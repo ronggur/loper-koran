@@ -519,6 +519,7 @@ Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dib
 
 ## Changelog Keputusan
 
+- **2026-10-08** — **Konversi gambar AI baru disetujui** (`design/character/loper_agen/konversi2/`, 240×292). Kepala terpisah tanpa leher dengan dagu sedikit menumpuk kerah belakang, tas boncengan terbuka berisi koran, satu gir belakang, dua engkol segaris, dua kabel rem. Belum menggantikan `loper_agen_fullbody.png` (bagian 3.5); masih beda dengan 3.1 di spakbor, tas satu sisi, dan pose.
 - **2026-10-07** — **Usulan lingkungan** (bagian 2.6): bayangan berwarna per waktu, pemain setengah color grading, penampang jalan per distrik (lajur sepeda di perumahan, ruko 2 lajur, gang 2 ubin, talud sungai miring), palet enam distrik, detail pinggir jalan dan antena TV, tiga bentuk rumah dan tiga jenis pohon perumahan, model sedan/angkot/bus kecil. Mock di `design/environment/`, renderer `tools/env_art`. Belum dikunci.
 - **2026-10-07** — **Gambar full body: kepala terpisah tanpa leher, koran dijepit di samping wajah** (bagian 3.5). Kepala melayang 2 px di atas kerah; ukuran gambar menjadi 294×283 px. Sprite rute tidak berubah.
 - **2026-10-07** — **Celana panjang jogger dan tanpa keranjang depan** (bagian 3.1). Sprite produksi dirender ulang dengan ukuran sel dan titik pijak yang sama (46×58, 23,46), jadi kode dan SpriteFrames tidak berubah. Ditambah lampu depan dan bel. Gambar full body skala besar dibuat dengan gaya lima nada (bagian 3.5); pilihan celana 3/4 tidak dipakai.
