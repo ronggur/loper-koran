@@ -11,6 +11,7 @@ Status: **Pra-produksi** (per 2026-10-07). Desain inti, kamera, kontrol, dan kar
 | [`ROADMAP.md`](./ROADMAP.md) | Status kesiapan, milestone M0–M4, keputusan yang masih terbuka |
 | [`DEV_PHASES.md`](./DEV_PHASES.md) | Fase development dengan checklist, mengikuti urutan prototype 1–4 |
 | [`GDD.md`](./GDD.md) | Game design document: core loop, kontrol, distrik, misi, sepeda, ekonomi, milestone |
+| [`STORY.md`](./STORY.md) | Cerita utama: premis, tokoh, timeline bab per distrik, syarat membuka distrik, tiga akhir, Fase Bebas, status pelacakan |
 | [`ART_DIRECTION.md`](./ART_DIRECTION.md) | Art bible: aturan pixel art isometrik, palet, kamera, karakter, daftar aset, spesifikasi teknis |
 | [`BALANCING.md`](./BALANCING.md) | Angka tuning awal (kecepatan, stamina, lemparan, skor, ekonomi) dan cara mengubahnya |
 | [`ROUTE_DESIGN.md`](./ROUTE_DESIGN.md) | Panduan menyusun rute dari segmen: ukuran, jalur, penempatan rumah dan rintangan, aturan adil |

@@ -50,7 +50,7 @@ Game mobile bergaya pixel art isometrik yang memodernisasi Paperboy NES: pemain 
 
 ### 3.2 Yang perlu diputuskan
 
-- Isi cerita besar dan akhirnya, misalnya membuka agen koran sendiri, belum dirancang.
+- Cerita besar dan akhirnya: premis diputuskan (Tabungan Kuliah ditambah Menyambung Hidup Keluarga), bab dan akhir masih usulan. Lihat [`STORY.md`](./STORY.md).
 - Ada game over atau tidak, atau hari buruk hanya mengurangi pelanggan.
 - Ada target harian atau tidak.
 
