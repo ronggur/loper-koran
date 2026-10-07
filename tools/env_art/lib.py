@@ -350,11 +350,61 @@ def angkot(s, x, y, body=None, length=44, width=22, front=None, stripe=None):
         return mi, sh
     s.add(_conv(planes, (x - hw, y - hl, zb), (x + hw, y + hl, zt),
                 [body, LAMP_F, LAMP_R, TRIM, RIM, stripe, GLASS_CAR, Mat('#4A4450', '#3A3440', '#26222C')], tex))
-    pid = s.prims[-1].part
-    # rak atap
-    for sx in (-1, 1):
-        s.add(box(x + sx * (hw - 3) - 0.6, x + sx * (hw - 3) + 0.6, y - hl * 0.7, y + hl * 0.5, zt, zt + 2.2, TRIM, part=pid))
     _wheels(s, x, hw - 0.2, wys, r=4.4)
+
+
+def bus_kecil(s, x, y, body=None, upper=None, length=74, width=24, front=None):
+    """Bus kecil kota (sedang): bodi kotak tinggi dengan sudut tumpul, kaca depan hampir tegak,
+    papan trayek di atas kaca, deret jendela panjang, dua warna, pintu terbuka di depan sisi trotoar."""
+    body = body or Mat('#FF9A6A', '#E8683E', '#A44428')
+    upper = upper or Mat('#FBF6E8', '#F2E7C9', '#C2AF86')
+    f = front if front is not None else (1 if x > 0 else -1)
+    hl, hw = length / 2, width / 2
+    zb, zt = 3.0, 31.0
+    Y = np.array([0, f, 0.0])
+    kw = 0.12
+    planes = [((1, 0, 0), x + hw), ((-1, 0, 0), -(x - hw)), ((0, 0, 1), zt), ((0, 0, -1), -zb),
+              (Y, f * y + hl), (-Y, -f * y + hl),
+              (np.array([0, f, kw]), f * y + hl + kw * 13),             # kaca depan sedikit miring
+              (np.array([0, f, 1.0]), f * y + hl + zt - 2.5),            # sudut atap depan
+              (np.array([0, -f, 1.0]), -f * y + hl + zt - 2.0),
+              ((1, 0, 1), x + hw + zt - 1.5), ((-1, 0, 1), -(x - hw) + zt - 1.5)]
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            planes.append((np.array([sx, sy * f, 0.0]), sx * x + sy * f * y + hw + hl - 2.5))
+    wys = (y + f * hl * 0.6, y - f * hl * 0.55)
+    base = _body_tex(x, y, f, hw, hl, wys, stripe=(12.5, 14.0), arch=6.2)
+
+    def tex(Pw, Nw):
+        mi, sh = base(Pw, Nw)
+        pz = Pw[:, 2]
+        u = f * (Pw[:, 1] - y)
+        lat = Pw[:, 0] - x
+        side = np.abs(Nw[:, 0]) > 0.7
+        frontf = (Nw @ np.array([0, f, 0.0])) > 0.5
+        upperz = (pz > 14) & (mi == 0)
+        mi = np.where(upperz, 8, mi)
+        win = side & (pz > 16) & (pz < 26) & (u < hl - 3) & (u > -hl + 4)
+        pillar = np.mod(u + hl, 11.0) < 1.5
+        mi = np.where(win & ~pillar, 6, mi)
+        door = side & (lat * f < 0) & (u > hl - 15) & (u < hl - 5) & (pz > 4) & (pz < 27)
+        mi = np.where(door, 7, mi)
+        ws = frontf & (pz > 14) & (pz < 26) & (np.abs(lat) < hw - 1.5)
+        mi = np.where(ws, 6, mi)
+        sign = frontf & (pz >= 26.5) & (pz < 29.5) & (np.abs(lat) < hw - 3)
+        mi = np.where(sign, 9, mi)
+        mi = np.where(sign & text_band(lat * f, pz), 8, mi)
+        return mi, sh
+    s.add(_conv(planes, (x - hw, y - hl, zb), (x + hw, y + hl, zt),
+                [body, LAMP_F, LAMP_R, TRIM, RIM, body, GLASS_CAR, Mat('#4A4450', '#3A3440', '#26222C'), upper,
+                 Mat('#3A3440', '#2C2632', '#1C1822')], tex))
+    _wheels(s, x, hw - 0.2, wys, r=4.8)
+
+
+def text_band(u, z):
+    """Huruf trayek kecil (pola blok) untuk papan bus."""
+    return (np.mod(np.floor(u / 1.0), 4) != 3) & (np.mod(np.floor(u / 4.0), 3) != 2) & (np.abs(z - 28) < 0.9) & \
+           (hash2(np.floor(u), np.floor(z), 5) > 0.35)
 
 
 def motor(s, x, y, body=None, along='y'):

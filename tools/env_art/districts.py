@@ -129,6 +129,7 @@ def build_ruko(s):
         motor(s, -(RR + 8) if i % 2 else RR + 8, my, body=[P['red'], P['blue'], P['metal_dk'], RK['s_yel']][i % 4])
     # angkot di lajur dekat
     angkot(s, 30, -40, body=RK['angkot'], front=1)
+    bus_kecil(s, -26, 70, front=-1)
     # gerobak kaki lima di trotoar seberang
     gx0 = -RR - 14
     s.add(box(gx0, gx0 + 10, 70, 90, 6, 18, [P['white'], RK['s_red']], wall_tex([dict(face='+x', u=(70, 90), v=(14, 16), mat=1)])))

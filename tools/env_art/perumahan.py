@@ -140,39 +140,92 @@ def kerb_with_gaps(s, a, b, z1, mat, gaps):
             s.add(box(a, b, y0, y1, 0, z1, mat, outline=False, cast=False))
 
 
-def house_far(s, yc, wall, roof, seed=0, carport_car=False):
+def _teras(s, x1, ya, yb, R, seed, kind='shed', h=27):
+    """Teras di depan pintu: lantai keramik, keset, dua tiang, atap kecil, lampu."""
+    s.add(box(x1, x1 + 15, ya, yb, 0, 2.5, P['paper'],
+              lambda Pw, Nw: (0, np.where((np.mod(Pw[:, 0], 5) < 0.8) | (np.mod(Pw[:, 1], 5) < 0.8), 1, 0)),
+              outline=True, cast=False))
+    yc = (ya + yb) / 2
+    s.add(box(x1 + 3, x1 + 9, yc - 3, yc + 5, 2.5, 3.2, P['red'], outline=False, cast=False))  # keset
+    for py in (ya + 1, yb - 3):
+        s.add(box(x1 + 12, x1 + 14, py, py + 2, 2.5, h, P['white']))
+    if kind == 'shed':
+        s.add(shed(x1 - 2, x1 + 17, ya - 2, yb + 2, h + 3, h - 1, '+x', 2, mats=R, tex=roof_tex('flat')))
+    else:   # dak beton datar dengan lis
+        s.add(box(x1 - 1, x1 + 17, ya - 2, yb + 2, h, h + 3, P['white']))
+    s.add(box(x1 + 0.5, x1 + 2.5, yc - 1, yc + 1, h - 5, h - 3, P['lamp']))
+    s.lights.append(Light((x1 + 6, yc, 16), 46, '#FFC870', 0.85, flat=0.5))
+
+
+HOUSE_TYPES = ('limasan', 'pelana', 'sayap')
+
+
+def house_far(s, yc, wall, roof, seed=0, carport_car=False, kind='limasan'):
+    """Rumah sisi seberang (fasad terlihat). Tiga bentuk:
+    limasan: badan lebar, atap limas, teras di tengah.
+    pelana: atap pelana dengan segitiga menghadap jalan, teras samping beratap dak.
+    sayap: badan utama mundur, satu ruang depan menonjol beratap pelana kecil, teras di ceruk."""
     W, R = P[wall], P[roof]
     x0, x1 = FX0, FX1
     y0, y1 = yc - 44, yc + 44
-    feats = [
-        dict(face='+x', u=(yc + 2, yc + 14), v=(2, 25), mat=1, frame=2, kind='door', handle=4),
-        dict(face='+x', u=(yc - 32, yc - 16), v=(12, 25), mat=3, frame=2),
-        dict(face='+x', u=(yc + 22, yc + 36), v=(12, 25), mat=3, frame=2),
-        dict(face='+y', u=(x0 + 18, x0 + 34), v=(12, 25), mat=3, frame=2),
-        dict(face='+y', u=(x0 + 54, x0 + 70), v=(12, 25), mat=3, frame=2),
-    ]
     mats = [W, P['wood'], P['white'], P['glass'], P['metal_dk'], P['conc']]
-    s.add(box(x0, x1, y0, y1, 0, 34, mats, wall_tex(feats, plinth=(3.5, 5))))
-    s.add(hip(x0 - 5, x1 + 5, y0 - 5, y1 + 5, 33, 58, mats=[R, W], tex=roof_tex('genteng', seed, wall=True)))
-    # teras: lantai, tiang, atap kecil
-    s.add(box(x1, x1 + 15, yc - 6, yc + 20, 0, 2.5, P['paper'],
-              lambda Pw, Nw: (0, np.where((np.mod(Pw[:, 0], 5) < 0.8) | (np.mod(Pw[:, 1], 5) < 0.8), 1, 0)),
-              outline=True, cast=False))
-    s.add(box(x1 + 3, x1 + 9, yc + 4, yc + 12, 2.5, 3.2, P['red'], outline=False, cast=False))  # keset
-    for py in (yc - 5, yc + 17):
-        s.add(box(x1 + 12, x1 + 14, py, py + 2, 2.5, 27, P['white']))
-    s.add(shed(x1 - 2, x1 + 17, yc - 8, yc + 22, 30, 26, '+x', 2, mats=R, tex=roof_tex('flat')))
-    s.add(box(x1 + 0.5, x1 + 2.5, yc - 1, yc + 1, 22, 24, P['lamp']))
-    s.lights.append(Light((x1 + 6, yc + 7, 16), 46, '#FFC870', 0.85, flat=0.5))
-    for i, py in enumerate((yc + 24, yc + 31, yc + 38)):
+    rt = roof_tex('genteng', seed, wall=True)
+    if kind == 'limasan':
+        feats = [
+            dict(face='+x', u=(yc + 2, yc + 14), v=(2, 25), mat=1, frame=2, kind='door', handle=4),
+            dict(face='+x', u=(yc - 32, yc - 16), v=(12, 25), mat=3, frame=2),
+            dict(face='+x', u=(yc + 22, yc + 36), v=(12, 25), mat=3, frame=2),
+            dict(face='+y', u=(x0 + 18, x0 + 34), v=(12, 25), mat=3, frame=2),
+            dict(face='+y', u=(x0 + 54, x0 + 70), v=(12, 25), mat=3, frame=2)]
+        s.add(box(x0, x1, y0, y1, 0, 34, mats, wall_tex(feats, plinth=(3.5, 5))))
+        s.add(hip(x0 - 5, x1 + 5, y0 - 5, y1 + 5, 33, 58, mats=[R, W], tex=rt))
+        _teras(s, x1, yc - 6, yc + 20, R, seed)
+        bush_ys = (yc + 24, yc + 31, yc + 38)
+        ant = (x0 + 34, yc + 14 - (seed % 2) * 20, 34, 72)
+    elif kind == 'pelana':
+        y0, y1 = yc - 36, yc + 36
+        feats = [
+            dict(face='+x', u=(yc + 10, yc + 22), v=(2, 25), mat=1, frame=2, kind='door', handle=4),
+            dict(face='+x', u=(yc - 26, yc - 4), v=(12, 25), mat=3, frame=2),
+            dict(face='+x', u=(yc - 4, yc + 4), v=(42, 48), mat=4, frame=2, kind='nako'),   # lubang angin di segitiga
+            dict(face='+y', u=(x0 + 18, x0 + 34), v=(12, 25), mat=3, frame=2),
+            dict(face='+y', u=(x0 + 54, x0 + 70), v=(12, 25), mat=3, frame=2)]
+        tex = wall_tex(feats, plinth=(3.5, 5))
+        s.add(box(x0, x1, y0, y1, 0, 34, mats, tex))
+        # atap pelana, bubungan tegak lurus jalan; dinding segitiga ikut warna dinding
+        s.add(gable(x0 - 4, x1 + 4, y0 - 5, y1 + 5, 34, 62, 'x', mats=[R, W], tex=rt))
+        s.add(gable(x0, x1, y0, y1, 34, 59, 'x', mats=mats, tex=tex, part=s.prims[-1].part))
+        _teras(s, x1, yc + 4, yc + 30, R, seed, kind='dak', h=26)
+        bush_ys = (yc - 30, yc - 22)
+        ant = (x0 + 30, yc - 12, 50, 80)
+    else:  # sayap
+        xb = x1 - 16                       # badan utama mundur
+        feats = [
+            dict(face='+x', u=(yc + 6, yc + 18), v=(2, 25), mat=1, frame=2, kind='door', handle=4),
+            dict(face='+x', u=(yc + 24, yc + 38), v=(12, 25), mat=3, frame=2),
+            dict(face='+y', u=(x0 + 18, x0 + 34), v=(12, 25), mat=3, frame=2),
+            dict(face='+y', u=(x0 + 54, x0 + 70), v=(12, 25), mat=3, frame=2)]
+        s.add(box(x0, xb, y0, y1, 0, 34, mats, wall_tex(feats, plinth=(3.5, 5))))
+        s.add(hip(x0 - 5, xb + 5, y0 - 5, y1 + 5, 33, 56, mats=[R, W], tex=rt))
+        # ruang depan menonjol di sisi kiri, segitiga atap menghadap jalan
+        wy0, wy1 = y0, yc - 2
+        wf = [dict(face='+x', u=(wy0 + 8, wy1 - 8), v=(10, 25), mat=3, frame=2, kind='window'),
+              dict(face='+y', u=(xb + 2, x1 - 3), v=(12, 24), mat=3, frame=2)]
+        wt = wall_tex(wf, plinth=(3.5, 5))
+        s.add(box(xb - 2, x1, wy0, wy1, 0, 33, mats, wt))
+        s.add(gable(xb - 6, x1 + 4, wy0 - 3, wy1 + 3, 33, 52, 'x', mats=[R, W], tex=rt))
+        s.add(gable(xb - 2, x1, wy0, wy1, 33, 50, 'x', mats=mats, tex=wt, part=s.prims[-1].part))
+        _teras(s, xb, yc + 2, yc + 26, R, seed, h=26)
+        bush_ys = (yc + 30, yc + 37)
+        ant = (x0 + 30, yc + 20, 34, 70)
+    for i, py in enumerate(bush_ys):
         bush(s, x1 + 4, py, 4.2, seed=seed * 7 + i)
-    pot_plant(s, x1 + 12, yc - 3, 2.6, seed=seed)
-    # kotak surat tepat di tepi luar lajur sepeda
+    pot_plant(s, x1 + 3, yc - 3 if kind != 'pelana' else yc + 1, 2.6, seed=seed)
     kotak_surat(s, -EDGE[1] - 5, yc + 24)
     if carport_car:
         car(s, x1 + 26, yc - 29, body=Mat('#9CC4E4', '#6C9CC8', '#46688E'), length=50, width=22)
     if seed % 3 != 1:
-        antena(s, x0 + 34, yc + 14 - (seed % 2) * 20, 34, 72, seed=seed)
+        antena(s, *ant, seed=seed)
 
 
 def house_near(s, yc, wall, roof, seed=0):
@@ -188,7 +241,16 @@ def house_near(s, yc, wall, roof, seed=0):
     ]
     mats = [W, P['wood'], P['white'], P['glass'], P['metal_dk'], P['conc']]
     s.add(box(x0, x1, y0, y1, 0, 32, mats, wall_tex(feats, plinth=(3.5, 5))))
-    s.add(hip(x0 - 5, x1 + 5, y0 - 5, y1 + 5, 31, 54, mats=[R, W], tex=roof_tex('genteng', seed + 9, wall=True)))
+    rt = roof_tex('genteng', seed + 9, wall=True)
+    k = seed % 3
+    if k == 0:
+        s.add(hip(x0 - 5, x1 + 5, y0 - 5, y1 + 5, 31, 54, mats=[R, W], tex=rt))
+    elif k == 1:
+        s.add(gable(x0 - 4, x1 + 4, y0 - 5, y1 + 5, 32, 56, 'x', mats=[R, W], tex=rt))
+        s.add(gable(x0, x1, y0, y1, 32, 53, 'x', mats=W, part=s.prims[-1].part))
+    else:
+        s.add(gable(x0 - 5, x1 + 5, y0 - 4, y1 + 4, 32, 52, 'y', mats=[R, W], tex=rt))
+        s.add(gable(x0, x1, y0, y1, 32, 50, 'y', mats=W, part=s.prims[-1].part))
     s.add(shed(x1, x1 + 12, yc - 12, yc + 10, 25, 22, '+x', 1.5, mats=P['metal'], tex=roof_tex('seng')))
     if seed % 2 == 0:
         antena(s, x0 + 50, yc - 8, 32, 68, seed=seed + 20)
@@ -209,7 +271,7 @@ def build(s, car_on=True):
         a, b = (EDGE if sg > 0 else (-EDGE[1], -EDGE[0]))
         kerb_with_gaps(s, a, b, 2.6, P['kerb'], gaps)
     for i, yc in enumerate(FAR_YC):
-        house_far(s, yc, WALLS[i], ROOFS[i], seed=i, carport_car=(i == 3))
+        house_far(s, yc, WALLS[i], ROOFS[i], seed=i, carport_car=(i == 3), kind=HOUSE_TYPES[i % 3])
         if i % 2 == 0:
             tree_round(s, FX1 - 28, yc + 66, r=15, h=24, seed=i)
         else:
