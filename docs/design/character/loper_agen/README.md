@@ -11,6 +11,8 @@ Desain sejak 2026-10-07: celana panjang jogger, tanpa keranjang depan, dengan la
 - `loper_sprite.gd`: memilih animasi dari input stick (`speed_level`, `steer`, `pedal_rate`).
 - `loper_agen.json`: metadata (sel, titik pijak, region tiap frame).
 - `preview/loper_agen_x4.png`: sprite sheet ×4 untuk dilihat.
+- `base/`: papan base model, 5 arah santai dan 3 pose kecepatan (acuan).
+- `arsip/`: full body versi pertama dan versi celana 3/4, tidak dipakai.
 - `konversi/`: gambar AI yang diubah jadi pixel art, eksplorasi (lihat README di folder itu).
 - `jatuh/`: animasi jatuh terjerembab, **usulan** (belum dipakai; lihat README di folder itu).
 - `loper_agen_fullbody.png`: gambar full body skala besar, 294×283 px, kepala terpisah tanpa leher, untuk layar di luar rute (lihat `docs/ART_DIRECTION.md` 3.5). Pratinjau ×3 di `preview/loper_agen_fullbody_x3.png`.
