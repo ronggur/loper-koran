@@ -194,6 +194,8 @@ def build(cfg, phi_deg=-40):
     M.capsule(v(14.2, -3.6, 17.7), v(14.2, 3.6, 17.7), 0.38, DARK, p_bar)
     M.capsule(v(13.6, 3.0, 17.8), v(13.6, 3.9, 17.8), 0.55, DARK, p_bar)
     M.capsule(v(13.6, -3.0, 17.8), v(13.6, -3.9, 17.8), 0.55, DARK, p_bar)
+    if cfg.get('bell'):
+        M.sphere(v(14.1, -1.6, 18.15), 0.5, mat('#ffe08a', '#ffc94a', '#d9a33a'), p_bar)
     if cfg.get('lamp'):
         p_l = M.part('lamp')
         M.box(v(15.6, 0, 15.0), v(1, 0, 0), v(0, 1, 0), v(0, 0, 1), 0.7, 0.8, 0.7, mat('#ffffff', '#f2e7c9', '#c2af86'), p_l)
@@ -253,6 +255,10 @@ def build(cfg, phi_deg=-40):
         M.capsule(hip, knee, 1.45, pants, p_leg)
         if long_pants:
             M.capsule(knee, ankle, 1.15, pants, p_shin)
+            if cfg.get('cuffs'):
+                # jogger: gathered elastic cuff just above the shoe
+                cuff = (pants[1], pants[2], tuple(max(0, int(ch * 0.8)) for ch in pants[2]))
+                M.capsule(ankle + (knee - ankle) * 0.16, ankle, 1.2, cuff, p_shin, bias=0.05)
         else:
             cut = knee + (hip - knee) * 0.12
             M.capsule(cut, ankle, 1.0, skin, p_shin)
@@ -487,7 +493,8 @@ VARIANTS_NOBAG = [
          shoes=mat('#ffffff', '#f2e7c9', '#bfa67c'), socks=None,
          bike=mat('#5f5b66', '#3d4649', '#221e26'),
          pannier=mat('#f6b26b', '#e98e3f', '#b5523b'), pannier_strap=flat('#2a1e17')),
-    dict(id='h', name='Kemeja Agen', skin='terang', crossbag=False, basket=True,
+    dict(id='h', name='Kemeja Agen', skin='terang', crossbag=False, basket=False, long_pants=True, cuffs=True,
+         lamp=True, bell=True,
          cap=mat('#ffffff', '#f2e7c9', '#c2af86'), brim=mat('#7480a3', '#5c6a8c', '#404a62'),
          shirt=mat('#9bc4d8', '#5f96c8', '#466e8c'),
          pants=mat('#7480a3', '#5c6a8c', '#404a62'),

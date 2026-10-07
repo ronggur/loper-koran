@@ -128,7 +128,18 @@ Patokan dari GDD 14.1 (diputuskan sebagai acuan). Angka bengkel di bawah adalah 
 
 Gagal misi tidak pernah mengurangi koin (GDD 10.5).
 
----
+### 7.1 Ekonomi cerita (usulan, direvisi 2026-10-07)
+
+Detail dan alasan ada di `STORY.md` bagian 4.1. Semua angka masuk `scripts/config.gd`.
+
+| Parameter | Nilai awal |
+|---|---|
+| Target Tabungan Kuliah | 12.000 koin (Rp1.200.000) |
+| Total kebutuhan awal kuliah / sumbangan keluarga | 37.000 / 25.000 koin |
+| `HARI_CERITA` (panjang cerita utama) | 60 hari (19 Juni sampai 18 Agustus), sekitar 5 jam |
+| Pendapatan kotor per hari (rata-rata) | sekitar 400 koin |
+| Setoran Keluarga / Bengkel / Tabungan | 35% / 15% / 50% (sekitar 140 / 60 / 200 koin) |
+| Ambang akhir (hari terakhir) | Mandiri 100%; Dibantu warga 70 sampai 99% dan reputasi rata-rata minimal 60; di bawah itu Tunda setahun |
 
 ## 8. Keausan sepeda
 

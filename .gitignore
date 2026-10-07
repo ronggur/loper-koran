@@ -6,3 +6,7 @@ builds/
 .godot/
 *.apk
 *.aab
+
+# .cursor/rules adalah sumber aturan agent dan harus ikut di-commit,
+# walau .gitignore global mengabaikan .cursor/
+!.cursor/

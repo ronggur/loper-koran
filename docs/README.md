@@ -11,6 +11,7 @@ Status: **Pra-produksi** (per 2026-10-07). Desain inti, kamera, kontrol, dan kar
 | [`ROADMAP.md`](./ROADMAP.md) | Status kesiapan, milestone M0–M4, keputusan yang masih terbuka |
 | [`DEV_PHASES.md`](./DEV_PHASES.md) | Fase development dengan checklist, mengikuti urutan prototype 1–4 |
 | [`GDD.md`](./GDD.md) | Game design document: core loop, kontrol, distrik, misi, sepeda, ekonomi, milestone |
+| [`STORY.md`](./STORY.md) | Cerita utama: premis, tokoh, timeline bab per distrik, syarat membuka distrik, tiga akhir, Fase Bebas, status pelacakan |
 | [`ART_DIRECTION.md`](./ART_DIRECTION.md) | Art bible: aturan pixel art isometrik, palet, kamera, karakter, daftar aset, spesifikasi teknis |
 | [`BALANCING.md`](./BALANCING.md) | Angka tuning awal (kecepatan, stamina, lemparan, skor, ekonomi) dan cara mengubahnya |
 | [`ROUTE_DESIGN.md`](./ROUTE_DESIGN.md) | Panduan menyusun rute dari segmen: ukuran, jalur, penempatan rumah dan rintangan, aturan adil |
@@ -60,7 +61,7 @@ Path seperti `scripts/config.gd` atau `tools/loper_art/produce.py` di dokumen la
 - **Sepeda**: komponen bisa aus atau rusak dan hanya diperbaiki di bengkel setelah mengantar (GDD 12).
 - **Ekonomi**: satu mata uang (koin), tanpa gems. Pemasukan dari iklan hadiah opsional, tanpa iklan paksa (GDD 14).
 - **Gaya visual**: pixel art isometrik dengan acuan gaya Brainy Dungeon, dimodernkan lewat lighting, partikel, dan color grading (ART_DIRECTION 2).
-- **Karakter pemain**: **Kemeja Agen** tanpa tas selempang, 5 arah × 3 kecepatan; varian baju lain disimpan untuk item (ART_DIRECTION 3).
+- **Karakter pemain**: **Kemeja Agen**, anak muda bercelana panjang jogger, tanpa tas selempang dan tanpa keranjang depan, 5 arah × 3 kecepatan; varian baju lain disimpan untuk item (ART_DIRECTION 3).
 - **Sumber utama desain**: `docs/GDD.md` di repo ini; dokumen Claude Docs jadi arsip (2026-10-07).
 
 Keputusan yang masih terbuka ada di `ROADMAP.md` bagian 5.

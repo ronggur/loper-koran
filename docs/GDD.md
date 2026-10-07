@@ -50,7 +50,7 @@ Game mobile bergaya pixel art isometrik yang memodernisasi Paperboy NES: pemain 
 
 ### 3.2 Yang perlu diputuskan
 
-- Isi cerita besar dan akhirnya, misalnya membuka agen koran sendiri, belum dirancang.
+- Cerita besar dan akhirnya: premis diputuskan (Tabungan Kuliah ditambah Menyambung Hidup Keluarga), bab dan akhir masih usulan. Lihat [`STORY.md`](./STORY.md).
 - Ada game over atau tidak, atau hari buruk hanya mengurangi pelanggan.
 - Ada target harian atau tidak.
 
@@ -195,8 +195,8 @@ Baris pasar, desa, dan pinggir sungai masih usulan awal dan belum diuji. Di bari
 - **Waktu dan cuaca:** pagi sepi dengan tukang sayur, siang terik, sore ramai anak main, malam gelap dan butuh lampu, plus hujan dan banjir.
 - **Kejadian khas Indonesia:** lomba 17 Agustus, hajatan dengan tenda yang menutup jalan, pasar kaget, takjil saat Ramadan. Headline koran bisa jadi pemicunya.
 - **Momen khas per distrik:** misalnya kejar-kejaran dengan anjing besar di kampung, atau menyeberang jalan raya yang ramai di ruko.
-- **Detail latar yang hidup:** kucing, ayam, layangan, jemuran. Dijaga tetap terbaca supaya tidak mengganggu pandangan ke rintangan.
-- **Palet warna berbeda per distrik dan waktu,** dengan gaya pixel yang sama, supaya pemain langsung tahu sedang di mana (ART_DIRECTION 2.5).
+- **Detail latar yang hidup:** jemuran yang bergoyang, ayam mematuk di halaman, kucing tidur di teras, asap dari warung atau gerobak, dan layangan di langit. Semuanya dekorasi yang tidak menghalangi jalur, dijaga tetap terbaca dan tidak memakai penanda misi, supaya tidak mengganggu pandangan ke rintangan dan petunjuk (ART_DIRECTION 6.10).
+- **Palet warna berbeda per distrik dan waktu,** dengan gaya pixel yang sama, supaya pemain langsung tahu sedang di mana. Warna bayangan ikut berubah (ART_DIRECTION 2.5).
 
 ### 9.5 Yang perlu diputuskan
 
@@ -455,7 +455,7 @@ Angka koin mengacu pada penghasilan loper koran sungguhan di Indonesia: komisi s
 
 Ringkasan; aturan lengkapnya ada di `ART_DIRECTION.md` dan `SOUND_DESIGN.md`.
 
-- **Gaya:** pixel art retro dengan palet terbatas, dimodernkan lewat lighting dinamis, bayangan lembut, partikel, depth of field ringan, bloom, dan color grading per distrik. Referensi rasa: Eastward dan Octopath Traveler, tanpa pindah dari isometrik 2:1.
+- **Gaya:** pixel art retro dengan palet terbatas, dimodernkan lewat lighting dinamis (cahaya utama dari kiri atas), bayangan lembut berwarna yang mengikuti distrik dan waktu, partikel, depth of field ringan, bloom, dan color grading per distrik. Referensi rasa: Eastward dan Octopath Traveler, tanpa pindah dari isometrik 2:1.
 - **Ukuran:** ubin isometrik belah ketupat 2:1, usulan 64×32 px. Karakter pemain dan sepeda sekitar 47 px tinggi. Di layar landscape 2400×1080, skala ×3 memberi kanvas sekitar 800×360 px.
 - **Umpan balik kecepatan:** garis kecepatan, debu pixel di roda, getaran kamera, dan nada suara kayuhan yang naik saat ngebut. Bel sepeda jadi efek suara sekaligus alat mengusir pejalan kaki. Kamera melebar sedikit ke depan saat ngebut supaya rintangan masih sempat terlihat.
 - **Orientasi landscape:** dipegang dengan dua tangan, jadi dua jempol terasa natural. Ruang ke samping luas dan pandangan ke depan lebih lega karena jalan isometrik berjalan diagonal. Portrait ditinggalkan karena jalan diagonal memendekkan pandangan dan membuang sisi layar.

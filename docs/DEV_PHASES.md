@@ -37,7 +37,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 
 - [ ] Putuskan nama package Android (ROADMAP 5)
 - [ ] Repo git `loper-koran`: root repo = root project Godot, dokumen di `docs/` (folder ini) dengan `docs/.gdignore`
-- [ ] Project Godot 4 (minimal 4.3) landscape, renderer Compatibility; cek apakah light 2D, glow, dan partikel yang dibutuhkan jalan di renderer ini di HP target (ART_DIRECTION 7)
+- [ ] Project Godot 4 (minimal 4.3) landscape, renderer Compatibility; cek apakah light 2D, glow, partikel, dan shader warna bayangan yang dibutuhkan jalan di renderer ini di HP target (ART_DIRECTION 2.3, 7)
 - [ ] Resolusi dasar dan stretch dengan skala bulat sesuai usulan ART_DIRECTION 7; uji di rasio 16:9, 19.5:9, 20:9
 - [ ] Import filter Nearest dan tanpa mipmap untuk sprite dunia; `snap_2d_transforms_to_pixel` aktif
 - [ ] `scripts/config.gd` berisi angka awal dari `BALANCING.md`
@@ -153,7 +153,8 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 
 ## Fase 7 — Vertical slice perumahan & audio dasar (M3)
 
-- [ ] Lighting dinamis, waktu pagi/siang/sore/malam, satu cuaca (hujan)
+- [ ] Lighting dinamis, waktu pagi/siang/sore/malam dengan warna bayangan masing-masing (ART_DIRECTION 2.5), satu cuaca (hujan)
+- [ ] Detail hidup pinggir jalan perumahan: jemuran, ayam, kucing, asap warung, layangan (ART_DIRECTION 6.10)
 - [ ] Berita utama dengan efek dunia (minimal dua dari GDD 10.7)
 - [ ] Misi P2 dan P3
 - [ ] Efek suara inti dan ambience perumahan (`SOUND_DESIGN.md`)

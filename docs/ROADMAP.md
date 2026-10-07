@@ -23,7 +23,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · ✅ selesai
 | 8 | Panduan menyusun rute dan segmen | 🟡 Usulan ditulis 2026-10-07 (`ROUTE_DESIGN.md`), diuji di Fase 3. |
 | 9 | Panduan menulis headline dan misi | 🟡 Ditulis 2026-10-07 (`CONTENT_GUIDE.md`). Contoh headline hari 1–3 belum dibuat. |
 | 10 | Desain layar di luar rute: halaman depan koran, hasil harian, bengkel | ⬜ HUD rute sudah ada di mock; tiga layar ini belum didesain (`design/DESIGN_SPEC.md` 4). |
-| 11 | Cerita besar dan kondisi gagal | ⬜ Belum dirancang (GDD 3.2). |
+| 11 | Cerita besar dan kondisi gagal | 🟡 Premis dan alur diputuskan 2026-10-07, bab dan akhir masih usulan (`STORY.md`). Usulan: tanpa game over, tenggat terlewat berakhir di "tunda setahun". |
 | 12 | Audio | ⬜ Draf prinsip dan daftar suara (`SOUND_DESIGN.md`); musik belum diputuskan. |
 | 13 | Target usia dan pasar, kebijakan privasi, Data Safety | ⬜ Belum diputuskan. Menentukan aturan iklan dan konten. |
 | 14 | Integrasi iklan hadiah (AdMob atau sejenisnya) | ⬜ Plugin perlu dicek lebih awal (GDD 16). |

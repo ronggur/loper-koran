@@ -9,6 +9,11 @@ pip install numpy pillow
 python3 tools/loper_art/produce.py --out build/loper_art          # Kemeja Agen, sekitar 35 detik
 python3 tools/loper_art/produce.py --out build/loper_art --variant e   # varian baju lain
 python3 tools/loper_art/base.py --out build/loper_art/base        # papan pratinjau 5 arah + 3 pose
+python3 tools/loper_art/jatuh.py --out build/loper_art/jatuh   # animasi jatuh terjerembab (usulan)
+python3 tools/loper_art/fullbody/fullbody.py --out build/loper_art/fullbody   # gambar full body skala besar
+python3 tools/loper_art/fullbody/konversi.py GAMBAR.jpg --out build/loper_art/konversi   # ilustrasi jadi pixel art (butuh scipy, scikit-image, scikit-learn)
+python3 tools/loper_art/fullbody/konversi_loper.py docs/design/character/loper_agen/konversi/sumber_ai.jpg --out build/loper_art/konversi   # + penyesuaian ke brief
+python3 tools/loper_art/fullbody/fullbody.py --out build/loper_art/fullbody --layers   # + layer kepala dan badan terpisah
 ```
 
 `build/` tidak di-commit. Setelah dicek, salin hasilnya ke `assets/sprites/loper/` (dan `docs/design/character/loper_agen/` kalau base model berubah).
@@ -21,6 +26,8 @@ python3 tools/loper_art/base.py --out build/loper_art/base        # papan pratin
 | `loper.py` | Model pengendara dan sepeda (`build`), delapan varian baju (`VARIANTS`, `VARIANTS_NOBAG`) |
 | `base.py` | Pose yang dikunci 2026-10-07: `SPEED` (santai, cepat, ngebut), `HEADINGS` (5 arah), `ground()` untuk latar pratinjau |
 | `produce.py` | 60 frame → sheet 4×15 (sel 46×58, titik pijak 23,46), JSON, SpriteFrames `.tres`, pratinjau |
+| `jatuh.py` | Animasi jatuh terjerembab (usulan, arah normal): sepeda dan pengendara dengan pose bebas, sel 114×68, offset Godot sama dengan sheet kayuh |
+| `fullbody/` | Gambar full body skala besar 294×283 (`fullbody.py`, kepala di layer sendiri) dengan pelukis 2D lima nada (`pxhd.py`); gaya di `docs/ART_DIRECTION.md` 3.5. `konversi.py` mengubah ilustrasi jadi pixel art, `konversi_loper.py` menyesuaikan hasil gambar AI loper ke brief |
 
 ## Varian baju
 
@@ -33,7 +40,7 @@ python3 tools/loper_art/base.py --out build/loper_art/base        # papan pratin
 | e | Polo Kuning | tidak |
 | f | Batik | tidak |
 | g | Hoodie Abu | tidak |
-| h | Kemeja Agen (base model) | tidak |
+| h | Kemeja Agen (base model): celana panjang jogger, lampu depan, bel, tanpa keranjang | tidak |
 
 Hanya `h` yang sudah diaudit untuk produksi. Varian lain memakai pose yang sama tapi belum dicek frame per frame; varian a–d dengan tas selempang belum pernah dirender dalam pose condong.
 
