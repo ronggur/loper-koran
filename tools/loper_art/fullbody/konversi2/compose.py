@@ -159,3 +159,9 @@ for (ax,ay) in AXLES:
     for (x,y) in [(ax-2,ay-1),(ax-2,ay),(ax+1,ay-1),(ax+1,ay),(ax-1,ay-2),(ax,ay-2),(ax-1,ay+1),(ax,ay+1)]:
         img.put(x,y,OUT)
 Image.fromarray(img.rgba()).save(W+'comp1x.png')
+# head and body layers: body keeps what lies under the head (back of the collar)
+body=Canvas(GH,GW); body.rgb=img.rgb.copy(); body.a=img.a.copy()
+hm=HEAD_LAYER.a>0
+body.rgb[hm]=PRE_RGB[hm]; body.a[hm]=PRE_A[hm]
+Image.fromarray(body.rgba()).save(W+'layer_badan.png')
+Image.fromarray(HEAD_LAYER.rgba()).save(W+'layer_kepala.png')

@@ -1,7 +1,8 @@
-"""Gambar AI loper (sumber 1792x2240) jadi pixel art 240x292, versi konversi2.
+"""Gambar full body loper (resmi sejak 2026-10-08): gambar AI 1792x2240 jadi pixel art 240x292.
 
-Hasil: docs/design/character/loper_agen/konversi2/. Langkah-langkahnya ada di
-folder konversi2/ dan dijalankan berurutan:
+Hasil: docs/design/character/loper_agen/loper_agen_fullbody.png (sumber dan catatan di
+konversi2/ di folder yang sama). Langkah-langkahnya ada di folder konversi2/ di sini dan
+dijalankan berurutan:
 
   mask.py     latar cokelat polos dibuang (masker latar)
   stage1.py   bayangan tanah dipisah, palet 36 warna (k-means Lab), tiap sel 7x7 px
@@ -20,6 +21,7 @@ Koordinat di tiap langkah khusus untuk gambar sumber ini.
 
   python3 tools/loper_art/fullbody/konversi2.py \\
       docs/design/character/loper_agen/konversi2/sumber_ai.jpg --out build/loper_art/konversi2
+  # --layers: juga simpan layer kepala dan badan terpisah (untuk ekspresi potret)
 
 Butuh numpy, pillow, opencv-python, scikit-learn.
 """
@@ -38,6 +40,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("source", help="gambar sumber (sumber_ai.jpg)")
     ap.add_argument("--out", default="build/loper_art/konversi2")
+    ap.add_argument("--layers", action="store_true", help="juga simpan layer kepala dan badan terpisah")
     args = ap.parse_args()
 
     out = os.path.abspath(args.out)
@@ -49,13 +52,15 @@ def main():
         print("..", step)
         runpy.run_path(os.path.join(HERE, step), init_globals={"W": work + os.sep, "HERE": HERE})
 
+    name = "loper_agen_fullbody"
     img = Image.open(os.path.join(work, "comp1x.png")).convert("RGBA")
-    img.save(os.path.join(out, "loper_agen_konversi2.png"))
+    img.save(os.path.join(out, name + ".png"))
     w, h = img.size
-    big = img.resize((w * 3, h * 3), Image.NEAREST)
-    os.makedirs(os.path.join(out, "preview"), exist_ok=True)
-    big.save(os.path.join(out, "preview", "loper_agen_konversi2_x3.png"))
-    print("selesai:", os.path.join(out, "loper_agen_konversi2.png"), f"{w}x{h}")
+    img.resize((w * 3, h * 3), Image.NEAREST).save(os.path.join(out, name + "_x3.png"))
+    if args.layers:
+        shutil.copyfile(os.path.join(work, "layer_badan.png"), os.path.join(out, name + "_body.png"))
+        shutil.copyfile(os.path.join(work, "layer_kepala.png"), os.path.join(out, name + "_head.png"))
+    print(f"{name}: {w}x{h} -> {out}")
 
 
 if __name__ == "__main__":
