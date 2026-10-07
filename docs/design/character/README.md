@@ -10,10 +10,11 @@ Nama dan latar tokoh ada di `docs/STORY.md` bagian 3. Desain baju dan aturan gay
 |---|---|---|
 | [`loper_agen/`](./loper_agen/) | Sprite sheet kayuh 15 animasi (3 kecepatan × 5 arah), SpriteFrames, scene, skrip Godot | **Produksi** |
 | [`loper_agen/base/`](./loper_agen/base/) | Papan base model: 5 arah santai dan 3 pose kecepatan (normal dan samping) | Acuan |
-| `loper_agen/loper_agen_fullbody.png` | Gambar full body skala besar, kepala terpisah tanpa leher | Resmi (gaya skala besar masih usulan) |
+| `loper_agen/loper_agen_fullbody.png` | Gambar full body skala besar 240×292 dari konversi gambar AI (sejak 2026-10-08), kepala terpisah tanpa leher | Resmi |
 | [`loper_agen/jatuh/`](./loper_agen/jatuh/) | Animasi jatuh terjerembab, arah normal | Usulan |
+| [`loper_agen/konversi2/`](./loper_agen/konversi2/) | Gambar sumber AI dan catatan perubahan untuk gambar full body resmi | Sumber |
 | [`loper_agen/konversi/`](./loper_agen/konversi/) | Gambar AI yang diubah jadi pixel art dan disesuaikan ke brief | Eksplorasi |
-| [`loper_agen/arsip/`](./loper_agen/arsip/) | Full body versi pertama dan versi celana 3/4 | Arsip, tidak dipakai |
+| [`loper_agen/arsip/`](./loper_agen/arsip/) | Full body versi pertama, versi lima nada 294×283, dan versi celana 3/4 | Arsip, tidak dipakai |
 
 ## Varian baju
 

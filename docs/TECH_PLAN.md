@@ -196,7 +196,7 @@ Menambah `ART_DIRECTION.md` 7 (penamaan dan folder). Semua usulan sampai Fase 6B
 | UI cerita | `ui_<nama>.png` | mengikuti `DESIGN_SPEC.md` 1.3 | Panel 9-slice | `assets/sprites/ui/` |
 | Overlay musiman | `overlay_<nama>_<distrik>.png` | per distrik | Sprite biasa, di atas dunia | `assets/sprites/overlay/` |
 
-Ekspresi potret: netral, senang, cemas atau sedih, kaget. Tokoh yang hanya muncul sebentar cukup dua ekspresi. Potret Fajar memakai desain Kemeja Agen dan kepala terpisah dari gambar full body (ART_DIRECTION 3.5), jadi ekspresinya bisa dirender dari `fullbody.py --layers`.
+Ekspresi potret: netral, senang, cemas atau sedih, kaget. Tokoh yang hanya muncul sebentar cukup dua ekspresi. Potret Fajar memakai desain Kemeja Agen dan kepala terpisah dari gambar full body (ART_DIRECTION 3.5), jadi kepalanya bisa diambil dari layer terpisah (`konversi2.py --layers`) sebagai dasar ekspresi.
 
 ---
 

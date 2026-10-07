@@ -210,20 +210,32 @@ Tujuh varian dari eksplorasi tetap ada di `tools/loper_art/loper.py` dan bisa di
 
 ### 3.5 Gambar skala besar (full body)
 
-Dipakai di layar di luar rute: layar judul, halaman depan koran, lemari baju, hasil harian, gambar toko. File: `design/character/loper_agen/loper_agen_fullbody.png` (294×283 px, tampil ×3), dibuat dengan `tools/loper_art/fullbody/fullbody.py`.
+> **KEPUTUSAN (2026-10-08): gambar full body diganti dengan konversi gambar AI** (`konversi2`), menggantikan gambar 294×283 hasil `fullbody.py` (disimpan di `design/character/loper_agen/arsip/loper_agen_fullbody_v2.png`).
 
-Gaya skala besar (usulan) sengaja lebih kaya dari sprite rute, karena dilihat dari dekat dan tidak bergerak di atas jalan:
+Dipakai di layar di luar rute: layar judul, halaman depan koran, lemari baju, hasil harian, gambar toko. Gambar skala besar seperti ini juga akan dijadikan **gambar adegan (cutscene)** saat jalan cerita maju dan di **adegan pembuka (start scene)** (keputusan Ronggur 2026-10-08); bentuk adegannya mengikuti `docs/STORY.md` bagian 10. File: `design/character/loper_agen/loper_agen_fullbody.png` (240×292 px, tampil ×3), dibuat dengan `tools/loper_art/fullbody/konversi2.py` dari ilustrasi AI `design/character/loper_agen/konversi2/sumber_ai.jpg`, lalu sebagian diubah dan digambar ulang (catatan lengkap di `konversi2/README.md`).
+
+Gaya skala besar sengaja lebih kaya dari sprite rute, karena dilihat dari dekat dan tidak bergerak di atas jalan:
 
 | | Sprite rute | Skala besar |
 |---|---|---|
-| Nada per warna | 3 | 5, bayangan bergeser ke ungu-biru |
-| Garis dalam | `#0E0A1C` | Warna gelap bahan itu sendiri; garis luar siluet `#1B1226` |
+| Nada per warna | 3 | Palet hasil konversi (k-means 36 warna ditambah warna bagian yang digambar ulang, 70 warna) |
+| Garis dalam | `#0E0A1C` | Warna gelap dari gambar sumber; garis luar siluet `#1B1226` |
 | Bayangan tanah | Penanda hitam 28%, diwarnai shader | Dongker `#2E3550` 38% |
 | Detail | Bentuk besar, wajah 2 mata + mulut | Lipatan kain, jahitan, wajah tiga perempat, tulisan "KORAN" di koran |
 
-Pose: berdiri di depan sepeda, tangan kiri di setang. Tangan kanan menjulurkan koran hari ini ke samping wajah dan menjepit sisi kiri bawahnya: empat jari di depan koran dan jempol ditekuk di atasnya, lengan di belakang koran dan muncul dari tepi bawahnya. Wajah menoleh sekitar 30° ke kanan; garis rahang berakhir di telinga, dan telinga tanpa garis hitam.
+Pose: berdiri di depan sepeda, menghadap penonton. Tangan kanan mengangkat koran hari ini tinggi-tinggi dengan tulisan "KORAN" terbaca, tangan kiri di samping badan. Wajah tiga perempat, tersenyum.
 
-**Kepala terpisah (2026-10-07):** leher tidak digambar. Kepala diletakkan dekat badan, hanya dipisah celah 2 px dari kerah, dan digambar di layer sendiri, jadi bisa diekspor terpisah (`fullbody.py --layers`) untuk ganti ekspresi atau animasi kecil. Kerah kemeja memeluk pangkal leher: lebarnya sekitar satu setengah kali lebar leher dan tidak melebar ke bahu. Kancing teratas terbuka, jadi kulit dada hanya terlihat di bukaan V kecil tepat di bawah dagu; dua daun kerah terlipat turun di kiri-kanan bukaan dan berakhir runcing.
+**Kepala terpisah:** leher tidak digambar. Bagian belakang kerah dongker terlihat di bawah dagu, dan dagu sedikit menumpuk kerah itu. Garis dagu melengkung: tegak di bawah telinga, landai ke dagu. Ujung kerah menyambung ke bahu; kulit dada hanya terlihat di bukaan V kecil. Kepala ada di layer sendiri (`konversi2.py --layers` menyimpan `_head` dan `_body`) untuk ganti ekspresi atau animasi kecil.
+
+**Sepeda di gambar ini:** tas boncengan terbuka berisi koran gulung, satu gir belakang tanpa derailleur, dua engkol segaris, dua kabel rem. Beda dengan 3.1: sepeda pakai spakbor dan tas boncengan hanya terlihat satu sisi. Sprite rute tidak berubah.
+
+**Acuan untuk gambar skala besar berikutnya (2026-10-08):** gambar adegan cerita, adegan pembuka, potret ekspresi, dan baju lain di lemari mengikuti gambar full body ini supaya terlihat satu keluarga. Prinsipnya diputuskan Ronggur; rincian di bawah masih **usulan**:
+
+- **Cara membuat:** ilustrasi (boleh dari AI) diubah jadi pixel art dengan cara yang sama (`konversi2.py` sebagai contoh: latar dibuang, warna dikelompokkan, tiap sel mengambil warna terbanyak, piksel lepas dirapikan), lalu bagian yang salah atau tidak cocok dengan brief digambar ulang dengan tangan. Kalau sumbernya gambar AI, periksa ketentuan lisensi komersial generatornya (bagian 9).
+- **Palet:** warna kulit, kemeja, dongker, merah bata, hijau sepeda, dan krem koran diambil dari `loper_agen_fullbody.png`, bukan dari palet baru tiap gambar. Warna baru hanya untuk benda yang memang baru (latar, tokoh lain).
+- **Garis dan bayangan:** garis luar siluet `#1B1226` 1 px, garis dalam dari warna gelap bahannya, bayangan tanah dongker `#2E3550` 38%.
+- **Kepadatan piksel:** sama dengan gambar ini, tokoh setinggi sekitar 270 px dari topi sampai sol, tampil ×3. Gambar adegan yang lebih lebar memakai kepadatan yang sama, bukan diperkecil.
+- **Kepala** digambar di layer sendiri seperti gambar ini, supaya ekspresi bisa diganti tanpa menggambar ulang badan.
 
 ---
 
@@ -280,7 +292,7 @@ Kolom **M2** = dibutuhkan untuk satu hari penuh di perumahan (prototype 3–4). 
 | Aset | M2 | M3 | Catatan |
 |---|---|---|---|
 | Kayuh 3 kecepatan × 5 arah | ✅ | ✅ | Selesai 2026-10-07, diperbarui ke celana jogger tanpa keranjang |
-| Gambar full body skala besar | ✅ | ✅ | Selesai 2026-10-07 (bagian 3.5) |
+| Gambar full body skala besar | ✅ | ✅ | Selesai; diganti 2026-10-08 dengan konversi gambar AI (bagian 3.5) |
 | Lempar sisi seberang / dekat | ✅ | ✅ | Per arah normal dulu, arah lain menyusul |
 | Meluncur, rem | ✅ | ✅ | |
 | Berhenti (kaki turun) | ✅ | ✅ | Untuk menangkap kucing |
@@ -476,7 +488,7 @@ Ikuti urutan kebutuhan, bukan urutan daftar:
 
 - **Pemain, rumah, dan rintangan dibuat sendiri** (bagian 4), karena harus konsisten dengan proyeksi dan palet.
 - **UI, ikon, dan efek suara** boleh memakai set CC0 (misalnya Kenney.nl) kalau cocok dengan gaya. Lisensi aset dari OpenGameArt dan itch.io bervariasi per aset, jadi selalu periksa.
-- **AI image generation** lemah untuk sprite yang harus konsisten di banyak arah dan frame. Kalau dipakai, hanya untuk konsep atau latar statis, dan periksa ketentuan lisensi komersialnya.
+- **AI image generation** lemah untuk sprite yang harus konsisten di banyak arah dan frame. Kalau dipakai, hanya untuk konsep, latar statis, atau gambar skala besar yang diam (full body dan gambar adegan, bagian 3.5; diubah jadi pixel art dulu), dan periksa ketentuan lisensi komersialnya.
 
 ### Wajib: catat semua lisensi
 
@@ -513,12 +525,12 @@ Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dib
 - **Cara menampilkan rumah di sisi dekat**, yang hanya terlihat belakangnya.
 - **Font HUD**: mock memakai Lexend + Lilita One (sama dengan Brainy Dungeon). Kunci atau pilih identitas sendiri.
 - **Apakah sprite pemain dipoles manual** sebelum rilis, terutama wajah dari arah depan.
-- **Gaya skala besar** (bagian 3.5): lima nada dan garis dalam berwarna dikunci atau disamakan dengan sprite rute.
 
 ---
 
 ## Changelog Keputusan
 
+- **2026-10-08** — **Gambar full body diganti dengan konversi gambar AI** (bagian 3.5). `loper_agen_fullbody.png` sekarang 240×292 px dari `konversi2.py` (sumber di `design/character/loper_agen/konversi2/`), menggantikan gambar 294×283 lima nada dari `fullbody.py`. Kepala terpisah tanpa leher dengan dagu sedikit menumpuk kerah belakang, koran diangkat tinggi, tas boncengan terbuka berisi koran, satu gir belakang, dua engkol segaris, dua kabel rem. Spakbor dan tas satu sisi berbeda dari 3.1, hanya di gambar ini. Pertanyaan terbuka soal gaya lima nada untuk skala besar ditutup. Gambar ini jadi acuan gambar skala besar berikutnya, dan gambar skala besar seperti ini akan dipakai sebagai gambar adegan (cutscene) saat jalan cerita maju dan di adegan pembuka.
 - **2026-10-07** — **Usulan lingkungan** (bagian 2.6): bayangan berwarna per waktu, pemain setengah color grading, penampang jalan per distrik (lajur sepeda di perumahan, ruko 2 lajur, gang 2 ubin, talud sungai miring), palet enam distrik, detail pinggir jalan dan antena TV, tiga bentuk rumah dan tiga jenis pohon perumahan, model sedan/angkot/bus kecil. Mock di `design/environment/`, renderer `tools/env_art`. Belum dikunci.
 - **2026-10-07** — **Gambar full body: kepala terpisah tanpa leher, koran dijepit di samping wajah** (bagian 3.5). Kepala melayang 2 px di atas kerah; ukuran gambar menjadi 294×283 px. Sprite rute tidak berubah.
 - **2026-10-07** — **Celana panjang jogger dan tanpa keranjang depan** (bagian 3.1). Sprite produksi dirender ulang dengan ukuran sel dan titik pijak yang sama (46×58, 23,46), jadi kode dan SpriteFrames tidak berubah. Ditambah lampu depan dan bel. Gambar full body skala besar dibuat dengan gaya lima nada (bagian 3.5); pilihan celana 3/4 tidak dipakai.
