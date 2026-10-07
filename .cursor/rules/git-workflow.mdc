@@ -1,0 +1,84 @@
+---
+description: Alur kerja git dan GitHub untuk Loper Koran — branch, commit, PR, merge. Berlaku untuk semua pekerjaan yang membuat commit.
+globs:
+alwaysApply: true
+---
+
+# Alur Kerja Git
+
+Repo: `github.com/ronggur/loper-koran`, branch utama `main`. **Proteksi branch tidak ditegakkan GitHub** untuk repo private di akun Free, jadi push langsung ke `main` secara teknis tetap bisa. Aturan di bawah dijaga oleh disiplin, bukan oleh GitHub. (Commit awal repo adalah satu-satunya yang masuk langsung ke `main`.)
+
+## Aturan utama
+
+- **Jangan pernah commit atau push langsung ke `main`.** Semua perubahan lewat branch + Pull Request, termasuk perubahan kecil dan perubahan dokumen.
+- Permintaan "commit dan push" dari user berarti: commit di branch kerja, push branch itu, lalu buka atau perbarui PR. **Bukan** push ke `main`.
+- **Jangan merge PR sendiri** kecuali user memintanya secara eksplisit. Yang me-review dan merge adalah user.
+- **Jangan pernah force push ke `main`** atau menulis ulang history-nya (`reset`, `rebase`, `commit --amend` pada commit yang sudah ada di `main`).
+
+## Memulai pekerjaan
+
+**Wajib, setiap mulai task baru:**
+
+1. **Pindah ke `main` dan tarik versi terbaru dari GitHub**, walaupun sedang berada di branch lain atau baru saja menyelesaikan task sebelumnya. PR lain bisa sudah di-merge sejak terakhir kali `main` ditarik.
+2. **Pastikan `main` lokal sama persis dengan `origin/main`**: `git rev-parse main origin/main` menghasilkan hash yang sama, dan `git status -sb` menunjukkan `## main...origin/main` tanpa `ahead`/`behind`. Kalau `git pull --ff-only` gagal atau `main` lokal punya commit yang tidak ada di `origin/main`, berhenti dan laporkan ke user. Jangan di-reset diam-diam.
+3. **Baru buat branch kerja dari `main` itu**, lalu konfirmasi dengan `git branch --show-current` bahwa branch aktif sudah branch baru (bukan `main`). Baru setelah terkonfirmasi, pekerjaan dimulai.
+
+Jangan membuat branch baru dari branch kerja lain atau dari `main` yang belum ditarik.
+
+```bash
+git switch main && git pull --ff-only     # 1. mulai dari main terbaru
+git fetch origin && git status -sb        # 2. harus "## main...origin/main" tanpa ahead/behind
+git rev-parse main origin/main            #    kedua hash harus sama
+git switch -c feat/gerak-sepeda           # 3. satu branch per topik
+git branch --show-current                 #    konfirmasi: harus feat/gerak-sepeda, bukan main
+```
+
+- Nama branch: `<tipe>/<deskripsi-singkat-kebab-case>`, dengan tipe sama seperti awalan commit: `feat/`, `fix/`, `tune/`, `content/`, `art/`, `docs/`, `test/`, `chore/`. Contoh: `feat/gerak-sepeda`, `tune/laju-stamina`, `art/tileset-perumahan`, `docs/git-workflow-rule`.
+- Satu branch = satu topik yang bisa di-review sekali duduk, idealnya satu tugas atau satu kelompok tugas di `docs/DEV_PHASES.md`. Pekerjaan besar (misalnya satu fase) dipecah jadi beberapa PR berurutan.
+- Kalau sudah terlanjur ada perubahan di `main` lokal yang belum di-commit, buat branch dulu (`git switch -c ...`); perubahannya ikut pindah.
+
+## Commit
+
+- Satu commit = satu perubahan yang jelas. Format pesan: `<tipe>: <ringkasan>` dengan tipe `feat`, `fix`, `tune` (angka balancing), `content` (headline, misi, rute), `art` (sprite, tileset, hasil `tools/loper_art`), `docs`, `test`, `chore`. Ringkasan dan isi boleh bahasa Indonesia.
+- Isi pesan (body) menjelaskan **kenapa**, bukan mengulang diff. Rujuk bagian GDD/DEV_PHASES kalau relevan.
+- Perubahan yang saling bergantung masuk commit yang sama: perubahan `scripts/config.gd` + `docs/BALANCING.md`, perubahan `tools/loper_art/*.py` + sprite hasil render ulangnya, perubahan skema di `docs/DATA_SCHEMA.md` + data yang memakainya.
+- Commit file `.uid` dan `.import` yang dibuat Godot (Godot 4.4+) setelah project Godot ada. Jangan commit `.godot/`, `build/`, `builds/`, APK/AAB, keystore (`*.keystore`, `*.jks`, `*.p12`), `export_credentials.cfg`, atau kredensial apa pun.
+- Sebelum commit: jalankan tes yang relevan kalau sudah ada (`tests/`), lalu periksa `git status` supaya tidak ada file nyasar.
+
+## Selesai pekerjaan
+
+- **Setiap pekerjaan yang selesai wajib di-commit dan di-push** ke branch kerja, tanpa menunggu diminta. Jangan tinggalkan perubahan yang belum di-commit atau commit yang belum di-push di akhir pekerjaan.
+- Cek akhir: `git status` bersih dan `git status -sb` tidak menunjukkan `ahead`.
+
+## Push & Pull Request
+
+Belum ada workflow GitHub Actions yang membuka PR otomatis, jadi PR dibuat manual dengan `gh`:
+
+```bash
+git push -u origin <branch>
+gh pr list --head <branch> --state open --json number --jq '.[0].number // empty'   # cek sudah ada PR?
+gh pr create --base main --title "<tipe>: <ringkasan>" --body-file <file>           # kalau belum ada
+gh pr edit <nomor> --title "<tipe>: <ringkasan>" --body-file <file>                 # kalau sudah ada
+```
+
+- **Judul PR memakai format Conventional Commits** (`feat:`, `fix:`, `tune:`, `content:`, `art:`, `docs:`, `test:`, `chore:`, `ci:`). Squash merge memakai judul PR sebagai commit di `main`. Perubahan yang merusak kompatibilitas data atau save ditandai `!` (misalnya `feat!: ...`).
+- Kalau CI sudah ada, PR hanya siap di-merge kalau CI hijau.
+
+Isi deskripsi PR:
+
+- **Ringkasan**: apa yang berubah dan kenapa (2–5 poin).
+- **Cara menguji**: perintah yang dijalankan beserta hasilnya, dan langkah manual kalau ada (misalnya dicoba di HP). Kontrol touch wajib dicoba di HP asli.
+- **Checklist**: tugas `DEV_PHASES.md` yang diselesaikan, dan hal yang belum atau tidak bisa diuji (katakan terus terang).
+- Keputusan desain baru yang ikut diambil, supaya user bisa menyetujui atau menolaknya di review.
+
+Setelah PR dibuka, commit lanjutan untuk perbaikan review di-push ke branch yang sama.
+
+## Merge & sinkronisasi
+
+- Metode merge: **squash merge**, supaya satu PR = satu commit di `main`. Branch dihapus setelah merge.
+- Kalau `main` bergerak saat PR masih terbuka: `git fetch && git rebase origin/main` di branch sendiri, lalu `git push --force-with-lease`. Force push **hanya** boleh ke branch kerja sendiri, dengan `--force-with-lease`, tidak pernah ke `main`.
+- Setelah PR di-merge: `git switch main && git pull --ff-only`, lalu hapus branch lokal (`git branch -d <branch>`; pakai `-D` kalau hasil squash tidak dikenali sebagai merged).
+
+## Rilis
+
+Belum ada otomasi rilis. Jangan mengubah nomor versi atau membuat tag/Release tanpa diminta user. Kalau nanti memakai release-please atau sejenisnya, tambahkan bagian rilis di sini.
