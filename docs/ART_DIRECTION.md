@@ -30,7 +30,7 @@ Yang membedakan pixel art profesional dari yang amatir hampir seluruhnya soal ko
 2. **Garis luar 1 px warna `#0E0A1C`**, termasuk garis dalam antarbagian yang saling menutup. Tanpa anti-aliasing. Mock jalan lama di kanvas kamera masih memakai `#2A1E17`; aset baru memakai `#0E0A1C` seperti sprite pemain dan Brainy Dungeon.
 3. **Tiga nada per material:** terang, dasar, gelap. Warna dasar mendominasi; nada gelap hanya di sisi yang membelakangi cahaya, nada terang hanya di bidang yang menghadap cahaya. Tanpa gradien.
 4. **Cahaya dari kiri atas** di semua sprite. Konsekuensinya, fasad sisi seberang (menghadap kanan bawah) cenderung gelap; pintu, jendela, dan kotak surat di fasad dibuat kontras supaya tetap terbaca (keputusan 2026-10-05).
-5. **Bayangan di tanah**: elips hitam dengan opasitas 28% (`#000000`, alpha 71), digeser 1 px ke kanan bawah, dipanggang di sprite. Bayangan lembut dari lighting dinamis ditambahkan di atasnya oleh engine.
+5. **Bayangan di tanah berwarna** (usulan, 2026-10-07): elips 28% (alpha 71), digeser 1 px ke kanan bawah, dipanggang di sprite dengan `#000000` sebagai **warna penanda**. Di game, shader mengganti piksel penanda itu dengan **warna bayangan** distrik dan waktu yang aktif (bagian 2.5), jadi bayangan tidak pernah hitam pekat. Bayangan lembut dari lighting dinamis memakai warna yang sama.
 6. **Detail di bawah 2 px dihilangkan.** Bentuk dibuat besar dan sederhana. Wajah pemain dari arah depan hanya sekitar 4 baris piksel, jadi ekspresi cukup dua mata dan mulut.
 7. **Objek gameplay lebih kontras dari latar.** Kotak surat, teras sasaran, rintangan, dan petunjuk misi memakai nada terang dan garis luar penuh; dinding, atap, dan tanah latar memakai kontras rendah.
 
@@ -60,6 +60,7 @@ Ukuran relatif (usulan, dicek di graybox Fase 1):
 ### 2.3 Cahaya, bayangan, dan efek modern
 
 - Cahaya utama dari kiri atas dipanggang di sprite (nada terang/dasar/gelap). Lighting dinamis engine hanya **menambah**: lampu jalan dan lampu sepeda di malam hari, jendela menyala, kilat, dan color grading per waktu.
+- **Bayangan berwarna** (usulan): bayangan tanah, bayangan jatuh dari objek tinggi, dan bayangan lembut engine memakai warna bayangan dari bagian 2.5, bukan hitam. Nada gelap material tidak berubah; yang berwarna hanya bayangan yang jatuh ke permukaan lain. Cara kerjanya: satu shader mengganti piksel `#000000` alpha 71 dengan warna bayangan aktif, jadi sprite yang sudah ada (termasuk pemain) tidak perlu dirender ulang.
 - Glow dan cahaya lampu memakai cincin piksel semi-transparan bertumpuk atau light 2D engine, bukan gradien di dalam sprite.
 - Partikel (debu roda, percikan genangan, kertas koran) digambar sebagai sprite piksel kecil dengan palet yang sama.
 - Depth of field dan bloom dipakai ringan dan tidak pernah membuat objek gameplay kabur. Apakah semuanya jalan di renderer Compatibility di HP kelas bawah harus dicek di Fase 0 (bagian 7).
@@ -71,7 +72,7 @@ Diambil dari sprite pemain produksi dan mock jalan. Dikunci setelah aset gelomba
 | Peran | Warna (terang · dasar · gelap) |
 |---|---|
 | Garis luar | `#0E0A1C` |
-| Bayangan tanah | `#000000` alpha 28% |
+| Bayangan tanah | penanda `#000000` alpha 28%, diganti warna bayangan aktif (bagian 2.5) |
 | Kertas, krem | `#FBF6E8` · `#F2E7C9` · `#C2AF86`; putih `#FFFFFF` |
 | Kulit terang | `#F2B98C` · `#E8A07A` · `#B47C5F` |
 | Kulit sawo | `#D89A6C` · `#B47C5F` · `#8A5A40` |
@@ -102,12 +103,14 @@ Gaya piksel sama, palet berbeda, supaya pemain langsung tahu sedang di mana (GDD
 | Jalan desa | Hijau sawah, tanah cokelat, langit luas |
 | Pinggir sungai | Biru-hijau air, kayu dermaga, rumah panggung |
 
-| Waktu | Color grading |
-|---|---|
-| Pagi | Hangat dan terang, bayangan panjang tipis |
-| Siang | Netral terang, kontras tinggi |
-| Sore | Jingga, bayangan panjang |
-| Malam | Biru gelap; lampu jalan, lampu sepeda, dan jendela menyala |
+| Waktu | Color grading | Warna bayangan (usulan) |
+|---|---|---|
+| Pagi | Hangat dan terang, bayangan panjang tipis | `#3E3A66` ungu kebiruan |
+| Siang | Netral terang, kontras tinggi | `#2E3550` dongker tua |
+| Sore | Jingga, bayangan panjang | `#5A2E3A` merah anggur |
+| Malam | Biru gelap; lampu jalan, lampu sepeda, dan jendela menyala | `#141A3A` biru malam |
+
+Warna bayangan sengaja lebih dingin dari cahaya hangat dari kiri atas, supaya bentuk tetap terbaca tanpa hitam pekat. Tiap distrik boleh menggesernya sedikit ke arah rasa paletnya (misalnya lebih hijau di jalan desa, lebih biru-hijau di pinggir sungai), selama tetap gelap. Dikunci bersama palet induk.
 
 ### 2.6 Lingkungan: cahaya, jalan, dan detail (usulan)
 
@@ -159,10 +162,14 @@ Jalan yang lebih lebar membuat lemparan ke sisi dekat butuh swipe panjang; perlu
 
 ### 3.1 Desain
 
+> **KEPUTUSAN (2026-10-07): celana panjang jogger dan tanpa keranjang depan.** Menggantikan celana pendek dan keranjang depan di versi pertama. Pilihan celana 3/4 tidak dipakai.
+
+- Pemain **anak muda** (sekitar 18–20 tahun), badan ramping.
 - Topi putih **dipakai terbalik** dengan pita dan pet dongker, sehingga pet terbaca di tengkuk dari semua arah.
-- Kemeja biru, celana dongker, sepatu gelap, kulit terang.
-- **Tanpa tas selempang.** Koran dibawa di **tas kiri dan kanan boncengan** (merah bata) dan **keranjang depan**.
-- Sepeda hijau, rangka dua nada, tanpa spakbor.
+- Kemeja biru lengan pendek, dibiarkan di luar celana; kulit terang.
+- **Celana panjang jogger** dongker dengan manset karet di pergelangan kaki; sneakers gelap bersol krem.
+- **Tanpa tas selempang dan tanpa keranjang depan.** Koran dibawa di **tas kiri dan kanan boncengan** (merah bata).
+- Sepeda hijau, rangka dua nada, tanpa spakbor, **lampu depan kecil** dan **bel kuning** di setang.
 - Spesifikasi dan riwayat keputusan: project claude.ai, dokumen `claude/sprite-loper-kemeja-agen.md`.
 
 ### 3.2 Set animasi produksi
@@ -201,6 +208,23 @@ Tujuh varian dari eksplorasi tetap ada di `tools/loper_art/loper.py` dan bisa di
 | Berhenti | Fase 4 (menangkap kucing) | Satu kaki turun ke tanah |
 | Tabrakan / oleng | Fase 3 | Tidak jatuh dramatis; kerusakan hanya menghambat |
 
+### 3.5 Gambar skala besar (full body)
+
+Dipakai di layar di luar rute: layar judul, halaman depan koran, lemari baju, hasil harian, gambar toko. File: `design/character/loper_agen/loper_agen_fullbody.png` (294×283 px, tampil ×3), dibuat dengan `tools/loper_art/fullbody/fullbody.py`.
+
+Gaya skala besar (usulan) sengaja lebih kaya dari sprite rute, karena dilihat dari dekat dan tidak bergerak di atas jalan:
+
+| | Sprite rute | Skala besar |
+|---|---|---|
+| Nada per warna | 3 | 5, bayangan bergeser ke ungu-biru |
+| Garis dalam | `#0E0A1C` | Warna gelap bahan itu sendiri; garis luar siluet `#1B1226` |
+| Bayangan tanah | Penanda hitam 28%, diwarnai shader | Dongker `#2E3550` 38% |
+| Detail | Bentuk besar, wajah 2 mata + mulut | Lipatan kain, jahitan, wajah tiga perempat, tulisan "KORAN" di koran |
+
+Pose: berdiri di depan sepeda, tangan kiri di setang. Tangan kanan menjulurkan koran hari ini ke samping wajah dan menjepit sisi kiri bawahnya: empat jari di depan koran dan jempol ditekuk di atasnya, lengan di belakang koran dan muncul dari tepi bawahnya. Wajah menoleh sekitar 30° ke kanan; garis rahang berakhir di telinga, dan telinga tanpa garis hitam.
+
+**Kepala terpisah (2026-10-07):** leher tidak digambar. Kepala diletakkan dekat badan, hanya dipisah celah 2 px dari kerah, dan digambar di layer sendiri, jadi bisa diekspor terpisah (`fullbody.py --layers`) untuk ganti ekspresi atau animasi kecil. Kerah kemeja memeluk pangkal leher: lebarnya sekitar satu setengah kali lebar leher dan tidak melebar ke bahu. Kancing teratas terbuka, jadi kulit dada hanya terlihat di bukaan V kecil tepat di bawah dagu; dua daun kerah terlipat turun di kiri-kanan bukaan dan berakhir runcing.
+
 ---
 
 ## 4. Pipeline Aset
@@ -232,6 +256,7 @@ Keuntungannya: arah, pose, dan varian baju selalu konsisten, dan menambah animas
 - **PNG 1×** (ukuran piksel asli), satu sheet per objek atau animasi, latar transparan. Pembesaran dilakukan Godot.
 - Filter tekstur **Nearest**, tanpa mipmap, mode **Lossless**.
 - Sheet animasi didampingi JSON (ukuran sel, titik pijak, region frame) atau langsung SpriteFrames `.tres`.
+- Bayangan tanah dipanggang dengan warna penanda `#000000` alpha 71 (bagian 2.1 no. 5). Jangan memakai warna itu untuk hal lain di sprite.
 
 ---
 
@@ -254,7 +279,8 @@ Kolom **M2** = dibutuhkan untuk satu hari penuh di perumahan (prototype 3–4). 
 
 | Aset | M2 | M3 | Catatan |
 |---|---|---|---|
-| Kayuh 3 kecepatan × 5 arah | ✅ | ✅ | Selesai 2026-10-07 |
+| Kayuh 3 kecepatan × 5 arah | ✅ | ✅ | Selesai 2026-10-07, diperbarui ke celana jogger tanpa keranjang |
+| Gambar full body skala besar | ✅ | ✅ | Selesai 2026-10-07 (bagian 3.5) |
 | Lempar sisi seberang / dekat | ✅ | ✅ | Per arah normal dulu, arah lain menyusul |
 | Meluncur, rem | ✅ | ✅ | |
 | Berhenti (kaki turun) | ✅ | ✅ | Untuk menangkap kucing |
@@ -344,6 +370,27 @@ Spesifikasi di `design/DESIGN_SPEC.md`.
 | Percikan genangan | ⬜ | ✅ |
 | Hujan | ⬜ | ✅ |
 
+### 6.10 Detail hidup di pinggir jalan (usulan)
+
+Gerakan kecil yang membuat lingkungan terasa ditinggali (GDD 9.4). Semuanya dekorasi: tidak masuk jalur, tidak bisa ditabrak, dan tidak memberi skor.
+
+| Aset | M2 | M3 | Catatan |
+|---|---|---|---|
+| Jemuran bergoyang | ⬜ | ✅ | 2–3 frame, di samping rumah. Jemuran yang melintang jalan adalah rintangan perkampungan, bukan dekorasi |
+| Ayam mematuk, lari kecil saat sepeda lewat | ⬜ | ✅ | Di halaman, selalu menjauh dari jalan |
+| Kucing tidur di teras atau pagar | ⬜ | ✅ | Warna dan pose berbeda dari kucing misi |
+| Asap warung atau gerobak | ⬜ | ✅ | Loop 4–6 frame dari piksel semi-transparan bertumpuk; warung di ujung blok |
+| Layangan di langit | ⬜ | ✅ | Bergerak pelan, hanya di latar |
+| Daun jatuh | ⬜ | ⬜ | Partikel, setelah M3 |
+
+Aturan (usulan):
+
+- Kontras di bawah objek gameplay (bagian 2.1 no. 7), jadi tidak pernah lebih menonjol dari kotak surat, rintangan, atau petunjuk.
+- Tidak memakai kilau, gerakan ekor, atau warna penanda radar dan misi (kuning, hijau, oranye; DESIGN_SPEC 1.1), supaya tidak tertukar dengan petunjuk misi (GDD 10.3).
+- Hewan latar tidak pernah bergerak ke jalur.
+- Animasi 2–6 frame dengan jeda acak antar loop, supaya tidak berdenyut bersamaan.
+- Maksimal sekitar 4 detail bergerak dalam satu layar, untuk menjaga fill rate di HP murah (bagian 7).
+
 ---
 
 ## 7. Spesifikasi Teknis
@@ -364,7 +411,7 @@ Spesifikasi di `design/DESIGN_SPEC.md`.
 - **Gabungkan ke atlas per konteks** (pemain, distrik, UI) untuk menurunkan draw call.
 - **Fill rate** adalah leher botol utama di HP murah: hindari menumpuk banyak sprite transparan besar dan efek layar penuh.
 - Sprite piksel diimpor **Lossless**, filter **Nearest**, tanpa mipmap.
-- Renderer **Compatibility** (usulan) untuk HP kelas bawah. Cek di Fase 0 apakah light 2D, glow, dan partikel yang dibutuhkan jalan di renderer ini.
+- Renderer **Compatibility** (usulan) untuk HP kelas bawah. Cek di Fase 0 apakah light 2D, glow, partikel, dan shader warna bayangan yang dibutuhkan jalan di renderer ini.
 - **Anggaran ukuran APK: target di bawah 100 MB.**
 
 ### Penamaan file
@@ -417,7 +464,7 @@ Ikuti urutan kebutuhan, bukan urutan daftar:
 
 **Tahap 2 — Satu hari di perumahan (Fase 3–4).** Rumah modular, kotak surat, dua rintangan, kucing, HUD, layar koran dan hasil.
 
-**Tahap 3 — Hidup dan modern (Fase 6–7).** Lighting dan waktu, VFX, warga, properti tambahan, bengkel.
+**Tahap 3 — Hidup dan modern (Fase 6–7).** Lighting dan waktu dengan bayangan berwarna, VFX, warga, detail hidup pinggir jalan (6.10), properti tambahan, bengkel.
 
 **Tahap 4 — Distrik berikutnya.** Palet dan modul baru per distrik.
 
@@ -450,7 +497,8 @@ Buat `assets/LICENSES.md` sejak aset pihak ketiga pertama masuk: nama file, sumb
 | Misi | ~6 | ~40 |
 | HUD, ikon, layar | ~30 | ~45 |
 | VFX | ~10 | ~20 |
-| **Total** | **~117** | **~450** |
+| Detail hidup pinggir jalan | ~5 | ~30 |
+| **Total** | **~122** | **~480** |
 
 Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dibangun ke rencana: pemain dirender dari model, rumah modular, variasi lewat palette swap, dan distrik baru hanya dibuat setelah perumahan terbukti seru.
 
@@ -461,16 +509,20 @@ Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dib
 - **Skala piksel (×3 atau ×4) dan ukuran ubin (64×32)**: dikunci setelah graybox Fase 1.
 - **Stretch mode dan resolusi dasar** (bagian 7): dikunci di Fase 0.
 - **Palet induk** (bagian 2.4): dikunci setelah aset gelombang 1.
+- **Warna bayangan per waktu dan distrik** (bagian 2.5): dikunci bersama palet induk, setelah shader-nya dicek di Fase 0.
 - **Cara menampilkan rumah di sisi dekat**, yang hanya terlihat belakangnya.
 - **Font HUD**: mock memakai Lexend + Lilita One (sama dengan Brainy Dungeon). Kunci atau pilih identitas sendiri.
 - **Apakah sprite pemain dipoles manual** sebelum rilis, terutama wajah dari arah depan.
+- **Gaya skala besar** (bagian 3.5): lima nada dan garis dalam berwarna dikunci atau disamakan dengan sprite rute.
 
 ---
 
 ## Changelog Keputusan
 
 - **2026-10-07** — **Usulan lingkungan** (bagian 2.6): bayangan berwarna per waktu, pemain setengah color grading, penampang jalan per distrik (lajur sepeda di perumahan, ruko 2 lajur, gang 2 ubin, talud sungai miring), palet enam distrik, detail pinggir jalan dan antena TV, tiga bentuk rumah dan tiga jenis pohon perumahan, model sedan/angkot/bus kecil. Mock di `design/environment/`, renderer `tools/env_art`. Belum dikunci.
-
+- **2026-10-07** — **Gambar full body: kepala terpisah tanpa leher, koran dijepit di samping wajah** (bagian 3.5). Kepala melayang 2 px di atas kerah; ukuran gambar menjadi 294×283 px. Sprite rute tidak berubah.
+- **2026-10-07** — **Celana panjang jogger dan tanpa keranjang depan** (bagian 3.1). Sprite produksi dirender ulang dengan ukuran sel dan titik pijak yang sama (46×58, 23,46), jadi kode dan SpriteFrames tidak berubah. Ditambah lampu depan dan bel. Gambar full body skala besar dibuat dengan gaya lima nada (bagian 3.5); pilihan celana 3/4 tidak dipakai.
+- **2026-10-07** — **Bayangan berwarna dan detail hidup pinggir jalan** dimasukkan sebagai usulan. Bayangan tanah tidak lagi hitam pekat: warnanya mengikuti distrik dan waktu lewat shader yang mengganti warna penanda (bagian 2.1 no. 5, 2.3, 2.5). Jemuran, ayam, kucing, asap warung, dan layangan masuk daftar aset sebagai dekorasi (bagian 6.10).
 - **2026-10-07** — **Sprite produksi Kemeja Agen** (bagian 3.2): 15 animasi kayuh (3 kecepatan × 5 arah, 4 frame maju), sel 46×58, titik pijak (23, 46), SpriteFrames dicek memuat di Godot 4.3. Saat ngebut hanya sepeda yang bergoyang ±5°; badan pengendara stabil supaya kepala tidak bergetar di 12 fps.
 - **2026-10-07** — **Audit sprite sebelum produksi**: roda depan tidak lagi terpotong saat setang belok (seluruh rakitan depan berputar bersama), condong dan setang saat belok dikecilkan, wajah dari depan memakai dua mata dan mulut, topi diberi pita dan pet dongker supaya terbaca terbalik, bahu dilebarkan supaya lengan terlihat dari belakang, rangka sepeda dua nada dan lebih tipis, pose ngebut dibuat lebih tegak dengan sadel terlihat.
 - **2026-10-07** — **Kemeja Agen jadi base model** (bagian 3), tanpa tas selempang. Lima arah sesuai stick dan tiga pose kecepatan disetujui. Varian baju lain disimpan untuk item (bagian 3.3).
