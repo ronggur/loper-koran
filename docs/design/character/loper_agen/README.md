@@ -2,6 +2,8 @@
 
 Pixel art isometrik 2:1. Sepeda melaju ke kanan atas layar, kamera dari kanan belakang, cahaya dari kiri atas.
 
+Desain sejak 2026-10-07: celana panjang jogger, tanpa keranjang depan, dengan lampu depan dan bel. Ukuran sel dan titik pijak sama dengan versi sebelumnya.
+
 ## Isi
 - `loper_agen.png`: sprite sheet 1×, latar transparan, bayangan sudah termasuk. 4 kolom × 15 baris, sel 46×58 px.
 - `loper_agen_frames.tres`: SpriteFrames Godot 4 dengan 15 animasi, masing-masing 4 frame dan loop.
@@ -9,6 +11,9 @@ Pixel art isometrik 2:1. Sepeda melaju ke kanan atas layar, kamera dari kanan be
 - `loper_sprite.gd`: memilih animasi dari input stick (`speed_level`, `steer`, `pedal_rate`).
 - `loper_agen.json`: metadata (sel, titik pijak, region tiap frame).
 - `preview/loper_agen_x4.png`: sprite sheet ×4 untuk dilihat.
+- `konversi/`: gambar AI yang diubah jadi pixel art, eksplorasi (lihat README di folder itu).
+- `jatuh/`: animasi jatuh terjerembab, **usulan** (belum dipakai; lihat README di folder itu).
+- `loper_agen_fullbody.png`: gambar full body skala besar, 294×283 px, kepala terpisah tanpa leher, untuk layar di luar rute (lihat `docs/ART_DIRECTION.md` 3.5). Pratinjau ×3 di `preview/loper_agen_fullbody_x3.png`.
 
 ## Pasang di Godot
 Salin folder ini ke `res://assets/sprites/loper/`. Kalau foldernya berbeda, ubah path di `.tres` dan `.tscn`.
@@ -41,5 +46,5 @@ santai: normal, serong_kanan, kanan, serong_kiri, kiri (baris 0–4), lalu cepat
 Kolom 0–3 adalah frame kayuh, berputar maju.
 
 ## Sumber dan render ulang
-Sheet, JSON, `.tres`, dan isi `preview/` dibuat oleh `tools/loper_art/produce.py` (lihat `docs/ART_DIRECTION.md` bagian 4.1). `loper_agen.tscn` dan `loper_sprite.gd` ditulis tangan dan tidak ikut dirender ulang.
+Sheet, JSON, `.tres`, dan isi `preview/` dibuat oleh `tools/loper_art/produce.py` (lihat `docs/ART_DIRECTION.md` bagian 4.1). `loper_agen.tscn` dan `loper_sprite.gd` ditulis tangan dan tidak ikut dirender ulang. Gambar full body dibuat oleh `tools/loper_art/fullbody/fullbody.py`.
 Saat Fase 0, salin folder ini (tanpa `preview/`) ke `assets/sprites/loper/`. Folder di `docs/` adalah arsip desain yang diabaikan Godot.

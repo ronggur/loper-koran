@@ -1,0 +1,81 @@
+{
+ "sprite": "loper_agen_jatuh.png",
+ "cell": [
+  114,
+  68
+ ],
+ "columns": 5,
+ "rows": 1,
+ "ground_anchor": [
+  57,
+  51
+ ],
+ "godot_offset": [
+  0,
+  -17.0
+ ],
+ "status": "usulan",
+ "note": "Titik pijak = posisi sepeda saat menabrak. Offset sama dengan sheet kayuh, jadi animasi ini bisa masuk SpriteFrames yang sama.",
+ "animations": [
+  {
+   "name": "jatuh_normal",
+   "frames": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "fps": 10,
+   "loop": false,
+   "regions": [
+    [
+     0,
+     0,
+     114,
+     68
+    ],
+    [
+     114,
+     0,
+     114,
+     68
+    ],
+    [
+     228,
+     0,
+     114,
+     68
+    ],
+    [
+     342,
+     0,
+     114,
+     68
+    ]
+   ]
+  },
+  {
+   "name": "terjerembab_normal",
+   "frames": [
+    3,
+    4
+   ],
+   "fps": 3,
+   "loop": true,
+   "regions": [
+    [
+     342,
+     0,
+     114,
+     68
+    ],
+    [
+     456,
+     0,
+     114,
+     68
+    ]
+   ]
+  }
+ ]
+}

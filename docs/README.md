@@ -61,7 +61,7 @@ Path seperti `scripts/config.gd` atau `tools/loper_art/produce.py` di dokumen la
 - **Sepeda**: komponen bisa aus atau rusak dan hanya diperbaiki di bengkel setelah mengantar (GDD 12).
 - **Ekonomi**: satu mata uang (koin), tanpa gems. Pemasukan dari iklan hadiah opsional, tanpa iklan paksa (GDD 14).
 - **Gaya visual**: pixel art isometrik dengan acuan gaya Brainy Dungeon, dimodernkan lewat lighting, partikel, dan color grading (ART_DIRECTION 2).
-- **Karakter pemain**: **Kemeja Agen** tanpa tas selempang, 5 arah × 3 kecepatan; varian baju lain disimpan untuk item (ART_DIRECTION 3).
+- **Karakter pemain**: **Kemeja Agen**, anak muda bercelana panjang jogger, tanpa tas selempang dan tanpa keranjang depan, 5 arah × 3 kecepatan; varian baju lain disimpan untuk item (ART_DIRECTION 3).
 - **Sumber utama desain**: `docs/GDD.md` di repo ini; dokumen Claude Docs jadi arsip (2026-10-07).
 
 Keputusan yang masih terbuka ada di `ROADMAP.md` bagian 5.
