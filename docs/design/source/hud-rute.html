@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>UI in-game</title>
+
+</head>
+<body>
+<div id="root">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600&family=Lilita+One&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+
+<div style="width: 1728px; height: 1420px; box-sizing: border-box; padding: 64px; background: #1C130F; color: #FFF3E3; font-family: 'Lexend', sans-serif; display: flex; flex-direction: column; gap: 40px">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div style="font-size: 18px; font-weight: 600; letter-spacing: 0.12em; color: #FFB22E">UI IN-GAME · LANDSCAPE</div>
+<h1 style="margin: 0; font-family: 'Lilita One', sans-serif; font-weight: 400; font-size: 64px; line-height: 1.05; color: #FFF3E3">HUD saat mengantar</h1>
+<div style="font-size: 22px; line-height: 1.45; color: #CDB9A3; max-width: 1240px">Informasi diletakkan di tepi layar supaya tengah, tempat jalan dan rumah, tetap bersih. Bagian bawah dekat jempol hanya berisi hal yang dilirik sekilas.</div>
+</div>
+
+<div style="position: relative; width: 1600px; height: 720px; flex: none; outline: 4px solid #0E0A1C; border-radius: 4px; overflow: hidden">
+<img src="scene.png" alt="Contoh tampilan isometrik landscape dengan pelempar koran di jalan" style="position: absolute; left: 0; top: 0; width: 1600px; height: 720px; display: block; image-rendering: pixelated">
+
+<button type="button" aria-label="Jeda" style="position: absolute; left: 52px; top: 16px; width: 48px; height: 48px; padding: 0; box-sizing: border-box; background: rgba(14,10,28,0.84); border: 3px solid #0E0A1C; box-shadow: inset 0 0 0 2px #36281E; border-radius: 8px; border-color: #FFF3E3; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: default">
+<span style="display: block; width: 6px; height: 20px; background: #FFF3E3; border-radius: 2px"></span>
+<span style="display: block; width: 6px; height: 20px; background: #FFF3E3; border-radius: 2px"></span>
+</button>
+
+<div style="position: absolute; left: 52px; top: 80px; width: 290px; box-sizing: border-box; background: rgba(14,10,28,0.84); border: 3px solid #0E0A1C; box-shadow: inset 0 0 0 2px #36281E; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 12px">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAkElEQVR4nKWSuxHEIAxEF40jB1TgIaAQ93QdqAP35EIcMFRAQGguuZsBWZj7vFDa1WoEwL/YeSnfaOhTs+w1xsBeNdt5KYF9U5ukKLCHYxRZk5jexB6OD6QcDY2lOhej40NNGRq1lbUaAUDK0ciptG6gdbskpxwNoFz1zbk/eq12VS21lwa8nqPm7vfUxp95AoZCNOsfvySOAAAAAElFTkSuQmCC" alt="" style="width: 36px; height: 36px; image-rendering: pixelated; flex: none">
+<div style="display: flex; flex-direction: column; gap: 1px; min-width: 0">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: 0.1em; color: #FFB22E">MISI SAMPINGAN</div>
+<div style="font-size: 16px; font-weight: 600">Cari kucing Mimi</div>
+<div style="font-size: 13px; color: #CDB9A3">dari berita hal. 2 · 0/1</div>
+</div>
+</div>
+
+<div style="position: absolute; left: 540px; top: 16px; width: 520px; box-sizing: border-box; background: rgba(14,10,28,0.84); border: 3px solid #0E0A1C; box-shadow: inset 0 0 0 2px #36281E; border-radius: 8px; padding: 10px 18px 12px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; letter-spacing: 0.1em">
+<div>HARI 3 · MELATI</div>
+<div style="color: #FFB22E">3 / 9 TERKIRIM</div>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between"><div style="width: 24px; height: 24px; box-sizing: border-box; border: 3px solid #0E0A1C; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; line-height: 1; background: #56C46E; color: #0E0A1C">✓</div><div style="width: 24px; height: 24px; box-sizing: border-box; border: 3px solid #0E0A1C; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; line-height: 1; background: #56C46E; color: #0E0A1C">✓</div><div style="width: 24px; height: 24px; box-sizing: border-box; border: 3px solid #0E0A1C; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; line-height: 1; background: #D94F3D; color: #FFF3E3">×</div><div style="width: 24px; height: 24px; box-sizing: border-box; border: 3px solid #0E0A1C; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; line-height: 1; background: #56C46E; color: #0E0A1C">✓</div><div style="width: 24px; height: 24px; box-sizing: border-box; border: 3px solid #0E0A1C; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; line-height: 1; background: #FFB22E; color: #0E0A1C">▶</div><div style="width: 24px; height: 24px; box-sizing: border-box; border: 3px solid #0E0A1C; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; line-height: 1; background: #36281E; border-color: #CDB9A3; border-style: dashed"></div><div style="width: 24px; height: 24px; box-sizing: border-box; border: 3px solid #0E0A1C; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; line-height: 1; background: #36281E; border-color: #CDB9A3; border-style: dashed"></div><div style="width: 24px; height: 24px; box-sizing: border-box; border: 3px solid #0E0A1C; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; line-height: 1; background: #36281E; border-color: #CDB9A3; border-style: dashed"></div><div style="width: 24px; height: 24px; box-sizing: border-box; border: 3px solid #0E0A1C; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; line-height: 1; background: #36281E; border-color: #CDB9A3; border-style: dashed"></div></div>
+</div>
+
+<div style="position: absolute; right: 56px; top: 16px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px">
+<div style="display: flex; gap: 10px">
+<div style="background: rgba(14,10,28,0.84); border: 3px solid #0E0A1C; box-shadow: inset 0 0 0 2px #36281E; border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 600"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAhklEQVR4nGNgIBMwYhPk45L5j8z/9O0JhjoWbBo+rhBCUcQfwfAf3QBGZE1wDXoxqMZfWgI14B1cMwsDOtCLgSvEJ8aEYhuSAv6Idwz8Ee8QNurFMHxcIQT3DhOGjUQC+mvEDFU8gYM/VKEBgSGGy0aYrQwM2BIAJHSxJgBsBsAAtiRHNgAAekQ+B2ENsQ8AAAAASUVORK5CYII=" alt="Koin" style="width: 28px; height: 28px; image-rendering: pixelated">1.250</div>
+<div style="background: rgba(14,10,28,0.84); border: 3px solid #0E0A1C; box-shadow: inset 0 0 0 2px #36281E; border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 600"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAjklEQVR4nLWSMQ6AIAxFf40TAyTMnMHzMHg8B2eP4hmYSWRgrZMJGlt1sBv8vv62KSCENYElDQA6TdTgW9CawNvstZq64zZ70bW/E65u15xSE5HY2jAC63T6cjGj1EQAQG1Vba4WApoZS03kYn4FncCvIYIuZhwdaNuFNYF5GdiawG3S8VZB7VKeTvD/2AGIBzqIw9e57gAAAABJRU5ErkJggg==" alt="Reputasi" style="width: 28px; height: 28px; image-rendering: pixelated">3,5</div>
+</div>
+<div style="background: rgba(14,10,28,0.84); border: 3px solid #0E0A1C; box-shadow: inset 0 0 0 2px #36281E; border-radius: 8px; padding: 8px 14px; display: flex; align-items: center; gap: 16px">
+<div style="display:flex;align-items:center;gap:8px"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAlklEQVR4nGNgIBMwYhPk45L5j8z/9O0JhjoWbBp0tDVQFF25yvAf3QBGZE3oGtDBlas34JqZ8Cm6cvUGTkOYsNl25eoNht37tzPs3r8dRbOOtgbcOxg2wjTBALpmFBvJARgadbQ1GFwdPeF8V0dPjFBmYMATqjDnoYvBQhUlHtFtxgdQUgTuBACxHWsCwGYADGBLcmQDACs4RYgte2MkAAAAAElFTkSuQmCC" alt="Ban" style="width:28px;height:28px;image-rendering:pixelated"><div style="display:flex;gap:3px"><span style="display:block;width:9px;height:9px;background:#FFF3E3;border:2px solid #0E0A1C"></span><span style="display:block;width:9px;height:9px;background:#FFF3E3;border:2px solid #0E0A1C"></span><span style="display:block;width:9px;height:9px;background:#FFF3E3;border:2px solid #0E0A1C"></span></div></div>
+<div style="display:flex;align-items:center;gap:8px"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAg0lEQVR4nGNgGLSAj0vmPx+XzH8Yn4VYTaddFRkYGBgYTHcz/P/07QkjXOPKldv+49KYmpiGIcaELqCgIIuhaPb8WQymu+8zmO6+z/Dp2xNGBgYGBkZkBSdPXobbam6uy4huAE4bkRUjG0JQIymaMTQSqxmrRmI049RIrM14AVmacAEAqHUxzxH+g90AAAAASUVORK5CYII=" alt="Rem" style="width:28px;height:28px;image-rendering:pixelated"><div style="display:flex;gap:3px"><span style="display:block;width:9px;height:9px;background:#FFF3E3;border:2px solid #0E0A1C"></span><span style="display:block;width:9px;height:9px;background:#FFF3E3;border:2px solid #0E0A1C"></span><span style="display:block;width:9px;height:9px;background:#FFF3E3;border:2px solid #0E0A1C"></span></div></div>
+<div style="display:flex;align-items:center;gap:8px"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAUklEQVR4nGNgoDdghDH4uGT+I0t8+vaEEVM5mkY+Lpn/s+fPQpFITUzDq5mJLHcy4HEqOkC3HatTiHE65U7FZitZGtENQXc69Z2KzVZyLaEOAAD6ARt73zArvgAAAABJRU5ErkJggg==" alt="Rantai" style="width:28px;height:28px;image-rendering:pixelated"><div style="display:flex;gap:3px"><span style="display:block;width:9px;height:9px;background:#FF8A3D;border:2px solid #0E0A1C"></span><span style="display:block;width:9px;height:9px;background:#36281E;border:2px solid #0E0A1C"></span><span style="display:block;width:9px;height:9px;background:#36281E;border:2px solid #0E0A1C"></span></div><span style="color:#FF8A3D;font-weight:700">!</span></div>
+</div>
+</div>
+
+<div style="position: absolute; left: 636px; top: 268px; background: rgba(14,10,28,0.84); border: 3px solid #0E0A1C; box-shadow: inset 0 0 0 2px #36281E; border-radius: 8px; padding: 6px 12px; display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 600; white-space: nowrap"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAhklEQVR4nGNgIBMwYhPk45L5j8z/9O0JhjoWbBo+rhBCUcQfwfAf3QBGZE1wDXoxqMZfWgI14B1cMwsDOtCLgSvEJ8aEYhuSAv6Idwz8Ee8QNurFMHxcIQT3DhOGjUQC+mvEDFU8gYM/VKEBgSGGy0aYrQwM2BIAJHSxJgBsBsAAtiRHNgAAekQ+B2ENsQ8AAAAASUVORK5CYII=" alt="" style="width: 24px; height: 24px; image-rendering: pixelated">+25<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAfklEQVR4nGNgIBMwInP4uGT+w9ifvj1hxCfOgix52lURbojpbob/n749YcQlzohNE0LRfQZc4kz4/IFNEwzg1YgPUKbx07cnjKa77xOlwXT3fYZP354wwm0kRjNME4ZT8WlG1oShEZdmdE14AR+XzP+b/rb/kVMN0YAsTYQAAH6aSZafLjV0AAAAAElFTkSuQmCC" alt="" style="width: 24px; height: 24px; image-rendering: pixelated"><span style="font-size: 13px; font-weight: 500; color: #CDB9A3">pelanggan puas</span></div>
+
+<div style="position: absolute; left: 420px; bottom: 16px; width: 340px; box-sizing: border-box; background: rgba(14,10,28,0.84); border: 3px solid #0E0A1C; box-shadow: inset 0 0 0 2px #36281E; border-radius: 8px; padding: 10px 16px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; letter-spacing: 0.1em"><div style="width: 100px">KECEPATAN</div><div style="position: relative; flex: 1; height: 14px; background: #36281E; border: 2px solid #0E0A1C"><div style="width: 58%; height: 100%; background: #FFF3E3"></div><div style="position: absolute; left: 80%; top: -3px; width: 2px; height: 16px; background: #FF8A3D"></div></div></div>
+<div style="display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; letter-spacing: 0.1em"><div style="width: 100px">STAMINA</div><div style="flex: 1; height: 14px; background: #36281E; border: 2px solid #0E0A1C"><div style="width: 62%; height: 100%; background: #FFB22E"></div></div></div>
+</div>
+
+<div style="position: absolute; left: 800px; bottom: 16px; background: rgba(14,10,28,0.84); border: 3px solid #0E0A1C; box-shadow: inset 0 0 0 2px #36281E; border-radius: 8px; padding: 10px 16px; display: flex; align-items: center; gap: 12px">
+<div style="font-size: 13px; font-weight: 600; letter-spacing: 0.1em">KORAN</div>
+<div style="display: flex; gap: 4px"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAXUlEQVR4nGNgoDdgZGBgYODjkvlPiqZP354wssA4H18eJ0oTv7glAwMDAwMLsuD05XtRFGVGOmOIwQALVlE0zcigoqCGOI24bIQHDil+RAkcfKYPDhvhGmHxM3gBAEQbItQofa97AAAAAElFTkSuQmCC" alt="" style="width:24px;height:24px;image-rendering:pixelated;"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAXUlEQVR4nGNgoDdgZGBgYODjkvlPiqZP354wssA4H18eJ0oTv7glAwMDAwMLsuD05XtRFGVGOmOIwQALVlE0zcigoqCGOI24bIQHDil+RAkcfKYPDhvhGmHxM3gBAEQbItQofa97AAAAAElFTkSuQmCC" alt="" style="width:24px;height:24px;image-rendering:pixelated;"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAXUlEQVR4nGNgoDdgZGBgYODjkvlPiqZP354wssA4H18eJ0oTv7glAwMDAwMLsuD05XtRFGVGOmOIwQALVlE0zcigoqCGOI24bIQHDil+RAkcfKYPDhvhGmHxM3gBAEQbItQofa97AAAAAElFTkSuQmCC" alt="" style="width:24px;height:24px;image-rendering:pixelated;"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAXUlEQVR4nGNgoDdgZGBgYODjkvlPiqZP354wssA4H18eJ0oTv7glAwMDAwMLsuD05XtRFGVGOmOIwQALVlE0zcigoqCGOI24bIQHDil+RAkcfKYPDhvhGmHxM3gBAEQbItQofa97AAAAAElFTkSuQmCC" alt="" style="width:24px;height:24px;image-rendering:pixelated;"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAXUlEQVR4nGNgoDdgZGBgYODjkvlPiqZP354wssA4H18eJ0oTv7glAwMDAwMLsuD05XtRFGVGOmOIwQALVlE0zcigoqCGOI24bIQHDil+RAkcfKYPDhvhGmHxM3gBAEQbItQofa97AAAAAElFTkSuQmCC" alt="" style="width:24px;height:24px;image-rendering:pixelated;"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAXUlEQVR4nGNgoDdgZGBgYODjkvlPiqZP354wssA4H18eJ0oTv7glAwMDAwMLsuD05XtRFGVGOmOIwQALVlE0zcigoqCGOI24bIQHDil+RAkcfKYPDhvhGmHxM3gBAEQbItQofa97AAAAAElFTkSuQmCC" alt="" style="width:24px;height:24px;image-rendering:pixelated;opacity:0.28"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAXUlEQVR4nGNgoDdgZGBgYODjkvlPiqZP354wssA4H18eJ0oTv7glAwMDAwMLsuD05XtRFGVGOmOIwQALVlE0zcigoqCGOI24bIQHDil+RAkcfKYPDhvhGmHxM3gBAEQbItQofa97AAAAAElFTkSuQmCC" alt="" style="width:24px;height:24px;image-rendering:pixelated;opacity:0.28"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAXUlEQVR4nGNgoDdgZGBgYODjkvlPiqZP354wssA4H18eJ0oTv7glAwMDAwMLsuD05XtRFGVGOmOIwQALVlE0zcigoqCGOI24bIQHDil+RAkcfKYPDhvhGmHxM3gBAEQbItQofa97AAAAAElFTkSuQmCC" alt="" style="width:24px;height:24px;image-rendering:pixelated;opacity:0.28"></div>
+<div style="font-size: 18px; font-weight: 600">5</div>
+</div>
+
+<svg width="1600" height="720" viewBox="0 0 1600 720" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<circle cx="200" cy="556" r="70" fill="#FFF3E3" fill-opacity="0.14" stroke="#FFF3E3" stroke-opacity="0.7" stroke-width="4"/>
+<polygon points="200,492 190,507 210,507" fill="#FFF3E3" fill-opacity="0.7" stroke="#0E0A1C" stroke-width="2" stroke-linejoin="round"/>
+<polygon points="200,620 190,605 210,605" fill="#FFF3E3" fill-opacity="0.7" stroke="#0E0A1C" stroke-width="2" stroke-linejoin="round"/>
+<polygon points="136,556 151,546 151,566" fill="#FFF3E3" fill-opacity="0.7" stroke="#0E0A1C" stroke-width="2" stroke-linejoin="round"/>
+<polygon points="264,556 249,546 249,566" fill="#FFF3E3" fill-opacity="0.7" stroke="#0E0A1C" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="200" cy="528" r="30" fill="#FFB22E" stroke="#0E0A1C" stroke-width="4"/>
+</svg>
+</div>
+
+<div style="display: flex; gap: 24px; align-items: stretch">
+<div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 14px; background: #2A1E17; border-radius: 12px; padding: 28px">
+<div style="font-family: 'Lilita One', sans-serif; font-size: 28px; color: #FFB22E">Atas layar</div>
+<div style="font-size: 17px; line-height: 1.5">Kiri: tombol jeda dan misi sampingan yang sedang aktif.</div>
+<div style="font-size: 17px; line-height: 1.5">Tengah: progres rute. Satu kotak per pelanggan: ✓ terkirim, × meleset, ▶ berikutnya, putus-putus belum.</div>
+<div style="font-size: 17px; line-height: 1.5">Kanan: koin dan reputasi, lalu kondisi sepeda.</div>
+</div>
+<div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 14px; background: #2A1E17; border-radius: 12px; padding: 28px">
+<div style="font-family: 'Lilita One', sans-serif; font-size: 28px; color: #FFB22E">Radar di tepi</div>
+<div style="font-size: 17px; line-height: 1.5">Strip kiri menandai sisi seberang, strip kanan sisi dekat, sama seperti arah stick dan swipe.</div>
+<div style="font-size: 17px; line-height: 1.5">Atas strip jauh di depan, bawah sudah dekat dengan sepeda.</div>
+<div style="font-size: 17px; line-height: 1.5">Titik kuning pelanggan, hijau tip, oranye misi, abu-abu bukan pelanggan.</div>
+</div>
+<div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 14px; background: #2A1E17; border-radius: 12px; padding: 28px">
+<div style="font-family: 'Lilita One', sans-serif; font-size: 28px; color: #FFB22E">Bawah layar</div>
+<div style="font-size: 17px; line-height: 1.5">Kecepatan dan stamina ada di sebelah stick supaya mudah dilirik. Garis oranye di bar kecepatan menandai batas ngebut.</div>
+<div style="font-size: 17px; line-height: 1.5">Sisa koran di tengah bawah, tiap lemparan mengurangi satu.</div>
+<div style="font-size: 17px; line-height: 1.5">Stick muncul di tempat jempol menyentuh, jadi tidak ada tombol permanen.</div>
+</div>
+<div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 14px; background: #2A1E17; border-radius: 12px; padding: 28px">
+<div style="font-family: 'Lilita One', sans-serif; font-size: 28px; color: #CDB9A3">Kondisi sepeda</div>
+<div style="font-size: 17px; line-height: 1.5">Tiga komponen dengan tiga kotak: ban, rem, rantai. Kotak berkurang saat aus atau kena kejadian di rute.</div>
+<div style="font-size: 17px; line-height: 1.5">Tanda ! oranye berarti perlu diperbaiki di bengkel setelah pengantaran. Efeknya hanya menghambat, tidak menghentikan permainan.</div>
+</div>
+</div>
+</div>
+</div>
+
+</body>
+</html>
