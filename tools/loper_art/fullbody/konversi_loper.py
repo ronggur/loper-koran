@@ -3,7 +3,9 @@
 Menjalankan konversi.py lalu:
 1. celana diwarnai ulang ke dongker (ramp yang sama dengan jogger di gambar full body resmi),
 2. mata menatap ke depan (iris di tengah mata, putih tipis di kedua sisi),
-3. kepala (bagian yang melayang) diturunkan supaya jaraknya ke kerah lebih kecil.
+3. kepala (bagian yang melayang) diturunkan supaya jaraknya ke kerah lebih kecil,
+4. sepeda diperbaiki (konversi_sepeda.py): frame lebih pendek dengan pipa lurus, engkol segaris, setang kiri
+   tersambung, tas boncengan tanpa tutup dengan koran terlihat, tas sisi seberang terlihat.
 
     python3 tools/loper_art/fullbody/konversi_loper.py docs/design/character/loper_agen/konversi/sumber_ai.jpg --out build/loper_art/konversi
 """
@@ -15,6 +17,7 @@ from PIL import Image
 from scipy import ndimage
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from konversi import convert  # noqa: E402
+from konversi_sepeda import fix_bike  # noqa: E402
 
 # 1. celana: biru muda dari gambar AI -> dongker, urut dari terang ke gelap
 PANTS = {
@@ -57,15 +60,18 @@ def hexrgb(h):
     return np.array([int(h[i:i + 2], 16) for i in (0, 2, 4)], np.uint8)
 
 
-def adjust(img, head_drop=HEAD_DROP):
+def adjust(img, head_drop=HEAD_DROP, bike=True):
     a = np.array(img)
     H, W = a.shape[:2]
     yy, xx = np.mgrid[0:H, 0:W]
     # 1. pants
     region = (yy >= PANTS_TOP) & (xx >= PANTS_X[0]) & (xx < PANTS_X[1]) & (a[..., 3] == 255)
-    for src, dst in PANTS.items():
-        m = region & np.all(a[..., :3] == hexrgb(src), -1)
+    for old, dst in PANTS.items():
+        m = region & np.all(a[..., :3] == hexrgb(old), -1)
         a[m, :3] = hexrgb(dst)
+    # 4. bike fixes (frame, cranks, handlebar, bags); everything else stays as converted
+    if bike:
+        a = np.array(fix_bike(Image.fromarray(a, 'RGBA')))
     # 3. the floating head is the second largest solid part (the largest is body + bike)
     solid = a[..., 3] == 255
     lab, n = ndimage.label(solid)
@@ -88,17 +94,25 @@ def adjust(img, head_drop=HEAD_DROP):
     return Image.fromarray(a, 'RGBA')
 
 
+def trim_box(img, pad=2):
+    ys, xs = np.where(np.array(img)[..., 3] > 0)
+    return (max(0, xs.min() - pad), max(0, ys.min() - pad), min(img.width, xs.max() + 1 + pad), min(img.height, ys.max() + 1 + pad))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument('src')
     ap.add_argument('--out', default='build/loper_art/konversi')
     ap.add_argument('--name', default='loper_agen_konversi')
     ap.add_argument('--head-drop', type=int, default=HEAD_DROP)
+    ap.add_argument('--sepeda-lama', action='store_true', help='sepeda hasil konversi apa adanya (versi 2)')
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
     img, pal, box, f = convert(args.src, 278, 40)
     img.save(f'{args.out}/{args.name}_asli.png')
-    out = adjust(img, args.head_drop)
+    out = adjust(img, args.head_drop, not args.sepeda_lama)
+    if not args.sepeda_lama:
+        out = out.crop(trim_box(out))                  # sepeda lebih pendek: buang tepi kosong
     out.save(f'{args.out}/{args.name}.png')
     out.resize((out.width * 3, out.height * 3), Image.NEAREST).save(f'{args.out}/{args.name}_x3.png')
     cols = sorted({tuple(c) for c in np.array(out)[np.array(out)[..., 3] == 255][:, :3]},
@@ -107,7 +121,8 @@ def main():
     for i, c in enumerate(cols):
         sw.paste(tuple(int(x) for x in c), (i * 12, 0, i * 12 + 12, 12))
     sw.save(f'{args.out}/{args.name}_palet.png')
-    print(f'{args.name}: {out.width}x{out.height} px, {len(cols)} warna, kepala turun {args.head_drop} px')
+    print(f'{args.name}: {out.width}x{out.height} px, {len(cols)} warna, kepala turun {args.head_drop} px'
+          f"{', sepeda versi 2' if args.sepeda_lama else ', sepeda diperbaiki'}")
 
 
 if __name__ == '__main__':

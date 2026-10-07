@@ -13,7 +13,7 @@ python3 tools/loper_art/varian.py --out build/loper_art/varian    # pratinjau 8 
 python3 tools/loper_art/jatuh.py --out build/loper_art/jatuh   # animasi jatuh terjerembab (usulan)
 python3 tools/loper_art/fullbody/fullbody.py --out build/loper_art/fullbody   # gambar full body skala besar
 python3 tools/loper_art/fullbody/konversi.py GAMBAR.jpg --out build/loper_art/konversi   # ilustrasi jadi pixel art (butuh scipy, scikit-image, scikit-learn)
-python3 tools/loper_art/fullbody/konversi_loper.py docs/design/character/loper_agen/konversi/sumber_ai.jpg --out build/loper_art/konversi   # + penyesuaian ke brief
+python3 tools/loper_art/fullbody/konversi_loper.py docs/design/character/loper_agen/konversi/sumber_ai.jpg --out build/loper_art/konversi   # + penyesuaian ke brief dan perbaikan sepeda
 python3 tools/loper_art/fullbody/fullbody.py --out build/loper_art/fullbody --layers   # + layer kepala dan badan terpisah
 python3 tools/loper_art/fullbody/arsip/fullbody_v1.py build/loper_art/arsip   # arsip: full body versi pertama
 ```
@@ -30,7 +30,7 @@ python3 tools/loper_art/fullbody/arsip/fullbody_v1.py build/loper_art/arsip   # 
 | `produce.py` | 60 frame → sheet 4×15 (sel 46×58, titik pijak 23,46), JSON, SpriteFrames `.tres`, pratinjau |
 | `varian.py` | Pratinjau delapan varian baju: 5 arah santai dan GIF kayuh, hasilnya di `docs/design/character/varian/` |
 | `jatuh.py` | Animasi jatuh terjerembab (usulan, arah normal): sepeda dan pengendara dengan pose bebas, sel 114×68, offset Godot sama dengan sheet kayuh |
-| `fullbody/` | Gambar full body skala besar 294×283 (`fullbody.py`, kepala di layer sendiri) dengan pelukis 2D lima nada (`pxhd.py`); gaya di `docs/ART_DIRECTION.md` 3.5. `konversi.py` mengubah ilustrasi jadi pixel art, `konversi_loper.py` menyesuaikan hasil gambar AI loper ke brief. `arsip/` menyimpan full body versi pertama (`fullbody_v1.py`, pelukis tiga nada `px2d.py`) |
+| `fullbody/` | Gambar full body skala besar 294×283 (`fullbody.py`, kepala di layer sendiri) dengan pelukis 2D lima nada (`pxhd.py`); gaya di `docs/ART_DIRECTION.md` 3.5. `konversi.py` mengubah ilustrasi jadi pixel art, `konversi_loper.py` menyesuaikan hasil gambar AI loper ke brief, `konversi_sepeda.py` memperbaiki frame, engkol, setang, dan tas sepedanya. `arsip/` menyimpan full body versi pertama (`fullbody_v1.py`, pelukis tiga nada `px2d.py`) |
 
 ## Varian baju
 
