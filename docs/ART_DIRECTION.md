@@ -109,6 +109,42 @@ Gaya piksel sama, palet berbeda, supaya pemain langsung tahu sedang di mana (GDD
 | Sore | Jingga, bayangan panjang |
 | Malam | Biru gelap; lampu jalan, lampu sepeda, dan jendela menyala |
 
+### 2.6 Lingkungan: cahaya, jalan, dan detail (usulan)
+
+> **Usulan (2026-10-07)**, disetujui di kanvas "Lingkungan Loper Koran" tapi belum diuji di HP. Mock dan cara merender ulang: [`design/environment/`](./design/environment/), `tools/env_art`.
+
+**Cahaya dan bayangan**
+
+- Bayangan jatuh dan sisi yang membelakangi matahari **diwarnai sesuai waktu**, bukan hitam, supaya material di dalam bayangan tetap terbaca. Arah cahaya tetap dari kiri atas; yang berubah hanya tinggi matahari dan warna. Kalau dipakai, ini menggantikan bayangan hitam 28% di aturan 2.1 nomor 5 untuk lingkungan.
+
+| Waktu | Sudut matahari | Pengali cahaya (R · G · B) | Pengali bayangan (R · G · B) |
+|---|---|---|---|
+| Pagi | 24° | 1,04 · 1,00 · 0,90 | 0,66 · 0,70 · 0,92 |
+| Siang | 52° | 1,00 · 1,00 · 1,00 | 0,60 · 0,62 · 0,82 |
+| Sore | 20° | 1,08 · 0,90 · 0,72 | 0,60 · 0,53 · 0,76 |
+| Malam | 40° | 0,40 · 0,46 · 0,70 | 0,24 · 0,26 · 0,46 |
+
+- Lampu malam (`#FFD27A`) menerangi dalam tiga cincin (1,00 · 0,62 · 0,30), hanya permukaan yang menghadap lampu. Jendela menyala memakai glow tiga cincin piksel.
+- **Pemain hanya kena setengah color grading** supaya tidak tenggelam di bayangan sore dan malam.
+- Di Godot (cek di Fase 0): CanvasModulate per waktu, lapisan bayangan multiply, PointLight2D bertekstur cincin.
+
+**Penampang jalan per distrik**
+
+| Distrik | Jalan |
+|---|---|
+| Perumahan | Aspal 3 ubin (dua lajur mobil), kerb pemisah, **lajur sepeda hijau ¾ ubin di tiap sisi** menggantikan trotoar, tepi putus-putus di depan jalan masuk garasi. Loper di lajur sepeda kiri, di samping deretan kotak surat. Halaman depan dipersempit supaya rumah di kedua sisi tetap terlihat. |
+| Perkampungan | Gang 2 ubin, selokan di kedua sisi. Di sisi dekat, rumah dan halaman (kandang ayam, kebun, jemuran) diselang-seling. |
+| Ruko | 2 lajur (aspal 3 ubin), garis tengah putus-putus, trotoar di kedua sisi |
+| Pasar | Lorong hampir 4 ubin di antara lapak |
+| Jalan desa | Jalan tanah 2 ubin, parit di sisi dekat |
+| Pinggir sungai | Jalan semen hampir 2 ubin. Muka air jauh di bawah jalan dengan **talud batu kali miring**; lampu jalan di sisi sungai. |
+
+Jalan yang lebih lebar membuat lemparan ke sisi dekat butuh swipe panjang; perlu diuji di prototype 2.
+
+**Palet distrik** tambahan dari palet induk ada di papan "Palet per distrik" (ramp terang · dasar · gelap), dengan color grading ringan per distrik (contoh: perkampungan R ×1,04 B ×0,94, sungai R ×0,97 B ×1,04).
+
+**Detail hidup di pinggir jalan:** jemuran bergoyang (kaus, celana, handuk, sarung; 8 frame), ayam jalan dan mematuk (8 frame, tiga warna lewat palette swap), asap warung (12 frame, tanpa garis luar karena VFX), kucing di tembok, layangan di kabel, **antena TV di atap** rumah dan ruko, pohon kelapa, klotok di sungai. Gerakannya pelan dan kontrasnya di bawah objek gameplay.
+
 ---
 
 ## 3. Karakter Pemain: Kemeja Agen
@@ -181,7 +217,7 @@ Keuntungannya: arah, pose, dan varian baju selalu konsisten, dan menambah animas
 
 ### 4.2 Aset lain
 
-- **Rumah dan kendaraan (usulan):** dirender dengan renderer yang sama (kotak, prisma atap) supaya proyeksi dan cahayanya persis sama dengan pemain, lalu dipoles manual.
+- **Rumah dan kendaraan (usulan):** dirender dengan renderer yang sama (kotak, prisma atap) supaya proyeksi dan cahayanya persis sama dengan pemain, lalu dipoles manual. Mock lingkungan sudah memakai `tools/env_art` (ray cast pada primitif cembung, proyeksi dan cahaya sama dengan `iso.py`).
 - **Properti kecil, NPC, hewan, VFX, ikon:** boleh digambar langsung per piksel di Aseprite atau LibreSprite dengan palet induk dan kepadatan yang sama.
 - File kerja disimpan di luar `assets/` (`tools/`, `docs/design/`) supaya tidak ikut ke APK.
 
@@ -199,6 +235,7 @@ Keuntungannya: arah, pose, dan varian baju selalu konsisten, dan menambah animas
 |---|---|
 | Kanvas "Loper Koran — Kamera dan Kontrol" | Isometrik 2:1 (mock jalan 800×360), kontrol landscape, HUD, banding arah jalan |
 | Kanvas "Karakter Loper Koran" | Eksplorasi baju A–H, banding dengan Brainy Dungeon, base model 5 arah, pose kecepatan, sprite produksi |
+| Kanvas "Lingkungan Loper Koran" ([`design/environment/`](./design/environment/)) | Gang perkampungan sore, perumahan empat waktu, bayangan hitam vs berwarna, palet enam distrik, detail pinggir jalan |
 | Brainy Dungeon `docs/ART_DIRECTION.md` | Acuan aturan pixel art (garis, bayangan, skala bulat) |
 
 ---
@@ -425,6 +462,8 @@ Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dib
 ---
 
 ## Changelog Keputusan
+
+- **2026-10-07** — **Usulan lingkungan** (bagian 2.6): bayangan berwarna per waktu, pemain setengah color grading, penampang jalan per distrik (lajur sepeda di perumahan, ruko 2 lajur, gang 2 ubin, talud sungai miring), palet enam distrik, detail pinggir jalan dan antena TV. Mock di `design/environment/`, renderer `tools/env_art`. Belum dikunci.
 
 - **2026-10-07** — **Sprite produksi Kemeja Agen** (bagian 3.2): 15 animasi kayuh (3 kecepatan × 5 arah, 4 frame maju), sel 46×58, titik pijak (23, 46), SpriteFrames dicek memuat di Godot 4.3. Saat ngebut hanya sepeda yang bergoyang ±5°; badan pengendara stabil supaya kepala tidak bergetar di 12 fps.
 - **2026-10-07** — **Audit sprite sebelum produksi**: roda depan tidak lagi terpotong saat setang belok (seluruh rakitan depan berputar bersama), condong dan setang saat belok dikecilkan, wajah dari depan memakai dua mata dan mulut, topi diberi pita dan pet dongker supaya terbaca terbalik, bahu dilebarkan supaya lengan terlihat dari belakang, rangka sepeda dua nada dan lebih tipis, pose ngebut dibuat lebih tegak dengan sadel terlihat.
