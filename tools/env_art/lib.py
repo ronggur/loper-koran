@@ -592,3 +592,115 @@ def antena(s, x, y, z0, z1, n=5, boom=16, seed=0, mat=None, tiang=None):
         s.add(obox(p, side, d, up, L / 2, 0.5, 0.45, mat, part=pid))
     # kawat penahan pendek: elemen kedua lebih rendah di tiang
     s.add(obox(top - up * 5 + d * 1.5, side, d, up, 3.5, 0.45, 0.45, mat, part=pid))
+
+
+# ---------------- pohon perumahan: tiga variasi ----------------
+LEAF_MANGGA = Mat('#8CC860', '#4F8A4A', '#2E5236')
+LEAF_GLODOK = Mat('#7DBB5A', '#3F7A44', '#24482C')
+LEAF_KETAPANG = Mat('#B4DC6A', '#6FAE4F', '#3F6E3A')
+BARK = Mat('#9A6A4E', '#6D4334', '#4A2A20')
+
+
+def _leaf_tex(seed, scale=2.2):
+    def tex(Pw, Nw):
+        cell = np.floor(Pw / scale)
+        h = hash2(cell[:, 0] + cell[:, 2] * 7, cell[:, 1] - cell[:, 2] * 3, seed)
+        d = Nw @ BAKE
+        # gumpalan daun: titik terang di sisi kena cahaya, titik gelap di sisi bayangan
+        sh = np.where((h > 0.7) & (d > 0.35), -1, np.where((h < 0.28) & (d < 0.75), 1, 0))
+        return 0, sh
+    return tex
+
+
+def _limb(s, a, b, r, mat, part):
+    a, b = np.asarray(a, float), np.asarray(b, float)
+    d = b - a
+    L = np.linalg.norm(d)
+    d /= L
+    sd = np.cross(d, [0, 0, 1.0])
+    if np.linalg.norm(sd) < 1e-3:
+        sd = np.array([1.0, 0, 0])
+    sd /= np.linalg.norm(sd)
+    s.add(obox((a + b) / 2, d, sd, np.cross(d, sd), L / 2 + r * 0.4, r, r, mat, part=part))
+    return s.prims[-1].part
+
+
+def tree_rindang(s, x, y, h=22, r=17, seed=0):
+    """Pohon rindang (mangga/kersen): batang bercabang, tajuk lebar dari banyak gumpalan."""
+    rng = np.random.default_rng(seed)
+    s.add(cyl((x, y), 2.4, 0, h * 0.6, mats=BARK))
+    pid = s.prims[-1].part
+    base = np.array([x, y, h * 0.55])
+    tips = []
+    for i in range(3):
+        a = 2 * math.pi * i / 3 + rng.random() * 0.6
+        tip = base + np.array([math.cos(a) * r * 0.45, math.sin(a) * r * 0.45, h * 0.45 + rng.random() * 4])
+        _limb(s, base, tip, 1.3, BARK, pid)
+        tips.append(tip)
+    crown = None
+    tex = _leaf_tex(seed)
+    # gumpalan: satu besar di tengah atas, lalu lingkaran gumpalan di tepi dan bawah
+    blobs = [(np.array([x, y, h + r * 0.55]), r * 0.62)]
+    for i in range(7):
+        a = 2 * math.pi * i / 7 + rng.random() * 0.4
+        rr = r * (0.42 + rng.random() * 0.12)
+        c = np.array([x + math.cos(a) * r * 0.62, y + math.sin(a) * r * 0.62, h + r * (0.15 + rng.random() * 0.3)])
+        blobs.append((c, rr))
+    for t in tips:
+        blobs.append((t + np.array([0, 0, r * 0.25]), r * 0.4))
+    for k, (c, rr) in enumerate(blobs):
+        # gumpalan tepi diberi garis sendiri supaya siluetnya bergelombang
+        s.add(ellip(c, (rr, rr, rr * 0.82), LEAF_MANGGA, tex, part=None if k else crown))
+        crown = crown or s.prims[-1].part
+
+
+def tree_glodokan(s, x, y, h=10, H=58, seed=0):
+    """Glodokan tiang: ramping dan tinggi, tajuk meruncing dari tumpukan gumpalan daun yang makin kecil."""
+    rng = np.random.default_rng(seed)
+    s.add(cyl((x, y), 1.6, 0, h + 4, mats=BARK))
+    crown = None
+    tex = _leaf_tex(seed + 3, 1.8)
+    n = 9
+    for i in range(n):
+        t = i / (n - 1)
+        z = h + (H - h) * t
+        rr = 7.5 * (1 - t) ** 0.8 + 2.0
+        for j in range(3 if t < 0.8 else 1):
+            a = 2 * math.pi * j / 3 + i * 1.3
+            off = rr * 0.35 if t < 0.8 else 0
+            c = np.array([x + math.cos(a) * off, y + math.sin(a) * off, z])
+            s.add(ellip(c, (rr * 0.8, rr * 0.8, 4.2), LEAF_GLODOK, tex, part=crown))
+            crown = s.prims[-1].part
+
+
+def tree_ketapang(s, x, y, H=50, seed=0):
+    """Ketapang kencana: batang lurus, tajuk bertingkat datar seperti payung bersusun."""
+    rng = np.random.default_rng(seed)
+    s.add(cyl((x, y), 1.5, 0, H * 0.94, mats=BARK))
+    pid = s.prims[-1].part
+    tiers = [(H * 0.4, 15.0), (H * 0.6, 12.0), (H * 0.79, 8.5), (H * 0.97, 4.5)]
+    tex = _leaf_tex(seed + 7, 1.6)
+    for k, (z, R) in enumerate(tiers):
+        crown = None
+        # ranting mendatar di tiap tingkat
+        for i in range(4):
+            a = 2 * math.pi * i / 4 + k * 0.7
+            _limb(s, (x, y, z - 1.5), (x + math.cos(a) * R * 0.6, y + math.sin(a) * R * 0.6, z - 0.5), 0.6, BARK, pid)
+        for i in range(5):
+            a = 2 * math.pi * i / 5 + k * 0.9 + rng.random() * 0.3
+            c = np.array([x + math.cos(a) * R * 0.55, y + math.sin(a) * R * 0.55, z])
+            s.add(ellip(c, (R * 0.5, R * 0.5, 1.3), LEAF_KETAPANG, tex, part=crown))
+            crown = s.prims[-1].part
+        s.add(ellip((x, y, z + 0.3), (R * 0.45, R * 0.45, 1.5), LEAF_KETAPANG, tex, part=crown))
+
+
+TREE_KINDS = ('rindang', 'glodokan', 'ketapang')
+
+
+def tree_perumahan(s, x, y, kind, seed=0):
+    if kind == 'rindang':
+        tree_rindang(s, x, y, seed=seed)
+    elif kind == 'glodokan':
+        tree_glodokan(s, x, y, seed=seed)
+    else:
+        tree_ketapang(s, x, y, seed=seed)

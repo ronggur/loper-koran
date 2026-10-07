@@ -143,6 +143,8 @@ Jalan yang lebih lebar membuat lemparan ke sisi dekat butuh swipe panjang; perlu
 
 **Variasi rumah perumahan** (bentuk, bukan cuma warna), diselang-seling di sisi seberang: *limasan* (badan lebar, atap limas, teras di tengah), *pelana* (segitiga atap menghadap jalan dengan lubang angin, teras samping beratap dak), *sayap* (badan utama mundur, ruang depan menonjol beratap pelana kecil, teras di ceruk). Rumah sisi dekat bergantian atap limas, pelana melintang, dan pelana memanjang. Warna dinding dan atap tetap lewat palette swap.
 
+**Pohon perumahan**, tiga jenis bergantian: *rindang* (mangga/kersen: batang bercabang, tajuk lebar dari banyak gumpalan), *glodokan tiang* (ramping, meruncing), *ketapang kencana* (tajuk datar bertingkat).
+
 **Kendaraan:** sedan, angkot (minibus tanpa rak atap), dan bus kecil kota dua warna dengan papan trayek; semuanya punya kaca miring, sudut bodi tumpul, lekuk roda, pelek, dan lampu.
 
 **Palet distrik** tambahan dari palet induk ada di papan "Palet per distrik" (ramp terang · dasar · gelap), dengan color grading ringan per distrik (contoh: perkampungan R ×1,04 B ×0,94, sungai R ×0,97 B ×1,04).
@@ -467,7 +469,7 @@ Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dib
 
 ## Changelog Keputusan
 
-- **2026-10-07** — **Usulan lingkungan** (bagian 2.6): bayangan berwarna per waktu, pemain setengah color grading, penampang jalan per distrik (lajur sepeda di perumahan, ruko 2 lajur, gang 2 ubin, talud sungai miring), palet enam distrik, detail pinggir jalan dan antena TV, tiga bentuk rumah perumahan, model sedan/angkot/bus kecil. Mock di `design/environment/`, renderer `tools/env_art`. Belum dikunci.
+- **2026-10-07** — **Usulan lingkungan** (bagian 2.6): bayangan berwarna per waktu, pemain setengah color grading, penampang jalan per distrik (lajur sepeda di perumahan, ruko 2 lajur, gang 2 ubin, talud sungai miring), palet enam distrik, detail pinggir jalan dan antena TV, tiga bentuk rumah dan tiga jenis pohon perumahan, model sedan/angkot/bus kecil. Mock di `design/environment/`, renderer `tools/env_art`. Belum dikunci.
 
 - **2026-10-07** — **Sprite produksi Kemeja Agen** (bagian 3.2): 15 animasi kayuh (3 kecepatan × 5 arah, 4 frame maju), sel 46×58, titik pijak (23, 46), SpriteFrames dicek memuat di Godot 4.3. Saat ngebut hanya sepeda yang bergoyang ±5°; badan pengendara stabil supaya kepala tidak bergetar di 12 fps.
 - **2026-10-07** — **Audit sprite sebelum produksi**: roda depan tidak lagi terpotong saat setang belok (seluruh rakitan depan berputar bersama), condong dan setang saat belok dikecilkan, wajah dari depan memakai dua mata dan mulut, topi diberi pita dan pet dongker supaya terbaca terbalik, bahu dilebarkan supaya lengan terlihat dari belakang, rangka sepeda dua nada dan lebih tipis, pose ngebut dibuat lebih tegak dengan sadel terlihat.

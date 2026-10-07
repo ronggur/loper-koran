@@ -29,7 +29,7 @@ Hasil masuk ke `build/env_art/` (tidak di-commit, bisa diganti lewat `ENV_ART_OU
 | File | Isi |
 |---|---|
 | `engine.py` | Primitif, ray cast, nada, bayangan, lampu, glow, garis luar, penempelan sprite, `TIMES` |
-| `lib.py` | Palet induk + tambahan, tekstur dinding/atap/tanah, pohon, semak, kotak surat, lampu jalan, sedan, angkot, bus kecil, motor, ayam, jemuran, kabel, asap, antena TV |
+| `lib.py` | Palet induk + tambahan, tekstur dinding/atap/tanah, pohon (termasuk `TREE_KINDS`: rindang, glodokan, ketapang), kelapa, semak, kotak surat, lampu jalan, sedan, angkot, bus kecil, motor, ayam, jemuran, kabel, asap, antena TV |
 | `perumahan.py` | Jalan perumahan: aspal 3 ubin, lajur sepeda di kedua sisi, tiga bentuk rumah (`HOUSE_TYPES`: limasan, pelana, sayap) |
 | `kampung.py` | Gang perkampungan 2 ubin: rumah rapat, warung, jemuran melintang, halaman, tiang listrik |
 | `districts.py` | Ruko, pasar, desa, pinggir sungai, dan vinyet enam distrik |

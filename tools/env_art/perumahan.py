@@ -272,8 +272,9 @@ def build(s, car_on=True):
         kerb_with_gaps(s, a, b, 2.6, P['kerb'], gaps)
     for i, yc in enumerate(FAR_YC):
         house_far(s, yc, WALLS[i], ROOFS[i], seed=i, carport_car=(i == 3), kind=HOUSE_TYPES[i % 3])
-        if i % 2 == 0:
-            tree_round(s, FX1 - 28, yc + 66, r=15, h=24, seed=i)
+        # pohon di halaman samping, bergantian tiga jenis; sesekali cuma semak
+        if i % 4 != 3:
+            tree_perumahan(s, FX1 - 26, yc + 64, TREE_KINDS[i % 3], seed=i)
         else:
             bush(s, FX1 - 10, yc + 62, 6, seed=i)
             bush(s, FX1 - 22, yc + 70, 5, seed=i + 3)
@@ -281,7 +282,7 @@ def build(s, car_on=True):
         house_near(s, yc, WALLS[(i + 3) % 8], ROOFS[(i + 2) % 8], seed=i)
         bush(s, NX0 - 10, yc + 10, 5, seed=20 + i)
         if i % 2 == 1:
-            tree_round(s, NX1 + 30, yc + 54, r=14, h=22, seed=30 + i)
+            tree_perumahan(s, NX1 + 30, yc + 54, TREE_KINDS[(i + 1) % 3], seed=30 + i)
     # deret rumah di belakang sisi seberang
     for i, yc in enumerate([-420, -300, -180, -60, 60, 180]):
         s.add(box(FX0 - 146, FX0 - 64, yc - 40, yc + 40, 0, 32, P[WALLS[(i + 5) % 8]]))
@@ -290,7 +291,7 @@ def build(s, car_on=True):
         if i % 2 == 1:
             antena(s, FX0 - 100, yc + 10, 32, 68, seed=40 + i)
     for i, yc in enumerate([-370, -250, -130, -10, 110]):
-        tree_round(s, FX0 - 34, yc, r=13, h=26, seed=50 + i, mat=P['leaf'])
+        tree_perumahan(s, FX0 - 34, yc, TREE_KINDS[(i + 2) % 3], seed=50 + i)
     s.add(box(NX1 + 50, NX1 + 54, -900, 900, 0, 14, P['conc']))
     # lampu jalan di tepi luar lajur sepeda sisi seberang, menerangi lajur
     for ly in (-256, 0, 256):
