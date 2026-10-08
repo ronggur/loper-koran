@@ -17,7 +17,7 @@ Semua bagian lain di dokumen ini adalah **usulan** sampai disetujui.
 
 ## 2. Premis
 
-Tokoh utama baru lulus SMA. Ayahnya baru kena PHK dan tabungan keluarga terkuras untuk kebutuhan sehari-hari. Ia diterima kuliah, tapi biaya daftar ulang belum cukup. Ia menjadi loper koran selama dua bulan menjelang tenggat daftar ulang dan menabung dari tiap rute. Cerita tamat saat ia membayar biaya daftar: uang yang ia kumpulkan menutup kekurangan yang tidak sanggup ditutup keluarganya.
+Tokoh utama baru lulus SMA. Ayahnya baru kena PHK dan tabungan keluarga terkuras untuk kebutuhan sehari-hari. Ia diterima kuliah, tapi biaya daftar ulang belum cukup. Ia menjadi loper koran selama empat bulan menjelang tenggat daftar ulang dan menabung dari tiap rute. Cerita tamat saat ia membayar biaya daftar: uang yang ia kumpulkan menutup kekurangan yang tidak sanggup ditutup keluarganya.
 
 Latar ekonomi yang dirujuk: PHK yang berlanjut, daya beli yang turun, dan kelas menengah yang menyusut (lihat sumber di bagian 12).
 
@@ -41,49 +41,59 @@ Tokoh rute yang sudah ada (Bu Ratmi, Pak RT, Pak Sarmin, Pak Ujang, lihat CONTEN
 - **Pilihan kecil.** Dua opsi di akhir tiap bab memengaruhi setoran, reputasi, dan akhir.
 - **Tanpa game over.** Kalau tenggat terlewat, cerita lanjut ke akhir "tunda setahun", bukan kalah.
 
-### 4.1 Biaya kuliah dan tenggat (usulan, direvisi 2026-10-07: cerita dipendekkan)
+### 4.1 Biaya kuliah, tenggat, dan panjang cerita (usulan, direvisi 2026-10-08)
 
-Angka disusun dari biaya kuliah PTN 2026 (lihat sumber di bawah) dan penghasilan loper sungguhan (GDD 14.1), lalu disetel di prototype. Cerita utama dibuat **60 hari rute (sekitar 5 jam)**, bukan 120 hari, karena versi 120 hari terasa terlalu panjang.
+Angka disusun dari biaya kuliah PTN 2026 (lihat sumber di bawah) dan penghasilan loper sungguhan (GDD 14.1), lalu disetel di prototype.
+
+**Dua jam yang berbeda.** Kalender cerita berjalan **120 hari** (20 April sampai 18 Agustus), tetapi pemain hanya memainkan **60 rute (sekitar 5 jam)**. Satu rute yang dimainkan mewakili **dua hari cerita**: **hari utama** (dimainkan penuh) dan **hari ringkas** (dihitung otomatis dan ditampilkan sebagai ringkasan singkat). Jadi tenggat tetap panjang dan realistis, tetapi waktu bermain pendek.
 
 **Jalur dan biaya.** Fajar diterima di PTN lewat jalur SNBP atau SNBT, jadi **tanpa uang pangkal (IPI)**. Karena ayahnya di-PHK, ia mengajukan penyesuaian UKT dan ditetapkan di **golongan 2 (sekitar Rp1.000.000 per semester)**.
 
 | Komponen biaya awal | Rupiah | Koin (1 koin = Rp100) |
 |---|---|---|
 | UKT semester 1 (golongan 2) | 1.000.000 | 10.000 |
-| Kos dan deposit awal | 1.000.000 | 10.000 |
-| Almamater, buku, perlengkapan, transport awal | 700.000 | 7.000 |
-| Cadangan darurat bulan pertama | 1.000.000 | 10.000 |
-| **Total kebutuhan** | **3.700.000** | **37.000** |
+| Kos dan deposit awal | 1.500.000 | 15.000 |
+| Almamater, buku, perlengkapan, transport awal | 1.000.000 | 10.000 |
+| Cadangan darurat bulan pertama | 1.500.000 | 15.000 |
+| **Total kebutuhan** | **5.000.000** | **50.000** |
 | Sumbangan keluarga (tabungan ibu) | 2.500.000 | 25.000 |
-| **Target Tabungan Kuliah Fajar** | **1.200.000** | **12.000** |
+| **Target Tabungan Kuliah Fajar** | **2.500.000** | **25.000** |
 
-Tabungan Fajar menambah biaya daftar, sesuai keputusan cerita: keluarga menutup sebagian besar, Fajar menutup kekurangannya.
+Tabungan Fajar menambah biaya daftar, sesuai keputusan cerita: keluarga menutup separuh, Fajar separuhnya.
 
-**Tenggat.** Cerita mulai **19 Juni** (pengumuman diterima kuliah dan kabar PHK ayah) dan tenggat daftar ulang jatuh pada **18 Agustus**, tepat **60 hari** kemudian. Tenggat ini menutup bulan 17 Agustus, jadi bab terakhir bisa memakai suasana Tujuh Belasan (GDD 10.7). Satu hari rute di game sama dengan satu hari di kalender cerita.
+**Tenggat.** Cerita mulai **20 April** (setelah pengumuman kelulusan dan kabar PHK ayah) dan tenggat daftar ulang jatuh pada **18 Agustus**, tepat **120 hari** kemudian. Tenggat ini menutup bulan 17 Agustus, jadi bab terakhir bisa memakai suasana Tujuh Belasan (GDD 10.7).
+
+**Hari ringkas (usulan).**
+- Pendapatan hari ringkas = **90 persen** pendapatan hari utama sebelumnya, karena pelanggan tetap tetap dilayani. Performa hari utama tetap menentukan hasil dua hari.
+- Setoran Keluarga, Bengkel, dan Tabungan dihitung seperti biasa dengan porsi yang dipilih pemain.
+- Sepeda tidak aus di hari ringkas. Keausan dan kerusakan hanya terjadi di rute yang dimainkan.
+- Layar hasil menampilkan ringkasan dua tiga baris untuk hari ringkas: kejadian kecil, pesan dari Dimas atau Pak Darto, atau berita ringan. Di sinilah banyak peristiwa cerita bisa disisipkan tanpa menambah waktu bermain.
+- Misi sampingan dan flag lanjutan berjalan di hari utama. Hari ringkas hanya meneruskan flag ke hari utama berikutnya.
 
 **Mengapa masuk akal.**
-- Penghasilan satu hari rapi 300 sampai 375 koin, ditambah tip dan hadiah misi, kira-kira **400 koin kotor per hari** (Rp40.000, dekat penghasilan nyata Rp30.000 sampai Rp40.000).
-- Setoran harian yang realistis: **Keluarga 35 persen** (sekitar 140 koin), **Bengkel 15 persen** (sekitar 60 koin), **Tabungan 50 persen** (sekitar 200 koin).
-- 60 hari dikali 200 koin kira-kira **12.000 koin**, tepat target. Pemain rata-rata pas-pasan, pemain yang rapi dan menjaga sepeda tetap sehat bisa mandiri, dan sisanya dibantu warga.
-- Satu hari rute sekitar 5 menit, jadi cerita utama sekitar 5 jam bermain (usulan).
+- Penghasilan satu hari utama yang rapi 300 sampai 375 koin, ditambah tip dan hadiah misi, kira-kira **400 koin kotor** (Rp40.000, dekat penghasilan nyata Rp30.000 sampai Rp40.000).
+- Satu rute (hari utama dan hari ringkas) kira-kira **760 koin kotor** (400 ditambah 360).
+- Setoran: **Keluarga 35 persen**, **Bengkel 15 persen**, **Tabungan 50 persen**, jadi tabungan sekitar **380 koin per rute**.
+- 60 rute dikali 380 koin kira-kira **22.800 koin (91 persen target)** untuk pemain rata-rata. Pemain yang rapi (pendapatan sekitar 450 koin per hari utama) mencapai 100 persen atau lebih, dan pemain rata-rata biasanya masuk akhir "Dibantu warga".
+- Satu rute dimainkan sekitar 5 menit, jadi cerita utama sekitar **5 jam bermain**.
 
-**Target tabungan per bab (rata-rata, usulan).** Satu bab sekitar 10 hari cerita.
+**Target tabungan per bab (rata-rata, usulan).** Satu bab sekitar 10 rute (20 hari cerita, sekitar 50 menit bermain).
 
-| Bab | Hari cerita | Tabungan kumulatif | Persen target |
-|---|---|---|---|
-| Prolog dan 1 | 1 sampai 10 | 2.000 | 17 persen |
-| 2 | 11 sampai 20 | 4.000 | 33 persen |
-| 3 | 21 sampai 30 | 6.000 | 50 persen |
-| 4 | 31 sampai 40 | 8.000 | 67 persen |
-| 5 | 41 sampai 50 | 10.000 | 83 persen |
-| 6 | 51 sampai 60 | 12.000 | 100 persen |
+| Bab | Hari cerita | Rute | Tabungan kumulatif | Persen target |
+|---|---|---|---|---|
+| Prolog dan 1 | 1 sampai 20 | 1 sampai 10 | 3.800 | 15 persen |
+| 2 | 21 sampai 40 | 11 sampai 20 | 7.600 | 30 persen |
+| 3 | 41 sampai 60 | 21 sampai 30 | 11.400 | 46 persen |
+| 4 | 61 sampai 80 | 31 sampai 40 | 15.200 | 61 persen |
+| 5 | 81 sampai 100 | 41 sampai 50 | 19.000 | 76 persen |
+| 6 | 101 sampai 120 | 51 sampai 60 | 22.800 | 91 persen |
 
-**Akhir menurut tabungan dan reputasi pada hari ke-60.**
+**Akhir menurut tabungan dan reputasi pada hari ke-120.**
 - **Mandiri:** tabungan 100 persen atau lebih.
 - **Dibantu warga:** tabungan 70 sampai 99 persen **dan** reputasi rata-rata di distrik yang sudah dibuka minimal 60. Kekurangan ditutup patungan warga.
 - **Tunda setahun:** tabungan di bawah 70 persen, atau reputasi di bawah 60. Tabungan tetap dibawa ke tahun kedua.
 
-**Tombol penyesuaian.** Panjang cerita diatur lewat `HARI_CERITA` (nilai awal 60) di `scripts/config.gd`. Target tabungan, tenggat, dan jumlah hari per bab mengikuti nilai itu. Kalau 5 jam masih terasa panjang, kurangi hari dan target secara proporsional (misalnya 45 hari dan 9.000 koin), tanpa mengubah rasio setoran.
+**Tombol penyesuaian** (di `scripts/config.gd`). `HARI_CERITA` (120), `HARI_CERITA_PER_RUTE` (2), dan `PERSEN_HARI_RINGKAS` (90). Kalau 5 jam masih terasa panjang, naikkan `HARI_CERITA_PER_RUTE` ke 3 (40 rute, sekitar 3,3 jam) dengan `PERSEN_HARI_RINGKAS` tetap, lalu hitung ulang target per bab.
 
 ## 5. Struktur: satu save, dua fase
 
@@ -119,7 +129,7 @@ Satu distrik terbuka kalau **reputasi**, **peristiwa cerita**, dan **syarat pend
 | Ruko | Perkampungan 50 | Dimas berangkat, tawaran kurir online | Satu upgrade sepeda, servis pertama |
 | Pasar tradisional | Ruko 55 | Ibu berjualan di pasar sepi | Lulus satu misi antar khusus |
 | Jalan desa dan persawahan | Pasar 60 | Ayah ikut panen | Ban anti-selip |
-| Pinggir sungai besar | Desa 65 | Tenggat pendaftaran mendekat | Tabungan minimal 60 persen target (pemain rata-rata sekitar 83 persen di hari 50) |
+| Pinggir sungai besar | Desa 65 | Tenggat pendaftaran mendekat | Tabungan minimal 60 persen target (pemain rata-rata sekitar 76 persen di akhir bab 5) |
 
 Angka reputasi (skala 0 sampai 100) hanya contoh dan disetel di prototype.
 
@@ -151,7 +161,7 @@ Tokoh berangkat kuliah dan menjadi **loper akhir pekan**. Semua distrik terbuka,
 
 ## 11. Yang perlu diputuskan
 
-- Apakah 60 hari cerita (sekitar 5 jam) terasa pas, atau perlu dipendekkan lagi lewat `HARI_CERITA` (bagian 4.1).
+- Apakah 60 rute (sekitar 5 jam, 120 hari cerita) terasa pas, dan apakah hari ringkas (90 persen pendapatan hari utama) terasa adil. Kalau terlalu panjang, naikkan `HARI_CERITA_PER_RUTE` (bagian 4.1).
 - Apakah reputasi bisa dikejar dengan farming satu distrik atau dibatasi per hari.
 - Apakah setelah tamat semua distrik otomatis terbuka.
 - Pilihan kecil di akhir bab: apa saja, dan seberapa jauh memengaruhi akhir.
@@ -168,13 +178,14 @@ Tokoh berangkat kuliah dan menjadi **loper akhir pekan**. Semua distrik terbuka,
 | Tiga akhir | 🟡 Usulan | Bagian 8 |
 | Naskah dialog dan adegan bab | ⬜ Belum | Ikuti CONTENT_GUIDE |
 | Nama tokoh utama | ✅ Fajar Sidik, diputuskan 2026-10-07 | Bagian 1 |
-| Angka biaya daftar, konversi koin, dan tenggat | 🟡 Ditetapkan sebagai angka awal 2026-10-07, disetel di prototype | Bagian 4.1, `BALANCING.md` 7.1 |
+| Angka biaya daftar, konversi koin, tenggat, dan hari ringkas | 🟡 Ditetapkan sebagai angka awal 2026-10-07, direvisi 2026-10-08, disetel di prototype | Bagian 4.1, `BALANCING.md` 7.1 |
 
 ## 13. Riwayat
 
 - **2026-10-07** — Opsi premis dibahas dan dikerucutkan ke Tabungan Kuliah ditambah Menyambung Hidup Keluarga. Diputuskan: tokoh baru lulus SMA, uang tabungan menambah biaya daftar kuliah, game lanjut setelah tamat, satu save dua fase. Cerita dipisah ke `STORY.md`.
 - **2026-10-07** — Tokoh utama dikunci laki-laki, 17 sampai 18 tahun, bernama **Fajar** (dipilih dari enam opsi, salah satu pertimbangan: mudah dibaca pemain luar negeri). Nama belakang dipilih Ronggur: **Sidik** (dari "siddiq", yang jujur), sehingga nama lengkap **Fajar Sidik**.
 - **2026-10-07** — Biaya kuliah dan tenggat ditetapkan (usulan, disetel di prototype). Versi pertama 120 hari (sekitar 10 jam) dianggap terlalu panjang, jadi diperpendek: tenggat 60 hari (19 Juni sampai 18 Agustus, sekitar 5 jam), total kebutuhan Rp3.700.000 dengan sumbangan keluarga Rp2.500.000, target Tabungan Kuliah 12.000 koin (Rp1.200.000), setoran 35/15/50 persen.
+- **2026-10-08** — Panjang cerita dikembalikan ke 120 hari kalender (tenggat 20 April sampai 18 Agustus), tetapi waktu bermain tetap sekitar 5 jam: satu rute yang dimainkan mewakili dua hari cerita (hari utama dan hari ringkas otomatis). Biaya kembali ke Rp5.000.000 dengan target Tabungan Kuliah 25.000 koin. Tombol baru: `HARI_CERITA_PER_RUTE` dan `PERSEN_HARI_RINGKAS`.
 
 ## Sumber (konteks ekonomi dan biaya)
 
