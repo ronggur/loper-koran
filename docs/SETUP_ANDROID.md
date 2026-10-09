@@ -155,6 +155,7 @@ Google Play mewajibkan app baru dan update menargetkan Android 16 (API 36) mulai
 
 - **AAB**: Play Console menerima AAB untuk app baru; ekspor AAB (`gradle_build/export_format=1`) hanya valid dengan **Use Gradle Build** menyala. Gradle build baru dipasang saat plugin Android masuk (Fase 8 dan 14), lalu folder `android/` perlu aturan `.gitignore` sendiri.
 - Keystore rilis di luar folder project, kata sandi tidak di-commit.
+- Layar besar: menurut dokumentasi Android 16, app yang menargetkan API 36 tidak lagi dipatuhi batasan orientasi dan `resizeableActivity` di layar lebar (sw ≥ 600dp: tablet, foldable terbuka). Landscape terkunci tetap berlaku di HP seperti A54, tetapi belum diuji di perangkat besar; tinjau sebelum rilis.
 - Tinjau izin `INTERNET`, `allowBackup`, kebijakan privasi, dan Data Safety (`privacy-ads`, ROADMAP 5 #13).
 - Ikon aplikasi, nama toko, dan `version/code` yang naik tiap upload.
 
