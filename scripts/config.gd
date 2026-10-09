@@ -112,6 +112,15 @@ const JALAN_TROTOAR_UBIN: float = 1.0
 const KAMERA_SEPEDA_X_PECAHAN: float = 0.3333
 ## Letak sepeda pada sumbu tegak layar sebagai pecahan tinggi viewport.
 const KAMERA_SEPEDA_Y_PECAHAN: float = 0.6
+## Dorongan kecepatan (GDD 15, usulan, disetel di HP): sepeda bergeser di bingkai layar sejajar arah jalan (naik ke
+## kanan atas, 2:1) sesuai kecepatan SEBENARNYA. Nol di `KECEPATAN_SANTAI_UD`, naik linear sampai nilai di bawah di
+## `KECEPATAN_NGEBUT_UD`, turun linear ke arah sebaliknya di `KECEPATAN_MELAMBAT_UD`. Nilai = komponen datar geseran.
+## Geseran maju saat ngebut, komponen datar, piksel game (komponen tegak = setengahnya ke atas).
+const DORONGAN_MAJU_PX: float = 28.0
+## Geseran mundur saat melambat, komponen datar, piksel game (komponen tegak = setengahnya ke bawah).
+const DORONGAN_MUNDUR_PX: float = 20.0
+## Konstanta waktu penghalusan geseran (eksponensial, bebas framerate), detik. Setelah satu konstanta sisa jarak 37%.
+const DORONGAN_RESPON_DETIK: float = 0.35
 ## Jarak antar rumah graybox di sisi seberang, ubin (3 ubin rumah + 1 ubin celah).
 const JALAN_UJI_RUMAH_PERIODE_UBIN: int = 4
 ## Letak titik pijak rumah graybox melintang jalan, ubin dari garis tengah jalan (negatif = sisi seberang).

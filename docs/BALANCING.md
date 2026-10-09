@@ -50,7 +50,12 @@ Stick analog dipetakan halus: sumbu atas memetakan santai → ngebut, sumbu bawa
 | Zona stick (tangan kanan) | x 8–192, y 186–352 | Stick melayang muncul di titik sentuh; opsi kidal mencerminkan |
 | Zona swipe | x 210 sampai lebar − 20, y 48–352 | Strip atas (y < 48) bebas dari kontrol untuk tombol HUD; kidal mencerminkan |
 | Lebar jalan scene uji | 2 ubin aspal, geser lateral ±1 ubin | `JALAN_LEBAR_UBIN`; placeholder run 0B, penguncian sisi dan batas resmi di Fase 1 |
-| Letak sepeda di layar | 33,33% lebar, 60% tinggi | `KAMERA_SEPEDA_*_PECAHAN`; sepertiga kiri (ART_DIRECTION 2.2), ±8 px di 640, 780, 800 |
+| Letak dasar sepeda di layar | 33,33% lebar, 60% tinggi | `KAMERA_SEPEDA_*_PECAHAN`; sepertiga kiri (ART_DIRECTION 2.2), ±8 px di 640, 780, 800 saat geseran dorongan = 0 (santai) |
+| Dorongan maju (ngebut) | 28 px game datar, naik ke kanan atas 2:1 (28, −14) | `DORONGAN_MAJU_PX`; GDD 15, usulan (permintaan Ronggur 2026-10-09), disetel di HP |
+| Dorongan mundur (melambat) | 20 px game datar, turun ke kiri bawah 2:1 (−20, +10) | `DORONGAN_MUNDUR_PX`; usulan |
+| Respon dorongan | 0,35 detik | `DORONGAN_RESPON_DETIK`; konstanta waktu penghalusan eksponensial, bebas framerate |
+
+**Dorongan kecepatan** (`scripts/systems/dorongan_kecepatan.gd`, GDD 15): geseran sepeda di bingkai layar dihitung dari kecepatan SEBENARNYA, bukan dari stick. Nol di 3,0 u/d (santai), naik linear ke 28 px di 6,0 u/d (ngebut), turun linear ke −20 px di 1,5 u/d (melambat), dijepit di luar rentang itu; arah sejajar jalan (kemiringan persis 2:1). Hanya kamera yang bergeser (sepeda tampil di letak dasar + geseran); posisi dunia, posisi sprite, dan HUD tidak berubah. Geseran total ngebut ke melambat = 48 px game datar (sekitar 144 px layar di ×3). Konsekuensi yang sengaja disetel di HP: sepeda yang maju di layar memperpendek jalan yang terlihat di depan saat waktu bereaksi paling sempit, jadi nilainya sengaja kecil.
 
 ---
 
