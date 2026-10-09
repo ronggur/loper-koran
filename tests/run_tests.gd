@@ -68,6 +68,8 @@ func _initialize() -> void:
 	# Pembantu tes terpisah supaya berkas ini tidak membengkak; memakai `check` runner ini.
 	var murni: TesInputMurni = TesInputMurni.new(check, _judul)
 	murni.jalankan()
+	var ekspor: TesExport = TesExport.new(check, _judul)
+	ekspor.jalankan()
 	var scene_input: TesInputScene = TesInputScene.new(check, _judul, self)
 	await scene_input.jalankan()
 	root.size = ukuran_sebelum
