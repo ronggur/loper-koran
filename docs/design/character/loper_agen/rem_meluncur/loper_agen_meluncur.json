@@ -1,0 +1,190 @@
+{
+ "sprite": "loper_agen_meluncur.png",
+ "cell": [
+  46,
+  58
+ ],
+ "columns": 4,
+ "rows": 5,
+ "ground_anchor": [
+  23,
+  46
+ ],
+ "godot_offset": [
+  0.0,
+  -17.0
+ ],
+ "status": "usulan; dari frame santai 2, badan atas digeser kaku",
+ "animations": [
+  {
+   "name": "meluncur_normal",
+   "heading": "normal",
+   "row": 0,
+   "fps": 4,
+   "loop": true,
+   "source": "santai row 0 frame 2",
+   "regions": [
+    [
+     0,
+     0,
+     46,
+     58
+    ],
+    [
+     46,
+     0,
+     46,
+     58
+    ],
+    [
+     92,
+     0,
+     46,
+     58
+    ],
+    [
+     138,
+     0,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "meluncur_serong_kanan",
+   "heading": "serong_kanan",
+   "row": 1,
+   "fps": 4,
+   "loop": true,
+   "source": "santai row 1 frame 2",
+   "regions": [
+    [
+     0,
+     58,
+     46,
+     58
+    ],
+    [
+     46,
+     58,
+     46,
+     58
+    ],
+    [
+     92,
+     58,
+     46,
+     58
+    ],
+    [
+     138,
+     58,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "meluncur_kanan",
+   "heading": "kanan",
+   "row": 2,
+   "fps": 4,
+   "loop": true,
+   "source": "santai row 2 frame 2",
+   "regions": [
+    [
+     0,
+     116,
+     46,
+     58
+    ],
+    [
+     46,
+     116,
+     46,
+     58
+    ],
+    [
+     92,
+     116,
+     46,
+     58
+    ],
+    [
+     138,
+     116,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "meluncur_serong_kiri",
+   "heading": "serong_kiri",
+   "row": 3,
+   "fps": 4,
+   "loop": true,
+   "source": "santai row 3 frame 2",
+   "regions": [
+    [
+     0,
+     174,
+     46,
+     58
+    ],
+    [
+     46,
+     174,
+     46,
+     58
+    ],
+    [
+     92,
+     174,
+     46,
+     58
+    ],
+    [
+     138,
+     174,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "meluncur_kiri",
+   "heading": "kiri",
+   "row": 4,
+   "fps": 4,
+   "loop": true,
+   "source": "santai row 4 frame 2",
+   "regions": [
+    [
+     0,
+     232,
+     46,
+     58
+    ],
+    [
+     46,
+     232,
+     46,
+     58
+    ],
+    [
+     92,
+     232,
+     46,
+     58
+    ],
+    [
+     138,
+     232,
+     46,
+     58
+    ]
+   ]
+  }
+ ]
+}
