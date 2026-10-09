@@ -118,6 +118,7 @@ func _test_preset_contoh_buruk() -> void:
 		['keystore/release_user=""', 'keystore/release_user="unggah"', "keystore/release_user", "nama kunci rilis terisi"],
 		['name="Android"', 'name="Android uji"', "nama", "nama preset bukan Android"],
 		['runnable=true', 'runnable=false', "runnable", "runnable mati"],
+		['package/signed=true', 'package/signed=false', "package/signed", "APK tidak ditandatangani (tidak bisa dipasang)"],
 		['version/code=1', 'version/code=2', "version/code", "version/code bukan 1"],
 		['version/name="0.1.0"', 'version/name="1.0.0"', "version/name", "version/name bukan 0.1.0"],
 		['screen/immersive_mode=true', 'screen/immersive_mode=false', "imersif", "mode imersif mati"],
@@ -204,6 +205,8 @@ func _pelanggaran_preset(teks: String) -> Array[String]:
 	for arsitektur: String in ARSITEKTUR_MATI:
 		if cfg.get_value(opsi, arsitektur, null) != false:
 			hasil.append("%s harus ada dan false (arm64-v8a saja)" % arsitektur)
+	if cfg.get_value(opsi, "package/signed", null) != true:
+		hasil.append("package/signed harus true (APK debug tak bertanda tangan tidak bisa dipasang)")
 	if cfg.get_value(opsi, "version/code", null) != VERSI_KODE:
 		hasil.append("version/code harus %d" % VERSI_KODE)
 	if cfg.get_value(opsi, "version/name", null) != VERSI_NAMA:
