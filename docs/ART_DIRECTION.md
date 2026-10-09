@@ -203,8 +203,8 @@ Tujuh varian dari eksplorasi tetap ada di `tools/loper_art/loper.py` dan bisa di
 |---|---|---|
 | Lempar ke sisi seberang | Fase 2 | Lengan kiri, 3–4 frame, per arah |
 | Lempar ke sisi dekat | Fase 2 | Lengan kanan |
-| Meluncur | Fase 1 | Pedal datar, kaki diam |
-| Rem | Fase 1 | Badan sedikit mundur |
+| Meluncur | Fase 1 | Pedal datar, kaki diam. **Usulan sudah dibuat** (`design/character/loper_agen/rem_meluncur/`), 5 arah, belum dipasang |
+| Rem | Fase 1 | Badan sedikit mundur. **Usulan sudah dibuat** (`design/character/loper_agen/rem_meluncur/`), 5 arah, belum dipasang |
 | Berhenti | Fase 4 (menangkap kucing) | Satu kaki turun ke tanah |
 | Tabrakan / oleng | Fase 3 | Tidak jatuh dramatis; kerusakan hanya menghambat |
 

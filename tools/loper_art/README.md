@@ -13,6 +13,7 @@ python3 tools/loper_art/varian.py --out build/loper_art/varian    # pratinjau 8 
 python3 tools/loper_art/jatuh.py --out build/loper_art/jatuh   # animasi jatuh terjerembab (usulan)
 python3 tools/loper_art/melambat.py --out build/loper_art/melambat   # sprite melambat (usulan): frame santai diputar 4 fps
 python3 tools/loper_art/lempar.py docs/design/character/loper_agen/loper_agen.png build/loper_art/lempar.png   # animasi lempar koran (usulan), digambar di atas frame kayuh, belum dari renderer
+python3 tools/loper_art/rem_meluncur.py --out build/loper_art/rem_meluncur   # sprite meluncur dan rem (usulan), dari frame santai 2
 python3 tools/loper_art/fullbody/fullbody.py --out build/loper_art/fullbody   # gambar full body versi lama 294×283 (diganti konversi2.py)
 python3 tools/loper_art/fullbody/konversi.py GAMBAR.jpg --out build/loper_art/konversi   # ilustrasi jadi pixel art (butuh scipy, scikit-image, scikit-learn)
 python3 tools/loper_art/fullbody/konversi_loper.py docs/design/character/loper_agen/konversi/sumber_ai.jpg --out build/loper_art/konversi   # + penyesuaian ke brief dan perbaikan sepeda
@@ -35,6 +36,7 @@ python3 tools/loper_art/fullbody/arsip/fullbody_v1.py build/loper_art/arsip   # 
 | `jatuh.py` | Animasi jatuh terjerembab (usulan, arah normal): sepeda dan pengendara dengan pose bebas, sel 114×68, offset Godot sama dengan sheet kayuh |
 | `melambat.py` | Sprite melambat (usulan): memotong baris santai dari sheet kayuh, 4 fps, hasilnya di `docs/design/character/loper_agen/melambat/` |
 | `lempar.py` | Animasi lempar koran (usulan, 18 baris): lengan dan koran digambar di atas frame kayuh, **belum dari renderer model**; hasilnya di `docs/design/character/loper_agen/lempar/` |
+| `rem_meluncur.py` | Sprite meluncur dan rem (usulan): frame santai 2 dengan badan atas digeser kaku, hasilnya di `docs/design/character/loper_agen/rem_meluncur/` |
 | `fullbody/` | Gambar full body skala besar; gaya di `docs/ART_DIRECTION.md` 3.5. **`konversi2.py`** membuat gambar resmi 240×292 (sejak 2026-10-08) dari gambar AI dengan langkah-langkah di `konversi2/`: konversi otomatis, lalu kepala, kerah, tas, gir, engkol, dan kabel diubah; kepala di layer sendiri. `fullbody.py` (dengan pelukis lima nada `pxhd.py`) adalah versi lama 294×283, hasilnya sekarang di arsip. `konversi.py`, `konversi_loper.py`, dan `konversi_sepeda.py` (perbaikan frame, engkol, setang, dan tas sepeda) adalah eksplorasi konversi pertama. `arsip/` menyimpan full body versi pertama (`fullbody_v1.py`, pelukis tiga nada `px2d.py`) |
 
 ## Varian baju
