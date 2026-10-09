@@ -18,7 +18,7 @@ Status dicek 2026-10-09 (macOS, Apple M1). Perintah cek ada di kolom terakhir.
 | `export/android/android_sdk_path` | ✅ | Terisi di Editor Settings (`~/Library/Application Support/Godot/editor_settings-4.7.tres`) | lihat bagian 2 |
 | **`export/android/java_sdk_path`** | ✅ Terisi 2026-10-09 | `/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home`, diisi orchestrator atas izin pemilik. **Wajib**: tanpanya ekspor berhenti dengan `A valid Java SDK path is required in Editor Settings.`, dan variabel lingkungan `JAVA_HOME` **tidak** menggantikannya di Godot 4.7.2 (dicoba, pesan sama) | `grep java_sdk_path "$HOME/Library/Application Support/Godot/editor_settings-4.7.tres"` |
 | Debug keystore | ✅ | `~/Library/Application Support/Godot/keystores/debug.keystore` (2,7 KB) dibuat Godot sendiri (lewat `keytool` dari JDK di atas) pada ekspor debug pertama; perilaku standar, di luar repo | `ls "$HOME/Library/Application Support/Godot/keystores/"` |
-| `aapt2`, `apksigner`, `apkanalyzer` | ✅ | `~/Library/Android/sdk/build-tools/<versi>/aapt2` dan `apksigner`; `~/Library/Android/sdk/cmdline-tools/latest/bin/apkanalyzer` | `aapt2 version` |
+| `aapt2`, `apksigner`, `apkanalyzer` | ✅ | `~/Library/Android/sdk/build-tools/<versi>/aapt2` dan `apksigner`; `~/Library/Android/sdk/cmdline-tools/latest/bin/apkanalyzer` | `~/Library/Android/sdk/build-tools/37.0.0/aapt2 version` |
 
 ### Export templates (kalau belum ada)
 
@@ -220,7 +220,7 @@ Dikerjakan manusia di HP asli; agent tidak bisa menilai rasa kontrol. Fase 0 **t
 **Inti M0**
 
 - [ ] APK terpasang dan app terbuka dalam landscape; tidak ada crash di `adb logcat -s godot`.
-- [ ] Stick muncul di bawah jempol kiri, sepeda bergerak naik ke kanan atas. Atas: ngebut (sprite berdiri). Netral: santai. Bawah: melambat. Kiri/kanan: sprite serong atau 90° dan sepeda bergeser. Tidak ada animasi yang berkedip di sekitar batas sudut 22,5°.
+- [ ] Stick muncul di bawah jempol kiri, sepeda bergerak naik ke kanan atas. Atas: ngebut (sprite berdiri). Netral: santai. Bawah: melambat. Kiri/kanan: sprite serong (sekitar 45° sampai 63°) dan sepeda bergeser. Sprite 90° belum bisa muncul di run ini (butuh rem Fase 1), jadi jangan dicatat sebagai cacat. Tidak ada animasi yang berkedip di sekitar batas sudut 22,5°.
 - [ ] Dua jempol bersamaan: stick dan garis swipe jalan tanpa saling mengganggu; mengangkat satu jari tidak mematikan yang lain.
 - [ ] Tombol kidal menukar zona dan panel kecepatan; tombol di strip atas tidak tersentuh tak sengaja saat bermain.
 - [ ] Kembali dari background (tombol home lalu buka lagi): stick tidak macet dan tidak ada gerak sendiri.
