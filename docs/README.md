@@ -1,4 +1,6 @@
-# Loper Koran
+# Kring Kring! (Loper Koran)
+
+> **Judul game: Kring Kring!** (diputuskan 2026-10-09; dari bunyi bel sepeda). "Loper Koran" tetap dipakai sebagai nama kerja, nama repo, dan nama folder. Usulan subjudul berbahasa Inggris untuk pemain luar negeri (misalnya *Paper Route Stories*) belum diputuskan.
 
 Game 2D mobile (Android) bergaya Paperboy modern: pemain mengayuh sepeda menyusuri jalan isometrik sambil melempar koran ke rumah pelanggan, dengan latar Indonesia, kecepatan yang diatur sendiri, dan isi koran yang ikut mengubah dunia.
 
