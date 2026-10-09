@@ -1,0 +1,5 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[1;31mERROR: Failed loading resource: res://scenes/dev/graybox.tscn.[0m
+[90m   at: _load (core/io/resource_loader.cpp:317)[0m
+933 lolos, 0 gagal

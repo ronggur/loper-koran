@@ -1,0 +1,7 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+== Tingkat sprite dari stick ==
+SCRIPT ERROR: Invalid call. Nonexistent function 'tidak_ada' in base 'GDScript'.
+          at: _test_tingkat_sprite (res://tests/run_tests.gd:120)
+== Arah sprite dari gerak ==
+933 lolos, 0 gagal
