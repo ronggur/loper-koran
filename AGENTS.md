@@ -32,24 +32,38 @@ Wajib:
 
 ## Perintah cepat
 
-Project Godot belum ada (dibuat di Fase 0). Setelah itu:
+Project Godot 4.7.2 sudah ada (Fase 0, run 0A). Dari root repo:
 
 ```bash
-godot --headless --import                              # sekali setelah clone
-godot --headless --script res://tests/run_tests.gd     # tes logika inti
-python3 tools/loper_art/produce.py --out build/loper_art   # render ulang sprite pemain
+godot --headless --import                              # sekali setelah clone, dan setiap ada class_name atau aset baru
+mkdir -p build                                         # folder log, tidak di-commit
+godot --headless --script res://tests/run_tests.gd 2>&1 | tee build/tests.log   # tes logika inti
+python3 tools/cek_keluaran_tes.py build/tests.log      # pemeriksa keluaran: WAJIB, exit code Godot saja tidak cukup
+python3 tools/tests_cek/uji_pemeriksa.py               # bukti pemeriksa menolak log buruk
+godot --headless --path . --quit-after 2               # buka project dua frame, tidak boleh ada ERROR/WARNING
+godot --headless --path . --script res://tests/probe_layar.gd   # skala bulat dan lebar viewport per rasio layar
+python3 tools/env_art/graybox.py                       # render ulang ubin dan kotak graybox (hanya stdlib)
+python3 tools/loper_art/produce.py --out build/loper_art   # render ulang sprite pemain (butuh numpy, pillow)
 ```
 
+`godot --headless` mengabaikan `--resolution`; untuk jendela asli sebentar: `godot --path . --resolution 1560x720 --script res://tests/probe_layar_jendela.gd -- <jalur.png>`.
 macOS tanpa `godot` di PATH: `/Applications/Godot.app/Contents/MacOS/Godot`.
 
 ## Peta repo
 
 ```
-docs/                Dokumen desain (GDD, STORY, TECH_PLAN, ART_DIRECTION, BALANCING, DATA_SCHEMA, dst.) + design/
+project.godot        Godot 4.7.2, Compatibility, landscape, 640x360 canvas_items + integer + expand
+scenes/              dev/graybox.tscn (scene utama sementara), entities/loper_agen.tscn (pemain)
+scripts/             config.gd (semua angka tuning), systems/ (logika murni), entities/, ui/ (palette.gd)
+assets/              sprites/ (loper/, _placeholder/), palette/, fonts/ (usulan), LICENSES.md
+tests/               run_tests.gd (runner), probe_layar*.gd (ukur skala layar)
+docs/                Dokumen desain (GDD, STORY, TECH_PLAN, ART_DIRECTION, BALANCING, DATA_SCHEMA, dst.) + design/ + loop/
 docs/design/         Token desain, mock HUD, sprite produksi pemain (character/loper_agen/)
 tools/loper_art/     Renderer sprite pemain (Python), lihat tools/loper_art/README.md
-tools/env_art/       Renderer aset lingkungan (usulan)
+tools/env_art/       Renderer aset lingkungan (usulan) + graybox.py (ubin graybox)
+tools/               cek_keluaran_tes.py (pemeriksa keluaran tes), tests_cek/ (contoh log baik dan buruk)
+.github/workflows/   tes.yml (CI: import, tes, pemeriksa keluaran)
 .cursor/rules/       Aturan agent (sumber tunggal)
 ```
 
-Struktur Godot (`scenes/`, `scripts/`, `assets/`, `tests/`) dibuat di Fase 0, lihat `docs/README.md`.
+Belum ada: `export_presets.cfg`, `android/` (run 0C), input touch (run 0B), `scripts/autoload/`, `assets/data/`, file terjemahan, `assets/ui/theme.tres`. Struktur lengkap yang direncanakan ada di `docs/README.md`.

@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="SpriteFrames" path="res://assets/sprites/loper/loper_agen_frames.tres" id="1_frames"]
+[ext_resource type="Script" path="res://scripts/entities/loper_sprite.gd" id="2_script"]
+
+[node name="LoperAgen" type="AnimatedSprite2D"]
+texture_filter = 1
+sprite_frames = ExtResource("1_frames")
+animation = &"santai_normal"
+offset = Vector2(0, -17)
+script = ExtResource("2_script")

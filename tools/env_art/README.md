@@ -14,6 +14,12 @@ python3 districts.py                               # enam vinyet distrik, atau s
 python3 details.py                                 # loop jemuran, ayam, asap warung + strip frame
 ```
 
+Ubin dan kotak graybox untuk project Godot (Fase 0) dibuat oleh `graybox.py`, yang hanya memakai pustaka standar Python (tanpa numpy dan pillow) dan menulis langsung ke `assets/sprites/_placeholder/`:
+
+```
+python3 tools/env_art/graybox.py                   # dari root repo; hasil deterministik
+```
+
 Hasil masuk ke `build/env_art/` (tidak di-commit, bisa diganti lewat `ENV_ART_OUT`). Setelah dicek, salin yang dipakai ke `docs/design/environment/`.
 
 ## Cara kerja
@@ -35,3 +41,4 @@ Hasil masuk ke `build/env_art/` (tidak di-commit, bisa diganti lewat `ENV_ART_OU
 | `districts.py` | Ruko, pasar, desa, pinggir sungai, dan vinyet enam distrik |
 | `details.py` | Loop detail pinggir jalan |
 | `anim_hero.py` | Animasi adegan utama |
+| `graybox.py` | Ubin graybox 64x32 (aspal, trotoar, rumput), kotak rumah, dan kotak surat untuk `assets/sprites/_placeholder/` (hanya stdlib, bukan mock) |

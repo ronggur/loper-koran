@@ -523,7 +523,7 @@ Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dib
 ## 11. Keputusan yang Perlu Diambil
 
 - **Ukuran ubin (64×32)**: dikunci setelah graybox Fase 1. Skala piksel sudah dikunci ×3 (2026-10-09).
-- **Stretch mode dan resolusi dasar** (bagian 7): sudah dipilih 2026-10-09, diverifikasi di Fase 0 (run 0A).
+- **Stretch mode dan resolusi dasar** (bagian 7): sudah dipilih 2026-10-09, diverifikasi di desktop pada run 0A (hasil di ROADMAP 4b); uji di HP menunggu.
 - **Palet induk** (bagian 2.4): dikunci setelah aset gelombang 1.
 - **Warna bayangan per waktu dan distrik** (bagian 2.5): dikunci bersama palet induk, setelah shader-nya dicek di Fase 0.
 - **Cara menampilkan rumah di sisi dekat**, yang hanya terlihat belakangnya.

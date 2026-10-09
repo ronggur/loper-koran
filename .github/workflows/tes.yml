@@ -1,0 +1,86 @@
+name: tes
+
+# Tes headless Godot untuk setiap PR dan setiap push ke main (rule `testing`, DEV_PHASES Fase 0).
+# Godot tidak ada di runner, jadi dipasang dari rilis resmi godotengine/godot-builds dan
+# diverifikasi dengan SHA-512 yang disematkan di sini (nilai dari SHA512-SUMS.txt rilis yang sama,
+# dicocokkan juga dengan zip yang diunduh). Mengganti versi Godot berarti mengganti dua nilai env.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  tes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GODOT_RILIS: 4.7.2-stable
+      GODOT_VERSI_DIHARAPKAN: 4.7.2.stable
+      GODOT_SHA512: 9aa00f7a605200940bce3027a567b782f49bd8e940dd06ae9e987bd65aee1b1467edd56ed84fcdcbdd44354bf613bdbb4e5d2913e925850368e150c59ed54c65
+    steps:
+      - name: Ambil kode
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Pasang Godot (rilis resmi, checksum SHA-512)
+        run: |
+          set -euo pipefail
+          berkas="Godot_v${GODOT_RILIS}_linux.x86_64"
+          curl -sSfL --retry 3 -o "$RUNNER_TEMP/godot.zip" \
+            "https://github.com/godotengine/godot-builds/releases/download/${GODOT_RILIS}/${berkas}.zip"
+          echo "${GODOT_SHA512}  $RUNNER_TEMP/godot.zip" | sha512sum -c -
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP/godot"
+          chmod +x "$RUNNER_TEMP/godot/${berkas}"
+          mkdir -p "$HOME/.local/bin"
+          ln -s "$RUNNER_TEMP/godot/${berkas}" "$HOME/.local/bin/godot"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          versi="$("$HOME/.local/bin/godot" --version)"
+          echo "Godot: ${versi}"
+          case "${versi}" in
+            "${GODOT_VERSI_DIHARAPKAN}"*) ;;
+            *) echo "Versi Godot tidak sesuai, diharapkan ${GODOT_VERSI_DIHARAPKAN}"; exit 1 ;;
+          esac
+
+      - name: Uji pemeriksa keluaran tes
+        run: python3 tools/tests_cek/uji_pemeriksa.py
+
+      - name: Import project (tanpa error, tanpa berkas yang belum di-commit)
+        run: |
+          set -uo pipefail
+          godot --headless --import 2>&1 | tee "$RUNNER_TEMP/import.log"
+          if grep -E 'SCRIPT ERROR|ERROR:' "$RUNNER_TEMP/import.log"; then
+            echo "Import memuat error"; exit 1
+          fi
+          # .uid dan .import yang dibuat Godot harus sudah ter-commit (AC-1).
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Import mengubah atau membuat berkas yang belum ter-commit:"; git status --porcelain; exit 1
+          fi
+
+      - name: Buka project dua frame (tanpa error atau warning)
+        run: |
+          set -uo pipefail
+          godot --headless --path . --quit-after 2 2>&1 | tee "$RUNNER_TEMP/buka.log"
+          if grep -E 'SCRIPT ERROR|ERROR:|WARNING:' "$RUNNER_TEMP/buka.log"; then
+            echo "Membuka project menghasilkan error atau warning"; exit 1
+          fi
+
+      - name: Tes logika (run_tests.gd + pemeriksa keluaran)
+        run: |
+          set +e
+          godot --headless --script res://tests/run_tests.gd 2>&1 | tee "$RUNNER_TEMP/tes.log"
+          kode_godot=${PIPESTATUS[0]}
+          python3 tools/cek_keluaran_tes.py "$RUNNER_TEMP/tes.log"
+          kode_cek=$?
+          echo "exit Godot=${kode_godot}, exit pemeriksa=${kode_cek}"
+          if [ "${kode_godot}" -ne 0 ] || [ "${kode_cek}" -ne 0 ]; then exit 1; fi
+
+      - name: Probe layar (skala bulat di berbagai rasio)
+        run: |
+          set -uo pipefail
+          godot --headless --path . --script res://tests/probe_layar.gd 2>&1 | tee "$RUNNER_TEMP/layar.log"
+          if grep -E 'SCRIPT ERROR|ERROR:|PECAHAN' "$RUNNER_TEMP/layar.log"; then
+            echo "Probe layar menemukan error atau skala pecahan"; exit 1
+          fi
