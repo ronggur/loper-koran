@@ -549,7 +549,10 @@ python3 tools/cek_keluaran_tes.py build/tests.log           # pemeriksa: lolos (
 python3 tools/cek_keluaran_tes.py --ketat build/tests.log   # exit 0
 python3 tools/tests_cek/uji_pemeriksa.py                    # uji pemeriksa: 16 kasus, 0 menyimpang
 godot --headless --path . --quit-after 2                    # hanya banner; 0 ERROR/WARNING
-# klon bersih (git clone --branch feat/fase0bc-input-export, scratchpad): lihat baris hasil di bawah
+# klon bersih (git clone --branch feat/fase0bc-input-export, scratchpad):
+godot --headless --import                                   # exit 0, 0 ERROR/WARNING; /usr/bin/git status --porcelain -uall = 0 baris
+godot --headless --script res://tests/run_tests.gd ...      # 2102 lolos, 0 gagal; pemeriksa --ketat exit 0
+godot --headless --path . --quit-after 2                    # 0 ERROR/WARNING; git status tetap 0 baris
 git diff --name-only main...HEAD | grep -E "keystore|jks|p12|apk|aab|idsig|export_credentials|^.godot/|^build/|^builds/"   # kosong (exit 1)
 ```
 
