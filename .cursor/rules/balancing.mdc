@@ -1,0 +1,41 @@
+---
+description: Aturan mengubah angka tuning (kecepatan, stamina, lemparan, skor, tenggat, ekonomi, keausan) dan rumus yang memakainya.
+globs: scripts/config.gd, scripts/systems/**, assets/data/missions/**, assets/data/shop/**, tests/sim_ekonomi.gd, docs/BALANCING.md
+alwaysApply: false
+---
+
+# Balancing
+
+Rujukan: `docs/BALANCING.md`, GDD 5, 6, 12, 14, STORY 4.1. **Semua angka di `BALANCING.md` adalah usulan awal** untuk prototype. Angka berubah lewat uji di HP, lalu dokumen diperbarui dari `scripts/config.gd`, bukan sebaliknya.
+
+## Sumber kebenaran
+
+- `scripts/config.gd`: semua angka global.
+- `assets/data/missions/*.json`: parameter tiap misi (batas, hadiah).
+- `assets/data/routes/<distrik>/*.json`: jarak rumah dan posisi rintangan per segmen.
+- `assets/data/shop/upgrades.json` (Fase 6A): harga dan efek upgrade.
+
+## Aturan format `config.gd`
+
+- **Setiap konstanta ditulis dalam SATU baris** (`const NAMA: Tipe = nilai`) dengan nilai literal: angka, `true` atau `false`, array. Tidak ada ekspresi atau referensi ke konstanta lain. Alasannya: alat simulasi atau validator nanti mem-parse baris ini, dan bentuk lain rusak diam-diam.
+- Kelompokkan per bagian GDD dengan komentar `##` singkat, dan tulis satuannya di nama atau komentar.
+- **Satuan**: jarak dalam ubin (1 ubin = 32 unit dunia), kecepatan dalam ubin per detik (u/d), waktu dalam detik, koin bilangan bulat (1 koin ≈ Rp100). Data dan kode memakai satuan yang sama dengan `BALANCING.md` bagian 1.
+- Parameter cerita (`TARGET_TABUNGAN`, `HARI_CERITA_TOTAL`, `PORSI_AWAL`, ambang akhir) mengikuti `TECH_PLAN.md` 3.5. Yang bertanda ❓ di sana belum punya angka: jangan mengarang, tanyakan atau ajukan usulan bertulis.
+
+## Alur mengubah angka
+
+1. Ubah `scripts/config.gd` (atau data misi, rute, upgrade).
+2. Jalankan `godot --headless --script res://tests/run_tests.gd`. Tes ini mengecek target di `BALANCING.md` bagian 9 (dan, mulai Fase 6B, `tests/sim_ekonomi.gd` untuk ekonomi cerita).
+3. **Coba di HP asli.** Angka gerak dan lemparan tidak bisa dinilai dari editor.
+4. Perbarui tabel di `BALANCING.md` dan tulis alasannya di bagian perubahan. Kalau angka yang tercantum di GDD ikut berubah (GDD 14.1, 5, 6), perbarui GDD dan tambahkan baris di Changelog Keputusan.
+
+## Batasan desain (jangan dilanggar oleh tuning)
+
+- Ngebut menaikkan skor dan mengejar tenggat, tapi **harus** punya harga: reaksi lebih sempit, stamina terkuras, keausan lebih cepat (prinsip 1). Tuning yang membuat ngebut selalu lebih baik atau santai selalu lebih baik berarti gagal.
+- Kegagalan tidak menghukum berlapis (prinsip 2): misi gagal tidak mengurangi koin dan tidak menggagalkan hari, tabrakan menghambat tidak menghentikan rute, kerusakan sepeda tidak membuat game tidak bisa dimainkan.
+- Kerusakan sepeda memberi tanda peringatan dulu sebelum efeknya (prinsip 3).
+- **Mode bantu tidak boleh membuat pemain tertahan** di hasil yang jauh lebih buruk; efek kerusakan di mode bantu masih terbuka (ROADMAP 5), jangan memutuskan sendiri.
+- Ekonomi mengacu pada penghasilan loper sungguhan (GDD 14.1): ongkos antar 15 koin (rentang 6 sampai 20), rute awal sekitar 25 rumah, hari rapi sekitar 300 sampai 375 koin, hadiah misi 45 / 75 / 120. Menyimpang dari patokan ini perlu alasan tertulis.
+- Rata-rata 400 koin per hari yang dituntut cerita lebih tinggi dari rute dasar (STORY 4.1, TECH_PLAN 3.6). Penyelesaiannya lewat misi dan tip, bukan dengan menaikkan ongkos dasar diam-diam. Catat selisihnya di PR.
+- Ekonomi dirancang seolah tidak ada pemain yang menonton iklan (iklan selalu bonus opsional, GDD 14.2).
+- **Tidak ada power creep**: upgrade yang lebih kuat hanya masuk bersama distrik atau bab baru, lalu target dicek ulang.

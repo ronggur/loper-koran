@@ -1,0 +1,35 @@
+---
+description: Aturan menulis dan memperbarui dokumen desain di docs/.
+globs: docs/**
+alwaysApply: false
+---
+
+# Dokumen Desain
+
+- Semua dokumen di `docs/` ditulis dalam **bahasa Indonesia**, kalimat jelas dan langsung. Nama file, path, field, dan identifier kode tetap apa adanya.
+- Path di dokumen selalu relatif terhadap root repo (`scripts/config.gd`, `tools/loper_art/produce.py`).
+- Rujuk bagian lain dengan nomor bagian (`GDD 5.2`, `ART_DIRECTION 3.5`) supaya mudah dilacak dari kode.
+- Pisahkan yang **dikunci** dari yang **usulan**. Tandai usulan dengan kata "usulan" dan jangan mengubahnya jadi keputusan tanpa persetujuan user. Hal yang belum diuji ditandai usulan sampai ada prototype yang mengujinya.
+- `docs/GDD.md` adalah sumber utama desain. Dokumen Claude Docs "Loper Koran — Ide Pengembangan Game" adalah arsip yang tidak diperbarui lagi; jangan menulis perubahan desain di sana.
+
+## Kapan memperbarui dokumen
+
+| Kejadian | Dokumen yang diperbarui |
+|---|---|
+| Keputusan desain baru atau berubah | `GDD.md` bagian terkait (dan `STORY.md` untuk cerita). Visual atau audio: `ART_DIRECTION.md` atau `SOUND_DESIGN.md` |
+| Tugas fase selesai | `DEV_PHASES.md`: centang `[x]`. Kalau fase selesai, perbarui status dan tanggal di tabel ringkasan, dan milestone di `ROADMAP.md` |
+| Keputusan terbuka diambil user | Hapus dari `ROADMAP.md` bagian 5, perbarui GDD bagian yang bertanya (mis. 3.2, 9.5, 14.3, 17), dan catat tanggalnya |
+| Format data berubah | `DATA_SCHEMA.md` (contoh harus diambil dari file yang benar-benar ada) |
+| Angka tuning berubah | `scripts/config.gd` dulu, lalu tabel di `BALANCING.md` dengan alasannya. Kalau angka itu juga tertulis di GDD, perbarui di sana |
+| Rencana teknis berubah atau disetujui | `TECH_PLAN.md`. Setelah disetujui, ringkasannya dipindah ke `DEV_PHASES.md` dan `ROADMAP.md`, angkanya ke `BALANCING.md` dan `DATA_SCHEMA.md` |
+| Aset baru atau gaya berubah | `ART_DIRECTION.md`, dan `tools/loper_art/README.md` kalau alatnya berubah |
+| Status project berubah | Baris status di `docs/README.md` dan tanggal status di `ROADMAP.md` |
+| Dokumen baru ditambah | Daftarkan di tabel `docs/README.md` |
+
+## Jangan
+
+- Jangan menandai keputusan sebagai "dikunci" tanpa persetujuan user.
+- Jangan membuat dokumen baru kalau isinya cocok di dokumen yang sudah ada.
+- Jangan membiarkan dua dokumen berbeda angka. Kalau menemukan selisih (mis. angka di GDD berbeda dengan `BALANCING.md`), sebutkan ke user dan perbaiki sumber yang salah, jangan menambal salah satunya diam-diam.
+- Jangan mengubah `STORY.md` (tokoh, urutan bab, akhir) tanpa persetujuan user.
+- Isi `docs/design/` yang dihasilkan alat (render HUD, sprite) diubah lewat script sumbernya, bukan diedit manual.
