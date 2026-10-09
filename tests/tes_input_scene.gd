@@ -152,6 +152,20 @@ func _test_scene_jalan_uji() -> void:
 				hanya_tombol_menerima = false
 	check(tanpa_posisi_absolut, "HUD: semua Control selain dua kontainer anchor ditata oleh Container induknya (tanpa posisi piksel absolut)")
 	check(hanya_tombol_menerima, "HUD: hanya tombol yang menerima sentuhan (kontainer, panel, label, dan bar memakai MOUSE_FILTER_IGNORE)")
+	# Umpan balik stick (AC-14): tekstur cakram/cincin/knob dirasterisasi per piksel game dengan warna dari Palette.
+	var tekstur_isi: ImageTexture = kontrol.get("_tekstur_isi") as ImageTexture
+	var tekstur_cincin: ImageTexture = kontrol.get("_tekstur_cincin") as ImageTexture
+	var tekstur_knob: ImageTexture = kontrol.get("_tekstur_knob") as ImageTexture
+	check(tekstur_isi != null and tekstur_cincin != null and tekstur_knob != null, "KontrolTouch membuat tekstur isi, cincin, dan knob stick")
+	if tekstur_isi != null and tekstur_cincin != null and tekstur_knob != null:
+		var radius: int = int(Config.STICK_RADIUS_PX)
+		var gambar_isi: Image = tekstur_isi.get_image()
+		var gambar_cincin: Image = tekstur_cincin.get_image()
+		var gambar_knob: Image = tekstur_knob.get_image()
+		check(gambar_isi.get_size() == Vector2i(71, 71) and gambar_cincin.get_size() == Vector2i(71, 71) and gambar_knob.get_size() == Vector2i(31, 31), "cincin radius 35 (71 px) dan knob radius 15 (31 px), DESIGN_SPEC 3.7")
+		check(_hampir(gambar_isi.get_pixel(radius, radius), Color(Palette.TEXT, Config.STICK_ISI_ALPHA)) and gambar_isi.get_pixel(0, 0).a == 0.0, "isi cincin = TEXT alpha 14%, sudut persegi transparan")
+		check(_hampir(gambar_cincin.get_pixel(0, radius), Color(Palette.TEXT, Config.STICK_GARIS_ALPHA)) and _hampir(gambar_cincin.get_pixel(1, radius), Color(Palette.TEXT, Config.STICK_GARIS_ALPHA)) and gambar_cincin.get_pixel(2, radius).a == 0.0 and gambar_cincin.get_pixel(radius, radius).a == 0.0, "garis cincin = TEXT alpha 70% setebal 2 px, bagian dalam kosong")
+		check(_hampir(gambar_knob.get_pixel(Config.STICK_KNOB_RADIUS_PX, Config.STICK_KNOB_RADIUS_PX), Palette.ACCENT) and gambar_knob.get_pixel(0, 0).a == 0.0, "knob = ACCENT penuh, sudut transparan")
 	var lapisan_kontrol: Node = kontrol.get_parent()
 	check(lapisan_kontrol is CanvasLayer and lapisan_kontrol != hud, "node input digambar di CanvasLayer sendiri (koordinat gambar = koordinat event)")
 	_bersihkan(akar)
@@ -457,6 +471,12 @@ func _test_proyek_dan_keyboard() -> void:
 
 
 # --- Pembantu node ---
+
+## True bila dua warna sama dalam satu langkah kuantisasi 8-bit.
+func _hampir(a: Color, b: Color) -> bool:
+	var batas: float = 1.5 / 255.0
+	return absf(a.r - b.r) <= batas and absf(a.g - b.g) <= batas and absf(a.b - b.b) <= batas and absf(a.a - b.a) <= batas
+
 
 func _semua_node(akar: Node) -> Array[Node]:
 	var hasil: Array[Node] = [akar]
