@@ -121,7 +121,7 @@ Batas bukti ini: **desktop macOS, bukan HP.** Ketajaman dan skala di Samsung A54
 ## NEEDS-MANUAL (uji di HP)
 - [ ] Tampilan dan ketajaman piksel di 16:9, 19,5:9 (A54 2340×1080 → 780×360), dan 20:9 di layar sungguhan; jalankan scene `scenes/dev/graybox.tscn`, harapan: piksel tajam tanpa blur, skala bulat, tidak ada tepi bergerigi acak.
 - [ ] Di HP: pastikan tinggi jendela yang dipakai game tepat 1080 (bilah sistem tersembunyi, layar penuh imersif) sehingga skala tetap x3. Dengan stretch `integer`, tinggi di bawah 1080 menurunkan skala ke x2 dan menyisakan tepi kosong. Dikerjakan di preset export run 0C; probe: `tests/probe_layar_jendela.gd` tidak bisa jalan di HP, jadi cek lewat tampilan dan tangkapan layar `adb`.
-- [ ] CI GitHub Actions hijau pada PR (hanya bisa dibuktikan setelah PR dibuka). Dev tidak bisa menjalankan runner Linux; langkah dan checksum sudah diperiksa dengan membaca dan mencocokkan (lihat Catatan gerbang).
+- [x] CI GitHub Actions hijau pada PR: terbukti 2026-10-09 pada PR #12, run `37908728048`, commit `9a553a0` (semua langkah sukses; log CI memuat `950 lolos, 0 gagal` dan `pemeriksa: lolos`). Diperiksa orchestrator lewat `gh run view`. Dev tidak bisa menjalankan runner Linux; langkah dan checksum sudah diperiksa dengan membaca dan mencocokkan (lihat Catatan gerbang).
 - [ ] Cek light 2D / glow / partikel / shader warna bayangan di renderer Compatibility pada HP target (tidak dikerjakan di 0A; masuk run berikutnya atau Fase 1).
 
 Tambahan QA (iterasi 1), langkah uji yang QA tidak bisa jalankan di sini (tidak ada HP terhubung ke sesi ini, tidak ada runner Linux):
