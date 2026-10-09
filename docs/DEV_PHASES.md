@@ -17,7 +17,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 
 | Fase | Nama | Milestone | Status | Selesai |
 |---|---|---|---|---|
-| 0 | Fondasi teknis | M0 | ⬜ | |
+| 0 | Fondasi teknis | M0 | 🟡 run 0A selesai (PR #12); 0B dan 0C menyusul | |
 | 1 | Gerak sepeda & kecepatan (prototype 1) | M1 | ⬜ | |
 | 2 | Lemparan koran (prototype 2) | M1 | ⬜ | |
 | 3 | Satu rute perumahan (prototype 3) | M2 | ⬜ | |
@@ -27,7 +27,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 | 7 | Vertical slice perumahan & audio dasar | M3 | ⬜ | |
 | 8 | Distrik berikutnya, iklan, rilis | M4 | ⬜ | |
 
-**Fase aktif: belum ada.** Pra-produksi: dokumen dan sprite pemain siap per 2026-10-07. Fase berikutnya adalah Fase 0.
+**Fase aktif: Fase 0**, dikerjakan lewat loop Dev↔QA dalam tiga run (`LOOP-DEV-QA.md` Bagian 6). Run 0A (fondasi project) lolos QA 2026-10-09; run 0B (input touch dan sepeda placeholder) dan 0C (export Android dan APK) menyusul.
 
 ---
 
@@ -36,15 +36,17 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 **Tujuan:** project bisa dibangun jadi APK dan jalan di HP sungguhan sebelum gameplay dibuat.
 
 - [x] Putuskan nama package Android: `com.rmh.kring` (2026-10-09, ROADMAP 4b)
-- [ ] Repo git `loper-koran`: root repo = root project Godot, dokumen di `docs/` (folder ini) dengan `docs/.gdignore`
-- [ ] Project Godot 4.7.2 landscape, renderer Compatibility; cek apakah light 2D, glow, partikel, dan shader warna bayangan yang dibutuhkan jalan di renderer ini di HP target (ART_DIRECTION 2.3, 7)
-- [ ] Resolusi dasar 640×360 dan stretch `canvas_items` + integer scale + `expand`, skala ×3 (dipilih 2026-10-09, ROADMAP 4b); uji di rasio 16:9, 19.5:9, 20:9
-- [ ] Import filter Nearest dan tanpa mipmap untuk sprite dunia; `snap_2d_transforms_to_pixel` aktif
-- [ ] `scripts/config.gd` berisi angka awal dari `BALANCING.md`
+- [x] Repo git `loper-koran`: root repo = root project Godot, dokumen di `docs/` (folder ini) dengan `docs/.gdignore`
+- [x] Project Godot 4.7.2 landscape, renderer Compatibility (run 0A, 2026-10-09)
+- [ ] Cek apakah light 2D, glow, partikel, dan shader warna bayangan yang dibutuhkan jalan di renderer Compatibility di HP target (ART_DIRECTION 2.3, 7)
+- [x] Resolusi dasar 640×360 dan stretch `canvas_items` + integer scale + `expand`, skala ×3 (dipilih 2026-10-09, ROADMAP 4b); diverifikasi di jendela desktop pada rasio 16:9, 19.5:9, 20:9 (run 0A, hasil di ROADMAP 4b)
+- [ ] Uji ketajaman piksel dan skala di HP (A54 2340×1080 → 780×360 ×3), termasuk memastikan tinggi jendela 1080 di Android supaya skala tidak turun ke ×2 (dikerjakan bersama run 0C)
+- [x] Import filter Nearest dan tanpa mipmap untuk sprite dunia; `snap_2d_transforms_to_pixel` aktif
+- [x] `scripts/config.gd` berisi angka awal dari `BALANCING.md`
 - [ ] Input touch: stick melayang di zona kiri bawah, swipe di zona kanan, opsi kidal menukar zona; input keyboard untuk tes di editor
-- [ ] Pasang sprite pemain (`assets/sprites/loper/` dari `docs/design/character/loper_agen/`) dan scene `loper_agen.tscn`
-- [ ] Tes logika headless (`tests/run_tests.gd`) dan CI sederhana
-- [ ] `CLAUDE.md` / `AGENTS.md` dengan aturan coding dan Definition of Done
+- [x] Pasang sprite pemain (`assets/sprites/loper/` dari `docs/design/character/loper_agen/`) dan scene `loper_agen.tscn` (di `scenes/entities/`)
+- [x] Tes logika headless (`tests/run_tests.gd`) dan CI sederhana (CI hijau di PR #12)
+- [x] `CLAUDE.md` / `AGENTS.md` dengan aturan coding dan Definition of Done
 - [ ] Preset export Android dan APK debug; panduan `SETUP_ANDROID.md` diadaptasi dari Brainy Dungeon
 - [ ] Uji APK di HP
 
