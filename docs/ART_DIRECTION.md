@@ -348,6 +348,7 @@ Kolom **M2** = dibutuhkan untuk satu hari penuh di perumahan (prototype 3–4). 
 | Penghuni menyiram halaman | ⬜ | ✅ | |
 | Tukang sayur keliling | ⬜ | ✅ | |
 | Pelanggan di teras (reaksi senang / kesal) | ⬜ | ✅ | |
+| Reaksi bel: ikon "!" lalu menepi | ⬜ | ✅ | Untuk warga dan hewan yang bisa minggir (GDD 5.4). Ikon di `design/bel/`; frame menepi per tokoh menyusul, awalnya cukup bergeser |
 
 ### 6.7 Misi
 
@@ -370,6 +371,8 @@ Spesifikasi di `design/DESIGN_SPEC.md`.
 | Layar halaman depan koran | ✅ | ✅ |
 | Layar hasil harian | ✅ | ✅ |
 | Layar bengkel | ⬜ | ✅ |
+| Tombol bel: diam, ditekan, jeda (usulan, `design/bel/`) | ⬜ | ✅ |
+| Logo "Kring Kring!" untuk layar judul dan ikon aplikasi | ⬜ | ✅ |
 
 ### 6.9 VFX
 
@@ -380,6 +383,7 @@ Spesifikasi di `design/DESIGN_SPEC.md`.
 | Koran kena sasaran (bintang kecil) | ✅ | ✅ |
 | Tip / koin muncul | ✅ | ✅ |
 | Percikan genangan | ⬜ | ✅ |
+| Efek bel: garis getar dan teks "KRING!" / "KRING KRING!" (usulan, `design/bel/`) | ⬜ | ✅ |
 | Hujan | ⬜ | ✅ |
 
 ### 6.10 Detail hidup di pinggir jalan (usulan)
@@ -530,6 +534,7 @@ Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dib
 
 ## Changelog Keputusan
 
+- **2026-10-09** — **Judul game "Kring Kring!" dan bel sebagai ciri khas** (GDD 5.4). Aset bel ditambahkan sebagai usulan: tombol bel HUD tiga keadaan, efek garis getar dan teks "KRING!" / "KRING KRING!" di atas setang, dan ikon "!" untuk warga atau hewan yang menepi (`design/bel/`, `tools/ui_art/bel.py`). Logo "Kring Kring!" masuk daftar aset. Animasi pemain tidak berubah: bel di sprite rute hanya 1–2 piksel, jadi efeknya cukup lewat VFX.
 - **2026-10-08** — **Gambar full body diganti dengan konversi gambar AI** (bagian 3.5). `loper_agen_fullbody.png` sekarang 240×292 px dari `konversi2.py` (sumber di `design/character/loper_agen/konversi2/`), menggantikan gambar 294×283 lima nada dari `fullbody.py`. Kepala terpisah tanpa leher dengan dagu sedikit menumpuk kerah belakang, koran diangkat tinggi, tas boncengan terbuka berisi koran, satu gir belakang, dua engkol segaris, dua kabel rem. Spakbor dan tas satu sisi berbeda dari 3.1, hanya di gambar ini. Pertanyaan terbuka soal gaya lima nada untuk skala besar ditutup. Gambar ini jadi acuan gambar skala besar berikutnya, dan gambar skala besar seperti ini akan dipakai sebagai gambar adegan (cutscene) saat jalan cerita maju dan di adegan pembuka.
 - **2026-10-07** — **Usulan lingkungan** (bagian 2.6): bayangan berwarna per waktu, pemain setengah color grading, penampang jalan per distrik (lajur sepeda di perumahan, ruko 2 lajur, gang 2 ubin, talud sungai miring), palet enam distrik, detail pinggir jalan dan antena TV, tiga bentuk rumah dan tiga jenis pohon perumahan, model sedan/angkot/bus kecil. Mock di `design/environment/`, renderer `tools/env_art`. Belum dikunci.
 - **2026-10-07** — **Gambar full body: kepala terpisah tanpa leher, koran dijepit di samping wajah** (bagian 3.5). Kepala melayang 2 px di atas kerah; ukuran gambar menjadi 294×283 px. Sprite rute tidak berubah.

@@ -12,6 +12,7 @@ Spesifikasi visual untuk mengimplementasikan HUD dan layar game di Godot. Pasang
 | `design/screens/*-board.png` | Papan lengkap dengan catatan | Konteks |
 | `design/source/*.html` | Source HTML kedua papan (versi berdiri sendiri, latar `scene.png`) | Angka persis kalau spec ini kurang detail |
 | `design/character/loper_agen/` | Sprite pemain produksi untuk Godot | Lihat `ART_DIRECTION.md` 3 |
+| `design/bel/` | Tombol bel, efek "kring", ikon "!" (usulan) | Bagian 3.8 |
 
 **Skala.** Kanvas dasar game tingginya 360 px dengan lebar 640–800 px tergantung rasio layar (ART_DIRECTION 7). **Semua angka di dokumen ini dalam piksel dasar (kanvas 800×360)**, kecuali ditulis lain. Mock digambar di 1600×720, jadi angka di source HTML dibagi 2. Di HP 1080p pembesarannya ×3.
 
@@ -159,10 +160,25 @@ GDD 5.2.
 |---|---|---|
 | Zona stick | x 8–192, y 186–352 | Stick muncul di tempat jempol menyentuh, hilang saat dilepas |
 | Stick | cincin radius 35 (isi `TEXT` 14%, garis 2 px `TEXT` 70%), knob radius 15 `ACCENT` | Empat panah kecil di dalam cincin. Saat rem aktif (BALANCING 2), cincin bawah menyala `WARN` |
-| Zona swipe | x 210 sampai tepi kanan −20, y 48–352 | Swipe di mana saja. Garis bidik muncul selama jari ditahan |
+| Zona swipe | x 210 sampai tepi kanan −20, y 48–352 | Swipe di mana saja, kecuali sentuhan yang dimulai di zona tap bel (bagian 3.8). Garis bidik muncul selama jari ditahan |
 | Garis bidik | titik 2 px tiap 4 px, `TEXT` | Berakhir di elips pendaratan 10×5 px yang sudah memperhitungkan kecepatan sepeda (BALANCING 4). Elips berubah `OK` kalau mengarah ke sasaran sah |
 
-Opsi kidal menukar zona kiri dan kanan beserta panel bawah. Mode bantu menyembunyikan stick dan memakai tap di sisi layar (GDD 5.3).
+Opsi kidal menukar zona kiri dan kanan beserta panel bawah dan tombol bel. Mode bantu menyembunyikan stick dan memakai tap di sisi layar (GDD 5.3).
+
+### 3.8 Tombol bel dan efek "kring" (usulan, 2026-10-09)
+
+GDD 5.4. Aset di `design/bel/`, render penempatan di `design/bel/preview/penempatan_hud.png` dan `penempatan_kontrol.png`.
+
+| Elemen | Ukuran / posisi | Perilaku |
+|---|---|---|
+| Tombol bel | 40×40, pusat di (lebar −28, 332), pojok kanan bawah. Kidal: pusat di (28, 332) | Lingkaran: garis luar 1 px `OUTLINE`, cincin 1 px `TEXT` (seperti tombol jeda, supaya terbaca sebagai tombol), garis dalam `UI_PANEL_RAISED`, isi `HUD_PANEL`. Ikon bel kuning 20×19 |
+| Zona tap bel | lingkaran radius 28 dari pusat tombol | Sentuhan yang **dimulai** di sini membunyikan bel; swipe yang hanya melewati tombol tetap swipe |
+| Ditekan | | Cincin `ACCENT`, ikon turun 1 px, garis getar kecil di kiri-kanan ikon |
+| Jeda | | Setelah "kring kring!" (GDD 5.4): ikon redup 45%, cincin `ACCENT` berkurang searah jarum jam selama jeda |
+| Efek "kring" | di titik bel sprite pemain | Garis getar 4 frame (12 fps) + teks "KRING!" yang naik 1 px per frame; ketukan kedua mengganti teks jadi "KRING KRING!". Selalu tampil, juga saat suara mati |
+| Ikon "!" | 11×13, 2 px di atas kepala | Muncul di atas warga atau hewan yang bereaksi, sekitar 0,5 detik, lalu mereka menepi |
+
+Tombol tidak menutupi panel bawah (koran berakhir di x sekitar 572) dan berada di luar strip radar kanan (y 10–182). Ukuran 40 piksel dasar menjadi 120 px di layar 1080p, cukup untuk jempol; cek di HP bersama zona swipe.
 
 ---
 
