@@ -220,7 +220,7 @@ Setiap fase berisi: tujuan, kaitan cerita, sistem dan kode, aset, konten, uji, d
 | Import sprite | Nearest, tanpa mipmap, Lossless; `snap_2d_transforms_to_pixel` aktif |
 | Input | Stick melayang (zona kiri bawah), swipe (zona kanan), opsi kidal, keyboard untuk editor |
 | Target Android | Google Play mewajibkan app baru dan update menargetkan Android 16 (API 36) mulai 31 Agustus 2026. Pastikan template export Godot terpilih mendukung target itu sebelum membuat preset export |
-| Nama package | ✅ `com.rmh.loperkoran` (2026-10-09); tidak bisa diganti setelah upload pertama |
+| Nama package | ✅ `com.rmh.kring` (2026-10-09); tidak bisa diganti setelah upload pertama |
 | Repo | Root repo = root project Godot, `docs/.gdignore`, `AGENTS.md` dan `CLAUDE.md` berisi Definition of Done |
 | Tes | `tests/run_tests.gd` headless dan CI sederhana |
 
@@ -859,7 +859,7 @@ Perkiraan total: **sekitar 480 aset game** (ART_DIRECTION 10) **ditambah sekitar
 
 | Keputusan | Dibutuhkan sebelum | Usulan awal |
 |---|---|---|
-| ~~Nama package Android~~ | ✅ 2026-10-09 | `com.rmh.loperkoran` |
+| ~~Nama package Android~~ | ✅ 2026-10-09 | `com.rmh.kring` |
 | ~~Versi Godot dan stretch mode~~ | ✅ 2026-10-09 | Godot 4.7.2; `canvas_items` + integer scale + `expand` |
 | ~~HP uji (merek dan kelas)~~ | ✅ 2026-10-09 | Samsung A54 (SM-A546E), Android 16, 2340×1080, terhubung lewat `adb` |
 | Ubin 64×32 (skala piksel ×3 sudah dikunci 2026-10-09) | Akhir Fase 1 | 64×32 |
