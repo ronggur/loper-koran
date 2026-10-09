@@ -861,7 +861,7 @@ Perkiraan total: **sekitar 480 aset game** (ART_DIRECTION 10) **ditambah sekitar
 |---|---|---|
 | ~~Nama package Android~~ | ✅ 2026-10-09 | `com.rmh.loperkoran` |
 | ~~Versi Godot dan stretch mode~~ | ✅ 2026-10-09 | Godot 4.7.2; `canvas_items` + integer scale + `expand` |
-| HP uji (merek dan kelas) | Fase 0 | Tanya Ronggur HP yang dipakai |
+| ~~HP uji (merek dan kelas)~~ | ✅ 2026-10-09 | Samsung A54 (SM-A546E), Android 16, 2340×1080, terhubung lewat `adb` |
 | Ubin 64×32 (skala piksel ×3 sudah dikunci 2026-10-09) | Akhir Fase 1 | 64×32 |
 | Jendela: bonus atau penalti | Fase 2 | Netral dulu |
 | Tampilan rumah sisi dekat | Akhir Fase 3 (paling lambat sebelum Fase 8) | Uji tiga pendekatan di graybox |
