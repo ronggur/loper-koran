@@ -68,6 +68,8 @@ func _initialize() -> void:
 	# Pembantu tes terpisah supaya berkas ini tidak membengkak; memakai `check` runner ini.
 	var murni: TesInputMurni = TesInputMurni.new(check, _judul)
 	murni.jalankan()
+	var sprite: TesSprite = TesSprite.new(check, _judul, self)
+	sprite.jalankan()
 	var ekspor: TesExport = TesExport.new(check, _judul)
 	ekspor.jalankan()
 	var scene_input: TesInputScene = TesInputScene.new(check, _judul, self)
@@ -290,10 +292,17 @@ func _test_nama_animasi_dan_frames() -> void:
 	check(LoperAnim.nama_animasi(9, -9) == &"ngebut_kiri", "tingkat dan arah di luar jangkauan dijepit (9, -9) = ngebut_kiri")
 	check(LoperAnim.nama_animasi(-1, 9) == &"santai_kanan", "tingkat dan arah di luar jangkauan dijepit (-1, 9) = santai_kanan")
 
+	# Sejak run sprite-lempar-melambat SpriteFrames memuat 38 animasi (15 kayuh + 5 melambat + 18 lempar); pemeriksaan lengkapnya
+	# terhadap tiga JSON ada di `tests/tes_sprite.gd`. Di sini hanya kayuh yang dipilih `LoperAnim.nama_animasi(0..2, arah)`.
 	var nama_frames: PackedStringArray = frames.get_animation_names()
-	check(nama_frames.size() == 15, "SpriteFrames memuat tepat 15 animasi, dapat %d" % nama_frames.size())
+	check(nama_frames.size() == 38, "SpriteFrames memuat tepat 38 animasi (15 kayuh + 5 melambat + 18 lempar), dapat %d" % nama_frames.size())
+	var jumlah_kayuh: int = 0
 	for nama: String in nama_frames:
-		check(nama_dipakai.has(StringName(nama)), "animasi SpriteFrames '%s' dipakai LoperAnim (tidak ada animasi yatim)" % nama)
+		if nama.begins_with("melambat_") or nama.begins_with("lempar_"):
+			continue
+		jumlah_kayuh += 1
+		check(nama_dipakai.has(StringName(nama)), "animasi kayuh SpriteFrames '%s' dipakai LoperAnim (tidak ada animasi yatim)" % nama)
+	check(jumlah_kayuh == 15, "15 animasi kayuh di antara 38, dapat %d" % jumlah_kayuh)
 
 	# Bandingkan dengan metadata sprite (loper_agen.json): fps, loop, region tiap frame.
 	var json: Variant = JSON.parse_string(FileAccess.get_file_as_string(BERKAS_JSON))

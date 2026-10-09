@@ -47,6 +47,9 @@ jobs:
       - name: Uji pemeriksa keluaran tes
         run: python3 tools/tests_cek/uji_pemeriksa.py
 
+      - name: Uji pembangun SpriteFrames (berkas di repo = hasil skrip, deterministik)
+        run: python3 tools/tests_cek/uji_bangun_frames.py
+
       - name: Import project (tanpa error, tanpa berkas yang belum di-commit)
         run: |
           set -uo pipefail

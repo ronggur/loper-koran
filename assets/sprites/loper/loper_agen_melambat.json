@@ -1,0 +1,195 @@
+{
+ "sprite": "loper_agen_melambat.png",
+ "cell": [
+  46,
+  58
+ ],
+ "columns": 4,
+ "rows": 5,
+ "ground_anchor": [
+  23,
+  46
+ ],
+ "godot_offset": [
+  0.0,
+  -17.0
+ ],
+ "status": "usulan; frame sama persis dengan santai, hanya diputar 4 fps (santai 8 fps)",
+ "animations": [
+  {
+   "name": "melambat_normal",
+   "speed": "melambat",
+   "heading": "normal",
+   "row": 0,
+   "source": "santai row 0 frame 0-3, tanpa perubahan gambar",
+   "fps": 4,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     0,
+     46,
+     58
+    ],
+    [
+     46,
+     0,
+     46,
+     58
+    ],
+    [
+     92,
+     0,
+     46,
+     58
+    ],
+    [
+     138,
+     0,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "melambat_serong_kanan",
+   "speed": "melambat",
+   "heading": "serong_kanan",
+   "row": 1,
+   "source": "santai row 1 frame 0-3, tanpa perubahan gambar",
+   "fps": 4,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     58,
+     46,
+     58
+    ],
+    [
+     46,
+     58,
+     46,
+     58
+    ],
+    [
+     92,
+     58,
+     46,
+     58
+    ],
+    [
+     138,
+     58,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "melambat_kanan",
+   "speed": "melambat",
+   "heading": "kanan",
+   "row": 2,
+   "source": "santai row 2 frame 0-3, tanpa perubahan gambar",
+   "fps": 4,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     116,
+     46,
+     58
+    ],
+    [
+     46,
+     116,
+     46,
+     58
+    ],
+    [
+     92,
+     116,
+     46,
+     58
+    ],
+    [
+     138,
+     116,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "melambat_serong_kiri",
+   "speed": "melambat",
+   "heading": "serong_kiri",
+   "row": 3,
+   "source": "santai row 3 frame 0-3, tanpa perubahan gambar",
+   "fps": 4,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     174,
+     46,
+     58
+    ],
+    [
+     46,
+     174,
+     46,
+     58
+    ],
+    [
+     92,
+     174,
+     46,
+     58
+    ],
+    [
+     138,
+     174,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "melambat_kiri",
+   "speed": "melambat",
+   "heading": "kiri",
+   "row": 4,
+   "source": "santai row 4 frame 0-3, tanpa perubahan gambar",
+   "fps": 4,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     232,
+     46,
+     58
+    ],
+    [
+     46,
+     232,
+     46,
+     58
+    ],
+    [
+     92,
+     232,
+     46,
+     58
+    ],
+    [
+     138,
+     232,
+     46,
+     58
+    ]
+   ]
+  }
+ ]
+}
