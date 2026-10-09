@@ -1,0 +1,274 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/tile_graybox_rumput.png" id="1_rumput"]
+[ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/tile_graybox_trotoar.png" id="2_trotoar"]
+[ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/tile_graybox_aspal.png" id="3_aspal"]
+[ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/house_graybox_kotak.png" id="4_rumah"]
+[ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/prop_graybox_kotak_surat.png" id="5_kotak_surat"]
+[ext_resource type="PackedScene" path="res://scenes/entities/loper_agen.tscn" id="6_loper"]
+
+[node name="Graybox" type="Node2D"]
+
+[node name="Kamera" type="Camera2D" parent="."]
+position = Vector2(80, -72)
+
+[node name="Tanah" type="Node2D" parent="."]
+texture_filter = 1
+
+[node name="Rumput_7_n4" type="Sprite2D" parent="Tanah"]
+position = Vector2(96, -176)
+texture = ExtResource("1_rumput")
+
+[node name="Rumput_6_n4" type="Sprite2D" parent="Tanah"]
+position = Vector2(64, -160)
+texture = ExtResource("1_rumput")
+
+[node name="Rumput_7_n3" type="Sprite2D" parent="Tanah"]
+position = Vector2(128, -160)
+texture = ExtResource("1_rumput")
+
+[node name="Rumput_5_n4" type="Sprite2D" parent="Tanah"]
+position = Vector2(32, -144)
+texture = ExtResource("1_rumput")
+
+[node name="Rumput_6_n3" type="Sprite2D" parent="Tanah"]
+position = Vector2(96, -144)
+texture = ExtResource("1_rumput")
+
+[node name="Trotoar_7_n2" type="Sprite2D" parent="Tanah"]
+position = Vector2(160, -144)
+texture = ExtResource("2_trotoar")
+
+[node name="Rumput_4_n4" type="Sprite2D" parent="Tanah"]
+position = Vector2(0, -128)
+texture = ExtResource("1_rumput")
+
+[node name="Rumput_5_n3" type="Sprite2D" parent="Tanah"]
+position = Vector2(64, -128)
+texture = ExtResource("1_rumput")
+
+[node name="Trotoar_6_n2" type="Sprite2D" parent="Tanah"]
+position = Vector2(128, -128)
+texture = ExtResource("2_trotoar")
+
+[node name="Aspal_7_n1" type="Sprite2D" parent="Tanah"]
+position = Vector2(192, -128)
+texture = ExtResource("3_aspal")
+
+[node name="Rumput_3_n4" type="Sprite2D" parent="Tanah"]
+position = Vector2(-32, -112)
+texture = ExtResource("1_rumput")
+
+[node name="Rumput_4_n3" type="Sprite2D" parent="Tanah"]
+position = Vector2(32, -112)
+texture = ExtResource("1_rumput")
+
+[node name="Trotoar_5_n2" type="Sprite2D" parent="Tanah"]
+position = Vector2(96, -112)
+texture = ExtResource("2_trotoar")
+
+[node name="Aspal_6_n1" type="Sprite2D" parent="Tanah"]
+position = Vector2(160, -112)
+texture = ExtResource("3_aspal")
+
+[node name="Aspal_7_0" type="Sprite2D" parent="Tanah"]
+position = Vector2(224, -112)
+texture = ExtResource("3_aspal")
+
+[node name="Rumput_2_n4" type="Sprite2D" parent="Tanah"]
+position = Vector2(-64, -96)
+texture = ExtResource("1_rumput")
+
+[node name="Rumput_3_n3" type="Sprite2D" parent="Tanah"]
+position = Vector2(0, -96)
+texture = ExtResource("1_rumput")
+
+[node name="Trotoar_4_n2" type="Sprite2D" parent="Tanah"]
+position = Vector2(64, -96)
+texture = ExtResource("2_trotoar")
+
+[node name="Aspal_5_n1" type="Sprite2D" parent="Tanah"]
+position = Vector2(128, -96)
+texture = ExtResource("3_aspal")
+
+[node name="Aspal_6_0" type="Sprite2D" parent="Tanah"]
+position = Vector2(192, -96)
+texture = ExtResource("3_aspal")
+
+[node name="Trotoar_7_1" type="Sprite2D" parent="Tanah"]
+position = Vector2(256, -96)
+texture = ExtResource("2_trotoar")
+
+[node name="Rumput_1_n4" type="Sprite2D" parent="Tanah"]
+position = Vector2(-96, -80)
+texture = ExtResource("1_rumput")
+
+[node name="Rumput_2_n3" type="Sprite2D" parent="Tanah"]
+position = Vector2(-32, -80)
+texture = ExtResource("1_rumput")
+
+[node name="Trotoar_3_n2" type="Sprite2D" parent="Tanah"]
+position = Vector2(32, -80)
+texture = ExtResource("2_trotoar")
+
+[node name="Aspal_4_n1" type="Sprite2D" parent="Tanah"]
+position = Vector2(96, -80)
+texture = ExtResource("3_aspal")
+
+[node name="Aspal_5_0" type="Sprite2D" parent="Tanah"]
+position = Vector2(160, -80)
+texture = ExtResource("3_aspal")
+
+[node name="Trotoar_6_1" type="Sprite2D" parent="Tanah"]
+position = Vector2(224, -80)
+texture = ExtResource("2_trotoar")
+
+[node name="Rumput_7_2" type="Sprite2D" parent="Tanah"]
+position = Vector2(288, -80)
+texture = ExtResource("1_rumput")
+
+[node name="Rumput_0_n4" type="Sprite2D" parent="Tanah"]
+position = Vector2(-128, -64)
+texture = ExtResource("1_rumput")
+
+[node name="Rumput_1_n3" type="Sprite2D" parent="Tanah"]
+position = Vector2(-64, -64)
+texture = ExtResource("1_rumput")
+
+[node name="Trotoar_2_n2" type="Sprite2D" parent="Tanah"]
+position = Vector2(0, -64)
+texture = ExtResource("2_trotoar")
+
+[node name="Aspal_3_n1" type="Sprite2D" parent="Tanah"]
+position = Vector2(64, -64)
+texture = ExtResource("3_aspal")
+
+[node name="Aspal_4_0" type="Sprite2D" parent="Tanah"]
+position = Vector2(128, -64)
+texture = ExtResource("3_aspal")
+
+[node name="Trotoar_5_1" type="Sprite2D" parent="Tanah"]
+position = Vector2(192, -64)
+texture = ExtResource("2_trotoar")
+
+[node name="Rumput_6_2" type="Sprite2D" parent="Tanah"]
+position = Vector2(256, -64)
+texture = ExtResource("1_rumput")
+
+[node name="Rumput_0_n3" type="Sprite2D" parent="Tanah"]
+position = Vector2(-96, -48)
+texture = ExtResource("1_rumput")
+
+[node name="Trotoar_1_n2" type="Sprite2D" parent="Tanah"]
+position = Vector2(-32, -48)
+texture = ExtResource("2_trotoar")
+
+[node name="Aspal_2_n1" type="Sprite2D" parent="Tanah"]
+position = Vector2(32, -48)
+texture = ExtResource("3_aspal")
+
+[node name="Aspal_3_0" type="Sprite2D" parent="Tanah"]
+position = Vector2(96, -48)
+texture = ExtResource("3_aspal")
+
+[node name="Trotoar_4_1" type="Sprite2D" parent="Tanah"]
+position = Vector2(160, -48)
+texture = ExtResource("2_trotoar")
+
+[node name="Rumput_5_2" type="Sprite2D" parent="Tanah"]
+position = Vector2(224, -48)
+texture = ExtResource("1_rumput")
+
+[node name="Trotoar_0_n2" type="Sprite2D" parent="Tanah"]
+position = Vector2(-64, -32)
+texture = ExtResource("2_trotoar")
+
+[node name="Aspal_1_n1" type="Sprite2D" parent="Tanah"]
+position = Vector2(0, -32)
+texture = ExtResource("3_aspal")
+
+[node name="Aspal_2_0" type="Sprite2D" parent="Tanah"]
+position = Vector2(64, -32)
+texture = ExtResource("3_aspal")
+
+[node name="Trotoar_3_1" type="Sprite2D" parent="Tanah"]
+position = Vector2(128, -32)
+texture = ExtResource("2_trotoar")
+
+[node name="Rumput_4_2" type="Sprite2D" parent="Tanah"]
+position = Vector2(192, -32)
+texture = ExtResource("1_rumput")
+
+[node name="Aspal_0_n1" type="Sprite2D" parent="Tanah"]
+position = Vector2(-32, -16)
+texture = ExtResource("3_aspal")
+
+[node name="Aspal_1_0" type="Sprite2D" parent="Tanah"]
+position = Vector2(32, -16)
+texture = ExtResource("3_aspal")
+
+[node name="Trotoar_2_1" type="Sprite2D" parent="Tanah"]
+position = Vector2(96, -16)
+texture = ExtResource("2_trotoar")
+
+[node name="Rumput_3_2" type="Sprite2D" parent="Tanah"]
+position = Vector2(160, -16)
+texture = ExtResource("1_rumput")
+
+[node name="Aspal_0_0" type="Sprite2D" parent="Tanah"]
+position = Vector2(0, 0)
+texture = ExtResource("3_aspal")
+
+[node name="Trotoar_1_1" type="Sprite2D" parent="Tanah"]
+position = Vector2(64, 0)
+texture = ExtResource("2_trotoar")
+
+[node name="Rumput_2_2" type="Sprite2D" parent="Tanah"]
+position = Vector2(128, 0)
+texture = ExtResource("1_rumput")
+
+[node name="Trotoar_0_1" type="Sprite2D" parent="Tanah"]
+position = Vector2(32, 16)
+texture = ExtResource("2_trotoar")
+
+[node name="Rumput_1_2" type="Sprite2D" parent="Tanah"]
+position = Vector2(96, 16)
+texture = ExtResource("1_rumput")
+
+[node name="Rumput_0_2" type="Sprite2D" parent="Tanah"]
+position = Vector2(64, 32)
+texture = ExtResource("1_rumput")
+
+[node name="Objek" type="Node2D" parent="."]
+y_sort_enabled = true
+texture_filter = 1
+
+[node name="RumahA" type="Sprite2D" parent="Objek"]
+position = Vector2(-96, -32)
+texture = ExtResource("4_rumah")
+centered = false
+offset = Vector2(-64, -128)
+y_sort_origin = -24
+
+[node name="RumahB" type="Sprite2D" parent="Objek"]
+position = Vector2(32, -96)
+texture = ExtResource("4_rumah")
+centered = false
+offset = Vector2(-64, -128)
+y_sort_origin = -24
+
+[node name="KotakSuratA" type="Sprite2D" parent="Objek"]
+position = Vector2(-32, -48)
+texture = ExtResource("5_kotak_surat")
+centered = false
+offset = Vector2(-8, -22)
+
+[node name="KotakSuratB" type="Sprite2D" parent="Objek"]
+position = Vector2(96, -112)
+texture = ExtResource("5_kotak_surat")
+centered = false
+offset = Vector2(-8, -22)
+
+[node name="LoperAgen" parent="Objek" instance=ExtResource("6_loper")]
+position = Vector2(16, -24)
+speed_level = 1
