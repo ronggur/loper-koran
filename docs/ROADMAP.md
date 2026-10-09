@@ -47,7 +47,7 @@ Milestone mengikuti urutan prototype di GDD 17. Rinciannya jadi fase dengan chec
 | **M3 — Vertical slice perumahan** | Aset final distrik perumahan, reputasi, bengkel dan kerusakan, ekonomi, milestone dasar, audio dasar, beberapa hari berturut-turut dengan flag lanjutan. | Seminggu dalam game di distrik perumahan bisa dimainkan tanpa kebuntuan. |
 | **M4 — Konten & rilis** | Distrik berikutnya, misi per distrik, iklan hadiah, kebijakan privasi, store listing, uji tertutup. | Lolos review Play Console. |
 
-## 4b. Keputusan teknis Fase 0 (dikunci 2026-10-09)
+## 4b. Keputusan teknis Fase 0 (dikunci 2026-10-09, kecuali baris bertanda usulan)
 
 Skala dipilih Ronggur; sisanya didelegasikan ke agent dengan alasan tertulis. Bisa dibatalkan lewat PR selama belum ada upload ke Play Console.
 
