@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/entities/sepeda_uji.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/entities/loper_agen.tscn" id="2_loper"]
+
+[node name="SepedaUji" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="LoperAgen" parent="." instance=ExtResource("2_loper")]
+unique_name_in_owner = true

@@ -1,0 +1,48 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/entities/jalan_uji.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/entities/tanah_daur.gd" id="2_tanah"]
+[ext_resource type="Script" path="res://scripts/entities/objek_daur.gd" id="3_objek"]
+[ext_resource type="Script" path="res://scripts/ui/kontrol_touch.gd" id="4_kontrol"]
+[ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/tile_graybox_aspal.png" id="5_aspal"]
+[ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/tile_graybox_trotoar.png" id="6_trotoar"]
+[ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/tile_graybox_rumput.png" id="7_rumput"]
+[ext_resource type="PackedScene" path="res://scenes/dev/rumah_graybox.tscn" id="8_rumah"]
+[ext_resource type="PackedScene" path="res://scenes/dev/kotak_surat_graybox.tscn" id="9_kotak_surat"]
+[ext_resource type="PackedScene" path="res://scenes/entities/sepeda_uji.tscn" id="10_sepeda"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_dev.tscn" id="11_hud"]
+
+[node name="JalanUji" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Kamera" type="Camera2D" parent="."]
+unique_name_in_owner = true
+
+[node name="Tanah" type="Node2D" parent="."]
+unique_name_in_owner = true
+texture_filter = 1
+script = ExtResource("2_tanah")
+tekstur_aspal = ExtResource("5_aspal")
+tekstur_trotoar = ExtResource("6_trotoar")
+tekstur_rumput = ExtResource("7_rumput")
+
+[node name="Objek" type="Node2D" parent="."]
+unique_name_in_owner = true
+y_sort_enabled = true
+texture_filter = 1
+script = ExtResource("3_objek")
+adegan_rumah = ExtResource("8_rumah")
+adegan_kotak_surat = ExtResource("9_kotak_surat")
+
+[node name="Sepeda" parent="Objek" instance=ExtResource("10_sepeda")]
+unique_name_in_owner = true
+
+[node name="Hud" parent="." instance=ExtResource("11_hud")]
+unique_name_in_owner = true
+
+[node name="LapisanKontrol" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="KontrolTouch" type="Node2D" parent="LapisanKontrol"]
+unique_name_in_owner = true
+script = ExtResource("4_kontrol")

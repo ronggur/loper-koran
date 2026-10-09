@@ -45,6 +45,6 @@ Bentuk JSON dan nama field di `DATA_SCHEMA.md` adalah **usulan** sampai dikunci 
 ## Terjemahan dan teks UI
 
 - **Tidak boleh ada teks yang dilihat pemain ditulis langsung di script, scene, atau gambar** (kecuali logo). Semua lewat kunci terjemahan, termasuk teks cerita dan dialog (kunci seperti `prolog_1.k1`, TECH_PLAN 3.4).
-- Bahasa utama Indonesia. Bahasa Inggris belum diputuskan (TECH_PLAN bagian 9), tapi kunci teks sejak awal menjaganya tetap terbuka. Format file terjemahan (CSV atau lain) ditetapkan di Fase 0; sebelum itu jangan membuat file terjemahan sendiri.
+- Bahasa utama Indonesia. Bahasa Inggris belum diputuskan (TECH_PLAN bagian 9), tapi kunci teks sejak awal menjaganya tetap terbuka. **Format file terjemahan: CSV `translations/ui.csv`** (dikunci user, 2026-10-09). Baris pertama `keys,id` (kolom bahasa ditambah di kanan, mis. `en`), satu kunci per baris, Godot mengimpornya jadi file `.translation` yang ikut di-commit bersama `.csv.import` dan didaftarkan di `project.godot` (`internationalization/locale/translations`, fallback `id`). Teks cerita yang panjang (prolog, dialog) boleh dipisah ke file CSV lain di `translations/` dengan format yang sama kalau `ui.csv` jadi terlalu besar.
 - Kunci `UPPER_SNAKE_CASE` dengan awalan layar atau fitur (`HUD_`, `KORAN_`, `HASIL_`, `BENGKEL_`, `MISI_`). Placeholder pakai nama (`{n}`, `{koin}`) dan diisi dengan `tr("KUNCI").format({"n": 3})`, supaya urutan kata bebas per bahasa.
 - Teks Indonesia sering lebih panjang dari Inggris: uji pemotongan di layar 800×360 dan di rasio layar lain.

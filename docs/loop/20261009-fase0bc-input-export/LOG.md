@@ -1,0 +1,671 @@
+# Loop Log — 20261009-fase0bc-input-export
+Scope: Run 0B + 0C digabung (input touch, sepeda placeholder, export Android, APK debug)  ·  Branch: feat/fase0bc-input-export  ·  Mulai: 2026-10-09  ·  Godot: 4.7.2.stable.official.ed1daf0bf
+
+## Status: PASSED   (selesai di iterasi 2/2: 0 Blocker, 0 Major, 0 Minor terbuka; QA iterasi 2 PASS, 9 temuan VERIFIED)
+
+## Ringkasan iterasi
+| Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
+|---|---|---|---|---|---|
+| 1 | **Dev-0B selesai** (AC-1..AC-18 bagian 0B; AC-18 perintah ekspor menyusul di Dev-0C): logika murni input dan gerak, node input, jalan uji tanpa ujung, HUD sementara, terjemahan, tes (950 -> 1840 pemeriksaan), penjaga Q-002/Q-003. Tidak ada `BLOCKED`. **Dev-0C selesai (lengkap)**: AC-18 sisa, AC-19..AC-24. `export_presets.cfg`, `tests/tes_export.gd`, `docs/SETUP_ANDROID.md`, perintah ekspor di dokumen, `.gitignore` +keystore, `icon.svg` sementara, Import ETC2/ASTC di `project.godot` (terbukti perlu). **APK debug dibangun** (`builds/kring-kring-debug.apk`, 28.483.189 byte, exit 0, 8 detik, 0 ERROR/WARNING): `com.rmh.kring` 0.1.0 (1), minSdk 24, targetSdk 36, arm64-v8a saja, landscape, nol izin, allowBackup false, tanda tangan debug valid. Sempat `BLOCKED` (0C-B001, Java SDK Path), dibuka orchestrator atas izin pemilik. | Dev-0B: import bersih di clone bersih (0 ERROR, `git status` kosong), `1840 lolos, 0 gagal` + pemeriksa (juga `--ketat`) exit 0, buka project 2 frame tanpa ERROR/WARNING. Dev-0C: import bersih di repo kerja dan clone bersih (0 ERROR/WARNING, `git status` kosong), `1956 lolos, 0 gagal` + pemeriksa (juga `--ketat`) exit 0, `uji_pemeriksa.py` 16 kasus 0 menyimpang, buka project 2 frame tanpa ERROR/WARNING, diff `main...HEAD` dan `git ls-files` tanpa keystore/APK/`.godot`/`build`/`builds`; ekspor APK debug exit 0 tanpa ERROR/WARNING | **PASS** (gerbang hijau di klon bersih, 0 Blocker, 0 Major; 6 Minor + 5 Nit OPEN, 1 NEEDS-MANUAL di tabel (QC-001) dan 3 butir baru di daftar HP) | 12 (QB-001..QB-011, QC-001) | 0 |
+| 2 | Dev: QB-001, 002, 003, 006, 007, 011 (guard `index < 0` di `touch_router.gd`, 30 pemeriksaan baru, batas keabsahan jarak trapesium `BikeDrive` di `##`); orchestrator: QB-004, 005, 008 (komentar dan dokumen), centang `DEV_PHASES.md`, baris `ROADMAP.md`, hasil pasang APK di A54 | Klon bersih HEAD `dc0ee5a`: import 0 ERROR/WARNING, `git status -uall` kosong, `1986 lolos, 0 gagal`, pemeriksa dan `--ketat` exit 0, `uji_pemeriksa.py` 16 kasus, `--quit-after 2` bersih, diff dan `git ls-files` tanpa keystore/APK/`.godot`/`build`/`builds`, `main` tidak bergerak; APK debug dibangun ulang dari HEAD (exit 0, 0 ERROR/WARNING, nilai manifes sama) | **PASS** (0 Blocker, 0 Major, 0 Minor OPEN, 1 Nit OPEN; QC-001 tetap NEEDS-MANUAL) | 1 (QB-012, Nit) | 9 (QB-001..QB-008, QB-011) |
+| dorongan kecepatan (tambahan pemilik setelah PR dibuka, di luar batas 2 iterasi) | Orchestrator: GDD 15, TECH_PLAN, DEV_PHASES (`1686eb0`); Dev: `DoronganKecepatan`, `Config.DORONGAN_*` (28 / 20 / 0,35, usulan), `posisi_kamera()` memakai geseran, BALANCING, checklist HP, probe + 12 tangkapan layar, 116 pemeriksaan baru | Klon bersih HEAD `e13c438`: import 0 ERROR/WARNING, `git status -uall` kosong, `2102 lolos, 0 gagal` (iterasi 2: 1986), pemeriksa dan `--ketat` exit 0, `uji_pemeriksa.py` 16 kasus, `--quit-after 2` bersih, diff tanpa keystore/APK/`.godot`/`build`/`builds`, `main` tidak bergerak | **PASS** (0 Blocker, 0 Major, 0 Minor; 1 Nit OPEN; 2 NEEDS-MANUAL baru) | 3 (QD-001 Nit, QD-002 dan QD-003 NEEDS-MANUAL) | 1 (QB-012) |
+
+## Temuan
+Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MANUAL | BLOCKED
+
+| ID | Iter | Sev | Lokasi | Temuan & reproduksi/bukti | Status | Fix (file/commit) | Tes regresi |
+|---|---|---|---|---|---|---|---|
+| 0A-Q002 | 1 | Minor | tests/run_tests.gd (tes `pedal_rate` negatif) | Dari run 0A (Q-002, DEFERRED, AC-17): tes `speed_scale >= 0.0` terlalu longgar, mutan `absf` lolos. | FIXED (Dev-0B) | `tests/run_tests.gd`: `speed_scale == 0.0` dan `LoperAnim.skala_kayuh(-2.0) == 0.0`; mutan `absf` ditangkap (2 GAGAL) | `_test_scene_pemain` |
+| 0A-Q003 | 1 | Minor | tests/run_tests.gd (penjaga AC-8/AC-9 run 0A) | Dari run 0A (Q-003, DEFERRED, AC-17): empat celah penjaga. Ditutup: `Camera2D.zoom` bulat (scene, skrip, dan node hidup), `Color.<KONSTAN>` di luar `palette.gd`, string `"kiri"`/`"kanan"` di skrip di luar `NAMA_ARAH`, teks pemain tertanam di skrip dan scene. Tiap penjaga punya contoh buruk sintetis yang ditolak dan mutan nyata yang ditangkap. | FIXED (Dev-0B) | `tests/run_tests.gd` (`_test_penjaga_berkas`, `_test_terjemahan`) | `_zoom_tak_bulat`, `_warna_konstan`, `_string_kiri_kanan`, `_teks_literal_di_skrip`, `_teks_di_scene` |
+| 0C-B001 | 1 | Major | Editor Settings `export/android/java_sdk_path` (di luar repo) | AC-21 dan AC-22 tidak bisa dibuktikan: `godot --headless --path . --export-debug "Android" builds/kring-kring-debug.apk` berhenti dengan `A valid Java SDK path is required in Editor Settings.` walau `JAVA_HOME` diset. | FIXED | Izin pemilik 2026-10-09 + pengisian baris 313 `editor_settings-4.7.tres` oleh orchestrator (`/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home`); **bukan perubahan kode repo**. Ekspor lalu jalan (exit 0), AC-21 dan AC-22 dibuktikan pada APK nyata (bagian Dev-0C) | tes preset tidak bergantung pada APK (`tests/tes_export.gd`) |
+| QB-001 | 1 | Minor | `scripts/systems/touch_router.gd` `lepas()`/`geser()` (sentinel `TIDAK_ADA = -1` dibandingkan langsung dengan `index` masukan) | AC-7e dan klaim Dev ("index tak dikenal/ganda/negatif/NaN" teruji) hanya benar untuk `tekan(-1)`. **`lepas(-1, ...)` saat stick aktif dan swipe tidak aktif mencatat swipe palsu**: `_index_swipe == -1 == index`, sehingga cabang swipe jalan, `jumlah_swipe_selesai` naik dan `swipe_selesai((0,0), akhir, waktu)` terpancar. `geser(-1, p)` menulis `_posisi_swipe` walau swipe tidak aktif. Repro (probe scratchpad `qa_router_edge.gd`, tidak di-commit): `r.tekan(0, Vector2(100,280), 1.0); r.lepas(-1, Vector2(500,200), 2.0)` mencetak `jumlah_swipe_selesai=1` dan sinyal `(0,0)(500,200)2.0`. Dampak nyata kecil: Godot/Android tidak pernah mengirim `index` negatif; tetap menyalahi semangat AC-7e dan menjadi swipe palsu bila nanti ada sumber event sintetis. Mutan `tekan` tanpa guard `index < 0` juga lolos semua tes (guard-nya redundan karena -1 sama dengan sentinel). Usul: tolak `index < 0` di awal `geser`/`lepas`/`batal` | **VERIFIED** (QA iterasi 2: repro asli `lepas(-1)` kini 0 swipe dan 0 sinyal; mutan tanpa guard `lepas` dan `geser` tertangkap) | `scripts/systems/touch_router.gd` (`7138fa1`): `geser`, `lepas`, dan `batal` menolak `index < 0` di awal (`tekan` sudah punya) | `tests/tes_input_murni.gd` `_router_e2_index_negatif`: skenario QA persis (`tekan(0)` lalu `lepas(-1)`: 0 swipe, 0 sinyal, stick utuh), `geser(-1)` tidak menulis posisi swipe atau stick, kebalikannya (swipe aktif), dan router kosong |
+| QB-002 | 1 | Minor | `tests/tes_input_murni.gd` `_test_bike_drive` (AC-8 "tidak melampaui target walau dt besar") | Celah tes, bukan bug kode. Mutan: hapus `minf(target, ...)` di cabang akselerasi `bike_drive.gd:55` (`baru = awal + AKSELERASI_UD2 * waktu`) **lolos seluruh 1956 pemeriksaan**, karena satu-satunya tes "naik dengan dt besar" memakai stick atas penuh (target 6,0 = batas atas `clampf` akhir yang menutupi kelebihan). Dengan target menengah, mis. `BikeDrive.langkah(3.0, 0.0, Vector2(0, 0.5), 1.0)` harus 4,5 u/d, mutan menghasilkan 6,0; bila bug itu masuk, di game dengan `dt` 0,1 detik kecepatan akan melampaui target sampai 0,3 u/d lalu turun lagi (getar di sekitar target). Sisi turun (`maxf`) sudah tertangkap. Perlu tes regresi: naik ke target menengah dengan dt besar dan dengan dt 0,1 dari 0,1 u/d di bawah target | **VERIFIED** (QA iterasi 2: mutan asli lolos di iterasi 1, kini 5 GAGAL; mutan overshoot kecil +0,05 juga tertangkap) | Tanpa perubahan kode (celah tes). Tes baru di `fba8025` | `tests/tes_input_murni.gd` `_test_bike_drive`: `langkah(3.0, 0, (0,0.5), 1.0)` = 4,5; dt 100 = 4,5; `langkah(4.4, 0, (0,0.5), 0.1)` = 4,5 (bukan 4,7); turun dari 6,0 ke 4,5; sapuan 8 stick x 9 selisih x 5 dt tanpa melewati target. Mutan tanpa `minf(target, ...)`: 5 GAGAL |
+| QB-003 | 1 | Minor | `tests/tes_input_scene.gd` (semua tes scene `set_process(false)`), `scripts/entities/jalan_uji.gd:25` | Pengaman "app kembali dari background tidak melompat" (`minf(delta, Config.LANGKAH_WAKTU_MAKS_DETIK)`) tidak punya tes. Mutan `perbarui(delta)` lolos semua tes (tes selalu memanggil `perbarui(DT)` langsung, tidak pernah `_process`). Konstanta `LANGKAH_WAKTU_MAKS_DETIK` jadi tanpa penjaga. Usul: tes yang memanggil `_process(5.0)` pada scene hidup dan memeriksa jarak maju paling banyak `LANGKAH_WAKTU_MAKS_DETIK x 6,0` ubin | **VERIFIED** (QA iterasi 2: mutan `perbarui(delta)` kini 2 GAGAL, jepit 2x batas 3 GAGAL, konstanta 0,5 detik 3 GAGAL) | Tanpa perubahan kode (celah tes). Tes baru di `fa8ee2d` | `tests/tes_input_scene.gd` `_test_langkah_waktu_dijepit`: `_process(5.0)` pada scene hidup menempuh paling banyak `LANGKAH_WAKTU_MAKS_DETIK` x 6,0 ubin dan menaikkan kecepatan paling banyak satu langkah terjepit; kontrol `perbarui(5.0)` melewati batas jauh. Mutan `perbarui(delta)`: 2 GAGAL |
+| QB-004 | 1 | Minor | `scripts/config.gd:146` (`HUD_TOMBOL_TINGGI_PX`), `scenes/ui/hud_dev.tscn`, rule `ui-scenes` ("target sentuh minimal setara 44dp") | Komentar Config menyebut tinggi tombol kidal 36 px game "sekitar 44 dp di A54". Hitungan: 36 px game x skala 3 = 108 px layar; pada kerapatan 3,0 (360 dp lebar, tipikal Samsung FHD+) = 36 dp, pada 2,625 = 41 dp; klaim 44 dp baru benar bila kerapatan 2,45 (tidak ada perangkat FHD+ begitu). Tombol di bawah 44 dp tingginya, lebarnya cukup (96 px game). Batas strip atas 48 px (zona swipe mulai y 48) membatasi tinggi, tapi trade-off itu tidak ditulis. Perbaiki komentar, atau tinggikan area sentuh (mis. tombol 44 px game dengan margin atas 0), dan ukur kerapatan A54 (NEEDS-MANUAL, `adb shell wm density` oleh orchestrator) | **VERIFIED** (QA iterasi 2, hanya komentar dan trade-off; tinggi tombol 38 dp tetap < 44 dp dan dinilai di uji HP, lihat NEEDS-MANUAL) | orchestrator `4dff121`: komentar `config.gd` memakai ukuran nyata. A54 `wm density` = 450 dpi, jadi 36 px game x3 = 108 px layar = 38,4 dp (bukan 44 dp). Angka tidak diubah | - |
+| QB-005 | 1 | Minor | `docs/SETUP_ANDROID.md` bagian 8 (checklist) dan SPEC NEEDS-MANUAL ("kiri/kanan: sprite serong atau 90°") | Sprite 90° (`kiri`/`kanan`, arah ±2) **tidak bisa muncul di run ini**: sudut gerak maksimum = atan(lateral 3,0 / maju minimum 1,5) = 63,4° < 67,5° (batas 90°). Probe scratchpad `qa_arah90.gd`: seluruh cakram stick, tiga kecepatan awal, 4 detik tiap kombinasi: arah yang pernah muncul hanya `[0, 1, -1]`, sudut terbesar 62,68°. Sesuai BALANCING 2 ("belok 90° hanya saat pelan atau hampir berhenti", butuh rem Fase 1), jadi bukan bug kode, tetapi checklist HP menyuruh pemilik mencari sesuatu yang mustahil tampil. Koreksi checklist: "serong (sekitar 45° sampai 63°); 90° baru muncul setelah rem di Fase 1" | **VERIFIED** (QA iterasi 2: teks checklist benar; `SPEC.md` baris 113 masih "serong atau 90°" sebagai kontrak historis, dikoreksi oleh item NEEDS-MANUAL di LOG) | orchestrator `87fce72`: `docs/SETUP_ANDROID.md` bagian 8 (serong sekitar 45 sampai 63 derajat; 90 derajat menunggu rem Fase 1) | - |
+| QB-006 | 1 | Minor | `tests/tes_input_scene.gd:455` (`_test_proyek_dan_keyboard`), AC-13 | Bukti "keyboard nonaktif di build ekspor" tautologis: `check(kontrol.keyboard_aktif == OS.has_feature("editor"))` selalu benar di runner (biner editor, fitur `editor` = true), jadi mutan `var keyboard_aktif: bool = true` **lolos semua tes**. Dev sudah mengakui tidak bisa dibuktikan headless, tetapi penjaga statis murah ada: tes yang membaca `kontrol_touch.gd` dan menuntut inisialisasi `OS.has_feature("editor")` (atau APK sungguhan: aksi `stick_*` tidak boleh menggerakkan sepeda). Verifikasi saya atas APK hanya sebatas kode terkompilasi (`.gdc`), bukan perilaku | **VERIFIED** (QA iterasi 2, dengan batas yang jujur: penjaga statis atas sumber, bukan bukti perilaku APK; mutan `= true`, `debug`, `or true`, `not template`, `_ready` paksa, pagar dihapus semuanya tertangkap, satu bentuk samaran `= not false` di `_ready` lolos) | Tanpa perubahan kode. Penjaga statis di `d5d4eeb` | `tests/tes_input_scene.gd` `_pelanggaran_keyboard_editor`: `kontrol_touch.gd` harus menginisialisasi `var keyboard_aktif: bool = OS.has_feature("editor")`, `vektor_keyboard` diawali pagar `if not keyboard_aktif`, dan tidak ada skrip di `scripts/` yang menulis `keyboard_aktif = true`; 5 contoh buruk sintetis ditolak, 1 kontrol positif. Mutan `= true`, fitur `debug`, dan `_ready` menyalakan paksa: masing-masing 2 GAGAL. BATAS: membuktikan sumber, bukan perilaku APK; tag fitur `editor` tidak ada di template ekspor adalah perilaku Godot yang tidak bisa dijalankan di runner editor |
+| QB-007 | 1 | Nit | `tests/tes_export.gd` (`_pelanggaran_preset`) | Mutan `package/signed=true` menjadi `false` lolos semua tes. APK debug tak bertanda tangan tidak bisa dipasang; bukan butir AC-19, tapi satu baris tambahan di penjaga preset menutupnya | **VERIFIED** (QA iterasi 2: mutan nyata `package/signed=false` di `export_presets.cfg` kini 3 GAGAL) | `tests/tes_export.gd` (`74c3922`): `_pelanggaran_preset` menuntut `package/signed == true` | Contoh buruk sintetis `package/signed=false` di daftar mutan `_test_preset_contoh_buruk`; mutan nyata di `export_presets.cfg`: 3 GAGAL |
+| QB-008 | 1 | Nit | `docs/SETUP_ANDROID.md` bagian 1, tabel prasyarat, kolom Cek (`aapt2 version`) | Perintah tidak bisa dijalankan apa adanya: `command -v aapt2` kosong (exit 1), karena `aapt2` hanya ada di `~/Library/Android/sdk/build-tools/<versi>/`. Bagian 5 sudah benar memakai `$BT/aapt2`; samakan kolom Cek (`$BT/aapt2 version`, saya jalankan: `Android Asset Packaging Tool (aapt) 2.20-15087165`). Perintah non-adb lain di panduan saya jalankan dan sesuai | **VERIFIED** (QA iterasi 2: perintah di kolom Cek saya jalankan, exit 0, `aapt2 2.20-15087165`) | orchestrator `87fce72`: kolom Cek memakai `~/Library/Android/sdk/build-tools/37.0.0/aapt2 version` | - |
+| QB-009 | 1 | Nit | `icon.svg` / ikon launcher di APK | Ikon sementara terpakai benar (`icon_foreground` dari `icon.svg`, warna `#1C130F #FFB22E` sama dengan palet; bukan logo Godot; layer `icon_background` adalah biru bawaan Godot `#32516B` tetapi tertutup penuh oleh foreground). Bentuknya (lingkaran oranye dengan tonjolan persegi di atas) lebih mirip bom atau hiasan daripada bel sepeda. Placeholder, pengganti di Fase 14; dicatat agar pemilik tidak heran saat melihatnya di launcher | DEFERRED | ikon sementara, pengganti final di Fase 14; pemilik sudah diberi tahu di laporan akhir | - |
+| QB-010 | 1 | Nit | `project.godot` `display/window/handheld/orientation=0` (SPEC AC-19 mengikatnya) | `screenOrientation=0` mengunci SATU arah landscape (bukan `sensorLandscape`): HP yang dipegang terbalik 180° menampilkan game terbalik dan tidak bisa berputar. Sesuai SPEC/tes (`bukan sensor`), jadi bukan pelanggaran; hanya pengingat bagi pemilik bahwa pemain yang memegang HP dengan kamera di sisi sebaliknya tidak bisa memutarnya. Keputusan pemilik, tidak diubah | DEFERRED (keputusan pemilik) | `landscape` satu arah sesuai SPEC AC-19 dan GDD (orientasi dikunci); `sensorLandscape` hanya bila pemilik meminta, diangkat di laporan akhir | - |
+| QB-011 | 1 | Nit | `scripts/systems/bike_drive.gd:59` (`maju_ubin`) | Jarak maju memakai trapesium `(awal + akhir) / 2 * dt` yang hanya tepat bila rampa kecepatan berlangsung sepanjang `dt`. Untuk `dt` lebih besar dari waktu mencapai target hasilnya melenceng jauh (`langkah(3.0, 0, (0,1), 100.0).maju_ubin` = 450, nilai benar 598,5 ubin: 4,5 selama rampa 1 detik lalu 6,0 x 99 detik). Di scene aman karena `dt` dijepit 0,1 detik (lihat QB-003), tetapi fungsi publik murni ini menyiratkan "jarak = integral kecepatan" | **VERIFIED** (QA iterasi 2, pilihan (b): angka di `##` benar, tes bermakna, tiga mutan rumus jarak tertangkap) | `scripts/systems/bike_drive.gd` (`3496114`): `##` pada `langkah` menulis batas keabsahan trapesium (tepat hanya bila `dt` <= waktu rampa), contoh `dt` 100 detik (450 vs 598,5 ubin), dan bahwa pemanggil menjepit `dt`. Perilaku tidak diubah | `tests/tes_input_murni.gd` `_test_bike_drive`: trapesium tepat di dalam rampa (galat < 1e-6) dan galat < 0,005 ubin pada `dt = LANGKAH_WAKTU_MAKS_DETIK` (terhadap integral tepat); jepit `dt` di scene dijaga tes QB-003. Mutan jarak dengan kecepatan awal saja atau akhir saja: 3 GAGAL |
+| QB-012 | 2 | Nit | `docs/ROADMAP.md` bagian 4b (judul "Keputusan teknis Fase 0 (dikunci 2026-10-09)"), commit `dc0ee5a` | Baris baru "Export Android (usulan, run 0C)" ditaruh di tabel yang judulnya "dikunci". Isi barisnya benar dan menulis "Usulan, belum dikunci", sehingga bukan pelanggaran, tetapi pembaca yang hanya melihat judul bagian bisa mengira preset (arm64 saja, tanpa Gradle, imersif, `allowBackup` false) sudah dikunci; rule `docs` meminta usulan dan keputusan dipisahkan. Usul: sub-judul "Usulan (belum dikunci)" di bawah tabel, atau pindahkan baris itu ke bagian yang berlabel usulan. Baris "Format file terjemahan" memang keputusan pemilik dan tidak masalah | **VERIFIED** (QA dorongan kecepatan: judul 4b kini "dikunci 2026-10-09, kecuali baris bertanda usulan" dan baris Export Android berlabel "Usulan, belum dikunci") | orchestrator: judul `docs/ROADMAP.md` 4b menjadi "(dikunci 2026-10-09, kecuali baris bertanda usulan)" | - |
+| QC-001 | 1 | NEEDS-MANUAL | `export_presets.cfg` -> manifes APK hasil ekspor (`com.rmh.kring.fileprovider` pada dua provider) | Terverifikasi di APK buatan saya (`aapt2 dump xmltree`, baris 72 dan 81): `androidx.core.content.FileProvider` dan `androidx.startup.InitializationProvider` sama-sama `authorities="com.rmh.kring.fileprovider"`. Penilaian risiko: (1) **gagal pasang `INSTALL_FAILED_CONFLICTING_PROVIDER` kecil kemungkinannya**: pemeriksaan di PackageManager (`assertProvidersNotDefined`/`assertPackageIsValid`) membandingkan authority terhadap provider paket LAIN yang sudah terpasang, bukan antar-provider dalam paket yang sama; duplikat dalam satu paket hanya memberi log `Skipping provider name ... name already used`. Authority unik per paket (bukan `com.godot.game.*` bawaan) justru menghindari konflik antar-app Godot di HP yang sama. Saya TIDAK bisa membuktikannya tanpa perangkat (dilarang `adb`). (2) **Risiko laten saat jalan**: di ActivityManager, provider yang terbit belakangan menimpa yang awal pada peta authority, jadi pencarian `com.rmh.kring.fileprovider` bisa jatuh ke `InitializationProvider`, bukan `FileProvider`; tidak berefek selama tidak ada kode yang memakai FileProvider (bagikan atau buka berkas), yang belum ada. Langkah uji di HP (orchestrator): lihat daftar NEEDS-MANUAL | NEEDS-MANUAL (butir a dan b VERIFIED oleh orchestrator di A54; butir c menunggu uji pemilik) | Orchestrator 2026-10-09 18:30 pada A54 (SM-A546E, Android 16): `adb install -r builds/kring-kring-debug.apk` = `Success` (tanpa `INSTALL_FAILED_CONFLICTING_PROVIDER`); `dumpsys package com.rmh.kring`: versionCode=1 versionName=0.1.0 minSdk=24 targetSdk=36, kedua provider terdaftar; logcat: `PackageManager: Skipping provider name com.rmh.kring.fileprovider (in package com.rmh.kring): name already used by com.rmh.kring` (persis seperti prediksi QA). SHA-256 APK terpasang = `44d8be60...e227`. App BELUM diluncurkan (layar HP menyala, bisa sedang dipakai pemilik). | - |
+| QD-001 | dorongan | Nit | `docs/GDD.md` bagian 15 (commit `1686eb0`) | Kalimat "posisi dasar sepeda yang lebih rendah mengimbanginya" ditulis seperti kenyataan, padahal posisi dasar belum diturunkan (`KAMERA_SEPEDA_Y_PECAHAN` tetap 0,6, sepeda di y 216 dari 360) dan `DEV_PHASES.md` Fase 1 baru memuatnya sebagai butir "Coba juga menurunkan posisi sepeda" (usulan dari uji A54). GDD adalah sumber utama desain, jadi pembaca bisa mengira kompensasi sudah ada. Usul: "dapat diimbangi dengan menurunkan posisi dasar sepeda (usulan Fase 1)". Angka dan arah lain di GDD, TECH_PLAN, BALANCING cocok dengan `config.gd` dan kode | FIXED (dokumen) | orchestrator: kalimat GDD 15 diganti: kompensasi posisi dasar masih usulan Fase 1, dengan angka jalan terlihat dan batas geser dari QA | - |
+| QD-002 | dorongan | NEEDS-MANUAL | `scripts/config.gd` `DORONGAN_MAJU_PX` (28), `docs/BALANCING.md` | Dorongan memendekkan jalan terlihat di depan sepeda saat ngebut. Hitungan QA (jalan naik 32 px ke kanan dan 16 px ke atas per ubin; jalan keluar layar lewat tepi atas atau kanan, mana yang dulu; ngebut 6,0 u/d): 640 lebar: 13,34 ubin = 2,22 s menjadi 12,47 ubin = 2,08 s; 780 dan 800: 13,50 ubin = 2,25 s menjadi 12,62 ubin = 2,10 s; selisih 0,88 ubin (sekitar 0,15 s, 6,5%). Masih di atas 2 detik (prinsip 3), tetapi geseran datar 43 px (640) atau 48 px (780, 800) sudah menurunkannya ke tepat 2,0 s, jadi 28 px aman dan angka yang lebih besar tidak. Pernyataan Dev ("kira-kira satu ubin") cocok. Penilaian "cukup dini terbaca" hanya bisa di HP | NEEDS-MANUAL | | |
+| QD-003 | dorongan | NEEDS-MANUAL | `scripts/config.gd` `DORONGAN_MUNDUR_PX` (20), lebar viewport 640 | Di 16:9 sepeda saat melambat berada di x = 193 px game, tepat di tepi kanan zona stick (x 8..192) dan sel sprite 46 px tumpang tindih zona; posisi dasar (213) sudah dekat. Jempol kiri atau cincin stick (radius 35) di sisi kanan zona dapat menutupi sepeda saat melambat. Di 780 dan 800 aman (x terkecil 240 dan 247). Tidak melanggar AC mana pun; dinilai di HP atau jendela 16:9 | NEEDS-MANUAL | | |
+
+## NEEDS-MANUAL (uji di HP)
+Daftar awal ada di SPEC bagian "Butuh uji perangkat nyata". Dev dan QA menambah langkah di sini.
+
+- [ ] (dari run 0A, Q-012/Q-013) Tangkapan layar A54 dan `cek_blok_piksel.py 3`, tinggi jendela 1080 (imersif).
+- [ ] (dari run 0A, Q-014) Light 2D / glow / partikel / shader di Compatibility pada HP: bukan bagian run ini.
+- [ ] (Dev-0B) Tepi layar Android: zona stick mulai di x = 8 px game (sekitar 24 px layar dari tepi kiri). Gestur "kembali" sistem di tepi kiri/kanan bisa mencuri atau membatalkan sentuhan di sana. Kode sudah menangani `InputEventScreenTouch.canceled` (jari dilepas tanpa mencatat swipe), tapi apakah zona perlu digeser ke dalam hanya bisa dinilai di A54. Catat bila stick sering "putus" saat jempol dekat tepi.
+- [ ] (Dev-0B) Cutout kamera A54 di landscape (kamera di tepi kiri atau kanan tengah): periksa tidak menutupi zona stick (x mulai 8, y 186..352) atau panel kecepatan. Inset aman (`DisplayServer.get_display_safe_area()`) belum dipakai di run ini.
+- [ ] (Dev-0B) Tombol kidal (strip atas, tinggi 36 px game = sekitar 108 px layar) mudah ditekan sengaja dan tidak ikut tersentuh saat bermain; panel kecepatan tidak tertutup jempol kanan saat swipe.
+- [ ] (Dev-0B) Garis bidik swipe 2 px tiap 4 px (sekitar 6 px layar) terbaca di bawah jempol; knob (radius 15) yang menonjol 15 px di luar cincin saat tarikan penuh terlihat wajar.
+- [ ] (Dev-0B) Tangkapan layar HUD: teks Lexend adalah font vektor yang dirasterisasi di resolusi layar dengan anti-alias, jadi tepi hurufnya BUKAN blok 3x3 (dikecualikan di `cek_blok_piksel.py --kecualikan`). Nilai keterbacaan ukuran 6 px game (18 px layar) dinilai mata di HP.
+- [ ] (Dev-0C, orchestrator) Pasang `builds/kring-kring-debug.apk` ke A54 (`adb install -r`, setelah QA PASS dan izin sesuai SPEC) dan perhatikan: (a) pemasangan tidak gagal `INSTALL_FAILED_CONFLICTING_PROVIDER` (dua provider berauthority sama di manifes, `docs/SETUP_ANDROID.md` bagian 5); (b) server adb kemungkinan dimatikan `adb kill-server` Godot saat ekspor, perintah `adb` pertama menyalakannya lagi; (c) app terbuka dan `adb logcat -s godot` tanpa error skrip.
+- [ ] (Dev-0C) Orientasi terkunci (putar HP 180 derajat: tampilan tidak terbalik dan tidak jadi portrait) dan ikon di launcher (`icon.svg` sementara: bel oranye di latar gelap, tidak terpotong oleh bentuk ikon adaptif).
+- [ ] (Dev-0C, opsional) Keyboard fisik/Bluetooth: panah dan WASD tidak boleh menggerakkan sepeda di APK (`OS.has_feature("editor")` salah di build ekspor). Sisa AC-13 dari Dev-0B yang tidak bisa dibuktikan headless.
+- [ ] (Dev-0C) Layar penuh imersif di A54 dengan `screen/edge_to_edge=false` (bawaan Godot, belum diuji): viewport 780x360 skala x3; bila x2, coba `screen/edge_to_edge=true` di preset (usulan di `docs/SETUP_ANDROID.md` bagian 6).
+- [ ] (QA iterasi 1, QC-001, orchestrator) Setelah `adb install -r builds/kring-kring-debug.apk` (APK Dev dan APK QA identik: 28.483.189 byte, daftar berkas dan ukuran sama): (a) pasang berhasil, tidak `INSTALL_FAILED_CONFLICTING_PROVIDER`; (b) `adb shell dumpsys package com.rmh.kring | grep -i -A2 "Provider"` menampilkan kedua provider dan `adb logcat -d | grep -i "Skipping provider name"` mencatat satu baris untuk `com.rmh.kring.fileprovider` (itu bentuk yang diharapkan, bukan galat); (c) app terbuka tanpa crash walau `InitializationProvider` dilewati. Bila (a) gagal: perbaikan bukan di repo (Gradle build atau patch Godot), catat sebagai syarat rilis. **Catatan QA iterasi 2:** butir (a) dan (b) dilaporkan sudah dijalankan orchestrator di A54 (lihat baris QC-001 di tabel Temuan; saya tidak bisa memverifikasinya tanpa `adb`, tetapi pesan `Skipping provider name` persis sama dengan prediksi); tersisa butir (c), meluncurkan app tanpa crash.
+- [ ] (QA iterasi 1, QB-004, orchestrator) Ukur kerapatan A54 untuk menilai tinggi tombol kidal: `adb shell wm density` dan `adb shell wm size` (tinggi tombol 36 px game = 108 px layar; target >= 44 dp berarti kerapatan <= 2,45, tidak mungkin; catat dp sebenarnya) dan uji tekan sengaja tanpa meleset. **Catatan QA iterasi 2:** kerapatan sudah diukur orchestrator (450 dpi, tombol 38,4 dp, komentar `config.gd` sudah benar); tersisa uji tekan sengaja dan meleset di HP.
+- [ ] (QA iterasi 1, QB-005) Saat menguji "kiri/kanan": yang diharapkan sprite SERONG (sekitar 45 sampai 63 derajat); sprite 90 derajat (`kiri`/`kanan`) tidak bisa muncul sebelum rem ada di Fase 1, jadi jangan dicatat sebagai cacat (`SPEC.md` baris 113 masih menulis "serong atau 90°": abaikan bagian 90°).
+- [ ] (QA iterasi 2) `builds/kring-kring-debug.apk` (SHA-256 `44d8be60...e227`, dibangun dari `fb5bd37`, terpasang di A54) lebih tua dari HEAD: `touch_router.gdc` dan `bike_drive.gdc` di APK itu belum memuat perubahan iterasi 2 (guard `index < 0` yang tak pernah terpicu oleh sentuhan Android nyata, dan komentar). Tidak ada perbedaan perilaku untuk masukan sah, jadi uji HP atas APK lama masih mewakili; bangun ulang (`godot --headless --path . --export-debug "Android" builds/kring-kring-debug.apk`) dan pasang ulang hanya bila ingin uji HP memakai kode PR persis. **Catatan QA dorongan kecepatan:** APK itu juga belum memuat dorongan kecepatan (`jalan_uji.gd`, `config.gd`, `dorongan_kecepatan.gd` berubah sesudahnya); butir uji HP "dorongan kecepatan" di `docs/SETUP_ANDROID.md` bagian 8 baru bermakna setelah APK dibangun ulang dari HEAD dan dipasang.
+- [ ] (QA dorongan kecepatan, QD-002) Jalan terlihat di depan sepeda saat ngebut: perhitungan QA menunjukkan turun dari 2,22 s (640) dan 2,25 s (780, 800) menjadi 2,08 s dan 2,10 s (sekitar 6,5%, 0,88 ubin lebih pendek). Nilai terkecil yang masih >= 2,0 s: geseran datar 43 px di 640 (tepi kanan layar membatasi) dan 48 px di 780/800 (tepi atas membatasi); usulan 28 px masih di dalam, tetapi jangan dinaikkan tanpa menurunkan posisi dasar sepeda. Nilai di HP: apakah rintangan masih terbaca cukup dini saat ngebut.
+- [ ] (QA dorongan kecepatan, QD-003) Layar 16:9 (640): saat melambat sepeda ada di x = 193 px game, tepat di tepi kanan zona stick (x <= 192); badan sprite (sel 46 px) tumpang tindih zona. Nilai di HP (atau di jendela 16:9) apakah jempol kiri menutupi sepeda saat melambat. Di 780 dan 800 sepeda terjauh ke kiri x = 240 dan 247, aman.
+
+## Catatan Dev (per pemanggilan)
+Dev menulis gerbang yang dijalankan, perintah persis, dan keluaran ringkas di sini: satu bagian per pemanggilan (Dev-0B, Dev-0C, dan iterasi 2 bila ada). Termasuk: nama kelas bila berbeda dari SPEC D-1, perintah ekspor APK, durasi dan ukuran APK, hasil `aapt2`/`apksigner`/`apkanalyzer`, nilai min SDK/target SDK/`allowBackup`, daftar izin dan penjelasannya.
+
+### Dev-0B (iterasi 1)
+
+Lingkungan: macOS (Apple M1), `godot --version` = `4.7.2.stable.official.ed1daf0bf`, Python 3 (stdlib). 11 commit Dev-0B di `feat/fase0bc-input-export` (`git log --oneline main..HEAD`, di luar 3 commit dokumen orchestrator), tidak ada commit di `main`, tidak ada push. Hook `rtk` mengganti keluaran `git status --porcelain`; hitungan di bawah memakai `/usr/bin/git`. Tidak menyentuh HP, tidak mengunduh apa pun, tidak memasang apa pun di luar repo. Tidak ada `BLOCKED`. Bagian 0C (AC-19..AC-23) tidak dikerjakan.
+
+#### Kelas dan file nyata (dibanding SPEC D-1)
+
+Semua lima kelas D-1 ada dengan nama persis SPEC; tambahan yang tidak disebut SPEC ditandai (+).
+
+| Tanggung jawab | File | Catatan |
+|---|---|---|
+| `Iso` | `scripts/systems/iso.gd` | `dunia_ke_layar`, `layar_ke_dunia`, `posisi_gambar` (dibulatkan), konstanta arah. Hanya yang dibutuhkan 0B (D-2); item Fase 1 tidak dicentang |
+| `TouchZones` | `scripts/systems/touch_zones.gd` | `rect_stick`, `rect_swipe`, `zona_di`; semua tepi inklusif |
+| `StickMap` | `scripts/systems/stick_map.gd` | `petakan`, `jepit_geser`, `dari_tombol` (keyboard editor, AC-13); satu fungsi `_layar_ke_kontrol` membalik sumbu Y |
+| `TouchRouter` | `scripts/systems/touch_router.gd` | `RefCounted`, signal `swipe_selesai`, `tekan`/`geser`/`lepas`/`batal`/`batal_semua`/`atur_kidal` |
+| `BikeDrive` | `scripts/systems/bike_drive.gd` | `langkah()` mengembalikan `BikeDrive.Hasil` (kecepatan, lateral, jarak maju, lateral efektif, tingkat dan arah sprite) |
+| (+) `JalanDaur` | `scripts/systems/jalan_daur.gd` | Logika murni jalan tanpa ujung: sel tanah yang menutup layar, jenis ubin, slot objek berkala |
+| (+) `PikselLingkaran` | `scripts/systems/piksel_lingkaran.gd` | Cakram dan cincin per piksel untuk tampilan stick |
+| Node input + tampilan | `scripts/ui/kontrol_touch.gd` (`KontrolTouch`) | `_input`, notifikasi app, gambar stick/garis swipe, keyboard editor |
+| HUD sementara | `scripts/ui/hud_dev.gd`, `bar_kecepatan.gd`, `scenes/ui/hud_dev.tscn` | |
+| Pengendali sepeda uji | `scripts/entities/sepeda_uji.gd`, `scenes/entities/sepeda_uji.tscn` | |
+| Scene uji | `scenes/dev/jalan_uji.tscn`, `scripts/entities/jalan_uji.gd`, `tanah_daur.gd`, `objek_daur.gd`, `scenes/dev/rumah_graybox.tscn`, `kotak_surat_graybox.tscn` | `run/main_scene` kini `jalan_uji.tscn` |
+| Terjemahan dan tema | `translations/ui.csv` (+ `.import`, `ui.id.translation`), `assets/ui/theme.tres` | 3 kunci: `HUD_KECEPATAN`, `HUD_KECEPATAN_ANGKA` (`{v} u/d`), `HUD_KIDAL` |
+| Tes | `tests/tes_input_murni.gd`, `tests/tes_input_scene.gd` (pembantu, dipanggil `run_tests.gd`), `tests/probe_input_jendela.gd` | `run_tests.gd` tetap runner tunggal; hitungan `check` satu |
+| Alat | `tools/cek_blok_piksel.py` + opsi `--kecualikan` | Untuk melewati kotak teks HUD |
+
+Aksi InputMap: `stick_atas`, `stick_bawah`, `stick_ke_seberang`, `stick_ke_dekat` (panah dan WASD, `physical_keycode`). Dipilih nama tanpa `kiri`/`kanan` (kata itu ditolak penjaga gaya kode).
+
+#### Bukti per AC (file dan tes)
+
+| AC | Bukti |
+|---|---|
+| AC-1 | Clone bersih di scratchpad (`git clone --branch feat/fase0bc-input-export`): `godot --headless --import` exit 0, `grep -cE "ERROR\|SCRIPT ERROR\|WARNING"` = 0, `/usr/bin/git status --porcelain -uall \| wc -l` = 0. Lihat "Temuan teknis" nomor 5 (satu masalah impor yang ditemukan dan diperbaiki) |
+| AC-2 | `1840 lolos, 0 gagal` (sebelumnya 950), pemeriksa exit 0 termasuk `--ketat`, `uji_pemeriksa.py` 16 kasus 0 menyimpang. Tidak ada tes dihapus atau di-skip; yang diubah: tes `run/main_scene` (lihat AC-11) dan `speed_scale` (AC-17) |
+| AC-3 | `godot --headless --path . --quit-after 2` hanya mencetak banner; 0 `ERROR`/`WARNING` (di repo kerja dan clone bersih) |
+| AC-4 | Penjaga lama otomatis memindai semua `.gd` baru (tab, tipe return, tipe variabel, `for x: T in`, tanpa `kiri`/`kanan` di kode, tanpa hex/`Color("...")`, tanpa angka literal selain 0/1/2/-1/-2 di `systems/entities/ui`); semuanya lolos tanpa melonggarkan penjaga. Semua angka baru ke `Config` (+39 konstanta, satu baris, `ConfigParser` lolos) |
+| AC-5 | `TesInputMurni._test_touch_zones`: 640/780/800 x bawaan/kidal, zona persis angka DESIGN_SPEC 3.7, cermin persis, tepi tiap zona di dalam dan 1 px di luar (kiri, kanan, atas, bawah, pojok), celah, strip atas bebas |
+| AC-6 | `_test_stick_map`: 14,9 / 15,0 / 15,1 / 100 / 150% pada 6 arah; linear (57,5% = 0,5); tanpa lompatan (maks 0,00118 per 0,1% radius); monoton; sumbu Y dibalik (jari ke atas = (0, 1)); NaN/INF = nol |
+| AC-7 | `_test_touch_router`: skenario a..i (a stick melayang, b dua jari kedua urutan, c jari kedua diabaikan, d jari diangkat + swipe tercatat sekali dengan durasi dari parameter, e index tak dikenal/ganda/negatif/NaN, f mulai di luar zona, g zona hanya saat turun, h kidal + batalkan semua + lebar 640/800, i `batal_semua`); ditambah `batal(index)` dan durasi tak negatif |
+| AC-8 | `_test_bike_drive`: target 3,0 / 4,5 / 6,0 / 1,5 (+ -0,5 = 2,25), akselerasi dan perlambatan, dt besar tidak melewati target, dt nol/negatif/NaN/INF tanpa perubahan, batas 1,5..6,0, lateral dijepit +-1 ubin, diagonal, jarak = integral (4,5 ubin), 2000 rangkaian acak seed tetap (deterministik dan aman) |
+| AC-9 | `_test_iso`: (1,0) -> (32,16), (0,1) -> (-32,16), maju (32,-16) kemiringan 1:2, 100 langkah tepat, bolak-balik 300 titik (toleransi karena `Vector2` float32), linear, `posisi_gambar` bulat |
+| AC-10 | `_test_stick_ke_animasi`: a netral `santai_normal`; b atas penuh `ngebut_normal` (+ ambang 0,32/0,34 dan 0,79/0,81); c bawah penuh `santai_normal` dan turun ke 1,5; d kiri penuh maju 3,0 lateral -3,0 = `santai_serong_kiri`, lalu normal setelah membentur tepi jalan; e kanan penuh `santai_serong_kanan`; f lihat di bawah |
+| AC-11 | `TesInputScene._test_scene_jalan_uji` dan `_test_jalan_tanpa_ujung`: tanah dan rumah didaur, 60 detik ngebut (358 ubin) di 3 lebar dengan cakupan layar dicek tiap detik pada scene sungguhan, sepeda di sepertiga kiri (simpangan terbesar tercatat di tes, batas 8 px) di lateral -1..1 dan jarak 0..250, tanpa zoom, posisi dan skala bulat, Nearest, Y-sort (`Objek` induk, titik pijak) |
+| AC-12 | `_test_input_terpadu`: event sintetis lewat `Input.parse_input_event` pada jendela 2340x1080 (viewport 780x360): koordinat, dua jari (dua urutan), background (`propagate_notification(FOCUS_OUT)` dan `SceneTree.notification(PAUSED)`), `canceled`, strip atas, klik mouse tidak jadi stick. Kecepatan, posisi, dan animasi sepeda diperiksa. Kidal di `_test_kidal_dan_hud` (3 lebar) |
+| AC-13 | `_test_tombol_keyboard` (16 kombinasi, panjang <= 1), `_test_proyek_dan_keyboard` (aksi, `keyboard_aktif == OS.has_feature("editor")`, dimatikan = nol, sentuhan didahulukan, tidak ada emulasi sentuhan dari mouse). Nonaktif di build ekspor TIDAK bisa dibuktikan tanpa export (dokumentasi Godot: tag `editor` hanya ada di build editor); dibuktikan di 0C bila perlu |
+| AC-14 | Piksel stick/garis swipe: tekstur dicek dari `Palette` (isi TEXT 14%, garis TEXT 70% setebal 2 px, knob ACCENT radius 15); tangkapan layar 15 berkas: 0 blok 3x3 tidak seragam di luar teks HUD |
+| AC-15 | `_test_scene_jalan_uji` + `_test_kidal_dan_hud`: `CanvasLayer` terpisah, anchor + Container, hanya tombol yang menerima sentuhan, tombol di y 4..40 (< 48) di luar kedua zona (pojok dan pusat, 3 lebar, kedua mode), sentuhan di tombol tidak diklaim, panel x 210 lebar 170 dan pindah ke lebar-210 saat kidal, bar 75% untuk 4,5 u/d, angka lewat `HUD_KECEPATAN_ANGKA`, ukuran font dari tema (10/6) |
+| AC-16 | `_test_terjemahan`: header `keys,id`, kunci `HUD_*`, tanpa duplikat/kosong, placeholder bernama, `.import` + `.translation` + pendaftaran + fallback, `tr()` tiap kunci = kolom CSV, semua `tr("...")` di `scripts/` dan `text` di `scenes/` merujuk kunci yang ada, 7 contoh buruk sintetis ditolak |
+| AC-17 | Q-002 dan Q-003 ditutup (lihat tabel Temuan); 36 mutan nyata dijalankan, semuanya ditangkap (bagian "Uji mutasi") |
+| AC-18 | `AGENTS.md`, `.cursor/rules/00-project-core.mdc`, `docs/README.md`, `docs/ROADMAP.md` bagian 6 dan `docs/BALANCING.md` diperbarui. **Bagian "perintah ekspor" menunggu Dev-0C** (belum ada perintahnya). `ROADMAP.md` 4b dan `DEV_PHASES.md` tidak disentuh |
+
+AC-10(f), diagonal atas-seberang tepat di batas 22,5 derajat: keyboard diagonal = (-0,7071, 0,7071). Kecepatan tujuan = 3,0 + 3,0 x 0,7071 = 5,1213 dan lateral = 0,7071 x 3,0 = 2,1213 u/d, sehingga tan(sudut) = 0,41421 = tan 22,5 derajat tepat (rasio itu = akar 2 - 1, kebetulan aljabar). Hasilnya `cepat_serong_kiri`: batas bawah serong inklusif dan toleransi 1e-6 derajat di `LoperAnim.besar_arah_dari_sudut` mencegah derau desimal membalikkannya. Dijelaskan di `##` tes dan di BALANCING 2. Di permainan nyata keadaan ini tidak bertahan: lateral membentur tepi jalan (+-1 ubin) dalam 0,47 detik, sebelum kecepatan sempat mencapai 5,12 (0,71 detik), jadi sudutnya turun melewati 22,5 derajat dari atas (35 derajat di awal) lalu sprite kembali normal. Kasus di sekitar batas (lateral 1% lebih kecil = normal, 1% lebih besar = serong) dites. Di HP kedutan di sekitar 22,5 derajat tetap mungkin karena jari bergetar: NEEDS-MANUAL (SPEC).
+
+#### Temuan teknis (untuk orchestrator dan QA)
+
+1. **Koordinat event sentuh (diminta SPEC).** Dengan stretch `canvas_items` + integer + `expand`, `InputEventScreenTouch.position` dan `InputEventScreenDrag.position` yang tiba di `_input` sudah berada di ruang koordinat viewport game (0..780 x 0..360 pada jendela 2340x1080), BUKAN piksel jendela, dan transformasi kamera TIDAK ikut. Buktinya (`tes_input_scene.gd`, `_test_input_terpadu`): event sintetis dengan posisi piksel jendela (300, 780) tiba di `TouchRouter` sebagai (100, 260) pada skala x3; hasilnya sama setelah sepeda dipindah 300 ubin dan kamera di (9732, -4837). Penyebabnya: `Viewport::_make_input_local` memakai `get_final_transform()` (stretch x global canvas transform); `Camera2D` mengubah `canvas_transform`, bukan transform global itu. Jalur yang dipakai tes (`Input.parse_input_event` lalu `flush_buffered_events`) melewati jalur dispatch yang sama dengan event perangkat dari `SceneTree`, kecuali tahap dari driver tampilan; jadi yang tidak terbukti hanya sisi Android (NEEDS-MANUAL). Node input memakai `_input` (bukan `_unhandled_input`) dan tidak menandai event tertangani: tombol HUD di strip atas tetap menerimanya lewat emulasi mouse-dari-sentuh bawaan (`emulate_mouse_from_touch` dibiarkan default true; yang dilarang SPEC hanya emulasi sentuhan dari mouse, dan itu tidak diaktifkan, dites).
+2. **Notifikasi app.** `NOTIFICATION_APPLICATION_PAUSED` dan `FOCUS_OUT` sampai ke node lewat `SceneTree.notification()` dan `propagate_notification()`; dites kedua jalurnya, dan `batal_semua()` memang melepas stick tanpa menimbulkan gerak sendiri.
+3. **`Vector2` berpresisi tunggal (float32).** Batas 0,80 tidak bisa dites lewat `Vector2(0, 0.80)` (menjadi 0,800000012 > 0,80 sehingga ngebut). Batas tepat dites langsung di `LoperAnim` (float64) dan di tes terpadu dipakai 0,79/0,81 dan 0,32/0,34. Toleransi tes proyeksi `Iso` di koordinat ribuan piksel memakai jarak eksplisit, bukan `is_equal_approx`.
+4. **Jendela headless awal 64x64** (`root.size` = (64, 64), viewport terlihat 640x640). Tes scene selalu mengatur `root.size` dulu dan mengembalikannya di akhir.
+5. **`gui/theme/custom` menghasilkan ERROR di impor pertama clone bersih.** Dengan tema proyek terisi, Godot mencoba memuat `theme.tres` (dan fontnya) saat startup sebelum font diimpor: 10 baris `ERROR:` pada `--import` pertama (exit 0, tapi AC-1 dan CI mensyaratkan 0 ERROR). Diperbaiki: tema dipasang di dua kontainer HUD (`theme = ExtResource(...)`), `gui/theme/custom` dikosongkan, dites (`tes_input_scene.gd`). Konsekuensi untuk Fase 1: scene UI baru harus memasang tema sendiri sampai ada cara memuatnya tanpa ERROR di impor pertama.
+6. **Teks HUD bukan blok piksel.** Lexend adalah font vektor; hasil render beranti-alias di resolusi layar, jadi `cek_blok_piksel.py` melaporkan sekitar 424 blok tidak seragam di dua kotak HUD (tombol dan panel). Dunia, sprite, stick, dan garis swipe 0 blok. Alat diberi `--kecualikan X0,Y0,X1,Y1`; `tests/probe_input_jendela.gd` mencetak kotak yang perlu dikecualikan. Font piksel (atau teks yang dirender di 1x lalu diskalakan Nearest) tetap pilihan desain Fase 1, bukan keputusan Dev.
+
+#### Keputusan dan deviasi kecil (bisa ditolak di review PR)
+
+- **Koordinat jalan uji.** Garis tengah jalan = x 0; aspal x di -1..1 (ubin berpusat di +-0,5), trotoar +-1..2, rumput di luar. Ini bergeser 0,5 ubin dari penamaan sel graybox lama (pusat sel bulat) tetapi tata letak layarnya sama. Rumah di x -2,0 dan kotak surat di x -1,5, tiap 4 ubin, hanya sisi `seberang` (sisi `dekat` belum diputuskan, ROADMAP 5).
+- **Kamera mengikuti sepeda penuh** (x dan y, dibulatkan), sepeda tetap di sekitar 33,3% lebar dan 60% tinggi, bukan hanya mengikuti sumbu jalan. Akibatnya geser lateral terlihat sebagai dunia yang bergeser dan sprite yang berputar, bukan sepeda yang berpindah di layar. Ini memenuhi "+-8 px di semua lebar" dari SPEC; apakah kamera nanti hanya mengikuti sumbu jalan adalah keputusan Fase 1.
+- **Tingkat sprite dari komponen ATAS stick**, bukan panjang vektor (D-4 menyebut "kekuatan stick"; `LoperAnim.tingkat_dari_stick` didokumentasikan "kekuatan stick ke atas"). Stick penuh ke samping tanpa atas = santai. BALANCING 2 menulis "posisi stick"; kalimat klarifikasi ditambahkan di sana.
+- **Pedal rate tidak dikaitkan ke kecepatan** (tetap 1,0): SPEC hanya meminta `speed_level` dan `steer`. Saat melambat ke 1,5 u/d animasi kayuh tetap pada laju bawaan tingkat santai.
+- **Swipe di 0B**: hanya terdeteksi dan digambar; hasilnya (awal, akhir, durasi) tersedia lewat signal `swipe_selesai`, tanpa ambang minimum (butuh uji HP). Waktu swipe dari `Time.get_ticks_msec()` di node (sistem murni hanya menerima parameter).
+- **Zona mati** inklusif dengan toleransi desimal `is_equal_approx` (15,0% harus nol walau pembulatan float).
+- **Tidak digambar** (di luar AC dan butuh keputusan atau aset): empat panah kecil di dalam cincin dan cincin bawah menyala saat rem (DESIGN_SPEC 3.7, rem = Fase 1); garis tegak WARN di 80% bar kecepatan (DESIGN_SPEC 3.5), karena tingkat sprite berasal dari stick, bukan dari kecepatan, sehingga penanda itu menyesatkan; garis dalam panel `UI_PANEL_RAISED` (DESIGN_SPEC 1.3) karena `StyleBoxFlat` hanya punya satu garis tepi (menunggu panel 9-slice). Panel memakai garis luar 1 px `OUTLINE` dan sudut tegas.
+- **`LANGKAH_WAKTU_MAKS_DETIK` = 0,1** membatasi `delta` per frame di `JalanUji` supaya app yang kembali dari background tidak melompat jauh. Angka usulan.
+- **Blok tanah**: satu blok tetap (maks 450 `Sprite2D` pada lebar 800, 377 pada 640) dibangun sekali untuk lebar terbesar dan digeser kelipatan satu ubin; tidak dibangun ulang per lebar. Margin satu ubin dipakai supaya aman terhadap geser lateral dan pembulatan kamera. Bila profil di HP menunjukkan beban, kurangi margin atau pakai `TileMapLayer`.
+- **Posisi dunia float tanpa rebasing**: pada 6 u/d, 1 jam menempuh 21.600 ubin = sekitar 690.000 px; presisi float32 `Vector2` turun ke 0,06 px. Bukan masalah di sesi pendek; rute sungguhan (Fase 3) memakai segmen dan posisi kecil.
+
+#### Selisih dokumen yang ditemukan (docs.mdc: sebut ke pemilik, jangan ditambal diam-diam)
+
+- BALANCING 2 ("sprite memilih tingkat dari posisi stick") vs implementasi (komponen atas): sudah diperjelas di BALANCING 2, sumber kebenaran tetap `LoperAnim`.
+- DESIGN_SPEC 3.7 menyebut knob di dalam cincin; di jangkauan penuh pusat knob tepat di tepi cincin (radius jangkauan 35 = radius cincin) sehingga knob menonjol 15 px. Mock `design/screens/kontrol.png` hanya menunjukkan knob di tengah. Belum ada angka "knob dibatasi ke radius cincin dikurangi radius knob"; saya biarkan jangkauan 35 apa adanya.
+- DESIGN_SPEC 3.5 "x 210, lebar 170" tumpang tindih dengan zona swipe (x >= 210). Panel tidak menerima sentuhan (IGNORE) sehingga swipe di atasnya tetap bekerja; tolong nilai di HP apakah panel di bawah jempol kanan mengganggu.
+
+#### Uji mutasi (bukti tes menangkap bug; skrip sementara di scratchpad, tidak di-commit)
+
+36 mutan satu baris diterapkan satu per satu pada kode asli lalu dijalankan `run_tests.gd` + `cek_keluaran_tes.py`, dikembalikan setelahnya (`git status` bersih). Semuanya ditangkap (exit Godot 1, pemeriksa 1, 1 sampai 48 `GAGAL`): `skala_kayuh` absf (Q-002); zona mati bergeser; sumbu Y tidak dibalik; zona swipe tepi +1; turun dobel diterima; swipe dicatat dua kali; kidal tidak membatalkan; `batal_semua` hanya stick; stick digeser ke zona lain berubah peran; perlambatan = akselerasi; lateral tidak dijepit; arah dari stick bukan gerak nyata; tingkat dari panjang stick; tanda `Iso` salah; koordinat event dibagi 3; `FOCUS_OUT` dan `PAUSED` tidak membatalkan; `canceled` diabaikan; keyboard nonaktif tak berlaku; zoom kamera 1,5; sepeda di tengah layar; zona mati 20%; tombol menembus strip atas; slot daur kurang; tanah tidak ikut maju; rumah tidak didaur; `Color.RED` di skrip; string `"kiri"` di skrip; teks pemain tertanam; kunci `tr()` tidak ada; kalimat di scene; kidal tidak memindah panel; bar tidak ikut kecepatan; `steer` tidak diterapkan; posisi tidak dibulatkan; kunci hilang dari CSV.
+
+#### Gerbang yang dijalankan (perintah dan hasil)
+
+```
+godot --headless --import                                   # repo kerja: 0 baris ERROR/WARNING
+mkdir -p build && godot --headless --script res://tests/run_tests.gd 2>&1 | tee build/tests.log
+                                                            # ... 1840 lolos, 0 gagal (sekitar 1,6 detik)
+python3 tools/cek_keluaran_tes.py build/tests.log           # pemeriksa: lolos (1840 lolos, 0 gagal, 0 peringatan), exit 0
+python3 tools/cek_keluaran_tes.py --ketat build/tests.log   # exit 0
+python3 tools/tests_cek/uji_pemeriksa.py                    # uji pemeriksa: 16 kasus, 0 menyimpang
+godot --headless --path . --quit-after 2                    # hanya banner; 0 ERROR/WARNING
+godot --headless --path . --script res://tests/probe_layar.gd   # 8 ukuran, semua skala bulat (640/780/800 pada x3 dan x2)
+# clone bersih:
+git clone --branch feat/fase0bc-input-export <repo> <scratchpad>/klon
+cd <scratchpad>/klon && godot --headless --import           # exit 0, 0 ERROR/WARNING
+/usr/bin/git status --porcelain -uall | wc -l               # 0
+godot --headless --script res://tests/run_tests.gd ...      # 1835 lolos, 0 gagal (sebelum 5 tes tekstur ditambahkan); pemeriksa --ketat exit 0
+godot --headless --path . --quit-after 2                    # 0 ERROR/WARNING
+```
+
+#### Tangkapan layar (non-headless, OpenGL 4.1 Metal, Apple M1)
+
+Perintah (tiap ukuran; jendela terbuka sekitar 5 detik lalu menutup sendiri):
+
+```
+godot --path . --resolution 2340x1080 --position 0,0 --script res://tests/probe_input_jendela.gd -- docs/loop/20261009-fase0bc-input-export/shots/iter1
+```
+
+Jendela asli 1920x1080 / 2340x1080 / 2400x1080 -> viewport 640 / 780 / 800 x 360, skala x3 bulat (dicetak probe). 15 berkas `shots/iter1/<ukuran>_<tahap>.png`, tahap: `awal`, `dua_jari` (stick atas penuh + swipe), `serong_seberang`, `serong_dekat`, `kidal`. Ketajaman (kotak teks HUD dikecualikan dengan `--kecualikan` dari keluaran probe):
+
+```
+python3 tools/cek_blok_piksel.py 3 --kecualikan 1026,12,1315,121 --kecualikan 630,954,1141,1057 shots/iter1/2340x1080_awal.png
+  -> 269864 blok, 0 tidak seragam, 10936 blok dikecualikan, sisa tepi (0, 0)
+```
+
+Hasil sama (0 tidak seragam) untuk ke-15 berkas (kotak panel mengikuti sisi pada tahap `kidal`). Kontrol negatif: tanpa `--kecualikan` file `2340x1080_awal.png` melaporkan 424 blok tidak seragam, exit 1 (teks HUD). Yang terlihat di gambar: jalan naik ke kanan atas dengan kemiringan 1:2, sepeda di sepertiga kiri dan sekitar 60% tinggi, rumah dan kotak surat graybox bergeser, stick melayang (cincin pucat, knob oranye) di titik sentuh, garis putus swipe, panel kecepatan di x 210 (pindah ke sisi kanan saat kidal, tombol "Kidal" beraksen), sprite serong di `serong_*`. Penilaian rasa dan keterbacaan di HP tetap NEEDS-MANUAL.
+
+#### Hal yang tidak bisa saya verifikasi
+
+Rasa kontrol (ukuran stick 35 px, zona mati 15%, ambang 33%/80%, geser lateral bebas 3,0 u/d), 60 fps, perilaku sentuhan multi-jari dan gestur tepi di Android sungguhan, cutout kamera A54, nonaktifnya keyboard di build ekspor, dan dua hal yang hanya sampai di 0C (imersif, orientasi di manifes). Catatan untuk Dev-0C: `display/window/handheld/orientation=0` sudah ada di `project.godot`; `.gitignore` sudah menutup `builds/`, `*.apk`, `*.aab`, `.godot/` (tes lama memeriksa); AC-19 butuh tes baru di `run_tests.gd` (tambahkan sebagai berkas pembantu atau fungsi baru); `export_credentials.cfg` tidak boleh masuk diff; dan "perintah ekspor" di `AGENTS.md`/`00-project-core.mdc` (AC-18) ditambahkan di sana.
+
+### Dev-0C (iterasi 1)
+
+Lingkungan: macOS (Apple M1), `godot --version` = `4.7.2.stable.official.ed1daf0bf`, JDK 17 (Zulu 17.0.14), Android SDK `~/Library/Android/sdk` (build-tools 35.0.0, 36.0.0, 37.0.0; Godot memilih `36.0.0/apksigner`), export templates 4.7.2 terpasang orchestrator. Commit Dev-0C di atas Dev-0B: `946effb` (preset, tes, panduan), `abb313d` (perintah ekspor di dokumen), `9ea914a` (ETC2/ASTC), `818ef40` (catatan Android 16), `2e1410b` (LOG tahap BLOCKED), `0264908` (icon.svg dan tesnya), `fb5bd37` (SETUP_ANDROID hasil nyata), ditambah commit LOG akhir ini. Tidak ada commit di `main`, tidak ada push. Hook `rtk` mengganti keluaran `git`; hitungan memakai `/usr/bin/git`. **Tidak menjalankan `adb` apa pun**, tidak memasang apa pun ke HP, tidak mengubah Editor Settings (hanya membaca), tidak mengunduh apa pun, tidak membuat `android/`. Logika dan scene 0B tidak diubah; perubahan `project.godot` dituntut ekspor (temuan 3 dan 5).
+
+**Status: semua AC 0C selesai (AC-18 sisa, AC-19, AC-20, AC-21, AC-22, AC-23, AC-24).** Tahap pertama sempat `BLOCKED` (0C-B001, `export/android/java_sdk_path` kosong); orchestrator membukanya atas izin pemilik (2026-10-09), lalu AC-21 dan AC-22 dikerjakan pada pemanggilan lanjutan yang sama.
+
+**APK:** `builds/kring-kring-debug.apk` (di-ignore git, tidak di-commit), **28.483.189 byte (27,2 MiB)**, SHA-256 `44d8be6073527e490af0f277a32cef91d614c3100b54b8f0c1ebe28ce583e227` (diekspor dari keadaan yang di-commit, `fb5bd37`). `builds/kring-kring-debug.apk.idsig` ikut dibuat Godot (tanda tangan v4, juga di-ignore).
+
+#### Tahap BLOCKED (riwayat, sudah dibuka)
+
+`godot --headless --path . --export-debug "Android" builds/kring-kring-debug.apk` dengan `JAVA_HOME` diset berhenti (exit 1, 2 detik, tiga kali identik) dengan `ERROR: Cannot export project with preset "Android" due to configuration errors: A valid Java SDK path is required in Editor Settings.`; Godot 4.7.2 tidak membaca `JAVA_HOME`, hanya `export/android/java_sdk_path` di `editor_settings-4.7.tres` (waktu itu `""`). Tanpa jalan memutar (mis. `HOME` sementara, yang juga membuat kunci adb baru dan berisiko memunculkan dialog di HP). Orchestrator mengisi baris 313 (`export/android/java_sdk_path = "/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home"`) atas izin pemilik; **bukan perubahan kode repo**. Temuan 0C-B001 di tabel: FIXED.
+
+#### AC-21: ekspor APK debug
+
+Perintah persis (dari root repo; `mkdir -p builds` sudah dijalankan; perintah sama dengan `docs/SETUP_ANDROID.md` bagian 4, tanpa `JAVA_HOME`):
+
+```
+godot --headless --path . --export-debug "Android" builds/kring-kring-debug.apk
+```
+
+| Percobaan | Hasil |
+|---|---|
+| 1. Sesudah blokir dibuka, tanpa ikon | exit **0**, 9 detik, 28.458.369 byte. Satu baris `ERROR: No project icon specified. Please specify one in the Project Settings under Application -> Config -> Icon` (`load_icon_refs`, `platform/android/export/export_plugin.cpp:1941`); ekspor tetap selesai |
+| Eksperimen ETC2: `import_etc2_astc=false` sementara (APK ke `builds/etc2_off.apk`, dihapus) | exit **1**, 3 detik: `ERROR: Cannot export project with preset "Android" due to configuration errors: ETC2/ASTC texture compression is required for Android export. In Project Settings, search for 'ETC2' ...`. **Terbukti perlu.** Dikembalikan ke `true` (`git diff project.godot` kosong) |
+| 2. Sesudah `icon.svg` | exit **0**, 8 detik, **28.483.189 byte**, **nol `ERROR:` dan nol `WARNING:`** (hanya `cannot connect to daemon at tcp:5037` dari `adb kill-server` Godot di akhir) |
+| 3. Ekspor ulang dari keadaan yang di-commit | exit 0, 8 detik, 28.483.189 byte, nilai kunci identik (SHA-256 di atas) |
+
+Keluaran inti (tanpa baris `ADDING:` dan `Storing File`): `Started Exporting for Android (105 steps)`, argumen `--xr_mode_regular --xr-mode off --fullscreen --background_color #000000`, `Creating APK...`, `Adding application metadata org.godotengine.rendering.method` dan `org.godotengine.editor.version`, `Aligning APK...`, `Signing debug APK...` memakai `build-tools/36.0.0/apksigner`, `Signed`, `Verifying APK...`, `[ DONE ] export`. Debug keystore dibuat Godot di `~/Library/Application Support/Godot/keystores/debug.keystore` (2,7 KB, di luar repo).
+
+#### AC-22: bukti isi APK (pada `builds/kring-kring-debug.apk`, bukan template)
+
+Perintah persis (`BT=~/Library/Android/sdk/build-tools/36.0.0`, `APK=builds/kring-kring-debug.apk`):
+
+```
+$BT/aapt2 dump badging $APK
+$BT/aapt2 dump xmltree --file AndroidManifest.xml $APK
+~/Library/Android/sdk/cmdline-tools/latest/bin/apkanalyzer manifest print $APK
+$BT/aapt2 dump permissions $APK
+$BT/apksigner verify --verbose --print-certs $APK
+unzip -l $APK ; unzip -p $APK assets/_cl_ | strings
+```
+
+| Hal | Hasil |
+|---|---|
+| `package` | `name='com.rmh.kring' versionCode='1' versionName='0.1.0'`, `platformBuildVersionCode='36'`, `compileSdkVersion='36'`, `application-label:'Kring Kring!'`, `install-location:'auto'` |
+| `minSdkVersion` | **24** (Android 7.0): nilai template; tanpa Gradle tidak bisa diubah dari preset |
+| `targetSdkVersion` | **36** (Android 16). Syarat Google Play API 36 (TECH_PLAN Fase 0) **terpenuhi** untuk APK debug ini. Syarat rilis yang tersisa (AAB hanya dengan Gradle, keystore rilis, izin, Data Safety) di `docs/SETUP_ANDROID.md` bagian 5 |
+| `native-code` | **`'arm64-v8a'`** saja; `lib/` hanya `arm64-v8a/libgodot_android.so` (76.181.608 byte tak terkompresi, 25 MB di APK) dan `libc++_shared.so` |
+| Orientasi | `screenOrientation=0` (landscape terkunci) pada `com.godot.game.GodotApp`; `uses-feature android.hardware.screen.landscape` (tersirat: "one or more activities have specified a landscape orientation") |
+| Peluncur | `aapt2 dump badging` **tidak** mencetak `launchable-activity` (peluncur lewat alias). Manifes: `activity-alias` `com.godot.game.GodotAppLauncher` (MAIN, DEFAULT, LAUNCHER, `exported=true`) → `com.godot.game.GodotApp` (`exported=false`) |
+| `allowBackup` | **`false`** (sesuai preset). Juga `debuggable=true`, `profileable shell=true`, `isGame=true`, `resizeableActivity=true` (template `false`; Godot menulis ulang), `supports-screens` semua ukuran, GLES 3.0 (`glEsVersion=0x00030000`) |
+| Izin | `aapt2 dump permissions`: hanya `package: com.rmh.kring`, **tanpa `uses-permission`** (nol izin). Tidak ada `INTERNET` walau debug (ekspor CLI bukan Remote Deploy), tidak ada `AD_ID`, lokasi, atau izin pelacakan. `android.permission.DUMP` di manifes adalah izin yang dituntut receiver `androidx.profileinstaller.ProfileInstallReceiver` milik AndroidX, bukan izin yang diminta app |
+| `apksigner verify` | `Verifies` (exit 0); v2 dan v3 `true`, v1 dan v4 `false`; satu penanda tangan `CN=Godot, OU=Godot Engine, O=Stichting Godot, C=NL`, RSA 2048, SHA-256 sertifikat `838522b262fa12a7c2fe28aed4e3b15c1cdf9a3c076d1b35c09213d2ce164483` (debug keystore mesin ini) |
+| `unzip -l` | 181 berkas, 84.188.491 byte tak terkompresi; `AndroidManifest.xml`, `resources.arsc`, 13 `classes*.dex`, 83 entri `assets/` (skrip `.gdc` dan `.remap`, `.import`, `.ctex`, `project.binary`, `assets/assets.sparsepck` 7 KB sebagai indeks, `_cl_`); isi game tersimpan sebagai berkas terpisah di `assets/`, bukan satu `.pck`. **0** entri `assets/docs|tests|tools|build|builds`, **0** sumber `.gd`. `strings` pada `assets/_cl_`: `--xr_mode_regular --xr-mode off --fullscreen --background_color #000000` |
+| Ukuran | 28.483.189 byte, jauh di bawah 100 MB (TECH_PLAN 3.7) |
+
+Tidak ada penyimpangan dari preset (arsitektur ekstra, izin tak terduga, orientasi bukan landscape, package salah): tidak ada perbaikan preset dan tidak ada ekspor ulang karena itu. Penjaga yang bisa diuji tanpa APK sudah ada (`tests/tes_export.gd`). Dua pengamatan belum terbukti berefek (butuh pasang di HP): dua provider berauthority sama (temuan 8) dan peringatan `themed_icon` dari `aapt2` (temuan 9).
+
+#### Bukti per AC
+
+| AC | Bukti |
+|---|---|
+| AC-18 (sisa 0C) | Perintah ekspor (`--export-pack`, `--export-debug`) dan peta repo (`export_presets.cfg`, `icon.svg`, `builds/`, `tests/tes_export.gd`, `docs/SETUP_ANDROID.md`) di `AGENTS.md`, `.cursor/rules/00-project-core.mdc`, `docs/README.md` (tabel dokumen, struktur, status), `docs/ROADMAP.md` bagian 6. `ROADMAP.md` 4b dan 5 dan `DEV_PHASES.md` tidak disentuh. Commit `abb313d`, `0264908` |
+| AC-19 | `export_presets.cfg` (satu preset `Android`, `runnable=true`, `package/unique_name="com.rmh.kring"`, landscape dari `display/window/handheld/orientation=0`, `screen/immersive_mode=true`, `architectures/arm64-v8a=true` dan tiga lainnya `false`, `gradle_build/use_gradle_build=false`, `version/code=1`, `version/name="0.1.0"`, 152 izin Godot ditulis eksplisit `false`, `custom_permissions` kosong, enam kolom `keystore/*` kosong, `user_data_backup/allow=false`, `exclude_filter="docs/*, tests/*, tools/*, build/*, builds/*"`). Semua nilai terbukti di APK nyata kecuali yang tidak tampak di manifes (imersif terbukti lewat `--fullscreen` di `_cl_`). `tests/tes_export.gd`: `_test_preset_asli`, `_test_preset_contoh_buruk` (**24 mutan sintetis** ditolak, pesan commit `946effb` salah menulis 23), `_test_gitignore` (baris wajib + `git check-ignore` untuk 10 jalur dan kontrol negatif 5 jalur), `_test_berkas_dilacak` (`git ls-files` tanpa keystore/kredensial/APK/AAB/`.godot/`/`build/`/`builds/`, 11 contoh buruk), `_test_ikon_sementara`. `.gitignore` +`*.keystore`, `*.jks`, `*.p12`, `export_credentials.cfg` (pengaman tambahan, alasan AC-23). Tes tidak butuh APK, templates, atau Java (hanya `git`). Commit `946effb`, `0264908` |
+| AC-20 | `docs/SETUP_ANDROID.md` (prasyarat dengan status nyata mesin ini, cara pasang templates dengan SHA-512, Java SDK Path, tabel preset dengan alasan dan label usulan, pengaturan project yang dituntut ekspor, ekspor CLI dengan hasil nyata, pemeriksaan isi APK dengan hasil nyata, target API 36 dan syarat rilis, pasang/log/`pm list packages`/larangan `pm clear`/tangkapan layar + `cek_blok_piksel.py`, masalah umum, checklist HP) dan baris di tabel `docs/README.md`. `grep -n -i -E "brainydungeon\|startlights\|quicksplit\|firebase\|admob\|release-please\|godot-share\|SharePlugin" docs/SETUP_ANDROID.md` kosong (exit 1), dijaga tes `_test_panduan_setup`. Commit `946effb`, `9ea914a`, `818ef40`, `fb5bd37` |
+| AC-21 | Lihat bagian "AC-21" di atas: exit 0, 8 detik, 28.483.189 byte, nol ERROR/WARNING, `builds/` tidak di-commit (`git check-ignore -v`: `.gitignore:5:builds/` untuk `.apk` dan `.apk.idsig`) |
+| AC-22 | Lihat bagian "AC-22" di atas, seluruhnya pada APK hasil ekspor |
+| AC-23 | `git diff main...HEAD --name-only \| grep -E '(\.keystore\|\.jks\|\.p12\|\.apk\|\.aab\|\.idsig)$\|export_credentials\.cfg\|(^\|/)\.godot/\|(^\|/)builds?/'` kosong (exit 1); `git ls-files` dengan pola sama kosong; tidak ada kata sandi/token (grep pola `password="..."`, `BEGIN ... PRIVATE`, `ghp_`, `AKIA` kosong); `main` tidak berubah; tidak ada push; tidak ada nama berkas atau string Brainy Dungeon di diff |
+| AC-24 | Commit kecil bertipe `feat`, `docs`, dan `fix`, bahasa Indonesia; perubahan yang saling bergantung bersama (preset + tes + `.gitignore` + panduan; `project.godot` + tes + panduan; `icon.svg` + `.import` + `project.godot` + tes). Branch `feat/fase0bc-input-export`, tidak ada push |
+
+#### Temuan teknis (untuk orchestrator dan QA)
+
+1. **`JAVA_HOME` tidak cukup di Godot 4.7.2** (terbukti, pesan sama dengan dan tanpa variabel). `export/android/java_sdk_path` wajib terisi; sudah diisi orchestrator.
+2. **`--export-pack` jalan tanpa Java** dan memakai preset dan filter yang sama (tampaknya jalur `pack_only` Godot melewati pemeriksaan konfigurasi ekspor; disimpulkan dari perilakunya). Bukti filter: tanpa `exclude_filter`, 12 entri `tests/*.gd` ikut; dengan filter, `strings` pada paket menemukan 0 kemunculan `res://tests` dan `TesInput` (cache kelas global ikut tersaring); di APK final 0 entri `tests/docs/tools/build`.
+3. **`rendering/textures/vram_compression/import_etc2_astc=true` terbukti perlu** (commit `9ea914a`). Eksperimen pada ekspor Android sungguhan: `false` → exit 1 dengan pesan ETC2/ASTC; `true` → lolos. Efek ke repo nol (tekstur Lossless; `--import` tidak mengubah berkas apa pun; `git status` bersih). Tidak perlu dikembalikan. Sebelumnya hanya dibuktikan lewat preset iOS sementara di klon scratchpad.
+4. **Godot memanggil `adb` sendiri.** `export/android/shutdown_adb_on_exit` (bawaan aktif) menjalankan `adb kill-server` saat Godot keluar. Orchestrator melaporkan server adb hidup dan A54 terhubung sebelum ekspor pertama; setelah ekspor pertama `pgrep` (bukan perintah `adb`) tidak menemukan proses server adb, dan ekspor berikutnya mencetak `cannot connect to daemon at tcp:5037: Connection refused` (kill-server tanpa server). **Kemungkinan besar ekspor pertama mematikan server adb orchestrator**; perintah `adb` berikutnya menyalakannya lagi dan HP seharusnya muncul lagi tanpa otorisasi ulang. Saya tidak menjalankan `adb` apa pun untuk memeriksanya. Tidak ada yang dipasang atau dikirim ke HP. Dicatat di `SETUP_ANDROID.md` bagian 4.
+5. **Ikon (keputusan Dev, bisa ditolak di review).** `application/config/icon` kosong membuat ekspor mencetak `ERROR: No project icon specified`. Dipilih cara paling kecil: `icon.svg` sementara buatan sendiri (bel oranye di latar gelap, hanya warna `Palette` `#1C130F #FFB22E #0E0A1C #FFF3E3`, isi di zona aman ikon adaptif), didaftarkan di `project.godot`, dengan `icon.svg.import` (Lossless dari `importer_defaults`). Bukan ikon bawaan Godot (logo CC BY 4.0 yang butuh atribusi). SPEC 0A mengizinkan `icon.svg` sementara; tidak ada PNG hasil renderer yang diedit tangan dan tidak ada aset pihak ketiga. Dijaga tes (pengaturan, berkas, `.import`, semua hex ada di `Palette`; 3 mutan ditangkap). Pengganti final: logo "Kring Kring!" di Fase 14.
+6. **`.json` ikut paket** pada `export_filter=all_resources` (`assets/sprites/loper/loper_agen.json` ada di APK), jadi `assets/data/*.json` nanti tidak butuh `include_filter`. File non-resource lain (`.md`, `.py`, `.gpl`, `.csv` mentah) tidak ikut; `translations/ui.csv` hanya lewat `.import` dan `.translation`.
+7. **Struktur APK tanpa Gradle di 4.7:** isi game berupa berkas terpisah di `assets/` dengan `assets.sparsepck` sebagai indeks, bukan satu `.pck`. Panduan lama (dan tahap pertama panduan ini) menulis sebaliknya; sudah dikoreksi.
+8. **Dua provider berauthority sama (belum terbukti berefek).** `androidx.core.content.FileProvider` dan `androidx.startup.InitializationProvider` sama-sama `authorities="com.rmh.kring.fileprovider"` di manifes hasil ekspor (template: `com.godot.game.androidx-startup` untuk yang kedua; Godot menulis ulang semua `authorities`). Menurut perilaku Android yang saya ketahui, duplikat dalam satu paket hanya memberi peringatan `Skipping provider name` dan yang kedua dilewati. **Belum terbukti di HP**: bila `adb install` gagal `INSTALL_FAILED_CONFLICTING_PROVIDER`, inilah penyebabnya, dan perbaikannya bukan di repo (Gradle build atau patch Godot).
+9. **Peringatan `aapt2`** `warn: resource com.godot.game:mipmap/themed_icon ... but no such path exists` pada setiap perintah aapt2 untuk APK ini (tidak muncul pada `android_debug.apk` template). Acuan ikon bertema tanpa berkas; ikon adaptif punya `icon_monochrome.webp` sendiri. Tidak diketahui berefek.
+10. **Opsi preset 4.7 yang tidak ada di panduan lama:** `screen/edge_to_edge` (bawaan `false`; APK tidak memuat `--edge_to_edge`), `screen/background_color`, `shader_baker/enabled`, `gradle_build/custom_theme_attributes`. Nama opsi dan 152 nama izin diambil dari string biner Godot 4.7.2 (`strings`) karena `godot --headless` tidak punya perintah membuat preset; sekarang terbukti dibaca benar lewat ekspor nyata (package, versi, backup, arsitektur, imersif, izin kosong terlihat di APK).
+11. **Pesan `ERROR:` dari `ConfigFile` pada berkas rusak** ditolak pemeriksa keluaran, jadi kasus "preset tidak bisa diurai" sengaja tidak dites (cabang pertahanan di `_pelanggaran_preset` tetap ada).
+12. **Sisa AC-13 dari Dev-0B** (keyboard nonaktif di build ekspor: `OS.has_feature("editor")` salah di APK) tidak bisa dibuktikan tanpa perangkat; ada di NEEDS-MANUAL (opsional).
+13. **Android 16 di layar besar:** `resizeableActivity=true` di manifes hasil ekspor (template `false`); untuk app yang menargetkan API 36, batasan orientasi diabaikan di layar sw ≥ 600dp (tablet, foldable terbuka). A54 aman; dicatat di `SETUP_ANDROID.md` bagian 5.
+
+#### Uji mutasi Dev-0C (skrip sementara di scratchpad, tidak di-commit)
+
+22 mutan satu baris pada berkas asli, masing-masing dijalankan `run_tests.gd` + `cek_keluaran_tes.py`, dipulihkan setelahnya (`git status` bersih): package `com.rmh.loperkoran`; kata sandi keystore rilis terisi; jalur keystore debug terisi; izin `internet` menyala; `x86_64` menyala; Gradle menyala; imersif mati; `tests/*` tidak dikecualikan; `version/code=2`; `runnable=false`; `.gitignore` tanpa `builds/`, `*.aab`, `*.keystore`, `.godot/`; panduan memuat `AdMob`; panduan memuat package project lain; panduan tanpa `pm clear`; README tanpa `SETUP_ANDROID.md`; orientasi proyek bukan landscape; warna ikon di luar palet; `config/icon` dihapus; `config/icon` ke berkas lain. Semuanya ditangkap (exit Godot 1 dan pemeriksa 1, 1 sampai 4 `GAGAL`). Tambahan: `import_etc2_astc=false` ditangkap; `git add -f builds/x.apk kunci_uji.keystore` ditolak tes berkas dilacak (lalu dibatalkan).
+
+#### Gerbang yang dijalankan (perintah dan hasil)
+
+```
+godot --headless --import                                   # repo kerja: exit 0, 0 baris ERROR/WARNING, git status kosong
+godot --headless --script res://tests/run_tests.gd 2>&1 | tee build/tests.log
+                                                            # ... 1956 lolos, 0 gagal (sebelumnya 1840: +116 pemeriksaan)
+python3 tools/cek_keluaran_tes.py build/tests.log           # pemeriksa: lolos (1956 lolos, 0 gagal, 0 peringatan), exit 0
+python3 tools/cek_keluaran_tes.py --ketat build/tests.log   # exit 0
+python3 tools/tests_cek/uji_pemeriksa.py                    # uji pemeriksa: 16 kasus, 0 menyimpang
+godot --headless --path . --quit-after 2                    # hanya banner; 0 ERROR/WARNING
+godot --headless --path . --script res://tests/probe_layar.gd   # tanpa ERROR atau PECAHAN
+# clone bersih (git clone --branch feat/fase0bc-input-export <repo> <scratchpad>/klon0c, di commit fb5bd37):
+godot --headless --import                                   # exit 0, 0 ERROR/WARNING
+/usr/bin/git status --porcelain -uall | wc -l               # 0 (setelah import dan setelah tes)
+godot --headless --script res://tests/run_tests.gd ...      # 1956 lolos, 0 gagal; pemeriksa --ketat exit 0
+godot --headless --path . --quit-after 2                    # 0 ERROR/WARNING
+git diff main...HEAD --stat                                 # 79 berkas, 4238 penambahan, 51 penghapusan (Dev-0B + 0C, sebelum commit LOG ini)
+git diff main...HEAD --name-only | grep -E '(\.keystore|\.jks|\.p12|\.apk|\.aab|\.idsig)$|export_credentials\.cfg|(^|/)\.godot/|(^|/)builds?/'
+                                                            # kosong (exit 1); git ls-files dengan pola sama juga kosong
+godot --headless --path . --export-debug "Android" builds/kring-kring-debug.apk   # exit 0, 8 detik, 28.483.189 byte, 0 ERROR/WARNING
+```
+
+#### Hal yang tidak bisa saya verifikasi
+
+Perilaku APK di HP: apakah terpasang (lihat temuan 8), imersif dan skala x3 di A54 dengan `screen/edge_to_edge=false`, orientasi terkunci, ikon di launcher, cutout kamera, kinerja, kontrol sentuh. `OS.has_feature("editor")` di build ekspor. Apakah `adb kill-server` Godot benar mematikan server adb orchestrator (temuan 4).
+
+### QA (iterasi 1)
+
+Auditor independen (Agent 2). Semua di bawah dijalankan sendiri pada klon bersih `git clone --branch feat/fase0bc-input-export` (HEAD `44c7266`) di scratchpad `qa_iter1/klon`, bukan di repo kerja; klaim Dev tidak dipercaya tanpa dijalankan ulang. **Tidak ada `adb` yang dijalankan, tidak ada HP disentuh, tidak ada unduhan, tidak ada push/PR/merge, Editor Settings tidak diubah.** `builds/kring-kring-debug.apk` milik Dev tidak disentuh (SHA-256 tetap `44d8be60...e227`). Godot sendiri mencetak `cannot connect to daemon at tcp:5037` di akhir ekspor saya (`adb kill-server` bawaan Godot saat keluar): artinya tidak ada server adb hidup saat itu, jadi tidak ada yang dimatikan.
+
+#### Gerbang objektif (perintah dan hasil)
+
+| Gerbang | Perintah | Hasil |
+|---|---|---|
+| Import (AC-1) | `godot --headless --import` di klon bersih | exit 0, 0 baris `ERROR`/`SCRIPT ERROR`/`WARNING`; `git status --porcelain -uall` kosong; semua `.uid`, `.import`, `.translation` ter-commit (cek: tiap `.gd` dan aset sumber punya pasangan, satu-satunya tanpa `.uid` adalah `docs/design/character/loper_agen/loper_sprite.gd` yang lama dan di bawah `docs/.gdignore`) |
+| Tes (AC-2) | `godot --headless --script res://tests/run_tests.gd 2>&1 \| tee build/tests.log` | `1956 lolos, 0 gagal`; 0 baris `ERROR`/`WARNING`/`GAGAL` di log |
+| Pemeriksa | `python3 tools/cek_keluaran_tes.py build/tests.log` dan `--ketat` | keduanya exit 0 (`lolos (1956 lolos, 0 gagal, 0 peringatan)`) |
+| Uji pemeriksa | `python3 tools/tests_cek/uji_pemeriksa.py` | `16 kasus, 0 menyimpang`, exit 0 |
+| Buka project (AC-3) | `godot --headless --path . --quit-after 2` | hanya banner; 0 `ERROR`/`WARNING`; `git status` bersih sesudahnya |
+| Probe layar | `godot --headless --path . --script res://tests/probe_layar.gd` | 640/780/800 pada x3 bulat, tepi kosong 0 (kasus 1170x540 skala 1 dengan tepi kosong adalah batas lama run 0A, bukan baru) |
+| Kebersihan (AC-23) | `git diff main...HEAD --name-only` dan `git ls-files` disaring `keystore/jks/p12/apk/aab/idsig/export_credentials/.godot/build/builds` | kosong (exit 1) di keduanya; `.gitignore` menutup `builds/ build/ .godot/ *.apk *.aab *.keystore *.jks *.p12 export_credentials.cfg` (`git check-ignore -v` ya untuk semuanya); `git rev-parse main origin/main` sama (`6df6fc9`), tidak ada commit di `main` |
+| Format commit (AC-24) | `git log main..HEAD --format=%s` | 22 commit semua `<tipe>: ...` bahasa Indonesia; tidak ada yang melanggar format; commit terbesar `78a1233` (logika murni, 18 berkas) dan `832c776` (scene uji, 20 berkas) masih satu topik |
+| `export_presets.cfg` | dibaca penuh | satu preset `Android`, `runnable=true`, `package/unique_name="com.rmh.kring"`, `gradle_build/use_gradle_build=false`, `arm64-v8a=true` dan tiga lainnya `false`, `version/code=1`, `version/name="0.1.0"`, `screen/immersive_mode=true`, 152 izin `=false` dan 0 `=true`, `custom_permissions=PackedStringArray()`, enam kolom `keystore/*` kosong, `export_path=""`, `user_data_backup/allow=false`; **tidak ada kata sandi atau jalur keystore terisi** |
+| Catatan CI | `.github/workflows/tes.yml` berjalan di `ubuntu-latest` | Tidak bisa saya verifikasi (hanya macOS). `tests/tes_export.gd` memakai `git` lewat `OS.execute`, `tes_input_scene.gd` memakai jendela headless 2340x1080: ketergantungan ini tampak aman di Linux, tetapi hasil CI PR yang menentukan |
+
+#### Telusur SPEC (kode + tes yang membuktikan)
+
+| AC | Bukti yang saya periksa | Hasil |
+|---|---|---|
+| AC-1, 2, 3 | Gerbang di atas | OK |
+| AC-4 | Pindai sendiri: parameter fungsi dan lambda tanpa tipe = 0; `Time`/RNG/node/`get_node` di `scripts/systems/` = 0; tidak ada hex di luar `palette.gd` (ikon `icon.svg` memakai tepat empat hex yang ada di `Palette`); penjaga gaya otomatis ditegakkan dan terbukti menangkap mutan (P03..P10) | OK |
+| AC-5 TouchZones | `_test_touch_zones`: 640/780/800 x bawaan/kidal, zona persis, cermin, tepi dalam dan 1 px di luar tiap sisi dan pojok. Mutan: tepi kanan/bawah eksklusif, swipe kidal tepi 0, stick kidal tidak cermin: semua tertangkap (M12..M15) | OK |
+| AC-6 StickMap | 14,9/15,0/15,1/100/150% di 6 arah, linear (57,5% = 0,5), lompat terbesar 0,00118 per 0,1%, monoton, Y dibalik di satu fungsi (`_layar_ke_kontrol`). Mutan: tanpa jepit 1,0, pembagi 1,0 (lompat), zona mati eksklusif, `dari_tombol` tanpa batas panjang atau sumbu dibalik: tertangkap (M01..M03, N07, N08) | OK |
+| AC-7 TouchRouter a..i | `_router_a..i` + `_router_lain` ada, kedua urutan untuk (b), kidal dan lebar 640/800 di (h), `batal_semua` di (i). Probe saya menambah: resize viewport di tengah gerak (vektor tetap benar), `lepas` dengan waktu mundur (durasi 0), index 2147483647 (aman), kidal saat stick aktif (dibatalkan). **Celah: `lepas(-1)`/`geser(-1)` (QB-001)** | OK dengan 1 Minor |
+| AC-8 BikeDrive | target 3,0/4,5/6,0/1,5 (+2,25), akselerasi/perlambatan, `dt` besar/nol/negatif/NaN/INF, batas, lateral dijepit, diagonal, jarak trapesium, 2000 rangkaian acak seed tetap. **Celah: naik ke target menengah dengan `dt` besar tidak teruji (QB-002)**; trapesium tidak tepat untuk `dt` jauh melewati rampa (QB-011) | OK dengan 1 Minor + 1 Nit |
+| AC-9 Iso | (1,0) -> (32,16), (0,1) -> (-32,16), maju (32,-16) = 1:2, 100 langkah tepat, bolak-balik 300 titik seed tetap (toleransi float32 dijelaskan), `posisi_gambar` bulat. Mutan tanda salah (M16, N20) tertangkap | OK |
+| AC-10 (a..f) | `_test_stick_ke_animasi` a..f; (f) tepat 22,5 derajat terhitung 0,000001 derajat dari batas dan dijelaskan di `##` dan BALANCING 2. Tambahan QB-005: 90 derajat mustahil muncul di run ini | OK |
+| AC-11 | `_test_scene_jalan_uji` dan `_test_jalan_tanpa_ujung`: 60 detik ngebut x 3 lebar dengan cakupan layar dicek tiap detik pada scene hidup, sepertiga kiri +-8 px (lateral -1..1, jarak 0..250), zoom 1, posisi bulat, Nearest, Y-sort. Mutan kamera tidak dibulatkan (M29), `floor`->`ceil` (N12, setara karena margin satu ubin), zoom 1,5 (P06) | OK |
+| AC-12 | Event sintetis lewat `Input.parse_input_event` + `flush_buffered_events` (jalur dispatch sama dengan perangkat) melewati `KontrolTouch._input`; terbukti: mutan "drag tidak diteruskan" (N17), "`PAUSED` dihapus" (N18), "canceled = lepas" (M23), "lebar viewport tidak disinkronkan" (R01) tertangkap. `NOTIFICATION_APPLICATION_PAUSED` dan `FOCUS_OUT` dites lewat `SceneTree.notification` dan `propagate_notification` (benar: `SceneTree` meneruskan keduanya ke node). Probe saya tambahan: **sentuhan ScreenTouch sungguhan pada tombol kidal menekannya lewat emulasi mouse** (kidal menyala, jari tidak diklaim router); tidak ada `emulate_touch_from_mouse` | OK |
+| AC-13 | `_test_tombol_keyboard` (16 kombinasi), aksi `stick_*` tanpa kiri/kanan. **Bukti "nonaktif di ekspor" tautologis (QB-006)**; kode kompilasi di APK memuat inisialisasi yang sama | OK dengan 1 Minor |
+| AC-14 | tekstur dicek dari `Palette` (isi TEXT 14%, garis TEXT 70% setebal 2 px, knob ACCENT radius 15); tangkapan layar 15 berkas saya sendiri: 0 blok tidak seragam di luar teks HUD | OK |
+| AC-15 | `CanvasLayer` terpisah, anchor + Container, bar 7 px, `tr()`, tombol di y 4..40 (< 48) di luar kedua zona di 3 lebar x 2 mode, tombol tidak mengklaim sentuhan, panel pindah saat kidal. Mutan margin tertukar (M26), sinyal kidal hilang (N15, N16) tertangkap. Tinggi tombol di bawah 44 dp: QB-004 | OK dengan 1 Minor |
+| AC-16 | CSV `keys,id`, 3 kunci `HUD_*`, `.csv.import` + `ui.id.translation` ada dan terdaftar, fallback `id`, `tr()` tiap kunci = kolom CSV, rujukan `tr("...")` di `scripts/` dan `text` di `scenes/` dipindai, 7 contoh buruk sintetis. Mutan: fallback diganti (N28), nilai CSV diubah (N29), kalimat di scene (P07), teks tertanam (P04): tertangkap. `.translation` ada di APK (`assets/translations/ui.id.translation`); tidak ada teks mentah kunci di tangkapan layar | OK |
+| AC-17 | Q-002: mutan `absf` (P01) menggagalkan 2 pemeriksaan. Q-003: zoom bulat (scene+skrip+node hidup), `Color.<KONSTAN>` (P03), string `"kiri"/"kanan"` (P05), teks pemain tertanam di skrip dan scene (P04, P07); tiap penjaga punya contoh buruk sintetis. Q-001 tidak disentuh (`loper_sprite.gd` tidak berubah) | OK |
+| AC-18 | `AGENTS.md`, `00-project-core.mdc`, `docs/README.md` (tabel, struktur, status), `docs/ROADMAP.md` bagian 6 dan `BALANCING.md` diperbarui; `ROADMAP.md` 4b dan 5 serta `DEV_PHASES.md` tidak disentuh (diff `main...HEAD` tidak memuatnya); perintah ekspor tertulis dan sesuai kenyataan | OK |
+| AC-19 | Lihat baris `export_presets.cfg` di Gerbang. `tests/tes_export.gd`: 24 mutan sintetis + kontrol positif + `git check-ignore` + `git ls-files`. Mutan saya: izin lokasi menyala (N23), orientasi proyek bukan landscape (N22), `exclude docs` dihapus (N26), `.gitignore` tanpa `*.apk` (N27) tertangkap; `package/signed=false` lolos (QB-007) | OK dengan 1 Nit |
+| AC-20 | `grep -n -i -E "brainydungeon\|startlights\|quicksplit\|firebase\|admob\|release-please\|godot-share\|SharePlugin" docs/SETUP_ANDROID.md` kosong (exit 1; satu penyebutan "panduan Brainy Dungeon" sebagai asal adaptasi tanpa nilai spesifiknya, diperbolehkan); terdaftar di tabel `docs/README.md`; nilai prasyarat saya cek ke mesin (JDK Zulu 17.0.14 di jalur yang tertulis, `platforms` 29..36 tanpa 32, `adb` lewat symlink Homebrew, `version.txt` = `4.7.2.stable`, `debug.keystore` 2,7 KB, `java_sdk_path` terisi di `editor_settings-4.7.tres:313`, `apkanalyzer manifest print` jalan); `--export-pack` menghasilkan 81 entri tanpa `tests/docs/tools/build` (sesuai klaim), APK memuat 83 entri `assets/`. Cacat kecil di QB-008 dan QB-005 | OK dengan 1 Minor + 1 Nit |
+| AC-21 | `godot --headless --path <klon> --export-debug "Android" <scratchpad>/qa.apk`: exit 0, 9 detik, 28.483.189 byte (sama dengan APK Dev), 0 `ERROR`/`WARNING`, `Signed`, `Verifying APK` | OK |
+| AC-22 | Lihat "Bukti APK" | OK |
+| AC-23 | Gerbang kebersihan | OK |
+| AC-24 | Gerbang format commit; 15 PNG tangkapan layar Dev masuk dua kali di riwayat (`fa84527` lalu `f241749`, sekitar 0,7 MB sia-sia, ditolerir) | OK |
+| D-1..D-8 | D-1 lima kelas ada dengan nama SPEC (+ `JalanDaur`, `PikselLingkaran` tambahan, dicatat Dev); D-2 `Iso` minimal, butir Fase 1 tidak dicentang (`DEV_PHASES.md` tidak disentuh); D-3 lateral jepit lebar jalan, tanda sama dengan `LoperAnim`; D-4 tingkat dari komponen ATAS stick (penyimpangan kecil dari "kekuatan stick", dijelaskan Dev di BALANCING 2, wajar); D-5 kidal runtime saja, tombol di scene uji; D-6 sumbu benar (tangkapan layar: maju naik ke kanan atas, lateral positif turun ke kanan); D-7 `theme.tres` hanya font dan ukuran, tanpa hex; D-8 preset sesuai dan nilai tercatat | OK |
+
+Keputusan terbuka ROADMAP 5 tidak dipilih diam-diam (rumah sisi `dekat` tidak dibuat, game over/target usia/iklan tidak disentuh). Tidak ada kata "dikunci" untuk hal yang masih usulan di berkas baru (hanya untuk keputusan memang terkunci: layar, package, format CSV).
+
+#### Review kode terhadap rule
+
+`gdscript`: static typing lengkap (parameter, return, variabel, `for x: T in`), tab, `##` Indonesia, logika murni di `systems/` tanpa `Time`/RNG/node, `kiri`/`kanan` hanya di `NAMA_ARAH`, node input tipis, `_input` bukan `_unhandled_input` dengan alasan tertulis, notifikasi pause/focus-out ditangani. `balancing`: `config.gd` satu baris per konstanta (`ConfigParser` lolos), satuan di nama (`_PX`, `_UD`, `_UD2`, `_DETIK`), angka BALANCING 2 (3,0/4,5/6,0/1,5, 3,0 dan 2,0 u/d2, zona mati 15%, ambang 33/80) sama dengan `config.gd`, dokumen diperbarui di commit yang sama. `ui-scenes`: `CanvasLayer` terpisah, anchor + `MarginContainer`, unique name, tombol di strip atas di luar zona, `mouse_filter` IGNORE selain tombol, kidal menukar zona dan panel; inset aman belum dipakai (diakui Dev, NEEDS-MANUAL: cutout A54), tinggi tombol (QB-004). `content-data`: semua teks lewat kunci `HUD_*` dan `{v}` bernama. `art-assets`/`privacy-ads`: tidak ada aset pihak ketiga baru, ikon buatan sendiri, nol izin, tanpa analytics/iklan. `docs`: bahasa Indonesia, usulan ditandai "usulan". `git-workflow`: branch benar, tanpa commit di `main`, tanpa push.
+
+#### Probe edge case input touch (skrip sementara di scratchpad, tidak di-commit)
+
+Dua jari kedua urutan, jari kedua di zona yang sudah terisi, jari stick/swipe diangkat, `canceled`, zona mati, kidal saat stick aktif, resize viewport 640->800 di tengah gerak (vektor tetap benar karena zona hanya dihitung saat turun), `lebar_viewport` hanya disinkronkan saat `ScreenTouch` (cukup, zona hanya dipakai saat turun), event duplikat, drag/up tanpa down, index 7 dan 2147483647 (aman), index -1 (**cacat QB-001**), `lepas` dengan `waktu` mundur (durasi dijepit 0), tombol HUD ditekan lewat `ScreenTouch` sungguhan (jalan, tidak mencuri stick). Tidak ditemukan bug lain di jalur sentuh.
+
+#### Uji mutasi QA (di klon, dipulihkan tiap kali; `git status` klon bersih di akhir)
+
+69 mutan satu-baris dijalankan (`run_tests.gd` + `cek_keluaran_tes.py`) di empat kelompok, plus 1 kontrol positif (guard `index < 0` di `lepas`: tetap lulus, jadi perbaikan QB-001 aman) dan 1 mutan yang dilewati karena teks tidak cocok (N03; padanannya R02 dijalankan dan tertangkap). **56 ditangkap, 13 lolos.** Yang lolos dipilah:
+
+| Mutan lolos | Penilaian |
+|---|---|
+| M04 akselerasi tanpa `minf(target)` | Celah tes nyata: QB-002 |
+| M25 `_process` tanpa jepit `delta` | Celah tes nyata: QB-003 |
+| M24 `keyboard_aktif = true` | Celah tes nyata: QB-006 |
+| N24 `package/signed=false` | Celah tes kecil: QB-007 |
+| M17 `tekan` tanpa guard `index < 0` | Guard redundan (sentinel -1 sama dengan index): lihat QB-001 |
+| M06, M07, N10 clamp ganda (`BikeDrive`) | Setara: clamp lain menutup; tidak ada perilaku berbeda |
+| M18 `geser` tanpa guard finite | Setara: `StickMap.petakan` sudah menolak NaN |
+| N06 `StickMap.petakan` tanpa guard finite | Tertangkap hanya oleh `cek_keluaran_tes.py --ketat` (`WARNING` normalize); mode bawaan lolos. Wajar: gerbang saya menjalankan keduanya |
+| N12 `floor` -> `ceil` di `TanahDaur` | Setara dalam batas margin satu ubin |
+| N14 `set_pressed_no_signal` dihapus | Setara: hanya dipanggil dari tombol itu sendiri |
+| N25 `export_format=1` (AAB) | Setara: tak berefek tanpa Gradle |
+
+Klaim Dev "36 mutan semuanya tertangkap" dan "22 mutan 0C" terbukti benar pada contoh yang saya ulang (Q-002 `absf`, turun dobel, `Color.RED`, teks tertanam, `"kiri"`, zoom 1,5, kalimat di scene, hex di scene, config multibaris, angka ajaib, package, izin, orientasi, `.gitignore`).
+
+#### Validasi visual (non-headless, Apple M1, OpenGL via Metal)
+
+`godot --path . --resolution <WxH> --position 0,0 --script res://tests/probe_input_jendela.gd -- <scratchpad>/shots` pada 1920x1080 (viewport 640x360), 2340x1080 (780x360), 2400x1080 (800x360); semuanya skala x3 bulat. 15 tangkapan layar saya sendiri, tiap ukuran x (awal, dua_jari, serong_seberang, serong_dekat, kidal), dan saya lihat dengan Read: [`qa_2340x1080_awal`](shots/iter1/qa_2340x1080_awal.png), [`qa_2340x1080_dua_jari`](shots/iter1/qa_2340x1080_dua_jari.png), [`qa_2340x1080_serong_seberang`](shots/iter1/qa_2340x1080_serong_seberang.png), [`qa_2340x1080_serong_dekat`](shots/iter1/qa_2340x1080_serong_dekat.png), [`qa_2340x1080_kidal`](shots/iter1/qa_2340x1080_kidal.png), [`qa_1920x1080_dua_jari`](shots/iter1/qa_1920x1080_dua_jari.png), [`qa_2400x1080_kidal`](shots/iter1/qa_2400x1080_kidal.png) (dan delapan lainnya di folder yang sama, awalan `qa_`).
+
+- Ketajaman: `python3 -I tools/cek_blok_piksel.py 3 --kecualikan <kotak tombol> --kecualikan <kotak panel> <png>` pada semua 15 berkas: **0 tidak seragam**, 9.574 blok dikecualikan (9.609 untuk `kidal`, panel dipindah ke sisi kanan, kotak saya hitung dari `lebar - 380` sampai `lebar - 210`), sisa tepi (0, 0). Kontrol negatif: tanpa `--kecualikan` `2340x1080_awal` melapor 424 blok tidak seragam (teks Lexend vektor). Pengecualian hanya dua kotak HUD (sekitar 3,5% blok): dunia, sprite, stick, dan garis swipe tidak dikecualikan.
+- Isi gambar: jalan naik ke kanan atas dengan kemiringan 1:2; sepeda di sepertiga kiri (sekitar x 33%, y 60%) di ketiga rasio; rumah dan kotak surat graybox bergeser; stick melayang (cincin pucat, knob oranye ditarik ke atas penuh, menonjol 15 px di luar cincin seperti yang dicatat Dev) muncul di titik sentuh (100,260) dan hilang saat dilepas (tidak tampak di `awal`); garis swipe putus mengarah dari (450,250) ke jari; panel kecepatan di kiri-tengah bawah (x 210) dan **pindah ke kanan** saat kidal bersama stick (kanan) dan swipe (kiri); tombol "Kidal" di strip atas, berubah bingkai dan teks `ACCENT` saat menyala; sprite memakai santai/ngebut dan serong sesuai: `serong_seberang` tampak dari belakang (menuju atas layar), `serong_dekat` tampak dari samping (menuju kanan layar); tidak ada teks kunci mentah (`HUD_KECEPATAN` tampil "KECEPATAN", `HUD_KIDAL` "Kidal", angka "5.5 u/d").
+- HUD tidak menutup jalan di depan sepeda: panel di bawah, tombol di atas-tengah (menimpa atap rumah graybox, bukan aspal di depan sepeda). Bar kecepatan terisi sesuai (3.0 u/d = 50%, 5.5 u/d sekitar 92%).
+- Tidak bisa saya nilai: rasa kontrol, 60 fps, cutout/gestur tepi A54, dan tampilan di HP sungguhan (hanya jendela macOS). Kemiringan, warna, dan tata letak saya nilai dari PNG; ukuran dp tombol dari hitungan (QB-004).
+
+#### Bukti APK (dibangun ulang sendiri dari klon bersih)
+
+APK `qa.apk` di scratchpad: 28.483.189 byte, daftar berkas dan ukuran identik dengan APK Dev (181 berkas, 84.188.491 byte tak terkompresi); hash berbeda karena tanda tangan/zip.
+
+| Hal | Hasil saya (`build-tools/37.0.0`) | Klaim Dev |
+|---|---|---|
+| `aapt2 dump badging` | `package: name='com.rmh.kring' versionCode='1' versionName='0.1.0'`, `minSdkVersion:'24'`, `targetSdkVersion:'36'` (syarat API 36 terpenuhi), `compileSdkVersion='36'`, `application-label:'Kring Kring!'`, `application-debuggable`, `application-isGame`, `native-code: 'arm64-v8a'`, `uses-gl-es: 0x30000`, `uses-feature android.hardware.screen.landscape` (tersirat) | Cocok |
+| Manifes (`xmltree`) | `screenOrientation=0` (landscape) pada `com.godot.game.GodotApp`; `activity-alias com.godot.game.GodotAppLauncher` (MAIN/DEFAULT/LAUNCHER, `exported=true`); `allowBackup=false`; `debuggable=true`; `resizeableActivity=true`, `supportsPictureInPicture=true` (template; yang kedua tidak disebut Dev, tidak berbahaya untuk game); `profileable shell=true`; `ProcessPhoenix` terpisah proses | Cocok |
+| `aapt2 dump permissions` | hanya `package: com.rmh.kring`, **nol** `uses-permission` (tidak ada `INTERNET`, `AD_ID`, lokasi); `android.permission.DUMP` hanya persyaratan pengirim pada `ProfileInstallReceiver` AndroidX | Cocok |
+| `apksigner verify --verbose --print-certs` | `Verifies`; v2 dan v3 true, v1/v4 false; satu penanda tangan `CN=Godot, OU=Godot Engine, O=Stichting Godot, C=NL`, RSA 2048, SHA-256 `838522b2...164483` | Cocok |
+| `unzip -l` | `lib/` hanya `arm64-v8a/libgodot_android.so` (76.181.608) dan `libc++_shared.so`; 13 `classes*.dex`; 83 entri `assets/`: skrip hanya `.gdc` dan `.gd.remap` (0 sumber `.gd`), 0 entri `assets/(docs\|tests\|tools\|build\|builds)/`; cache kelas global memuat 19 kelas dan tidak satu pun `Tes*`; `assets/_cl_` = `--xr_mode_regular --xr-mode off --fullscreen --background_color #000000` (imersif) | Cocok |
+| Ikon launcher | `res/mipmap-anydpi-v26/icon.xml` = adaptive-icon (background, foreground; **tanpa** `<monochrome>`); `icon_foreground.webp` dan `icon.webp` berasal dari `icon.svg` Dev (piksel `#1C130F` dan `#FFB22E`, bukan logo Godot); `icon_background.webp` = biru bawaan Godot `#32516B`, tertutup penuh foreground; peringatan `themed_icon` adalah entri tabel sumber daya yatim (`mipmap/themed_icon` tanpa berkas), tidak dipakai manifes, tidak berefek | Cocok (QB-009 nit bentuk) |
+| Dua provider authority sama | Terlihat di manifes: `FileProvider` dan `InitializationProvider` keduanya `com.rmh.kring.fileprovider` | Terkonfirmasi; penilaian risiko di QC-001 |
+
+#### Regresi
+
+Tes lama run 0A tetap ada dan lulus: `git diff main...HEAD -- tests/run_tests.gd` hanya menghapus 8 baris, semuanya diganti padanan yang sama atau lebih ketat (scene utama `jalan_uji.tscn`, graybox lama tetap dites lewat `BERKAS_SCENE_GRAYBOX`, `speed_scale >= 0.0` -> `== 0.0` untuk Q-002); tidak ada tes di-skip. Jumlah pemeriksaan 950 -> 1956.
+
+#### Hal yang tidak bisa saya verifikasi
+
+Perilaku di HP (pasang, imersif dan skala x3 di A54 dengan `edge_to_edge=false` padahal target API 36 memaksa edge-to-edge, cutout, gestur tepi, rasa stick dan ambang, 60 fps, orientasi terkunci, keyboard fisik, ikon di launcher), hasil CI Linux, dan perilaku nyata dua provider (QC-001). Penilaian "stick enak" tidak saya klaim.
+
+#### Verdict QA iterasi 1: **PASS**
+
+Semua gerbang hijau di klon bersih; tidak ada Blocker atau Major; 6 Minor dan 5 Nit berstatus OPEN (semuanya perbaikan kecil atau celah tes, boleh `DEFERRED`; QB-001 dan QB-002 sebaiknya diperbaiki di PR ini karena murah, QB-005 hanya koreksi satu baris checklist); NEEDS-MANUAL (QC-001 dan 3 butir HP) tidak menghalangi PASS tetapi **Fase 0 tidak boleh dicentang selesai sebelum uji HP dilakukan**.
+
+### Dev (iterasi 2)
+
+Lingkup (perintah orchestrator): QB-001, QB-002, QB-003, QB-006, QB-007, QB-011. QB-004, QB-005, QB-008 sudah dikerjakan orchestrator (`4dff121`, `87fce72`) dan tidak disentuh; QB-009, QB-010, QC-001 bukan lingkup. Tidak menyentuh HP, `adb`, internet, Editor Settings, `ROADMAP.md` 4b, `DEV_PHASES.md`; APK tidak dibangun ulang (kode berubah hanya di `touch_router.gd` dan `##` di `bike_drive.gd`; orchestrator membangun ulang bila perlu). Status temuan `FIXED`, bukan `VERIFIED`. Tabel Temuan: hanya enam baris itu yang diubah.
+
+Enam commit kecil (`git log --oneline 6c90ecf..HEAD`): `7138fa1` (QB-001), `fba8025` (QB-002), `3496114` (QB-011), `fa8ee2d` (QB-003), `d5d4eeb` (QB-006), `74c3922` (QB-007).
+
+| ID | Perbaikan | Catatan |
+|---|---|---|
+| QB-001 | Guard `index < 0` di awal `geser`, `lepas`, `batal` (`tekan` sudah punya). Penyebabnya sentinel `TIDAK_ADA = -1` yang sama dengan `index` masukan | Pagar di `batal` dan `tekan` terbukti TIDAK teramati: mutan tanpa guard di keduanya lolos hijau karena `tekan(-1)` selalu berhenti di pemeriksaan "index sudah dipakai" (-1 sama dengan slot kosong) dan `batal(-1)` hanya membebaskan slot yang memang sudah kosong. Dipertahankan sebagai pertahanan berlapis dan konsisten; dua mutan itu setara (sama dengan penilaian QA M17). Mutan guard `lepas` dan `geser` dihapus: tertangkap (1 dan 2 GAGAL) |
+| QB-002 | Tes, tanpa perubahan kode | Mutan `baru = awal + AKSELERASI_UD2 * waktu` (tanpa `minf`) 5 GAGAL; mutan sisi turun tanpa `maxf` 4 GAGAL |
+| QB-003 | Tes scene hidup memanggil `JalanUji._process(5.0)` langsung | Ada kontrol: `perbarui(5.0)` publik tidak menjepit (jepit adalah tugas `_process`), sehingga tes memang membedakan; mutan 2 GAGAL |
+| QB-006 | Penjaga statis atas sumber `kontrol_touch.gd` | Bukan klaim APK terbukti. Perbandingan lama `keyboard_aktif == OS.has_feature("editor")` tetap, tetapi selalu benar di runner (biner editor) sehingga tidak menangkap `= true`; penjaga baru menutupnya. Bukti perilaku build ekspor tetap hanya lewat perangkat atau pembacaan kode terkompilasi (QA sudah melihat `.gdc` memuat inisialisasi yang sama). Batas ditulis di komentar tes |
+| QB-007 | Satu baris di `_pelanggaran_preset` + satu mutan sintetis | Mutan nyata `package/signed=false` di `export_presets.cfg`: 3 GAGAL |
+| QB-011 | Pilihan (b): `##` batas keabsahan + tes. Pilihan (a) tidak diambil | (a) mengubah rumus `maju_ubin` yang sudah dites (4,5 ubin untuk rampa 1 detik tetap benar, tetapi cabang "rampa lalu konstan" menambah logika dan tes baru di fungsi murni inti) untuk kasus yang di scene tidak terjadi karena `dt` dijepit 0,1 detik. Galat terhadap integral tepat pada batas itu paling banyak sekitar 0,004 ubin (kurang dari 0,2 px), terukur oleh tes (< 0,005) |
+
+Uji mutasi iterasi 2 (skrip sementara di scratchpad, dipulihkan tiap kali; `git status` bersih setelahnya): 13 mutan, 11 tertangkap, 2 lolos dan setara (guard redundan di `tekan` dan `batal`, lihat QB-001). Daftar tertangkap: `lepas` tanpa guard, `geser` tanpa guard, akselerasi tanpa `minf(target)`, perlambatan tanpa `maxf(target)`, `_process` tanpa `minf(delta)`, `keyboard_aktif = true`, fitur `debug` menggantikan `editor`, `_ready` menyalakan paksa, `package/signed=false`, jarak dengan kecepatan awal saja, jarak dengan kecepatan akhir saja.
+
+Gerbang (perintah persis):
+
+```
+godot --headless --import                                   # repo kerja: 0 baris ERROR/WARNING
+godot --headless --script res://tests/run_tests.gd 2>&1 | tee build/tests.log
+                                                            # ... 1986 lolos, 0 gagal (sebelumnya 1956)
+python3 tools/cek_keluaran_tes.py build/tests.log           # pemeriksa: lolos (1986 lolos, 0 gagal, 0 peringatan), exit 0
+python3 tools/cek_keluaran_tes.py --ketat build/tests.log   # exit 0
+python3 tools/tests_cek/uji_pemeriksa.py                    # uji pemeriksa: 16 kasus, 0 menyimpang
+godot --headless --path . --quit-after 2                    # hanya banner; 0 ERROR/WARNING
+# klon bersih (git clone --branch feat/fase0bc-input-export, scratchpad):
+godot --headless --import                                   # exit 0, 0 ERROR/WARNING
+/usr/bin/git status --porcelain -uall | wc -l               # 0 (juga setelah tes dan buka project)
+godot --headless --script res://tests/run_tests.gd ...      # 1986 lolos, 0 gagal; pemeriksa --ketat exit 0
+git diff --name-only main...HEAD | grep -E "keystore|jks|p12|apk|aab|idsig|export_credentials|^.godot/|^build/|^builds/"   # kosong (exit 1)
+```
+
+Tidak ada temuan yang tidak jadi diperbaiki dalam lingkup ini. Perhatian untuk orchestrator: QB-006 hanya menutup celah tes sumber; "keyboard nonaktif di APK" tetap hanya terbukti lewat pembacaan kode terkompilasi (QA) dan, bila ingin pasti, menekan aksi `stick_*` di perangkat (tidak ada keyboard fisik di A54, jadi praktis tidak terjangkau).
+
+### QA (iterasi 2)
+
+Verifikasi perbaikan. Semua dijalankan sendiri pada klon bersih baru (`qa_iter2/klon`, `git clone --branch feat/fase0bc-input-export`, HEAD `dc0ee5a`); klaim Dev dan orchestrator tidak dipercaya tanpa dijalankan ulang. Aturan sama dengan iterasi 1: tidak ada `adb`, HP, unduhan, push, PR, atau perubahan Editor Settings; mutasi hanya di klon (`git status` klon bersih setelah tiap batch); repo kerja tidak diubah kecuali `LOG.md`.
+
+#### Gerbang (ulang penuh)
+
+| Gerbang | Hasil |
+|---|---|
+| `godot --headless --import` (klon bersih) | exit 0, 0 `ERROR`/`SCRIPT ERROR`/`WARNING`; `git status --porcelain -uall` kosong |
+| `run_tests.gd` | `1986 lolos, 0 gagal` (iterasi 1: 1956, +30 pemeriksaan, cocok dengan klaim Dev); 0 baris `ERROR`/`WARNING`/`GAGAL` di log |
+| `cek_keluaran_tes.py` dan `--ketat` | keduanya exit 0 (`lolos (1986 lolos, 0 gagal, 0 peringatan)`) |
+| `tests_cek/uji_pemeriksa.py` | `16 kasus, 0 menyimpang` |
+| `godot --headless --path . --quit-after 2` | hanya banner; 0 `ERROR`/`WARNING`; `git status` bersih |
+| Kebersihan | `git diff main...HEAD --name-only` dan `git ls-files` disaring keystore/jks/p12/apk/aab/idsig/export_credentials/`.godot`/`build`/`builds`: kosong; kolom `keystore/*` di `export_presets.cfg` semuanya `=""`; `main` = `origin/main` = `6df6fc9`; 34 commit di branch, semua `<tipe>: ...` bahasa Indonesia; 11 commit baru sejak `c1063bf` (`git log c1063bf..HEAD`) kecil dan satu topik |
+| APK dari HEAD (AC-21/22 diulang) | `godot --headless --path <klon> --export-debug "Android" <scratchpad>/qa2.apk`: exit 0, 0 `ERROR`/`WARNING`, `Signed`, `Verifying APK`; `aapt2 dump badging`: `com.rmh.kring` versionCode 1 versionName 0.1.0, min 24, target 36, `arm64-v8a`; `dump permissions`: nol izin; `apksigner verify`: `Verifies` (v2, v3); manifes: `screenOrientation=0`, `allowBackup=false`, dua provider tetap berauthority sama (QC-001); `lib/` hanya `arm64-v8a`; 0 entri `assets/(docs\|tests\|tools\|build\|builds)/`; 28.483.189 byte |
+
+**Koreksi atas LOG iterasi 1:** di NEEDS-MANUAL QC-001 saya menulis APK Dev dan APK QA "identik". Yang benar: daftar berkas dan ukuran sama, tetapi 9 entri berbeda CRC pada dua build dari kode yang sama (tujuh adegan `.scn`, `uid_cache.bin`, `assets.sparsepck`; ekspor adegan tidak deterministik, mengubah isi tanpa mengubah ukuran). Saya cek ulang dengan membandingkan CRC lewat `zipfile`, bukan lewat `diff` daftar. Pada iterasi 2 `builds/kring-kring-debug.apk` (dibangun dari `fb5bd37`) berbeda dari build HEAD hanya karena sumber: `assets/scripts/systems/touch_router.gdc` (2387 -> 2404 byte) dan `bike_drive.gdc` (1679 -> 1688 byte, komentar `##` ikut terkompilasi) ditambah sembilan entri tak-deterministik tadi; `config.gdc` CRC sama. Butir NEEDS-MANUAL baru mencatat bahwa APK terpasang lebih tua dari HEAD.
+
+#### Verifikasi tiap temuan (repro asli dan mutan)
+
+Skrip repro `qa_repro2.gd` dan mutan di scratchpad (tidak di-commit). Mutan = satu baris diubah di klon, lalu `run_tests.gd` + `cek_keluaran_tes.py`.
+
+| ID | Repro ulang | Mutan nyata | Penilaian tes baru | Hasil |
+|---|---|---|---|---|
+| QB-001 | Skenario asli (`tekan(0)` lalu `lepas(-1)`): `jumlah_swipe_selesai=0`, sinyal 0, `stick_aktif=true`; `geser(-1)` meninggalkan `posisi_swipe=(0,0)`; swipe nyata index 1 tetap tercatat satu kali; index 0 tetap sah | `lepas` tanpa guard: 1 GAGAL; `geser` tanpa guard: 2 GAGAL; guard salah `<= 0` (memblok index 0): 9 GAGAL; guard `< -1`: 1 GAGAL. Guard di `batal` dan `tekan` dihapus: lolos, dan memang setara (sentinel -1 sama dengan slot kosong, `batal(-1)` hanya membebaskan slot yang sudah kosong) | Bermakna: `_router_e2_index_negatif` memeriksa skenario persis, kebalikannya (swipe aktif lalu `geser/lepas/batal(-1)`), nilai internal `_posisi_stick`, dan router kosong | **VERIFIED** |
+| QB-002 | `langkah(3.0, 0, (0,0.5), 1.0)` = 4,5 (dulu mutan 6,0); `langkah(4.4, 0, (0,0.5), 0.1)` = 4,5 | Akselerasi tanpa `minf(target)`: 5 GAGAL (di iterasi 1: 0); perlambatan tanpa `maxf(target)`: 4 GAGAL; overshoot kecil `minf(target + 0,05, ...)`: 5 GAGAL | Bermakna: sapuan 8 stick x 9 selisih x 5 dt, plus tiga kasus tunggal | **VERIFIED** |
+| QB-003 | `_process(5.0)` pada scene hidup menempuh paling banyak 0,1 x 6,0 ubin; kontrol `perbarui(5.0)` melewati batas jauh | `_process` tanpa `minf(delta)`: 2 GAGAL; jepit 2x batas: 3 GAGAL; `LANGKAH_WAKTU_MAKS_DETIK` 0,1 -> 0,5: 3 GAGAL | Bermakna (bukan tautologi): tes membedakan jalur `_process` dari `perbarui`, dengan kontrol positif | **VERIFIED** |
+| QB-004 | Komentar `config.gd:146` kini: 450 dpi, 108 px layar = 38 dp, di bawah 44 dp, strip atas 48 px, dinilai lewat uji HP. Hitungan 108 / (450/160) = 38,4 dp benar; angka 450 dpi dari orchestrator (tidak bisa saya ukur) | tidak berlaku (komentar) | Tidak ada tes; `ConfigParser` tetap lolos (satu baris) | **VERIFIED** (komentar). Tinggi tombol sendiri tetap 38 dp < 44 dp: bukan cacat tersembunyi lagi, dinilai di uji HP |
+| QB-005 | `SETUP_ANDROID.md` bagian 8 kini "serong (sekitar 45° sampai 63°) ... Sprite 90° belum bisa muncul di run ini (butuh rem Fase 1)", cocok dengan probe saya (sudut terbesar 62,68°). `SPEC.md` baris 113 tidak diubah (kontrak historis); item NEEDS-MANUAL LOG menutup celah itu | tidak berlaku | tidak berlaku | **VERIFIED** |
+| QB-006 | Penjaga statis `_pelanggaran_keyboard_editor` membaca `kontrol_touch.gd` | `= true`: 2 GAGAL; `OS.has_feature("debug")`: 2; `... or true`: 2; `not OS.has_feature("template")`: 2; `_ready` menyalakan `= true`: 2; pagar `vektor_keyboard` dihapus: 3; pagar jadi `if false`: 3; jalur samaran `vektor_stick` memakai `Input` langsung tanpa pagar: 1 (tertangkap tes perilaku lama). **Lolos: `_ready` yang menulis `keyboard_aktif = not false`** (regex hanya mengenali literal `true`) | Bermakna, bukan tautologi, dan batasnya ditulis jujur di komentar tes dan LOG: ia memeriksa SUMBER, bukan perilaku APK (tag fitur `editor` tidak ada di template ekspor adalah perilaku Godot yang tak bisa dijalankan di runner editor). Bentuk samaran di atas adalah batas bawaan penjaga regex, bukan cacat yang perlu diperbaiki sekarang | **VERIFIED** (dengan batas) |
+| QB-007 | `package/signed=false` kini ditolak | 3 GAGAL (di iterasi 1: lolos); contoh sintetis baru ada di daftar mutan `_test_preset_contoh_buruk` | Bermakna | **VERIFIED** |
+| QB-008 | Perintah kolom Cek dijalankan persis: `~/Library/Android/sdk/build-tools/37.0.0/aapt2 version` = `Android Asset Packaging Tool (aapt) 2.20-15087165`, exit 0 | tidak berlaku | tidak berlaku | **VERIFIED** |
+| QB-011 | Angka di `##` `bike_drive.gd` saya hitung ulang: `langkah(3.0, 0, (0,1), 100.0).maju_ubin` = 450 (dicetak), nilai benar 4,5 + 6,0 x 99 = 598,5; galat maksimum pada `dt` 0,1 = diff x (dt - rampa) / 2 = 0,15 x 0,05 / 2 = 0,00375 ubin (< 0,2 px, sesuai klaim "sekitar 0,004") | Rumus jarak dengan kecepatan awal saja: 3 GAGAL; akhir saja: 3 GAGAL; tanpa `/ 2`: 5 GAGAL | Bermakna: dua tes (tepat di dalam rampa, galat < 0,005 pada batas scene) dengan nilai terburuk tercakup di grid selisih (-0,15 dan 0,15). Pilihan (b) tepat: mengubah rumus untuk kasus yang tak terjadi di scene (`dt` dijepit, dijaga QB-003) menambah risiko tanpa manfaat. Perilaku kode tidak berubah (diff `bike_drive.gd` hanya baris `##`) | **VERIFIED** |
+
+Mutan iterasi 1 saya jalankan ulang pada kode iterasi 2 (empat berkas mutan, 73 entri: 68 dijalankan, 5 dilewati karena teks tidak cocok, yaitu M21, M22, N03 seperti di iterasi 1 dan M17, M18 yang barisnya berubah akibat guard baru; padanannya R01, R02, S02, S04 dijalankan) ditambah 25 mutan baru (S01..S22, T01..T03). Empat mutan yang dulu lolos karena celah tes (M04 akselerasi, M24 `keyboard_aktif = true`, M25 `_process`, N24 `package/signed`) kini tertangkap; yang masih lolos hanyalah yang dulu sudah dinilai setara (clamp ganda M06, M07, N10; `floor`->`ceil` N12; sinkron tombol N14; AAB tanpa Gradle N25; N06 tertangkap hanya oleh `--ketat`) dan kontrol N01 (guard rangkap di `lepas`, lulus sebagaimana mestinya). Tidak ada mutan lain yang berubah status: tidak ada regresi tes.
+
+#### Regresi dan diff iterasi 2
+
+- Tes: `git diff c1063bf...HEAD --numstat -- tests/` = 0 baris dihapus di semua berkas (hanya penambahan: 85 + 110 + 3); jumlah pemeriksaan 1956 -> 1986, tidak ada tes dihapus atau di-skip.
+- Kode: `touch_router.gd` hanya menambah `if index < 0: return` di `geser`, `lepas`, `batal` dan komentar; `bike_drive.gd` hanya baris `##` (dicek dengan `git diff -w`, nol baris kode berubah); `config.gd` hanya satu komentar. Perilaku iterasi 1 tidak berubah: dua jari, `batal_semua`, index 0 sah, dan seluruh 1956 pemeriksaan lama tetap lulus; mutan iterasi 1 yang dulu tertangkap tetap tertangkap.
+- Dokumen: `DEV_PHASES.md` Fase 0 diberi status 🟨 ("kode selesai, uji HP menunggu", sesuai legenda), bukan ✅; tiga butir HP tetap `[ ]` ("Cek light 2D/glow/partikel", "Uji ketajaman piksel dan skala di HP", "Uji APK di HP"); "Selesai kalau: APK terpasang di HP dan sepeda ... bisa digerakkan" tidak diklaim; butir "Input touch" dan "Preset export Android dan APK debug" dicentang dengan catatan jujur (logika dites headless, rasa kontrol di HP lewat butir "Uji APK di HP"; APK dibangun dan terpasang). Klaim "terpasang di A54" bersumber dari orchestrator; tidak bisa saya verifikasi. `ROADMAP.md`: baris 7 berstatus 🟡 (bukan ✅), bagian 5 (keputusan terbuka) tidak disentuh; baris "Format file terjemahan" = keputusan pemilik; baris "Export Android" memang berlabel "Usulan, belum dikunci" tetapi diletakkan di bagian berjudul "dikunci" (QB-012, Nit). Tidak ada kata "dikunci" baru untuk hal yang masih usulan di berkas yang berubah.
+- Temuan baru dari diff iterasi 2: hanya QB-012 (Nit). Tidak ada temuan kode atau tes baru.
+
+#### Hal yang tidak bisa saya verifikasi
+
+Hasil pasang dan `dumpsys` di A54 (laporan orchestrator pada QC-001), kerapatan 450 dpi, peluncuran app, CI Linux PR, dan perilaku keyboard di APK nyata.
+
+#### Verdict QA iterasi 2: **PASS**
+
+Semua gerbang hijau di klon bersih; 9 temuan (QB-001..QB-008, QB-011) berstatus VERIFIED; QB-009 dan QB-010 tetap DEFERRED (Nit, alasan tertulis: ikon sementara dan keputusan pemilik soal orientasi); QB-012 (Nit) OPEN dan tidak menghalangi; QC-001 tetap NEEDS-MANUAL (butir c). Tidak ada Blocker, Major, atau Minor OPEN. Fase 0 tetap belum boleh dicentang selesai sebelum uji HP (rasa kontrol, ketajaman dan skala, light 2D) dilakukan.
+
+### Dev (dorongan kecepatan)
+
+Fitur tambahan atas permintaan pemilik (2026-10-09), bukan temuan QA; QA independen memverifikasi sesudahnya. Rancangan dari orchestrator (`1686eb0`: GDD 15, TECH_PLAN, DEV_PHASES) diikuti; semua angka usulan dan konstanta `Config`. Tidak menyentuh HP, `adb`, internet, Editor Settings, `ROADMAP.md` 4b, `DEV_PHASES.md`; APK tidak dibangun ulang (kode berubah: orchestrator yang membangun bila perlu); tidak ada garis kecepatan, debu, atau getar kamera.
+
+Commit (`git log --oneline 1686eb0..HEAD`): logika murni + Config + BALANCING + tes murni; kamera memakai dorongan + tes scene; probe + tangkapan layar + butir checklist HP; peta repo.
+
+#### Yang dibuat
+
+| Bagian | Berkas | Isi |
+|---|---|---|
+| Logika murni | `scripts/systems/dorongan_kecepatan.gd` (`DoronganKecepatan`) | `geser_target(kecepatan_ud)`: geseran layar sejajar jalan, kemiringan diturunkan dari `Iso.dunia_ke_layar(Iso.ARAH_MAJU)` (persis 2:1, bukan angka sendiri); 0 di `KECEPATAN_SANTAI_UD`, linear ke `+DORONGAN_MAJU_PX` di ngebut, linear ke `-DORONGAN_MUNDUR_PX` di melambat, dijepit di luar rentang, NaN = nol. `haluskan(sekarang, target, dt)`: alpha = 1 - exp(-dt / `DORONGAN_RESPON_DETIK`) dijepit 0..1 (tanpa overshoot), `dt` nol/negatif/NaN/INF tidak mengubah, geseran awal NaN dipulihkan ke target. Nama kelas `DoronganKecepatan` (bukan `DorongKecepatan` seperti contoh) supaya sama dengan nama berkas (rule `gdscript`) |
+| Config | `scripts/config.gd` | `DORONGAN_MAJU_PX = 28.0`, `DORONGAN_MUNDUR_PX = 20.0`, `DORONGAN_RESPON_DETIK = 0.35` (satu baris, `##` dengan satuan; `ConfigParser` lolos). Dicatat di `docs/BALANCING.md` bagian 2 (tabel + paragraf rumus) pada commit yang sama |
+| Scene | `scripts/entities/jalan_uji.gd` | Menyimpan `_geser_dorongan` (dihaluskan tiap `perbarui(dt)` dari kecepatan sebenarnya `_sepeda.kecepatan_ud`, sesudah `gerak`); `posisi_kamera()` = `(sepeda.position + ukuran / 2 - (sasaran + geser)).round()`; akses baca `geser_dorongan()`. Posisi dunia sepeda, posisi sprite, dan HUD (`CanvasLayer`) tidak diubah |
+| Tes | `tests/tes_input_murni.gd` (`_test_dorongan_kecepatan`), `tests/tes_input_scene.gd` (`_test_dorongan_kecepatan_scene`) | Lihat bawah |
+| Alat | `tests/probe_dorongan_jendela.gd` | Menahan stick lewat sentuhan sintetis di jendela asli, memotret santai/ngebut/melambat/lepas, dan mencetak posisi sepeda di layar |
+| Dokumen | `docs/SETUP_ANDROID.md` bagian 8, `AGENTS.md`, `docs/README.md` | Butir uji HP dorongan (terlalu kecil/besar, kembali halus tanpa goyang); peta repo |
+
+#### Tes (label bahasa Indonesia, rujuk GDD 15)
+
+Logika murni (`TesInputMurni`): angka awal; nilai persis di 6,0 = (28, -14), 1,5 = (-20, +10), 3,0 = nol, 4,5 = (14, -7), 2,25 = (-10, +5); tanda (maju +/-, mundur -/+) dan monoton naik di 451 kecepatan 1,5..6,0; `dy = -dx / 2` persis di semua kecepatan dan hasil kali silang dengan arah jalan nol; dijepit di 100, INF, 0, -50, -INF; NaN = nol. Penghalusan: 3000 acak seed tetap (dt 0,0001 sampai 100000 detik) tidak pernah melewati atau menjauhi target; dt 100000 mendekati target, dt 100 = tepat target; dt 0/-0,1/-100/NaN/INF/-INF tidak berubah; geseran awal NaN dipulihkan, target NaN diabaikan; konvergen dalam 10 detik pada 60 fps; setelah satu konstanta waktu tercapai 1 - 1/e = 63,2%; bebas framerate (dua langkah dt/2 = satu langkah dt, selisih < 0,001 px; 30 fps dan 144 fps sama setelah 1 detik).
+
+Scene hidup (`TesInputScene`, jendela 1920x1080/2340x1080/2400x1080 = viewport 640/780/800, `dt` tetap 1/60, stick lewat aksi keyboard editor): santai mantap geseran nol dan sepeda di posisi dasar +-1 px; transform kanvas sepeda sama dengan perhitungan (kamera sungguh menerapkan geseran); santai -> ngebut: sepeda bergeser maju tanpa mundur sesaat; ngebut mantap = dasar + (28, -14) +-1 px; lepas stick: 0,1 detik kemudian kecepatan 5,0..6,0 dan geseran masih > 24 px (stick nol akan menariknya ke sekitar 21: membuktikan geseran dari kecepatan sebenarnya) lalu kembali ke dasar; melambat mantap = dasar - (20, -10) +-1 px; melambat -> ngebut langsung monoton dan tiba di dasar + (28, -14); sepanjang urutan: geseran di scene sama dengan `haluskan(sebelumnya, geser_target(kecepatan sebenarnya), dt)` tiap frame, kamera selalu bilangan bulat, posisi sepeda = `Iso.posisi_gambar(posisi dunia)` (dorongan tidak mengubah posisi dunia atau sprite), zoom 1, `CanvasLayer` HUD dan lapisan kontrol tanpa offset/skala/rotasi, tombol dan panel HUD tidak berpindah.
+
+Batas perpindahan per frame yang saya tentukan: geseran target terjauh (maju + mundur = 48 px datar, panjang = 48 x sqrt(1,25)) dikali bagian yang ditempuh satu langkah penghalusan pada 1/60 detik (alpha = 4,65%) ditambah 1,5 px pembulatan kamera = 4,0 px per frame. Terukur: paling besar 1,41 px per frame (satu piksel di tiap sumbu karena pembulatan) di semua peralihan, karena kecepatan sendiri berubah bertahap (3,0 u/d dan 2,0 u/d2) sehingga targetnya bergerak pelan; batas 4,0 px adalah batas teoretis yang aman, ditambah syarat "ada perpindahan nyata > 0,5 px" supaya tes tidak lolos kosong.
+
+Tes lama "sepeda di sepertiga kiri +-8 px" (`_test_scene_jalan_uji`) TIDAK diubah dan tidak dilemahkan: ia berjalan pada keadaan awal (santai, geseran 0) sehingga tetap menjaga posisi dasar; tes baru menambah ketelitian +-1 px untuk posisi dasar saat geseran nol dan +-1 px untuk geseran ngebut dan melambat.
+
+#### Uji mutasi (skrip sementara di scratchpad, dipulihkan tiap kali)
+
+18 mutan satu baris, 17 tertangkap (1 sampai 35 GAGAL), 1 setara. Yang diminta orchestrator, semuanya tertangkap: tanda dibalik (35), rasio bukan 2:1 (23, dan 4:1: 29), tanpa jepit kecepatan (2), overshoot alpha = dt/tau tanpa jepit (6) dan alpha digandakan (7), geser dari stick bukan kecepatan (7), kamera tidak dibulatkan (7), HUD ikut bergeser (`_hud.offset = geseran`: 3). Tambahan tertangkap: tidak nol di santai (25), penghalusan tidak bebas framerate (6), geseran langsung ke target tanpa penghalusan (3), sprite sepeda ikut digeser (12), geseran tidak diterapkan ke kamera (18), tanda geseran di kamera salah (18), `DORONGAN_MAJU_PX` 40 (4), `DORONGAN_RESPON_DETIK` 1,0 (12). Satu lolos dan setara: `dt <= 0.0` menjadi `dt < 0.0` (pada dt = 0 alpha = 0 sehingga hasilnya sama).
+
+#### Bukti visual dan selisih posisi sepeda (jendela asli macOS, OpenGL via Metal, skala x3 bulat)
+
+```
+godot --path . --resolution 2340x1080 --position 0,0 --script res://tests/probe_dorongan_jendela.gd -- docs/loop/20261009-fase0bc-input-export/shots/dorongan
+```
+
+Posisi sepeda di layar (koordinat viewport game, dari `get_global_transform_with_canvas`), setelah tunggu 7 detik dinding di tiap keadaan (stick ditahan lewat sentuhan sintetis; santai = tanpa sentuhan; melambat = stick digeser ke bawah penuh):
+
+| Lebar viewport | Santai (dasar) | Ngebut | Melambat | Lepas (kembali) | Ngebut - santai | Melambat - santai | Ngebut - melambat |
+|---|---|---|---|---|---|---|---|
+| 640 (1920x1080) | (213, 216) | (241, 202) | (193, 226) | (213, 216) | (+28, -14) | (-20, +10) | (+48, -24) |
+| 780 (2340x1080) | (260, 216) | (288, 202) | (240, 226) | (260, 216) | (+28, -14) | (-20, +10) | (+48, -24) |
+| 800 (2400x1080) | (267, 216) | (295, 202) | (247, 226) | (267, 216) | (+28, -14) | (-20, +10) | (+48, -24) |
+
+Dasar = pecahan `KAMERA_SEPEDA_*_PECAHAN` dibulatkan oleh kamera (213,3 / 260,0 / 266,6 -> bilangan bulat). Kecepatan terukur saat dipotret: 3,00 / 6,00 / 1,50 / 3,00 u/d. Selisih persis 2:1 dan sama di tiga lebar. 12 PNG `shots/dorongan/<ukuran>_<keadaan>.png` (keadaan: `melambat`, `santai`, `ngebut`, `lepas`). Ketajaman: `python3 tools/cek_blok_piksel.py 3 --kecualikan <kotak tombol> --kecualikan <kotak panel> <png>` (kotak dari keluaran probe, panel tidak bergeser karena HUD tidak ikut) pada ke-12 berkas: 0 blok tidak seragam (10.936 blok teks HUD dikecualikan, sisa tepi 0,0). Saya melihat PNG `2340x1080_ngebut` dan `2340x1080_melambat`: sepeda lebih ke atas-kanan di ngebut dan lebih ke bawah-kiri di melambat dibanding posisi dasar, jalan dan rumah graybox tajam, stick dan knob tajam, HUD di tempat yang sama.
+
+#### Gerbang (perintah persis)
+
+```
+godot --headless --import                                   # repo kerja: 0 ERROR/WARNING
+godot --headless --script res://tests/run_tests.gd 2>&1 | tee build/tests.log
+                                                            # ... 2102 lolos, 0 gagal (sebelum fitur: 1986)
+python3 tools/cek_keluaran_tes.py build/tests.log           # pemeriksa: lolos (2102 lolos, 0 gagal, 0 peringatan), exit 0
+python3 tools/cek_keluaran_tes.py --ketat build/tests.log   # exit 0
+python3 tools/tests_cek/uji_pemeriksa.py                    # uji pemeriksa: 16 kasus, 0 menyimpang
+godot --headless --path . --quit-after 2                    # hanya banner; 0 ERROR/WARNING
+# klon bersih (git clone --branch feat/fase0bc-input-export, scratchpad):
+godot --headless --import                                   # exit 0, 0 ERROR/WARNING; /usr/bin/git status --porcelain -uall = 0 baris
+godot --headless --script res://tests/run_tests.gd ...      # 2102 lolos, 0 gagal; pemeriksa --ketat exit 0
+godot --headless --path . --quit-after 2                    # 0 ERROR/WARNING; git status tetap 0 baris
+git diff --name-only main...HEAD | grep -E "keystore|jks|p12|apk|aab|idsig|export_credentials|^.godot/|^build/|^builds/"   # kosong (exit 1)
+```
+
+#### Keputusan, deviasi, dan hal yang tidak bisa saya verifikasi
+
+- **Deviasi nama**: `DoronganKecepatan` (bukan `DorongKecepatan`), supaya nama berkas `dorongan_kecepatan.gd` sesuai rule `gdscript`.
+- **Kamera tetap mengikuti sepeda penuh** (keputusan lama Dev-0B); geseran dorongan hanya menggeser sasaran sepeda di layar, jadi geseran lateral dan dorongan saling menumpuk tanpa konflik.
+- **Angka usulan** 28/20/0,35 tidak diubah dan belum dinilai di HP (butir baru di `SETUP_ANDROID.md` bagian 8). Catatan GDD 15 sudah menyebut konsekuensinya (jalan di depan memendek saat ngebut); pada 28 px datar, jalan yang terlihat di depan memendek sekitar 28 px di sumbu datar dan 14 px di sumbu tegak (kira-kira satu ubin).
+- **Respon 0,35 detik** menghasilkan geseran yang tertinggal sedikit dari kecepatan; perilaku persisnya (terasa lamban/goyang atau tidak) hanya bisa dinilai di perangkat.
+- **Mutan setara** satu (`dt < 0.0`), bukan celah tes.
+- Ketergantungan: tidak ada perubahan di `BikeDrive` atau `Iso`; `DoronganKecepatan` hanya membaca `Config.KECEPATAN_*` dan `Iso`.
+
+### QA (dorongan kecepatan)
+
+Verifikasi independen atas tambahan permintaan pemilik setelah PR #14 dibuka (di luar batas dua iterasi, bukan temuan QA). Semua dijalankan sendiri pada klon bersih baru (`qa_iter3/klon`, HEAD `e13c438`, 9 commit sejak `242ff18`: tiga dokumen orchestrator `3403328`, `df98a54`, `1686eb0`, lalu `f9ff26a`, `045a1a4`, `7e08a8d`, `63cc81e`, `a69916b`, `e13c438`). Aturan sama: tanpa `adb`, HP, unduhan, push, PR; Editor Settings tidak disentuh; mutasi hanya di klon (`git status` klon bersih sesudah tiap batch); repo kerja hanya berubah di `LOG.md` dan tangkapan layar QA.
+
+#### Gerbang
+
+| Gerbang | Hasil |
+|---|---|
+| `godot --headless --import` | exit 0, 0 `ERROR`/`SCRIPT ERROR`/`WARNING`; `git status --porcelain -uall` kosong |
+| `run_tests.gd` | `2102 lolos, 0 gagal` (iterasi 2: 1986, +116, cocok klaim Dev); 0 baris `ERROR`/`WARNING`/`GAGAL` |
+| `cek_keluaran_tes.py` dan `--ketat` | keduanya exit 0 (`lolos (2102 lolos, 0 gagal, 0 peringatan)`) |
+| `uji_pemeriksa.py` | `16 kasus, 0 menyimpang` |
+| `--quit-after 2` | hanya banner; 0 `ERROR`/`WARNING`; `git status` bersih |
+| Kebersihan | `git diff main...HEAD --name-only` dan `git ls-files` tanpa keystore/jks/p12/apk/aab/idsig/export_credentials/`.godot`/`build`/`builds`; `main` = `origin/main` = `6df6fc9`; semua commit baru `<tipe>: ...` bahasa Indonesia; `dorongan_kecepatan.gd`, `probe_dorongan_jendela.gd` dan keduanya `.uid` ter-commit |
+
+#### Kebenaran logika (probe saya sendiri, `qa_logika.gd` di scratchpad, tidak di-commit)
+
+- `geser_target`: santai (3,0) = (0, 0); ngebut (6,0) = (28, -14); melambat (1,5) = (-20, +10); sapuan 0..8 u/d tiap 0,0007 (11.429 titik): 0 pelanggaran tanda (maju (+, -), mundur (-, +)), 0 pelanggaran monoton, rentang x tepat [-20, 28] (dijepit di luar 1,5..6,0), kemiringan `dy = -dx / 2` sampai 1e-9 dan sama dengan kemiringan `Iso.dunia_ke_layar(Iso.ARAH_MAJU)` (-0,5). Kontinu di santai (3,0000001 memberi 1e-6, bukan lompatan), tetapi berlereng beda di dua sisi (9,33 px per u/d ke atas, 13,33 ke bawah): wajar karena dua konstanta berbeda.
+- `haluskan`: 20.000 kasus acak dengan `dt` 1e-9 sampai 1e6 detik: 0 kali melewati target, 0 kali menjauh; `sekarang == target` tidak berubah; `dt` 0, -0, -1, NaN, INF, -INF, 1e-320: tidak berubah (catatan: `dt` = INF tidak berubah, bukan "ke target"; konsisten dengan komentarnya dan tak terpakai karena scene menjepit `dt`); satu detik pada 24/30/60/90/120/144/240 fps semuanya (26,39189, -13,19594) sama dengan nilai analitik 28 x (1 - e^(-1/0,35)) = 26,39189: bebas framerate; `dt` 0,1 dari 0 ke 28 memberi 6,96 (alpha 25%), `dt` 5 memberi 27,99998.
+- Ketahanan: 1.000.000 langkah 1/60 detik dengan target acak tiap 500 langkah: komponen terbesar 27,98 (batas 28), tetap hingga: tidak meluap dan tidak macet.
+
+#### Integrasi di scene hidup (probe `qa_scene.gd` dan `qa_mantap.gd`, jendela 1920/2340/2400 x 1080)
+
+| Pemeriksaan | Hasil |
+|---|---|
+| Posisi sepeda di layar (dari `kamera.position`), keadaan mantap | 640: santai (213, 216), ngebut (241, 202), melambat (193, 226); 780: (260, 216), (288, 202), (240, 226); 800: (267, 216), (295, 202), (247, 226). Selisih ngebut-santai (+28, -14), melambat-santai (-20, +10), persis 2:1 dan sama di tiga lebar; dasar = pecahan Config dibulatkan kamera (213,3 / 260,0 / 266,6) |
+| Stick analog sintetis ditahan di 0,25 / 0,5 / 0,75 / -0,5 selama 10 detik mantap | tepat SATU posisi layar sepeda tiap kasus (mis. 0,5 di 780 = (274, 209) = dasar + (14, -7)): tidak ada getar 1 px di kecepatan menengah yang ditahan |
+| Semua `Node2D` (tanah, rumah, kotak surat, sepeda, kamera) selama transisi 6 detik ngebut dan 6 detik melambat x 3 lebar | 0 posisi bukan bilangan bulat di semua frame |
+| Kidal ditoggle saat ngebut mantap | sepeda tetap di (241, 202) dll., geseran (27,99998, -13,99999) tidak berubah; tombol kidal dan panel HUD tidak bergeser dari posisi awal |
+| Ukuran jendela diubah saat ngebut (640 -> 800, 780 -> 800, 800 -> 640) | geseran tidak terganggu (selisih < 0,001 px); sepeda langsung di dasar jendela baru + geseran (mis. 800: (295, 202) = 266,64 + 28 dibulatkan) |
+| Kembali dari background: `_process(5.0)` dan `FOCUS_OUT` lalu `_process(3.0)` | `delta` dijepit 0,1 detik, geseran berubah satu langkah alpha 25% (sepeda bergeser 3,2 sampai 4,1 px, setara satu frame 0,1 detik), tidak melompat ke target |
+| Tes lama "sepertiga kiri +-8 px" (`_test_scene_jalan_uji`) | tidak dilemahkan: `git diff 242ff18...HEAD -- tests/` menghapus 0 baris (hanya penambahan: 98 + 125). Tes itu berjalan pada keadaan santai/`dt` 0 sehingga geseran 0 dan tetap menjaga dasar; tes baru menambah ketelitian +-1 px untuk ketiga keadaan |
+| Kecepatan nyata, bukan stick | `JalanUji.perbarui` memberi `_sepeda.kecepatan_ud` ke `geser_target` setelah `gerak`; mutan "dari stick" tertangkap |
+
+#### Uji mutasi QA (27 mutan di klon, 26 tertangkap, 1 setara)
+
+| Mutan | GAGAL |
+|---|---|
+| Tanda x dan y dibalik | 35 |
+| Hanya y dibalik (turun saat ngebut) | 30 |
+| Rasio 4:1 | 30 |
+| Rasio 1:1 | 23 |
+| Tanpa jepit kecepatan | 2 |
+| NaN tidak ditangani | 1 |
+| Mundur memakai konstanta maju | 9 |
+| Pembagi maju salah (rentang melambat-ngebut) | 18 |
+| `alpha = dt / tau` tanpa jepit (overshoot) | 6 |
+| `alpha` 1,5x dengan jepit 2 (melewati target) | 7 |
+| `exp(-dt * tau)` | 26 |
+| Hapus cek `dt` hingga | 2 |
+| Geser dari stick bukan kecepatan | 7 |
+| Kamera tidak dibulatkan | 7 |
+| Tanda geser di kamera dibalik | 18 |
+| HUD ikut bergeser (`offset`) | 3 |
+| Lapisan kontrol sentuh ikut bergeser | 3 |
+| Penghalusan dilewati (langsung target) | 3 |
+| `dt` tetap 1/60, bukan `dt` | 1 |
+| Geseran dihitung sebelum `gerak` (tertinggal satu frame) | 3 |
+| Hanya sumbu x yang diterapkan ke kamera | 15 |
+| Sprite sepeda ikut digeser | 12 |
+| `DORONGAN_MAJU_PX` 28 -> 30 | 4 |
+| `DORONGAN_MUNDUR_PX` 20 -> 0 | 8 |
+| `DORONGAN_RESPON_DETIK` 0,35 -> 0,0001 | 2 |
+| Posisi dasar sepeda digeser 5 px | 16 |
+| `v >= santai` -> `v > santai` | lolos, setara (di `v == santai` kedua cabang bernilai 0) |
+
+Penilaian tes: bermakna, bukan tautologi. Logika murni diuji dengan nilai persis, sapuan, dan 3000 kasus acak seed tetap; scene diuji dengan perhitungan ulang geseran tiap frame dari `DoronganKecepatan` terhadap kecepatan sebenarnya, transform kanvas sepeda sungguhan, `CanvasLayer` HUD dan kontrol tanpa offset, serta batas perpindahan per frame. Tiga mutan konstanta (30, 0, 0,0001) tertangkap karena tes menetapkan angka awal 28 / 20 / 0,35 persis; tes lain menurunkan nilai dari `Config`, jadi saat angka disetel di HP cukup ubah satu pemeriksaan "angka awal" (pola yang sama dengan zona sentuh). Tidak ada temuan.
+
+#### Visual (jendela asli macOS, OpenGL via Metal, skala x3 bulat)
+
+`godot --path . --resolution <WxH> --position 0,0 --script res://tests/probe_dorongan_jendela.gd -- <scratchpad>/shots` pada 1920/2340/2400 x 1080; 12 PNG saya sendiri tersimpan di `shots/dorongan/qa_<ukuran>_<keadaan>.png` (keadaan: santai, ngebut, melambat, lepas), misalnya [`qa_2340x1080_ngebut`](shots/dorongan/qa_2340x1080_ngebut.png), [`qa_1920x1080_melambat`](shots/dorongan/qa_1920x1080_melambat.png), [`qa_2400x1080_santai`](shots/dorongan/qa_2400x1080_santai.png). Saya lihat tiga di antaranya dengan Read plus ukur piksel semuanya.
+
+- Posisi sepeda dari probe cocok dengan tabel Dev dan dengan probe saya (di atas). Dari piksel gambar (centroid helm putih): melambat-santai (-20,0, +10,0) dan lepas-santai (0, 0) persis di tiga lebar; ngebut-santai terukur (+33,3, -14,5) karena sprite ngebut (berdiri/condong) punya pose berbeda dari santai (helm +5 px dari titik pijak), sedangkan titik pijak dari transform engine tepat +28.
+- Ketajaman: `python3 -I tools/cek_blok_piksel.py 3 --kecualikan <kotak tombol> --kecualikan <kotak panel> <png>` pada 12 PNG saya: **0 tidak seragam** (9.574 blok teks HUD dikecualikan, sisa tepi 0,0); kontrol negatif tanpa pengecualian: 426 blok tidak seragam (teks Lexend). PNG Dev `2340x1080_ngebut` saya cek ulang: 0 tidak seragam.
+- HUD tidak ikut bergeser (tombol kidal dan panel kecepatan di tempat sama di keempat keadaan); stick (cincin dan knob) tetap di titik sentuh; jalan tetap naik ke kanan atas dengan kemiringan 1:2; sepeda tidak keluar layar dan tidak menyentuh tombol (y 4..40) atau panel kecepatan (y sekitar 318..352) pada geseran maksimum di tiga lebar; satu-satunya kedekatan dengan zona kontrol: QD-003 (640, melambat).
+- Jalan terlihat saat ngebut dengan dan tanpa dorongan (QD-002): 640 lebar 2,22 s -> 2,08 s; 780 dan 800 2,25 s -> 2,10 s. Rumus: jalan naik (32, -16) px per ubin, jarak ke tepi atas = y / 16 ubin, ke tepi kanan = (lebar - x) / 32 ubin, ambil yang lebih kecil, bagi 6,0 u/d. Geseran datar yang menurunkan angka itu ke 2,0 s: 43 px (640) dan 48 px (780, 800).
+
+#### Dokumen
+
+GDD 15, TECH_PLAN, DEV_PHASES, BALANCING, SETUP_ANDROID saya baca terhadap kode: angka BALANCING (28 / 20 / 0,35, (28, -14), (-20, +10), 48 px total = 144 px layar) sama dengan `config.gd` dan tes; semuanya berlabel "usulan" dan "disetel di HP"; tidak ada klaim "dikunci" atau "terbukti enak" (satu-satunya "dikunci" baru adalah judul ROADMAP 4b yang sudah mengecualikan baris usulan); butir uji HP dorongan di `SETUP_ANDROID.md` bagian 8 berupa `[ ]`, dan `DEV_PHASES.md` Fase 1 tetap `[ ]` untuk kamera dan ukuran kontrol. Satu selisih: QD-001 (GDD menyebut posisi dasar lebih rendah "mengimbangi" padahal belum dilakukan). `AGENTS.md` dan `docs/README.md` mencantumkan `dorongan_kecepatan` dan probe dengan benar. QB-012 diverifikasi (judul ROADMAP 4b).
+
+#### Hal yang tidak bisa saya verifikasi
+
+Rasa dorongan (besar 28/20 px, respon 0,35 detik, goyang atau tersentak saat stick dilepas) dan keterbacaan rintangan saat ngebut: hanya di HP. APK terpasang di A54 belum memuat fitur ini (lihat NEEDS-MANUAL). CI Linux PR.
+
+#### Verdict QA dorongan kecepatan: **PASS**
+
+Gerbang hijau di klon bersih (2102 pemeriksaan); logika murni dan integrasi scene benar di probe saya; 26 dari 27 mutan tertangkap (1 setara); visual tajam dan geseran tepat 2:1 di tiga lebar. Tidak ada Blocker, Major, atau Minor. OPEN: QD-001 (Nit, dokumen GDD). NEEDS-MANUAL baru: QD-002 (jalan terlihat saat ngebut) dan QD-003 (sepeda di tepi zona stick pada 16:9), keduanya dinilai di HP bersama butir dorongan di `SETUP_ANDROID.md`. QB-012 VERIFIED.
+
+## Keputusan & catatan
+- Keputusan pemilik (2026-10-09): run 0B dan 0C digabung; izin pasang APK ke A54 (hanya orchestrator yang menyentuh HP); format terjemahan CSV `translations/ui.csv`; izin unduh export templates 4.7.2. Lihat SPEC.
+- Orchestrator: export templates 4.7.2 diunduh dari `godotengine/godot-builds` (`Godot_v4.7.2-stable_export_templates.tpz`, 1,2 GB) ke folder scratchpad, SHA-512 dicocokkan dengan `SHA512-SUMS.txt` rilis, lalu diekstrak ke `~/Library/Application Support/Godot/export_templates/4.7.2.stable/` (status di bagian bawah setelah selesai).
+- Keputusan struktur D-1..D-8 ada di SPEC; yang diambil orchestrator tanpa tanya pemilik dan bisa ditolak di review PR.
+- QA iterasi 1: tidak ada temuan yang menuntut keputusan pemilik. Untuk dipertimbangkan pemilik (bukan cacat): QB-010 (orientasi `landscape` satu arah, bukan `sensorLandscape`) dan ikon sementara (QB-009). Untuk orchestrator sebelum PR: perbaikan QB-001 dan QB-002 murah (dua baris kode + dua tes) dan lebih baik masuk PR ini; QB-005 hanya koreksi satu baris checklist `docs/SETUP_ANDROID.md`; QB-003, QB-004, QB-006 dapat `DEFERRED` ke Fase 1 dengan catatan bila pemilik setuju.
+- Penutupan run (orchestrator): QA iterasi 2 PASS. Yang tersisa terbuka: QB-009 dan QB-010 (Nit, DEFERRED, keputusan pemilik), QC-001 butir c (meluncurkan app; pemilik sudah membukanya di A54 dan tangkapan layar orchestrator menunjukkan game berjalan, 2340x1080, skala x3, 0 blok tidak seragam di luar teks HUD), dan seluruh NEEDS-MANUAL di atas. APK yang terpasang di A54 berasal dari iterasi 1 (SHA-256 `44d8be60...e227`); beda dengan HEAD hanya `touch_router.gdc` (guard `index < 0`) dan komentar `bike_drive.gdc`, tanpa beda perilaku untuk masukan sah. Tidak dipasang ulang karena app sedang dipakai pemilik; bangun ulang dan `adb install -r` saat pemilik selesai menguji.
+- Bukti ketajaman di A54 (orchestrator, 2026-10-09): `adb exec-out screencap -p` saat app di latar depan, 2340x1080 tanpa bilah sistem, `python3 tools/cek_blok_piksel.py 3 <png> --kecualikan 620,945,1150,1060 --kecualikan 1020,5,1320,125` = 269758 blok, 0 tidak seragam, sisa tepi (0, 0). Menutup bagian ketajaman dan skala Q-013 (run 0A); butir "Uji ketajaman piksel dan skala di HP" di `DEV_PHASES.md` tetap dicentang oleh pemilik setelah menilai dengan mata, bukan oleh agent.
+- Dorongan kecepatan (orchestrator, 2026-10-09 19:04): APK dibangun ulang dari HEAD `e13c438` (`builds/kring-kring-debug.apk`, SHA-256 `c37a22bb7f85aaa4767735b205e8ad4a0c9dbe520779a67d9c9c2a8f61c05486`, memuat `dorongan_kecepatan.gdc`, `apksigner verify` OK) dan dipasang ke A54 atas permintaan pemilik (`adb install -r` = Success; tiga app lain tidak berubah; app dibuka lagi karena sedang di layar; log godot tanpa error/warning). Perubahan sesudahnya (`1ad90dc` dan koreksi GDD) hanya LOG, tangkapan layar, dan dokumen. QD-002 dan QD-003 tetap NEEDS-MANUAL (nilai 28/20/0,35 disetel pemilik di HP).
+- Koreksi laporan orchestrator ke pemilik: pernyataan "posisi dasar sepeda (60% tinggi layar) mengimbangi dorongan" keliru; 60% hanyalah posisi dasar saat ini, bukan kompensasi yang dirancang (QD-001).

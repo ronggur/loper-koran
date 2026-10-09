@@ -9,6 +9,11 @@ posisi setengah piksel membuat sebagian blok tidak seragam.
 Cara pakai:
     python3 tools/cek_blok_piksel.py <skala> <png> [<png> ...]
     python3 tools/cek_blok_piksel.py 3 docs/loop/20261009-fase0a-fondasi/shots/iter1/jendela_2340x1080.png
+    python3 tools/cek_blok_piksel.py 3 --kecualikan X0,Y0,X1,Y1 [--kecualikan ...] <png>
+
+`--kecualikan` (piksel tangkapan layar, boleh diulang) melewati blok yang beririsan dengan kotak itu. Dipakai untuk teks
+HUD: font vektor (Lexend) dirasterisasi di resolusi layar dengan anti-alias, jadi tepi hurufnya bukan blok seragam.
+Dunia, sprite, stick, dan garis swipe digambar per piksel game dan harus tetap 0 blok tidak seragam.
 
 Tangkapan layar dibuat oleh `tests/probe_layar_jendela.gd`. Exit code 0 bila semua blok seragam, 1 bila ada
 yang tidak, 2 bila berkas tidak bisa dibaca.
@@ -67,12 +72,24 @@ def baca_png(jalur):
     return lebar, tinggi, bpp, baris
 
 
-def periksa(jalur, skala):
+def beririsan(bx, by, skala, kotak):
+    """True bila blok (bx, by) selebar `skala` beririsan dengan salah satu kotak (x0, y0, x1, y1)."""
+    for x0, y0, x1, y1 in kotak:
+        if bx < x1 and bx + skala > x0 and by < y1 and by + skala > y0:
+            return True
+    return False
+
+
+def periksa(jalur, skala, kotak=()):
     lebar, tinggi, bpp, baris = baca_png(jalur)
     total = 0
     tidak_seragam = 0
+    dilewati = 0
     for by in range(0, tinggi - tinggi % skala, skala):
         for bx in range(0, lebar - lebar % skala, skala):
+            if kotak and beririsan(bx, by, skala, kotak):
+                dilewati += 1
+                continue
             acuan = baris[by][bx * bpp : (bx + 1) * bpp]
             seragam = True
             for dy in range(skala):
@@ -85,19 +102,39 @@ def periksa(jalur, skala):
             total += 1
             tidak_seragam += 0 if seragam else 1
     sisa = (lebar % skala, tinggi % skala)
-    print("%s: %dx%d, skala %d, %d blok, %d tidak seragam, sisa tepi %s" % (jalur, lebar, tinggi, skala, total, tidak_seragam, sisa))
+    tambahan = ", %d blok dikecualikan" % dilewati if kotak else ""
+    print("%s: %dx%d, skala %d, %d blok, %d tidak seragam%s, sisa tepi %s" % (jalur, lebar, tinggi, skala, total, tidak_seragam, tambahan, sisa))
     return tidak_seragam == 0 and sisa == (0, 0)
 
 
 def main():
     if len(sys.argv) < 3 or not sys.argv[1].isdigit() or int(sys.argv[1]) < 1:
-        print("pemakaian: cek_blok_piksel.py <skala> <png> [<png> ...]", file=sys.stderr)
+        print("pemakaian: cek_blok_piksel.py <skala> [--kecualikan X0,Y0,X1,Y1] <png> [<png> ...]", file=sys.stderr)
         return 2
     skala = int(sys.argv[1])
+    kotak = []
+    jalur_png = []
+    argumen = sys.argv[2:]
+    i = 0
+    while i < len(argumen):
+        if argumen[i] == "--kecualikan":
+            try:
+                x0, y0, x1, y1 = (int(n) for n in argumen[i + 1].split(","))
+            except (IndexError, ValueError):
+                print("--kecualikan butuh X0,Y0,X1,Y1 (bilangan bulat)", file=sys.stderr)
+                return 2
+            kotak.append((x0, y0, x1, y1))
+            i += 2
+        else:
+            jalur_png.append(argumen[i])
+            i += 1
+    if not jalur_png:
+        print("tidak ada berkas PNG", file=sys.stderr)
+        return 2
     semua_baik = True
-    for jalur in sys.argv[2:]:
+    for jalur in jalur_png:
         try:
-            semua_baik = periksa(jalur, skala) and semua_baik
+            semua_baik = periksa(jalur, skala, kotak) and semua_baik
         except (OSError, ValueError) as galat:
             print("tidak bisa membaca %s: %s" % (jalur, galat), file=sys.stderr)
             return 2

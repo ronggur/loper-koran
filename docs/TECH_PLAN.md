@@ -251,7 +251,7 @@ Setiap fase berisi: tujuan, kaitan cerita, sistem dan kode, aset, konten, uji, d
 
 - `Iso` (`scripts/systems/iso.gd`): konversi dunia ↔ layar sesuai ART_DIRECTION 2.2 (x → (+1, +½), y → (−1, +½), z → (0, −1) per unit). Jalan naik ke kanan atas. Tes: bolak-balik dunia → layar → dunia harus kembali ke titik awal.
 - `BikeMotion` (`scripts/systems/bike_motion.gd`): logika murni. Masukan stick, keluaran kecepatan, posisi lateral, stamina, status rem. Angka dari `config.gd` (BALANCING 2–3).
-- Kamera: sepeda di sepertiga kiri, melebar ke depan saat ngebut.
+- Kamera: sepeda di sepertiga kiri; saat ngebut sepeda maju sedikit di bingkai dan saat melambat tertarik mundur (dorongan kecepatan, GDD 15, 2026-10-09), bukan zoom (skala piksel bulat).
 - `loper_sprite.gd` memilih animasi `kecepatan_arah` dari arah gerak sebenarnya (BALANCING 2).
 - Umpan balik: debu roda dan garis kecepatan sebagai placeholder.
 - Pause: game benar-benar berhenti.

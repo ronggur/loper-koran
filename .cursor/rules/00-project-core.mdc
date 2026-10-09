@@ -84,7 +84,7 @@ Coba sendiri lewat CLI sebelum meminta user mengerjakan sesuatu: `godot --headle
 
 ## Perintah
 
-Project Godot 4.7.2 ada sejak Fase 0 (run 0A). Dari root repo:
+Project Godot 4.7.2 ada sejak Fase 0 (run 0A; run 0B menambah input touch, terjemahan `translations/ui.csv`, dan scene utama sementara `scenes/dev/jalan_uji.tscn`; run 0C menambah preset export Android `export_presets.cfg` dan `docs/SETUP_ANDROID.md`). Dari root repo:
 
 ```bash
 godot --headless --import                              # sekali setelah clone, dan kalau class_name atau aset baru belum dikenali
@@ -92,11 +92,15 @@ mkdir -p build                                         # folder log, tidak di-co
 godot --headless --script res://tests/run_tests.gd 2>&1 | tee build/tests.log   # tes logika inti (exit code 1 kalau gagal)
 python3 tools/cek_keluaran_tes.py build/tests.log      # pemeriksa keluaran, wajib: exit code Godot saja tidak cukup (rule testing)
 godot --headless --path . --quit-after 2               # buka project dua frame, harus tanpa ERROR dan WARNING
+godot --path .                                         # jalankan scene utama sementara (jalan_uji.tscn): stick di layar sentuh, panah atau WASD di editor
+mkdir -p builds                                        # folder APK hasil ekspor, tidak di-commit
+godot --headless --path . --export-pack "Android" build/kring-uji.pck   # paket game dengan filter preset (tanpa Java), periksa tidak ada tests/ atau docs/
+godot --headless --path . --export-debug "Android" builds/kring-kring-debug.apk   # APK debug; butuh export templates 4.7.2 dan Java SDK Path di Editor Settings
 python3 tools/loper_art/produce.py --out build/loper_art   # render ulang sprite pemain (butuh numpy, pillow)
 python3 tools/env_art/graybox.py                       # render ulang ubin dan kotak graybox (hanya stdlib)
 ```
 
-Kalau `godot` tidak ada di PATH (macOS): pakai `/Applications/Godot.app/Contents/MacOS/Godot`. Kalau Godot tidak terpasang sama sekali, katakan terus terang bahwa tes dan playtest belum dijalankan. Jangan mengklaim lolos. Perintah lain (smoke test layar, validator data, export) ditambahkan ke sini saat alatnya dibuat. Ukuran jendela uji layar: `tests/probe_layar.gd` (headless mengabaikan `--resolution`, lihat komentar di skripnya).
+Kalau `godot` tidak ada di PATH (macOS): pakai `/Applications/Godot.app/Contents/MacOS/Godot`. Kalau Godot tidak terpasang sama sekali, katakan terus terang bahwa tes dan playtest belum dijalankan. Jangan mengklaim lolos. Export Android: prasyarat mesin, alasan tiap opsi preset, pemeriksaan isi APK, pasang ke HP, dan checklist uji ada di `docs/SETUP_ANDROID.md`. `JAVA_HOME` saja tidak cukup, `export/android/java_sdk_path` di Editor Settings harus terisi; jangan mengubah Editor Settings tanpa izin pemilik. Memasang APK ke HP hanya setelah izin pemilik (HP dipakai bersama project lain). Perintah lain (validator data, dst.) ditambahkan ke sini saat alatnya dibuat. Ukuran jendela uji layar: `tests/probe_layar.gd` (headless mengabaikan `--resolution`, lihat komentar di skripnya).
 
 ## Definition of Done
 
