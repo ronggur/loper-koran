@@ -50,6 +50,7 @@ func _initialize() -> void:
 	_test_scene_pemain()
 	await process_frame  # root baru ada di scene tree setelah satu frame
 	_test_scene_pemain_di_tree()
+	await _test_graybox_di_tree()
 	_test_pengaturan_proyek()
 	_test_layar_integer()
 	_test_palet()
@@ -380,6 +381,27 @@ func _test_scene_pemain_di_tree() -> void:
 	check(di_tree.is_playing() and di_tree.animation == &"ngebut_serong_kanan", "animasi tetap berjalan saat tingkat dan arah berganti")
 	root.remove_child(di_tree)
 	di_tree.free()
+
+
+## Scene utama masuk scene tree beberapa frame tanpa error, dan pemain di dalamnya berjalan.
+func _test_graybox_di_tree() -> void:
+	_judul("Scene utama graybox di scene tree")
+	var paket: PackedScene = load(BERKAS_SCENE_UTAMA) as PackedScene
+	if paket == null:
+		check(false, "graybox.tscn termuat untuk uji scene tree")
+		return
+	var akar: Node = paket.instantiate()
+	root.add_child(akar)
+	await process_frame
+	await process_frame
+	var pemain: LoperSprite = akar.find_child("LoperAgen", true, false) as LoperSprite
+	check(pemain != null, "graybox memuat node LoperAgen bertipe LoperSprite")
+	if pemain != null:
+		check(pemain.is_playing() and pemain.speed_level == 1, "pemain di graybox berjalan di tingkat cepat")
+	var kamera: Camera2D = akar.find_child("Kamera", true, false) as Camera2D
+	check(kamera != null and kamera.position == kamera.position.round(), "graybox punya kamera dengan posisi bilangan bulat (piksel tajam)")
+	root.remove_child(akar)
+	akar.free()
 
 
 # --- f. Pengaturan proyek dan impor (AC-2, AC-8) ---
