@@ -34,6 +34,7 @@ func jalankan() -> void:
 	await _test_jalan_tanpa_ujung()
 	await _test_input_terpadu()
 	await _test_langkah_waktu_dijepit()
+	await _test_dorongan_kecepatan_scene()
 	await _test_kidal_dan_hud()
 	_test_proyek_dan_keyboard()
 
@@ -393,6 +394,130 @@ func _test_langkah_waktu_dijepit() -> void:
 	Input.action_release(&"stick_atas")
 	kontrol.keyboard_aktif = OS.has_feature("editor")
 	_bersihkan(akar)
+
+
+# --- Dorongan kecepatan di scene hidup (GDD 15) ---
+
+## Posisi sepeda di layar (koordinat viewport game) dihitung dari posisi kamera: sepeda - (kamera - ukuran / 2).
+func _layar_sepeda(sepeda: SepedaUji, kamera: Camera2D, ukuran: Vector2) -> Vector2:
+	return sepeda.position - (kamera.position - ukuran / 2)
+
+
+## Dorongan kecepatan: saat ngebut sepeda maju sedikit di bingkai, saat melambat mundur sedikit, kembali halus ke posisi dasar
+## saat santai. Hanya kamera yang bergeser: posisi dunia sepeda, sprite, dan HUD tidak berubah. Tes memakai `dt` tetap 1/60
+## dan kecepatan sebenarnya (bukan stick) sebagai penentu geseran.
+func _test_dorongan_kecepatan_scene() -> void:
+	_judul.call("Dorongan kecepatan di scene (GDD 15)")
+	var alpha_frame: float = 1.0 - exp(-DT / Config.DORONGAN_RESPON_DETIK)
+	# Batas wajar perpindahan sepeda di layar per frame: geseran target paling jauh (maju + mundur, 2:1 sehingga panjang
+	# = datar x sqrt(1,25)) dikali bagian yang ditempuh satu langkah penghalusan, ditambah 1,5 px pembulatan kamera.
+	var batas_loncat: float = (Config.DORONGAN_MAJU_PX + Config.DORONGAN_MUNDUR_PX) * sqrt(1.25) * alpha_frame + 1.5
+	for kasus: Array in KASUS_JENDELA:
+		var lebar: int = kasus[2]
+		var tag: String = "lebar %d" % lebar
+		var akar: JalanUji = await _siapkan(Vector2i(kasus[0], kasus[1]))
+		var sepeda: SepedaUji = _anak(akar, "Sepeda") as SepedaUji
+		var kontrol: KontrolTouch = _anak(akar, "KontrolTouch") as KontrolTouch
+		var kamera: Camera2D = _anak(akar, "Kamera") as Camera2D
+		var hud: HudDev = _anak(akar, "Hud") as HudDev
+		kontrol.keyboard_aktif = true
+		var ukuran: Vector2 = akar.get_viewport_rect().size
+		var dasar: Vector2 = Vector2(ukuran.x * Config.KAMERA_SEPEDA_X_PECAHAN, ukuran.y * Config.KAMERA_SEPEDA_Y_PECAHAN)
+		var maju: Vector2 = Vector2(Config.DORONGAN_MAJU_PX, -Config.DORONGAN_MAJU_PX / 2)
+		var mundur: Vector2 = Vector2(-Config.DORONGAN_MUNDUR_PX, Config.DORONGAN_MUNDUR_PX / 2)
+		var rect_tombol: Rect2 = hud.rect_tombol_kidal()
+		var rect_panel: Rect2 = hud.rect_panel_kecepatan()
+		var keadaan: Dictionary = {"loncat": 0.0, "bulat": true, "harapan": Vector2.ZERO, "cocok": true, "posisi_dunia": true}
+		# Santai mantap: geseran nol, sepeda di posisi dasar.
+		keadaan = _jalankan_dorongan(akar, sepeda, kamera, ukuran, 60, keadaan)
+		var layar: Vector2 = _layar_sepeda(sepeda, kamera, ukuran)
+		check(akar.geser_dorongan() == Vector2.ZERO and sepeda.kecepatan_ud == 3.0, "%s santai mantap: geseran dorongan nol dan kecepatan 3,0 u/d" % tag)
+		check(layar.distance_to(dasar) <= 1.0, "%s santai mantap: sepeda di posisi dasar (%s) +-1 px, dapat %s" % [tag, dasar, layar])
+		await _tree.process_frame
+		check(sepeda.get_global_transform_with_canvas().origin.distance_to(layar) < 0.001, "%s: kamera benar-benar menerapkan geseran (transform kanvas sepeda = %s)" % [tag, layar])
+		# Ngebut mantap (stick atas keyboard editor): sepeda maju di bingkai, naik ke kanan atas 2:1.
+		Input.action_press(&"stick_atas")
+		var x_sebelum: float = layar.x
+		var naik_monoton: bool = true
+		for i: int in range(240):
+			keadaan = _jalankan_dorongan(akar, sepeda, kamera, ukuran, 1, keadaan)
+			var x_sekarang: float = _layar_sepeda(sepeda, kamera, ukuran).x
+			if x_sekarang < x_sebelum:
+				naik_monoton = false
+			x_sebelum = x_sekarang
+		layar = _layar_sepeda(sepeda, kamera, ukuran)
+		check(naik_monoton, "%s: santai -> ngebut: sepeda bergeser maju di layar tanpa mundur sesaat (monoton)" % tag)
+		check(sepeda.kecepatan_ud == 6.0 and akar.geser_dorongan().distance_to(maju) < 0.01, "%s ngebut mantap: geseran dorongan = %s (galat < 0,01 px), dapat %s" % [tag, maju, akar.geser_dorongan()])
+		check(layar.distance_to(dasar + maju) <= 1.0, "%s ngebut mantap: sepeda di dasar + (28, -14) = %s +-1 px, dapat %s (selisih dari dasar %s)" % [tag, dasar + maju, layar, layar - dasar])
+		check(layar.x > dasar.x + 20.0 and layar.y < dasar.y - 10.0, "%s ngebut: sepeda lebih ke kanan dan lebih ke atas daripada posisi dasar (naik ke kanan atas)" % tag)
+		var rect_tombol_ngebut: Rect2 = hud.rect_tombol_kidal()
+		var rect_panel_ngebut: Rect2 = hud.rect_panel_kecepatan()
+		check(rect_tombol_ngebut.position == rect_tombol.position and rect_panel_ngebut.position == rect_panel.position, "%s ngebut: HUD tidak ikut bergeser (tombol dan panel di tempat semula)" % tag)
+		# Lepas stick: kecepatan turun bertahap (2 u/d2), geseran mengikuti kecepatan SEBENARNYA, bukan stick.
+		Input.action_release(&"stick_atas")
+		keadaan = _jalankan_dorongan(akar, sepeda, kamera, ukuran, 6, keadaan)
+		check(sepeda.kecepatan_ud > 5.0 and sepeda.kecepatan_ud < 6.0, "%s: 0,1 detik setelah stick dilepas kecepatan masih turun dari 6,0 (%s u/d)" % [tag, sepeda.kecepatan_ud])
+		check(akar.geser_dorongan().x > 24.0, "%s: geseran mengikuti kecepatan sebenarnya, bukan stick: 0,1 detik setelah stick dilepas masih %s px (stick nol akan menariknya ke sekitar 21)" % [tag, akar.geser_dorongan().x])
+		keadaan = _jalankan_dorongan(akar, sepeda, kamera, ukuran, 360, keadaan)
+		layar = _layar_sepeda(sepeda, kamera, ukuran)
+		check(sepeda.kecepatan_ud == 3.0 and akar.geser_dorongan().length() < 0.01 and layar.distance_to(dasar) <= 1.0, "%s: stick dilepas lama: kembali halus ke posisi dasar %s +-1 px, dapat %s" % [tag, dasar, layar])
+		# Melambat mantap (stick bawah): sepeda mundur sedikit.
+		Input.action_press(&"stick_bawah")
+		keadaan = _jalankan_dorongan(akar, sepeda, kamera, ukuran, 360, keadaan)
+		layar = _layar_sepeda(sepeda, kamera, ukuran)
+		check(sepeda.kecepatan_ud == 1.5 and akar.geser_dorongan().distance_to(mundur) < 0.01, "%s melambat mantap: geseran dorongan = %s (galat < 0,01 px), dapat %s" % [tag, mundur, akar.geser_dorongan()])
+		check(layar.distance_to(dasar + mundur) <= 1.0, "%s melambat mantap: sepeda di dasar - (20, -10) = %s +-1 px, dapat %s (selisih dari dasar %s)" % [tag, dasar + mundur, layar, layar - dasar])
+		check(layar.x < dasar.x - 10.0 and layar.y > dasar.y + 5.0, "%s melambat: sepeda lebih ke kiri dan lebih ke bawah daripada posisi dasar (turun ke kiri bawah)" % tag)
+		var rect_panel_lambat: Rect2 = hud.rect_panel_kecepatan()
+		check(rect_panel_lambat.position == rect_panel.position and hud.rect_tombol_kidal().position == rect_tombol.position, "%s melambat: HUD tidak ikut bergeser" % tag)
+		# Peralihan langsung melambat -> ngebut (lompatan target terbesar): masih halus.
+		Input.action_release(&"stick_bawah")
+		Input.action_press(&"stick_atas")
+		var x_lambat: float = layar.x
+		var maju_monoton: bool = true
+		for i: int in range(360):
+			keadaan = _jalankan_dorongan(akar, sepeda, kamera, ukuran, 1, keadaan)
+			var x_baru: float = _layar_sepeda(sepeda, kamera, ukuran).x
+			if x_baru < x_lambat:
+				maju_monoton = false
+			x_lambat = x_baru
+		Input.action_release(&"stick_atas")
+		layar = _layar_sepeda(sepeda, kamera, ukuran)
+		check(maju_monoton and layar.distance_to(dasar + maju) <= 1.0, "%s: melambat -> ngebut langsung: bergeser maju monoton dan tiba di dasar + (28, -14), dapat %s" % [tag, layar])
+		# Ukuran seluruh urutan: halus, bulat, posisi dunia dan sprite tak berubah, HUD dan lapisan kontrol tidak bergeser.
+		check(keadaan["loncat"] <= batas_loncat, "%s: perpindahan sepeda di layar per frame (dt 1/60) paling besar %s px, batas %s px (geseran total x alpha satu langkah + 1,5 px pembulatan)" % [tag, keadaan["loncat"], batas_loncat])
+		check(keadaan["loncat"] > 0.5, "%s: ada perpindahan nyata selama transisi (terbesar %s px per frame), tes tidak lolos kosong" % [tag, keadaan["loncat"]])
+		check(keadaan["bulat"], "%s: posisi kamera selalu bilangan bulat sepanjang urutan (tidak ada sub-piksel)" % tag)
+		check(keadaan["cocok"], "%s: geseran di scene = DoronganKecepatan.haluskan(sebelumnya, geser_target(kecepatan sebenarnya), dt) di setiap frame" % tag)
+		check(keadaan["posisi_dunia"], "%s: posisi sepeda = Iso.posisi_gambar(posisi dunia) sepanjang urutan (dorongan tidak mengubah posisi dunia atau sprite)" % tag)
+		check(kamera.zoom == Vector2.ONE and kamera.position == kamera.position.round(), "%s: kamera tanpa zoom dan posisinya bulat" % tag)
+		check(hud.offset == Vector2.ZERO and hud.scale == Vector2.ONE and hud.rotation == 0.0 and hud.follow_viewport_enabled == false, "%s: CanvasLayer HUD tidak punya offset, skala, atau rotasi (tidak ikut geseran kamera)" % tag)
+		var lapisan_kontrol: CanvasLayer = kontrol.get_parent() as CanvasLayer
+		check(lapisan_kontrol != null and lapisan_kontrol.offset == Vector2.ZERO and lapisan_kontrol.scale == Vector2.ONE and lapisan_kontrol.rotation == 0.0, "%s: lapisan kontrol sentuh tidak bergeser (zona stick dan swipe tetap)" % tag)
+		kontrol.keyboard_aktif = OS.has_feature("editor")
+		_bersihkan(akar)
+
+
+## Menjalankan `jumlah` langkah dt tetap dan mengumpulkan ukuran: perpindahan layar terbesar per frame, kamera bulat,
+## kecocokan geseran dengan rumus murni, dan posisi sepeda = proyeksi posisi dunia. Mengembalikan `keadaan` yang diperbarui.
+func _jalankan_dorongan(akar: JalanUji, sepeda: SepedaUji, kamera: Camera2D, ukuran: Vector2, jumlah: int, keadaan: Dictionary) -> Dictionary:
+	var harapan: Vector2 = keadaan["harapan"]
+	var loncat: float = keadaan["loncat"]
+	for i: int in range(jumlah):
+		var sebelum: Vector2 = _layar_sepeda(sepeda, kamera, ukuran)
+		akar.perbarui(DT)
+		var sesudah: Vector2 = _layar_sepeda(sepeda, kamera, ukuran)
+		loncat = maxf(loncat, sebelum.distance_to(sesudah))
+		harapan = DoronganKecepatan.haluskan(harapan, DoronganKecepatan.geser_target(sepeda.kecepatan_ud), DT)
+		if akar.geser_dorongan().distance_to(harapan) > 0.0001:
+			keadaan["cocok"] = false
+		if kamera.position != kamera.position.round():
+			keadaan["bulat"] = false
+		if sepeda.position != Iso.posisi_gambar(sepeda.posisi_dunia()):
+			keadaan["posisi_dunia"] = false
+	keadaan["harapan"] = harapan
+	keadaan["loncat"] = loncat
+	return keadaan
 
 
 # --- AC-12/15: kidal dan HUD ---
