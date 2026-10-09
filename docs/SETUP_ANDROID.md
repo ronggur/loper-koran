@@ -235,6 +235,7 @@ Dikerjakan manusia di HP asli; agent tidak bisa menilai rasa kontrol. Fase 0 **t
 - [ ] Tombol kidal (strip atas, tinggi 36 px game, sekitar 108 px layar) mudah ditekan sengaja; panel kecepatan tidak tertutup jempol kanan saat swipe.
 - [ ] Garis bidik swipe (2 px tiap 4 px) terbaca di bawah jempol; knob (radius 15) yang menonjol saat tarikan penuh terlihat wajar.
 - [ ] Keterbacaan teks HUD (6 px game = 18 px layar) dinilai dengan mata.
+- [ ] Dorongan kecepatan (GDD 15, `DORONGAN_*` di `scripts/config.gd`, usulan awal 28 px maju, 20 px mundur, respon 0,35 detik): saat ngebut sepeda maju sedikit di layar (naik ke kanan atas); saat melambat mundur sedikit; stick dilepas: kembali halus ke posisi dasar tanpa goyang atau tersentak. Catat apakah geser terasa terlalu kecil atau terlalu besar (dan apakah jalan di depan jadi terasa terlalu pendek saat ngebut) beserta angka yang diinginkan; jangan diubah di run ini.
 - [ ] Orientasi terkunci: memutar HP 180° tidak membalik tampilan atau menjadikannya portrait (`screenOrientation=0`, bukan sensor).
 - [ ] Ikon di launcher: bel oranye di latar gelap (`icon.svg` sementara, tidak terpotong oleh bentuk ikon adaptif); nilai dengan mata, ikon final di Fase 14.
 - [ ] Opsional: sambungkan keyboard fisik; panah dan WASD **tidak** boleh menggerakkan sepeda di APK (keyboard hanya untuk editor, `OS.has_feature("editor")`).
