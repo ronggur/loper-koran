@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/ui/hud_dev.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/ui/bar_kecepatan.gd" id="2_bar"]
+[ext_resource type="Theme" path="res://assets/ui/theme.tres" id="3_theme"]
 
 [node name="HudDev" type="CanvasLayer"]
 layer = 5
@@ -13,6 +14,7 @@ anchors_preset = 10
 anchor_right = 1.0
 grow_horizontal = 2
 mouse_filter = 2
+theme = ExtResource("3_theme")
 
 [node name="TombolKidal" type="Button" parent="StripAtas"]
 unique_name_in_owner = true
@@ -32,6 +34,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
+theme = ExtResource("3_theme")
 
 [node name="PanelKecepatan" type="PanelContainer" parent="PanelBawah"]
 unique_name_in_owner = true

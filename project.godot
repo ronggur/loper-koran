@@ -23,10 +23,6 @@ window/stretch/aspect="expand"
 window/stretch/scale_mode="integer"
 window/handheld/orientation=0
 
-[gui]
-
-theme/custom="res://assets/ui/theme.tres"
-
 [importer_defaults]
 
 texture={

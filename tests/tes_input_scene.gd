@@ -138,6 +138,9 @@ func _test_scene_jalan_uji() -> void:
 	var panel_bawah: MarginContainer = _anak(hud, "PanelBawah") as MarginContainer
 	check(strip != null and strip.anchor_left == 0.0 and strip.anchor_right == 1.0 and strip.anchor_top == 0.0 and strip.anchor_bottom == 0.0, "HUD: strip atas ber-anchor lebar penuh di tepi atas (bukan posisi piksel)")
 	check(panel_bawah != null and panel_bawah.anchor_left == 0.0 and panel_bawah.anchor_right == 1.0 and panel_bawah.anchor_top == 1.0 and panel_bawah.anchor_bottom == 1.0, "HUD: panel bawah ber-anchor lebar penuh di tepi bawah (bukan posisi piksel)")
+	var tema: Theme = load("res://assets/ui/theme.tres") as Theme
+	check(strip != null and panel_bawah != null and strip.theme == tema and panel_bawah.theme == tema and tema != null, "HUD memakai assets/ui/theme.tres (dipasang di scene, bukan gui/theme/custom: tema proyek memuat font saat impor pertama di clone bersih dan menghasilkan ERROR)")
+	check(str(ProjectSettings.get_setting("gui/theme/custom", "")).is_empty(), "gui/theme/custom tidak diisi (impor pertama di clone bersih harus tanpa ERROR)")
 	var tanpa_posisi_absolut: bool = true
 	var hanya_tombol_menerima: bool = true
 	for node: Node in _semua_node(hud):
@@ -407,6 +410,7 @@ func _test_kidal_dan_hud() -> void:
 		var judul: Label = _anak(hud, "LabelKecepatan") as Label
 		check(bar != null and is_equal_approx(bar.nilai, 0.75), "%s: bar kecepatan 4,5 u/d = 75%% dari ngebut" % tag)
 		check(angka != null and angka.text == hud.tr("HUD_KECEPATAN_ANGKA").format({"v": "4.5"}) and angka.text.contains("4.5"), "%s: angka kecepatan 4.5 lewat kunci HUD_KECEPATAN_ANGKA, dapat '%s'" % [tag, angka.text if angka != null else ""])
+		check(angka != null and judul != null and angka.get_theme_font_size(&"font_size") == 10 and judul.get_theme_font_size(&"font_size") == 6, "%s: ukuran font dari tema: angka 10 (HudAngka), label 6 (HudLabel), DESIGN_SPEC 1.2" % tag)
 		check(judul != null and judul.text == "HUD_KECEPATAN", "%s: label judul bar berisi kunci HUD_KECEPATAN (diterjemahkan otomatis oleh Label)" % tag)
 		_bersihkan(akar)
 
@@ -433,7 +437,6 @@ func _test_proyek_dan_keyboard() -> void:
 		var harus: Array = diharapkan[aksi]
 		check(tombol.size() == 2 and tombol.has(int(harus[0])) and tombol.has(int(harus[1])), "aksi '%s' dipetakan ke panah dan WASD (physical keycode), dapat %s" % [aksi, tombol])
 	check(not bool(ProjectSettings.get_setting("input_devices/pointing/emulate_touch_from_mouse", false)), "tidak ada emulasi sentuhan dari mouse di project.godot (input_devices/pointing/emulate_touch_from_mouse)")
-	check(str(ProjectSettings.get_setting("gui/theme/custom")) == "res://assets/ui/theme.tres", "tema proyek = assets/ui/theme.tres")
 	var kontrol: KontrolTouch = KontrolTouch.new()
 	check(kontrol.keyboard_aktif == OS.has_feature("editor"), "keyboard aktif hanya bila OS.has_feature(\"editor\") (nonaktif di build ekspor)")
 	kontrol.keyboard_aktif = true
