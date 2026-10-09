@@ -91,6 +91,8 @@ func _test_preset_asli() -> void:
 	# Orientasi diatur di project.godot (preset Godot 4 tidak punya opsi orientasi sendiri): landscape terkunci.
 	check(int(ProjectSettings.get_setting("display/window/handheld/orientation")) == DisplayServer.SCREEN_LANDSCAPE, "orientasi landscape terkunci di project.godot (display/window/handheld/orientation = 0), dipakai preset export")
 	check(not ProjectSettings.has_setting("display/window/handheld/orientation_override"), "preset tidak menimpa orientasi lewat pengaturan lain")
+	# Godot menolak ekspor mobile tanpa Import ETC2 ASTC, walau semua tekstur repo ini Lossless (SETUP_ANDROID bagian 3).
+	check(bool(ProjectSettings.get_setting("rendering/textures/vram_compression/import_etc2_astc", false)), "Import ETC2 ASTC menyala di project.godot (syarat ekspor Android, SETUP_ANDROID bagian 3)")
 
 
 func _test_preset_contoh_buruk() -> void:

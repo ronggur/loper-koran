@@ -70,6 +70,13 @@ File di root repo, **di-commit**, tanpa rahasia. Tes `tests/tes_export.gd` memba
 | `package/name` | kosong | Label app = nama project, `Kring Kring!` |
 | Ikon (`launcher_icons/*`) | kosong | Belum ada ikon project (`application/config/icon`); ikon sementara dan final bukan scope Fase 0 (Fase 14). Launcher menampilkan ikon bawaan template |
 
+### Pengaturan project yang dituntut ekspor
+
+| Pengaturan (`project.godot`) | Nilai | Alasan |
+|---|---|---|
+| `rendering/textures/vram_compression/import_etc2_astc` (Project Settings → Rendering → Textures → VRAM Compression → Import ETC2 ASTC) | `true` | Godot menolak ekspor mobile tanpanya (pesan Android: `ETC2/ASTC texture compression is required for Android export`). Ditemukan 2026-10-09 lewat ekspor uji platform iOS di salinan sementara: gagal dengan `configuration errors:` kosong sampai pengaturan ini menyala. **Belum dicoba pada ekspor Android sebenarnya** (tertahan Java SDK Path, bagian 2). Efek: hanya tekstur ber-mode "VRAM Compressed" mendapat varian ETC2/ASTC tambahan; semua sprite repo ini Lossless, jadi hasil impor tidak berubah (`git status` bersih sesudah `--import`) |
+| `display/window/handheld/orientation` | `0` (landscape) | Dipakai Godot untuk `screenOrientation` di manifes; dijaga `tests/run_tests.gd` dan `tests/tes_export.gd` |
+
 ### Nilai dari template 4.7.2 (terverifikasi pada `android_debug.apk` bawaan, 2026-10-09)
 
 Dengan build tanpa Gradle, nilai ini tidak bisa diubah dari preset:
@@ -195,6 +202,7 @@ Teks HUD (font vektor) tidak berupa blok piksel; kecualikan kotaknya dengan `--k
 | `INSTALL_FAILED_UPDATE_INCOMPATIBLE` (umum) | APK lama ditandatangani keystore lain. Cek `pm list packages` dulu, lalu `adb uninstall com.rmh.kring` hanya dengan izin pemilik (save ikut terhapus) |
 | App langsung tertutup (umum) | Lihat penyebabnya dengan `adb logcat -s godot` |
 | Dialog sistem "Viewing full screen" saat pertama dibuka (umum) | Dialog Android untuk mode imersif; tekan "Got it", muncul sekali |
+| `ETC2/ASTC texture compression is required for Android export` | `rendering/textures/vram_compression/import_etc2_astc` mati di `project.godot` (bagian 3); dijaga `tests/tes_export.gd` |
 | Skala turun ke ×2 atau ada tepi kosong di HP | Bilah sistem tidak tersembunyi; lihat bagian 6 dan ROADMAP 4b |
 | Tes ekspor `tests/tes_export.gd` gagal | Ada perubahan di `export_presets.cfg` atau `.gitignore` yang melanggar bagian 3; baca pesan `GAGAL` |
 
