@@ -1,0 +1,64 @@
+GIMP Palette
+Name: Loper Master (usulan, ART_DIRECTION 2.4)
+Columns: 4
+#
+# Palet induk Kring Kring! (Loper Koran), usulan sampai aset gelombang 1 selesai.
+# Sumber: docs/ART_DIRECTION.md bagian 2.4. Untuk Aseprite / LibreSprite / GIMP.
+# Bayangan tanah sebenarnya penanda #000000 alpha 28% yang diganti warna bayangan aktif (2.5).
+#
+ 14  10  28	Garis luar #0E0A1C
+  0   0   0	Bayangan tanah (penanda, alpha 28%) #000000
+251 246 232	Kertas / terang #FBF6E8
+242 231 201	Kertas / dasar #F2E7C9
+194 175 134	Kertas / gelap #C2AF86
+255 255 255	Putih #FFFFFF
+242 185 140	Kulit terang / terang #F2B98C
+232 160 122	Kulit terang / dasar #E8A07A
+180 124  95	Kulit terang / gelap #B47C5F
+216 154 108	Kulit sawo / terang #D89A6C
+180 124  95	Kulit sawo / dasar #B47C5F
+138  90  64	Kulit sawo / gelap #8A5A40
+138  90  64	Rambut / terang #8A5A40
+109  67  52	Rambut / dasar #6D4334
+ 74  35  25	Rambut / gelap #4A2319
+155 196 216	Biru kemeja / terang #9BC4D8
+ 95 150 200	Biru kemeja / dasar #5F96C8
+ 70 110 140	Biru kemeja / gelap #466E8C
+116 128 163	Dongker / terang #7480A3
+ 92 106 140	Dongker / dasar #5C6A8C
+ 64  74  98	Dongker / gelap #404A62
+111 174  79	Hijau rangka / terang #6FAE4F
+ 70 110  80	Hijau rangka / dasar #466E50
+ 49  77  56	Hijau rangka / gelap #314D38
+125 187  90	Rumput / terang #7DBB5A
+111 174  79	Rumput / dasar #6FAE4F
+ 98 160  70	Rumput / gelap #62A046
+181  82  59	Merah bata / terang #B5523B
+153  69  50	Merah bata / dasar #994532
+103  63  49	Merah bata / gelap #673F31
+126  57  41	Merah bata / aksen #7E3929
+180 124  95	Cokelat kayu / terang #B47C5F
+150 100  60	Cokelat kayu / dasar #96643C
+ 85  52  40	Cokelat kayu / gelap #553428
+196 192 200	Logam / terang #C4C0C8
+150 154 160	Logam / dasar #969AA0
+103  99 109	Logam / gelap #67636D
+ 95  91 102	Logam gelap / terang #5F5B66
+ 61  70  73	Logam gelap / dasar #3D4649
+ 34  30  38	Logam gelap / gelap #221E26
+108 104 114	Aspal / 1 #6C6872
+103  99 109	Aspal / 2 #67636D
+242 231 201	Aspal / marka #F2E7C9
+220 203 166	Trotoar / 1 #DCCBA6
+213 196 161	Trotoar / 2 #D5C4A1
+169 162 174	Trotoar / kerb #A9A2AE
+240 200 205	Dinding pink / terang #F0C8CD
+187 156 159	Dinding pink / gelap #BB9C9F
+246 214 160	Dinding krem #F6D6A0
+201 224 165	Dinding hijau muda / terang #C9E0A5
+156 174 128	Dinding hijau muda / gelap #9CAE80
+170 220 240	Dinding biru muda / terang #AADCF0
+144 187 204	Dinding biru muda / gelap #90BBCC
+255 224 138	Aksen hangat / terang #FFE08A
+255 201  74	Aksen hangat / dasar #FFC94A
+233 142  63	Aksen hangat / gelap #E98E3F
