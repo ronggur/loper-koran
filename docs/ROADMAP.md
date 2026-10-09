@@ -80,7 +80,7 @@ Skala dipilih Ronggur; sisanya didelegasikan ke agent dengan alasan tertulis. Bi
 
 ## 6. Cara menjalankan project
 
-Project Godot 4.7.2 ada sejak run 0A (Fase 0). Root repo = root project Godot. Dari root repo (macOS tanpa `godot` di PATH: `/Applications/Godot.app/Contents/MacOS/Godot`):
+Project Godot 4.7.2 ada sejak run 0A (Fase 0); run 0B menambah input touch dan scene utama sementara yang bisa digerakkan. Root repo = root project Godot. Dari root repo (macOS tanpa `godot` di PATH: `/Applications/Godot.app/Contents/MacOS/Godot`):
 
 ```
 godot --headless --import                           # sekali, setelah clone
@@ -89,7 +89,7 @@ godot --headless --script res://tests/run_tests.gd 2>&1 | tee build/tests.log   
 python3 tools/cek_keluaran_tes.py build/tests.log   # pemeriksa keluaran: wajib, exit code Godot saja tidak cukup
 godot --headless --path . --quit-after 2            # buka project dua frame, tanpa ERROR dan WARNING
 godot --headless --path . --script res://tests/probe_layar.gd   # skala bulat dan viewport per rasio layar
-godot --path .                                      # jalankan scene utama sementara (graybox) di jendela
+godot --path .                                      # jalankan scene utama sementara (jalan_uji.tscn): stick di layar sentuh, panah atau WASD di editor
 python3 tools/env_art/graybox.py                    # render ulang ubin graybox (hanya stdlib)
 python3 tools/loper_art/produce.py                  # render ulang sprite pemain (butuh numpy, pillow)
 ```

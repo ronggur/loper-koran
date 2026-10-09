@@ -32,7 +32,7 @@ Wajib:
 
 ## Perintah cepat
 
-Project Godot 4.7.2 sudah ada (Fase 0, run 0A). Dari root repo:
+Project Godot 4.7.2 sudah ada (Fase 0, run 0A dan 0B). Dari root repo:
 
 ```bash
 godot --headless --import                              # sekali setelah clone, dan setiap ada class_name atau aset baru
@@ -42,6 +42,7 @@ python3 tools/cek_keluaran_tes.py build/tests.log      # pemeriksa keluaran: WAJ
 python3 tools/tests_cek/uji_pemeriksa.py               # bukti pemeriksa menolak log buruk
 godot --headless --path . --quit-after 2               # buka project dua frame, tidak boleh ada ERROR/WARNING
 godot --headless --path . --script res://tests/probe_layar.gd   # skala bulat dan lebar viewport per rasio layar
+godot --path .                                         # jalankan scene utama sementara (jalan_uji.tscn): stick di layar sentuh, panah atau WASD di editor
 python3 tools/env_art/graybox.py                       # render ulang ubin dan kotak graybox (hanya stdlib)
 python3 tools/loper_art/produce.py --out build/loper_art   # render ulang sprite pemain (butuh numpy, pillow)
 ```
@@ -52,11 +53,12 @@ macOS tanpa `godot` di PATH: `/Applications/Godot.app/Contents/MacOS/Godot`.
 ## Peta repo
 
 ```
-project.godot        Godot 4.7.2, Compatibility, landscape, 640x360 canvas_items + integer + expand
-scenes/              dev/graybox.tscn (scene utama sementara), entities/loper_agen.tscn (pemain)
-scripts/             config.gd (semua angka tuning), systems/ (logika murni), entities/, ui/ (palette.gd)
-assets/              sprites/ (loper/, _placeholder/), palette/, fonts/ (usulan), LICENSES.md
-tests/               run_tests.gd (runner), probe_layar*.gd (ukur skala layar)
+project.godot        Godot 4.7.2, Compatibility, landscape, 640x360 canvas_items + integer + expand, scene utama jalan_uji.tscn, aksi InputMap stick_* (keyboard hanya editor), terjemahan dan tema terdaftar
+scenes/              dev/jalan_uji.tscn (scene utama sementara, jalan tanpa ujung yang bisa digerakkan), dev/graybox.tscn (statis, untuk probe layar), entities/loper_agen.tscn (pemain) dan sepeda_uji.tscn, ui/hud_dev.tscn (HUD sementara)
+scripts/             config.gd (semua angka tuning), systems/ (logika murni: iso, touch_zones, stick_map, touch_router, bike_drive, jalan_daur, loper_anim), entities/ (sepeda_uji, jalan_uji, tanah_daur, objek_daur, loper_sprite), ui/ (palette, kontrol_touch, hud_dev, bar_kecepatan)
+assets/              sprites/ (loper/, _placeholder/), palette/, fonts/ (usulan), ui/theme.tres (font dan ukuran saja), LICENSES.md
+translations/        ui.csv (kolom keys,id) beserta ui.csv.import dan ui.id.translation hasil impor; semua teks pemain lewat kunci di sini
+tests/               run_tests.gd (runner), tes_input_murni.gd dan tes_input_scene.gd (pembantu runner), probe_layar*.gd (ukur skala layar)
 docs/                Dokumen desain (GDD, STORY, TECH_PLAN, ART_DIRECTION, BALANCING, DATA_SCHEMA, dst.) + design/ + loop/
 docs/design/         Token desain, mock HUD, sprite produksi pemain (character/loper_agen/)
 tools/loper_art/     Renderer sprite pemain (Python), lihat tools/loper_art/README.md
@@ -66,4 +68,4 @@ tools/               cek_keluaran_tes.py (pemeriksa keluaran tes), tests_cek/ (c
 .cursor/rules/       Aturan agent (sumber tunggal)
 ```
 
-Belum ada: `export_presets.cfg`, `android/` (run 0C), input touch (run 0B), `scripts/autoload/`, `assets/data/`, file terjemahan, `assets/ui/theme.tres`. Struktur lengkap yang direncanakan ada di `docs/README.md`.
+Belum ada: `export_presets.cfg`, `android/` (run 0C), `scripts/autoload/`, `assets/data/`, file terjemahan bahasa Inggris, panel 9-slice di `assets/ui/theme.tres`. Struktur lengkap yang direncanakan ada di `docs/README.md`.
