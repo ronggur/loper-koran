@@ -10,6 +10,7 @@ extends RefCounted
 const FOLDER_ASET: String = "res://assets/sprites/loper/"
 const FOLDER_SUMBER: String = "res://docs/design/character/loper_agen/"
 const BERKAS_FRAMES: String = "res://assets/sprites/loper/loper_agen_frames.tres"
+const BERKAS_SCENE_PEMAIN: String = "res://scenes/entities/loper_agen.tscn"
 ## Tiga sheet: nama berkas JSON di aset, JSON sumber, PNG di aset dan sumber, jumlah animasi, jumlah baris, fps tiap animasi dibaca dari JSON.
 const SHEET: Array = [
 	{"tag": "kayuh", "json": "loper_agen.json", "png": "loper_agen.png", "sumber": "", "animasi": 15, "baris": 15},
@@ -41,6 +42,12 @@ func jalankan() -> void:
 	_test_nama_lempar()
 	_test_sisi_dari_swipe()
 	_test_lempar_waktu()
+	_test_loper_sprite_tingkat()
+	_test_loper_sprite_lempar()
+	_test_loper_sprite_lempar_semua_kombinasi()
+	_test_loper_sprite_lempar_tepi()
+	_test_loper_sprite_di_tree()
+	_test_loper_sprite_tanpa_frames()
 
 
 ## JSON sheet sebagai Dictionary (aset di repo), atau kosong bila gagal dibaca.
@@ -389,3 +396,300 @@ func _test_lempar_waktu() -> void:
 			semua_sifat = false
 			contoh_gagal = "putaran %d: lepas %d selesai %d" % [putaran, jumlah_lepas, jumlah_selesai]
 	check(semua_sifat, "200 putaran dt acak: lepas tepat sekali, selesai tepat sekali, frame tidak mundur, waktu menaik dan dijepit ke durasi (%s)" % contoh_gagal)
+
+
+# --- AC-4: LoperSprite ---
+
+## Pemain baru dari scene (belum masuk scene tree).
+func _pemain_baru() -> LoperSprite:
+	var paket: PackedScene = load(BERKAS_SCENE_PEMAIN) as PackedScene
+	return paket.instantiate() as LoperSprite
+
+
+## Menyambung sinyal `koran_lepas` dan `lempar_selesai` ke catatan: tiap entri [jenis, sisi atau animasi, frame saat sinyal].
+func _catat(pemain: LoperSprite) -> Array:
+	var catatan: Array = []
+	pemain.koran_lepas.connect(func(sisi: LoperAnim.Sisi) -> void: catatan.append(["lepas", int(sisi), pemain.frame, pemain.animation]))
+	pemain.lempar_selesai.connect(func() -> void: catatan.append(["selesai", -1, pemain.frame, pemain.animation]))
+	return catatan
+
+
+## Jumlah entri catatan berjenis `jenis`.
+func _hitung(catatan: Array, jenis: String) -> int:
+	var jumlah: int = 0
+	for entri: Array in catatan:
+		if entri[0] == jenis:
+			jumlah += 1
+	return jumlah
+
+
+func _test_loper_sprite_tingkat() -> void:
+	_judul.call("LoperSprite: tingkat melambat (AC-4)")
+	var pemain: LoperSprite = _pemain_baru()
+	var frames: SpriteFrames = pemain.sprite_frames
+	check(frames != null and pemain.speed_level == 0 and pemain.animation == &"santai_normal", "pemain mulai santai_normal")
+	pemain.speed_level = -1
+	check(pemain.speed_level == -1 and pemain.animation == &"melambat_normal", "speed_level -1 memilih melambat_normal, dapat '%s'" % pemain.animation)
+	check(is_equal_approx(frames.get_animation_speed(pemain.animation), 4.0), "animasi melambat berkecepatan 4 fps (santai 8 fps)")
+	for arah: int in range(-2, 3):
+		pemain.steer = arah
+		check(pemain.animation == LoperAnim.nama_animasi(-1, arah) and String(pemain.animation).begins_with("melambat_"), "melambat arah %d memilih '%s'" % [arah, LoperAnim.nama_animasi(-1, arah)])
+	pemain.speed_level = -9
+	check(pemain.speed_level == -1, "speed_level -9 dijepit ke -1 (melambat)")
+	pemain.speed_level = 9
+	check(pemain.speed_level == 2, "speed_level 9 tetap dijepit ke 2 (ngebut)")
+	# Fase kayuh dijaga saat berganti dari santai ke melambat dan sebaliknya.
+	pemain.steer = 0
+	pemain.speed_level = 0
+	pemain.set_frame_and_progress(2, 0.4)
+	pemain.speed_level = -1
+	check(pemain.animation == &"melambat_normal" and pemain.frame == 2 and is_equal_approx(pemain.frame_progress, 0.4), "santai -> melambat menjaga frame (2) dan progres (0,4) kayuh")
+	pemain.speed_level = 0
+	check(pemain.animation == &"santai_normal" and pemain.frame == 2 and is_equal_approx(pemain.frame_progress, 0.4), "melambat -> santai menjaga frame dan progres")
+	pemain.free()
+
+
+func _test_loper_sprite_lempar() -> void:
+	_judul.call("LoperSprite: lempar sekali, sinyal, kembali ke kayuh (AC-4, D-3, D-4, D-5)")
+	var pemain: LoperSprite = _pemain_baru()
+	var catatan: Array = _catat(pemain)
+	pemain.speed_level = 1
+	pemain.steer = 1
+	check(not pemain.sedang_melempar(), "awalnya tidak sedang melempar")
+	check(pemain.lempar(LoperAnim.Sisi.DEKAT), "lempar(DEKAT) dimulai (true)")
+	check(pemain.sedang_melempar() and pemain.animation == &"lempar_kanan_cepat_serong_kanan", "memainkan lempar_kanan_cepat_serong_kanan (sisi dekat, cepat, serong dekat), dapat '%s'" % pemain.animation)
+	check(pemain.frame == 0 and not pemain.is_playing() and not pemain.sprite_frames.get_animation_loop(pemain.animation), "mulai di frame 0, tidak diputar pemutar bawaan, animasi tidak loop")
+	check(catatan.is_empty(), "tidak ada sinyal saat lempar baru dimulai")
+	# Langkah demi langkah dengan dt tetap 1/60: frame berganti tiap 5 langkah, koran lepas di langkah 10 (frame 2), selesai di langkah 20.
+	var urutan_frame: Array[int] = []
+	var nama_dalam: bool = true
+	for langkah: int in range(1, 20):
+		pemain.maju(DT)
+		urutan_frame.append(pemain.frame)
+		if pemain.animation != &"lempar_kanan_cepat_serong_kanan":
+			nama_dalam = false
+		if langkah == 3:
+			# Perubahan tingkat dan arah di tengah lempar disimpan, tidak mengganti gambar (D-4). Lempar kedua diabaikan (D-3).
+			pemain.speed_level = 2
+			pemain.steer = -1
+			check(pemain.animation == &"lempar_kanan_cepat_serong_kanan" and pemain.speed_level == 2 and pemain.steer == -1, "speed_level dan steer berubah di tengah lempar: tersimpan, gambar lempar tidak berganti")
+			check(not pemain.lempar(LoperAnim.Sisi.SEBERANG), "lempar(SEBERANG) saat sedang melempar diabaikan (false)")
+			check(pemain.animation == &"lempar_kanan_cepat_serong_kanan" and pemain.frame == 0, "lempar yang diabaikan tidak mengulang atau mengganti animasi")
+		if langkah == 9:
+			check(_hitung(catatan, "lepas") == 0, "sampai langkah 9 (frame 1) koran belum lepas")
+		if langkah == 10:
+			check(_hitung(catatan, "lepas") == 1 and pemain.frame == 2, "langkah 10: koran_lepas tepat sekali saat frame 2 tampil")
+	check(nama_dalam, "selama 19 langkah animasi tetap lempar_kanan_cepat_serong_kanan")
+	check(urutan_frame.slice(0, 4) == [0, 0, 0, 0] and urutan_frame[4] == 1 and urutan_frame[8] == 1 and urutan_frame[9] == 2 and urutan_frame[13] == 2 and urutan_frame[14] == 3 and urutan_frame[18] == 3, "frame 0 langkah 1-4, frame 1 langkah 5-9, frame 2 langkah 10-14, frame 3 langkah 15-19")
+	check(pemain.sedang_melempar() and _hitung(catatan, "selesai") == 0, "sampai langkah 19 masih melempar, belum selesai")
+	pemain.maju(DT)
+	check(not pemain.sedang_melempar() and _hitung(catatan, "selesai") == 1, "langkah 20: lempar_selesai tepat sekali")
+	check(pemain.animation == &"ngebut_serong_kiri" and pemain.is_playing(), "sprite kembali ke kayuh dengan tingkat dan arah TERKINI (ngebut_serong_kiri, bukan cepat_serong_kanan dari saat mulai) dan berputar lagi, dapat '%s'" % pemain.animation)
+	check(pemain.frame == 0 and pemain.frame_progress == 0.0, "indeks frame dilanjutkan dari frame lempar terakhir (3, progres penuh): kayuh melanjutkan ke frame 0 (kaki lanjut ke fase berikutnya), dapat frame %d progres %s" % [pemain.frame, pemain.frame_progress])
+	check(catatan.size() == 2 and catatan[0][0] == "lepas" and catatan[1][0] == "selesai", "urutan sinyal: koran_lepas lalu lempar_selesai, masing-masing sekali (%d entri)" % catatan.size())
+	check(catatan[0][1] == int(LoperAnim.Sisi.DEKAT) and catatan[0][2] == 2 and catatan[0][3] == &"lempar_kanan_cepat_serong_kanan", "koran_lepas membawa sisi DEKAT, frame 2, dan animasi lempar saat dipancarkan")
+	check(String(catatan[1][3]) == "ngebut_serong_kiri", "lempar_selesai dipancarkan sesudah sprite kembali ke kayuh (animasi '%s')" % catatan[1][3])
+	for i: int in range(40):
+		pemain.maju(DT)
+	check(catatan.size() == 2 and pemain.animation == &"ngebut_serong_kiri", "sesudah selesai, maju tidak memancarkan sinyal lagi dan tidak mengganti animasi")
+	# Setelah selesai lempar baru boleh lagi, mulai dari frame 0, sisi seberang.
+	check(pemain.lempar(LoperAnim.Sisi.SEBERANG) and pemain.animation == &"lempar_kiri_ngebut_serong_kiri" and pemain.frame == 0, "lempar berikutnya sesudah selesai dimulai dari frame 0: lempar_kiri_ngebut_serong_kiri")
+	for i: int in range(20):
+		pemain.maju(DT)
+	check(catatan.size() == 4 and catatan[2][1] == int(LoperAnim.Sisi.SEBERANG) and catatan[3][0] == "selesai", "lempar kedua juga memancarkan koran_lepas (SEBERANG) dan lempar_selesai tepat sekali")
+	pemain.free()
+
+
+## Semua kombinasi sisi x tingkat (melambat sampai ngebut) x arah (-2 sampai 2): animasi benar, sekali putar, sinyal sekali.
+func _test_loper_sprite_lempar_semua_kombinasi() -> void:
+	_judul.call("LoperSprite: lempar untuk semua kombinasi")
+	var pemain: LoperSprite = _pemain_baru()
+	var catatan: Array = _catat(pemain)
+	var jumlah: int = 0
+	var salah: Array[String] = []
+	for sisi: LoperAnim.Sisi in [LoperAnim.Sisi.SEBERANG, LoperAnim.Sisi.DEKAT]:
+		for tingkat: int in range(LoperAnim.TINGKAT_MELAMBAT, 3):
+			for arah: int in range(-2, 3):
+				pemain.speed_level = tingkat
+				pemain.steer = arah
+				var nama: StringName = LoperAnim.nama_lempar(sisi, tingkat, arah)
+				var sebelum: int = catatan.size()
+				var mulai: bool = pemain.lempar(sisi)
+				var benar_nama: bool = pemain.animation == nama
+				var langkah_selesai: int = 0
+				for langkah: int in range(1, 40):
+					pemain.maju(DT)
+					if not pemain.sedang_melempar():
+						langkah_selesai = langkah
+						break
+				var baru: Array = catatan.slice(sebelum)
+				var urut_benar: bool = baru.size() == 2 and baru[0][0] == "lepas" and baru[0][1] == int(sisi) and baru[0][2] == 2 and baru[0][3] == nama and baru[1][0] == "selesai"
+				var kayuh_benar: bool = pemain.animation == LoperAnim.nama_animasi(tingkat, arah) and pemain.is_playing()
+				jumlah += 1
+				if not (mulai and benar_nama and langkah_selesai == 20 and urut_benar and kayuh_benar):
+					salah.append("sisi %d tingkat %d arah %d (mulai %s nama %s selesai di %d urut %s kayuh %s)" % [sisi, tingkat, arah, mulai, benar_nama, langkah_selesai, urut_benar, kayuh_benar])
+	check(jumlah == 40, "40 kombinasi dicoba (2 sisi x 4 tingkat x 5 arah), dapat %d" % jumlah)
+	check(salah.is_empty(), "tiap kombinasi: animasi lempar benar, selesai tepat di langkah 20, koran_lepas sekali (frame 2, sisi benar) lalu lempar_selesai sekali, kembali ke kayuh; salah: %s" % "; ".join(salah))
+	pemain.free()
+
+
+func _test_loper_sprite_lempar_tepi() -> void:
+	_judul.call("LoperSprite: tepi (sisi kosong, dt tidak sah, dt besar, batal, re-entrancy, pedal_rate)")
+	var node: LoperSprite = _pemain_baru()
+	var catatan: Array = _catat(node)
+	# Lempar selalu mulai dari frame 0, progres 0, apa pun fase kayuh saat swipe dilepas.
+	node.set_frame_and_progress(2, 0.5)
+	node.lempar(LoperAnim.Sisi.DEKAT)
+	check(node.frame == 0 and node.frame_progress == 0.0, "lempar dimulai dari frame 0 progres 0 walau kayuh sedang di frame 2 progres 0,5, dapat frame %d progres %s" % [node.frame, node.frame_progress])
+	node.batalkan_lempar()
+	catatan.clear()
+	# Sisi kosong atau tidak dikenal tidak melempar.
+	check(not node.lempar(LoperAnim.Sisi.TIDAK_ADA) and not node.sedang_melempar() and node.animation == &"santai_normal", "lempar(TIDAK_ADA) tidak melakukan apa pun")
+	check(not node.lempar(7 as LoperAnim.Sisi) and not node.sedang_melempar(), "lempar dengan nilai sisi tak dikenal tidak melakukan apa pun")
+	# maju tanpa lempar tidak memicu apa pun.
+	node.maju(5.0)
+	check(catatan.is_empty() and node.animation == &"santai_normal", "maju(5) saat tidak melempar tidak melakukan apa pun")
+	# dt nol, negatif, NaN, tak hingga tidak memajukan.
+	node.lempar(LoperAnim.Sisi.SEBERANG)
+	for dt_buruk: float in [0.0, -1.0, NAN, INF]:
+		node.maju(dt_buruk)
+	check(node.sedang_melempar() and node.frame == 0 and catatan.is_empty(), "dt 0, -1, NaN, tak hingga tidak memajukan lempar (masih frame 0, tanpa sinyal)")
+	# Satu dt besar: koran_lepas lalu lempar_selesai pada panggilan yang sama, masing-masing sekali.
+	node.maju(10.0)
+	check(not node.sedang_melempar() and catatan.size() == 2 and catatan[0][0] == "lepas" and catatan[1][0] == "selesai", "satu maju(10) menghasilkan koran_lepas lalu lempar_selesai, sekali masing-masing")
+	check(node.animation == &"santai_normal" and node.is_playing(), "dan kembali ke santai_normal yang berputar")
+	catatan.clear()
+	# Batal sebelum lepas: tidak ada koran_lepas, tidak ada lempar_selesai.
+	node.lempar(LoperAnim.Sisi.DEKAT)
+	for i: int in range(6):
+		node.maju(DT)
+	node.batalkan_lempar()
+	check(node.animation == &"santai_normal" and node.frame == 1 and absf(node.frame_progress - 0.2) < 0.001, "batalkan_lempar 6 langkah (frame 1, progres 0,2): kayuh melanjutkan dari frame dan progres yang sama, dapat frame %d progres %s" % [node.frame, node.frame_progress])
+	for i: int in range(40):
+		node.maju(DT)
+	check(not node.sedang_melempar() and catatan.is_empty() and node.animation == &"santai_normal" and node.is_playing(), "batalkan_lempar sebelum lepas: tanpa koran_lepas dan tanpa lempar_selesai, kembali ke kayuh yang berputar")
+	# Batal sesudah lepas: koran_lepas yang sudah terjadi tetap sekali, tidak ada lempar_selesai.
+	node.lempar(LoperAnim.Sisi.DEKAT)
+	for i: int in range(12):
+		node.maju(DT)
+	node.batalkan_lempar()
+	for i: int in range(40):
+		node.maju(DT)
+	check(_hitung(catatan, "lepas") == 1 and _hitung(catatan, "selesai") == 0 and not node.sedang_melempar(), "batalkan_lempar sesudah lepas: koran_lepas tetap sekali, lempar_selesai tidak dipancarkan")
+	node.batalkan_lempar()
+	check(not node.sedang_melempar() and catatan.size() == 1, "batalkan_lempar saat tidak melempar tidak melakukan apa pun")
+	# Re-entrancy: pendengar koran_lepas membatalkan lempar -> lempar_selesai tidak dipancarkan.
+	var node2: LoperSprite = _pemain_baru()
+	var catatan2: Array = []
+	node2.koran_lepas.connect(func(_sisi: LoperAnim.Sisi) -> void:
+		catatan2.append("lepas")
+		node2.batalkan_lempar())
+	node2.lempar_selesai.connect(func() -> void: catatan2.append("selesai"))
+	node2.lempar(LoperAnim.Sisi.DEKAT)
+	node2.maju(10.0)
+	check(catatan2 == ["lepas"] and not node2.sedang_melempar(), "pendengar koran_lepas yang membatalkan lempar mencegah lempar_selesai (tidak ada sinyal ganda)")
+	node2.free()
+	# Re-entrancy: pendengar lempar_selesai langsung melempar lagi -> berhasil karena keadaan sudah dibersihkan sebelum sinyal.
+	var node3: LoperSprite = _pemain_baru()
+	var hitung3: Array[int] = [0, 0]
+	node3.koran_lepas.connect(func(_sisi: LoperAnim.Sisi) -> void: hitung3[0] += 1)
+	node3.lempar_selesai.connect(func() -> void:
+		hitung3[1] += 1
+		if hitung3[1] == 1:
+			node3.lempar(LoperAnim.Sisi.SEBERANG))
+	node3.lempar(LoperAnim.Sisi.DEKAT)
+	node3.maju(10.0)
+	check(node3.sedang_melempar() and node3.animation == &"lempar_kiri_santai_normal" and hitung3 == [1, 1], "pendengar lempar_selesai boleh langsung melempar lagi (lempar berantai) tanpa sinyal ganda")
+	node3.maju(10.0)
+	check(not node3.sedang_melempar() and hitung3 == [2, 2], "lempar berantai selesai: total 2 koran_lepas dan 2 lempar_selesai")
+	node3.free()
+	# Lempar tidak bergantung pada laju kayuh: pedal_rate 0 tidak membekukan lempar.
+	var node4: LoperSprite = _pemain_baru()
+	var catatan4: Array = _catat(node4)
+	node4.pedal_rate = 0.0
+	node4.lempar(LoperAnim.Sisi.DEKAT)
+	for i: int in range(20):
+		node4.maju(DT)
+	check(catatan4.size() == 2 and not node4.sedang_melempar(), "pedal_rate 0 tidak membekukan lempar: selesai di langkah 20 dengan dua sinyal")
+	check(node4.speed_scale == 0.0, "speed_scale kayuh tetap mengikuti pedal_rate (0) sesudah lempar")
+	node4.free()
+	node.free()
+
+
+func _test_loper_sprite_di_tree() -> void:
+	_judul.call("LoperSprite: di scene tree (proses hanya saat melempar, delta dijepit)")
+	var root: Window = _tree.root
+	var pemain: LoperSprite = _pemain_baru()
+	var catatan: Array = _catat(pemain)
+	root.add_child(pemain)
+	check(pemain.is_playing() and not pemain.is_processing(), "di scene tree animasi kayuh berjalan dan _process mati saat tidak melempar (tanpa biaya per frame)")
+	pemain.speed_level = 2
+	check(pemain.lempar(LoperAnim.Sisi.SEBERANG), "lempar di dalam scene tree dimulai")
+	check(pemain.is_processing() and not pemain.is_playing(), "selama melempar _process menyala dan pemutar bawaan berhenti")
+	# Delta besar (kembali dari background) dijepit ke LANGKAH_WAKTU_MAKS_DETIK = 0,1 detik: baru frame 1, belum lepas.
+	pemain._process(5.0)
+	check(pemain.sedang_melempar() and pemain.frame == 1 and catatan.is_empty(), "_process(5,0) hanya memajukan %s detik (frame 1), tidak langsung selesai" % Config.LANGKAH_WAKTU_MAKS_DETIK)
+	pemain._process(5.0)
+	check(pemain.sedang_melempar() and pemain.frame == 2 and _hitung(catatan, "lepas") == 1, "_process(5,0) kedua: 0,2 detik, frame 2, koran_lepas sekali, belum selesai")
+	pemain._process(5.0)
+	check(pemain.sedang_melempar() and pemain.frame == 3 and _hitung(catatan, "lepas") == 1 and _hitung(catatan, "selesai") == 0, "_process(5,0) ketiga: 0,3 detik, frame 3, belum selesai (durasi 0,333 detik)")
+	pemain._process(5.0)
+	check(not pemain.sedang_melempar() and _hitung(catatan, "selesai") == 1 and not pemain.is_processing() and pemain.is_playing() and pemain.animation == &"ngebut_normal", "_process(5,0) keempat: 0,4 detik, selesai, _process mati lagi, kembali ke ngebut_normal yang berputar")
+	# Notifikasi app di-background dibatalkan oleh pemilik (JalanUji); node sendiri aman bila dikeluarkan dari tree saat melempar.
+	pemain.lempar(LoperAnim.Sisi.DEKAT)
+	root.remove_child(pemain)
+	pemain.maju(DT)
+	check(pemain.sedang_melempar(), "node yang dikeluarkan dari tree tidak error dan lempar tetap bisa dimajukan manual")
+	pemain.free()
+	# Memanggil lempar dan maju pada node yang belum pernah masuk tree tidak menghasilkan ERROR/WARNING (keluaran dicek pemeriksa).
+	var luar: LoperSprite = _pemain_baru()
+	check(luar.lempar(LoperAnim.Sisi.DEKAT) and not luar.is_inside_tree(), "lempar di luar scene tree berhasil")
+	luar.maju(1.0)
+	check(not luar.sedang_melempar(), "maju di luar scene tree menyelesaikan lempar")
+	luar.free()
+
+
+## Q-001 (run 0A): `sprite_frames` null aman, dan frames yang dipasang kemudian diterapkan.
+func _test_loper_sprite_tanpa_frames() -> void:
+	_judul.call("LoperSprite: sprite_frames kosong (Q-001)")
+	var root: Window = _tree.root
+	var frames: SpriteFrames = load(BERKAS_FRAMES) as SpriteFrames
+	# (a) LoperSprite.new() tanpa frames masuk tree: dulu ERROR 'There is no animation with name default'.
+	var kosong: LoperSprite = LoperSprite.new()
+	root.add_child(kosong)
+	check(kosong.is_inside_tree() and not kosong.is_playing() and not kosong.is_processing(), "LoperSprite tanpa sprite_frames masuk tree tanpa error dan tidak berputar")
+	check(not kosong.lempar(LoperAnim.Sisi.DEKAT) and not kosong.sedang_melempar(), "lempar tanpa sprite_frames mengembalikan false")
+	kosong.maju(1.0)
+	kosong.batalkan_lempar()
+	kosong.speed_level = 2
+	kosong.steer = -2
+	kosong.pedal_rate = 1.5
+	check(not kosong.is_playing() and kosong.speed_level == 2 and kosong.steer == -2, "mengubah speed_level, steer, pedal_rate, maju, dan batal tanpa sprite_frames aman")
+	# Frames dipasang kemudian: animasi sesuai tingkat/arah yang diubah selama kosong, dan berputar.
+	kosong.sprite_frames = frames
+	check(kosong.animation == &"ngebut_kiri" and kosong.is_playing(), "frames dipasang sesudah speed_level/steer diubah: animasi ngebut_kiri diterapkan dan berputar, dapat '%s' playing %s" % [kosong.animation, kosong.is_playing()])
+	root.remove_child(kosong)
+	kosong.free()
+	# (b) Skenario repro 0A: frames dicopot lalu dipasang lagi di tengah perubahan tingkat.
+	var p: LoperSprite = _pemain_baru()
+	p.speed_level = 2
+	p.steer = -2
+	root.add_child(p)
+	p.sprite_frames = null
+	p.speed_level = 1
+	check(not p.is_playing(), "frames dicopot: tidak berputar")
+	p.sprite_frames = frames
+	check(p.animation == &"cepat_kiri" and p.is_playing(), "frames dipasang lagi: animasi mengikuti speed_level 1 (cepat_kiri) dan berputar lagi (repro Q-001b), dapat '%s' playing %s" % [p.animation, p.is_playing()])
+	# (c) Frames dicopot di tengah lempar: lempar dibatalkan tanpa sinyal, tidak menggantung.
+	var catatan: Array = _catat(p)
+	p.lempar(LoperAnim.Sisi.DEKAT)
+	for i: int in range(3):
+		p.maju(DT)
+	p.sprite_frames = null
+	check(not p.sedang_melempar() and not p.is_processing() and catatan.is_empty(), "frames dicopot saat melempar: lempar berakhir tanpa sinyal dan _process mati")
+	p.maju(1.0)
+	p.sprite_frames = frames
+	check(p.animation == &"cepat_kiri" and p.is_playing() and catatan.is_empty(), "frames dipasang lagi sesudahnya: kayuh berputar, tidak ada sinyal sisa")
+	# (d) Frames diganti SpriteFrames lain tanpa animasi lempar: lempar ditolak (warning hanya untuk animasi kayuh yang hilang, jadi tidak diuji di sini).
+	root.remove_child(p)
+	p.free()
