@@ -59,7 +59,8 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 **Tujuan:** mengayuh, mengatur kecepatan, dan berpindah sisi terasa enak sebelum ada lemparan.
 
 - [ ] Sistem koordinat dunia ↔ layar isometrik 2:1, jalan lurus naik ke kanan atas, ubin placeholder (ART_DIRECTION 2.2)
-- [ ] Kamera: sepeda di sepertiga kiri layar, melebar sedikit ke depan saat ngebut
+- [ ] Kamera: sepeda di sepertiga kiri layar, melebar sedikit ke depan saat ngebut. Coba juga menurunkan posisi sepeda di layar: di A54 rumput kanan bawah kosong dan tinggi layar yang membatasi jalan ke depan (sekitar 2 detik saat ngebut), jadi sepeda lebih rendah memberi sekitar 30% lebih jauh tanpa mengubah skala ×3 (usulan dari uji A54, 2026-10-09; skala ×4 ditolak sementara karena viewport turun ke 585×270)
+- [ ] Uji ukuran kontrol dan HUD di A54: radius stick 35 px game, tombol kidal 38 dp (di bawah 44 dp rule `ui-scenes`), teks HUD 6 px. Perbesar kontrol dan HUD tanpa mengubah skala dunia bila perlu
 - [ ] Gerak maju terus dengan tiga tingkat kecepatan dari stick (santai/cepat/ngebut) dan transisi halus (BALANCING 2)
 - [ ] Melambat dan meluncur (stick bawah), rem saat ditarik penuh dan ditahan dengan ambang di ujung bawah
 - [ ] Pindah posisi lateral ke sisi seberang dan sisi dekat; batas tepi jalan
