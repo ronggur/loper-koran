@@ -48,6 +48,7 @@ func jalankan() -> void:
 	_test_loper_sprite_lempar_tepi()
 	_test_loper_sprite_di_tree()
 	_test_loper_sprite_tanpa_frames()
+	_test_titik_pijak_sama()
 
 
 ## JSON sheet sebagai Dictionary (aset di repo), atau kosong bila gagal dibaca.
@@ -693,3 +694,67 @@ func _test_loper_sprite_tanpa_frames() -> void:
 	# (d) Frames diganti SpriteFrames lain tanpa animasi lempar: lempar ditolak (warning hanya untuk animasi kayuh yang hilang, jadi tidak diuji di sini).
 	root.remove_child(p)
 	p.free()
+
+
+# --- AC-8: titik pijak sama (sprite tidak melompat saat berganti animasi) ---
+
+## Baris piksel terbawah yang tidak transparan dalam sel (kolom `frame`, baris `baris`) dan himpunan piksel tidak transparan
+## di tiga baris terbawahnya (tapak roda dan bayangan). -1 bila sel kosong.
+func _alas(gambar: Image, frame: int, baris: int) -> Array:
+	var x0: int = frame * SEL.x
+	var y0: int = baris * SEL.y
+	var bawah: int = -1
+	for y: int in range(SEL.y - 1, -1, -1):
+		for x: int in range(SEL.x):
+			if gambar.get_pixel(x0 + x, y0 + y).a > 0.0:
+				bawah = y
+				break
+		if bawah >= 0:
+			break
+	var tapak: Array[Vector2i] = []
+	for y: int in range(bawah - 2, bawah + 1):
+		for x: int in range(SEL.x):
+			if y >= 0 and gambar.get_pixel(x0 + x, y0 + y).a > 0.0:
+				tapak.append(Vector2i(x, y))
+	return [bawah, tapak]
+
+
+## Alas (baris terbawah dan tapak tiga baris terbawah) tiap frame lempar sama dengan frame kayuh sumbernya (`source_row`), dan
+## frame melambat identik piksel demi piksel dengan santai. Sel, titik pijak (23, 46), dan offset sama untuk ketiga sheet
+## (dites di AC-2). Jadi gambar sprite tidak bergeser vertikal maupun horizontal di alas saat kayuh -> lempar -> kayuh.
+func _test_titik_pijak_sama() -> void:
+	_judul.call("Titik pijak sama: kayuh, melambat, lempar (AC-8)")
+	var kayuh: Image = (load(FOLDER_ASET + "loper_agen.png") as Texture2D).get_image()
+	var melambat: Image = (load(FOLDER_ASET + "loper_agen_melambat.png") as Texture2D).get_image()
+	var lempar: Image = (load(FOLDER_ASET + "loper_agen_lempar.png") as Texture2D).get_image()
+	var json: Dictionary = _baca_json("loper_agen_lempar.json")
+	var frame_dicek: int = 0
+	var alas_beda: Array[String] = []
+	var tapak_beda: Array[String] = []
+	var alas_terukur: Dictionary = {}
+	for entri: Dictionary in json.get("animations", []):
+		for frame: int in range(4):
+			var a_lempar: Array = _alas(lempar, frame, int(entri["row"]))
+			var a_kayuh: Array = _alas(kayuh, frame, int(entri["source_row"]))
+			frame_dicek += 1
+			alas_terukur[String(entri["heading"])] = a_kayuh[0]
+			if a_lempar[0] != a_kayuh[0] or a_lempar[0] < 0:
+				alas_beda.append("%s f%d (%d lawan %d)" % [entri["name"], frame, a_lempar[0], a_kayuh[0]])
+			if a_lempar[1] != a_kayuh[1]:
+				tapak_beda.append("%s f%d" % [entri["name"], frame])
+	check(frame_dicek == 72, "72 frame lempar dibandingkan dengan frame kayuh sumbernya (18 animasi x 4), dapat %d" % frame_dicek)
+	check(alas_beda.is_empty(), "baris alas (piksel terbawah) tiap frame lempar = frame kayuh sumbernya: %s" % "; ".join(alas_beda))
+	check(tapak_beda.is_empty(), "tapak tiga baris terbawah (roda dan bayangan) tiap frame lempar sama persis dengan kayuh sumbernya: %s" % "; ".join(tapak_beda))
+	check(alas_terukur == {"normal": 54, "serong_kanan": 50, "serong_kiri": 56}, "baris piksel terbawah (indeks dari atas sel 46x58, titik pijak y 46) per arah: normal 54, serong_kanan 50, serong_kiri 56, dapat %s" % alas_terukur)
+	var identik: bool = true
+	for baris: int in range(5):
+		for frame: int in range(4):
+			var rect: Rect2i = Rect2i(frame * SEL.x, baris * SEL.y, SEL.x, SEL.y)
+			if melambat.get_region(rect).get_data() != kayuh.get_region(rect).get_data():
+				identik = false
+	check(identik, "20 frame melambat identik piksel demi piksel dengan baris santai di sheet kayuh (hanya fps berbeda)")
+	# Kontrol negatif: pengukur membedakan sel yang digeser satu piksel ke bawah.
+	var geser: Image = Image.create_empty(SEL.x * KOLOM, SEL.y, false, Image.FORMAT_RGBA8)
+	geser.blit_rect(kayuh, Rect2i(0, 0, SEL.x * KOLOM, SEL.y - 1), Vector2i(0, 1))
+	check(_alas(geser, 0, 0)[0] == int(_alas(kayuh, 0, 0)[0]) + 1, "kontrol negatif: sel yang digeser 1 piksel ke bawah terukur satu baris lebih rendah (pengukur peka)")
+	check(_alas(geser, 0, 0)[1] != _alas(kayuh, 0, 0)[1], "kontrol negatif: tapak sel yang digeser berbeda dari aslinya")
