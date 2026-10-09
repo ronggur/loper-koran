@@ -6,7 +6,7 @@ Scope: Run 0B + 0C digabung (input touch, sepeda placeholder, export Android, AP
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
 |---|---|---|---|---|---|
-| 1 | **Dev-0B selesai** (AC-1..AC-18 bagian 0B; AC-18 perintah ekspor menyusul di Dev-0C): logika murni input dan gerak, node input, jalan uji tanpa ujung, HUD sementara, terjemahan, tes (950 -> 1840 pemeriksaan), penjaga Q-002/Q-003. Tidak ada `BLOCKED`. Dev-0C belum dijalankan. | Dev-0B: import bersih di clone bersih (0 ERROR, `git status` kosong), `1840 lolos, 0 gagal` + pemeriksa (juga `--ketat`) exit 0, buka project 2 frame tanpa ERROR/WARNING | | | |
+| 1 | **Dev-0B selesai** (AC-1..AC-18 bagian 0B; AC-18 perintah ekspor menyusul di Dev-0C): logika murni input dan gerak, node input, jalan uji tanpa ujung, HUD sementara, terjemahan, tes (950 -> 1840 pemeriksaan), penjaga Q-002/Q-003. Tidak ada `BLOCKED`. **Dev-0C selesai sebagian** (AC-18 sisa, AC-19, AC-20, AC-23, AC-24 selesai; **AC-21 dan AC-22 `BLOCKED`**: `export/android/java_sdk_path` kosong di Editor Settings, tidak ada APK): `export_presets.cfg`, `tests/tes_export.gd`, `docs/SETUP_ANDROID.md`, perintah ekspor di dokumen, `.gitignore` +keystore, Import ETC2 ASTC di `project.godot`. | Dev-0B: import bersih di clone bersih (0 ERROR, `git status` kosong), `1840 lolos, 0 gagal` + pemeriksa (juga `--ketat`) exit 0, buka project 2 frame tanpa ERROR/WARNING. Dev-0C: import bersih di repo kerja dan clone bersih (0 ERROR/WARNING, `git status` kosong), `1948 lolos, 0 gagal` + pemeriksa (juga `--ketat`) exit 0, `uji_pemeriksa.py` 16 kasus 0 menyimpang, buka project 2 frame tanpa ERROR/WARNING, diff `main...HEAD` tanpa keystore/APK/`.godot`/`build`; **export APK tidak bisa dijalankan (BLOCKED)** | | | |
 
 ## Temuan
 Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MANUAL | BLOCKED
@@ -15,6 +15,7 @@ Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MAN
 |---|---|---|---|---|---|---|---|
 | 0A-Q002 | 1 | Minor | tests/run_tests.gd (tes `pedal_rate` negatif) | Dari run 0A (Q-002, DEFERRED, AC-17): tes `speed_scale >= 0.0` terlalu longgar, mutan `absf` lolos. | FIXED (Dev-0B) | `tests/run_tests.gd`: `speed_scale == 0.0` dan `LoperAnim.skala_kayuh(-2.0) == 0.0`; mutan `absf` ditangkap (2 GAGAL) | `_test_scene_pemain` |
 | 0A-Q003 | 1 | Minor | tests/run_tests.gd (penjaga AC-8/AC-9 run 0A) | Dari run 0A (Q-003, DEFERRED, AC-17): empat celah penjaga. Ditutup: `Camera2D.zoom` bulat (scene, skrip, dan node hidup), `Color.<KONSTAN>` di luar `palette.gd`, string `"kiri"`/`"kanan"` di skrip di luar `NAMA_ARAH`, teks pemain tertanam di skrip dan scene. Tiap penjaga punya contoh buruk sintetis yang ditolak dan mutan nyata yang ditangkap. | FIXED (Dev-0B) | `tests/run_tests.gd` (`_test_penjaga_berkas`, `_test_terjemahan`) | `_zoom_tak_bulat`, `_warna_konstan`, `_string_kiri_kanan`, `_teks_literal_di_skrip`, `_teks_di_scene` |
+| 0C-B001 | 1 | Major | Editor Settings `export/android/java_sdk_path` (di luar repo) | AC-21 dan AC-22 tidak bisa dibuktikan: `godot --headless --path . --export-debug "Android" builds/kring-kring-debug.apk` berhenti dengan `A valid Java SDK path is required in Editor Settings.` walau `JAVA_HOME` diset. Tidak ada APK. Detail dan usulan tunggal di bagian Dev-0C. | BLOCKED | usulan di bagian Dev-0C: isi Java SDK Path di Editor Settings (butuh izin pemilik) | tes preset tidak bergantung pada APK (`tests/tes_export.gd`) |
 
 ## NEEDS-MANUAL (uji di HP)
 Daftar awal ada di SPEC bagian "Butuh uji perangkat nyata". Dev dan QA menambah langkah di sini.
@@ -26,6 +27,10 @@ Daftar awal ada di SPEC bagian "Butuh uji perangkat nyata". Dev dan QA menambah 
 - [ ] (Dev-0B) Tombol kidal (strip atas, tinggi 36 px game = sekitar 108 px layar) mudah ditekan sengaja dan tidak ikut tersentuh saat bermain; panel kecepatan tidak tertutup jempol kanan saat swipe.
 - [ ] (Dev-0B) Garis bidik swipe 2 px tiap 4 px (sekitar 6 px layar) terbaca di bawah jempol; knob (radius 15) yang menonjol 15 px di luar cincin saat tarikan penuh terlihat wajar.
 - [ ] (Dev-0B) Tangkapan layar HUD: teks Lexend adalah font vektor yang dirasterisasi di resolusi layar dengan anti-alias, jadi tepi hurufnya BUKAN blok 3x3 (dikecualikan di `cek_blok_piksel.py --kecualikan`). Nilai keterbacaan ukuran 6 px game (18 px layar) dinilai mata di HP.
+- [ ] (Dev-0C, orchestrator, setelah Java SDK Path terisi dan sebelum QA iterasi 1 bila memungkinkan) Jalankan ulang AC-21 dan AC-22 sesuai `docs/SETUP_ANDROID.md` bagian 4 dan 5, lalu salin hasilnya ke bagian Dev-0C (durasi, ukuran, `minSdkVersion`, `targetSdkVersion`, izin akhir, tanda tangan). Bila ada `ERROR:`/`WARNING:` baru (mis. ikon, build-tools, ETC2/ASTC), catat.
+- [ ] (Dev-0C) Orientasi terkunci (putar HP 180 derajat: tampilan tidak terbalik dan tidak jadi portrait) dan ikon di launcher (kemungkinan ikon bawaan template; belum ada ikon project).
+- [ ] (Dev-0C, opsional) Keyboard fisik/Bluetooth: panah dan WASD tidak boleh menggerakkan sepeda di APK (`OS.has_feature("editor")` salah di build ekspor). Sisa AC-13 dari Dev-0B yang tidak bisa dibuktikan headless.
+- [ ] (Dev-0C) Layar penuh imersif di A54 dengan `screen/edge_to_edge=false` (bawaan Godot, belum diuji): viewport 780x360 skala x3; bila x2, coba `screen/edge_to_edge=true` di preset (usulan di `docs/SETUP_ANDROID.md` bagian 6).
 
 ## Catatan Dev (per pemanggilan)
 Dev menulis gerbang yang dijalankan, perintah persis, dan keluaran ringkas di sini: satu bagian per pemanggilan (Dev-0B, Dev-0C, dan iterasi 2 bila ada). Termasuk: nama kelas bila berbeda dari SPEC D-1, perintah ekspor APK, durasi dan ukuran APK, hasil `aapt2`/`apksigner`/`apkanalyzer`, nilai min SDK/target SDK/`allowBackup`, daftar izin dan penjelasannya.
@@ -153,6 +158,113 @@ Hasil sama (0 tidak seragam) untuk ke-15 berkas (kotak panel mengikuti sisi pada
 #### Hal yang tidak bisa saya verifikasi
 
 Rasa kontrol (ukuran stick 35 px, zona mati 15%, ambang 33%/80%, geser lateral bebas 3,0 u/d), 60 fps, perilaku sentuhan multi-jari dan gestur tepi di Android sungguhan, cutout kamera A54, nonaktifnya keyboard di build ekspor, dan dua hal yang hanya sampai di 0C (imersif, orientasi di manifes). Catatan untuk Dev-0C: `display/window/handheld/orientation=0` sudah ada di `project.godot`; `.gitignore` sudah menutup `builds/`, `*.apk`, `*.aab`, `.godot/` (tes lama memeriksa); AC-19 butuh tes baru di `run_tests.gd` (tambahkan sebagai berkas pembantu atau fungsi baru); `export_credentials.cfg` tidak boleh masuk diff; dan "perintah ekspor" di `AGENTS.md`/`00-project-core.mdc` (AC-18) ditambahkan di sana.
+
+### Dev-0C (iterasi 1)
+
+Lingkungan: macOS (Apple M1), `godot --version` = `4.7.2.stable.official.ed1daf0bf`, JDK 17 (Zulu 17.0.14), Android SDK `~/Library/Android/sdk` (build-tools 35.0.0, 36.0.0, 37.0.0), export templates 4.7.2 terpasang orchestrator. 4 commit kode/dokumen Dev-0C di atas Dev-0B (`946effb`, `abb313d`, `9ea914a`, `818ef40`) ditambah 1 commit LOG ini, tidak ada commit di `main`, tidak ada push. Hook `rtk` mengganti keluaran `git`; hitungan memakai `/usr/bin/git`. **Tidak menyentuh HP** (tidak menjalankan `adb` apa pun; lihat temuan 4 tentang `adb` yang dipanggil Godot sendiri), tidak mengunduh apa pun, tidak mengubah Editor Settings, tidak membuat `android/`. Logika dan scene 0B tidak diubah; satu perubahan `project.godot` dituntut ekspor (temuan 3).
+
+**Status: AC-18, AC-19, AC-20, AC-23, AC-24 selesai. AC-21 dan AC-22 `BLOCKED` (tidak ada APK).**
+
+#### BLOCKED: ekspor APK (AC-21, AC-22)
+
+Perintah persis (dari root repo, `JAVA_HOME` diset seperti diminta orchestrator, `builds/` sudah dibuat):
+
+```
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
+godot --headless --path . --export-debug "Android" builds/kring-kring-debug.apk
+```
+
+Keluaran lengkap (tanpa baris kemajuan `first_scan_filesystem`), exit code **1**, durasi 2 detik, tiga kali dicoba (sebelum dan sesudah `export_presets.cfg` final, dan sesudah perubahan `project.godot`) dengan hasil identik:
+
+```
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+ERROR: Cannot export project with preset "Android" due to configuration errors:
+A valid Java SDK path is required in Editor Settings.
+
+   at: _fs_changed (editor/editor_node.cpp:1401)
+ERROR: Project export for preset "Android" failed.
+   at: _fs_changed (editor/editor_node.cpp:1417)
+cannot connect to daemon at tcp:5037: Connection refused
+```
+
+Penyebab: `~/Library/Application Support/Godot/editor_settings-4.7.tres` berisi `export/android/java_sdk_path = ""`. Godot 4.7.2 **tidak** memakai `JAVA_HOME` sebagai pengganti. Sesuai instruksi, Editor Settings tidak ditulis dan tidak ada jalan memutar (mis. `HOME` sementara, yang juga akan membuat kunci adb baru dan berisiko memunculkan dialog di HP). Tidak ada APK di `builds/` (kosong), debug keystore belum dibuat (butuh `keytool`).
+
+**Usulan tunggal:** isi **Java SDK Path** dengan `/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home` (Editor → Editor Settings → Export → Android, atau ubah baris `export/android/java_sdk_path` di `editor_settings-4.7.tres` saat Godot tertutup; `docs/SETUP_ANDROID.md` bagian 2). Ini pengaturan mesin di luar repo dan butuh izin pemilik. Setelah itu orchestrator menjalankan `docs/SETUP_ANDROID.md` bagian 4 (ekspor) dan bagian 5 (isi APK) dan menyalin hasilnya ke sini. Urutan perintah AC-22 sudah siap di bagian 5 dokumen itu (`aapt2 dump badging`, `aapt2 dump xmltree --file AndroidManifest.xml`, `aapt2 dump permissions`, `apksigner verify --verbose --print-certs`, `unzip -l`, opsional `apkanalyzer manifest print`).
+
+Risiko tersisa yang baru terlihat setelah Java terisi: nama opsi preset diverifikasi terhadap string biner Godot 4.7.2 dan perilaku filter diverifikasi lewat `--export-pack`, tetapi ekspor APK penuh belum pernah jalan. Hal yang paling mungkin muncul pertama: `WARNING`/`ERROR` soal ikon (tidak ada `application/config/icon`), versi build-tools, atau opsi yang namanya salah (Godot mengabaikan kunci tak dikenal tanpa pesan, jadi nilai di APK harus dicek lewat `aapt2`: package, versionCode/Name, allowBackup, orientasi, izin).
+
+#### Bukti per AC
+
+| AC | Bukti |
+|---|---|
+| AC-18 (sisa 0C) | Perintah ekspor (`--export-pack`, `--export-debug`) dan peta repo (`export_presets.cfg`, `builds/`, `tests/tes_export.gd`, `docs/SETUP_ANDROID.md`) di `AGENTS.md`, `.cursor/rules/00-project-core.mdc`, `docs/README.md` (tabel dokumen, struktur, status), `docs/ROADMAP.md` bagian 6. Baris "belum ada" tidak lagi menyebut `export_presets.cfg`; `android/` tetap belum ada (build tanpa Gradle). `ROADMAP.md` 4b dan 5 dan `DEV_PHASES.md` tidak disentuh. Commit `abb313d` |
+| AC-19 | `export_presets.cfg` (satu preset `Android`, `runnable=true`, `package/unique_name="com.rmh.kring"`, landscape dari `display/window/handheld/orientation=0`, `screen/immersive_mode=true`, `architectures/arm64-v8a=true` dan tiga lainnya `false`, `gradle_build/use_gradle_build=false`, `version/code=1`, `version/name="0.1.0"`, 152 izin Godot ditulis eksplisit `false`, `custom_permissions` kosong, enam kolom `keystore/*` kosong, `user_data_backup/allow=false`, `exclude_filter="docs/*, tests/*, tools/*, build/*, builds/*"`). `tests/tes_export.gd` (dipanggil dari `run_tests.gd`): `_test_preset_asli`, `_test_preset_contoh_buruk` (**24 mutan sintetis** ditolak, pesan commit `946effb` salah menulis 23: package salah/kosong, arsitektur ekstra/arm64 mati, Gradle, izin internet/camera/kustom, kata sandi dan jalur keystore terisi, nama preset, runnable, versi, imersif, backup, exclude_filter, export_path/template lokal, kunci enkripsi skrip; ditambah nol preset, dua preset, tanpa bagian opsi, dan kontrol positif), `_test_gitignore` (baris wajib + **`git check-ignore`** untuk 10 jalur contoh dan kontrol negatif 5 jalur sumber), `_test_berkas_dilacak` (`git ls-files` tanpa keystore/kredensial/APK/AAB/`.godot/`/`build/`/`builds/`, 11 contoh buruk ditolak). `.gitignore` ditambah `*.keystore`, `*.jks`, `*.p12`, `export_credentials.cfg` (pengaman tambahan di luar daftar AC-19, alasan: AC-23). Tes tidak butuh APK, templates, atau Java (hanya `git`). Commit `946effb` |
+| AC-20 | `docs/SETUP_ANDROID.md` (8 bagian: prasyarat dengan status nyata mesin ini, cara pasang templates dengan SHA-512, Java SDK Path, tabel preset dengan alasan dan label usulan, pengaturan project yang dituntut ekspor, nilai template terverifikasi, ekspor CLI, pemeriksaan isi APK, target API 36 dan syarat rilis, pasang/log/`pm list packages`/larangan `pm clear`/tangkapan layar + `cek_blok_piksel.py`, tabel masalah umum, checklist HP) dan baris di tabel `docs/README.md`. `grep -n -i -E "brainydungeon\|startlights\|quicksplit\|firebase\|admob\|release-please\|godot-share\|SharePlugin" docs/SETUP_ANDROID.md` kosong (exit 1), dan dijaga tes (`_test_panduan_setup`: istilah terlarang ditolak, istilah wajib dicek, README mendaftarkannya). Commit `946effb`, `9ea914a`, `818ef40` |
+| AC-21 | **BLOCKED** (lihat atas). Tidak ada APK, durasi, atau ukuran APK |
+| AC-22 | **BLOCKED** pada APK hasil ekspor. Sebagai bukti sebagian, perintah yang sama dijalankan pada `android_debug.apk` bawaan template (tabel "Nilai yang diminta SPEC" di bawah) supaya sintaks perintah terbukti jalan dan batas bawah nilai (minSdk, targetSdk) diketahui |
+| AC-23 | `git diff main...HEAD --name-only \| grep -E '(\.keystore\|\.jks\|\.p12\|\.apk\|\.aab)$\|export_credentials\.cfg\|(^\|/)\.godot/\|(^\|/)builds?/'` kosong (exit 1); `git diff main...HEAD` tanpa kata sandi/token (grep pola `password="..."`, `BEGIN ... PRIVATE`, `ghp_`, `AKIA` kosong); `git ls-files` tanpa berkas terlarang; `builds/` kosong dan ter-ignore; tidak ada commit di `main` (`main` = `origin/main` = `6df6fc9`); tidak ada push; tidak ada nama berkas atau string Brainy Dungeon di diff |
+| AC-24 | 4 commit Dev-0C bertipe `feat`/`docs`/`fix`/`docs`, bahasa Indonesia, perubahan yang saling bergantung bersama (preset + tes + `.gitignore` + panduan + README; `project.godot` + tes + panduan). Branch `feat/fase0bc-input-export`, tidak ada push |
+
+#### Nilai yang diminta SPEC (AC-19, AC-22, D-8)
+
+| Nilai | Hasil | Sumber / status |
+|---|---|---|
+| `minSdkVersion` | **24** (Android 7.0) | **Template 4.7.2** (`aapt2 dump badging android_debug.apk`). Tanpa Gradle tidak bisa diubah dari preset (Godot: `"Min SDK" can only be overridden when "Use Gradle Build" is enabled`). APK hasil ekspor: belum diverifikasi |
+| `targetSdkVersion` | **36** (`compileSdkVersion` 36) | Template. Memenuhi syarat Google Play API 36 (TECH_PLAN Fase 0) untuk APK debug tanpa Gradle; APK hasil ekspor belum diverifikasi. Syarat rilis (AAB butuh Gradle, keystore rilis, izin, Data Safety) dicatat di `SETUP_ANDROID.md` bagian 5 |
+| `allowBackup` | **`false`** lewat `user_data_backup/allow=false`. Template juga `false` | **Usulan**: belum ada save yang layak dicadangkan; tinjau di Fase 6 (`save-system`, `privacy-ads`). APK hasil ekspor: belum diverifikasi (cek `aapt2 dump xmltree`) |
+| Izin | Preset: **tidak ada izin menyala** (152 `permissions/*=false`, `custom_permissions` kosong). Template: `aapt2 dump permissions` hanya mencetak `package: com.godot.game`, tanpa izin | `INTERNET` tidak diminta preset. Godot dapat menambahkannya otomatis pada build debug untuk debugger jarak jauh (string `android.permission.INTERNET` ada di eksportirnya, kemungkinan hanya untuk Remote Deploy dari editor); belum diverifikasi pada APK CLI. Bila muncul: wajar untuk debug, wajib ditinjau di build rilis. Izin pelacakan (`AD_ID`, lokasi) tidak mungkin muncul karena tidak ada plugin dan semua izin mati; dikonfirmasi pada APK nyata saat ekspor jalan |
+| Orientasi | Template: `screenOrientation=0` (landscape terkunci, bukan sensor), `resizeableActivity=false`; Godot menulis ulang dari `display/window/handheld/orientation=0` (sudah dites di `run_tests.gd` dan `tes_export.gd`) | APK hasil ekspor: belum diverifikasi |
+| Activity peluncur | Template: alias `com.godot.game.GodotAppLauncher` → `com.godot.game.GodotApp` | Dipakai perintah `am start -n com.rmh.kring/com.godot.game.GodotAppLauncher` di panduan; cocokkan dengan `launchable-activity` pada APK nyata |
+| `native-code` | Template: `arm64-v8a armeabi-v7a x86 x86_64`; preset hanya `arm64-v8a` | Template di disk 121,4 MB (empat arsitektur); ukuran APK arm64 saja: belum diketahui |
+| `apksigner verify` | Template: `DOES NOT VERIFY` / `Missing META-INF/MANIFEST.MF` (template tidak bertanda tangan, wajar) | Tanda tangan debug baru ada setelah ekspor |
+| Durasi dan ukuran APK | Tidak ada (BLOCKED) | |
+| Paket game (`--export-pack`, tanpa Java) | **78 entri, 212,4 KB**; tidak ada `tests/`, `tools/`, `docs/`, `build/`. Tanpa `exclude_filter`: 90 entri, 310,6 KB, dengan 12 entri `tests/*.gd`. `strings` pada paket: `res://tests` 0 kemunculan (dengan filter) vs 14 (tanpa), `TesInput` 0 vs 2 | Bukti bahwa filter bekerja dan cache kelas global ikut tersaring |
+
+#### Temuan teknis (untuk orchestrator dan QA)
+
+1. **`JAVA_HOME` tidak cukup di Godot 4.7.2.** Pesan sama dengan dan tanpa variabel itu; hanya `export/android/java_sdk_path` yang dibaca. Dicatat di `SETUP_ANDROID.md` bagian 1, 2, dan 7.
+2. **`--export-pack` jalan tanpa Java** dan memakai preset dan filter yang sama (tampaknya jalur `pack_only` Godot melewati pemeriksaan konfigurasi ekspor; disimpulkan dari perilakunya, bukan dari kode sumber). Dipakai sebagai satu-satunya bukti filter ekspor sampai APK bisa dibangun. Perintahnya ada di `AGENTS.md`, `00-project-core.mdc`, ROADMAP 6, dan `SETUP_ANDROID.md` bagian 4.
+3. **`rendering/textures/vram_compression/import_etc2_astc=true` ditambahkan ke `project.godot`** (commit `9ea914a`). Temuan ini tidak ada di SPEC. Godot menolak ekspor mobile tanpanya (string pesan Android: `ETC2/ASTC texture compression is required for Android export`), tetapi pesan itu tersembunyi di balik kesalahan Java. Dibuktikan dengan ekspor uji platform lain di salinan klon sementara di scratchpad (preset iOS sementara, bukan di repo): gagal dengan `configuration errors:` kosong, lolos (mulai mengemas) setelah pengaturan itu menyala. Efek di repo ini nol: semua tekstur Lossless; `--import` tidak mengubah berkas apa pun (`git status` bersih) dan paket tetap 78 entri 212,4 KB. **Belum dicoba pada ekspor Android sebenarnya.** Dijaga `tes_export.gd` (mutan `false` ditangkap). Ini satu-satunya perubahan `project.godot` dan satu-satunya sentuhan di luar tugas 0C; bisa ditolak di review PR (konsekuensinya ekspor Android gagal).
+4. **Godot memanggil `adb` sendiri** karena preset `runnable` (`cannot connect to daemon at tcp:5037` di akhir tiap ekspor, juga `--export-pack`; kemungkinan `adb kill-server` saat keluar tanpa server). Bukan perintah dari Dev, dan tampaknya tidak ada server adb yang hidup pada semua percobaan (pesan `Connection refused`); tidak ada yang dipasang atau dikirim ke HP. Bila HP tercolok saat ekspor APK penuh, Godot dapat mencacah perangkat (daftar saja). Dicatat di `SETUP_ANDROID.md` bagian 4.
+5. **Tidak ada ikon project** (`application/config/icon` kosong; string Godot: `No project icon specified`). Ikon sementara bukan scope SPEC (Fase 14 untuk final; TECH_PLAN Fase 0 menyebut "Ikon aplikasi sementara" tanpa menetapkan alatnya dan `art-assets.mdc` melarang PNG buatan tangan). Dugaan: Godot memakai ikon bawaan template; belum terbukti. Keputusan perlu dari orchestrator bila ekspor menghasilkan WARNING.
+6. **`.json` ikut paket** pada `export_filter=all_resources` (terbukti: `assets/sprites/loper/loper_agen.json`), jadi `assets/data/*.json` nanti tidak butuh `include_filter`. File non-resource lain (`.md`, `.py`, `.gpl`, `.csv` mentah) tidak ikut; `translations/ui.csv` hanya lewat `.import` dan `.translation`.
+7. **Template tidak bertanda tangan dan tanpa izin; `resizeableActivity=false`, `profileable` aktif.** Untuk app yang menargetkan API 36, Android 16 mengabaikan batasan orientasi dan resizability di layar besar (sw ≥ 600dp). A54 aman; tablet dan foldable terbuka tidak (catatan di `SETUP_ANDROID.md` bagian 5, belum diuji).
+8. **Opsi preset 4.7 yang tidak ada di panduan lama:** `screen/edge_to_edge` (bawaan `false`, dicatat sebagai opsi pertama bila skala turun ke x2), `screen/background_color`, `shader_baker/enabled`, `gradle_build/custom_theme_attributes`. Daftar nama opsi dan 152 nama izin diambil dari string biner Godot 4.7.2 (`strings`), karena `godot --headless` tidak punya perintah membuat preset. Preset ditulis tangan dengan format `[preset.0]` + `[preset.0.options]` dan diurai ulang oleh `ConfigFile` di tes.
+9. **Sisa AC-13 dari Dev-0B** (keyboard nonaktif di build ekspor) tetap tidak terbukti headless; ditambahkan sebagai langkah opsional di NEEDS-MANUAL.
+10. **Pesan `ERROR:` dari `ConfigFile` pada berkas rusak** ditolak pemeriksa keluaran, jadi kasus "preset tidak bisa diurai" sengaja tidak dites (cabang pertahanan di `_pelanggaran_preset` tetap ada).
+
+#### Uji mutasi Dev-0C (skrip sementara di scratchpad, tidak di-commit)
+
+19 mutan satu baris pada berkas asli, masing-masing dijalankan `run_tests.gd` + `cek_keluaran_tes.py`, dipulihkan setelahnya (`git status` bersih): package `com.rmh.loperkoran`; kata sandi keystore rilis terisi; jalur keystore debug terisi; izin `internet` menyala; `x86_64` menyala; Gradle menyala; imersif mati; `tests/*` tidak dikecualikan; `version/code=2`; `runnable=false`; `.gitignore` tanpa `builds/`, `*.aab`, `*.keystore`, `.godot/`; panduan memuat `AdMob`; panduan memuat package project lain; panduan tanpa `pm clear`; README tanpa `SETUP_ANDROID.md`; orientasi proyek bukan landscape. Semuanya ditangkap (exit Godot 1 dan pemeriksa 1, 1 sampai 4 `GAGAL`). Tambahan: mutan `import_etc2_astc=false` ditangkap; `git add -f builds/x.apk kunci_uji.keystore` ditolak tes berkas dilacak (lalu dibatalkan).
+
+#### Gerbang yang dijalankan (perintah dan hasil)
+
+```
+godot --headless --import                                   # repo kerja: exit 0, 0 baris ERROR/WARNING, git status kosong
+godot --headless --script res://tests/run_tests.gd 2>&1 | tee build/tests.log
+                                                            # ... 1948 lolos, 0 gagal (sebelumnya 1840: +108 pemeriksaan)
+python3 tools/cek_keluaran_tes.py build/tests.log           # pemeriksa: lolos (1948 lolos, 0 gagal, 0 peringatan), exit 0
+python3 tools/cek_keluaran_tes.py --ketat build/tests.log   # exit 0
+python3 tools/tests_cek/uji_pemeriksa.py                    # uji pemeriksa: 16 kasus, 0 menyimpang
+godot --headless --path . --quit-after 2                    # hanya banner; 0 ERROR/WARNING
+godot --headless --path . --script res://tests/probe_layar.gd   # tanpa ERROR atau PECAHAN
+# clone bersih (git clone --branch feat/fase0bc-input-export <repo> <scratchpad>/klon0c, diulang setelah commit terakhir kode):
+godot --headless --import                                   # exit 0, 0 ERROR/WARNING
+/usr/bin/git status --porcelain -uall | wc -l               # 0 (sebelum dan sesudah tes)
+godot --headless --script res://tests/run_tests.gd ...      # 1948 lolos, 0 gagal; pemeriksa --ketat exit 0
+godot --headless --path . --quit-after 2                    # 0 ERROR/WARNING
+git diff main...HEAD --stat                                 # 77 berkas, 4020 penambahan (Dev-0B + 0C, sebelum commit LOG ini)
+git diff main...HEAD --name-only | grep -E '(\.keystore|\.jks|\.p12|\.apk|\.aab)$|export_credentials\.cfg|(^|/)\.godot/|(^|/)builds?/'
+                                                            # kosong (exit 1)
+godot --headless --path . --export-pack "Android" build/kring-uji.pck   # exit 0, 78 entri, 212,4 KB
+export JAVA_HOME=...zulu-17.jdk/Contents/Home; godot --headless --path . --export-debug "Android" builds/kring-kring-debug.apk
+                                                            # exit 1: Java SDK Path kosong (BLOCKED)
+```
+
+#### Hal yang tidak bisa saya verifikasi
+
+APK hasil ekspor sama sekali (isi manifes, izin akhir, tanda tangan, ukuran, `unzip -l`), perilaku di HP (imersif, skala x3, orientasi, ikon), `OS.has_feature("editor")` di build ekspor, dan apakah ETC2/ASTC adalah satu-satunya pemeriksaan proyek Android yang tersembunyi di balik kesalahan Java (iOS menunjukkan pola yang sama, Android belum dicoba).
 
 ## Keputusan & catatan
 - Keputusan pemilik (2026-10-09): run 0B dan 0C digabung; izin pasang APK ke A54 (hanya orchestrator yang menyentuh HP); format terjemahan CSV `translations/ui.csv`; izin unduh export templates 4.7.2. Lihat SPEC.
