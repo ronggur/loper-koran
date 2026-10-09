@@ -1,0 +1,107 @@
+---
+description: Konteks inti Loper Koran — stack, prinsip desain, sumber kebenaran, keputusan terkunci, alur kerja, Definition of Done. Berlaku untuk semua pekerjaan di repo ini.
+globs:
+alwaysApply: true
+---
+
+# Loper Koran — Aturan Inti
+
+Game 2D mobile (Android, **landscape**) bergaya Paperboy modern: pemain mengayuh sepeda menyusuri jalan isometrik dan melempar koran ke rumah pelanggan, latar Indonesia, kecepatan diatur pemain, isi koran ikut mengubah dunia.
+Core loop: **baca halaman depan koran → antar rute dalam batas waktu (atur kecepatan, lempar koran, ambil atau lewati misi) → lihat hasil → servis di bengkel → hari berikutnya dipengaruhi headline dan hasil kemarin** (GDD 3.1, 4).
+
+## Stack
+
+- **Godot 4.7.2, GDScript** (dikunci 2026-10-09, ROADMAP 4b). Renderer **Compatibility**.
+- Pixel art isometrik 2:1, ubin 64×32 (usulan), skala bulat **×3** (dikunci 2026-10-09). Base 640×360, stretch `canvas_items` + integer scale + aspect `expand`, lebar mengikuti rasio layar (ART_DIRECTION 7, ROADMAP 4b).
+- Data konten: **JSON** di `assets/data/`. Teks yang dilihat pemain lewat file terjemahan (kunci teks), bukan string tertanam.
+- Tooling: **Python 3** di `tools/` (renderer sprite pemain `tools/loper_art/`, renderer lingkungan `tools/env_art/`). Tes: skrip headless `tests/run_tests.gd`.
+- Root repo git = root project Godot. Dokumen desain di `docs/` (diabaikan Godot lewat `docs/.gdignore`).
+- Nama package Android **`com.rmh.kring`** (pilihan user, 2026-10-09). Final: jangan diganti, termasuk di `export_presets.cfg`, karena terkunci setelah upload pertama ke Play Console.
+
+## Sumber kebenaran (baca sebelum mengubah sistem terkait)
+
+| Topik | File |
+|---|---|
+| Desain game, aturan main, semua sistem | `docs/GDD.md` (sumber utama sejak 2026-10-07) |
+| Cerita, bab, tenggat, akhir | `docs/STORY.md` |
+| Rencana teknis per fase (arsitektur, modul, aset) | `docs/TECH_PLAN.md` |
+| Format misi, headline, segmen rute, save | `docs/DATA_SCHEMA.md` |
+| Angka tuning | `scripts/config.gd` (satu-satunya tempat angka global), cara menyetel di `docs/BALANCING.md` |
+| Menyusun rute dan segmen | `docs/ROUTE_DESIGN.md` |
+| Menulis headline, misi, nama tokoh | `docs/CONTENT_GUIDE.md` |
+| Visual, palet, daftar dan spesifikasi aset | `docs/ART_DIRECTION.md` |
+| HUD, token warna, font, layar | `docs/design/DESIGN_SPEC.md` |
+| Audio | `docs/SOUND_DESIGN.md` |
+| Fase kerja dan checklist | `docs/DEV_PHASES.md` (fase aktif ditulis di sana) |
+| Status besar dan keputusan terbuka | `docs/ROADMAP.md` |
+
+Label **usulan** di dokumen berarti belum diuji dan belum dikunci. Jangan memperlakukannya sebagai keputusan final dan jangan menandainya "dikunci" tanpa persetujuan user.
+
+Jangan mengambil keputusan yang tercatat terbuka di `ROADMAP.md` bagian 5 (game over atau tidak, struktur sesi, target usia, iklan, dst). Tanyakan ke user, atau kalau tidak menghambat, ajukan satu rekomendasi bertulis di PR.
+
+## Prinsip desain (GDD 2; menang atas keputusan teknis)
+
+1. **Kecepatan adalah pilihan dengan konsekuensi.** Ngebut menaikkan skor tapi mempersempit waktu bereaksi dan menguras stamina. Santai lebih aman tapi tenggat tidak menunggu.
+2. **Gagal tidak menghukum berlapis.** Misi gagal tidak mengurangi koin dan tidak menggagalkan hari. Kerusakan sepeda menghambat, tidak menghentikan permainan. Tidak ada keadaan "kalah" yang mengunci pemain (STORY, TECH_PLAN 3.2).
+3. **Adil dan bisa dibaca.** Rintangan punya pola yang bisa dipelajari, kerusakan memberi tanda peringatan dulu, petunjuk misi punya penanda visual minimal 2 detik, jalur utama selalu bersih, objek yang menutupi pemain semi-transparan.
+4. **Tanpa pay-to-win.** Satu mata uang (koin), hanya dari bermain. Iklan selalu pilihan pemain, tidak pernah di tengah rute, dan seluruh game bisa dimainkan tanpa iklan.
+5. **Indonesia yang hidup.** Gang kampung, warung, pasar, hajatan, tujuh belasan adalah bahan utama dunia, rintangan, dan misi, bukan dekorasi.
+
+Kalau sebuah permintaan bertabrakan dengan prinsip ini, sebutkan konfliknya ke user sebelum mengerjakan.
+
+## Keputusan yang sudah dikunci
+
+- **Platform**: Android, landscape, dipegang dua tangan. Orientasi dikunci.
+- **Kamera**: isometrik 2:1, jalan naik ke **kanan atas**, sepeda di sepertiga kiri layar, cahaya dari kiri atas (ART_DIRECTION 2.2).
+- **Dua sisi jalan**: `seberang` (fasad rumah, kiri atas layar) dan `dekat` (kanan bawah). Kiri dan kanan mengikuti arah pelempar, bukan arah layar. Di kode dan data selalu pakai `seberang` / `dekat`, tidak pernah `kiri` / `kanan` (GDD 4.2).
+- **Kontrol**: stick melayang di kiri bawah (atas kayuh keras, netral santai, bawah melambat, tarik penuh dan tahan = rem, kiri/kanan = pindah sisi), swipe di kanan untuk melempar. Tanpa tombol rem terpisah. Mode bantu dan opsi kidal wajib ada (GDD 5).
+- **Tujuan**: gabungan pelanggan, uang, dan cerita. Co-op dibuang. Tanpa endless run dan daily challenge.
+- **Ekonomi**: satu mata uang (koin, 1 koin ≈ Rp100), tanpa gems, tanpa pembelian uang asli. Pemasukan dari iklan hadiah opsional (GDD 14).
+- **Sepeda**: komponen bisa aus atau rusak, hanya diperbaiki di bengkel setelah mengantar (GDD 12).
+- **Karakter pemain**: **Kemeja Agen**, bercelana jogger, tanpa tas selempang dan tanpa keranjang depan, 5 arah × 3 kecepatan. Varian baju lain disimpan untuk item (ART_DIRECTION 3).
+- **Gaya visual**: pixel art isometrik, acuan gaya Brainy Dungeon (hanya acuan, bukan aset bersama), dimodernkan lewat lighting, partikel, dan color grading.
+- **Cerita**: 120 hari kalender, dimainkan 60 rute (sekitar 5 jam). Rincian di `STORY.md`.
+
+## Alur kerja
+
+- Mulai dari core loop; placeholder dulu, polish belakangan. Jangan over-engineer untuk fitur yang belum dibutuhkan.
+- Kerjakan sesuai **fase aktif** di `docs/DEV_PHASES.md`. Tugas baru yang muncul ditambahkan ke fase yang relevan. Satu fase kode aktif dalam satu waktu; Fase 5 (aset) boleh paralel.
+- Git: **semua perubahan lewat branch + Pull Request, tidak pernah push langsung ke `main`.** Setiap task baru dimulai dengan menarik `main` terbaru dan memastikannya sama dengan `origin/main`, baru membuat branch kerja. Detail di rule `git-workflow`.
+- Jangan pernah commit keystore, kredensial, `export_credentials.cfg`, APK/AAB, `.godot/`, atau `build/`.
+- Jangan memakai atau menyalin aset dari Brainy Dungeon. Itu hanya acuan gaya.
+
+## Kerjakan sendiri lewat CLI
+
+Coba sendiri lewat CLI sebelum meminta user mengerjakan sesuatu: `godot --headless`, `gh`, `python3`, dan nanti `adb`. Instruksi ke user hanya untuk hal yang memang tidak bisa dilakukan agent.
+
+- **Cek dulu apa yang terpasang** sebelum bilang tidak bisa: `command -v`, lalu cari di `/Applications/Godot.app/Contents/MacOS/Godot`, `/usr/local/bin`, `/opt/homebrew/bin`, dan `~/Library/Android/sdk`. PATH shell non-interaktif tidak memuat semuanya.
+- **Salah sendiri dulu, bukan salah alat.** Kalau panggilan gagal, periksa path, flag, dan argumen sebelum menyimpulkan bahwa fiturnya tidak ada.
+- **Tetap minta user** untuk: login interaktif atau persetujuan lewat browser, tindakan yang tidak bisa dibatalkan atau mengubah akun di luar repo, uji rasa kontrol di HP asli, dan keputusan desain. Jangan mencari jalan memutar untuk blokir izin; berhenti dan jelaskan.
+- **Perangkat fisik:** periksa dulu apakah user sedang memakainya sebelum mengirim ketukan. Sebelum `pm clear` atau uninstall, cek `pm list packages` supaya tidak menghapus save yang ada.
+- **Kredensial:** jangan menampilkan token di keluaran dan jangan commit.
+- **Jangan menahan pekerjaan dengan pertanyaan.** Kerjakan semua yang bisa dikerjakan sendiri, termasuk tindak lanjut kecil yang jelas (mencentang `DEV_PHASES.md` kalau buktinya ada, merapikan teks). Kalau satu langkah butuh user, kerjakan dulu sisanya, lalu minta hanya langkah itu dengan satu rekomendasi. Izin merge tetap hanya kalau user memintanya eksplisit per PR.
+- **Lapor apa adanya:** sebut perintah yang dijalankan dan hasilnya. Kalau satu langkah tidak bisa diverifikasi lewat CLI, katakan.
+
+## Perintah
+
+Project Godot belum ada (dibuat di Fase 0). Perintah Godot di bawah berlaku setelah itu; perintah Python sudah bisa dipakai.
+
+```bash
+godot --headless --import                              # sekali setelah clone
+godot --headless --script res://tests/run_tests.gd     # tes logika inti (exit code 1 kalau gagal)
+python3 tools/loper_art/produce.py --out build/loper_art   # render ulang sprite pemain (butuh numpy, pillow)
+```
+
+Kalau `godot` tidak ada di PATH (macOS): pakai `/Applications/Godot.app/Contents/MacOS/Godot`. Kalau Godot tidak terpasang sama sekali, katakan terus terang bahwa tes dan playtest belum dijalankan. Jangan mengklaim lolos. Perintah lain (smoke test layar, validator data, export) ditambahkan ke sini saat alatnya dibuat.
+
+## Definition of Done
+
+Untuk tugas kode (setelah Fase 0):
+
+- Jalan tanpa error atau warning baru di output Godot, dan `run_tests.gd` lolos.
+- Sudah dicoba dengan menjalankan game, bukan hanya membaca kode, termasuk kontrol touch. Kontrol yang enak di editor belum tentu enak di layar sentuh, jadi akhir fase gameplay diuji di HP asli.
+- Angka baru masuk `scripts/config.gd`, teks baru masuk file terjemahan.
+- Checklist di `docs/DEV_PHASES.md` dicentang kalau tugasnya selesai.
+- Commit di branch kerja dengan pesan yang jelas, di-push, dan PR dibuka (rule `git-workflow`). Merge dilakukan user.
+
+Untuk tugas dokumen dan aset, lihat rule `docs` dan `art-assets`.

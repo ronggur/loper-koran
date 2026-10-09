@@ -214,13 +214,13 @@ Setiap fase berisi: tujuan, kaitan cerita, sistem dan kode, aset, konten, uji, d
 
 | Hal | Keputusan teknis |
 |---|---|
-| Versi Godot | Usulan: kunci ke satu versi 4.7.x (rilis pemeliharaan terbaru yang terlihat per Agustus 2026 adalah 4.7.2). Sprite pemain baru dicek di 4.3, jadi muat ulang `loper_agen_frames.tres` di versi terpilih |
+| Versi Godot | ✅ **4.7.2** (2026-10-09, ROADMAP 4b). Sprite pemain baru dicek di 4.3, jadi muat ulang `loper_agen_frames.tres` di 4.7.2 |
 | Renderer | Compatibility (usulan, ART_DIRECTION 7). Uji light 2D, glow, partikel, dan shader warna bayangan di HP target |
-| Stretch | Bandingkan dua cara di ART_DIRECTION 7 (`canvas_items` + integer scale vs `viewport` 640×360 + expand) di rasio 16:9, 19.5:9, 20:9, lalu kunci |
+| Stretch | ✅ Dipilih `canvas_items` + integer scale + aspect `expand`, base 640×360, skala ×3 (2026-10-09). Verifikasi di rasio 16:9, 19.5:9, 20:9; `viewport` jadi cadangan |
 | Import sprite | Nearest, tanpa mipmap, Lossless; `snap_2d_transforms_to_pixel` aktif |
 | Input | Stick melayang (zona kiri bawah), swipe (zona kanan), opsi kidal, keyboard untuk editor |
 | Target Android | Google Play mewajibkan app baru dan update menargetkan Android 16 (API 36) mulai 31 Agustus 2026. Pastikan template export Godot terpilih mendukung target itu sebelum membuat preset export |
-| Nama package | ❓ Putuskan sekarang; tidak bisa diganti setelah upload pertama |
+| Nama package | ✅ `com.rmh.kring` (2026-10-09); tidak bisa diganti setelah upload pertama |
 | Repo | Root repo = root project Godot, `docs/.gdignore`, `AGENTS.md` dan `CLAUDE.md` berisi Definition of Done |
 | Tes | `tests/run_tests.gd` headless dan CI sederhana |
 
@@ -859,10 +859,10 @@ Perkiraan total: **sekitar 480 aset game** (ART_DIRECTION 10) **ditambah sekitar
 
 | Keputusan | Dibutuhkan sebelum | Usulan awal |
 |---|---|---|
-| Nama package Android | Fase 0 | — |
-| Versi Godot dan stretch mode | Fase 0 | Godot 4.7.x; bandingkan dua cara (ART_DIRECTION 7) |
-| HP uji (merek dan kelas) | Fase 0 | Tanya Ronggur HP yang dipakai |
-| Skala piksel (×3/×4) dan ubin 64×32 | Akhir Fase 1 | ×3, 64×32 |
+| ~~Nama package Android~~ | ✅ 2026-10-09 | `com.rmh.kring` |
+| ~~Versi Godot dan stretch mode~~ | ✅ 2026-10-09 | Godot 4.7.2; `canvas_items` + integer scale + `expand` |
+| ~~HP uji (merek dan kelas)~~ | ✅ 2026-10-09 | Samsung A54 (SM-A546E), Android 16, 2340×1080, terhubung lewat `adb` |
+| Ubin 64×32 (skala piksel ×3 sudah dikunci 2026-10-09) | Akhir Fase 1 | 64×32 |
 | Jendela: bonus atau penalti | Fase 2 | Netral dulu |
 | Tampilan rumah sisi dekat | Akhir Fase 3 (paling lambat sebelum Fase 8) | Uji tiga pendekatan di graybox |
 | Nama koran dan nama agen Pak Darto | Fase 4 | — |
@@ -908,7 +908,7 @@ Ini bukan keputusan baru; hanya hal yang perlu disamakan setelah dokumen ini dis
 
 1. **Baca dan koreksi dokumen ini.** Terutama pemecahan Fase 6A/6B, pemetaan bab ke fase, dan daftar keputusan terbuka.
 2. **Bila disetujui ("masukkan")**: perbarui `DEV_PHASES.md`, `ROADMAP.md`, `README.md` (daftar dokumen), `DATA_SCHEMA.md`, dan tabel tokoh di `CONTENT_GUIDE.md`, serta ketidakcocokan di bagian 10.
-3. **Mulai Fase 0.** Dibutuhkan dari Ronggur: nama package Android, HP yang dipakai untuk uji, dan versi Godot yang dipasang.
+3. **Mulai Fase 0.** Nama package, versi Godot, stretch, dan skala sudah diputuskan (ROADMAP 4b). Masih dibutuhkan dari Ronggur: HP yang dipakai untuk uji dan Godot 4.7.2 terpasang.
 
 ## Sumber
 

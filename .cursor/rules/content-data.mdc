@@ -1,0 +1,50 @@
+---
+description: Aturan data konten (misi, headline, segmen rute, cerita), terjemahan, dan standar penulisan teks Loper Koran.
+globs: assets/data/**, translations/**, docs/CONTENT_GUIDE.md, docs/DATA_SCHEMA.md, docs/ROUTE_DESIGN.md
+alwaysApply: false
+---
+
+# Konten, Data & Teks
+
+Rujukan: `docs/DATA_SCHEMA.md` (format), `docs/CONTENT_GUIDE.md` (suara dan panjang teks), `docs/ROUTE_DESIGN.md` (segmen), `docs/STORY.md` (cerita), GDD 10.
+
+Bentuk JSON dan nama field di `DATA_SCHEMA.md` adalah **usulan** sampai dikunci di Fase 3 dan 4. Kalau kode atau data membutuhkan perubahan format, ubah `DATA_SCHEMA.md` di PR yang sama dan ambil contoh dari file yang benar-benar ada.
+
+## Aturan data umum
+
+- Semua konten di `assets/data/` sebagai JSON, satu file per kelompok (per distrik atau per jenis). Angka global tidak ditaruh di sini, tapi di `scripts/config.gd`.
+- `id` huruf kecil dan garis bawah, unik di seluruh game, dan **tidak pernah diganti** atau dipakai ulang setelah dipakai di save. Menghapus konten: tandai nonaktif, jangan hapus dari file.
+- Sisi selalu `seberang` atau `dekat`, tidak pernah `kiri` / `kanan` (GDD 4.2).
+- Jarak dalam ubin, batas misi dalam rumah (GDD 10.3), waktu dalam detik.
+- Tes logika memuat semua file data dan memeriksa field wajib, id unik, rujukan id yang ada, dan panjang teks. Tambahkan pemeriksaan itu saat membuat jenis data baru.
+- Data cerita (`assets/data/story/*`, `districts.json`) mengikuti TECH_PLAN 3.4 dan masih usulan.
+
+## Segmen rute
+
+- Segmen buatan tangan, satu rute memakai 6 sampai 8 dari 8 sampai 10 segmen per distrik, disusun acak dengan seed (ROUTE_DESIGN, DEV_PHASES Fase 3).
+- Ikuti aturan adil di ROUTE_DESIGN: jalur utama selalu bersih, rintangan punya pola yang bisa dipelajari, tidak ada kombinasi yang tidak bisa dihindari. Tes memeriksa aturan yang bisa diperiksa mesin.
+- Distrik pertama (perumahan) hanya punya pelanggan di sisi `seberang`; sisi `dekat` baru dipakai setelah keputusan "cara menampilkan rumah sisi dekat" (ROADMAP 5).
+
+## Headline dan misi
+
+- Halaman depan selalu tiga headline: berita utama (mengubah dunia), misi sampingan (pemicu misi), berita ringan (humor, tanpa efek) (GDD 10.1).
+- Headline **maksimal 40 karakter**, Huruf Kapital di Awal Kata, satu kejadian satu kalimat, tanpa titik akhir (CONTENT_GUIDE 2). Pemain harus bisa menebak misi dari headline saja. Efek berita utama harus bisa ditebak dari kata-katanya.
+- Headline lanjutan dari flag memakai pola yang sama dengan headline asal. Misi lanjutan lebih longgar dari misi asal (prinsip 2).
+- Petunjuk misi punya penanda visual minimal 2 detik (prinsip 3).
+- Setiap misi punya kondisi selesai dan gagal yang jelas, serta hadiah dari kelipatan ongkos (45 / 75 / 120 koin, GDD 14.1). **Gagal tidak mengurangi koin.**
+
+## Standar konten
+
+- Suara game: hangat dan lucu, bukan sinis. Humor dari kejadian sehari-hari, bukan mengejek orang (CONTENT_GUIDE 1).
+- Bahasa Indonesia sehari-hari yang rapi: kata baku untuk headline dan UI, dialog pelanggan boleh santai tanpa bahasa gaul yang cepat basi.
+- **Aman untuk semua umur** sampai target usia diputuskan (ROADMAP 5): tanpa kekerasan, politik, SARA, merek nyata, atau nama orang terkenal.
+- Budaya Indonesia ditulis dengan hormat dan akurat. Hajatan, tujuh belasan, Ramadan, dan sejenisnya hidup sebagai bahan dunia, bukan bahan lelucon yang merendahkan. Hindari stereotip daerah atau suku. Kalau ragu soal ketepatan budaya atau agama, tandai di PR untuk ditinjau user.
+- Jangan mengarang fakta nyata (harga, tarif, peraturan) dan menyajikannya sebagai fakta. Patokan ekonomi hanya yang tercantum di GDD 14.1.
+- Konten cerita mengikuti `STORY.md`; jangan mengubah tokoh, urutan bab, atau akhir tanpa persetujuan user.
+
+## Terjemahan dan teks UI
+
+- **Tidak boleh ada teks yang dilihat pemain ditulis langsung di script, scene, atau gambar** (kecuali logo). Semua lewat kunci terjemahan, termasuk teks cerita dan dialog (kunci seperti `prolog_1.k1`, TECH_PLAN 3.4).
+- Bahasa utama Indonesia. Bahasa Inggris belum diputuskan (TECH_PLAN bagian 9), tapi kunci teks sejak awal menjaganya tetap terbuka. Format file terjemahan (CSV atau lain) ditetapkan di Fase 0; sebelum itu jangan membuat file terjemahan sendiri.
+- Kunci `UPPER_SNAKE_CASE` dengan awalan layar atau fitur (`HUD_`, `KORAN_`, `HASIL_`, `BENGKEL_`, `MISI_`). Placeholder pakai nama (`{n}`, `{koin}`) dan diisi dengan `tr("KUNCI").format({"n": 3})`, supaya urutan kata bebas per bahasa.
+- Teks Indonesia sering lebih panjang dari Inggris: uji pemotongan di layar 800×360 dan di rasio layar lain.

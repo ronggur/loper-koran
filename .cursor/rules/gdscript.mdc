@@ -1,0 +1,54 @@
+---
+description: Konvensi GDScript dan arsitektur kode Godot untuk Loper Koran (systems murni, autoload, config, sinyal, input touch, lokalisasi).
+globs: **/*.gd
+alwaysApply: false
+---
+
+# GDScript & Arsitektur
+
+Rujukan: `docs/TECH_PLAN.md` bagian 3 (arsitektur dan modul). Struktur Godot dibuat di Fase 0; sebelum itu aturan ini dasar untuk kode pertama.
+
+## Gaya
+
+- Indentasi **tab**. Ikuti gaya resmi GDScript.
+- `PascalCase` untuk `class_name`, Node, Scene. `snake_case` untuk variabel, fungsi, file. `UPPER_SNAKE_CASE` untuk konstanta.
+- Nama file = `snake_case` dari `class_name` (`class_name RouteBuilder` → `route_builder.gd`).
+- **Static typing wajib**: tipe return di setiap fungsi (`-> void`, `-> Dictionary`), `:=` untuk inferensi, tipe eksplisit saat nilai berasal dari `Dictionary` atau `Variant` (`var koin: int = state["koin"]`).
+- Fungsi privat diawali `_`.
+- Dokumentasi pakai `##` di bawah `extends` dan di atas fungsi publik, bahasa Indonesia, merujuk bagian GDD kalau relevan (`(GDD 5.2)`). Komentar biasa hanya untuk hal yang tidak jelas dari nama.
+- `push_error` dan `push_warning` boleh bahasa Indonesia (untuk developer). **Teks yang dilihat pemain wajib lewat `tr()`**.
+- Nama sisi jalan di kode: `seberang` dan `dekat` (enum `Side.SEBERANG`, `Side.DEKAT`), tidak pernah `kiri` / `kanan` (GDD 4.2). Sumbu layar boleh disebut kiri atau kanan hanya untuk input (zona stick di kiri, zona swipe di kanan).
+
+## Di mana kode ditaruh
+
+| Folder | Isi | Pola |
+|---|---|---|
+| `scripts/config.gd` | Semua angka tuning dan versi format | `class_name Config extends RefCounted`, hanya `const` |
+| `scripts/systems/` | Logika game murni: gerak sepeda, lemparan, skor, misi, reputasi, kerusakan, setoran | `class_name X extends RefCounted` + `static func`. Tanpa scene tree, tanpa autoload, tanpa `Time` atau `randi` langsung: waktu dan RNG dijadikan parameter supaya bisa dites |
+| `scripts/autoload/` | Singleton lintas scene: `SaveManager`, `DayManager`, `Audio`, dst (daftar di TECH_PLAN 3.1) | `extends Node`. Tambah autoload baru hanya kalau benar-benar lintas scene |
+| `scripts/entities/` | Script node entitas: sepeda, pelanggan, rintangan, koran | Satu file per entitas |
+| `scripts/ui/` | HUD, layar koran, hasil, bengkel, `palette.gd` | Tipis: baca input → panggil system → tampilkan hasil |
+| `scenes/` | `.tscn` | Root scene tipis; logika besar dipindah ke `systems/` |
+| `tests/` | Tes headless | Lihat rule `testing` |
+
+Aturan inti TECH_PLAN 3.1: **logika murni ada di `scripts/systems/` tanpa node**, node hanya menampilkan.
+
+## Aturan wajib
+
+- **Tidak ada angka ajaib.** Setiap angka tuning (kecepatan, stamina, jarak lempar, skor, tenggat, ongkos, keausan) jadi `const` di `scripts/config.gd`. Detail format di rule `balancing`.
+- **Semua data persisten lewat `SaveManager`** dan hanya ditulis di akhir hari (DATA_SCHEMA 4). Jangan menulis file sendiri di `user://` untuk progres.
+- **Semua konten (misi, headline, segmen rute, cerita) lewat pemuat data**, bukan membaca JSON langsung dari UI atau entitas.
+- **Pisahkan input dari logika.** Pembaca input (stick, swipe, keyboard untuk tes di editor) menghasilkan nilai abstrak (`arah`, `kekuatan`, `sisi`); `systems/` tidak tahu soal touch atau keyboard. Pakai `InputEventScreenTouch` dan `InputEventScreenDrag` dengan pelacakan `index` per jari, karena stick dan swipe aktif bersamaan. Jangan asumsikan mouse.
+- **Sistem koordinat**: simpan posisi dunia dalam satuan ubin pada bidang datar, ubah ke posisi layar hanya di satu tempat (fungsi proyeksi isometrik 2:1). Jangan mencampur koordinat dunia dan layar di logika.
+- **Pixel-perfect**: `snap_2d_transforms_to_pixel` aktif, posisi sprite dunia dibulatkan, skala hanya bilangan bulat. Gerak halus disimpan di nilai float di logika, bukan di posisi node yang digambar.
+- Angka dari JSON terbaca sebagai `float`. Konversi eksplisit dengan `int()` saat membaca.
+- Pakai `signal` untuk komunikasi antar node yang tidak berhubungan secara hierarki. Hindari `get_node("../../..")`. Pakai `%UniqueName` untuk node di scene sendiri.
+- Autoload yang dirujuk skrip `class_name` ikut dikompilasi lebih awal saat tes `--script` dimuat, sebelum autoload lain terdaftar. Skrip autoload seperti itu tidak boleh merujuk autoload lain. Data yang dibutuhkan diberikan pemanggil sebagai argumen. Gejalanya: `Identifier not found: SaveManager`.
+- Hentikan proses berat dan audio saat app di-background (`NOTIFICATION_APPLICATION_PAUSED` / `NOTIFICATION_APPLICATION_FOCUS_OUT`). Jeda rute yang sedang berjalan, jangan biarkan tenggat terus berjalan.
+- Tombol back Android (`ui_cancel` / `NOTIFICATION_WM_GO_BACK_REQUEST`) harus punya perilaku wajar di setiap layar (jeda di rute, kembali di menu).
+- **Rute dan acak bersifat deterministik dari seed hari.** Semua acak di gameplay memakai `RandomNumberGenerator` yang diberi seed, bukan `randi()` global, supaya rute bisa direproduksi dan dites.
+- Anggaran performa (TECH_PLAN 3.7): 60 fps di HP menengah, memuat rute di bawah 1 detik, detail hidup bergerak maksimal sekitar 4 per layar. Hindari alokasi per frame di `_process` dan efek layar penuh.
+
+## Kalau mengubah rumus
+
+Rumus gerak, lemparan, skor, dan ekonomi tercatat di `docs/BALANCING.md`. Kalau rumus di `scripts/systems/` berubah, perbarui dokumen itu dan tes yang menjaganya di commit yang sama.

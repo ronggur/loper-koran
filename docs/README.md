@@ -1,4 +1,8 @@
-# Loper Koran
+# Kring Kring! (Loper Koran)
+
+> **Judul game: Kring Kring!** (diputuskan 2026-10-09; dari bunyi bel sepeda). "Loper Koran" tetap dipakai sebagai nama kerja, nama repo, dan nama folder. Usulan subjudul berbahasa Inggris untuk pemain luar negeri (misalnya *Paper Route Stories*) belum diputuskan.
+
+Judul game: **Kring Kring!** (diputuskan 2026-10-09, GDD 5.4). "Loper Koran" adalah nama kerja repo dan dokumen.
 
 Game 2D mobile (Android) bergaya Paperboy modern: pemain mengayuh sepeda menyusuri jalan isometrik sambil melempar koran ke rumah pelanggan, dengan latar Indonesia, kecepatan yang diatur sendiri, dan isi koran yang ikut mengubah dunia.
 
@@ -18,6 +22,7 @@ Status: **Pra-produksi** (per 2026-10-07). Desain inti, kamera, kontrol, dan kar
 | [`CONTENT_GUIDE.md`](./CONTENT_GUIDE.md) | Panduan menulis headline koran, misi sampingan, dan nama tokoh |
 | [`DATA_SCHEMA.md`](./DATA_SCHEMA.md) | Format data misi, headline, segmen rute, dan file save (usulan) |
 | [`SOUND_DESIGN.md`](./SOUND_DESIGN.md) | Prinsip audio, daftar efek suara, ambience per distrik, spesifikasi teknis (draf) |
+| [`LOOP-DEV-QA.md`](./LOOP-DEV-QA.md) | Brief loop dua agent (Dev dan QA) untuk mengerjakan fase development, dengan Fase 0 dipecah jadi run 0A–0C |
 | [`design/`](./design/) | [`DESIGN_SPEC.md`](./design/DESIGN_SPEC.md): token warna, font, dan spesifikasi HUD; `screens/` dan `source/`: render dan source mock HUD dan kontrol; [`character/`](./design/character/): indeks semua karakter; [`character/loper_agen/`](./design/character/loper_agen/): sprite produksi pemain; [`character/varian/`](./design/character/varian/): varian baju |
 
 Sumber visual:
@@ -33,7 +38,7 @@ Mengikuti pola Brainy Dungeon: root repo git `loper-koran` sekaligus root projec
 ```
 AGENTS.md, CLAUDE.md   Pintu masuk agent coding
 docs/                  Dokumen desain (folder ini) + design/
-project.godot          Godot 4 (minimal 4.3), landscape, renderer Compatibility (usulan, dicek di Fase 0)
+project.godot          Godot 4.7.2, landscape, renderer Compatibility (usulan, dicek di Fase 0)
 export_presets.cfg     Preset export Android
 scenes/                Boot, Rute (gameplay), Koran (halaman depan), Hasil, Bengkel, dev/
 assets/sprites/        loper/ (pemain), tiles/, houses/, props/, obstacles/, vfx/, ui/
@@ -53,6 +58,7 @@ Path seperti `scripts/config.gd` atau `tools/loper_art/produce.py` di dokumen la
 
 - **Platform**: mobile Android, layar **landscape** dipegang dua tangan (GDD 5).
 - **Engine**: **Godot 4** dengan GDScript (GDD 16).
+- **Teknis Fase 0** (2026-10-09): Godot **4.7.2**, skala piksel **×3**, base 640×360 dengan stretch `canvas_items` + integer scale + `expand`, package Android **`com.rmh.kring`** (alasan di `ROADMAP.md` 4b).
 - **Kamera**: **isometrik 2:1**, jalan naik ke **kanan atas**, sepeda di sepertiga kiri layar, cahaya dari kiri atas (ART_DIRECTION 2.2).
 - **Dua sisi jalan**: kiri pelempar = **sisi seberang** (fasad rumah, kiri atas layar), kanan pelempar = **sisi dekat** (kanan bawah). Kiri dan kanan selalu mengikuti arah pelempar, bukan arah layar (GDD 4.2).
 - **Kontrol**: stick melayang di kiri bawah (atas kayuh keras, netral santai, bawah melambat, tarik penuh dan tahan = rem, kiri/kanan = ke sisi seberang/dekat), swipe di kanan untuk melempar. Tanpa tombol rem terpisah. Mode bantu dan opsi kidal (GDD 5).

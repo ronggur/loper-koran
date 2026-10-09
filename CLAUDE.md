@@ -8,6 +8,26 @@ Aturan project ini ada di `.cursor/rules/` dan dipakai bersama oleh Cursor, Clau
 
 ## Aturan (diimpor dari `.cursor/rules/`)
 
-Frontmatter `globs` di setiap file menunjukkan file mana yang terkena aturan itu. Aturan `git-workflow` berlaku untuk semua pekerjaan. Rule baru ditambahkan ke daftar impor ini.
+Frontmatter `globs` di setiap file menunjukkan file mana yang terkena aturan itu. Aturan `00-project-core` dan `git-workflow` berlaku untuk semua pekerjaan. Rule baru ditambahkan ke daftar impor ini.
+
+@.cursor/rules/00-project-core.mdc
 
 @.cursor/rules/git-workflow.mdc
+
+@.cursor/rules/gdscript.mdc
+
+@.cursor/rules/balancing.mdc
+
+@.cursor/rules/save-system.mdc
+
+@.cursor/rules/content-data.mdc
+
+@.cursor/rules/ui-scenes.mdc
+
+@.cursor/rules/art-assets.mdc
+
+@.cursor/rules/privacy-ads.mdc
+
+@.cursor/rules/testing.mdc
+
+@.cursor/rules/docs.mdc

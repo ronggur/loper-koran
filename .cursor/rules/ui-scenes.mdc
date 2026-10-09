@@ -1,0 +1,53 @@
+---
+description: Aturan scene Godot, HUD dan layar landscape, kontrol touch, aksesibilitas, dan umpan balik.
+globs: scenes/**, scripts/ui/**, docs/design/**
+alwaysApply: false
+---
+
+# Scene, UI Landscape & Kontrol Touch
+
+Rujukan: `docs/design/DESIGN_SPEC.md` (token warna, font, HUD, layar), `docs/ART_DIRECTION.md` bagian 7, GDD 5 dan 15. Mock di `docs/design/screens/` dan `docs/design/source/` adalah acuan visual; kalau berbeda dengan `DESIGN_SPEC.md`, tanyakan mana yang berlaku.
+
+## Scene
+
+- Root scene tipis. Script UI hanya menghubungkan input ke system dan menampilkan hasil.
+- Scene yang direncanakan (README, TECH_PLAN): Boot, Rute (gameplay), Koran (halaman depan), Hasil, Bengkel, dan `dev/`. Alur satu hari: Koran → (adegan) → Rute → Hasil → Setoran → Bengkel → simpan (TECH_PLAN 3.2).
+- Node yang diakses dari script diberi **unique name** (`%Info`).
+- File `.tscn` berbasis teks. Boleh diedit langsung, tapi jaga `load_steps`, ID `ext_resource`, dan `format=3` tetap valid. Jangan menulis `uid://` karangan.
+
+## Tema dan komponen
+
+- Warna dan font hanya dari token di `DESIGN_SPEC.md`, diwujudkan di satu tempat (`scripts/ui/palette.gd`, dibuat di Fase 0 atau 1). Jangan menulis hex di scene atau script lain.
+- Pakai ulang komponen yang sudah ada sebelum membuat baru. Panel 9-slice untuk tombol dan panel (ukuran mengikuti `DESIGN_SPEC` 1.3).
+- Maksimal dua keluarga font.
+
+## Layar dan resolusi
+
+- Landscape terkunci. Tinggi dasar 360 piksel game, lebar 640 (16:9), 780 (19,5:9), sampai 800 (20:9). Skala bulat; sprite pemain didesain untuk ×3 (ART_DIRECTION 7). Stretch dipilih `canvas_items` + integer scale + `expand` (ROADMAP 4b); `viewport` hanya cadangan kalau pengujian di run 0A gagal, jangan berganti sendiri.
+- Pakai anchor dan Container, **bukan posisi piksel absolut**. Elemen gameplay penting dan yang harus terlihat di 16:9 diletakkan di area 640×360 tengah (zona aman). HP yang lebih lebar menampilkan jalan lebih jauh, bukan HUD yang tercecer.
+- **Area aman** (cutout kamera, bilah gestur): HUD yang menempel di tepi wajib menghormati inset aman. Ujilah di rasio 16:9, 19,5:9, dan 20:9.
+- HUD digambar di ukuran final mengikuti `DESIGN_SPEC` (progres pelanggan, koin, sisa koran, kecepatan, stamina, radar kiri dan kanan).
+
+## Kontrol touch
+
+- **Dua jempol, dua zona**: stick melayang di kiri bawah, swipe lempar di kanan. Opsi **kidal** menukar zona. Keduanya aktif bersamaan, jadi lacak tiap jari dengan `index` sendiri.
+- Target sentuh minimal setara 44dp. Konversi ke piksel game mengikuti skala layar; cek di perangkat kecil, bukan hanya di editor. Ukuran zona dan zona mati stick (15%) ada di BALANCING 2.
+- Tombol dan kontrol penting di zona jempol; tombol jeda dan pengaturan jauh dari zona stick dan swipe supaya tidak tersentuh tak sengaja.
+- Swipe pendek harus tetap terbaca (ketelitian di layar kecil adalah pertanyaan terbuka GDD 17, ditentukan lewat uji HP). Jangan mengunci ambang tanpa uji.
+- **Mode bantu** (tap sisi layar untuk lempar otomatis, kecepatan otomatis) wajib ada dan sepenuhnya bisa dimainkan.
+- Input keyboard hanya untuk tes di editor, bukan fitur.
+
+## Umpan balik dan aksesibilitas
+
+- Status penting **tidak boleh hanya dibedakan warna**: kena atau meleset, peringatan kerusakan, dan petunjuk misi selalu dipasangkan dengan ikon, bentuk, atau animasi.
+- Peringatan kerusakan sepeda muncul sebelum efeknya (prinsip 3), terbaca tanpa menghentikan permainan.
+- Petunjuk misi tampil minimal 2 detik. Objek yang menutupi pemain jadi semi-transparan.
+- Umpan balik kecepatan: garis kecepatan, debu roda, getaran kamera ringan, nada kayuhan naik saat ngebut, kamera melebar ke depan (GDD 15). Getar dan efek berkedip tidak berlebihan; sediakan pengurangan efek kalau dibutuhkan.
+- Kegagalan hangat, bukan menghakimi (prinsip 2): hasil harian dibuka dengan yang berhasil, dan hari buruk tidak diberi layar kalah.
+- Game bisa dimainkan tanpa suara; setiap isyarat audio punya pasangan visual.
+- Bahasa Indonesia sering lebih panjang: pakai autowrap dan container yang bisa melar, lalu uji.
+
+## Monetisasi di UI
+
+- Tidak ada layar beli dengan uang asli. Harga di UI selalu dalam koin.
+- Iklan hadiah hanya di layar Hasil dan Bengkel (alur sudah berhenti, GDD 14.2), tidak pernah di tengah rute, tidak pernah di bawah jari pemain, disembunyikan kalau belum termuat. Detail di rule `privacy-ads`.

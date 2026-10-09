@@ -1,0 +1,42 @@
+---
+description: Aturan privasi, iklan hadiah, pembelian, dan export Android untuk Loper Koran. Pakai saat menyentuh analytics, plugin Android, export preset, atau data yang keluar dari perangkat.
+globs: scripts/autoload/analytics.gd, scripts/autoload/ad_service.gd, scripts/systems/ad_rules.gd, export_presets.cfg, android/**, addons/**
+alwaysApply: false
+---
+
+# Privasi, Iklan & Export Android
+
+Rujukan: GDD 14 (ekonomi dan monetisasi), GDD 16 (engine), ROADMAP 5. **Target usia dan pasar belum diputuskan** (ROADMAP #13). Itu menentukan aturan iklan dan konten, jadi sampai diputuskan, berlaku sikap paling hati-hati di bawah ini.
+
+## Prinsip
+
+Kumpulkan **perilaku bermain, bukan identitas pemain**. Sampai target usia diputuskan, anggap pemain bisa anak-anak: tanpa Advertising ID, tanpa iklan personalisasi, tanpa pengumpulan data pribadi.
+
+**Jangan menambahkan** analytics, SDK pelacak, age screen, parental gate, atau alur persetujuan tanpa keputusan user. Kalau sebuah fitur membutuhkannya, sebutkan konfliknya dulu.
+
+## Analytics (belum ada; kalau ditambahkan)
+
+- Semua event lewat satu autoload `Analytics`. Opt-in: tidak ada yang dikirim sebelum pemain setuju. Harus ada tombol mematikannya di pengaturan.
+- **Dilarang dikirim**: nama atau email pemain, teks bebas, Advertising ID, IMEI, serial perangkat, MAC, lokasi. Nama event buatan sendiri tidak boleh memakai nama yang dicadangkan SDK-nya.
+- Offline-first: simpan di perangkat, kirim saat online. Game tidak pernah menunggu jaringan.
+
+## Iklan hadiah (GDD 14.2, 14.3)
+
+- Plugin iklan (AdMob atau sejenisnya) adalah plugin komunitas untuk Godot dan **harus dicek lebih awal** kompatibilitasnya dengan versi Godot yang dipakai (GDD 16). Jangan mengintegrasikan sebelum Fase 14, kecuali untuk uji kelayakan yang diminta user.
+- Iklan **selalu pilihan pemain**, hanya di layar Hasil dan Bengkel (alur sudah berhenti), mis. menggandakan koin hari itu atau diskon servis. **Tidak ada iklan paksa, tidak ada iklan di tengah rute, tidak pernah di bawah jari pemain.** Offline atau belum termuat: dilewati, game tidak menunggu iklan.
+- Semua lewat satu autoload (`AdService`) dengan saklar di `Config`. Angka iklan di `config.gd` (awalan `AD_`). Logika "boleh tampil atau tidak" dibuat murni dan dites tanpa SDK.
+- Seluruh game tetap bisa dimainkan penuh tanpa iklan, dan ekonomi dirancang tanpa mengandalkan iklan (rule `balancing`).
+- Terbuka (ROADMAP 5, GDD 14.3): iklan satu-satunya pemasukan atau ada "hapus iklan", dan besar bonus iklan. Jangan memutuskan sendiri.
+
+## Pembelian
+
+- **Tidak ada pembelian dengan uang asli** untuk saat ini (GDD 14.2): koin tidak bisa dibeli. Jangan menambahkan Play Billing, layar beli, atau produk IAP tanpa keputusan baru user yang tercatat di GDD.
+- Tidak ada gems, gacha, loot box, atau revive berbayar.
+
+## Android / export
+
+- Nama package: **`com.rmh.kring`** (user, 2026-10-09). Jangan diganti, termasuk di `export_presets.cfg`: tidak bisa diubah setelah upload pertama ke Play Console.
+- Jangan commit keystore (`*.keystore`, `*.jks`, `*.p12`), `export_credentials.cfg`, atau kredensial apa pun. Keystore rilis disimpan di luar folder project.
+- Orientasi landscape dikunci di preset export. Min SDK dan pengaturan `allowBackup` dicatat saat preset dibuat di Fase 0.
+- Plugin Android pihak ketiga biasanya butuh Gradle build. Periksa kompatibilitasnya dengan versi Godot yang dipakai sebelum diandalkan.
+- Setiap perubahan data yang keluar dari perangkat (SDK baru, event baru, host baru) wajib diikuti pembaruan kebijakan privasi dan isian Data Safety di PR yang sama, begitu dokumen itu ada (M4). Jangan membuat build untuk Play sebelum kebijakan privasi dan Data Safety selesai.
