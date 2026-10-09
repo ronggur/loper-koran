@@ -46,6 +46,17 @@ def rider_mask(px, h):
             p = px[x, y]
             if p[3] > 200 and p[:3] == OUTL and any((x + dx, y + dy) in r for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
                 o.add((x, y))
+    # garis luar yang menyambung ke garis luar pengendara (mis. tonjolan 2x2 di topi) ikut bergeser,
+    # dua langkah saja supaya garis luar roda tidak ikut
+    for _ in range(2):
+        tambah = set()
+        for y in range(H):
+            for x in range(CW):
+                p = px[x, y]
+                if p[3] > 200 and p[:3] == OUTL and (x, y) not in o and (x, y) not in r \
+                        and any((x + dx, y + dy) in o for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
+                    tambah.add((x, y))
+        o |= tambah
     return r | o
 
 
