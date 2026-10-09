@@ -50,7 +50,7 @@ Hadiah inti tiap antaran. Bunyinya membedakan permukaan, supaya pemain tahu hasi
 
 ### 3.3 Bel sepeda
 
-Bel adalah efek suara sekaligus alat mengusir pejalan kaki (GDD 11, 15). Satu "kring" yang jelas, 300–500 ms, dengan 3 variasi. Bel yang di-upgrade punya bunyi berbeda (kosmetik).
+Bel adalah efek suara sekaligus alat mengusir pejalan kaki (GDD 5.4, 11, 15), dan sejak 2026-10-09 memberi nama pada game: **Kring Kring!** Satu "kring" yang jelas, 300–500 ms, dengan 3 variasi. Ketukan kedua selama teks masih tampil memutar bunyi kedua, jadi terdengar "kring kring!"; bunyi kedua sebaiknya sedikit lebih tinggi supaya dua bunyi terdengar sebagai satu frasa (usulan). Bel yang di-upgrade punya bunyi berbeda (kosmetik). Pasangan visualnya selalu tampil, juga saat suara mati (`design/bel/`).
 
 ---
 
@@ -65,7 +65,7 @@ Kolom **M2** menandai yang dibutuhkan untuk satu hari penuh di perumahan (ROADMA
 | Kayuhan (loop, 3 kecepatan lewat pitch) | ✅ | Animasi kayuh, bar kecepatan |
 | Freewheel saat meluncur | ✅ | Pedal diam |
 | Rem dan decit | ✅ | Animasi rem, cincin stick bawah menyala |
-| Bel | ⬜ | Gelombang kecil di depan setang |
+| Bel ("kring", dan "kring kring!" saat diketuk dua kali) | ⬜ | Garis getar dan teks "KRING!" di atas setang (`design/bel/`) |
 | Tabrakan (lembut, "bruk" + kerincing) | ✅ | Oleng, bintang kecil |
 | Selip di genangan / kerikil | ⬜ | Percikan, sepeda bergeser |
 

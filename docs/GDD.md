@@ -1,8 +1,10 @@
-# Game Design Document — "Loper Koran"
+# Game Design Document — "Kring Kring!" (nama kerja: Loper Koran)
 
 > **Dokumen pendamping**: [`ART_DIRECTION.md`](./ART_DIRECTION.md) (gaya visual & daftar aset), [`BALANCING.md`](./BALANCING.md) (angka tuning), [`ROUTE_DESIGN.md`](./ROUTE_DESIGN.md) (menyusun rute), [`DATA_SCHEMA.md`](./DATA_SCHEMA.md) (format data), [`SOUND_DESIGN.md`](./SOUND_DESIGN.md) (audio).
 >
 > **KEPUTUSAN (2026-10-07): dokumen ini sumber utama desain Loper Koran.** Perubahan desain ditulis di sini. Dokumen Claude Docs "Loper Koran — Ide Pengembangan Game" (versi 2026-10-07) adalah asal dokumen ini dan sekarang menjadi arsip yang tidak diperbarui lagi.
+>
+> **KEPUTUSAN (2026-10-09): judul game "Kring Kring!"**, dari bunyi bel sepeda. Pemain bisa membunyikan bel selama mengayuh sebagai tanda minta jalan (bagian 5.4). "Loper Koran" tetap dipakai sebagai nama kerja di repo dan dokumen.
 >
 > Dibanding dokumen asal, isinya sama; yang berubah hanya penomoran bagian, pemisahan skema data ke `DATA_SCHEMA.md`, dan bagian 2 yang merangkum prinsip dari keputusan yang sudah ada. Label **usulan** berarti belum diuji dan masih bisa berubah lewat prototype.
 
@@ -10,6 +12,7 @@
 
 Game mobile bergaya pixel art isometrik yang memodernisasi Paperboy NES: pemain mengayuh sepeda menyusuri jalan sambil melempar koran, dengan kecepatan yang bisa diatur, pelanggan berkepribadian, dan isi koran yang ikut memengaruhi dunia.
 
+- **Judul:** **Kring Kring!** Bel sepeda adalah ciri khas game: bisa dibunyikan kapan saja untuk minta jalan (bagian 5.4).
 - **Platform:** mobile saja dulu. Orientasi layar landscape, dipegang dengan dua tangan (bagian 15).
 - **Sudut pandang:** isometrik 2:1 (terkunci) di layar landscape, seperti Paperboy aslinya yang semi-isometrik. Lemparan dan manuver sepeda didesain ulang untuk sudut ini.
 - **Setting:** lokal Indonesia, misalnya gang kampung, warung, ojek, dan tukang bubur lewat. Jarang dipakai di game sejenis.
@@ -110,6 +113,7 @@ Tiga tingkat kecepatan yang terlihat di sprite pemain: **santai** (stick netral)
 - **Jempol kiri** memegang stick analog melayang di zona kiri bawah. Stick muncul di tempat jempol menyentuh. Kiri-kanan memindah sisi (kiri sisi seberang, kanan sisi dekat, mengikuti arah pelempar, bukan arah layar). Atas untuk kayuh keras, netral kayuh santai, bawah untuk melambat dan meluncur. Diagonal bekerja bersamaan, misalnya atas-kiri untuk ngebut sambil belok.
 - **Rem tanpa tombol terpisah:** stick ditarik penuh ke bawah dan ditahan, sepeda berhenti perlahan. Jempol tidak perlu pindah, jadi kemudi tetap terjaga. Ambang rem dibuat di ujung bawah supaya sepeda tidak berhenti tanpa sengaja saat belok.
 - **Jempol kanan** melempar dengan swipe kiri atau kanan di mana saja di sisi kanan layar: kiri ke sisi seberang, kanan ke sisi dekat. Swipe panjang melempar kencang dan jauh, swipe pendek pelan dan dekat. Garis bidik putus-putus muncul selama jari ditahan, koran terlempar saat jari dilepas.
+- **Bel (usulan, 2026-10-09):** tombol bel bulat di pojok kanan bawah, di dalam zona swipe. Sentuhan yang dimulai di tombol dibaca sebagai bel, bukan swipe (bagian 5.4).
 - Alternatif yang tidak dipilih: 3 tingkat gigi lewat swipe naik-turun. Lebih sederhana, tapi kurang halus dibanding stick analog.
 
 Mock tampilan dan zona kontrol: kanvas "Loper Koran — Kamera dan Kontrol", papan Kontrol landscape.
@@ -118,6 +122,17 @@ Mock tampilan dan zona kontrol: kanvas "Loper Koran — Kamera dan Kontrol", pap
 
 - **Mode bantu:** opsi kecepatan otomatis untuk pemain santai, supaya kontrol tambahan tidak jadi penghalang. Lemparnya juga otomatis: tap di sisi layar yang ada rumahnya, ke kotak surat terdekat di sisi itu.
 - **Opsi kidal:** zona kiri dan kanan bisa ditukar.
+
+### 5.4 Bel: "Kring Kring!" (usulan, 2026-10-09)
+
+Bel memberi nama pada game. Pemain membunyikannya sebagai tanda "permisi, mau lewat", seperti loper sungguhan di gang. Semua angka di bawah usulan dan disetel lewat prototype.
+
+- **Kontrol:** tombol bel 40×40 piksel dasar di pojok kanan bawah (opsi kidal: kiri bawah). Zona tapnya lingkaran radius 28; sentuhan yang dimulai di zona ini membunyikan bel dan tidak memulai swipe. Ukuran dan posisi di `design/DESIGN_SPEC.md` 3.8.
+- **Satu ketukan = "kring"** (sekitar 0,4 detik). **Ketuk lagi selama teks masih tampil = "kring kring!"**, bunyi dobel yang menjadi judul game. Setelah dua bunyi, bel jeda sekitar 1 detik; tombol menampilkan sisa jeda sebagai cincin. Jeda ini menjaga bel tidak dibunyikan terus-menerus, karena bunyinya akan didengar ribuan kali (`SOUND_DESIGN.md` 1).
+- **Efek ke dunia:** warga dan hewan yang bisa minggir dan berada dalam jangkauan di depan sepeda (sekitar 4 ubin) menampilkan ikon "!", lalu menepi ke pinggir jalan. Contoh: pejalan kaki, jogger, anak main bola, ayam, kucing. Anjing penjaga dan kendaraan tidak terpengaruh, supaya rintangan utama tetap harus dihindari. Rintangan mana yang bereaksi diatur per jenis rintangan (bagian 9.3, `ROUTE_DESIGN.md`).
+- **Tanpa suara tetap terbaca:** setiap bunyi bel selalu disertai efek visual di atas setang (garis getar dan teks "KRING!"), karena banyak pemain HP bermain tanpa suara.
+- **Upgrade dan kosmetik:** upgrade bel menambah jangkauan (bagian 11). Bel kosmetik mengganti warna dan bunyi, tanpa mengubah fungsi (bagian 13, `SOUND_DESIGN.md` 3.3).
+- **Aset:** `design/bel/` (tombol, efek, ikon "!"), dibuat dengan `tools/ui_art/bel.py`. Mock di kanvas "Loper Koran — Kamera dan Kontrol", papan Bel · Kring Kring!.
 
 ---
 
@@ -457,7 +472,7 @@ Ringkasan; aturan lengkapnya ada di `ART_DIRECTION.md` dan `SOUND_DESIGN.md`.
 
 - **Gaya:** pixel art retro dengan palet terbatas, dimodernkan lewat lighting dinamis (cahaya utama dari kiri atas), bayangan lembut berwarna yang mengikuti distrik dan waktu, partikel, depth of field ringan, bloom, dan color grading per distrik. Referensi rasa: Eastward dan Octopath Traveler, tanpa pindah dari isometrik 2:1.
 - **Ukuran:** ubin isometrik belah ketupat 2:1, usulan 64×32 px. Karakter pemain dan sepeda sekitar 47 px tinggi. Di layar landscape 2400×1080, skala ×3 memberi kanvas sekitar 800×360 px.
-- **Umpan balik kecepatan:** garis kecepatan, debu pixel di roda, getaran kamera, dan nada suara kayuhan yang naik saat ngebut. Bel sepeda jadi efek suara sekaligus alat mengusir pejalan kaki. Kamera melebar sedikit ke depan saat ngebut supaya rintangan masih sempat terlihat.
+- **Umpan balik kecepatan:** garis kecepatan, debu pixel di roda, getaran kamera, dan nada suara kayuhan yang naik saat ngebut. Bel sepeda jadi efek suara sekaligus alat mengusir pejalan kaki, dan memberi nama pada game (bagian 5.4). Kamera melebar sedikit ke depan saat ngebut supaya rintangan masih sempat terlihat.
 - **Orientasi landscape:** dipegang dengan dua tangan, jadi dua jempol terasa natural. Ruang ke samping luas dan pandangan ke depan lebih lega karena jalan isometrik berjalan diagonal. Portrait ditinggalkan karena jalan diagonal memendekkan pandangan dan membuang sisi layar.
 - **Isometrik 2:1, jalan ke kanan atas (diputuskan):** sepeda di sepertiga kiri layar, kamera melihat sisi kanan sepeda (rantai dan gir terlihat), fasad sisi seberang menghadap kanan bawah dengan pintu dan jendela kontras. Detail dan konsekuensinya: ART_DIRECTION 2.2.
 
@@ -493,6 +508,7 @@ Beberapa keputusan masih terbuka dan paling baik diputuskan lewat prototype kasa
 - Cerita besar dan kondisi gagal (bagian 3.2).
 - Cara menampilkan rumah di sisi dekat, yang hanya terlihat belakangnya di isometrik (kanan bawah jalan).
 - Kontrol landscape: apakah ambang rem di ujung bawah stick nyaman tanpa berhenti tak sengaja, dan apakah swipe pendek cukup teliti di layar kecil.
+- Bel: apakah tombol di pojok kanan bawah mudah dijangkau tanpa terpencet saat swipe, dan apakah bel dimajukan ke prototype awal karena sekarang menjadi ciri judul game (saat ini dijadwalkan Fase 6–7, `SOUND_DESIGN.md` 8).
 - Struktur sesi: rute harian berurutan, atau run roguelite dengan rute acak.
 - Skala tampilan pixel (×3 atau ×4) dan ukuran ubin isometrik.
 

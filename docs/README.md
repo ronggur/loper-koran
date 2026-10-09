@@ -1,5 +1,7 @@
 # Loper Koran
 
+Judul game: **Kring Kring!** (diputuskan 2026-10-09, GDD 5.4). "Loper Koran" adalah nama kerja repo dan dokumen.
+
 Game 2D mobile (Android) bergaya Paperboy modern: pemain mengayuh sepeda menyusuri jalan isometrik sambil melempar koran ke rumah pelanggan, dengan latar Indonesia, kecepatan yang diatur sendiri, dan isi koran yang ikut mengubah dunia.
 
 Status: **Pra-produksi** (per 2026-10-07). Desain inti, kamera, kontrol, dan karakter pemain sudah dikunci. Sprite produksi pemain (Kemeja Agen, 15 animasi kayuh) sudah jadi dan sudah dicek di Godot 4.3. Project Godot belum dibuat; langkah berikutnya adalah Fase 0 di [`DEV_PHASES.md`](./DEV_PHASES.md). Posisi lengkap ada di [`ROADMAP.md`](./ROADMAP.md).
