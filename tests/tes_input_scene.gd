@@ -493,6 +493,22 @@ func _test_proyek_dan_keyboard() -> void:
 	check(not bool(ProjectSettings.get_setting("input_devices/pointing/emulate_touch_from_mouse", false)), "tidak ada emulasi sentuhan dari mouse di project.godot (input_devices/pointing/emulate_touch_from_mouse)")
 	var kontrol: KontrolTouch = KontrolTouch.new()
 	check(kontrol.keyboard_aktif == OS.has_feature("editor"), "keyboard aktif hanya bila OS.has_feature(\"editor\") (nonaktif di build ekspor)")
+	# QB-006: penjaga statis. Perbandingan di atas selalu benar di runner (biner editor, fitur `editor` = true), jadi tidak
+	# menangkap `var keyboard_aktif: bool = true`. Penjaga di bawah memeriksa SUMBER. BATAS: ini tidak membuktikan perilaku
+	# build ekspor; bahwa tag fitur "editor" tidak ada di template ekspor adalah perilaku Godot (dokumentasi OS.has_feature)
+	# yang tidak bisa dijalankan di runner editor ini. Bukti perilaku APK sungguhan hanya dari menekan tombol di perangkat.
+	var skrip_ui: Dictionary = {}
+	for berkas: String in _daftar_gd("res://scripts"):
+		skrip_ui[berkas] = FileAccess.get_file_as_string(berkas)
+	var pelanggaran: Array[String] = _pelanggaran_keyboard_editor(skrip_ui)
+	check(pelanggaran.is_empty(), "keyboard editor: sumber menginisialisasi keyboard_aktif dari OS.has_feature(\"editor\"), memagari vektor_keyboard, dan tidak menyalakannya paksa: %s" % "; ".join(pelanggaran))
+	var asli: String = FileAccess.get_file_as_string("res://scripts/ui/kontrol_touch.gd")
+	check(not _pelanggaran_keyboard_editor({"res://scripts/ui/kontrol_touch.gd": asli.replace("var keyboard_aktif: bool = OS.has_feature(\"editor\")", "var keyboard_aktif: bool = true")}).is_empty(), "contoh buruk: keyboard_aktif = true sejak awal ditolak")
+	check(not _pelanggaran_keyboard_editor({"res://scripts/ui/kontrol_touch.gd": asli.replace("OS.has_feature(\"editor\")", "OS.has_feature(\"debug\")")}).is_empty(), "contoh buruk: fitur lain (debug) menggantikan editor ditolak")
+	check(not _pelanggaran_keyboard_editor({"res://scripts/ui/kontrol_touch.gd": asli.replace("	if not keyboard_aktif:\n		return Vector2.ZERO\n", "")}).is_empty(), "contoh buruk: vektor_keyboard tanpa pagar keyboard_aktif ditolak")
+	check(not _pelanggaran_keyboard_editor({"res://scripts/ui/kontrol_touch.gd": asli, "res://scripts/ui/lain.gd": "func f() -> void:\n\tkontrol.keyboard_aktif = true\n"}).is_empty(), "contoh buruk: skrip lain menyalakan keyboard_aktif paksa ditolak")
+	check(_pelanggaran_keyboard_editor({"res://scripts/ui/kontrol_touch.gd": asli, "res://scripts/ui/lain.gd": "# keyboard_aktif = true di komentar\nfunc f() -> void:\n\tpass\n"}).is_empty(), "kontrol positif: keyboard_aktif = true di komentar tidak dihitung")
+	check(not _pelanggaran_keyboard_editor({}).is_empty(), "contoh buruk: tanpa kontrol_touch.gd ditolak (penjaga tidak lolos kosong)")
 	kontrol.keyboard_aktif = true
 	Input.action_press(&"stick_atas")
 	check(kontrol.vektor_keyboard() == Vector2(0, 1) and kontrol.vektor_stick() == Vector2(0, 1), "keyboard aktif: tombol atas menghasilkan vektor stick (0, 1)")
@@ -511,6 +527,60 @@ func _test_proyek_dan_keyboard() -> void:
 
 
 # --- Pembantu node ---
+
+## Pelanggaran penjaga keyboard-hanya-editor pada `skrip` = {jalur: isi} semua skrip di `scripts/` (QB-006).
+func _pelanggaran_keyboard_editor(skrip: Dictionary) -> Array[String]:
+	var hasil: Array[String] = []
+	var jalur_kontrol: String = "res://scripts/ui/kontrol_touch.gd"
+	if not skrip.has(jalur_kontrol):
+		hasil.append("kontrol_touch.gd tidak ditemukan")
+		return hasil
+	var re_awal: RegEx = RegEx.create_from_string("^var keyboard_aktif\\s*:\\s*bool\\s*=\\s*OS\\.has_feature\\(\"editor\"\\)\\s*$")
+	var ada_awal: bool = false
+	for baris: String in str(skrip[jalur_kontrol]).split("\n"):
+		if re_awal.search(_tanpa_komentar(baris).strip_edges()) != null:
+			ada_awal = true
+	if not ada_awal:
+		hasil.append("keyboard_aktif harus diinisialisasi `OS.has_feature(\"editor\")`")
+	if not str(skrip[jalur_kontrol]).contains("func vektor_keyboard() -> Vector2:\n\tif not keyboard_aktif:\n\t\treturn Vector2.ZERO\n"):
+		hasil.append("vektor_keyboard harus diawali pagar `if not keyboard_aktif: return Vector2.ZERO`")
+	var re_paksa: RegEx = RegEx.create_from_string("\\bkeyboard_aktif\\s*=\\s*true\\b")
+	for jalur: String in skrip:
+		for baris: String in str(skrip[jalur]).split("\n"):
+			if re_paksa.search(_tanpa_komentar(baris)) != null:
+				hasil.append("%s menyalakan keyboard_aktif = true secara paksa" % jalur)
+	return hasil
+
+
+## Baris tanpa komentar `#` di ujungnya; isi teks berkutip dipertahankan.
+func _tanpa_komentar(baris: String) -> String:
+	var dalam_teks: String = ""
+	for i: int in range(baris.length()):
+		var c: String = baris[i]
+		if dalam_teks != "":
+			if c == dalam_teks and baris[i - 1] != "\\":
+				dalam_teks = ""
+			continue
+		if c == "\"" or c == "'":
+			dalam_teks = c
+		elif c == "#":
+			return baris.substr(0, i)
+	return baris
+
+
+func _daftar_gd(folder: String) -> Array[String]:
+	var hasil: Array[String] = []
+	var dir: DirAccess = DirAccess.open(folder)
+	if dir == null:
+		return hasil
+	for nama: String in dir.get_files():
+		if nama.get_extension() == "gd":
+			hasil.append(folder.path_join(nama))
+	for sub: String in dir.get_directories():
+		hasil.append_array(_daftar_gd(folder.path_join(sub)))
+	hasil.sort()
+	return hasil
+
 
 ## True bila dua warna sama dalam satu langkah kuantisasi 8-bit.
 func _hampir(a: Color, b: Color) -> bool:
