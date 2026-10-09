@@ -65,9 +65,10 @@ func tekan(index: int, posisi: Vector2, waktu_detik: float) -> void:
 				_waktu_awal_swipe = waktu_detik
 
 
-## Jari bergeser. Hanya jari yang sudah mengklaim yang berpengaruh.
+## Jari bergeser. Hanya jari yang sudah mengklaim yang berpengaruh. `index` negatif sama dengan sentinel
+## `TIDAK_ADA` dan harus ditolak di awal, kalau tidak slot yang kosong ikut terbaca "cocok".
 func geser(index: int, posisi: Vector2) -> void:
-	if not posisi.is_finite():
+	if index < 0 or not posisi.is_finite():
 		return
 	if index == _index_stick:
 		_posisi_stick = posisi
@@ -76,7 +77,10 @@ func geser(index: int, posisi: Vector2) -> void:
 
 
 ## Jari diangkat. Stick: vektor kembali nol dan slot bebas. Swipe: hasilnya dicatat tepat sekali.
+## `index` negatif ditolak (sentinel `TIDAK_ADA`), kalau tidak slot swipe yang kosong tercatat sebagai swipe palsu.
 func lepas(index: int, posisi: Vector2, waktu_detik: float) -> void:
+	if index < 0:
+		return
 	if index == _index_stick:
 		_bebaskan_stick()
 	elif index == _index_swipe:
@@ -90,6 +94,8 @@ func lepas(index: int, posisi: Vector2, waktu_detik: float) -> void:
 
 ## Satu jari dibatalkan sistem (mis. gestur sistem mengambil alih): dilepas tanpa mencatat swipe.
 func batal(index: int) -> void:
+	if index < 0:
+		return
 	if index == _index_stick:
 		_bebaskan_stick()
 	elif index == _index_swipe:

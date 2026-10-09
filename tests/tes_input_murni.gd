@@ -181,6 +181,7 @@ func _test_touch_router() -> void:
 	_router_c_jari_kedua_di_zona_stick()
 	_router_d_jari_diangkat()
 	_router_e_index_tak_dikenal_dan_ganda()
+	_router_e2_index_negatif()
 	_router_f_mulai_di_luar_zona()
 	_router_g_zona_hanya_saat_turun()
 	_router_h_kidal()
@@ -295,6 +296,41 @@ func _router_e_index_tak_dikenal_dan_ganda() -> void:
 	r.tekan(-1, TITIK_SWIPE, 0.3)
 	r.tekan(3, Vector2(NAN, 5), 0.3)
 	check(not r.swipe_aktif() and r.jumlah_jari_aktif() == 1, "7e: index negatif dan posisi NaN diabaikan")
+
+
+## QB-001: `index` negatif sama dengan sentinel slot kosong (-1) dan tidak boleh terbaca "cocok".
+func _router_e2_index_negatif() -> void:
+	# Stick aktif, slot swipe kosong: lepas(-1) dulu mencatat swipe palsu (awal nol, akhir sembarang).
+	var r: TouchRouter = _router()
+	var hasil: Array = []
+	r.swipe_selesai.connect(func(awal: Vector2, akhir: Vector2, durasi: float) -> void: hasil.append([awal, akhir, durasi]))
+	r.tekan(0, TITIK_STICK, 1.0)
+	r.lepas(-1, Vector2(500, 200), 2.0)
+	check(r.jumlah_swipe_selesai == 0 and hasil.is_empty(), "QB-001: lepas(-1) saat stick aktif tidak mencatat swipe palsu dan tidak memancarkan sinyal")
+	check(r.stick_aktif() and r.asal_stick() == TITIK_STICK and not r.swipe_aktif(), "QB-001: lepas(-1) tidak melepas stick dan tidak membuat swipe aktif")
+	r.geser(-1, Vector2(500, 200))
+	check(r.posisi_swipe() == Vector2.ZERO and r.awal_swipe() == Vector2.ZERO and not r.swipe_aktif(), "QB-001: geser(-1) tidak menulis posisi swipe walau swipe tidak aktif")
+	r.batal(-1)
+	check(r.stick_aktif() and r.jumlah_jari_aktif() == 1, "QB-001: batal(-1) tidak melepas jari yang aktif")
+	r.geser(0, TITIK_STICK + Vector2(0, -35))
+	check(r.vektor_stick().is_equal_approx(Vector2(0, 1)), "QB-001: stick tetap bekerja normal sesudah masukan index -1")
+	# Sebaliknya: swipe aktif, slot stick kosong: geser(-1) tidak boleh menulis posisi stick.
+	var s: TouchRouter = _router()
+	s.tekan(1, TITIK_SWIPE, 1.0)
+	s.geser(-1, Vector2(300, 100))
+	s.lepas(-1, Vector2(300, 100), 2.0)
+	s.batal(-1)
+	check(s.swipe_aktif() and s.posisi_swipe() == TITIK_SWIPE and s.jumlah_swipe_selesai == 0, "QB-001: swipe aktif tidak terganggu geser(-1), lepas(-1), dan batal(-1)")
+	check(s.get("_posisi_stick") == Vector2.ZERO and not s.stick_aktif(), "QB-001: geser(-1) tidak menulis posisi stick saat stick tidak aktif")
+	s.tekan(2, TITIK_STICK, 2.0)
+	check(s.stick_aktif() and s.asal_stick() == TITIK_STICK and s.vektor_stick() == Vector2.ZERO, "QB-001: stick yang diklaim sesudahnya mulai bersih (titik asal = titik sentuh, vektor nol)")
+	# Dua slot kosong: tidak ada efek samping apa pun.
+	var k: TouchRouter = _router()
+	k.lepas(-1, Vector2(100, 100), 1.0)
+	k.geser(-1, Vector2(100, 100))
+	k.batal(-1)
+	k.tekan(-1, TITIK_STICK, 1.0)
+	check(k.jumlah_jari_aktif() == 0 and k.jumlah_swipe_selesai == 0, "QB-001: index -1 pada router kosong tidak berefek (tekan, geser, lepas, batal)")
 
 
 func _router_f_mulai_di_luar_zona() -> void:
