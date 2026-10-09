@@ -31,11 +31,11 @@ Cara pakai: buka Claude Code di root repo `loper-koran`, tempel **Bagian 1 (Prom
 
 | Alat | Status saat ini | Konsekuensi |
 |---|---|---|
-| Godot 4.7.2 | **Belum terpasang** (`godot` tidak ada di PATH, `/Applications/Godot.app` tidak ada) | Prasyarat run 0A: pemilik memasang Godot, atau agent mengunduh ke folder sementara di luar repo **setelah pemilik mengizinkan**. Tanpa Godot tidak ada tes yang bisa diklaim lolos (`00-project-core`). |
-| Template export Godot | Belum ada | Dibutuhkan run 0C. Pastikan mendukung target Android yang dipersyaratkan Google Play (TECH_PLAN Fase 0). |
+| Godot 4.7.2 | Terpasang lewat Homebrew (`/opt/homebrew/bin/godot`, sejak run 0A) | Kalau tidak ada, pemilik memasangnya, atau agent mengunduh ke folder sementara di luar repo **setelah pemilik mengizinkan**. Tanpa Godot tidak ada tes yang bisa diklaim lolos (`00-project-core`). |
+| Template export Godot | Belum ada (dicek 2026-10-09, `~/Library/Application Support/Godot/export_templates/` kosong) | Dibutuhkan run 0C (sekitar 1 GB). Unduhan dari rilis resmi `godotengine/godot-builds` dengan verifikasi checksum, **setelah pemilik mengizinkan**. Pastikan mendukung target Android yang dipersyaratkan Google Play (TECH_PLAN Fase 0). |
 | Java | OpenJDK 17 | Cek syarat versi JDK untuk build Android Godot yang terpilih sebelum run 0C. |
 | Android SDK | Ada di `~/Library/Android/sdk` (`platform-tools`, `cmdline-tools`, `build-tools`, `emulator`, `system-images`) | Bisa dipakai untuk emulator dan `adb`. |
-| `adb` | `/opt/homebrew/bin/adb`, **tidak ada perangkat terhubung** | Uji di HP fisik = `NEEDS-MANUAL` sampai perangkat dicolok. Emulator hanya membuktikan APK terpasang dan jalan, **bukan** rasa kontrol touch. |
+| `adb` | `/opt/homebrew/bin/adb`; Samsung A54 (SM-A546E) terhubung bila dicolok (dicek 2026-10-09) | HP dipakai bersama project lain: periksa `adb devices` di awal run. Uji rasa kontrol di HP = `NEEDS-MANUAL` (QA tidak bisa merasakannya). Emulator hanya membuktikan APK terpasang dan jalan, **bukan** rasa kontrol touch. |
 | `gh`, `python3` | Ada | Dipakai untuk PR dan alat `tools/loper_art/`. |
 
 Aturan perangkat (dari `00-project-core`): periksa dulu apakah pemilik sedang memakai perangkat sebelum mengirim ketukan. Sebelum `pm clear` atau uninstall, cek `pm list packages` supaya tidak menghapus data yang ada. Menginstal app ke HP pemilik dilakukan hanya setelah pemilik mengizinkan.
@@ -243,9 +243,11 @@ Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MAN
 
 ---
 
-## 6. Fase 0 dipecah jadi tiga run
+## 6. Fase 0 dipecah jadi tiga run (0B dan 0C dijalankan sebagai satu run)
 
 Urutan berurutan; satu PR per run, run berikutnya dimulai dari `main` setelah PR sebelumnya di-merge pemilik. Hanya satu fase kode aktif (`DEV_PHASES.md`).
+
+> **Keputusan pemilik, 2026-10-09:** run 0B dan 0C **digabung** jadi satu run (`RUN_ID` `20261009-fase0bc-input-export`, satu branch, satu PR). Ini mengesampingkan "jangan menggabungkan" di Bagian 7. Alasannya: Fase 0 baru bisa ditutup kalau APK terpasang di HP dan sepeda bergerak dengan stick, jadi dua run terpisah menunda uji HP tanpa menambah keamanan. Aturan yang tetap berlaku untuk run gabungan: batas 2 iterasi dan satu QA per iterasi tidak berubah; bila konteks Dev terancam habis, boleh dua pemanggilan Dev berurutan di iterasi 1 (0B lalu 0C) sebelum QA. Risikonya (token sekitar dua kali run 0A, PR lebih besar, `ESCALATED` lebih mungkin) diterima pemilik. Bagian "Run 0B" dan "Run 0C" di bawah tetap menjadi daftar isinya.
 
 ### Run 0A — Fondasi project (`RUN_ID` mis. `20261009-fase0a-fondasi`)
 
@@ -296,4 +298,4 @@ Urutan berurutan; satu PR per run, run berikutnya dimulai dari `main` setelah PR
 - QA berbasis agent tidak menggantikan uji di HP nyata untuk rasa kontrol, performa, dan tampilan rasio layar. Fase gameplay selalu ditutup dengan uji manual (`DEV_PHASES.md`).
 - Tanpa Godot terpasang, loop tidak bisa menghasilkan bukti tes. Jangan menjalankan loop sebelum prasyarat 0A terpenuhi.
 - Keputusan terbuka (ROADMAP 5) adalah milik pemilik. Loop yang "menyelesaikan" Fase 0 dengan menebak nama package atau skala piksel menciptakan utang yang mahal (nama package tidak bisa diganti setelah upload pertama).
-- Run penuh (Dev + QA × 2 iterasi) memakan token besar; mulai dari 0A, jangan menggabungkan 0A–0C, dan jangan melanjutkan run berikutnya di sesi yang sama (Bagian 0c).
+- Run penuh (Dev + QA × 2 iterasi) memakan token besar; mulai dari 0A, jangan menggabungkan 0A dengan run lain, dan jangan melanjutkan run berikutnya di sesi yang sama (Bagian 0c). **Pengecualian yang disetujui pemilik (2026-10-09): 0B dan 0C boleh digabung jadi satu run** (lihat Bagian 6). Menggabungkan selain itu tetap tidak dianjurkan.
