@@ -1,0 +1,688 @@
+{
+ "sprite": "loper_agen_lempar.png",
+ "cell": [
+  46,
+  58
+ ],
+ "columns": 4,
+ "rows": 18,
+ "ground_anchor": [
+  23,
+  46
+ ],
+ "godot_offset": [
+  0.0,
+  -17.0
+ ],
+ "status": "usulan, dipoles tangan di atas frame render; belum dari tools/loper_art",
+ "release_frame": 2,
+ "note": "Nama: lempar_<sisi>_<kecepatan>_<arah>. Sisi kiri = sisi seberang, kanan = sisi dekat (mengikuti arah pelempar). Arah 90\u00b0 belum ada; sementara pakai serong di sisi yang sama.",
+ "animations": [
+  {
+   "name": "lempar_kiri_santai_normal",
+   "side": "kiri",
+   "speed": "santai",
+   "heading": "normal",
+   "row": 0,
+   "source_row": 0,
+   "fps": 12,
+   "loop": false,
+   "release_frame": 2,
+   "regions": [
+    [
+     0,
+     0,
+     46,
+     58
+    ],
+    [
+     46,
+     0,
+     46,
+     58
+    ],
+    [
+     92,
+     0,
+     46,
+     58
+    ],
+    [
+     138,
+     0,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "lempar_kanan_santai_normal",
+   "side": "kanan",
+   "speed": "santai",
+   "heading": "normal",
+   "row": 1,
+   "source_row": 0,
+   "fps": 12,
+   "loop": false,
+   "release_frame": 2,
+   "regions": [
+    [
+     0,
+     58,
+     46,
+     58
+    ],
+    [
+     46,
+     58,
+     46,
+     58
+    ],
+    [
+     92,
+     58,
+     46,
+     58
+    ],
+    [
+     138,
+     58,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "lempar_kiri_cepat_normal",
+   "side": "kiri",
+   "speed": "cepat",
+   "heading": "normal",
+   "row": 2,
+   "source_row": 5,
+   "fps": 12,
+   "loop": false,
+   "release_frame": 2,
+   "regions": [
+    [
+     0,
+     116,
+     46,
+     58
+    ],
+    [
+     46,
+     116,
+     46,
+     58
+    ],
+    [
+     92,
+     116,
+     46,
+     58
+    ],
+    [
+     138,
+     116,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "lempar_kanan_cepat_normal",
+   "side": "kanan",
+   "speed": "cepat",
+   "heading": "normal",
+   "row": 3,
+   "source_row": 5,
+   "fps": 12,
+   "loop": false,
+   "release_frame": 2,
+   "regions": [
+    [
+     0,
+     174,
+     46,
+     58
+    ],
+    [
+     46,
+     174,
+     46,
+     58
+    ],
+    [
+     92,
+     174,
+     46,
+     58
+    ],
+    [
+     138,
+     174,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "lempar_kiri_ngebut_normal",
+   "side": "kiri",
+   "speed": "ngebut",
+   "heading": "normal",
+   "row": 4,
+   "source_row": 10,
+   "fps": 12,
+   "loop": false,
+   "release_frame": 2,
+   "regions": [
+    [
+     0,
+     232,
+     46,
+     58
+    ],
+    [
+     46,
+     232,
+     46,
+     58
+    ],
+    [
+     92,
+     232,
+     46,
+     58
+    ],
+    [
+     138,
+     232,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "lempar_kanan_ngebut_normal",
+   "side": "kanan",
+   "speed": "ngebut",
+   "heading": "normal",
+   "row": 5,
+   "source_row": 10,
+   "fps": 12,
+   "loop": false,
+   "release_frame": 2,
+   "regions": [
+    [
+     0,
+     290,
+     46,
+     58
+    ],
+    [
+     46,
+     290,
+     46,
+     58
+    ],
+    [
+     92,
+     290,
+     46,
+     58
+    ],
+    [
+     138,
+     290,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "lempar_kiri_santai_serong_kanan",
+   "side": "kiri",
+   "speed": "santai",
+   "heading": "serong_kanan",
+   "row": 6,
+   "source_row": 1,
+   "fps": 12,
+   "loop": false,
+   "release_frame": 2,
+   "regions": [
+    [
+     0,
+     348,
+     46,
+     58
+    ],
+    [
+     46,
+     348,
+     46,
+     58
+    ],
+    [
+     92,
+     348,
+     46,
+     58
+    ],
+    [
+     138,
+     348,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "lempar_kanan_santai_serong_kanan",
+   "side": "kanan",
+   "speed": "santai",
+   "heading": "serong_kanan",
+   "row": 7,
+   "source_row": 1,
+   "fps": 12,
+   "loop": false,
+   "release_frame": 2,
+   "regions": [
+    [
+     0,
+     406,
+     46,
+     58
+    ],
+    [
+     46,
+     406,
+     46,
+     58
+    ],
+    [
+     92,
+     406,
+     46,
+     58
+    ],
+    [
+     138,
+     406,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "lempar_kiri_cepat_serong_kanan",
+   "side": "kiri",
+   "speed": "cepat",
+   "heading": "serong_kanan",
+   "row": 8,
+   "source_row": 6,
+   "fps": 12,
+   "loop": false,
+   "release_frame": 2,
+   "regions": [
+    [
+     0,
+     464,
+     46,
+     58
+    ],
+    [
+     46,
+     464,
+     46,
+     58
+    ],
+    [
+     92,
+     464,
+     46,
+     58
+    ],
+    [
+     138,
+     464,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "lempar_kanan_cepat_serong_kanan",
+   "side": "kanan",
+   "speed": "cepat",
+   "heading": "serong_kanan",
+   "row": 9,
+   "source_row": 6,
+   "fps": 12,
+   "loop": false,
+   "release_frame": 2,
+   "regions": [
+    [
+     0,
+     522,
+     46,
+     58
+    ],
+    [
+     46,
+     522,
+     46,
+     58
+    ],
+    [
+     92,
+     522,
+     46,
+     58
+    ],
+    [
+     138,
+     522,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "lempar_kiri_ngebut_serong_kanan",
+   "side": "kiri",
+   "speed": "ngebut",
+   "heading": "serong_kanan",
+   "row": 10,
+   "source_row": 11,
+   "fps": 12,
+   "loop": false,
+   "release_frame": 2,
+   "regions": [
+    [
+     0,
+     580,
+     46,
+     58
+    ],
+    [
+     46,
+     580,
+     46,
+     58
+    ],
+    [
+     92,
+     580,
+     46,
+     58
+    ],
+    [
+     138,
+     580,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "lempar_kanan_ngebut_serong_kanan",
+   "side": "kanan",
+   "speed": "ngebut",
+   "heading": "serong_kanan",
+   "row": 11,
+   "source_row": 11,
+   "fps": 12,
+   "loop": false,
+   "release_frame": 2,
+   "regions": [
+    [
+     0,
+     638,
+     46,
+     58
+    ],
+    [
+     46,
+     638,
+     46,
+     58
+    ],
+    [
+     92,
+     638,
+     46,
+     58
+    ],
+    [
+     138,
+     638,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "lempar_kiri_santai_serong_kiri",
+   "side": "kiri",
+   "speed": "santai",
+   "heading": "serong_kiri",
+   "row": 12,
+   "source_row": 3,
+   "fps": 12,
+   "loop": false,
+   "release_frame": 2,
+   "regions": [
+    [
+     0,
+     696,
+     46,
+     58
+    ],
+    [
+     46,
+     696,
+     46,
+     58
+    ],
+    [
+     92,
+     696,
+     46,
+     58
+    ],
+    [
+     138,
+     696,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "lempar_kanan_santai_serong_kiri",
+   "side": "kanan",
+   "speed": "santai",
+   "heading": "serong_kiri",
+   "row": 13,
+   "source_row": 3,
+   "fps": 12,
+   "loop": false,
+   "release_frame": 2,
+   "regions": [
+    [
+     0,
+     754,
+     46,
+     58
+    ],
+    [
+     46,
+     754,
+     46,
+     58
+    ],
+    [
+     92,
+     754,
+     46,
+     58
+    ],
+    [
+     138,
+     754,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "lempar_kiri_cepat_serong_kiri",
+   "side": "kiri",
+   "speed": "cepat",
+   "heading": "serong_kiri",
+   "row": 14,
+   "source_row": 8,
+   "fps": 12,
+   "loop": false,
+   "release_frame": 2,
+   "regions": [
+    [
+     0,
+     812,
+     46,
+     58
+    ],
+    [
+     46,
+     812,
+     46,
+     58
+    ],
+    [
+     92,
+     812,
+     46,
+     58
+    ],
+    [
+     138,
+     812,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "lempar_kanan_cepat_serong_kiri",
+   "side": "kanan",
+   "speed": "cepat",
+   "heading": "serong_kiri",
+   "row": 15,
+   "source_row": 8,
+   "fps": 12,
+   "loop": false,
+   "release_frame": 2,
+   "regions": [
+    [
+     0,
+     870,
+     46,
+     58
+    ],
+    [
+     46,
+     870,
+     46,
+     58
+    ],
+    [
+     92,
+     870,
+     46,
+     58
+    ],
+    [
+     138,
+     870,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "lempar_kiri_ngebut_serong_kiri",
+   "side": "kiri",
+   "speed": "ngebut",
+   "heading": "serong_kiri",
+   "row": 16,
+   "source_row": 13,
+   "fps": 12,
+   "loop": false,
+   "release_frame": 2,
+   "regions": [
+    [
+     0,
+     928,
+     46,
+     58
+    ],
+    [
+     46,
+     928,
+     46,
+     58
+    ],
+    [
+     92,
+     928,
+     46,
+     58
+    ],
+    [
+     138,
+     928,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "lempar_kanan_ngebut_serong_kiri",
+   "side": "kanan",
+   "speed": "ngebut",
+   "heading": "serong_kiri",
+   "row": 17,
+   "source_row": 13,
+   "fps": 12,
+   "loop": false,
+   "release_frame": 2,
+   "regions": [
+    [
+     0,
+     986,
+     46,
+     58
+    ],
+    [
+     46,
+     986,
+     46,
+     58
+    ],
+    [
+     92,
+     986,
+     46,
+     58
+    ],
+    [
+     138,
+     986,
+     46,
+     58
+    ]
+   ]
+  }
+ ]
+}
