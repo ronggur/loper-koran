@@ -7,7 +7,8 @@ extends SceneTree
 ## ukuran yang tercetak adalah ukuran sebenarnya):
 ##   godot --path . --resolution 1560x720 --script res://tests/probe_layar_jendela.gd -- docs/loop/<RUN_ID>/shots/iter1/jendela_1560x720.png
 ## Argumen setelah `--` = jalur PNG tangkapan layar (boleh dikosongkan). Tangkapan layar berukuran
-## sama dengan jendela: tiap piksel game adalah blok skala x skala piksel yang tajam.
+## sama dengan jendela: tiap piksel game adalah blok skala x skala piksel yang tajam. Buktikan dengan
+##   python3 tools/cek_blok_piksel.py <skala> <png>
 ## Untuk pengukuran tanpa jendela dan semua rasio sekaligus pakai `tests/probe_layar.gd`.
 
 const JUMLAH_FRAME_TUNGGU: int = 4
