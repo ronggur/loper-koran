@@ -53,7 +53,7 @@ assets/LICENSES.md     Lisensi aset pihak ketiga (ada)
 assets/data/           Segmen rute, misi, headline (DATA_SCHEMA.md), menyusul
 scripts/config.gd      SEMUA angka tuning (BALANCING.md) (ada)
 scripts/autoload/      SaveManager, DayManager, Analytics (nanti)
-scripts/systems/       Logika murni: config_parser, loper_anim, iso, touch_zones, stick_map, touch_router, bike_drive, jalan_daur, piksel_lingkaran (ada); stamina, rem, lemparan, skor, misi, reputasi, kerusakan menyusul
+scripts/systems/       Logika murni: config_parser, loper_anim, iso, touch_zones, stick_map, touch_router, bike_drive, dorongan_kecepatan, jalan_daur, piksel_lingkaran (ada); stamina, rem, lemparan, skor, misi, reputasi, kerusakan menyusul
 scripts/entities/      loper_sprite, sepeda_uji, jalan_uji, tanah_daur, objek_daur (ada)
 scripts/ui/            palette, kontrol_touch, hud_dev, bar_kecepatan (ada); HUD final dan layar menyusul
 tests/                 run_tests.gd, tes_input_murni.gd, tes_input_scene.gd, tes_export.gd, probe_layar.gd, probe_layar_jendela.gd (ada)

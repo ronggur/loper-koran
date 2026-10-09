@@ -59,13 +59,13 @@ Export Android (preset `Android` di `export_presets.cfg`, tanpa Gradle, arm64-v8
 ```
 project.godot        Godot 4.7.2, Compatibility, landscape, 640x360 canvas_items + integer + expand, scene utama jalan_uji.tscn, aksi InputMap stick_* (keyboard hanya editor), terjemahan dan tema terdaftar
 scenes/              dev/jalan_uji.tscn (scene utama sementara, jalan tanpa ujung yang bisa digerakkan), dev/graybox.tscn (statis, untuk probe layar), entities/loper_agen.tscn (pemain) dan sepeda_uji.tscn, ui/hud_dev.tscn (HUD sementara)
-scripts/             config.gd (semua angka tuning), systems/ (logika murni: iso, touch_zones, stick_map, touch_router, bike_drive, jalan_daur, loper_anim), entities/ (sepeda_uji, jalan_uji, tanah_daur, objek_daur, loper_sprite), ui/ (palette, kontrol_touch, hud_dev, bar_kecepatan)
+scripts/             config.gd (semua angka tuning), systems/ (logika murni: iso, touch_zones, stick_map, touch_router, bike_drive, dorongan_kecepatan, jalan_daur, loper_anim), entities/ (sepeda_uji, jalan_uji, tanah_daur, objek_daur, loper_sprite), ui/ (palette, kontrol_touch, hud_dev, bar_kecepatan)
 assets/              sprites/ (loper/, _placeholder/), palette/, fonts/ (usulan), ui/theme.tres (font dan ukuran saja), LICENSES.md
 icon.svg             Ikon aplikasi sementara (bel, hanya warna Palette; pengganti final di Fase 14), dipakai ekspor Android
 export_presets.cfg   Preset export Android (satu preset, tanpa rahasia, dijaga tests/tes_export.gd); keystore dan kredensial tidak pernah di-commit
 builds/              APK hasil ekspor (di .gitignore, tidak di-commit)
 translations/        ui.csv (kolom keys,id) beserta ui.csv.import dan ui.id.translation hasil impor; semua teks pemain lewat kunci di sini
-tests/               run_tests.gd (runner), tes_input_murni.gd, tes_input_scene.gd, dan tes_export.gd (pembantu runner), probe_layar*.gd (ukur skala layar)
+tests/               run_tests.gd (runner), tes_input_murni.gd, tes_input_scene.gd, dan tes_export.gd (pembantu runner), probe_layar*.gd (ukur skala layar), probe_input_jendela.gd dan probe_dorongan_jendela.gd (tangkapan layar skenario sentuh)
 docs/                Dokumen desain (GDD, STORY, TECH_PLAN, ART_DIRECTION, BALANCING, DATA_SCHEMA, dst.), SETUP_ANDROID.md (export dan uji HP) + design/ + loop/
 docs/design/         Token desain, mock HUD, sprite produksi pemain (character/loper_agen/)
 tools/loper_art/     Renderer sprite pemain (Python), lihat tools/loper_art/README.md
