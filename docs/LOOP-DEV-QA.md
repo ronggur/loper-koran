@@ -20,6 +20,7 @@ Cara pakai: buka Claude Code di root repo `loper-koran`, tempel **Bagian 1 (Prom
 | **Jujur soal yang tidak bisa diuji.** | Rasa stick, ambang rem, ketelitian swipe, performa 60 fps, dan tampilan di rasio layar asli butuh HP nyata. QA menandai `NEEDS-MANUAL`, bukan `PASS` (`testing.mdc`). |
 | **Berhenti dengan tegas.** | Akhir iterasi 2 dengan Blocker/Major terbuka → status `ESCALATED` dan lapor ke manusia. Tidak ada iterasi ke-3 diam-diam. |
 | **Satu branch + satu PR per run, banyak commit, tidak di-squash oleh loop.** | Squash merge dilakukan user (`git-workflow`). Judul PR Conventional Commits. |
+| **Satu sesi Claude Code per run; `/clear` atau sesi baru di antara run.** | Setiap giliran membawa seluruh riwayat percakapan. Semua keadaan penting sudah ada di repo (rule, `ROADMAP.md` 4b, `DEV_PHASES.md`, `SPEC.md`, `LOG.md`), jadi sesi baru tidak kehilangan apa-apa dan jauh lebih hemat token. Detail di Bagian 0c. |
 | **Tidak ada aksi keluar tanpa persetujuan.** | Selama loop: tidak push, tidak merge, tidak mengubah akun atau layanan di luar repo. PR dibuka orchestrator **setelah laporan akhir dan konfirmasi pemilik**. |
 
 > **Pengecualian yang disengaja terhadap `git-workflow.mdc`.** Rule itu meminta pekerjaan selesai langsung di-push. Untuk run loop, push ditunda sampai pemilik mengonfirmasi laporan akhir (permintaan pemilik, mengikuti brief Pantow). Semua aturan lain di `git-workflow.mdc` tetap berlaku: branch dari `main` terbaru, tidak pernah ke `main`, tidak merge sendiri.
@@ -51,11 +52,24 @@ Exit code Godot **tidak cukup** (`testing.mdc`): error skrip bisa lolos dengan "
 
 ---
 
+## 0c. Aturan sesi (satu sesi per run)
+
+- **Mulai tiap run di sesi baru** (atau `/clear`), dari `main` yang sudah memuat PR run sebelumnya. Sesi baru memuat `CLAUDE.md` dan `.cursor/rules/` otomatis. Jangan melanjutkan run 0B di sesi yang sama dengan run 0A.
+- **Jangan `/clear` di tengah run.** Dev dan QA sudah subagent berkonteks segar; orchestrator hanya memegang pointer ke `LOG.md`, jadi sesinya ringan.
+- **Run selesai** = PR sudah dibuka dan `DEV_PHASES.md` dicentang (Bagian 1 langkah 4). Setelah itu aman `/clear`. Pemilik me-merge PR sebelum run berikutnya dimulai.
+- **Sebelum clear, tulis dulu ke file** semua keputusan atau preferensi baru yang hanya ada di chat (ke `ROADMAP.md` 4b, rule `.cursor/rules/`, atau `SPEC.md`). Yang tidak ditulis akan hilang.
+- **Kalau terpaksa berhenti di tengah run**: orchestrator memperbarui `LOG.md` (status, iterasi saat ini, langkah berikutnya) lalu pemilik membuka sesi baru dengan "lanjutkan run `<RUN_ID>`". Orchestrator membaca `SPEC.md` + `LOG.md` + `git log` branch dan melanjutkan dari iterasi terakhir. Skill `handoff` boleh dipakai untuk membuat `HANDOFF.md`.
+- **Jika loop dijalankan sebagai Workflow** (skrip multi-agent): satu pemanggilan Workflow = satu run = satu sesi. Workflow juga hanya membaca file di repo, bukan riwayat chat; tiap agent() menerima prompt dari Bagian 2 dan 4. Batas 2 iterasi ditulis di skrip, dan hasil akhir tetap `LOG.md`. Gunakan `resumeFromRunId` untuk melanjutkan run yang terhenti, bukan memulai ulang.
+
+---
+
 ## 1. Prompt Orchestrator (tempel ini)
 
 ```text
 Kamu adalah ORCHESTRATOR loop Dev↔QA untuk repo Loper Koran. Ikuti
-docs/LOOP-DEV-QA.md secara ketat.
+docs/LOOP-DEV-QA.md secara ketat. Sesi ini hanya untuk SATU run (Bagian 0c).
+Kalau saya menulis "lanjutkan run <RUN_ID>", baca SPEC.md + LOG.md + git log
+branch run itu dan lanjutkan dari iterasi terakhir, jangan mulai ulang.
 
 SCOPE run ini:
   <isi, mis. "Run 0A: project Godot + resolusi + config.gd + sprite pemain + tes headless">
@@ -93,6 +107,9 @@ Langkah:
    konfirmasi; setelah itu push branch dan buka PR. Merge tetap oleh pemilik.
 4. Setelah PR dibuka: centang DEV_PHASES.md untuk tugas yang terbukti selesai
    (bukan yang NEEDS-MANUAL), di commit terpisah pada branch yang sama.
+5. Tutup run: tulis ke file semua keputusan baru yang hanya ada di chat, lalu
+   katakan "run selesai, aman /clear; mulai run berikutnya di sesi baru setelah
+   PR di-merge" dan sebut RUN_ID run berikutnya.
 ```
 
 ---
@@ -278,4 +295,4 @@ Urutan berurutan; satu PR per run, run berikutnya dimulai dari `main` setelah PR
 - QA berbasis agent tidak menggantikan uji di HP nyata untuk rasa kontrol, performa, dan tampilan rasio layar. Fase gameplay selalu ditutup dengan uji manual (`DEV_PHASES.md`).
 - Tanpa Godot terpasang, loop tidak bisa menghasilkan bukti tes. Jangan menjalankan loop sebelum prasyarat 0A terpenuhi.
 - Keputusan terbuka (ROADMAP 5) adalah milik pemilik. Loop yang "menyelesaikan" Fase 0 dengan menebak nama package atau skala piksel menciptakan utang yang mahal (nama package tidak bisa diganti setelah upload pertama).
-- Run penuh (Dev + QA × 2 iterasi) memakan token besar; mulai dari 0A, jangan menggabungkan 0A–0C.
+- Run penuh (Dev + QA × 2 iterasi) memakan token besar; mulai dari 0A, jangan menggabungkan 0A–0C, dan jangan melanjutkan run berikutnya di sesi yang sama (Bagian 0c).
