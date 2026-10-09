@@ -407,11 +407,11 @@ Aturan (usulan):
 
 ## 7. Spesifikasi Teknis
 
-### Resolusi & scaling (usulan, dikunci di Fase 0)
+### Resolusi & scaling (dikunci 2026-10-09; lihat ROADMAP 4b)
 
 - **Landscape**, orientasi dikunci.
 - **Tinggi dasar 360 piksel game**, lebar mengikuti rasio layar: 640 (16:9), 780 (19,5:9), 800 (20:9). Di HP 1080p pembesarannya ×3, di 720p ×2, di 1440p ×4. Sprite pemain didesain untuk ×3.
-- Dua cara di Godot yang perlu dibandingkan di Fase 0:
+- **Dipilih: `canvas_items` + integer scale + aspect `expand`** (alasan di ROADMAP 4b). Cara `viewport` jadi cadangan. Dua cara di Godot yang dibandingkan:
   - stretch mode `canvas_items` dengan `scale_mode = integer` dan snap piksel 2D: sprite tetap tajam, HUD dan teks dirender di resolusi layar (seperti Brainy Dungeon).
   - stretch mode `viewport` dengan base 640×360 dan aspect `expand`: piksel paling konsisten, tapi HUD dan teks ikut beresolusi rendah.
 - **Zona aman**: elemen gameplay penting tetap di area 16:9 tengah; HP yang lebih lebar menampilkan jalan lebih jauh ke depan dan ke belakang.
@@ -518,8 +518,8 @@ Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dib
 
 ## 11. Keputusan yang Perlu Diambil
 
-- **Skala piksel (×3 atau ×4) dan ukuran ubin (64×32)**: dikunci setelah graybox Fase 1.
-- **Stretch mode dan resolusi dasar** (bagian 7): dikunci di Fase 0.
+- **Ukuran ubin (64×32)**: dikunci setelah graybox Fase 1. Skala piksel sudah dikunci ×3 (2026-10-09).
+- **Stretch mode dan resolusi dasar** (bagian 7): sudah dipilih 2026-10-09, diverifikasi di Fase 0 (run 0A).
 - **Palet induk** (bagian 2.4): dikunci setelah aset gelombang 1.
 - **Warna bayangan per waktu dan distrik** (bagian 2.5): dikunci bersama palet induk, setelah shader-nya dicek di Fase 0.
 - **Cara menampilkan rumah di sisi dekat**, yang hanya terlihat belakangnya.

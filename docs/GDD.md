@@ -470,7 +470,7 @@ Ringkasan; aturan lengkapnya ada di `ART_DIRECTION.md` dan `SOUND_DESIGN.md`.
 Alasannya:
 
 - Mendukung TileMap isometrik bawaan, jadi ubin belah ketupat 2:1 bisa langsung dipakai, dan Y-sort mengurus urutan gambar rumah, sepeda, dan rintangan.
-- Render pixel-perfect dengan skala bilangan bulat (×3 atau ×4).
+- Render pixel-perfect dengan skala bilangan bulat (×3, dikunci 2026-10-09).
 - Ringan untuk HP Android kelas menengah ke bawah dan hasil ekspornya kecil.
 - Gratis tanpa royalti, cocok untuk proyek solo dengan monetisasi iklan.
 - Katalog misi bisa disimpan sebagai JSON atau resource, sesuai skema data misi (`DATA_SCHEMA.md`).
@@ -494,7 +494,7 @@ Beberapa keputusan masih terbuka dan paling baik diputuskan lewat prototype kasa
 - Cara menampilkan rumah di sisi dekat, yang hanya terlihat belakangnya di isometrik (kanan bawah jalan).
 - Kontrol landscape: apakah ambang rem di ujung bawah stick nyaman tanpa berhenti tak sengaja, dan apakah swipe pendek cukup teliti di layar kecil.
 - Struktur sesi: rute harian berurutan, atau run roguelite dengan rute acak.
-- Skala tampilan pixel (×3 atau ×4) dan ukuran ubin isometrik.
+- Ukuran ubin isometrik (skala tampilan pixel sudah dikunci ×3, 2026-10-09).
 
 **Urutan prototype**
 
