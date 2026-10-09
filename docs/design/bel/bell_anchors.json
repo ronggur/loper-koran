@@ -1,0 +1,65 @@
+{
+ "note": "Titik bel per animasi, koordinat piksel di sel 46x58 (1x). Efek garis getar dan teks KRING muncul dari titik ini. Untuk arah kiri (90 derajat), efek dicerminkan ke kiri.",
+ "bell_anchor": {
+  "santai_normal": [
+   31,
+   17
+  ],
+  "cepat_normal": [
+   32,
+   19
+  ],
+  "ngebut_normal": [
+   30,
+   15
+  ],
+  "santai_serong_kanan": [
+   32,
+   26
+  ],
+  "cepat_serong_kanan": [
+   30,
+   25
+  ],
+  "ngebut_serong_kanan": [
+   30,
+   25
+  ],
+  "santai_kanan": [
+   30,
+   29
+  ],
+  "cepat_kanan": [
+   29,
+   29
+  ],
+  "ngebut_kanan": [
+   27,
+   28
+  ],
+  "santai_serong_kiri": [
+   27,
+   16
+  ],
+  "cepat_serong_kiri": [
+   28,
+   17
+  ],
+  "ngebut_serong_kiri": [
+   28,
+   13
+  ],
+  "santai_kiri": [
+   15,
+   18
+  ],
+  "cepat_kiri": [
+   12,
+   20
+  ],
+  "ngebut_kiri": [
+   10,
+   17
+  ]
+ }
+}
