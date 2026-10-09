@@ -214,9 +214,9 @@ Setiap fase berisi: tujuan, kaitan cerita, sistem dan kode, aset, konten, uji, d
 
 | Hal | Keputusan teknis |
 |---|---|
-| Versi Godot | ✅ **4.7.2** (2026-10-09, ROADMAP 4b). Sprite pemain baru dicek di 4.3, jadi muat ulang `loper_agen_frames.tres` di 4.7.2 |
+| Versi Godot | ✅ **4.7.2** (2026-10-09, ROADMAP 4b). Sprite pemain dicek di 4.3 dan sudah dimuat di 4.7.2 tanpa perubahan (run 0A, 2026-10-09) |
 | Renderer | Compatibility (usulan, ART_DIRECTION 7). Uji light 2D, glow, partikel, dan shader warna bayangan di HP target |
-| Stretch | ✅ Dipilih `canvas_items` + integer scale + aspect `expand`, base 640×360, skala ×3 (2026-10-09). Verifikasi di rasio 16:9, 19.5:9, 20:9; `viewport` jadi cadangan |
+| Stretch | ✅ Dipilih `canvas_items` + integer scale + aspect `expand`, base 640×360, skala ×3 (2026-10-09). Diverifikasi di rasio 16:9, 19.5:9, 20:9 di desktop (run 0A, hasil di ROADMAP 4b); uji di HP menunggu; `viewport` jadi cadangan |
 | Import sprite | Nearest, tanpa mipmap, Lossless; `snap_2d_transforms_to_pixel` aktif |
 | Input | Stick melayang (zona kiri bawah), swipe (zona kanan), opsi kidal, keyboard untuk editor |
 | Target Android | Google Play mewajibkan app baru dan update menargetkan Android 16 (API 36) mulai 31 Agustus 2026. Pastikan template export Godot terpilih mendukung target itu sebelum membuat preset export |
