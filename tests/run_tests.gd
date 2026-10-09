@@ -53,6 +53,7 @@ func _initialize() -> void:
 	_test_pengaturan_proyek()
 	_test_layar_integer()
 	_test_palet()
+	_test_lisensi_font()
 	_test_tanpa_hex_di_luar_palet()
 	_test_gaya_kode()
 	print("%d lolos, %d gagal" % [_lolos, _gagal])
@@ -540,6 +541,28 @@ func _test_palet() -> void:
 	for token: String in ["OUTLINE", "RADAR_PELANGGAN", "RADAR_MISI", "RADAR_BUKAN"]:
 		var warna_induk: Color = peta[token]
 		check(hex_gpl.has(warna_induk.to_html(false)), "token %s berasal dari palet induk, jadi ada di loper_master.gpl" % token)
+
+
+# --- Font dan lisensi (AC-11) ---
+
+func _test_lisensi_font() -> void:
+	_judul("Font dan lisensi")
+	var lisensi: String = FileAccess.get_file_as_string("res://assets/LICENSES.md")
+	check(not lisensi.is_empty(), "assets/LICENSES.md ada")
+	var font: Array[String] = _daftar_berkas("res://assets/fonts", ["ttf", "otf"])
+	check(font.size() == 2, "dua font (Lexend dan Lilita One) ada di assets/fonts, dapat %d" % font.size())
+	var ada_lexend: bool = false
+	var ada_lilita: bool = false
+	for berkas: String in font:
+		ada_lexend = ada_lexend or berkas.get_file().begins_with("lexend")
+		ada_lilita = ada_lilita or berkas.get_file().begins_with("lilita_one")
+		check(lisensi.contains(berkas.get_file()), "%s tercatat di assets/LICENSES.md" % berkas.get_file())
+		check(FileAccess.file_exists(berkas.get_base_dir().path_join("OFL.txt")), "%s punya OFL.txt di foldernya" % berkas.get_file())
+		check(FileAccess.file_exists(berkas + ".import"), "%s punya berkas .import (ter-commit)" % berkas.get_file())
+	check(ada_lexend and ada_lilita, "font yang ada adalah Lexend dan Lilita One (DESIGN_SPEC 1.2)")
+	check(lisensi.contains("usulan (belum dikunci)"), "LICENSES.md menandai font sebagai usulan (belum dikunci)")
+	check(RegEx.create_from_string("[0-9a-f]{40}").search(lisensi) != null, "LICENSES.md mencatat hash commit hulu (40 heksadesimal)")
+	check(lisensi.contains("SIL Open Font License 1.1") and lisensi.contains("https://github.com/google/fonts"), "LICENSES.md mencatat lisensi OFL dan URL sumber")
 
 
 # --- h. Tanpa hex warna di luar palette.gd, tanpa angka tuning di luar config.gd ---
