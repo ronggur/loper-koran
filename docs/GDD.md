@@ -1,4 +1,6 @@
-# Game Design Document — "Loper Koran"
+# Game Design Document — "Kring Kring!" (Loper Koran)
+
+> **KEPUTUSAN (2026-10-09): judul game adalah "Kring Kring!"**, dari bunyi bel sepeda. "Loper Koran" tetap menjadi nama kerja, nama repo, dan nama folder. Subjudul berbahasa Inggris (usulan: *Paper Route Stories*), nama paket Android, dan pengecekan nama di Google Play, App Store, Steam, dan merek dagang (PDKI/DJKI) belum dilakukan.
 
 > **Dokumen pendamping**: [`ART_DIRECTION.md`](./ART_DIRECTION.md) (gaya visual & daftar aset), [`BALANCING.md`](./BALANCING.md) (angka tuning), [`ROUTE_DESIGN.md`](./ROUTE_DESIGN.md) (menyusun rute), [`DATA_SCHEMA.md`](./DATA_SCHEMA.md) (format data), [`SOUND_DESIGN.md`](./SOUND_DESIGN.md) (audio).
 >

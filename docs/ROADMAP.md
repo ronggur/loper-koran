@@ -54,6 +54,7 @@ Milestone mengikuti urutan prototype di GDD 17. Rinciannya jadi fase dengan chec
 | Skala piksel (×3 atau ×4) dan ukuran ubin (usulan 64×32) | Semua aset dunia (Fase 0–1). Sprite pemain dibuat untuk ×3 di kanvas 800×360. |
 | Resolusi dasar dan cara menangani rasio layar 16:9 sampai 20:9 (usulan di ART_DIRECTION 7) | Fase 0 |
 | Nama package Android (tidak bisa diganti setelah upload pertama) | Fase 0 (export) |
+| Subjudul Inggris dan cek ketersediaan nama "Kring Kring!" (Play Store, App Store, Steam, PDKI/DJKI) | Fase 0 (export), sebelum nama package dikunci |
 | Ambang rem di stick dan ketelitian swipe pendek | M1 (diputuskan lewat uji HP) |
 | Jendela kena koran: bonus atau penalti (GDD 4.1) | Fase 2–3 (skor) |
 | Cara menampilkan rumah di sisi dekat | Fase 3 (rute), aset rumah |
