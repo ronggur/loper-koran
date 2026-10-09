@@ -80,7 +80,7 @@ Skala dipilih Ronggur; sisanya didelegasikan ke agent dengan alasan tertulis. Bi
 
 ## 6. Cara menjalankan project
 
-Project Godot 4.7.2 ada sejak run 0A (Fase 0); run 0B menambah input touch dan scene utama sementara yang bisa digerakkan. Root repo = root project Godot. Dari root repo (macOS tanpa `godot` di PATH: `/Applications/Godot.app/Contents/MacOS/Godot`):
+Project Godot 4.7.2 ada sejak run 0A (Fase 0); run 0B menambah input touch dan scene utama sementara yang bisa digerakkan; run 0C menambah preset export Android (`export_presets.cfg`) dan `docs/SETUP_ANDROID.md`. Root repo = root project Godot. Dari root repo (macOS tanpa `godot` di PATH: `/Applications/Godot.app/Contents/MacOS/Godot`):
 
 ```
 godot --headless --import                           # sekali, setelah clone
@@ -92,6 +92,9 @@ godot --headless --path . --script res://tests/probe_layar.gd   # skala bulat da
 godot --path .                                      # jalankan scene utama sementara (jalan_uji.tscn): stick di layar sentuh, panah atau WASD di editor
 python3 tools/env_art/graybox.py                    # render ulang ubin graybox (hanya stdlib)
 python3 tools/loper_art/produce.py                  # render ulang sprite pemain (butuh numpy, pillow)
+mkdir -p builds                                     # folder APK hasil export, tidak di-commit
+godot --headless --path . --export-pack "Android" build/kring-uji.pck   # paket game dengan filter preset (tanpa Java)
+godot --headless --path . --export-debug "Android" builds/kring-kring-debug.apk   # APK debug (export templates 4.7.2 dan Java SDK Path di Editor Settings)
 ```
 
-Export Android dan APK debug (`builds/`) menyusul di run 0C. CI (`.github/workflows/tes.yml`) menjalankan import, tes, dan pemeriksa keluaran di setiap PR.
+Export Android dan APK debug (`builds/`): prasyarat mesin, isi preset, pemeriksaan isi APK, pasang ke HP, dan checklist uji ada di [`SETUP_ANDROID.md`](./SETUP_ANDROID.md). CI (`.github/workflows/tes.yml`) menjalankan import, tes, dan pemeriksa keluaran di setiap PR; CI tidak membangun APK.

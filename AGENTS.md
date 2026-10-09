@@ -32,7 +32,7 @@ Wajib:
 
 ## Perintah cepat
 
-Project Godot 4.7.2 sudah ada (Fase 0, run 0A dan 0B). Dari root repo:
+Project Godot 4.7.2 sudah ada (Fase 0, run 0A, 0B, dan 0C). Dari root repo:
 
 ```bash
 godot --headless --import                              # sekali setelah clone, dan setiap ada class_name atau aset baru
@@ -43,12 +43,16 @@ python3 tools/tests_cek/uji_pemeriksa.py               # bukti pemeriksa menolak
 godot --headless --path . --quit-after 2               # buka project dua frame, tidak boleh ada ERROR/WARNING
 godot --headless --path . --script res://tests/probe_layar.gd   # skala bulat dan lebar viewport per rasio layar
 godot --path .                                         # jalankan scene utama sementara (jalan_uji.tscn): stick di layar sentuh, panah atau WASD di editor
+mkdir -p builds                                        # folder APK hasil ekspor, tidak di-commit
+godot --headless --path . --export-pack "Android" build/kring-uji.pck   # paket game dengan filter preset (tanpa Java); periksa tidak ada tests/ atau docs/
+godot --headless --path . --export-debug "Android" builds/kring-kring-debug.apk   # APK debug; butuh export templates 4.7.2 dan Java SDK Path di Editor Settings
 python3 tools/env_art/graybox.py                       # render ulang ubin dan kotak graybox (hanya stdlib)
 python3 tools/loper_art/produce.py --out build/loper_art   # render ulang sprite pemain (butuh numpy, pillow)
 ```
 
 `godot --headless` mengabaikan `--resolution`; untuk jendela asli sebentar: `godot --path . --resolution 1560x720 --script res://tests/probe_layar_jendela.gd -- <jalur.png>`.
 macOS tanpa `godot` di PATH: `/Applications/Godot.app/Contents/MacOS/Godot`.
+Export Android (preset `Android` di `export_presets.cfg`, tanpa Gradle, arm64-v8a, package `com.rmh.kring`): prasyarat mesin, isi dan alasan preset, pemeriksaan isi APK (`aapt2`, `apksigner`), pasang ke HP, dan checklist uji ada di [`docs/SETUP_ANDROID.md`](docs/SETUP_ANDROID.md). `JAVA_HOME` saja tidak cukup: `export/android/java_sdk_path` di Editor Settings harus terisi. Memasang ke HP hanya setelah izin pemilik; HP dipakai bersama project lain, jangan `pm clear` atau uninstall tanpa izin.
 
 ## Peta repo
 
@@ -57,15 +61,17 @@ project.godot        Godot 4.7.2, Compatibility, landscape, 640x360 canvas_items
 scenes/              dev/jalan_uji.tscn (scene utama sementara, jalan tanpa ujung yang bisa digerakkan), dev/graybox.tscn (statis, untuk probe layar), entities/loper_agen.tscn (pemain) dan sepeda_uji.tscn, ui/hud_dev.tscn (HUD sementara)
 scripts/             config.gd (semua angka tuning), systems/ (logika murni: iso, touch_zones, stick_map, touch_router, bike_drive, jalan_daur, loper_anim), entities/ (sepeda_uji, jalan_uji, tanah_daur, objek_daur, loper_sprite), ui/ (palette, kontrol_touch, hud_dev, bar_kecepatan)
 assets/              sprites/ (loper/, _placeholder/), palette/, fonts/ (usulan), ui/theme.tres (font dan ukuran saja), LICENSES.md
+export_presets.cfg   Preset export Android (satu preset, tanpa rahasia, dijaga tests/tes_export.gd); keystore dan kredensial tidak pernah di-commit
+builds/              APK hasil ekspor (di .gitignore, tidak di-commit)
 translations/        ui.csv (kolom keys,id) beserta ui.csv.import dan ui.id.translation hasil impor; semua teks pemain lewat kunci di sini
-tests/               run_tests.gd (runner), tes_input_murni.gd dan tes_input_scene.gd (pembantu runner), probe_layar*.gd (ukur skala layar)
-docs/                Dokumen desain (GDD, STORY, TECH_PLAN, ART_DIRECTION, BALANCING, DATA_SCHEMA, dst.) + design/ + loop/
+tests/               run_tests.gd (runner), tes_input_murni.gd, tes_input_scene.gd, dan tes_export.gd (pembantu runner), probe_layar*.gd (ukur skala layar)
+docs/                Dokumen desain (GDD, STORY, TECH_PLAN, ART_DIRECTION, BALANCING, DATA_SCHEMA, dst.), SETUP_ANDROID.md (export dan uji HP) + design/ + loop/
 docs/design/         Token desain, mock HUD, sprite produksi pemain (character/loper_agen/)
 tools/loper_art/     Renderer sprite pemain (Python), lihat tools/loper_art/README.md
 tools/env_art/       Renderer aset lingkungan (usulan) + graybox.py (ubin graybox)
-tools/               cek_keluaran_tes.py (pemeriksa keluaran tes), tests_cek/ (contoh log baik dan buruk)
+tools/               cek_keluaran_tes.py (pemeriksa keluaran tes), tests_cek/ (contoh log baik dan buruk), cek_blok_piksel.py (ketajaman tangkapan layar)
 .github/workflows/   tes.yml (CI: import, tes, pemeriksa keluaran)
 .cursor/rules/       Aturan agent (sumber tunggal)
 ```
 
-Belum ada: `export_presets.cfg`, `android/` (run 0C), `scripts/autoload/`, `assets/data/`, file terjemahan bahasa Inggris, panel 9-slice di `assets/ui/theme.tres`. Struktur lengkap yang direncanakan ada di `docs/README.md`.
+Belum ada: `android/` (template Gradle; baru dipasang saat plugin Android masuk, Fase 8 dan 14), `scripts/autoload/`, `assets/data/`, file terjemahan bahasa Inggris, panel 9-slice di `assets/ui/theme.tres`. Struktur lengkap yang direncanakan ada di `docs/README.md`.
