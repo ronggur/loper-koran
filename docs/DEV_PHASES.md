@@ -17,7 +17,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 
 | Fase | Nama | Milestone | Status | Selesai |
 |---|---|---|---|---|
-| 0 | Fondasi teknis | M0 | 🟡 run 0A selesai (PR #12); 0B dan 0C menyusul | |
+| 0 | Fondasi teknis | M0 | 🟨 kode selesai: run 0A (PR #12) dan 0B+0C (QA lolos); uji HP dan cek light 2D menunggu | |
 | 1 | Gerak sepeda & kecepatan (prototype 1) | M1 | ⬜ | |
 | 2 | Lemparan koran (prototype 2) | M1 | ⬜ | |
 | 3 | Satu rute perumahan (prototype 3) | M2 | ⬜ | |
@@ -27,7 +27,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 | 7 | Vertical slice perumahan & audio dasar | M3 | ⬜ | |
 | 8 | Distrik berikutnya, iklan, rilis | M4 | ⬜ | |
 
-**Fase aktif: Fase 0**, dikerjakan lewat loop Dev↔QA dalam tiga run (`LOOP-DEV-QA.md` Bagian 6). Run 0A (fondasi project) lolos QA 2026-10-09; run 0B (input touch dan sepeda placeholder) dan 0C (export Android dan APK) menyusul.
+**Fase aktif: Fase 0**, dikerjakan lewat loop Dev↔QA dalam tiga run (`LOOP-DEV-QA.md` Bagian 6). Run 0A (fondasi project) lolos QA 2026-10-09; run 0B dan 0C dijalankan sebagai satu run (keputusan pemilik) dan lolos QA 2026-10-09 (input touch, sepeda placeholder, export Android, APK debug terpasang di A54). Yang tersisa untuk menutup Fase 0: uji di HP (rasa kontrol, ketajaman dan skala) dan cek light 2D/glow/partikel/shader di Compatibility.
 
 ---
 
@@ -43,11 +43,11 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 - [ ] Uji ketajaman piksel dan skala di HP (A54 2340×1080 → 780×360 ×3), termasuk memastikan tinggi jendela 1080 di Android supaya skala tidak turun ke ×2 (dikerjakan bersama run 0C)
 - [x] Import filter Nearest dan tanpa mipmap untuk sprite dunia; `snap_2d_transforms_to_pixel` aktif
 - [x] `scripts/config.gd` berisi angka awal dari `BALANCING.md`
-- [ ] Input touch: stick melayang di zona kiri bawah, swipe di zona kanan, opsi kidal menukar zona; input keyboard untuk tes di editor
+- [x] Input touch: stick melayang di zona kiri bawah, swipe di zona kanan, opsi kidal menukar zona; input keyboard untuk tes di editor (run 0B+0C, 2026-10-09; logika dites headless, rasa kontrol diuji di HP lewat butir "Uji APK di HP")
 - [x] Pasang sprite pemain (`assets/sprites/loper/` dari `docs/design/character/loper_agen/`) dan scene `loper_agen.tscn` (di `scenes/entities/`)
 - [x] Tes logika headless (`tests/run_tests.gd`) dan CI sederhana (CI hijau di PR #12)
 - [x] `CLAUDE.md` / `AGENTS.md` dengan aturan coding dan Definition of Done
-- [ ] Preset export Android dan APK debug; panduan `SETUP_ANDROID.md` diadaptasi dari Brainy Dungeon
+- [x] Preset export Android dan APK debug; panduan `SETUP_ANDROID.md` diadaptasi dari Brainy Dungeon (run 0B+0C, 2026-10-09; APK debug `com.rmh.kring` 0.1.0 dibangun lewat CLI dan terpasang di A54)
 - [ ] Uji APK di HP
 
 **Selesai kalau:** APK terpasang di HP dan sepeda placeholder bisa digerakkan dengan stick di layar sentuh.
