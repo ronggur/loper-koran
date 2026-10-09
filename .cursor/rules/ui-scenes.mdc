@@ -23,7 +23,7 @@ Rujukan: `docs/design/DESIGN_SPEC.md` (token warna, font, HUD, layar), `docs/ART
 
 ## Layar dan resolusi
 
-- Landscape terkunci. Tinggi dasar 360 piksel game, lebar 640 (16:9), 780 (19,5:9), sampai 800 (20:9). Skala bulat; sprite pemain didesain untuk ×3 (ART_DIRECTION 7). Cara stretch (`canvas_items` atau `viewport`) diputuskan di Fase 0, jangan memilih sendiri.
+- Landscape terkunci. Tinggi dasar 360 piksel game, lebar 640 (16:9), 780 (19,5:9), sampai 800 (20:9). Skala bulat; sprite pemain didesain untuk ×3 (ART_DIRECTION 7). Stretch dipilih `canvas_items` + integer scale + `expand` (ROADMAP 4b); `viewport` hanya cadangan kalau pengujian di run 0A gagal, jangan berganti sendiri.
 - Pakai anchor dan Container, **bukan posisi piksel absolut**. Elemen gameplay penting dan yang harus terlihat di 16:9 diletakkan di area 640×360 tengah (zona aman). HP yang lebih lebar menampilkan jalan lebih jauh, bukan HUD yang tercecer.
 - **Area aman** (cutout kamera, bilah gestur): HUD yang menempel di tepi wajib menghormati inset aman. Ujilah di rasio 16:9, 19,5:9, dan 20:9.
 - HUD digambar di ukuran final mengikuti `DESIGN_SPEC` (progres pelanggan, koin, sisa koran, kecepatan, stamina, radar kiri dan kanan).

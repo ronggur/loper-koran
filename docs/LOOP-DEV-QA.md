@@ -31,7 +31,7 @@ Cara pakai: buka Claude Code di root repo `loper-koran`, tempel **Bagian 1 (Prom
 
 | Alat | Status saat ini | Konsekuensi |
 |---|---|---|
-| Godot 4 | **Belum terpasang** (`godot` tidak ada di PATH, `/Applications/Godot.app` tidak ada) | Prasyarat run 0A: pemilik memasang Godot, atau agent mengunduh ke folder sementara di luar repo **setelah pemilik mengizinkan**. Tanpa Godot tidak ada tes yang bisa diklaim lolos (`00-project-core`). |
+| Godot 4.7.2 | **Belum terpasang** (`godot` tidak ada di PATH, `/Applications/Godot.app` tidak ada) | Prasyarat run 0A: pemilik memasang Godot, atau agent mengunduh ke folder sementara di luar repo **setelah pemilik mengizinkan**. Tanpa Godot tidak ada tes yang bisa diklaim lolos (`00-project-core`). |
 | Template export Godot | Belum ada | Dibutuhkan run 0C. Pastikan mendukung target Android yang dipersyaratkan Google Play (TECH_PLAN Fase 0). |
 | Java | OpenJDK 17 | Cek syarat versi JDK untuk build Android Godot yang terpilih sebelum run 0C. |
 | Android SDK | Ada di `~/Library/Android/sdk` (`platform-tools`, `cmdline-tools`, `build-tools`, `emulator`, `system-images`) | Bisa dipakai untuk emulator dan `adb`. |
@@ -83,9 +83,11 @@ Langkah:
       DEV_PHASES.md dan TECH_PLAN.md untuk fase yang dikerjakan.
    b. Periksa lingkungan (Bagian 0b). Kalau Godot belum ada, hentikan dan minta
       pemilik memasangnya atau mengizinkan unduhan. Hanya sekali.
-   c. Kumpulkan keputusan terbuka yang MENGHAMBAT scope ini (ROADMAP 5), dan tanyakan
-      ke pemilik dalam SATU pesan dengan satu rekomendasi per keputusan. Jangan
-      memutuskan sendiri: nama package, skala piksel, stretch mode, versi Godot.
+   c. Baca keputusan yang sudah dikunci (ROADMAP 4b: skala ×3, Godot 4.7.2, stretch,
+      package `com.rmh.kring`) dan jangan menanyakannya lagi. Kumpulkan keputusan
+      terbuka lain yang MENGHAMBAT scope ini (ROADMAP 5), dan tanyakan ke pemilik
+      dalam SATU pesan dengan satu rekomendasi per keputusan. Jangan memutuskan
+      sendiri.
    d. Tulis SPEC.md di docs/loop/<RUN_ID>/ (Bagian 3) dengan acceptance criteria
       yang bisa diuji. Minta konfirmasi bila scope ambigu — hanya sekali.
    e. Ikuti git-workflow.mdc: pindah ke main, tarik terbaru, pastikan sama dengan
@@ -247,10 +249,9 @@ Urutan berurutan; satu PR per run, run berikutnya dimulai dari `main` setelah PR
 
 ### Run 0A — Fondasi project (`RUN_ID` mis. `20261009-fase0a-fondasi`)
 
-**Prasyarat dari pemilik (ditanyakan orchestrator sekali, dengan rekomendasi):**
-- Pasang Godot, atau izin mengunduh ke folder sementara. TECH_PLAN usul kunci ke satu versi 4.7.x (sprite pemain baru dicek di 4.3: muat ulang `loper_agen_frames.tres` di versi terpilih).
-- Stretch mode: `canvas_items` + skala bulat atau `viewport` 640×360 (ART_DIRECTION 7). Skala piksel ×3 atau ×4.
-- Nama package Android: bisa ditunda ke run 0C, tapi harus ada sebelum export.
+**Keputusan yang sudah dikunci (ROADMAP 4b, 2026-10-09):** Godot 4.7.2, skala ×3, base 640×360 dengan stretch `canvas_items` + integer scale + `expand` (cadangan `viewport`), package `com.rmh.kring`. Sprite pemain baru dicek di 4.3: muat ulang `loper_agen_frames.tres` di 4.7.2.
+
+**Prasyarat dari pemilik:** pasang Godot 4.7.2, atau izin mengunduh ke folder sementara di luar repo.
 
 **Isi (dari `DEV_PHASES.md` Fase 0):**
 - `project.godot` landscape, renderer Compatibility; `docs/.gdignore` sudah ada.
@@ -267,7 +268,7 @@ Urutan berurutan; satu PR per run, run berikutnya dimulai dari `main` setelah PR
 - AC-2: `run_tests.gd` lolos dengan pemeriksa keluaran dan memuat tes untuk: parser `config.gd` (satu baris, literal), pemilih tingkat dan arah sprite (ambang 33% / 80%, sudut 22,5° / 67,5°, `BALANCING.md` 2), dan keberadaan semua frame animasi di `SpriteFrames`.
 - AC-3: Tidak ada angka tuning di luar `config.gd`; tidak ada hex di scene/skrip selain `palette.gd`.
 - AC-4: Pengaturan impor sprite dunia: Nearest, tanpa mipmap, Lossless; `snap_2d_transforms_to_pixel` aktif.
-- AC-5: Keputusan pemilik (versi Godot, stretch, skala) tercatat di `ROADMAP.md` 5 dan `TECH_PLAN.md` Fase 0 oleh orchestrator di commit `docs:` terpisah.
+- AC-5: Hasil verifikasi stretch di tiga rasio layar dicatat di `ROADMAP.md` 4b (dipertahankan, atau diganti ke `viewport` dengan alasan) oleh orchestrator di commit `docs:` terpisah.
 - **NEEDS-MANUAL:** tampilan di rasio 16:9, 19,5:9, 20:9 dan ketajaman piksel di layar nyata (bila belum ada HP, jalankan di jendela editor dan catat bahwa HP belum diuji).
 
 ### Run 0B — Input touch dan sepeda placeholder
@@ -281,7 +282,7 @@ Urutan berurutan; satu PR per run, run berikutnya dimulai dari `main` setelah PR
 
 ### Run 0C — Export Android dan APK
 
-**Prasyarat dari pemilik:** nama package final; izin memasang ke HP (dan HP dicolok), atau keputusan memakai emulator untuk uji awal.
+**Prasyarat dari pemilik:** izin memasang ke HP (Samsung A54, ROADMAP 4b; dipakai bersama project lain), atau keputusan memakai emulator untuk uji awal. Package sudah `com.rmh.kring`.
 
 **Isi:** `export_presets.cfg` (landscape terkunci, tanpa keystore di repo), `SETUP_ANDROID.md` diadaptasi dari Brainy Dungeon (jangan menyalin nilai spesifik Brainy: package, keystore, plugin), APK debug ke `builds/` (tidak di-commit), pemeriksaan target API dan template export (TECH_PLAN Fase 0).
 

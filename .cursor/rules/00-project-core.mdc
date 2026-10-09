@@ -11,12 +11,12 @@ Core loop: **baca halaman depan koran → antar rute dalam batas waktu (atur kec
 
 ## Stack
 
-- **Godot 4, GDScript** (minimal 4.3; versi pastinya dikunci di Fase 0). Renderer **Compatibility**.
-- Pixel art isometrik 2:1, ubin 64×32 (usulan), skala bulat (×3 atau ×4, dikunci di Fase 0). Tinggi dasar 360 piksel game, lebar mengikuti rasio layar (ART_DIRECTION 7).
+- **Godot 4.7.2, GDScript** (dikunci 2026-10-09, ROADMAP 4b). Renderer **Compatibility**.
+- Pixel art isometrik 2:1, ubin 64×32 (usulan), skala bulat **×3** (dikunci 2026-10-09). Base 640×360, stretch `canvas_items` + integer scale + aspect `expand`, lebar mengikuti rasio layar (ART_DIRECTION 7, ROADMAP 4b).
 - Data konten: **JSON** di `assets/data/`. Teks yang dilihat pemain lewat file terjemahan (kunci teks), bukan string tertanam.
 - Tooling: **Python 3** di `tools/` (renderer sprite pemain `tools/loper_art/`, renderer lingkungan `tools/env_art/`). Tes: skrip headless `tests/run_tests.gd`.
 - Root repo git = root project Godot. Dokumen desain di `docs/` (diabaikan Godot lewat `docs/.gdignore`).
-- Nama package Android **belum diputuskan** (ROADMAP 5). Jangan memilihnya sendiri; nama itu terkunci setelah upload pertama ke Play Console. Tanyakan ke user di Fase 0.
+- Nama package Android **`com.rmh.kring`** (pilihan user, 2026-10-09). Final: jangan diganti, termasuk di `export_presets.cfg`, karena terkunci setelah upload pertama ke Play Console.
 
 ## Sumber kebenaran (baca sebelum mengubah sistem terkait)
 
@@ -37,7 +37,7 @@ Core loop: **baca halaman depan koran → antar rute dalam batas waktu (atur kec
 
 Label **usulan** di dokumen berarti belum diuji dan belum dikunci. Jangan memperlakukannya sebagai keputusan final dan jangan menandainya "dikunci" tanpa persetujuan user.
 
-Jangan mengambil keputusan yang tercatat terbuka di `ROADMAP.md` bagian 5 (skala piksel, nama package, game over atau tidak, struktur sesi, target usia, iklan, dst). Tanyakan ke user, atau kalau tidak menghambat, ajukan satu rekomendasi bertulis di PR.
+Jangan mengambil keputusan yang tercatat terbuka di `ROADMAP.md` bagian 5 (game over atau tidak, struktur sesi, target usia, iklan, dst). Tanyakan ke user, atau kalau tidak menghambat, ajukan satu rekomendasi bertulis di PR.
 
 ## Prinsip desain (GDD 2; menang atas keputusan teknis)
 

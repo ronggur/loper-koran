@@ -3,7 +3,7 @@
 Panduan untuk semua coding agent (Codex, Cursor, Claude Code, dan lainnya) yang bekerja di repo ini.
 
 **Loper Koran**: game 2D mobile Android (landscape) bergaya Paperboy modern, pixel art isometrik 2:1, latar Indonesia.
-Stack rencana: **Godot 4 (GDScript)**, renderer Compatibility. Tooling aset: Python 3 (`tools/loper_art/`, `tools/env_art/`).
+Stack rencana: **Godot 4.7.2 (GDScript)**, renderer Compatibility. Tooling aset: Python 3 (`tools/loper_art/`, `tools/env_art/`).
 Status dan fase aktif: lihat `docs/README.md`, `docs/ROADMAP.md`, dan `docs/DEV_PHASES.md`. Sumber utama desain: `docs/GDD.md`.
 
 ## Aturan ada di `.cursor/rules/`

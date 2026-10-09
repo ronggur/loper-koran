@@ -35,7 +35,7 @@ Kumpulkan **perilaku bermain, bukan identitas pemain**. Sampai target usia diput
 
 ## Android / export
 
-- Nama package **belum diputuskan** (ROADMAP 5). Tanyakan ke user di Fase 0; setelah diputuskan, catat di `00-project-core` dan `docs/`. Nama itu tidak bisa diganti setelah upload pertama ke Play Console.
+- Nama package: **`com.rmh.kring`** (user, 2026-10-09). Jangan diganti, termasuk di `export_presets.cfg`: tidak bisa diubah setelah upload pertama ke Play Console.
 - Jangan commit keystore (`*.keystore`, `*.jks`, `*.p12`), `export_credentials.cfg`, atau kredensial apa pun. Keystore rilis disimpan di luar folder project.
 - Orientasi landscape dikunci di preset export. Min SDK dan pengaturan `allowBackup` dicatat saat preset dibuat di Fase 0.
 - Plugin Android pihak ketiga biasanya butuh Gradle build. Periksa kompatibilitasnya dengan versi Godot yang dipakai sebelum diandalkan.
