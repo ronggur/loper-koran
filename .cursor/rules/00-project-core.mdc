@@ -84,15 +84,19 @@ Coba sendiri lewat CLI sebelum meminta user mengerjakan sesuatu: `godot --headle
 
 ## Perintah
 
-Project Godot belum ada (dibuat di Fase 0). Perintah Godot di bawah berlaku setelah itu; perintah Python sudah bisa dipakai.
+Project Godot 4.7.2 ada sejak Fase 0 (run 0A). Dari root repo:
 
 ```bash
-godot --headless --import                              # sekali setelah clone
-godot --headless --script res://tests/run_tests.gd     # tes logika inti (exit code 1 kalau gagal)
+godot --headless --import                              # sekali setelah clone, dan kalau class_name atau aset baru belum dikenali
+mkdir -p build                                         # folder log, tidak di-commit
+godot --headless --script res://tests/run_tests.gd 2>&1 | tee build/tests.log   # tes logika inti (exit code 1 kalau gagal)
+python3 tools/cek_keluaran_tes.py build/tests.log      # pemeriksa keluaran, wajib: exit code Godot saja tidak cukup (rule testing)
+godot --headless --path . --quit-after 2               # buka project dua frame, harus tanpa ERROR dan WARNING
 python3 tools/loper_art/produce.py --out build/loper_art   # render ulang sprite pemain (butuh numpy, pillow)
+python3 tools/env_art/graybox.py                       # render ulang ubin dan kotak graybox (hanya stdlib)
 ```
 
-Kalau `godot` tidak ada di PATH (macOS): pakai `/Applications/Godot.app/Contents/MacOS/Godot`. Kalau Godot tidak terpasang sama sekali, katakan terus terang bahwa tes dan playtest belum dijalankan. Jangan mengklaim lolos. Perintah lain (smoke test layar, validator data, export) ditambahkan ke sini saat alatnya dibuat.
+Kalau `godot` tidak ada di PATH (macOS): pakai `/Applications/Godot.app/Contents/MacOS/Godot`. Kalau Godot tidak terpasang sama sekali, katakan terus terang bahwa tes dan playtest belum dijalankan. Jangan mengklaim lolos. Perintah lain (smoke test layar, validator data, export) ditambahkan ke sini saat alatnya dibuat. Ukuran jendela uji layar: `tests/probe_layar.gd` (headless mengabaikan `--resolution`, lihat komentar di skripnya).
 
 ## Definition of Done
 

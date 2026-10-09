@@ -19,7 +19,7 @@ Desain sejak 2026-10-07: celana panjang jogger, tanpa keranjang depan, dengan la
 - `loper_agen_fullbody.png`: gambar full body skala besar, 240×292 px, hasil konversi gambar AI (sejak 2026-10-08), kepala terpisah tanpa leher, untuk layar di luar rute (lihat `docs/ART_DIRECTION.md` 3.5). Pratinjau ×3 di `preview/loper_agen_fullbody_x3.png`. Sumber dan catatan perubahan di `konversi2/`.
 
 ## Pasang di Godot
-Salin folder ini ke `res://assets/sprites/loper/`. Kalau foldernya berbeda, ubah path di `.tres` dan `.tscn`.
+Sudah terpasang di project (Fase 0, run 0A): `loper_agen.png`, `loper_agen.json`, dan `loper_agen_frames.tres` disalin apa adanya ke `res://assets/sprites/loper/`. Skrip dan scene dipindah ke tempat kode (`gdscript.mdc`): `res://scripts/entities/loper_sprite.gd` (`LoperSprite`, memakai logika murni `scripts/systems/loper_anim.gd`) dan `res://scenes/entities/loper_agen.tscn`. `loper_agen.tscn` dan `loper_sprite.gd` di folder ini tinggal arsip desain dan tidak dipakai Godot (folder `docs/` diabaikan).
 Pakai filter Nearest (sudah diatur di scene) dan skala bilangan bulat (×3 atau ×4).
 
 ## Nama animasi
@@ -50,4 +50,4 @@ Kolom 0–3 adalah frame kayuh, berputar maju.
 
 ## Sumber dan render ulang
 Sheet, JSON, `.tres`, dan isi `preview/` dibuat oleh `tools/loper_art/produce.py` (lihat `docs/ART_DIRECTION.md` bagian 4.1). `loper_agen.tscn` dan `loper_sprite.gd` ditulis tangan dan tidak ikut dirender ulang. Gambar full body dibuat oleh `tools/loper_art/fullbody/konversi2.py` (versi lama 294×283 dari `fullbody.py` diganti 2026-10-08 dan disimpan di `arsip/`).
-Saat Fase 0, salin folder ini (tanpa `preview/`) ke `assets/sprites/loper/`. Folder di `docs/` adalah arsip desain yang diabaikan Godot.
+Setelah render ulang, salin `loper_agen.png`, `.json`, dan `_frames.tres` ke `assets/sprites/loper/`. Folder di `docs/` adalah arsip desain yang diabaikan Godot.

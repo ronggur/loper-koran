@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Testing & Verifikasi
 
-Rujukan: `docs/TECH_PLAN.md` 3.6 (strategi tes). Folder `tests/` dan Godot belum ada sampai Fase 0; aturan ini berlaku sejak tes pertama dibuat.
+Rujukan: `docs/TECH_PLAN.md` 3.6 (strategi tes). Folder `tests/` dan project Godot ada sejak Fase 0 (run 0A).
 
 ## Tes logika (`tests/run_tests.gd`)
 
@@ -28,11 +28,12 @@ Rujukan: `docs/TECH_PLAN.md` 3.6 (strategi tes). Folder `tests/` dan Godot belum
 
 ## Error skrip tidak boleh lolos diam-diam
 
-Error skrip saat runtime (`SCRIPT ERROR`) menghentikan fungsi tes di tengah jalan: sisa `check` dilewati, tapi ringkasan tetap "0 gagal" dan exit code 0. **Exit code Godot tidak cukup.** Tangkap keluaran dengan `tee`, lalu periksa tidak ada `SCRIPT ERROR`, baris `ERROR:`, atau `GAGAL`, dan baris ringkasan memang ada. Sediakan skrip pemeriksa kecil di `tools/` saat tes pertama dibuat dan pakai juga di CI.
+Error skrip saat runtime (`SCRIPT ERROR`) menghentikan fungsi tes di tengah jalan: sisa `check` dilewati, tapi ringkasan tetap "0 gagal" dan exit code 0. **Exit code Godot tidak cukup.** Tangkap keluaran dengan `tee`, lalu jalankan `tools/cek_keluaran_tes.py`: ia menolak `SCRIPT ERROR`, baris `ERROR:`, `GAGAL`, crash, dan ringkasan yang hilang, ganda, atau `0 lolos` (`--ketat` menolak `WARNING:` juga). Dipakai juga di CI; contoh log baik dan buruk beserta uji pemeriksanya ada di `tools/tests_cek/`.
 
 ```bash
-godot --headless --script res://tests/run_tests.gd 2>&1 | tee /tmp/tests.log
-grep -E 'SCRIPT ERROR|^ERROR:|GAGAL' /tmp/tests.log && echo "ADA ERROR" ; grep -E '^[0-9]+ lolos, 0 gagal$' /tmp/tests.log
+mkdir -p build
+godot --headless --script res://tests/run_tests.gd 2>&1 | tee build/tests.log
+python3 tools/cek_keluaran_tes.py build/tests.log && echo "OK"
 ```
 
 Laporkan hasil apa adanya. Kalau Godot tidak tersedia atau tes gagal, katakan begitu beserta keluarannya.

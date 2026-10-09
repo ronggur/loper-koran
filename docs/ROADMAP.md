@@ -80,11 +80,18 @@ Skala dipilih Ronggur; sisanya didelegasikan ke agent dengan alasan tertulis. Bi
 
 ## 6. Cara menjalankan project
 
-Belum ada project Godot. Setelah Fase 0, bagian ini diisi dengan perintah import, tes headless, dan export, mengikuti pola Brainy Dungeon:
+Project Godot 4.7.2 ada sejak run 0A (Fase 0). Root repo = root project Godot. Dari root repo (macOS tanpa `godot` di PATH: `/Applications/Godot.app/Contents/MacOS/Godot`):
 
 ```
-cd loper-koran                                      # root repo = root project Godot
 godot --headless --import                           # sekali, setelah clone
-godot --headless --script res://tests/run_tests.gd  # uji logika inti
-python3 tools/loper_art/produce.py                  # render ulang sprite pemain
+mkdir -p build                                      # folder log, tidak di-commit
+godot --headless --script res://tests/run_tests.gd 2>&1 | tee build/tests.log   # uji logika inti
+python3 tools/cek_keluaran_tes.py build/tests.log   # pemeriksa keluaran: wajib, exit code Godot saja tidak cukup
+godot --headless --path . --quit-after 2            # buka project dua frame, tanpa ERROR dan WARNING
+godot --headless --path . --script res://tests/probe_layar.gd   # skala bulat dan viewport per rasio layar
+godot --path .                                      # jalankan scene utama sementara (graybox) di jendela
+python3 tools/env_art/graybox.py                    # render ulang ubin graybox (hanya stdlib)
+python3 tools/loper_art/produce.py                  # render ulang sprite pemain (butuh numpy, pillow)
 ```
+
+Export Android dan APK debug (`builds/`) menyusul di run 0C. CI (`.github/workflows/tes.yml`) menjalankan import, tes, dan pemeriksa keluaran di setiap PR.

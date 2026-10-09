@@ -6,7 +6,7 @@ Judul game: **Kring Kring!** (diputuskan 2026-10-09, GDD 5.4). "Loper Koran" ada
 
 Game 2D mobile (Android) bergaya Paperboy modern: pemain mengayuh sepeda menyusuri jalan isometrik sambil melempar koran ke rumah pelanggan, dengan latar Indonesia, kecepatan yang diatur sendiri, dan isi koran yang ikut mengubah dunia.
 
-Status: **Pra-produksi** (per 2026-10-07). Desain inti, kamera, kontrol, dan karakter pemain sudah dikunci. Sprite produksi pemain (Kemeja Agen, 15 animasi kayuh) sudah jadi dan sudah dicek di Godot 4.3. Project Godot belum dibuat; langkah berikutnya adalah Fase 0 di [`DEV_PHASES.md`](./DEV_PHASES.md). Posisi lengkap ada di [`ROADMAP.md`](./ROADMAP.md).
+Status: **Pra-produksi, Fase 0 berjalan** (per 2026-10-09). Desain inti, kamera, kontrol, dan karakter pemain sudah dikunci. Project Godot 4.7.2 dibuat di run 0A (Fase 0): layar 640×360 dengan skala bulat, `scripts/config.gd`, `scripts/ui/palette.gd`, sprite pemain Kemeja Agen dengan pemilih animasinya, ubin graybox, tes headless, dan CI. Input touch (run 0B) serta export Android dan APK di HP (run 0C) belum dikerjakan; Fase 0 baru selesai setelah APK diuji di HP ([`DEV_PHASES.md`](./DEV_PHASES.md)). Posisi lengkap ada di [`ROADMAP.md`](./ROADMAP.md).
 
 ## Dokumen
 
@@ -23,6 +23,7 @@ Status: **Pra-produksi** (per 2026-10-07). Desain inti, kamera, kontrol, dan kar
 | [`DATA_SCHEMA.md`](./DATA_SCHEMA.md) | Format data misi, headline, segmen rute, dan file save (usulan) |
 | [`SOUND_DESIGN.md`](./SOUND_DESIGN.md) | Prinsip audio, daftar efek suara, ambience per distrik, spesifikasi teknis (draf) |
 | [`LOOP-DEV-QA.md`](./LOOP-DEV-QA.md) | Brief loop dua agent (Dev dan QA) untuk mengerjakan fase development, dengan Fase 0 dipecah jadi run 0A–0C |
+| [`loop/`](./loop/) | Satu folder per run loop (`<RUN_ID>/`): `SPEC.md` (kontrak run), `LOG.md` (temuan dan keputusan), `shots/` (tangkapan layar bukti) |
 | [`design/`](./design/) | [`DESIGN_SPEC.md`](./design/DESIGN_SPEC.md): token warna, font, dan spesifikasi HUD; `screens/` dan `source/`: render dan source mock HUD dan kontrol; [`character/`](./design/character/): indeks semua karakter; [`character/loper_agen/`](./design/character/loper_agen/): sprite produksi pemain; [`character/varian/`](./design/character/varian/): varian baju |
 
 Sumber visual:
@@ -31,24 +32,31 @@ Sumber visual:
 - Kanvas **"Karakter Loper Koran"**: eksplorasi karakter, base model Kemeja Agen 5 arah, pose kecepatan, sprite produksi.
 - Acuan gaya: proyek Brainy Dungeon (hanya acuan gaya, bukan aset bersama).
 
-## Struktur project (usulan)
+## Struktur project
 
-Mengikuti pola Brainy Dungeon: root repo git `loper-koran` sekaligus root project Godot. Dokumen desain ada di `docs/`, yang diabaikan Godot lewat `docs/.gdignore`. Struktur di bawah adalah rencana; dibuat di Fase 0.
+Mengikuti pola Brainy Dungeon: root repo git `loper-koran` sekaligus root project Godot. Dokumen desain ada di `docs/`, yang diabaikan Godot lewat `docs/.gdignore`. Struktur dibangun bertahap di Fase 0: bagian bertanda **(ada)** sudah dibuat di run 0A, sisanya masih rencana.
 
 ```
-AGENTS.md, CLAUDE.md   Pintu masuk agent coding
-docs/                  Dokumen desain (folder ini) + design/
-project.godot          Godot 4.7.2, landscape, renderer Compatibility (usulan, dicek di Fase 0)
-export_presets.cfg     Preset export Android
-scenes/                Boot, Rute (gameplay), Koran (halaman depan), Hasil, Bengkel, dev/
-assets/sprites/        loper/ (pemain), tiles/, houses/, props/, obstacles/, vfx/, ui/
-assets/data/           Segmen rute, misi, headline (DATA_SCHEMA.md)
-scripts/config.gd      SEMUA angka tuning (BALANCING.md)
+AGENTS.md, CLAUDE.md   Pintu masuk agent coding (ada)
+docs/                  Dokumen desain (folder ini) + design/ + loop/ (ada)
+project.godot          Godot 4.7.2, landscape, renderer Compatibility, 640x360 canvas_items integer expand (ada)
+export_presets.cfg     Preset export Android (run 0C)
+scenes/                dev/graybox.tscn dan entities/loper_agen.tscn (ada); Boot, Rute, Koran, Hasil, Bengkel menyusul
+assets/sprites/        loper/ dan _placeholder/ (ada); tiles/, houses/, props/, obstacles/, vfx/, ui/ menyusul
+assets/palette/        loper_master.gpl (ada)
+assets/fonts/          Lexend dan Lilita One, usulan (ada)
+assets/LICENSES.md     Lisensi aset pihak ketiga (ada)
+assets/data/           Segmen rute, misi, headline (DATA_SCHEMA.md), menyusul
+scripts/config.gd      SEMUA angka tuning (BALANCING.md) (ada)
 scripts/autoload/      SaveManager, DayManager, Analytics (nanti)
-scripts/systems/       Logika murni: gerak sepeda, lemparan, skor, misi, reputasi, kerusakan
-scripts/ui/            HUD, layar, palette.gd
-tests/                 Tes logika headless
+scripts/systems/       Logika murni: config_parser, loper_anim (ada); gerak sepeda, lemparan, skor, misi, reputasi, kerusakan menyusul
+scripts/entities/      loper_sprite.gd (ada)
+scripts/ui/            palette.gd (ada); HUD dan layar menyusul
+tests/                 run_tests.gd, probe_layar.gd, probe_layar_jendela.gd (ada)
 tools/loper_art/       Renderer sprite pemain (Python), lihat ART_DIRECTION bagian 4
+tools/env_art/         Renderer aset lingkungan, termasuk graybox.py (ada)
+tools/                 cek_keluaran_tes.py dan tests_cek/ (ada)
+.github/workflows/     tes.yml, CI import dan tes headless (ada)
 builds/                APK hasil export (tidak di-commit)
 ```
 
