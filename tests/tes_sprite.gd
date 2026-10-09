@@ -340,6 +340,21 @@ func _test_lempar_waktu() -> void:
 		check(hasil["lepas"] == 1 and hasil["langkah"] == langkah_total and naik and frame[frame.size() - 1] == 3, "dt %s: lepas tepat sekali, selesai di langkah %d (dapat %d), frame tidak pernah mundur" % [dt, langkah_total, hasil["langkah"]])
 		var langkah_lepas: int = int(ceilf((2.0 / 12.0) / dt - 0.000001))
 		check(hasil["lepas_di"] == langkah_lepas, "dt %s: lepas di langkah %d (waktu pertama >= 2/12 detik), dapat %d" % [dt, langkah_lepas, hasil["lepas_di"]])
+	# Batas inklusif TEPAT (posisi frame persis bilangan bulat, dihitung dengan toleransi yang sama): frame 2 dan akhir animasi sudah tercapai.
+	var tol: float = Config.LEMPAR_TOLERANSI_DETIK
+	var batas_tepat: bool = true
+	var batas_kurang: bool = true
+	for fps_batas: float in [1.0, 2.0, 4.0, 8.0, 12.0]:
+		var tepat_akhir: LemparWaktu.Langkah = LemparWaktu.langkah(0.0, 4.0 / fps_batas - tol, fps_batas, 4, 2)
+		var tepat_lepas: LemparWaktu.Langkah = LemparWaktu.langkah(0.0, 2.0 / fps_batas - tol, fps_batas, 4, 2)
+		var kurang_akhir: LemparWaktu.Langkah = LemparWaktu.langkah(0.0, 4.0 / fps_batas - 2.0 * tol, fps_batas, 4, 2)
+		var kurang_lepas: LemparWaktu.Langkah = LemparWaktu.langkah(0.0, 2.0 / fps_batas - 2.0 * tol, fps_batas, 4, 2)
+		if not (tepat_akhir.selesai and tepat_akhir.frame == 3 and tepat_lepas.lepas and tepat_lepas.frame == 2):
+			batas_tepat = false
+		if kurang_akhir.selesai or kurang_lepas.lepas or kurang_akhir.frame != 3 or kurang_lepas.frame != 1:
+			batas_kurang = false
+	check(batas_tepat, "tepat di batas (posisi frame 2,0 dan 4,0): lepas dan selesai tercapai (inklusif), untuk fps 1, 2, 4, 8, 12")
+	check(batas_kurang, "sedikit di bawah batas (2 x toleransi): belum lepas dan belum selesai")
 	# dt besar melompati frame: lepas dan selesai tetap tepat sekali.
 	var satu_lompat: LemparWaktu.Langkah = LemparWaktu.langkah(0.0, 1.0, 12.0, 4, 2)
 	check(satu_lompat.lepas and satu_lompat.selesai and satu_lompat.frame == 3 and is_equal_approx(satu_lompat.waktu, 1.0 / 3.0) and satu_lompat.progres == 1.0, "satu dt 1 detik: lepas dan selesai pada langkah yang sama, frame 3, waktu dijepit ke durasi")
