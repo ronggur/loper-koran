@@ -33,6 +33,7 @@ func jalankan() -> void:
 	await _test_scene_jalan_uji()
 	await _test_jalan_tanpa_ujung()
 	await _test_input_terpadu()
+	await _test_langkah_waktu_dijepit()
 	await _test_kidal_dan_hud()
 	_test_proyek_dan_keyboard()
 
@@ -352,6 +353,45 @@ func _test_input_terpadu() -> void:
 	lepas_klik.pressed = false
 	Input.parse_input_event(lepas_klik)
 	Input.flush_buffered_events()
+	_bersihkan(akar)
+
+
+# --- QB-003 dan QB-011: langkah waktu dijepit di scene ---
+
+## `JalanUji._process` menjepit `delta` ke `Config.LANGKAH_WAKTU_MAKS_DETIK`, supaya app yang kembali dari background
+## (delta beberapa detik) tidak melompat jauh dan jarak trapesium `BikeDrive` tetap sahih (QB-011).
+func _test_langkah_waktu_dijepit() -> void:
+	_judul.call("Langkah waktu dijepit di JalanUji._process")
+	var batas_waktu: float = Config.LANGKAH_WAKTU_MAKS_DETIK
+	var batas_jarak: float = batas_waktu * Config.KECEPATAN_NGEBUT_UD
+	check(batas_waktu > 0.0 and batas_waktu <= 0.25, "LANGKAH_WAKTU_MAKS_DETIK wajar (0 sampai 0,25 detik), dapat %s" % batas_waktu)
+	var akar: JalanUji = await _siapkan(Vector2i(2340, 1080))
+	var sepeda: SepedaUji = _anak(akar, "Sepeda") as SepedaUji
+	var kontrol: KontrolTouch = _anak(akar, "KontrolTouch") as KontrolTouch
+	kontrol.keyboard_aktif = true
+	Input.action_press(&"stick_atas")
+	var jarak_awal: float = sepeda.jarak_ubin
+	akar._process(5.0)
+	var tempuh: float = sepeda.jarak_ubin - jarak_awal
+	var kecepatan: float = sepeda.kecepatan_ud
+	check(tempuh > 0.0 and tempuh <= batas_jarak + 0.000001, "_process(5,0) menempuh paling banyak LANGKAH_WAKTU_MAKS_DETIK x kecepatan ngebut = %s ubin, dapat %s" % [batas_jarak, tempuh])
+	check(kecepatan <= Config.KECEPATAN_SANTAI_UD + Config.AKSELERASI_UD2 * batas_waktu + 0.000001, "_process(5,0) menaikkan kecepatan paling banyak satu langkah terjepit (%s u/d), dapat %s" % [Config.KECEPATAN_SANTAI_UD + Config.AKSELERASI_UD2 * batas_waktu, kecepatan])
+	akar._process(0.016)
+	check(sepeda.jarak_ubin - jarak_awal - tempuh > 0.0 and sepeda.jarak_ubin - jarak_awal - tempuh < 0.016 * Config.KECEPATAN_NGEBUT_UD + 0.000001, "delta normal (0,016 detik) tidak dijepit dan menambah jarak wajar")
+	Input.action_release(&"stick_atas")
+	kontrol.keyboard_aktif = OS.has_feature("editor")
+	_bersihkan(akar)
+	# Kontrol: jalur publik `perbarui` tidak menjepit (jepit ada di `_process`), jadi tes di atas memang membedakan.
+	akar = await _siapkan(Vector2i(2340, 1080))
+	sepeda = _anak(akar, "Sepeda") as SepedaUji
+	kontrol = _anak(akar, "KontrolTouch") as KontrolTouch
+	kontrol.keyboard_aktif = true
+	Input.action_press(&"stick_atas")
+	var jarak_lepas: float = sepeda.jarak_ubin
+	akar.perbarui(5.0)
+	check(sepeda.jarak_ubin - jarak_lepas > batas_jarak * 10.0, "kontrol: perbarui(5,0) tanpa jepit menempuh jauh lebih dari batas (%s ubin), jadi jepit memang tugas _process" % (sepeda.jarak_ubin - jarak_lepas))
+	Input.action_release(&"stick_atas")
+	kontrol.keyboard_aktif = OS.has_feature("editor")
 	_bersihkan(akar)
 
 
