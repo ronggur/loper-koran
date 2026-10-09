@@ -1,0 +1,537 @@
+{
+ "sprite": "loper_agen.png",
+ "cell": [
+  46,
+  58
+ ],
+ "columns": 4,
+ "rows": 15,
+ "ground_anchor": [
+  23,
+  46
+ ],
+ "godot_offset": [
+  0.0,
+  -17.0
+ ],
+ "note": "Ground anchor = titik tengah sepeda di tanah. Dengan centered=true, pakai offset ini supaya origin node ada di tanah (cocok untuk Y-sort).",
+ "headings": {
+  "normal": "lurus, kanan atas layar",
+  "serong_kanan": "kanan layar",
+  "kanan": "kanan bawah (sisi dekat)",
+  "serong_kiri": "atas layar",
+  "kiri": "kiri atas (sisi seberang)"
+ },
+ "animations": [
+  {
+   "name": "santai_normal",
+   "speed": "santai",
+   "heading": "normal",
+   "row": 0,
+   "fps": 8,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     0,
+     46,
+     58
+    ],
+    [
+     46,
+     0,
+     46,
+     58
+    ],
+    [
+     92,
+     0,
+     46,
+     58
+    ],
+    [
+     138,
+     0,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "santai_serong_kanan",
+   "speed": "santai",
+   "heading": "serong_kanan",
+   "row": 1,
+   "fps": 8,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     58,
+     46,
+     58
+    ],
+    [
+     46,
+     58,
+     46,
+     58
+    ],
+    [
+     92,
+     58,
+     46,
+     58
+    ],
+    [
+     138,
+     58,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "santai_kanan",
+   "speed": "santai",
+   "heading": "kanan",
+   "row": 2,
+   "fps": 8,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     116,
+     46,
+     58
+    ],
+    [
+     46,
+     116,
+     46,
+     58
+    ],
+    [
+     92,
+     116,
+     46,
+     58
+    ],
+    [
+     138,
+     116,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "santai_serong_kiri",
+   "speed": "santai",
+   "heading": "serong_kiri",
+   "row": 3,
+   "fps": 8,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     174,
+     46,
+     58
+    ],
+    [
+     46,
+     174,
+     46,
+     58
+    ],
+    [
+     92,
+     174,
+     46,
+     58
+    ],
+    [
+     138,
+     174,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "santai_kiri",
+   "speed": "santai",
+   "heading": "kiri",
+   "row": 4,
+   "fps": 8,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     232,
+     46,
+     58
+    ],
+    [
+     46,
+     232,
+     46,
+     58
+    ],
+    [
+     92,
+     232,
+     46,
+     58
+    ],
+    [
+     138,
+     232,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "cepat_normal",
+   "speed": "cepat",
+   "heading": "normal",
+   "row": 5,
+   "fps": 10,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     290,
+     46,
+     58
+    ],
+    [
+     46,
+     290,
+     46,
+     58
+    ],
+    [
+     92,
+     290,
+     46,
+     58
+    ],
+    [
+     138,
+     290,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "cepat_serong_kanan",
+   "speed": "cepat",
+   "heading": "serong_kanan",
+   "row": 6,
+   "fps": 10,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     348,
+     46,
+     58
+    ],
+    [
+     46,
+     348,
+     46,
+     58
+    ],
+    [
+     92,
+     348,
+     46,
+     58
+    ],
+    [
+     138,
+     348,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "cepat_kanan",
+   "speed": "cepat",
+   "heading": "kanan",
+   "row": 7,
+   "fps": 10,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     406,
+     46,
+     58
+    ],
+    [
+     46,
+     406,
+     46,
+     58
+    ],
+    [
+     92,
+     406,
+     46,
+     58
+    ],
+    [
+     138,
+     406,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "cepat_serong_kiri",
+   "speed": "cepat",
+   "heading": "serong_kiri",
+   "row": 8,
+   "fps": 10,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     464,
+     46,
+     58
+    ],
+    [
+     46,
+     464,
+     46,
+     58
+    ],
+    [
+     92,
+     464,
+     46,
+     58
+    ],
+    [
+     138,
+     464,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "cepat_kiri",
+   "speed": "cepat",
+   "heading": "kiri",
+   "row": 9,
+   "fps": 10,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     522,
+     46,
+     58
+    ],
+    [
+     46,
+     522,
+     46,
+     58
+    ],
+    [
+     92,
+     522,
+     46,
+     58
+    ],
+    [
+     138,
+     522,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "ngebut_normal",
+   "speed": "ngebut",
+   "heading": "normal",
+   "row": 10,
+   "fps": 12,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     580,
+     46,
+     58
+    ],
+    [
+     46,
+     580,
+     46,
+     58
+    ],
+    [
+     92,
+     580,
+     46,
+     58
+    ],
+    [
+     138,
+     580,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "ngebut_serong_kanan",
+   "speed": "ngebut",
+   "heading": "serong_kanan",
+   "row": 11,
+   "fps": 12,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     638,
+     46,
+     58
+    ],
+    [
+     46,
+     638,
+     46,
+     58
+    ],
+    [
+     92,
+     638,
+     46,
+     58
+    ],
+    [
+     138,
+     638,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "ngebut_kanan",
+   "speed": "ngebut",
+   "heading": "kanan",
+   "row": 12,
+   "fps": 12,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     696,
+     46,
+     58
+    ],
+    [
+     46,
+     696,
+     46,
+     58
+    ],
+    [
+     92,
+     696,
+     46,
+     58
+    ],
+    [
+     138,
+     696,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "ngebut_serong_kiri",
+   "speed": "ngebut",
+   "heading": "serong_kiri",
+   "row": 13,
+   "fps": 12,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     754,
+     46,
+     58
+    ],
+    [
+     46,
+     754,
+     46,
+     58
+    ],
+    [
+     92,
+     754,
+     46,
+     58
+    ],
+    [
+     138,
+     754,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "ngebut_kiri",
+   "speed": "ngebut",
+   "heading": "kiri",
+   "row": 14,
+   "fps": 12,
+   "loop": true,
+   "regions": [
+    [
+     0,
+     812,
+     46,
+     58
+    ],
+    [
+     46,
+     812,
+     46,
+     58
+    ],
+    [
+     92,
+     812,
+     46,
+     58
+    ],
+    [
+     138,
+     812,
+     46,
+     58
+    ]
+   ]
+  }
+ ]
+}
