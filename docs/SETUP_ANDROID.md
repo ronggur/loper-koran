@@ -2,7 +2,7 @@
 
 Panduan membangun APK debug **Kring Kring!** (`com.rmh.kring`) dari CLI, memeriksa isinya, memasangnya ke HP Android, dan checklist uji M0. Diadaptasi dari panduan Brainy Dungeon (hanya polanya), lalu ditulis ulang untuk repo ini berdasarkan perintah yang benar-benar dijalankan di mesin pengembang pada 2026-10-09. Tanpa Gradle, tanpa plugin Android, tanpa keystore rilis (belum ada, Fase 14).
 
-Label **usulan** berarti belum dikunci (rule `docs`). Nilai preset di bagian 3 adalah usulan SPEC run `20261009-fase0bc-input-export` (D-8), bukan keputusan pemilik. Kolom "Terverifikasi" membedakan yang sudah dijalankan dari yang belum.
+Label **usulan** berarti belum dikunci (rule `docs`). Nilai preset di bagian 3 adalah usulan SPEC run `20261009-fase0bc-input-export` (D-8), bukan keputusan pemilik. Semua hasil di bawah adalah keluaran perintah yang dijalankan pada 2026-10-09 (APK `builds/kring-kring-debug.apk`); yang belum dijalankan ditandai "belum".
 
 ## 1. Prasyarat dan status mesin ini
 
@@ -16,8 +16,8 @@ Status dicek 2026-10-09 (macOS, Apple M1). Perintah cek ada di kolom terakhir.
 | `adb` | ✅ | `/opt/homebrew/bin/adb` (platform-tools 37.0.0, juga ada di SDK) | `command -v adb` |
 | Export templates 4.7.2 | ✅ | `~/Library/Application Support/Godot/export_templates/4.7.2.stable/` (isi `android_debug.apk`, `android_release.apk`, `version.txt` = `4.7.2.stable`) | `cat "$HOME/Library/Application Support/Godot/export_templates/4.7.2.stable/version.txt"` |
 | `export/android/android_sdk_path` | ✅ | Terisi di Editor Settings (`~/Library/Application Support/Godot/editor_settings-4.7.tres`) | lihat bagian 2 |
-| **`export/android/java_sdk_path`** | ⬜ **Kosong** | Ekspor ditolak: `A valid Java SDK path is required in Editor Settings.` Variabel lingkungan `JAVA_HOME` **tidak** menggantikannya di Godot 4.7.2 (dicoba 2026-10-09, pesan sama) | bagian 2 |
-| Debug keystore | ⬜ | `~/Library/Application Support/Godot/keystores/debug.keystore` belum ada. Godot membuatnya sendiri (lewat `keytool` dari JDK di atas) pada ekspor debug pertama; ini perilaku standar dan berada di luar repo | `ls "$HOME/Library/Application Support/Godot/keystores/"` |
+| **`export/android/java_sdk_path`** | ✅ Terisi 2026-10-09 | `/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home`, diisi orchestrator atas izin pemilik. **Wajib**: tanpanya ekspor berhenti dengan `A valid Java SDK path is required in Editor Settings.`, dan variabel lingkungan `JAVA_HOME` **tidak** menggantikannya di Godot 4.7.2 (dicoba, pesan sama) | `grep java_sdk_path "$HOME/Library/Application Support/Godot/editor_settings-4.7.tres"` |
+| Debug keystore | ✅ | `~/Library/Application Support/Godot/keystores/debug.keystore` (2,7 KB) dibuat Godot sendiri (lewat `keytool` dari JDK di atas) pada ekspor debug pertama; perilaku standar, di luar repo | `ls "$HOME/Library/Application Support/Godot/keystores/"` |
 | `aapt2`, `apksigner`, `apkanalyzer` | ✅ | `~/Library/Android/sdk/build-tools/<versi>/aapt2` dan `apksigner`; `~/Library/Android/sdk/cmdline-tools/latest/bin/apkanalyzer` | `aapt2 version` |
 
 ### Export templates (kalau belum ada)
@@ -44,7 +44,7 @@ Godot 4.7.2 tidak mau mengekspor Android selama `export/android/java_sdk_path` k
 - **Editor**: buka project, **Editor → Editor Settings → Export → Android → Java SDK Path** diisi `/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home`.
 - **Berkas**: tutup semua jendela Godot, lalu ubah baris `export/android/java_sdk_path = ""` di `~/Library/Application Support/Godot/editor_settings-4.7.tres` menjadi nilai yang sama. (Godot menimpa berkas ini saat editor ditutup, jadi jangan mengeditnya sambil editor terbuka.)
 
-Ini pengaturan mesin, bukan bagian repo: jangan di-commit dan agent tidak mengubahnya tanpa izin pemilik. Setelah terisi, ekspor debug pertama membuat debug keystore otomatis.
+Ini pengaturan mesin, bukan bagian repo: jangan di-commit dan agent tidak mengubahnya tanpa izin pemilik. Di mesin ini baris itu diisi orchestrator pada 2026-10-09 atas izin pemilik (baris 313, hanya itu yang berubah). Setelah terisi, ekspor debug pertama membuat debug keystore otomatis.
 
 ## 3. Preset export (`export_presets.cfg`)
 
@@ -58,7 +58,7 @@ File di root repo, **di-commit**, tanpa rahasia. Tes `tests/tes_export.gd` memba
 | `architectures/arm64-v8a` | `true` | **Usulan.** HP target (A54) 64-bit; Google Play mewajibkan 64-bit. APK jadi lebih kecil |
 | `architectures/armeabi-v7a`, `x86`, `x86_64` | `false` | **Usulan.** Emulator x86_64 tidak dipakai (uji di HP asli). Nyalakan `x86_64` hanya bila perlu emulator |
 | `version/code`, `version/name` | `1`, `0.1.0` | **Usulan.** Versi awal pra-produksi. Jangan diubah tanpa diminta (rule `git-workflow`) |
-| `screen/immersive_mode` | `true` | Menyembunyikan bilah sistem supaya tinggi jendela 1080 dan skala tetap ×3 (ROADMAP 4b, risiko ×2) |
+| `screen/immersive_mode` | `true` | Menyembunyikan bilah sistem supaya tinggi jendela 1080 dan skala tetap ×3 (ROADMAP 4b, risiko ×2). Terbukti di APK: `assets/_cl_` memuat `--fullscreen` (efek di layar: uji HP) |
 | `screen/edge_to_edge` | `false` (bawaan Godot) | **Belum diuji di HP.** Bila bilah sistem atau cutout memakan layar atau skala turun ke ×2, ini opsi pertama yang dicoba |
 | `user_data_backup/allow` (`android:allowBackup`) | `false` | **Usulan.** Belum ada save yang layak dicadangkan (SaveManager belum ada). Tinjau ulang di Fase 6 bersama keputusan save dan privasi (`privacy-ads`, `save-system`) |
 | `permissions/*` | semua `false`, `custom_permissions` kosong | Tanpa izin kustom. Daftar penuh izin Godot ditulis eksplisit supaya penyimpangan terlihat di diff |
@@ -68,30 +68,19 @@ File di root repo, **di-commit**, tanpa rahasia. Tes `tests/tes_export.gd` memba
 | `export_filter` | `all_resources` | Semua resource yang dikenal Godot; `.json` data konten juga ikut (terbukti: `assets/sprites/loper/loper_agen.json` masuk paket) |
 | `script_export_mode` | `2` (terkompresi) | Hanya memadatkan skrip, **bukan** perlindungan: isi APK tetap bisa dibongkar |
 | `package/name` | kosong | Label app = nama project, `Kring Kring!` |
-| Ikon (`launcher_icons/*`) | kosong | Belum ada ikon project (`application/config/icon`); ikon sementara dan final bukan scope Fase 0 (Fase 14). Launcher menampilkan ikon bawaan template |
+| Ikon (`launcher_icons/*`) | kosong | Memakai ikon project (`application/config/icon` = `res://icon.svg`, lihat di bawah). Ikon final di Fase 14 |
 
 ### Pengaturan project yang dituntut ekspor
 
 | Pengaturan (`project.godot`) | Nilai | Alasan |
 |---|---|---|
-| `rendering/textures/vram_compression/import_etc2_astc` (Project Settings → Rendering → Textures → VRAM Compression → Import ETC2 ASTC) | `true` | Godot menolak ekspor mobile tanpanya (pesan Android: `ETC2/ASTC texture compression is required for Android export`). Ditemukan 2026-10-09 lewat ekspor uji platform iOS di salinan sementara: gagal dengan `configuration errors:` kosong sampai pengaturan ini menyala. **Belum dicoba pada ekspor Android sebenarnya** (tertahan Java SDK Path, bagian 2). Efek: hanya tekstur ber-mode "VRAM Compressed" mendapat varian ETC2/ASTC tambahan; semua sprite repo ini Lossless, jadi hasil impor tidak berubah (`git status` bersih sesudah `--import`) |
+| `rendering/textures/vram_compression/import_etc2_astc` (Project Settings → Rendering → Textures → VRAM Compression → Import ETC2 ASTC) | `true` | **Terbukti perlu** pada ekspor Android (2026-10-09): dengan `false` ekspor berhenti (exit 1) dengan `ETC2/ASTC texture compression is required for Android export`; dengan `true` lolos. Efek: hanya tekstur ber-mode "VRAM Compressed" mendapat varian ETC2/ASTC tambahan; semua sprite repo ini Lossless, jadi hasil impor tidak berubah (`git status` bersih sesudah `--import`) |
+| `application/config/icon` | `res://icon.svg` | Tanpa ikon project, ekspor Android mencetak `ERROR: No project icon specified` (tetap exit 0, tetapi gerbang meminta nol ERROR). `icon.svg` adalah ikon **sementara** buatan sendiri (bel oranye di latar gelap, hanya warna `Palette`, isi di zona aman ikon adaptif), bukan logo Godot. Pengganti final: logo "Kring Kring!" di Fase 14 (ART_DIRECTION 8). Dijaga `tests/tes_export.gd` |
 | `display/window/handheld/orientation` | `0` (landscape) | Dipakai Godot untuk `screenOrientation` di manifes; dijaga `tests/run_tests.gd` dan `tests/tes_export.gd` |
 
-### Nilai dari template 4.7.2 (terverifikasi pada `android_debug.apk` bawaan, 2026-10-09)
+### Nilai yang ditentukan template (tanpa Gradle tidak bisa diubah dari preset)
 
-Dengan build tanpa Gradle, nilai ini tidak bisa diubah dari preset:
-
-| Hal | Nilai template | Perintah |
-|---|---|---|
-| `minSdkVersion` | **24** (Android 7.0) | `aapt2 dump badging` pada `android_debug.apk` |
-| `targetSdkVersion` | **36** (Android 16), `compileSdkVersion` 36 | idem |
-| `allowBackup` bawaan template | `false` (Godot menulis ulang sesuai `user_data_backup/allow`) | `aapt2 dump xmltree --file AndroidManifest.xml` |
-| Orientasi activity | `screenOrientation=0` (landscape terkunci, bukan sensor); Godot menulis ulang dari `display/window/handheld/orientation` | idem |
-| Activity peluncur | alias `com.godot.game.GodotAppLauncher` → `com.godot.game.GodotApp` (`exported=true` hanya untuk alias) | idem |
-| Izin | tidak ada di template; Godot menambahkan sesuai preset (dan mungkin `INTERNET` untuk debugger jarak jauh) | `aapt2 dump permissions` |
-| Template tidak bertanda tangan | `apksigner verify` pada template: `Missing META-INF/MANIFEST.MF` (wajar; tanda tangan dibuat saat ekspor) | `apksigner verify` |
-
-Nilai **APK hasil ekspor** (package, versionCode, minSdk, izin akhir, tanda tangan) baru valid setelah ekspor pertama berhasil; lihat bagian 5.
+`minSdkVersion` **24** (Android 7.0) dan `targetSdkVersion` **36** (Android 16) berasal dari `android_debug.apk` bawaan export templates 4.7.2 dan terbukti sama di APK hasil ekspor (bagian 5). Godot menolak `"Min SDK" can only be overridden when "Use Gradle Build" is enabled`. Template sendiri tidak bertanda tangan (`apksigner verify`: `Missing META-INF/MANIFEST.MF`); tanda tangan dibuat saat ekspor.
 
 ## 4. Ekspor APK debug dari CLI
 
@@ -106,9 +95,12 @@ ls -la builds/kring-kring-debug.apk
 ```
 
 - Nama preset (`"Android"`) harus persis sama dengan `name` di `export_presets.cfg`.
-- Ekspor pertama membuat debug keystore di `~/Library/Application Support/Godot/keystores/` lewat `keytool`.
-- Karena preset `runnable`, Godot memanggil `adb` sendiri, juga pada mode headless dan `--export-pack` (terlihat dari pesan `cannot connect to daemon at tcp:5037: Connection refused` di akhir keluaran, kemungkinan `adb kill-server` saat keluar tanpa server berjalan). Itu bukan perintah dari kita, dan Godot dapat mencacah perangkat yang tersambung; ekspor tidak memasang apa pun ke HP.
+- Ekspor pertama membuat debug keystore di `~/Library/Application Support/Godot/keystores/` lewat `keytool`. Penandatanganan memakai `build-tools/36.0.0/apksigner` (Godot memilih sendiri).
+- Selain `builds/kring-kring-debug.apk`, Godot menulis `builds/kring-kring-debug.apk.idsig` (tanda tangan v4). Keduanya ter-ignore git.
+- **Godot memanggil `adb` sendiri.** Pengaturan editor `export/android/shutdown_adb_on_exit` (bawaan aktif) menjalankan `adb kill-server` saat Godot keluar: bila ada server adb hidup (mis. HP sedang tersambung), ekspor mematikannya, dan perintah `adb` berikutnya menyalakannya lagi. Bila tidak ada server, muncul `cannot connect to daemon at tcp:5037: Connection refused` di akhir keluaran; tidak berbahaya. Ekspor tidak memasang apa pun ke HP.
 - Keluaran harus bebas `ERROR:` dan `WARNING:`. Catat sisanya.
+
+**Hasil nyata 2026-10-09** (perintah persis di atas, `JAVA_HOME` tidak dipakai): exit **0**, **8 sampai 9 detik**, `builds/kring-kring-debug.apk` **28.483.189 byte** (27,2 MiB; di bawah anggaran 100 MB). Keluaran bebas `ERROR:` dan `WARNING:` sesudah `icon.svg` ditambahkan; sebelumnya ada satu `ERROR: No project icon specified. Please specify one in the Project Settings under Application -> Config -> Icon` (load_icon_refs), ekspor tetap selesai.
 
 ### Memeriksa isi paket game tanpa Java (terverifikasi 2026-10-09)
 
@@ -118,7 +110,7 @@ ls -la builds/kring-kring-debug.apk
 godot --headless --path . --export-pack "Android" build/kring-uji.pck 2>&1 | grep "Storing File"
 ```
 
-Hasil saat ditulis (2026-10-09): 78 entri, 212 KB; tidak ada `tests/`, `tools/`, `docs/`, atau `build/`. Tanpa `exclude_filter` paketnya 90 entri (310 KB) dan memuat 12 entri `tests/*.gd`; jadi filter itu bekerja.
+Hasil saat ditulis (2026-10-09, dengan `icon.svg`): 81 entri, 220 KB; tidak ada `tests/`, `tools/`, `docs/`, atau `build/`. Tanpa `exclude_filter` paket sebelum ikon berisi 90 entri (310 KB) dengan 12 entri `tests/*.gd` tambahan; jadi filter itu bekerja. Di APK, isi game tersimpan sebagai berkas terpisah di bawah `assets/` (83 entri) dengan `assets/assets.sparsepck` (7 KB) sebagai indeks.
 
 ## 5. Memeriksa isi APK
 
@@ -127,31 +119,43 @@ Setelah ekspor berhasil. `AAPT2` dan `APKSIGNER` ada di folder `build-tools` yan
 ```bash
 BT=~/Library/Android/sdk/build-tools/36.0.0
 APK=builds/kring-kring-debug.apk
-$BT/aapt2 dump badging $APK | grep -E "^(package|sdkVersion|minSdkVersion|targetSdkVersion|native-code|launchable-activity|supports-screens|uses-permission)"
-$BT/aapt2 dump xmltree --file AndroidManifest.xml $APK | grep -E "screenOrientation|allowBackup|debuggable|resizeableActivity|minSdkVersion|targetSdkVersion"
+stat -f "%z byte" $APK
+$BT/aapt2 dump badging $APK | grep -E "^(package|sdkVersion|minSdkVersion|targetSdkVersion|application-label:|native-code|launchable-activity|supports-screens|uses-permission|uses-feature)"
+$BT/aapt2 dump xmltree --file AndroidManifest.xml $APK | grep -E "screenOrientation|allowBackup|debuggable|resizeableActivity|minSdkVersion|targetSdkVersion|package="
 $BT/aapt2 dump permissions $APK
 $BT/apksigner verify --verbose --print-certs $APK
-unzip -l $APK | grep -E "assets/|lib/|classes|AndroidManifest" | head -20
-~/Library/Android/sdk/cmdline-tools/latest/bin/apkanalyzer manifest print $APK | head -60   # alternatif aapt2 xmltree
+unzip -l $APK | tail -1
+unzip -l $APK | grep -E " lib/|classes.dex|AndroidManifest"
+unzip -l $APK | grep -c -E "assets/(docs|tests|tools|build|builds)/"          # harus 0
+unzip -p $APK assets/_cl_ | strings                                           # argumen baris perintah (imersif)
+~/Library/Android/sdk/cmdline-tools/latest/bin/apkanalyzer manifest print $APK | head -120   # alternatif aapt2 xmltree
 ```
 
-Yang diharapkan (diverifikasi pada APK nyata, bukan hanya template):
+Hasil pada APK hasil ekspor (2026-10-09):
 
-| Hal | Diharapkan |
+| Hal | Hasil |
 |---|---|
-| `package: name=` | `com.rmh.kring`, `versionCode='1'`, `versionName='0.1.0'` |
-| `minSdkVersion` | `24` (dari template; build tanpa Gradle) |
-| `targetSdkVersion` | `36` (dari template) |
-| `native-code` | `'arm64-v8a'` saja |
-| Orientasi | `screenOrientation=0` (landscape) |
-| `allowBackup` | `false` |
-| Izin | tanpa izin pelacakan (`AD_ID`, lokasi, dst.). Godot menambahkan `INTERNET` hanya untuk debugger jarak jauh; catat apa adanya, dan **tinjau ulang di build rilis** (`privacy-ads`) |
-| `apksigner verify` | `Verifies` dengan sertifikat debug Godot (`CN=Godot, OU=Godot Engine, O=Stichting Godot, C=NL`, dari argumen `keytool` di Godot) |
-| `unzip -l` | `assets/` berisi paket game (di Godot 4.7: `assets/assets.sparsepck`), `lib/arm64-v8a/` saja, `AndroidManifest.xml`; ukuran APK jauh di bawah 100 MB (TECH_PLAN 3.7) |
+| `package` | `name='com.rmh.kring' versionCode='1' versionName='0.1.0'`, `compileSdkVersion='36'`, `application-label:'Kring Kring!'` |
+| `minSdkVersion` | **24** (Android 7.0) |
+| `targetSdkVersion` | **36** (Android 16): memenuhi syarat target API 36 Google Play untuk APK ini |
+| `native-code` | **`'arm64-v8a'`** saja. `lib/` hanya `arm64-v8a/libgodot_android.so` (76 MB tak terkompresi, 25 MB di APK) dan `libc++_shared.so`; tidak ada armeabi-v7a, x86, x86_64 |
+| Orientasi | `screenOrientation=0` (landscape, terkunci) pada `com.godot.game.GodotApp`; badging juga memuat `uses-feature android.hardware.screen.landscape` (tersirat) |
+| Activity peluncur | `aapt2 dump badging` **tidak** mencetak `launchable-activity` (peluncur lewat alias). Manifes: `activity-alias` `com.godot.game.GodotAppLauncher` (MAIN, DEFAULT, LAUNCHER, `exported=true`) → `com.godot.game.GodotApp` (`exported=false`) |
+| `allowBackup` | **`false`** (sesuai preset). Juga: `debuggable=true` (APK debug), `profileable shell=true`, `isGame=true`, `resizeableActivity=true` (template `false`; Godot menulis ulang) |
+| `supports-screens` | `'small' 'normal' 'large' 'xlarge'`; `glEsVersion=0x00030000` (GLES 3.0) |
+| Izin | `aapt2 dump permissions`: hanya `package: com.rmh.kring`, **tanpa `uses-permission`** (tidak ada `INTERNET` walau debug: ekspor CLI bukan Remote Deploy; tidak ada `AD_ID`, lokasi, atau izin pelacakan). `android.permission.DUMP` yang terlihat di manifes hanyalah izin yang dituntut receiver `androidx.profileinstaller.ProfileInstallReceiver` milik pustaka AndroidX, bukan izin yang diminta app |
+| `apksigner verify` | `Verifies`; skema v2 dan v3 `true`, v1 dan v4 `false`; satu penanda tangan `CN=Godot, OU=Godot Engine, O=Stichting Godot, C=NL`, RSA 2048, SHA-256 sertifikat `838522b2…164483` (debug keystore mesin ini) |
+| `unzip -l` | 181 berkas, 84.188.491 byte tak terkompresi; `AndroidManifest.xml`, `resources.arsc`, 13 `classes*.dex`, 83 entri `assets/` (skrip `.gdc` dan `.remap`, `.import`, `.ctex`, `assets.sparsepck`, `project.binary`, `_cl_`); **0** entri `assets/docs|tests|tools|build|builds`, **0** sumber `.gd` |
+| `assets/_cl_` | `--xr_mode_regular --xr-mode off --fullscreen --background_color #000000`: mode imersif (`--fullscreen`) aktif, tanpa `--edge_to_edge` |
+
+Pengamatan yang belum terbukti berefek (diuji saat pasang di HP):
+
+- **Dua provider dengan authority yang sama.** `androidx.core.content.FileProvider` dan `androidx.startup.InitializationProvider` sama-sama `authorities="com.rmh.kring.fileprovider"` (di template yang kedua `com.godot.game.androidx-startup`; Godot menulis ulang semua `authorities` pada ekspor tanpa Gradle). Menurut perilaku Android yang saya ketahui, duplikat dalam satu paket hanya memberi peringatan `Skipping provider name` dan provider kedua dilewati saat dipasang, tetapi **belum terbukti di HP**. Bila `adb install` gagal dengan `INSTALL_FAILED_CONFLICTING_PROVIDER`, inilah penyebabnya; jalan keluarnya Gradle build (manifes bisa dikendalikan) atau patch Godot, bukan perubahan di repo ini.
+- `aapt2` mencetak `warn: resource com.godot.game:mipmap/themed_icon for config 'anydpi-v26' is a file reference to 'res/mipmap-anydpi-v26/themed_icon.xml' but no such path exists` di setiap perintahnya pada APK ini (pada `android_debug.apk` template tidak muncul). Acuan ikon bertema tanpa berkas; ikon adaptif memuat `icon_monochrome.webp` sendiri. Tidak diketahui berefek.
 
 ### Target API 36 dan syarat rilis
 
-Google Play mewajibkan app baru dan update menargetkan Android 16 (API 36) mulai 31 Agustus 2026 (TECH_PLAN Fase 0). Template 4.7.2 menargetkan **36**, jadi APK debug tanpa Gradle memenuhi syarat target. Syarat rilis yang belum dikerjakan (bukan penghalang APK debug):
+Google Play mewajibkan app baru dan update menargetkan Android 16 (API 36) mulai 31 Agustus 2026 (TECH_PLAN Fase 0). Template 4.7.2 menargetkan **36** dan APK hasil ekspor terbukti `targetSdkVersion='36'`, jadi APK debug tanpa Gradle memenuhi syarat target. Syarat rilis yang belum dikerjakan (bukan penghalang APK debug):
 
 - **AAB**: Play Console menerima AAB untuk app baru; ekspor AAB (`gradle_build/export_format=1`) hanya valid dengan **Use Gradle Build** menyala. Gradle build baru dipasang saat plugin Android masuk (Fase 8 dan 14), lalu folder `android/` perlu aturan `.gitignore` sendiri.
 - Keystore rilis di luar folder project, kata sandi tidak di-commit.
@@ -196,7 +200,9 @@ Teks HUD (font vektor) tidak berupa blok piksel; kecualikan kotaknya dengan `--k
 | Gejala | Penyebab dan solusi |
 |---|---|
 | `A valid Java SDK path is required in Editor Settings.` | `export/android/java_sdk_path` kosong (bagian 2). `JAVA_HOME` saja tidak cukup di 4.7.2 (terverifikasi) |
-| `cannot connect to daemon at tcp:5037` di akhir ekspor | Godot mematikan server adb saat keluar; tidak berbahaya (bagian 4) |
+| `cannot connect to daemon at tcp:5037` di akhir ekspor | Godot menjalankan `adb kill-server` saat keluar dan tidak ada server; tidak berbahaya. Bila server adb hidup, ekspor mematikannya (bagian 4) |
+| `ERROR: No project icon specified` | `application/config/icon` kosong; sekarang `res://icon.svg` (bagian 3) |
+| `adb install` gagal `INSTALL_FAILED_CONFLICTING_PROVIDER` (belum terjadi) | Dua provider berauthority sama di manifes hasil ekspor tanpa Gradle (bagian 5, pengamatan) |
 | `No export template found` | Export templates 4.7.2 belum terpasang atau nama folder tidak sama dengan `version.txt` (bagian 1) |
 | Ekspor mengeluh soal keystore atau `keytool` | Java SDK Path salah atau bukan JDK (butuh `bin/keytool`); debug keystore dibuat otomatis (bagian 2) |
 | `adb devices` menampilkan `unauthorized` (umum) | Izinkan USB debugging di layar HP; kalau dialog tidak muncul, cabut otorisasi di Opsi pengembang lalu colok ulang |
@@ -230,6 +236,6 @@ Dikerjakan manusia di HP asli; agent tidak bisa menilai rasa kontrol. Fase 0 **t
 - [ ] Garis bidik swipe (2 px tiap 4 px) terbaca di bawah jempol; knob (radius 15) yang menonjol saat tarikan penuh terlihat wajar.
 - [ ] Keterbacaan teks HUD (6 px game = 18 px layar) dinilai dengan mata.
 - [ ] Orientasi terkunci: memutar HP 180° tidak membalik tampilan atau menjadikannya portrait (`screenOrientation=0`, bukan sensor).
-- [ ] Ikon di launcher: kemungkinan ikon bawaan Godot (belum ada ikon project); catat, tidak diperbaiki di run ini.
+- [ ] Ikon di launcher: bel oranye di latar gelap (`icon.svg` sementara, tidak terpotong oleh bentuk ikon adaptif); nilai dengan mata, ikon final di Fase 14.
 - [ ] Opsional: sambungkan keyboard fisik; panah dan WASD **tidak** boleh menggerakkan sepeda di APK (keyboard hanya untuk editor, `OS.has_feature("editor")`).
 - [ ] Tetap terbuka dan bukan bagian checklist ini: uji light 2D, glow, partikel, dan shader di Compatibility (DEV_PHASES Fase 0).
