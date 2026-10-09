@@ -7,8 +7,9 @@ extends Node2D
 ## dengan sepeda di sepertiga kiri layar (ART_DIRECTION 2.2) dan tanpa zoom, ditambah dorongan kecepatan (GDD 15):
 ## saat ngebut sepeda bergeser maju sedikit di bingkai, saat melambat mundur sedikit, dihaluskan eksponensial. Geseran
 ## hanya menggeser kamera (`DoronganKecepatan`); posisi dunia dan posisi sprite sepeda serta HUD tidak berubah. Gerak
-## halus tetap float di `SepedaUji`; hanya posisi gambar yang dibulatkan. Stamina, rem, garis kecepatan, debu, getar
-## kamera, dan batas jalan resmi adalah Fase 1.
+## halus tetap float di `SepedaUji`; hanya posisi gambar yang dibulatkan. Swipe di zona swipe memainkan animasi lempar
+## (`_saat_swipe_selesai`, tanpa proyektil; Fase 2) dan app yang di-background menutup lempar yang berjalan. Stamina, rem,
+## garis kecepatan, debu, getar kamera, dan batas jalan resmi adalah Fase 1.
 
 ## Geseran sepeda di layar akibat dorongan kecepatan yang sudah dihaluskan, piksel game.
 var _geser_dorongan: Vector2 = Vector2.ZERO
@@ -23,11 +24,23 @@ var _geser_dorongan: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
 	_hud.kidal_diubah.connect(_kontrol.atur_kidal)
+	_kontrol.router.swipe_selesai.connect(_saat_swipe_selesai)
 	perbarui(0.0)
+
+
+func _notification(what: int) -> void:
+	if (what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_APPLICATION_FOCUS_OUT) and _sepeda != null:
+		_sepeda.batalkan_lempar()
 
 
 func _process(delta: float) -> void:
 	perbarui(minf(delta, Config.LANGKAH_WAKTU_MAKS_DETIK))
+
+
+## Satu swipe selesai: sisi lempar dari arah swipe (kiri layar = seberang, kanan layar = dekat, GDD 5.2), lalu animasi lempar
+## pemain. Swipe vertikal atau lebih pendek dari ambang tidak melempar (`LoperAnim.sisi_dari_swipe`). Tanpa proyektil (Fase 2).
+func _saat_swipe_selesai(awal: Vector2, akhir: Vector2, _durasi_detik: float) -> void:
+	_sepeda.lempar(LoperAnim.sisi_dari_swipe(awal, akhir))
 
 
 ## Satu langkah permainan selama `dt` detik. Publik supaya tes terpadu bisa menjalankannya tanpa menunggu frame.
