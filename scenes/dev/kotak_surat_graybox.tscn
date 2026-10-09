@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/prop_graybox_kotak_surat.png" id="1_kotak_surat"]
+
+[node name="KotakSuratGraybox" type="Sprite2D"]
+texture_filter = 1
+texture = ExtResource("1_kotak_surat")
+centered = false
+offset = Vector2(-8, -22)
