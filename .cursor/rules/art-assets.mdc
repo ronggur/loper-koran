@@ -1,0 +1,59 @@
+---
+description: Aturan aset pixel art isometrik, renderer di tools/loper_art dan tools/env_art, penamaan, impor Godot, dan audio.
+globs: tools/loper_art/**, tools/env_art/**, assets/sprites/**, assets/audio/**, docs/design/character/**, docs/design/environment/**, docs/ART_DIRECTION.md, docs/SOUND_DESIGN.md
+alwaysApply: false
+---
+
+# Aset Visual & Audio
+
+Rujukan: `docs/ART_DIRECTION.md` (art bible, **sumber utama aturan gaya**), `tools/loper_art/README.md`, `docs/SOUND_DESIGN.md`. Palet induk dan ukuran ubin masih **usulan** sampai aset gelombang 1 selesai; jangan menganggapnya final.
+
+## Gaya
+
+- Pixel art isometrik 2:1, belah ketupat 64×32 (usulan), cahaya utama dari kiri atas, garis luar 1 px `#0E0A1C`, tiga nada per material, palet terbatas, bayangan tanah kecil. Brainy Dungeon hanya acuan gaya: **jangan menyalin atau memakai aset dari sana**.
+- Arah dunia mengikuti keputusan kamera: jalan naik ke kanan atas, fasad sisi seberang menghadap kanan bawah, sisi dekat menampilkan belakang rumah.
+- Sprite pemain **Kemeja Agen** sudah dikunci (5 arah × 3 kecepatan × 4 frame kayuh, sel 46×58, titik pijak 23,46). Jangan mengubah desain, proporsi, atau titik pijaknya tanpa persetujuan user. Perubahan pose atau varian lewat renderer, bukan menggambar ulang manual.
+- Gambar skala besar (full body, potret, adegan) mengikuti gaya di ART_DIRECTION 3.5. Gambar resmi saat ini hasil `konversi2.py`.
+
+## Aset dibuat lewat alat, bukan diedit manual
+
+- Sprite pemain dirender oleh `tools/loper_art/` (model sederhana → proyeksi isometrik 2:1 → sprite). Aset lingkungan oleh `tools/env_art/`. **Ubah script-nya lalu render ulang; jangan mengedit PNG hasilnya dengan tangan.**
+- Perubahan `tools/loper_art/*.py` dan sprite hasil render ulangnya masuk **commit yang sama** (rule `git-workflow`).
+- Hasil render ke `build/` (tidak di-commit). Setelah dicek, salin ke `assets/sprites/...` (dan `docs/design/character/...` kalau base model berubah).
+- Dependensi Python dicatat di README alat (`numpy`, `pillow`, dan untuk konversi gambar `opencv-python`, `scikit-learn`). Jangan menambah dependensi berat tanpa alasan.
+- Gambar sumber AI yang masuk repo dicatat asal dan lisensinya. Setiap aset pihak ketiga dicatat di `assets/LICENSES.md` saat pertama kali masuk.
+
+## Penamaan dan folder
+
+`snake_case` dengan awalan kategori (ART_DIRECTION 7):
+
+```
+loper_agen.png, loper_agen.json, loper_agen_frames.tres    # sheet pemain
+tile_perumahan_aspal.png
+house_perumahan_a_fasad.png / house_perumahan_a_belakang.png
+prop_kotak_surat.png   obs_anjing_sheet.png   npc_<tokoh>_sheet.png
+mission_kucing_sheet.png   vfx_debu_roda.png   ui_icon_koin.png
+portrait_<tokoh>_<ekspresi>.png   scene_<id>.png   news_<id>.png   # cerita (usulan, TECH_PLAN 3.8)
+```
+
+Folder di `assets/sprites/`: `loper/`, `tiles/<distrik>/`, `houses/<distrik>/`, `props/`, `obstacles/`, `npc/`, `vfx/`, `ui/`, dan untuk cerita `portraits/`, `scenes/`, `news/`, `overlay/`.
+
+## Impor Godot
+
+- Sprite dunia: PNG 1×, impor **Lossless**, filter **Nearest**, tanpa mipmap, tanpa kompresi VRAM. `snap_2d_transforms_to_pixel` aktif, skala bulat saja.
+- Ukuran tekstur maksimal 2048×2048, gabung ke atlas per konteks (pemain, distrik, UI). Hindari menumpuk banyak sprite transparan besar (fill rate adalah leher botol di HP murah).
+- UI: ikuti `DESIGN_SPEC`; teks UI dirender di resolusi layar, bukan di-bake ke gambar.
+- Anggaran: APK di bawah 100 MB, audio M3 di bawah 10 MB (TECH_PLAN 3.7).
+
+## Keterbacaan (ART_DIRECTION, GDD prinsip 3)
+
+- Rintangan dan target harus terbaca di skala ×3 pada kecepatan ngebut. Siluet dan kontras lebih penting dari detail.
+- Objek yang bisa menutupi pemain disiapkan versi semi-transparan atau mekanisme fade.
+- Bayangan berwarna per distrik dan waktu (ART_DIRECTION 2.5, usulan) tidak boleh menurunkan keterbacaan jalur.
+- Detail hidup pinggir jalan maksimal sekitar 4 bergerak per layar (ART_DIRECTION 6.10).
+
+## Audio
+
+- Prinsip dan daftar efek ada di `SOUND_DESIGN.md` (draf); musik belum diputuskan (ROADMAP 5), jangan menambah musik tanpa keputusan user.
+- Bus `Master` → `Ambience`, `SFX` (usulan). WAV untuk efek pendek, OGG untuk ambience loop. Nada kayuhan naik saat ngebut; bel sepeda adalah efek sekaligus alat gameplay.
+- Audio berhenti saat app di-background. Setiap isyarat audio punya pasangan visual.

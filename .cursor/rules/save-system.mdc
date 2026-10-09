@@ -1,0 +1,38 @@
+---
+description: Aturan file save, SaveManager, migrasi versi, dan data persisten pemain.
+globs: scripts/autoload/save_manager.gd, scripts/**/*save*.gd
+alwaysApply: false
+---
+
+# Save System
+
+Rujukan: `docs/DATA_SCHEMA.md` bagian 4, `docs/TECH_PLAN.md` 3.2 dan 3.3 (format versi 2 untuk cerita, usulan).
+
+## Arsitektur
+
+- Seluruh data persisten ada di **satu Dictionary** yang dipegang `SaveManager`, disimpan sebagai JSON di `user://save.json`. Satu slot dulu.
+- **Semua baca dan tulis lewat `SaveManager`.** Tidak ada node lain yang menulis file progres.
+- **Simpan hanya di akhir hari** (layar hasil, lalu setoran dan bengkel), tidak di tengah rute (DATA_SCHEMA 4, TECH_PLAN 3.2). Kalau app ditutup di tengah rute, rute itu diulang dari awal dan save terakhir tetap utuh.
+- Penulisan atomik: tulis ke `user://save.tmp` lalu rename. Jangan diganti dengan tulis langsung.
+- Waktu disimpan sebagai detik Unix (int); hari permainan sebagai bilangan bulat.
+
+## Mengubah struktur save
+
+- **Menambah field baru**: tambahkan ke state bawaan; save lama mendapat nilai bawaan lewat penggabungan dengan templat.
+- **Mengubah arti atau bentuk field yang sudah ada**: naikkan `versi` (ditaruh di `Config`), tulis langkah migrasi (`if versi < N: ...; versi = N`), dan tambahkan tes migrasi di `tests/run_tests.gd`. **Save lama dimigrasi, tidak dihapus** (DATA_SCHEMA 4).
+- Perbarui contoh save di `docs/DATA_SCHEMA.md` bagian 4. Contoh di dokumen harus format yang benar-benar dipakai kode.
+
+## Aturan data
+
+- **File save rusak tidak pernah ditimpa diam-diam**: salin dulu ke `user://save.corrupt.<waktu>.json`, lalu mulai dari state bawaan dan beri tahu pemain.
+- **Progres yang sudah dicapai tidak turun**: distrik yang terbuka tetap terbuka, milestone yang tercapai tetap tercapai, kosmetik yang dimiliki tidak hilang. Koin dan tabungan boleh berkurang hanya lewat pengeluaran yang disengaja pemain (servis, upgrade, porsi setoran), tidak lewat hukuman otomatis.
+- `id` (misi, headline, segmen, pelanggan, tokoh) **permanen dan tidak pernah diganti** setelah dipakai di save. `id` yang sudah tidak ada di data diabaikan dengan aman, jangan dihapus paksa dari save.
+- Pelanggan dirujuk lewat id rumah tetap di distrik (`per_r014`), bukan indeks segmen yang diacak (DATA_SCHEMA 4). Cara pemetaannya diputuskan di Fase 3.
+- Sisi selalu disimpan `seberang` atau `dekat`, `kosmetik.baju` memakai nama varian baju dari ART_DIRECTION 3.3.
+- Pengaturan `kidal`, `mode_bantu`, `suara`, dan `musik` ikut disimpan dan dibaca sebelum layar pertama dibuat.
+- Save cerita (`fase`, `cerita.saldo`, `cerita.pilihan`, `akhir`) mengikuti TECH_PLAN 3.3 yang masih **usulan**: jangan dikunci sebelum user menyetujui.
+
+## Android
+
+- Auto Backup aktif (`allowBackup="true"`); save kecil, cukup beberapa KB. Aturan lain soal export ada di rule `privacy-ads`.
+- Simpan state saat app dijeda atau masuk background, hanya jika sedang di titik simpan yang sah (akhir hari).

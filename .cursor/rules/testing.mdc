@@ -1,0 +1,38 @@
+---
+description: Aturan tes headless GDScript, cara verifikasi, dan uji di HP asli.
+globs: tests/**
+alwaysApply: false
+---
+
+# Testing & Verifikasi
+
+Rujukan: `docs/TECH_PLAN.md` 3.6 (strategi tes). Folder `tests/` dan Godot belum ada sampai Fase 0; aturan ini berlaku sejak tes pertama dibuat.
+
+## Tes logika (`tests/run_tests.gd`)
+
+- Runner sendiri tanpa framework: `extends SceneTree`, dijalankan dengan `godot --headless --script res://tests/run_tests.gd`. **Exit code 1 kalau ada yang gagal.** Ringkasan di akhir dengan format tetap, mis. `N lolos, 0 gagal`.
+- Jalankan `godot --headless --import` sekali setelah clone, atau kalau `class_name` baru belum dikenali.
+- Tambah tes sebagai fungsi `_test_<sistem>()` yang dipanggil dari `_initialize()`, dengan `check(kondisi, "label")`. Label bahasa Indonesia yang menjelaskan aturan yang dijaga, sebut bagian GDD kalau ada.
+- Autoload diuji dengan `load("res://scripts/autoload/x.gd").new()` **tanpa dimasukkan ke scene tree**, supaya `_ready()` tidak jalan dan tidak menulis file save. Selalu `free()` di akhir.
+- Tes hanya untuk logika non-trivial: gerak dan kecepatan, stamina, lemparan, skor, tabrakan, misi, reputasi, kerusakan, setoran, evaluator akhir, save dan migrasi, pembangun rute, dan validasi semua file data (field wajib, id unik, rujukan, panjang teks). Tidak perlu tes rendering atau visual.
+- **Waktu dan RNG dijadikan parameter** supaya deterministik. Rute dites dengan seed tetap: seed sama menghasilkan rute sama, seed berbeda menghasilkan rute berbeda.
+- Tes yang wajib ada untuk fitur baru: invarian prinsip desain (misi gagal tidak mengurangi koin, tabrakan tidak menghentikan rute, progres distrik tidak mundur, ngebut punya harga dan santai punya harga, jalur utama segmen selalu bersih).
+- Setelah Fase 6B: `tests/sim_ekonomi.gd` menjalankan 120 hari dengan tiga profil bot dan melaporkan tabungan per bab (TECH_PLAN 3.6).
+
+## Verifikasi sebelum menyatakan selesai
+
+1. `godot --headless --script res://tests/run_tests.gd` lolos. Layar baru ditambahkan ke smoke test layar (instansiasi scene, tekan tombol lewat `pressed.emit()`, cek hasil) begitu smoke test dibuat.
+2. Kalau menyentuh data: validasi data lolos. Kalau menyentuh angka tuning: tes target di `BALANCING.md` lolos.
+3. Jalankan game (editor atau `godot --path .`) dan periksa output untuk error atau warning. Coba alurnya dengan touch (emulasi touch dari mouse di Project Settings, atau di HP).
+4. **Di akhir fase gameplay, uji di HP asli**: rasa stick, ambang rem, ketelitian swipe pendek, keterbacaan sprite di skala ×3, 60 fps. Hal ini tidak bisa dinilai dari editor, dan hasilnya dicatat di PR. Kalau tidak bisa diuji (tidak ada perangkat), katakan terus terang; jangan menyatakan "enak" tanpa uji.
+
+## Error skrip tidak boleh lolos diam-diam
+
+Error skrip saat runtime (`SCRIPT ERROR`) menghentikan fungsi tes di tengah jalan: sisa `check` dilewati, tapi ringkasan tetap "0 gagal" dan exit code 0. **Exit code Godot tidak cukup.** Tangkap keluaran dengan `tee`, lalu periksa tidak ada `SCRIPT ERROR`, baris `ERROR:`, atau `GAGAL`, dan baris ringkasan memang ada. Sediakan skrip pemeriksa kecil di `tools/` saat tes pertama dibuat dan pakai juga di CI.
+
+```bash
+godot --headless --script res://tests/run_tests.gd 2>&1 | tee /tmp/tests.log
+grep -E 'SCRIPT ERROR|^ERROR:|GAGAL' /tmp/tests.log && echo "ADA ERROR" ; grep -E '^[0-9]+ lolos, 0 gagal$' /tmp/tests.log
+```
+
+Laporkan hasil apa adanya. Kalau Godot tidak tersedia atau tes gagal, katakan begitu beserta keluarannya.
