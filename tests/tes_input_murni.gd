@@ -456,6 +456,28 @@ func _test_bike_drive() -> void:
 	check(h.kecepatan_ud == 6.0, "dt besar tidak melewati target (naik): 3,0 -> tepat 6,0, dapat %s" % h.kecepatan_ud)
 	h = BikeDrive.langkah(3.0, 0.0, Vector2(0, -1), 100.0)
 	check(h.kecepatan_ud == 1.5, "stick bawah penuh dengan dt besar berhenti di 1,5 (tidak di bawah KECEPATAN_MELAMBAT_UD), dapat %s" % h.kecepatan_ud)
+	# QB-002: naik ke target MENENGAH tidak boleh melewati target. Batas atas clampf (6,0) hanya menutupi kasus target ngebut.
+	h = BikeDrive.langkah(3.0, 0.0, Vector2(0, 0.5), 1.0)
+	check(is_equal_approx(h.kecepatan_ud, 4.5), "target menengah, dt besar: dari 3,0 dengan stick atas 0,5 selama 1 detik = 4,5 u/d (bukan 6,0), dapat %s" % h.kecepatan_ud)
+	h = BikeDrive.langkah(3.0, 0.0, Vector2(0, 0.5), 100.0)
+	check(is_equal_approx(h.kecepatan_ud, 4.5), "target menengah, dt sangat besar = tepat 4,5 u/d, dapat %s" % h.kecepatan_ud)
+	h = BikeDrive.langkah(4.4, 0.0, Vector2(0, 0.5), 0.1)
+	check(is_equal_approx(h.kecepatan_ud, 4.5), "dt 0,1 dari 0,1 u/d di bawah target 4,5: berhenti di 4,5, tidak 4,7, dapat %s" % h.kecepatan_ud)
+	h = BikeDrive.langkah(6.0, 0.0, Vector2(0, 0.5), 1.0)
+	check(is_equal_approx(h.kecepatan_ud, 4.5), "turun ke target menengah: dari 6,0 dengan stick atas 0,5 selama 1 detik = 4,5 u/d (tidak di bawah target), dapat %s" % h.kecepatan_ud)
+	var melewati: bool = false
+	for atas: float in [0.1, 0.25, 0.5, 0.75, 0.9, -0.25, -0.5, -0.9]:
+		var tujuan: float = BikeDrive.kecepatan_target_ud(atas)
+		for selisih: float in [-1.0, -0.5, -0.1, -0.01, 0.0, 0.01, 0.1, 0.5, 1.0]:
+			for dt_uji: float in [0.016, 0.1, 0.5, 1.0, 100.0]:
+				var awal: float = clampf(tujuan + selisih, Config.KECEPATAN_MELAMBAT_UD, Config.KECEPATAN_NGEBUT_UD)
+				var hasil_uji: BikeDrive.Hasil = BikeDrive.langkah(awal, 0.0, Vector2(0, atas), dt_uji)
+				# Dari bawah target tidak boleh melewati; dari atas tidak boleh di bawah; selalu mendekat atau tetap.
+				if awal <= tujuan and hasil_uji.kecepatan_ud > tujuan + 0.000001:
+					melewati = true
+				if awal >= tujuan and hasil_uji.kecepatan_ud < tujuan - 0.000001:
+					melewati = true
+	check(not melewati, "sapuan: stick atas -0,9..0,9 x selisih awal x dt 0,016..100 detik: kecepatan tidak pernah melewati target dari arah mana pun")
 	h = BikeDrive.langkah(4.2, 0.4, Vector2(1, 1), 0.0)
 	check(h.kecepatan_ud == 4.2 and h.lateral_ubin == 0.4 and h.maju_ubin == 0.0 and h.lateral_ud == 0.0, "dt = 0: kecepatan, lateral, dan jarak tidak berubah")
 	for dt_aneh: float in [-1.0, NAN, INF]:
