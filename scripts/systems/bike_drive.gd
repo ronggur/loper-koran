@@ -43,6 +43,12 @@ static func batas_lateral_ubin() -> float:
 ## melewati target, lateral bergeser sesuai sumbu datar stick dan dijepit ke lebar jalan.
 ## `dt` yang nol, negatif, atau bukan bilangan hingga dianggap 0 (keadaan tidak berubah, kecuali
 ## kecepatan dijepit ke jangkauan sah). Kecepatan hasil selalu antara melambat dan ngebut.
+## Batas keabsahan `maju_ubin`: jarak dihitung dengan trapesium, `(kecepatan awal + akhir) / 2 * dt`,
+## yang TEPAT hanya selama `dt` tidak melebihi waktu rampa kecepatan ke target (rampa linear sepanjang
+## langkah). Untuk `dt` lebih besar hasilnya hanya pendekatan: misalnya `langkah(3.0, 0.0, Vector2(0, 1), 100.0)`
+## memberi 450 ubin, nilai benar 598,5 (rampa 1 detik rata-rata 4,5 u/d, lalu 6,0 u/d selama 99 detik). Fungsi ini
+## dirancang untuk langkah frame: pemanggil di scene menjepit `dt` ke `Config.LANGKAH_WAKTU_MAKS_DETIK` (`JalanUji`,
+## dijaga tes), dan pada batas itu galat jarak per langkah paling banyak sekitar 0,004 ubin (kurang dari 0,2 px).
 static func langkah(kecepatan_ud: float, lateral_ubin: float, stick: Vector2, dt: float) -> Hasil:
 	var hasil: Hasil = Hasil.new()
 	var waktu: float = dt if is_finite(dt) and dt > 0.0 else 0.0

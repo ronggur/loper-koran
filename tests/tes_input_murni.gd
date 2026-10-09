@@ -478,6 +478,33 @@ func _test_bike_drive() -> void:
 				if awal >= tujuan and hasil_uji.kecepatan_ud < tujuan - 0.000001:
 					melewati = true
 	check(not melewati, "sapuan: stick atas -0,9..0,9 x selisih awal x dt 0,016..100 detik: kecepatan tidak pernah melewati target dari arah mana pun")
+	# QB-011: trapesium tepat selama dt tidak melebihi waktu rampa; pada batas dt scene galatnya kecil.
+	var galat_maks: float = 0.0
+	var galat_tepat: float = 0.0
+	for atas: float in [0.0, 0.5, 1.0, -0.5, -1.0]:
+		var tujuan: float = BikeDrive.kecepatan_target_ud(atas)
+		for selisih: float in [-1.0, -0.15, -0.05, 0.0, 0.05, 0.15, 1.0]:
+			var awal: float = clampf(tujuan + selisih, Config.KECEPATAN_MELAMBAT_UD, Config.KECEPATAN_NGEBUT_UD)
+			var laju_rampa: float = Config.AKSELERASI_UD2 if awal < tujuan else Config.PERLAMBATAN_MELAMBAT_UD2
+			var waktu_rampa: float = absf(tujuan - awal) / laju_rampa
+			# dt di dalam rampa: trapesium = integral tepat.
+			var dt_dalam: float = waktu_rampa * 0.5
+			if dt_dalam > 0.0:
+				var arah: float = signf(tujuan - awal)
+				var akhir: float = awal + arah * laju_rampa * dt_dalam
+				var eksak_dalam: float = (awal + akhir) / 2 * dt_dalam
+				galat_tepat = maxf(galat_tepat, absf(BikeDrive.langkah(awal, 0.0, Vector2(0, atas), dt_dalam).maju_ubin - eksak_dalam))
+			# dt = batas scene: galat terhadap integral tepat (rampa lalu konstan).
+			var dt_batas: float = Config.LANGKAH_WAKTU_MAKS_DETIK
+			var eksak: float = 0.0
+			if dt_batas <= waktu_rampa:
+				var akhir_batas: float = awal + signf(tujuan - awal) * laju_rampa * dt_batas
+				eksak = (awal + akhir_batas) / 2 * dt_batas
+			else:
+				eksak = (awal + tujuan) / 2 * waktu_rampa + tujuan * (dt_batas - waktu_rampa)
+			galat_maks = maxf(galat_maks, absf(BikeDrive.langkah(awal, 0.0, Vector2(0, atas), dt_batas).maju_ubin - eksak))
+	check(galat_tepat < 0.000001, "QB-011: trapesium tepat bila dt di dalam waktu rampa (galat terbesar %s ubin)" % galat_tepat)
+	check(galat_maks < 0.005, "QB-011: pada dt = LANGKAH_WAKTU_MAKS_DETIK galat jarak per langkah di bawah 0,005 ubin (terbesar %s)" % galat_maks)
 	h = BikeDrive.langkah(4.2, 0.4, Vector2(1, 1), 0.0)
 	check(h.kecepatan_ud == 4.2 and h.lateral_ubin == 0.4 and h.maju_ubin == 0.0 and h.lateral_ud == 0.0, "dt = 0: kecepatan, lateral, dan jarak tidak berubah")
 	for dt_aneh: float in [-1.0, NAN, INF]:
