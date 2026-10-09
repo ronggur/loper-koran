@@ -13,10 +13,15 @@ const BERKAS_FRAMES: String = "res://assets/sprites/loper/loper_agen_frames.tres
 const BERKAS_JSON: String = "res://assets/sprites/loper/loper_agen.json"
 const BERKAS_CONFIG: String = "res://scripts/config.gd"
 const BERKAS_SCENE_PEMAIN: String = "res://scenes/entities/loper_agen.tscn"
-const BERKAS_SCENE_UTAMA: String = "res://scenes/dev/graybox.tscn"
+const BERKAS_SCENE_UTAMA: String = "res://scenes/dev/jalan_uji.tscn"
+const BERKAS_SCENE_GRAYBOX: String = "res://scenes/dev/graybox.tscn"
+const BERKAS_TERJEMAHAN_CSV: String = "res://translations/ui.csv"
+const BERKAS_TERJEMAHAN: String = "res://translations/ui.id.translation"
 const BERKAS_DESIGN_SPEC: String = "res://docs/design/DESIGN_SPEC.md"
 const BERKAS_ART_DIRECTION: String = "res://docs/ART_DIRECTION.md"
 const BERKAS_GPL: String = "res://assets/palette/loper_master.gpl"
+## Properti yang berisi teks untuk pemain; nilainya di skrip dan scene harus kunci terjemahan (AC-16, AC-17).
+const PROPERTI_TEKS: String = "text|tooltip_text|placeholder_text|title"
 
 ## Ukuran jendela uji layar: [lebar, tinggi, viewport_lebar_diharapkan, viewport_tinggi, skala].
 ## 1920x1080 = 16:9, 2340x1080 = 19,5:9 (Samsung A54), 2400x1080 = 20:9, sisanya setengah ukuran (x2).
@@ -57,6 +62,15 @@ func _initialize() -> void:
 	_test_lisensi_font()
 	_test_tanpa_hex_di_luar_palet()
 	_test_gaya_kode()
+	_test_terjemahan()
+	_test_penjaga_berkas()
+	var ukuran_sebelum: Vector2i = root.size
+	# Pembantu tes terpisah supaya berkas ini tidak membengkak; memakai `check` runner ini.
+	var murni: TesInputMurni = TesInputMurni.new(check, _judul)
+	murni.jalankan()
+	var scene_input: TesInputScene = TesInputScene.new(check, _judul, self)
+	await scene_input.jalankan()
+	root.size = ukuran_sebelum
 	print("%d lolos, %d gagal" % [_lolos, _gagal])
 	quit(1 if _gagal > 0 else 0)
 
@@ -354,7 +368,8 @@ func _test_scene_pemain() -> void:
 	pemain.pedal_rate = 1.5
 	check(is_equal_approx(pemain.speed_scale, 1.5), "pedal_rate 1,5 mengalikan kecepatan animasi 1,5")
 	pemain.pedal_rate = -2.0
-	check(pemain.speed_scale >= 0.0, "pedal_rate negatif tidak membuat speed_scale negatif")
+	check(pemain.speed_scale == 0.0, "pedal_rate negatif dianggap 0: speed_scale tepat 0,0, bukan nilai mutlak (Q-002)")
+	check(LoperAnim.skala_kayuh(-2.0) == 0.0 and LoperAnim.skala_kayuh(-0.001) == 0.0 and LoperAnim.skala_kayuh(1.5) == 1.5, "LoperAnim.skala_kayuh: negatif jadi 0, positif tetap (Q-002)")
 	pemain.pedal_rate = NAN
 	check(pemain.speed_scale == 0.0, "pedal_rate NaN menjadi speed_scale 0")
 	pemain.pedal_rate = 0.0
@@ -383,10 +398,10 @@ func _test_scene_pemain_di_tree() -> void:
 	di_tree.free()
 
 
-## Scene utama masuk scene tree beberapa frame tanpa error, dan pemain di dalamnya berjalan.
+## Scene graybox lama (bukan lagi scene utama sejak run 0B) masuk scene tree beberapa frame tanpa error, dan pemain di dalamnya berjalan.
 func _test_graybox_di_tree() -> void:
-	_judul("Scene utama graybox di scene tree")
-	var paket: PackedScene = load(BERKAS_SCENE_UTAMA) as PackedScene
+	_judul("Scene graybox lama di scene tree")
+	var paket: PackedScene = load(BERKAS_SCENE_GRAYBOX) as PackedScene
 	if paket == null:
 		check(false, "graybox.tscn termuat untuk uji scene tree")
 		return
@@ -424,8 +439,8 @@ func _test_pengaturan_proyek() -> void:
 	check(bool(ProjectSettings.get_setting("rendering/2d/snap/snap_2d_transforms_to_pixel")), "snap_2d_transforms_to_pixel aktif")
 	check(int(ProjectSettings.get_setting("rendering/textures/canvas_textures/default_texture_filter")) == Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST, "filter tekstur bawaan 2D = Nearest")
 	var utama: String = str(ProjectSettings.get_setting("application/run/main_scene"))
-	check(utama == BERKAS_SCENE_UTAMA, "scene utama sementara = %s, dapat '%s'" % [BERKAS_SCENE_UTAMA, utama])
-	check(ResourceLoader.exists(BERKAS_SCENE_UTAMA), "scene utama ada dan bisa dimuat")
+	check(utama == BERKAS_SCENE_UTAMA, "scene utama sementara = %s (run 0B: jalan uji yang bisa digerakkan menggantikan graybox statis), dapat '%s'" % [BERKAS_SCENE_UTAMA, utama])
+	check(ResourceLoader.exists(BERKAS_SCENE_UTAMA) and ResourceLoader.exists(BERKAS_SCENE_GRAYBOX), "scene utama dan graybox lama (untuk probe layar) ada dan bisa dimuat")
 
 	var bawaan: Dictionary = ProjectSettings.get_setting("importer_defaults/texture", {})
 	check(bawaan.get("compress/mode", -1) == 0, "default impor tekstur: Lossless (compress/mode 0)")
@@ -447,7 +462,7 @@ func _test_pengaturan_proyek() -> void:
 		check(meta.get("vram_texture", true) == false, "%s: tidak diimpor sebagai tekstur VRAM terkompresi" % berkas)
 
 	# Scene graybox: filter efektif Nearest dan skala bulat untuk semua node 2D.
-	var graybox: PackedScene = load(BERKAS_SCENE_UTAMA) as PackedScene
+	var graybox: PackedScene = load(BERKAS_SCENE_GRAYBOX) as PackedScene
 	check(graybox != null, "graybox.tscn termuat")
 	if graybox != null:
 		var akar: Node = graybox.instantiate()
@@ -695,6 +710,253 @@ func _test_gaya_kode() -> void:
 	var gitignore: String = FileAccess.get_file_as_string("res://.gitignore")
 	for pola: String in [".godot/", "build/", "builds/", "*.apk", "*.aab"]:
 		check(gitignore.split("\n").has(pola), ".gitignore menutup %s" % pola)
+
+
+# --- Terjemahan (AC-16, rule `content-data`) ---
+
+## Isi CSV terjemahan: {"header": PackedStringArray, "baris": Array[PackedStringArray]}.
+func _baca_csv(jalur: String) -> Dictionary:
+	var berkas: FileAccess = FileAccess.open(jalur, FileAccess.READ)
+	var hasil: Dictionary = {"header": PackedStringArray(), "baris": [] as Array[PackedStringArray]}
+	if berkas == null:
+		return hasil
+	var pertama: bool = true
+	while not berkas.eof_reached():
+		var baris: PackedStringArray = berkas.get_csv_line()
+		if baris.size() == 1 and baris[0].is_empty():
+			continue
+		if pertama:
+			hasil["header"] = baris
+			pertama = false
+		else:
+			var daftar: Array[PackedStringArray] = hasil["baris"]
+			daftar.append(baris)
+	return hasil
+
+
+func _test_terjemahan() -> void:
+	_judul("Terjemahan: translations/ui.csv (AC-16)")
+	var isi: Dictionary = _baca_csv(BERKAS_TERJEMAHAN_CSV)
+	var header: PackedStringArray = isi["header"]
+	var baris: Array[PackedStringArray] = isi["baris"]
+	check(header == PackedStringArray(["keys", "id"]), "header CSV = keys,id, dapat %s" % [header])
+	check(baris.size() >= 3, "CSV memuat kunci HUD sementara (%d baris)" % baris.size())
+	var kunci_sah: Array[String] = []
+	var rapi: bool = true
+	var re_kunci: RegEx = RegEx.create_from_string("^HUD_[A-Z0-9]+(?:_[A-Z0-9]+)*$")
+	var re_pengganti: RegEx = RegEx.create_from_string("\\{([^}]*)\\}")
+	for entri: PackedStringArray in baris:
+		if entri.size() != 2:
+			rapi = false
+			check(false, "tiap baris CSV punya tepat dua kolom (keys,id): %s" % [entri])
+			continue
+		var kunci: String = entri[0]
+		var nilai: String = entri[1]
+		check(re_kunci.search(kunci) != null, "kunci %s UPPER_SNAKE_CASE berawalan HUD_" % kunci)
+		check(not kunci_sah.has(kunci), "kunci %s tidak duplikat" % kunci)
+		check(not nilai.strip_edges().is_empty(), "kunci %s punya nilai (tidak kosong)" % kunci)
+		for cocok: RegExMatch in re_pengganti.search_all(nilai):
+			check(RegEx.create_from_string("^[a-z][a-z0-9_]*$").search(cocok.get_string(1)) != null, "placeholder {%s} di kunci %s berupa nama huruf kecil" % [cocok.get_string(1), kunci])
+		kunci_sah.append(kunci)
+	check(rapi and not kunci_sah.is_empty(), "CSV valid: semua baris dua kolom")
+	for kunci: String in ["HUD_KECEPATAN", "HUD_KECEPATAN_ANGKA", "HUD_KIDAL"]:
+		check(kunci_sah.has(kunci), "kunci %s ada (dipakai HUD sementara)" % kunci)
+	# Hasil impor: .csv.import dan .translation ter-commit, terdaftar di project.godot dengan fallback id.
+	check(FileAccess.file_exists(BERKAS_TERJEMAHAN_CSV + ".import"), "ui.csv.import ada (ter-commit)")
+	check(FileAccess.file_exists(BERKAS_TERJEMAHAN), "ui.id.translation hasil impor ada (ter-commit)")
+	var terdaftar: PackedStringArray = ProjectSettings.get_setting("internationalization/locale/translations", PackedStringArray())
+	check(terdaftar.has(BERKAS_TERJEMAHAN), "ui.id.translation terdaftar di internationalization/locale/translations, dapat %s" % [terdaftar])
+	check(str(ProjectSettings.get_setting("internationalization/locale/fallback")) == "id", "locale fallback = id")
+	var impor: ConfigFile = ConfigFile.new()
+	check(impor.load(BERKAS_TERJEMAHAN_CSV + ".import") == OK and str(impor.get_value("remap", "importer", "")) == "csv_translation", "ui.csv diimpor oleh csv_translation")
+	# Tiap kunci menghasilkan teks (bukan kuncinya) dan sama dengan kolom id di CSV.
+	for entri: PackedStringArray in baris:
+		if entri.size() != 2:
+			continue
+		var hasil_tr: String = tr(entri[0])
+		check(hasil_tr != entri[0] and hasil_tr == entri[1], "tr(\"%s\") = '%s' (bukan kuncinya, sama dengan CSV), dapat '%s'" % [entri[0], entri[1], hasil_tr])
+	check(TranslationServer.translate("KUNCI_YANG_TIDAK_ADA") == "KUNCI_YANG_TIDAK_ADA", "kunci yang tidak ada dikembalikan apa adanya (perilaku Godot, dasar penjaga di bawah)")
+
+	# Penjaga rujukan kunci: skrip dan scene hanya boleh memakai kunci yang ada.
+	var jumlah_skrip: int = 0
+	var jumlah_kunci_dirujuk: int = 0
+	for berkas: String in _daftar_berkas("res://scripts", ["gd"]):
+		jumlah_skrip += 1
+		var teks: String = FileAccess.get_file_as_string(berkas)
+		var rujukan: Array[String] = _kunci_tr_di_skrip(teks)
+		jumlah_kunci_dirujuk += rujukan.size()
+		for kunci: String in rujukan:
+			check(kunci_sah.has(kunci), "%s: tr(\"%s\") merujuk kunci yang ada di ui.csv" % [berkas, kunci])
+		check(_teks_literal_di_skrip(teks, kunci_sah).is_empty(), "%s: tidak ada teks pemain tertanam (properti teks hanya dari tr() atau kunci): %s" % [berkas, "; ".join(_teks_literal_di_skrip(teks, kunci_sah))])
+	check(jumlah_kunci_dirujuk >= 1, "skrip memakai kunci tr() (%d rujukan di %d skrip)" % [jumlah_kunci_dirujuk, jumlah_skrip])
+	var jumlah_teks_scene: int = 0
+	for berkas: String in _daftar_berkas("res://scenes", ["tscn"]):
+		var teks: String = FileAccess.get_file_as_string(berkas)
+		jumlah_teks_scene += _teks_di_scene(teks, []).size()
+		check(_teks_di_scene(teks, kunci_sah).is_empty(), "%s: setiap text/tooltip_text berisi kunci terjemahan yang ada: %s" % [berkas, "; ".join(_teks_di_scene(teks, kunci_sah))])
+	check(jumlah_teks_scene >= 2, "scene memuat properti teks berisi kunci (%d)" % jumlah_teks_scene)
+	# Penjaga harus menolak contoh buruk (bukan lolos kosong).
+	check(_kunci_tr_di_skrip("label.text = tr(\"HUD_KIDAL\")\nvar x: String = tr(&\"HUD_KECEPATAN\")") == ["HUD_KIDAL", "HUD_KECEPATAN"], "pemindai tr() mengenali tr(\"...\") dan tr(&\"...\")")
+	check(not kunci_sah.has("KUNCI_YANG_TIDAK_ADA") and _kunci_tr_di_skrip("x = tr(\"KUNCI_YANG_TIDAK_ADA\")") == ["KUNCI_YANG_TIDAK_ADA"], "kunci tr() yang tidak ada di CSV akan terdeteksi")
+	check(not _teks_di_scene("[node name=\"A\" type=\"Label\"]\ntext = \"Halo pemain, selamat datang\"\n", kunci_sah).is_empty(), "kalimat jadi di properti text scene ditolak")
+	check(not _teks_di_scene("[node name=\"A\" type=\"Button\"]\ntooltip_text = \"Ubah tangan\"\n", kunci_sah).is_empty(), "kalimat jadi di tooltip_text scene ditolak")
+	check(not _teks_di_scene("[node name=\"A\" type=\"Label\"]\ntext = \"HUD_TIDAK_ADA\"\n", kunci_sah).is_empty(), "kunci yang tidak ada di CSV di properti text scene ditolak")
+	check(_teks_di_scene("[node name=\"A\" type=\"Label\"]\ntext = \"HUD_KIDAL\"\nlayout_mode = 2\n", kunci_sah).is_empty(), "kunci yang ada di properti text scene diterima")
+	check(not _teks_literal_di_skrip("func f() -> void:\n\tlabel.text = \"Halo pemain\"", kunci_sah).is_empty(), "teks pemain tertanam di skrip (text = \"...\") ditolak")
+	check(not _teks_literal_di_skrip("\tlabel.set_text(\"Halo\")", kunci_sah).is_empty(), "set_text(\"...\") dengan teks tertanam ditolak")
+	check(_teks_literal_di_skrip("\tlabel.text = tr(\"HUD_KIDAL\")\n\tlabel.text = \"HUD_KIDAL\"\n\tprint(\"Halo\")", kunci_sah).is_empty(), "text = tr(kunci), kunci langsung, dan print() untuk developer diterima")
+
+
+## Kunci di setiap pemanggilan `tr("KUNCI")` atau `tr(&"KUNCI")` pada teks skrip (komentar diabaikan).
+func _kunci_tr_di_skrip(teks: String) -> Array[String]:
+	var hasil: Array[String] = []
+	var re: RegEx = RegEx.create_from_string("\\btr\\(\\s*&?\"([^\"]*)\"")
+	for baris: String in teks.split("\n"):
+		for cocok: RegExMatch in re.search_all(_tanpa_komentar(baris)):
+			hasil.append(cocok.get_string(1))
+	return hasil
+
+
+## Nilai properti teks pemain (text, tooltip_text, ...) di teks scene yang BUKAN kunci terjemahan yang ada.
+## Dengan `kunci_sah` kosong, mengembalikan semua nilai properti teks yang ditemukan.
+func _teks_di_scene(teks: String, kunci_sah: Array[String]) -> Array[String]:
+	var hasil: Array[String] = []
+	var re: RegEx = RegEx.create_from_string("^(?:%s)\\s*=\\s*\"(.*)\"\\s*$" % PROPERTI_TEKS)
+	for baris: String in teks.split("\n"):
+		var cocok: RegExMatch = re.search(baris.strip_edges())
+		if cocok == null:
+			continue
+		var nilai: String = cocok.get_string(1)
+		if kunci_sah.is_empty() or not kunci_sah.has(nilai):
+			hasil.append(nilai)
+	return hasil
+
+
+## Teks pemain yang tertanam di skrip: properti teks diberi literal bukan kunci, atau set_text("...").
+func _teks_literal_di_skrip(teks: String, kunci_sah: Array[String]) -> Array[String]:
+	var hasil: Array[String] = []
+	var re_properti: RegEx = RegEx.create_from_string("\\b(?:%s)\\s*=\\s*\"([^\"]*)\"" % PROPERTI_TEKS)
+	var re_set: RegEx = RegEx.create_from_string("\\bset_(?:text|tooltip_text)\\(\\s*\"([^\"]*)\"")
+	var nomor: int = 0
+	for baris: String in teks.split("\n"):
+		nomor += 1
+		var kode: String = _tanpa_komentar(baris)
+		for re: RegEx in [re_properti, re_set]:
+			for cocok: RegExMatch in re.search_all(kode):
+				if not kunci_sah.has(cocok.get_string(1)):
+					hasil.append("baris %d: \"%s\"" % [nomor, cocok.get_string(1)])
+	return hasil
+
+
+## Baris tanpa komentar `#` di ujungnya; isi teks berkutip dipertahankan.
+func _tanpa_komentar(baris: String) -> String:
+	var dalam_teks: String = ""
+	for i: int in range(baris.length()):
+		var c: String = baris[i]
+		if dalam_teks != "":
+			if c == dalam_teks and baris[i - 1] != "\\":
+				dalam_teks = ""
+			continue
+		if c == "\"" or c == "'":
+			dalam_teks = c
+		elif c == "#":
+			return baris.substr(0, i)
+	return baris
+
+
+# --- Penjaga tambahan temuan run 0A (AC-17: Q-003) ---
+
+func _test_penjaga_berkas() -> void:
+	_judul("Penjaga: zoom kamera, warna konstan, string kiri/kanan (Q-003)")
+	var skrip: Array[String] = _daftar_berkas("res://scripts", ["gd"])
+	var scene: Array[String] = _daftar_berkas("res://scenes", ["tscn"])
+	# Berkas asli harus bersih.
+	for berkas: String in skrip:
+		var teks: String = FileAccess.get_file_as_string(berkas)
+		check(_zoom_tak_bulat(teks).is_empty(), "%s: zoom kamera di skrip bilangan bulat (tanpa zoom pecahan)" % berkas)
+		if not berkas.ends_with("/palette.gd"):
+			check(_warna_konstan(teks).is_empty(), "%s: tidak memakai Color.<KONSTAN> (hanya Palette): %s" % [berkas, "; ".join(_warna_konstan(teks))])
+		check(_string_kiri_kanan(teks).is_empty(), "%s: tidak ada string \"kiri\"/\"kanan\" di luar NAMA_ARAH: %s" % [berkas, "; ".join(_string_kiri_kanan(teks))])
+	var jumlah_kamera: int = 0
+	for berkas: String in scene:
+		check(_zoom_tak_bulat(FileAccess.get_file_as_string(berkas)).is_empty(), "%s: zoom kamera di scene bilangan bulat" % berkas)
+		var paket: PackedScene = load(berkas) as PackedScene
+		if paket == null:
+			continue
+		var akar: Node = paket.instantiate()
+		for node: Node in _semua_node(akar):
+			if node is Camera2D:
+				jumlah_kamera += 1
+				var zoom: Vector2 = (node as Camera2D).zoom
+				check(zoom == zoom.round() and zoom.x >= 1.0 and zoom.y >= 1.0, "%s: Camera2D '%s' zoom bulat >= 1, dapat %s" % [berkas, node.name, zoom])
+		akar.free()
+	check(jumlah_kamera >= 2, "pemindai Camera2D menemukan kamera di graybox dan jalan uji (%d)" % jumlah_kamera)
+	# Penjaga harus menangkap contoh buruk (mutan sintetis), bukan hanya meloloskan berkas asli.
+	check(not _zoom_tak_bulat("[node name=\"Kamera\" type=\"Camera2D\"]\nzoom = Vector2(1.5, 1.5)\n").is_empty(), "zoom kamera pecahan di scene ditolak (mutan 1,5)")
+	check(not _zoom_tak_bulat("\tkamera.zoom = Vector2(1.5, 1.5)").is_empty(), "zoom kamera pecahan di skrip ditolak")
+	check(not _zoom_tak_bulat("zoom = Vector2(0, 0)").is_empty(), "zoom 0 ditolak")
+	check(not _zoom_tak_bulat("\tkamera.zoom = Vector2.ONE * 1.5").is_empty(), "zoom Vector2.ONE * 1,5 ditolak")
+	check(_zoom_tak_bulat("zoom = Vector2(2, 2)\n\tkamera.zoom = Vector2(3, 3)\n\tkamera.zoom = Vector2.ONE").is_empty(), "zoom bulat (2, 3, ONE) diterima")
+	check(not _warna_konstan("\tvar w: Color = Color.RED").is_empty() and not _warna_konstan("modulate = Color.TRANSPARENT").is_empty(), "Color.RED dan Color.TRANSPARENT di luar palette.gd ditolak (mutan)")
+	check(_warna_konstan("\t# Color.RED di komentar\n\tvar w: Color = Palette.TEXT\n\tvar x: Color = Color(Palette.TEXT, 0.5)\n\tvar s: String = \"Color.RED\"").is_empty(), "Palette, Color(Palette.X, alpha), komentar, dan string diterima")
+	check(not _string_kiri_kanan("\tvar sisi: String = \"kiri\"").is_empty() and not _string_kiri_kanan("\tvar sisi: String = &\"kanan\"").is_empty(), "string \"kiri\"/\"kanan\" untuk sisi ditolak (mutan)")
+	check(not _string_kiri_kanan("\tvar nama: StringName = &\"serong_kiri\"").is_empty(), "string berisi kata kiri (serong_kiri) di luar NAMA_ARAH ditolak")
+	check(_string_kiri_kanan("const NAMA_ARAH: Dictionary = {\n\t-2: \"kiri\",\n\t2: \"kanan\",\n}\n\tvar x: String = \"seberang\"\n\t# kiri di komentar").is_empty(), "string kiri/kanan di dalam NAMA_ARAH dan di komentar diterima")
+	check(_string_kiri_kanan("\tvar x: String = \"kirimkan\"").is_empty(), "kata yang hanya memuat 'kiri' sebagai awalan (kirimkan) tidak salah dikenali")
+
+
+## Pelanggaran zoom kamera: nilai pecahan atau di bawah 1 pada `zoom = Vector2(...)` atau `Vector2.ONE * x`.
+func _zoom_tak_bulat(teks: String) -> Array[String]:
+	var hasil: Array[String] = []
+	var re_vektor: RegEx = RegEx.create_from_string("\\bzoom\\s*=\\s*Vector2i?\\(([^)]*)\\)")
+	for baris: String in teks.split("\n"):
+		var kode: String = _tanpa_komentar(baris)
+		for cocok: RegExMatch in re_vektor.search_all(kode):
+			for bagian: String in cocok.get_string(1).split(","):
+				var nilai: float = bagian.strip_edges().to_float()
+				if nilai != roundf(nilai) or nilai < 1.0:
+					hasil.append(cocok.get_string())
+					break
+		var kali: RegExMatch = RegEx.create_from_string("\\bzoom\\s*=\\s*Vector2\\.ONE\\s*\\*\\s*([0-9.]+)").search(kode)
+		if kali != null:
+			var faktor: float = kali.get_string(1).to_float()
+			if faktor != roundf(faktor) or faktor < 1.0:
+				hasil.append(kali.get_string())
+	return hasil
+
+
+## Pemakaian `Color.<KONSTAN>` (mis. Color.RED) pada kode (komentar dan teks berkutip dibuang).
+func _warna_konstan(teks: String) -> Array[String]:
+	var hasil: Array[String] = []
+	var re: RegEx = RegEx.create_from_string("\\bColor\\.[A-Z][A-Z0-9_]*\\b")
+	var nomor: int = 0
+	for baris: String in teks.split("\n"):
+		nomor += 1
+		for cocok: RegExMatch in re.search_all(_kode_saja(baris)):
+			hasil.append("baris %d: %s" % [nomor, cocok.get_string()])
+	return hasil
+
+
+## String berkutip yang memuat kata `kiri` atau `kanan` di luar blok `const NAMA_ARAH` (nama animasi sprite yang dikunci).
+## Sisi jalan di kode selalu `seberang` / `dekat`; nama aksi input juga tidak memakai kata itu (rule `gdscript`).
+func _string_kiri_kanan(teks: String) -> Array[String]:
+	var hasil: Array[String] = []
+	var re: RegEx = RegEx.create_from_string("[\"'][^\"']*(?<![A-Za-z])(?:kiri|kanan)(?![A-Za-z])[^\"']*[\"']")
+	var dalam_blok: bool = false
+	var nomor: int = 0
+	for baris: String in teks.split("\n"):
+		nomor += 1
+		var kode: String = _tanpa_komentar(baris)
+		if kode.begins_with("const NAMA_ARAH"):
+			dalam_blok = true
+		if dalam_blok:
+			if kode.strip_edges() == "}":
+				dalam_blok = false
+			continue
+		var cocok: RegExMatch = re.search(kode)
+		if cocok != null:
+			hasil.append("baris %d: %s" % [nomor, cocok.get_string()])
+	return hasil
 
 
 # --- Pembantu berkas ---
