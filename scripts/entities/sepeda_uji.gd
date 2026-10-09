@@ -6,8 +6,8 @@ extends Node2D
 ## murni). Keadaan: kecepatan maju (u/d), posisi lateral (ubin dari garis tengah jalan, positif = sisi
 ## `dekat`), dan jarak yang sudah ditempuh sepanjang jalan (ubin). Posisi dunia = (lateral, -jarak) lalu
 ## diproyeksikan oleh `Iso` dan dibulatkan ke piksel; origin node = titik pijak sprite (Y-sort benar).
-## Tingkat sprite dari kekuatan stick, arah sprite dari gerak sebenarnya (D-4). Stamina, rem, dan
-## penguncian sisi bukan lingkup run ini (Fase 1).
+## Tingkat sprite dari komponen atas stick (stick bawah = melambat), arah sprite dari gerak sebenarnya (D-4). Lempar koran hanya
+## animasi (`lempar`). Stamina, rem, dan penguncian sisi bukan lingkup run ini (Fase 1).
 
 ## Kecepatan maju saat ini, u/d.
 var kecepatan_ud: float = Config.KECEPATAN_SANTAI_UD
@@ -42,3 +42,19 @@ func gerak(stick: Vector2, dt: float) -> void:
 ## Animasi yang sedang dipilih sprite (untuk tes dan HUD uji).
 func nama_animasi() -> StringName:
 	return _sprite.animation
+
+
+## Melempar koran ke `sisi`: hanya animasi pemain (D-3), tanpa proyektil, skor, atau sasaran (Fase 2). Gerak sepeda tidak terganggu.
+## True bila animasi dimulai; false bila sisi kosong atau pemain masih melempar (swipe berikutnya diabaikan).
+func lempar(sisi: LoperAnim.Sisi) -> bool:
+	return _sprite.lempar(sisi)
+
+
+## True selama animasi lempar berjalan.
+func sedang_melempar() -> bool:
+	return _sprite.sedang_melempar()
+
+
+## Menutup lempar yang sedang berjalan tanpa sinyal (app di-background atau kehilangan fokus).
+func batalkan_lempar() -> void:
+	_sprite.batalkan_lempar()

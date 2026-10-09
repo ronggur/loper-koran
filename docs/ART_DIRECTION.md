@@ -192,6 +192,7 @@ Sprite sheet ada di [`design/character/loper_agen/`](./design/character/loper_ag
 
 - Nama animasi `kecepatan_arah`, 4 frame kayuh yang berputar **maju** (searah jarum jam dilihat dari kanan).
 - Sel 46×58 px, titik pijak (tengah sepeda di tanah) di piksel (23, 46). Di Godot dengan `centered = true`: `offset = Vector2(0, -17)`.
+- **Melambat** (usulan, 2026-10-09): `melambat_<arah>`, 5 animasi, gambar sama persis dengan santai, 4 fps (santai 8 fps), dipakai saat stick ditarik ke bawah. **Lempar** (usulan, 2026-10-09): `lempar_<sisi>_<kecepatan>_<arah>`, 18 animasi (kiri = sisi seberang, kanan = sisi dekat; santai, cepat, ngebut; normal dan dua serong), 4 frame, 12 fps, sekali putar, koran lepas di frame 2; arah 90° belum ada gambarnya. Keduanya sudah dipasang di jalan uji (`assets/sprites/loper/loper_agen_frames.tres`, 38 animasi gabungan, dibangun `tools/loper_art/bangun_frames.py`) tetapi masih usulan sampai dinilai di HP.
 
 ### 3.3 Varian baju (disimpan untuk item)
 
@@ -201,8 +202,8 @@ Tujuh varian dari eksplorasi tetap ada di `tools/loper_art/loper.py` dan bisa di
 
 | Animasi | Dibutuhkan di | Catatan |
 |---|---|---|
-| Lempar ke sisi seberang | Fase 2 | Lengan kiri, 3–4 frame, per arah |
-| Lempar ke sisi dekat | Fase 2 | Lengan kanan |
+| Lempar ke sisi seberang | Fase 2 | Lengan kiri, 4 frame, arah normal dan dua serong sudah ada sebagai usulan dan dipakai di jalan uji sejak 2026-10-09 (3.2); arah 90° belum |
+| Lempar ke sisi dekat | Fase 2 | Lengan kanan, sama |
 | Meluncur | Fase 1 | Pedal datar, kaki diam. **Usulan sudah dibuat** (`design/character/loper_agen/rem_meluncur/`), 5 arah, belum dipasang |
 | Rem | Fase 1 | Badan sedikit mundur. **Usulan sudah dibuat** (`design/character/loper_agen/rem_meluncur/`), 5 arah, belum dipasang |
 | Berhenti | Fase 4 (menangkap kucing) | Satu kaki turun ke tanah |
@@ -534,6 +535,7 @@ Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dib
 
 ## Changelog Keputusan
 
+- **2026-10-09** — **Melambat dan lempar koran dipasang di jalan uji** (bagian 3.2, 3.4), tetap usulan sampai dinilai di HP. `loper_agen_frames.tres` kini gabungan 38 animasi (15 kayuh, 5 melambat, 18 lempar) yang dibangun `tools/loper_art/bangun_frames.py` dari tiga JSON sumber; sel, titik pijak, dan offset sama dengan sheet kayuh. Hanya animasi pemain: proyektil, skor, dan arah lempar 90° tetap Fase 2 dan aset berikutnya.
 - **2026-10-09** — **Judul game "Kring Kring!" dan bel sebagai ciri khas** (GDD 5.4). Aset bel ditambahkan sebagai usulan: tombol bel HUD tiga keadaan, efek garis getar dan teks "KRING!" / "KRING KRING!" di atas setang, dan ikon "!" untuk warga atau hewan yang menepi (`design/bel/`, `tools/ui_art/bel.py`). Logo "Kring Kring!" masuk daftar aset. Animasi pemain tidak berubah: bel di sprite rute hanya 1–2 piksel, jadi efeknya cukup lewat VFX.
 - **2026-10-08** — **Gambar full body diganti dengan konversi gambar AI** (bagian 3.5). `loper_agen_fullbody.png` sekarang 240×292 px dari `konversi2.py` (sumber di `design/character/loper_agen/konversi2/`), menggantikan gambar 294×283 lima nada dari `fullbody.py`. Kepala terpisah tanpa leher dengan dagu sedikit menumpuk kerah belakang, koran diangkat tinggi, tas boncengan terbuka berisi koran, satu gir belakang, dua engkol segaris, dua kabel rem. Spakbor dan tas satu sisi berbeda dari 3.1, hanya di gambar ini. Pertanyaan terbuka soal gaya lima nada untuk skala besar ditutup. Gambar ini jadi acuan gambar skala besar berikutnya, dan gambar skala besar seperti ini akan dipakai sebagai gambar adegan (cutscene) saat jalan cerita maju dan di adegan pembuka.
 - **2026-10-07** — **Usulan lingkungan** (bagian 2.6): bayangan berwarna per waktu, pemain setengah color grading, penampang jalan per distrik (lajur sepeda di perumahan, ruko 2 lajur, gang 2 ubin, talud sungai miring), palet enam distrik, detail pinggir jalan dan antena TV, tiga bentuk rumah dan tiga jenis pohon perumahan, model sedan/angkot/bus kecil. Mock di `design/environment/`, renderer `tools/env_art`. Belum dikunci.

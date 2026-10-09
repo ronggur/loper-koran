@@ -37,6 +37,12 @@ func jalankan() -> void:
 	await _test_dorongan_kecepatan_scene()
 	await _test_kidal_dan_hud()
 	_test_proyek_dan_keyboard()
+	await _test_melambat_stick()
+	await _test_lempar_swipe()
+	await _test_lempar_serong_dan_tepi()
+	await _test_lempar_dua_jari()
+	await _test_lempar_kidal()
+	await _test_lempar_batal()
 
 
 # --- Pembantu ---
@@ -305,8 +311,15 @@ func _test_input_terpadu() -> void:
 	check(sepeda.kecepatan_ud == 6.0 and router.posisi_swipe() == Vector2(520, 160), "menggeser stick ke atas penuh saat swipe ditahan: sepeda ngebut, swipe tidak terganggu")
 	_sentuh(1, Vector2(520, 160), false)
 	check(router.jumlah_swipe_selesai == 1 and not router.swipe_aktif() and router.stick_aktif(), "mengangkat jari swipe: swipe tercatat sekali dan stick tetap aktif")
+	# Sejak run sprite-lempar-melambat swipe horizontal (70 px ke kanan, 40 px ke atas: datar dominan) melempar ke sisi dekat. Tes lama
+	# mengamati animasi kayuh sesudahnya, jadi lempar diperiksa lalu diselesaikan dengan waktu terkontrol (bukan menunggu waktu nyata).
+	var pemain_lempar: LoperSprite = _sprite(akar)
+	pemain_lempar.set_process(false)
+	check(sepeda.sedang_melempar() and sepeda.nama_animasi() == &"lempar_kanan_ngebut_normal", "swipe ke kanan saat ngebut lurus melempar ke sisi dekat: lempar_kanan_ngebut_normal, dapat %s" % sepeda.nama_animasi())
 	_langkah(akar, 20)
-	check(sepeda.kecepatan_ud == 6.0 and router.stick_aktif(), "setelah swipe diangkat sepeda tetap ngebut")
+	check(sepeda.kecepatan_ud == 6.0 and router.stick_aktif() and sepeda.sedang_melempar(), "setelah swipe diangkat sepeda tetap ngebut dan lempar masih berjalan (waktu sprite tidak ikut langkah scene)")
+	_selesaikan_lempar(pemain_lempar)
+	check(not sepeda.sedang_melempar() and sepeda.nama_animasi() == &"ngebut_normal", "lempar selesai: kembali ke ngebut_normal")
 	# Jari stick diangkat: kembali ke santai tanpa gerak sendiri.
 	_sentuh(0, Vector2(100, 225), false)
 	check(not router.stick_aktif() and router.vektor_stick() == Vector2.ZERO, "mengangkat jari stick: vektor nol dan slot bebas")
@@ -354,6 +367,360 @@ func _test_input_terpadu() -> void:
 	lepas_klik.pressed = false
 	Input.parse_input_event(lepas_klik)
 	Input.flush_buffered_events()
+	_bersihkan(akar)
+
+
+# --- AC-5: melambat dari stick, lempar dari swipe (run sprite-lempar-melambat) ---
+
+## Sprite pemain di scene uji. Waktu lempar dimajukan tes dengan `dt` tetap (`maju`), jadi `_process` sprite dimatikan:
+## panggil `_sprite` lagi sesudah tiap swipe, karena `lempar` menyalakan `_process` kembali.
+func _sprite(akar: JalanUji) -> LoperSprite:
+	var sprite: LoperSprite = _anak(akar, "LoperAgen") as LoperSprite
+	sprite.set_process(false)
+	return sprite
+
+
+## Memajukan lempar `jumlah` langkah `DT`. Bila `jumlah` 0, sampai selesai (paling banyak 60 langkah).
+func _selesaikan_lempar(sprite: LoperSprite, jumlah: int = 0) -> void:
+	for i: int in range(jumlah if jumlah > 0 else 60):
+		if not sprite.sedang_melempar():
+			return
+		sprite.maju(DT)
+
+
+## Swipe sintetis: jari `index` turun di `dari`, bergeser ke `ke`, diangkat. Lempar (bila ada) dimulai di sini; `_process` sprite dimatikan sesudahnya.
+func _swipe(akar: JalanUji, index: int, dari: Vector2, ke: Vector2) -> void:
+	_sentuh(index, dari, true)
+	_geser(index, ke)
+	_sentuh(index, ke, false)
+	_sprite(akar).set_process(false)
+
+
+## Mencatat sinyal sprite: entri [jenis, sisi, animasi saat sinyal].
+func _catat_sprite(sprite: LoperSprite) -> Array:
+	var catatan: Array = []
+	sprite.koran_lepas.connect(func(sisi: LoperAnim.Sisi) -> void: catatan.append(["lepas", int(sisi), sprite.animation]))
+	sprite.lempar_selesai.connect(func() -> void: catatan.append(["selesai", -1, sprite.animation]))
+	return catatan
+
+
+func _jumlah(catatan: Array, jenis: String) -> int:
+	var hasil: int = 0
+	for entri: Array in catatan:
+		if entri[0] == jenis:
+			hasil += 1
+	return hasil
+
+
+## Stick bawah di scene uji: animasi melambat_* bersama dorongan kecepatan; ambang zona mati 15%.
+func _test_melambat_stick() -> void:
+	_judul.call("Melambat dari stick di scene uji (AC-5, D-1)")
+	var akar: JalanUji = await _siapkan(Vector2i(2340, 1080))
+	var sepeda: SepedaUji = _anak(akar, "Sepeda") as SepedaUji
+	var kontrol: KontrolTouch = _anak(akar, "KontrolTouch") as KontrolTouch
+	var sprite: LoperSprite = _sprite(akar)
+	kontrol.keyboard_aktif = false
+	var radius: float = Config.STICK_RADIUS_PX
+	# Zona mati: 14,9% dan 15,0% ke bawah masih santai, 15,1% sudah melambat (BALANCING 2).
+	_sentuh(0, Vector2(100, 260), true)
+	_geser(0, Vector2(100, 260.0 + radius * 0.149))
+	_langkah(akar, 3)
+	check(sepeda.nama_animasi() == &"santai_normal" and sprite.speed_level == 0, "stick ke bawah 14,9%% (zona mati): santai_normal, dapat %s" % sepeda.nama_animasi())
+	_geser(0, Vector2(100, 260.0 + radius * 0.150))
+	_langkah(akar, 3)
+	check(sepeda.nama_animasi() == &"santai_normal", "stick ke bawah tepat 15,0%% (tepi zona mati): santai_normal, dapat %s" % sepeda.nama_animasi())
+	_geser(0, Vector2(100, 260.0 + radius * 0.151))
+	_langkah(akar, 3)
+	check(sepeda.nama_animasi() == &"melambat_normal" and sprite.speed_level == -1, "stick ke bawah 15,1%% (tepat di luar zona mati): melambat_normal, dapat %s" % sepeda.nama_animasi())
+	# Stick bawah penuh: melambat_normal, kayuh 4 fps, kecepatan turun ke 1,5 u/d, dorongan kecepatan mundur.
+	_geser(0, Vector2(100, 260.0 + radius))
+	_langkah(akar, 6)
+	check(sepeda.nama_animasi() == &"melambat_normal" and sepeda.kecepatan_ud < 3.0, "stick bawah penuh: melambat_normal dan kecepatan turun (%s u/d)" % sepeda.kecepatan_ud)
+	check(is_equal_approx(sprite.sprite_frames.get_animation_speed(sprite.animation), 4.0) and sprite.is_playing(), "melambat berkayuh 4 fps dan berputar")
+	_langkah(akar, 114)
+	check(sepeda.kecepatan_ud == 1.5 and sepeda.nama_animasi() == &"melambat_normal", "2 detik stick bawah penuh: 1,5 u/d dan tetap melambat_normal, dapat %s %s" % [sepeda.kecepatan_ud, sepeda.nama_animasi()])
+	check(akar.geser_dorongan().distance_to(Vector2(-Config.DORONGAN_MUNDUR_PX, Config.DORONGAN_MUNDUR_PX / 2)) < 1.0, "dorongan kecepatan yang sudah ada tetap bekerja bersama melambat: geseran mundur %s" % akar.geser_dorongan())
+	# Bawah sambil ke sisi dekat: melambat dengan arah serong dari gerak sebenarnya.
+	_geser(0, Vector2(100.0 + radius * 0.7, 260.0 + radius * 0.7))
+	_langkah(akar, 4)
+	check(sepeda.nama_animasi() == &"melambat_serong_kanan", "stick bawah-dekat: melambat_serong_kanan, dapat %s" % sepeda.nama_animasi())
+	# Stick dilepas: tingkat kembali santai.
+	_sentuh(0, Vector2(100, 260), false)
+	_langkah(akar, 3)
+	check(sepeda.nama_animasi() == &"santai_normal" and sprite.speed_level == 0, "stick dilepas: kembali santai_normal")
+	kontrol.keyboard_aktif = OS.has_feature("editor")
+	_bersihkan(akar)
+
+
+## Swipe kiri dan kanan di tiga tingkat (stick lurus): lempar_<sisi>_<kecepatan>_normal yang benar, sinyal sekali, kembali ke kayuh.
+func _test_lempar_swipe() -> void:
+	_judul.call("Lempar dari swipe di scene uji, tiga tingkat (AC-5, D-2, D-3)")
+	var akar: JalanUji = await _siapkan(Vector2i(2340, 1080))
+	var sepeda: SepedaUji = _anak(akar, "Sepeda") as SepedaUji
+	var kontrol: KontrolTouch = _anak(akar, "KontrolTouch") as KontrolTouch
+	var sprite: LoperSprite = _sprite(akar)
+	var catatan: Array = _catat_sprite(sprite)
+	kontrol.keyboard_aktif = false
+	var radius: float = Config.STICK_RADIUS_PX
+	# [nama tingkat, geseran stick ke atas dalam piksel; 0 = stick tidak disentuh]. 20,125 px = kekuatan 0,5 (cepat).
+	var tingkat: Array = [["santai", 0.0], ["cepat", radius * (Config.ZONA_MATI_STICK + (1.0 - Config.ZONA_MATI_STICK) * 0.5)], ["ngebut", radius]]
+	var ada_stick: bool = false
+	for kasus: Array in tingkat:
+		var nama_tingkat: String = kasus[0]
+		var tarikan: float = kasus[1]
+		if tarikan > 0.0:
+			if not ada_stick:
+				_sentuh(0, Vector2(100, 260), true)
+				ada_stick = true
+			_geser(0, Vector2(100, 260.0 - tarikan))
+		_langkah(akar, 3)
+		check(sepeda.nama_animasi() == StringName("%s_normal" % nama_tingkat), "stick tingkat %s: kayuh %s_normal, dapat %s" % [nama_tingkat, nama_tingkat, sepeda.nama_animasi()])
+		# Swipe ke kiri layar -> sisi seberang (kiri), ke kanan layar -> sisi dekat (kanan).
+		for arah_swipe: Array in [["kiri", Vector2(500, 200), Vector2(440, 200), LoperAnim.Sisi.SEBERANG], ["kanan", Vector2(440, 200), Vector2(500, 200), LoperAnim.Sisi.DEKAT]]:
+			var sebelum: int = catatan.size()
+			_swipe(akar, 1, arah_swipe[1], arah_swipe[2])
+			var diharapkan: StringName = StringName("lempar_%s_%s_normal" % [arah_swipe[0], nama_tingkat])
+			check(sepeda.sedang_melempar() and sepeda.nama_animasi() == diharapkan, "swipe ke %s layar di tingkat %s: %s, dapat %s" % [arah_swipe[0], nama_tingkat, diharapkan, sepeda.nama_animasi()])
+			_langkah(akar, 5)
+			check(sepeda.nama_animasi() == diharapkan, "gerak sepeda terus (5 langkah scene) tidak mengganti animasi lempar")
+			_selesaikan_lempar(sprite)
+			var baru: Array = catatan.slice(sebelum)
+			check(baru.size() == 2 and baru[0][0] == "lepas" and baru[0][1] == int(arah_swipe[3]) and baru[0][2] == diharapkan and baru[1][0] == "selesai", "swipe ke %s layar di tingkat %s: koran_lepas (sisi %d) lalu lempar_selesai, masing-masing sekali" % [arah_swipe[0], nama_tingkat, int(arah_swipe[3])])
+			check(not sepeda.sedang_melempar() and sepeda.nama_animasi() == StringName("%s_normal" % nama_tingkat), "sesudah lempar kembali ke %s_normal" % nama_tingkat)
+	check(catatan.size() == 12, "6 swipe menghasilkan 12 sinyal (6 lepas + 6 selesai), dapat %d" % catatan.size())
+	if ada_stick:
+		_sentuh(0, Vector2(100, 225), false)
+	kontrol.keyboard_aktif = OS.has_feature("editor")
+	_bersihkan(akar)
+
+
+## Lempar sambil serong (arah dari gerak sebenarnya), arah 90 derajat, swipe vertikal/pendek/di ambang, swipe di luar zona, swipe saat melempar.
+func _test_lempar_serong_dan_tepi() -> void:
+	_judul.call("Lempar sambil serong, swipe tidak sah, swipe saat melempar (AC-5, D-2, D-3)")
+	var akar: JalanUji = await _siapkan(Vector2i(2340, 1080))
+	var sepeda: SepedaUji = _anak(akar, "Sepeda") as SepedaUji
+	var kontrol: KontrolTouch = _anak(akar, "KontrolTouch") as KontrolTouch
+	var sprite: LoperSprite = _sprite(akar)
+	var catatan: Array = _catat_sprite(sprite)
+	var router: TouchRouter = kontrol.router
+	kontrol.keyboard_aktif = false
+	# Stick ke kiri layar (seberang): sprite serong seberang; swipe ke kanan = sisi dekat: lempar_kanan_santai_serong_kiri.
+	_sentuh(0, Vector2(100, 260), true)
+	_geser(0, Vector2(65, 260))
+	_langkah(akar, 6)
+	check(sepeda.nama_animasi() == &"santai_serong_kiri", "stick ke kiri: santai_serong_kiri sebelum swipe, dapat %s" % sepeda.nama_animasi())
+	_swipe(akar, 1, Vector2(440, 200), Vector2(500, 200))
+	check(sepeda.nama_animasi() == &"lempar_kanan_santai_serong_kiri", "swipe ke kanan sambil serong seberang: lempar_kanan_santai_serong_kiri (varian serong yang benar), dapat %s" % sepeda.nama_animasi())
+	# Tingkat dan arah berubah selama lempar: gambar lempar tetap, kayuh sesudahnya mengikuti keadaan terkini.
+	_geser(0, Vector2(135, 260))
+	_langkah(akar, 6)
+	check(sepeda.nama_animasi() == &"lempar_kanan_santai_serong_kiri", "stick berbalik ke kanan selama lempar: gambar lempar tidak berganti, dapat %s" % sepeda.nama_animasi())
+	_selesaikan_lempar(sprite)
+	check(sepeda.nama_animasi() == &"santai_serong_kanan", "sesudah lempar kayuh mengikuti arah TERKINI (santai_serong_kanan), bukan arah saat mulai, dapat %s" % sepeda.nama_animasi())
+	# Stick ke kanan: swipe ke kiri = sisi seberang: lempar_kiri_santai_serong_kanan.
+	_swipe(akar, 1, Vector2(500, 200), Vector2(440, 200))
+	check(sepeda.nama_animasi() == &"lempar_kiri_santai_serong_kanan", "swipe ke kiri sambil serong dekat: lempar_kiri_santai_serong_kanan, dapat %s" % sepeda.nama_animasi())
+	_selesaikan_lempar(sprite)
+	# Arah 90 derajat belum punya gambar: memakai serong di sisi yang sama (sprite diatur langsung, karena rem Fase 1 belum ada).
+	_sentuh(0, Vector2(135, 260), false)
+	_langkah(akar, 3)
+	sprite.steer = 2
+	_swipe(akar, 1, Vector2(440, 200), Vector2(500, 200))
+	check(sepeda.nama_animasi() == &"lempar_kanan_santai_serong_kanan", "arah 90 derajat ke dekat + swipe kanan: serong_kanan di sisi yang sama, dapat %s" % sepeda.nama_animasi())
+	_selesaikan_lempar(sprite)
+	sprite.steer = -2
+	_swipe(akar, 1, Vector2(500, 200), Vector2(440, 200))
+	check(sepeda.nama_animasi() == &"lempar_kiri_santai_serong_kiri", "arah 90 derajat ke seberang + swipe kiri: serong_kiri, dapat %s" % sepeda.nama_animasi())
+	_selesaikan_lempar(sprite)
+	_langkah(akar, 3)
+	check(sepeda.nama_animasi() == &"santai_normal", "sepeda lurus kembali: santai_normal (arah dipulihkan gerak), dapat %s" % sepeda.nama_animasi())
+	# Swipe yang tidak melempar.
+	var sebelum: int = catatan.size()
+	_swipe(akar, 1, Vector2(450, 250), Vector2(450, 190))
+	check(not sepeda.sedang_melempar() and sepeda.nama_animasi() == &"santai_normal", "swipe vertikal ke atas tidak melempar")
+	_swipe(akar, 1, Vector2(450, 190), Vector2(450, 250))
+	check(not sepeda.sedang_melempar(), "swipe vertikal ke bawah tidak melempar")
+	_swipe(akar, 1, Vector2(450, 200), Vector2(480, 240))
+	check(not sepeda.sedang_melempar(), "swipe miring dengan gerak tegak lebih besar (30 datar, 40 tegak) tidak melempar")
+	_swipe(akar, 1, Vector2(450, 200), Vector2(450 + 11, 200))
+	check(not sepeda.sedang_melempar(), "swipe 11 px (di bawah ambang 12) tidak melempar")
+	_swipe(akar, 1, Vector2(450, 200), Vector2(450 - 11, 200))
+	check(not sepeda.sedang_melempar(), "swipe 11 px ke kiri tidak melempar")
+	_swipe(akar, 1, Vector2(450, 200), Vector2(450, 200))
+	check(not sepeda.sedang_melempar(), "ketukan tanpa geser (swipe nol) tidak melempar")
+	check(router.jumlah_swipe_selesai >= 8 and catatan.size() == sebelum, "swipe tak sah tetap tercatat router (jumlah %d) tetapi tidak ada sinyal sprite" % router.jumlah_swipe_selesai)
+	_swipe(akar, 1, Vector2(450, 200), Vector2(450 + 12, 200))
+	check(sepeda.sedang_melempar() and sepeda.nama_animasi() == &"lempar_kanan_santai_normal", "swipe tepat 12 px ke kanan (di ambang, inklusif) melempar sisi dekat, dapat %s" % sepeda.nama_animasi())
+	_selesaikan_lempar(sprite)
+	_swipe(akar, 1, Vector2(450, 200), Vector2(450 - 12, 200))
+	check(sepeda.sedang_melempar() and sepeda.nama_animasi() == &"lempar_kiri_santai_normal", "swipe tepat 12 px ke kiri melempar sisi seberang, dapat %s" % sepeda.nama_animasi())
+	_selesaikan_lempar(sprite)
+	# Swipe yang dimulai di luar zona swipe (strip HUD atas, zona stick) tidak diklaim dan tidak melempar.
+	sebelum = catatan.size()
+	var jumlah_router: int = router.jumlah_swipe_selesai
+	_swipe(akar, 2, Vector2(400, 20), Vector2(500, 20))
+	_swipe(akar, 2, Vector2(150, 220), Vector2(60, 220))
+	check(not sepeda.sedang_melempar() and router.jumlah_swipe_selesai == jumlah_router and catatan.size() == sebelum, "swipe yang dimulai di strip atas atau zona stick tidak diklaim sebagai swipe dan tidak melempar")
+	# Swipe kedua saat masih melempar diabaikan; sesudah selesai swipe baru melempar lagi.
+	sebelum = catatan.size()
+	_swipe(akar, 1, Vector2(440, 200), Vector2(500, 200))
+	_swipe(akar, 1, Vector2(500, 220), Vector2(440, 220))
+	check(sepeda.nama_animasi() == &"lempar_kanan_santai_normal", "swipe kedua (ke kiri) saat masih melempar diabaikan: tetap lempar_kanan_santai_normal, dapat %s" % sepeda.nama_animasi())
+	_selesaikan_lempar(sprite)
+	var baru: Array = catatan.slice(sebelum)
+	check(baru.size() == 2 and baru[0][1] == int(LoperAnim.Sisi.DEKAT) and baru[1][0] == "selesai", "hanya lemparan pertama menghasilkan sinyal (koran_lepas sisi dekat, lempar_selesai)")
+	_swipe(akar, 1, Vector2(500, 220), Vector2(440, 220))
+	check(sepeda.nama_animasi() == &"lempar_kiri_santai_normal", "swipe sesudah lempar selesai melempar lagi (sisi seberang)")
+	_selesaikan_lempar(sprite)
+	kontrol.keyboard_aktif = OS.has_feature("editor")
+	_bersihkan(akar)
+
+
+## Dua jari: stick menahan ngebut sementara swipe melempar; sepeda tetap bergerak selama lempar.
+func _test_lempar_dua_jari() -> void:
+	_judul.call("Stick dan swipe bersamaan: sepeda bergerak sambil melempar (AC-5)")
+	var akar: JalanUji = await _siapkan(Vector2i(2340, 1080))
+	var sepeda: SepedaUji = _anak(akar, "Sepeda") as SepedaUji
+	var kontrol: KontrolTouch = _anak(akar, "KontrolTouch") as KontrolTouch
+	var sprite: LoperSprite = _sprite(akar)
+	var catatan: Array = _catat_sprite(sprite)
+	var router: TouchRouter = kontrol.router
+	kontrol.keyboard_aktif = false
+	_sentuh(0, Vector2(100, 260), true)
+	_geser(0, Vector2(100, 225))
+	_langkah(akar, 90)
+	check(sepeda.kecepatan_ud == 6.0 and sepeda.nama_animasi() == &"ngebut_normal", "ngebut mantap sebelum swipe")
+	# Swipe ditahan dulu (jari belum diangkat): tidak ada lempar, stick tetap menggerakkan sepeda.
+	_sentuh(1, Vector2(440, 200), true)
+	_geser(1, Vector2(500, 200))
+	var jarak_awal: float = sepeda.jarak_ubin
+	_langkah(akar, 10)
+	check(router.jumlah_jari_aktif() == 2 and not sepeda.sedang_melempar() and sepeda.jarak_ubin - jarak_awal > 0.9, "swipe ditahan: dua jari aktif, belum melempar, sepeda terus maju")
+	_sentuh(1, Vector2(500, 200), false)
+	sprite.set_process(false)
+	check(sepeda.sedang_melempar() and sepeda.nama_animasi() == &"lempar_kanan_ngebut_normal", "jari swipe diangkat: lempar_kanan_ngebut_normal")
+	# Sepuluh langkah gabungan (scene + sprite) saat melempar: sepeda tetap ngebut dan maju, stick tidak terganggu.
+	var jarak_lempar: float = sepeda.jarak_ubin
+	for i: int in range(10):
+		akar.perbarui(DT)
+		sprite.maju(DT)
+	check(sepeda.kecepatan_ud == 6.0 and sepeda.jarak_ubin - jarak_lempar > 0.95 and router.stick_aktif(), "selama melempar sepeda tetap ngebut (6,0 u/d) dan maju %s ubin dalam 10 langkah, stick tetap aktif" % (sepeda.jarak_ubin - jarak_lempar))
+	check(sepeda.sedang_melempar() and _jumlah(catatan, "lepas") == 1 and sprite.frame == 2, "setengah lempar (10 langkah): koran sudah lepas sekali, masih melempar di frame 2")
+	# Stick dilepas di tengah lempar: gambar lempar tidak berganti; sesudah selesai kayuh mengikuti tingkat terkini (santai).
+	_sentuh(0, Vector2(100, 225), false)
+	for i: int in range(10):
+		akar.perbarui(DT)
+		sprite.maju(DT)
+	check(not sepeda.sedang_melempar() and _jumlah(catatan, "selesai") == 1, "lempar selesai di langkah 20 walau stick dilepas di tengah")
+	check(sepeda.nama_animasi() == &"santai_normal" and sepeda.kecepatan_ud > 3.0 and sepeda.kecepatan_ud < 6.0, "sesudah selesai kayuh mengikuti tingkat terkini (santai_normal) sementara kecepatan masih turun dari 6,0 (%s u/d)" % sepeda.kecepatan_ud)
+	kontrol.keyboard_aktif = OS.has_feature("editor")
+	_bersihkan(akar)
+
+
+## Kidal menukar zona, bukan arti sisi: swipe ke kiri layar tetap sisi seberang, ke kanan layar tetap sisi dekat.
+func _test_lempar_kidal() -> void:
+	_judul.call("Kidal tidak mengubah arti sisi lempar (AC-5, D-2)")
+	for kasus: Array in KASUS_JENDELA:
+		var lebar: int = kasus[2]
+		var w: float = float(lebar)
+		var tag: String = "lebar %d" % lebar
+		var akar: JalanUji = await _siapkan(Vector2i(kasus[0], kasus[1]))
+		var sepeda: SepedaUji = _anak(akar, "Sepeda") as SepedaUji
+		var kontrol: KontrolTouch = _anak(akar, "KontrolTouch") as KontrolTouch
+		var hud: HudDev = _anak(akar, "Hud") as HudDev
+		var sprite: LoperSprite = _sprite(akar)
+		var catatan: Array = _catat_sprite(sprite)
+		var tombol: Button = _anak(hud, "TombolKidal") as Button
+		kontrol.keyboard_aktif = false
+		# Tangan kanan (bawaan): swipe di sisi kanan layar.
+		var x_kanan: float = w - 100.0
+		_swipe(akar, 1, Vector2(x_kanan, 200), Vector2(x_kanan - 60.0, 200))
+		check(sepeda.nama_animasi() == &"lempar_kiri_santai_normal", "%s tangan kanan: swipe ke kiri layar = lempar_kiri (seberang), dapat %s" % [tag, sepeda.nama_animasi()])
+		_selesaikan_lempar(sprite)
+		_swipe(akar, 1, Vector2(x_kanan - 60.0, 200), Vector2(x_kanan, 200))
+		check(sepeda.nama_animasi() == &"lempar_kanan_santai_normal", "%s tangan kanan: swipe ke kanan layar = lempar_kanan (dekat), dapat %s" % [tag, sepeda.nama_animasi()])
+		_selesaikan_lempar(sprite)
+		# Kidal: zona swipe pindah ke sisi kiri layar (x 20 sampai lebar - 210); arti sisi tidak berubah.
+		tombol.button_pressed = true
+		await _tree.process_frame
+		await _tree.process_frame
+		check(kontrol.router.kidal(), "%s: kidal menyala" % tag)
+		sprite = _sprite(akar)
+		_swipe(akar, 1, Vector2(300, 200), Vector2(240, 200))
+		check(sepeda.nama_animasi() == &"lempar_kiri_santai_normal", "%s kidal: swipe ke kiri layar tetap lempar_kiri (seberang), dapat %s" % [tag, sepeda.nama_animasi()])
+		_selesaikan_lempar(sprite)
+		_swipe(akar, 1, Vector2(240, 200), Vector2(300, 200))
+		check(sepeda.nama_animasi() == &"lempar_kanan_santai_normal", "%s kidal: swipe ke kanan layar tetap lempar_kanan (dekat), dapat %s" % [tag, sepeda.nama_animasi()])
+		_selesaikan_lempar(sprite)
+		# Swipe di sisi kanan layar sekarang adalah zona stick (kidal): tidak melempar.
+		var sebelum: int = catatan.size()
+		_swipe(akar, 1, Vector2(w - 100.0, 260), Vector2(w - 160.0, 260))
+		check(catatan.size() == sebelum and not sepeda.sedang_melempar(), "%s kidal: gerak di sisi kanan layar (zona stick) tidak melempar" % tag)
+		_sentuh(1, Vector2(w - 100.0, 260), true)
+		_sentuh(1, Vector2(w - 100.0, 260), false)
+		tombol.button_pressed = false
+		await _tree.process_frame
+		kontrol.keyboard_aktif = OS.has_feature("editor")
+		_bersihkan(akar)
+
+
+## batal_semua / pause / kidal berganti: tidak ada lempar yang tercipta dari swipe yang dibatalkan dan tidak ada lempar yang menggantung.
+func _test_lempar_batal() -> void:
+	_judul.call("Pembatalan: batal_semua, pause, kidal berganti (AC-5)")
+	var akar: JalanUji = await _siapkan(Vector2i(2340, 1080))
+	var sepeda: SepedaUji = _anak(akar, "Sepeda") as SepedaUji
+	var kontrol: KontrolTouch = _anak(akar, "KontrolTouch") as KontrolTouch
+	var hud: HudDev = _anak(akar, "Hud") as HudDev
+	var router: TouchRouter = kontrol.router
+	var sprite: LoperSprite = _sprite(akar)
+	var catatan: Array = _catat_sprite(sprite)
+	kontrol.keyboard_aktif = false
+	# (a) Swipe ditahan lalu app kehilangan fokus: swipe dibatalkan, jari yang diangkat sesudahnya tidak melempar.
+	_sentuh(1, Vector2(440, 200), true)
+	_geser(1, Vector2(500, 200))
+	_tree.root.propagate_notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
+	check(not router.swipe_aktif() and router.jumlah_jari_aktif() == 0, "FOCUS_OUT membatalkan swipe yang ditahan")
+	_sentuh(1, Vector2(500, 200), false)
+	check(router.jumlah_swipe_selesai == 0 and not sepeda.sedang_melempar() and catatan.is_empty(), "jari swipe diangkat sesudah dibatalkan: tidak tercatat dan tidak melempar")
+	# (b) Sama untuk PAUSED lewat SceneTree.
+	_sentuh(2, Vector2(440, 200), true)
+	_geser(2, Vector2(500, 200))
+	_tree.notification(Node.NOTIFICATION_APPLICATION_PAUSED)
+	_sentuh(2, Vector2(500, 200), false)
+	check(router.jumlah_swipe_selesai == 0 and not sepeda.sedang_melempar(), "PAUSED membatalkan swipe yang ditahan: tidak melempar")
+	# (c) Kidal berganti saat swipe ditahan -> batal_semua -> tidak melempar.
+	_sentuh(3, Vector2(440, 200), true)
+	_geser(3, Vector2(500, 200))
+	kontrol.atur_kidal(true)
+	_sentuh(3, Vector2(500, 200), false)
+	check(router.jumlah_swipe_selesai == 0 and not sepeda.sedang_melempar(), "kidal berganti saat swipe ditahan: dibatalkan, tidak melempar")
+	kontrol.atur_kidal(false)
+	check(hud != null and not router.kidal(), "kembali tangan kanan")
+	# (d) Lempar yang sedang berjalan ditutup saat app di-background: tanpa sinyal, kembali ke kayuh, tidak menggantung.
+	_swipe(akar, 1, Vector2(440, 200), Vector2(500, 200))
+	sprite = _sprite(akar)
+	for i: int in range(6):
+		sprite.maju(DT)
+	check(sepeda.sedang_melempar() and sprite.is_processing() == false, "lempar berjalan (6 langkah, belum lepas)")
+	_tree.root.propagate_notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
+	check(not sepeda.sedang_melempar() and sepeda.nama_animasi() == &"santai_normal" and sprite.is_playing(), "FOCUS_OUT menutup lempar yang berjalan: kembali ke santai_normal yang berputar")
+	for i: int in range(40):
+		sprite.maju(DT)
+	check(catatan.is_empty(), "lempar yang ditutup sebelum lepas tidak memancarkan koran_lepas maupun lempar_selesai")
+	# (e) PAUSED sesudah koran lepas: koran_lepas yang sudah terjadi tetap sekali.
+	_swipe(akar, 1, Vector2(500, 200), Vector2(440, 200))
+	sprite = _sprite(akar)
+	for i: int in range(12):
+		sprite.maju(DT)
+	_tree.notification(Node.NOTIFICATION_APPLICATION_PAUSED)
+	check(not sepeda.sedang_melempar() and _jumlah(catatan, "lepas") == 1 and _jumlah(catatan, "selesai") == 0, "PAUSED sesudah lepas: koran_lepas tetap sekali, tidak ada lempar_selesai, tidak menggantung")
+	# (f) Sesudah pembatalan, swipe baru melempar normal.
+	_swipe(akar, 1, Vector2(440, 200), Vector2(500, 200))
+	sprite = _sprite(akar)
+	check(sepeda.sedang_melempar() and sepeda.nama_animasi() == &"lempar_kanan_santai_normal", "swipe sesudah pembatalan melempar normal")
+	_selesaikan_lempar(sprite)
+	check(_jumlah(catatan, "lepas") == 2 and _jumlah(catatan, "selesai") == 1, "total: 2 koran_lepas dan 1 lempar_selesai (satu lempar ditutup)")
+	kontrol.keyboard_aktif = OS.has_feature("editor")
 	_bersihkan(akar)
 
 
