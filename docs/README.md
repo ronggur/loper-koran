@@ -36,7 +36,7 @@ Mengikuti pola Brainy Dungeon: root repo git `loper-koran` sekaligus root projec
 ```
 AGENTS.md, CLAUDE.md   Pintu masuk agent coding
 docs/                  Dokumen desain (folder ini) + design/
-project.godot          Godot 4 (minimal 4.3), landscape, renderer Compatibility (usulan, dicek di Fase 0)
+project.godot          Godot 4.7.2, landscape, renderer Compatibility (usulan, dicek di Fase 0)
 export_presets.cfg     Preset export Android
 scenes/                Boot, Rute (gameplay), Koran (halaman depan), Hasil, Bengkel, dev/
 assets/sprites/        loper/ (pemain), tiles/, houses/, props/, obstacles/, vfx/, ui/
@@ -56,6 +56,7 @@ Path seperti `scripts/config.gd` atau `tools/loper_art/produce.py` di dokumen la
 
 - **Platform**: mobile Android, layar **landscape** dipegang dua tangan (GDD 5).
 - **Engine**: **Godot 4** dengan GDScript (GDD 16).
+- **Teknis Fase 0** (2026-10-09): Godot **4.7.2**, skala piksel **×3**, base 640×360 dengan stretch `canvas_items` + integer scale + `expand`, package Android **`com.rmh.kring`** (alasan di `ROADMAP.md` 4b).
 - **Kamera**: **isometrik 2:1**, jalan naik ke **kanan atas**, sepeda di sepertiga kiri layar, cahaya dari kiri atas (ART_DIRECTION 2.2).
 - **Dua sisi jalan**: kiri pelempar = **sisi seberang** (fasad rumah, kiri atas layar), kanan pelempar = **sisi dekat** (kanan bawah). Kiri dan kanan selalu mengikuti arah pelempar, bukan arah layar (GDD 4.2).
 - **Kontrol**: stick melayang di kiri bawah (atas kayuh keras, netral santai, bawah melambat, tarik penuh dan tahan = rem, kiri/kanan = ke sisi seberang/dekat), swipe di kanan untuk melempar. Tanpa tombol rem terpisah. Mode bantu dan opsi kidal (GDD 5).

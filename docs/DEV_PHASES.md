@@ -35,10 +35,10 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 
 **Tujuan:** project bisa dibangun jadi APK dan jalan di HP sungguhan sebelum gameplay dibuat.
 
-- [ ] Putuskan nama package Android (ROADMAP 5)
+- [x] Putuskan nama package Android: `com.rmh.kring` (2026-10-09, ROADMAP 4b)
 - [ ] Repo git `loper-koran`: root repo = root project Godot, dokumen di `docs/` (folder ini) dengan `docs/.gdignore`
-- [ ] Project Godot 4 (minimal 4.3) landscape, renderer Compatibility; cek apakah light 2D, glow, partikel, dan shader warna bayangan yang dibutuhkan jalan di renderer ini di HP target (ART_DIRECTION 2.3, 7)
-- [ ] Resolusi dasar dan stretch dengan skala bulat sesuai usulan ART_DIRECTION 7; uji di rasio 16:9, 19.5:9, 20:9
+- [ ] Project Godot 4.7.2 landscape, renderer Compatibility; cek apakah light 2D, glow, partikel, dan shader warna bayangan yang dibutuhkan jalan di renderer ini di HP target (ART_DIRECTION 2.3, 7)
+- [ ] Resolusi dasar 640×360 dan stretch `canvas_items` + integer scale + `expand`, skala ×3 (dipilih 2026-10-09, ROADMAP 4b); uji di rasio 16:9, 19.5:9, 20:9
 - [ ] Import filter Nearest dan tanpa mipmap untuk sprite dunia; `snap_2d_transforms_to_pixel` aktif
 - [ ] `scripts/config.gd` berisi angka awal dari `BALANCING.md`
 - [ ] Input touch: stick melayang di zona kiri bawah, swipe di zona kanan, opsi kidal menukar zona; input keyboard untuk tes di editor

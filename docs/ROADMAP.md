@@ -47,14 +47,24 @@ Milestone mengikuti urutan prototype di GDD 17. Rinciannya jadi fase dengan chec
 | **M3 — Vertical slice perumahan** | Aset final distrik perumahan, reputasi, bengkel dan kerusakan, ekonomi, milestone dasar, audio dasar, beberapa hari berturut-turut dengan flag lanjutan. | Seminggu dalam game di distrik perumahan bisa dimainkan tanpa kebuntuan. |
 | **M4 — Konten & rilis** | Distrik berikutnya, misi per distrik, iklan hadiah, kebijakan privasi, store listing, uji tertutup. | Lolos review Play Console. |
 
+## 4b. Keputusan teknis Fase 0 (dikunci 2026-10-09)
+
+Skala dipilih Ronggur; sisanya didelegasikan ke agent dengan alasan tertulis. Bisa dibatalkan lewat PR selama belum ada upload ke Play Console.
+
+| Keputusan | Pilihan | Alasan |
+|---|---|---|
+| Skala piksel | **×3**, tinggi dasar 360 piksel game | Sprite pemain sudah dibuat untuk ×3 (kanvas 800×360). Pandangan ke depan lebih luas untuk bereaksi saat ngebut (6 u/d). |
+| Versi Godot | **4.7.2** | Versi pemeliharaan terbaru yang tercatat (TECH_PLAN); sama dengan Brainy Dungeon, jadi panduan export Android dan template bisa dipakai ulang. Sprite pemain baru dicek di 4.3, muat ulang `loper_agen_frames.tres` di 4.7.2. |
+| Resolusi dasar dan stretch | **640×360**, stretch `canvas_items`, `scale_mode = integer`, aspect `expand`; lebar tampil 640 (16:9) sampai 800 (20:9) | HUD dan teks dirender di resolusi layar sehingga tajam, sprite tetap pixel-perfect lewat skala bulat dan `snap_2d_transforms_to_pixel`. Cara `viewport` (piksel paling konsisten tapi teks beresolusi rendah) dipakai sebagai cadangan. Run 0A menguji di 16:9, 19,5:9, 20:9; kalau gagal, ganti lewat PR terpisah. |
+| HP uji | **Samsung Galaxy A54 (SM-A546E)**, Android 16 (API 36), layar 2340×1080 landscape (19,5:9, tepat ×3 → kanvas 780×360), GL ES 3.2, kelas menengah | Terhubung lewat `adb` (2026-10-09). Mewakili HP menengah target; uji HP kelas bawah dan layar 16:9 menyusul (emulator atau perangkat lain). Perangkat dipakai bersama project lain: pasang dan hapus app hanya setelah izin pemilik. |
+| Nama package Android | **`com.rmh.kring`** | Pilihan Ronggur (2026-10-09, menggantikan usulan awal `com.rmh.loperkoran`). Pola sama dengan `com.rmh.brainydungeon`. Tidak bisa diganti setelah upload pertama ke Play Console. |
+
 ## 5. Keputusan yang masih terbuka
 
 | Keputusan | Menghambat |
 |---|---|
-| Skala piksel (×3 atau ×4) dan ukuran ubin (usulan 64×32) | Semua aset dunia (Fase 0–1). Sprite pemain dibuat untuk ×3 di kanvas 800×360. |
-| Resolusi dasar dan cara menangani rasio layar 16:9 sampai 20:9 (usulan di ART_DIRECTION 7) | Fase 0 |
-| Nama package Android (tidak bisa diganti setelah upload pertama) | Fase 0 (export) |
-| Subjudul Inggris dan cek ketersediaan nama "Kring Kring!" (Play Store, App Store, Steam, PDKI/DJKI) | Fase 0 (export), sebelum nama package dikunci |
+| Ukuran ubin (usulan 64×32) | Semua aset dunia. Dikunci setelah graybox Fase 1 (skala piksel sudah ×3). |
+| Subjudul Inggris dan cek ketersediaan nama "Kring Kring!" (Play Store, App Store, Steam, PDKI/DJKI) | Fase 0 (export). Nama package sudah `com.rmh.kring` (4b), jadi cek ini sebaiknya selesai sebelum upload pertama ke Play Console |
 | Ambang rem di stick dan ketelitian swipe pendek | M1 (diputuskan lewat uji HP) |
 | Jendela kena koran: bonus atau penalti (GDD 4.1) | Fase 2–3 (skor) |
 | Cara menampilkan rumah di sisi dekat | Fase 3 (rute), aset rumah |
