@@ -492,6 +492,76 @@ Hasil pasang dan `dumpsys` di A54 (laporan orchestrator pada QC-001), kerapatan 
 
 Semua gerbang hijau di klon bersih; 9 temuan (QB-001..QB-008, QB-011) berstatus VERIFIED; QB-009 dan QB-010 tetap DEFERRED (Nit, alasan tertulis: ikon sementara dan keputusan pemilik soal orientasi); QB-012 (Nit) OPEN dan tidak menghalangi; QC-001 tetap NEEDS-MANUAL (butir c). Tidak ada Blocker, Major, atau Minor OPEN. Fase 0 tetap belum boleh dicentang selesai sebelum uji HP (rasa kontrol, ketajaman dan skala, light 2D) dilakukan.
 
+### Dev (dorongan kecepatan)
+
+Fitur tambahan atas permintaan pemilik (2026-10-09), bukan temuan QA; QA independen memverifikasi sesudahnya. Rancangan dari orchestrator (`1686eb0`: GDD 15, TECH_PLAN, DEV_PHASES) diikuti; semua angka usulan dan konstanta `Config`. Tidak menyentuh HP, `adb`, internet, Editor Settings, `ROADMAP.md` 4b, `DEV_PHASES.md`; APK tidak dibangun ulang (kode berubah: orchestrator yang membangun bila perlu); tidak ada garis kecepatan, debu, atau getar kamera.
+
+Commit (`git log --oneline 1686eb0..HEAD`): logika murni + Config + BALANCING + tes murni; kamera memakai dorongan + tes scene; probe + tangkapan layar + butir checklist HP; peta repo.
+
+#### Yang dibuat
+
+| Bagian | Berkas | Isi |
+|---|---|---|
+| Logika murni | `scripts/systems/dorongan_kecepatan.gd` (`DoronganKecepatan`) | `geser_target(kecepatan_ud)`: geseran layar sejajar jalan, kemiringan diturunkan dari `Iso.dunia_ke_layar(Iso.ARAH_MAJU)` (persis 2:1, bukan angka sendiri); 0 di `KECEPATAN_SANTAI_UD`, linear ke `+DORONGAN_MAJU_PX` di ngebut, linear ke `-DORONGAN_MUNDUR_PX` di melambat, dijepit di luar rentang, NaN = nol. `haluskan(sekarang, target, dt)`: alpha = 1 - exp(-dt / `DORONGAN_RESPON_DETIK`) dijepit 0..1 (tanpa overshoot), `dt` nol/negatif/NaN/INF tidak mengubah, geseran awal NaN dipulihkan ke target. Nama kelas `DoronganKecepatan` (bukan `DorongKecepatan` seperti contoh) supaya sama dengan nama berkas (rule `gdscript`) |
+| Config | `scripts/config.gd` | `DORONGAN_MAJU_PX = 28.0`, `DORONGAN_MUNDUR_PX = 20.0`, `DORONGAN_RESPON_DETIK = 0.35` (satu baris, `##` dengan satuan; `ConfigParser` lolos). Dicatat di `docs/BALANCING.md` bagian 2 (tabel + paragraf rumus) pada commit yang sama |
+| Scene | `scripts/entities/jalan_uji.gd` | Menyimpan `_geser_dorongan` (dihaluskan tiap `perbarui(dt)` dari kecepatan sebenarnya `_sepeda.kecepatan_ud`, sesudah `gerak`); `posisi_kamera()` = `(sepeda.position + ukuran / 2 - (sasaran + geser)).round()`; akses baca `geser_dorongan()`. Posisi dunia sepeda, posisi sprite, dan HUD (`CanvasLayer`) tidak diubah |
+| Tes | `tests/tes_input_murni.gd` (`_test_dorongan_kecepatan`), `tests/tes_input_scene.gd` (`_test_dorongan_kecepatan_scene`) | Lihat bawah |
+| Alat | `tests/probe_dorongan_jendela.gd` | Menahan stick lewat sentuhan sintetis di jendela asli, memotret santai/ngebut/melambat/lepas, dan mencetak posisi sepeda di layar |
+| Dokumen | `docs/SETUP_ANDROID.md` bagian 8, `AGENTS.md`, `docs/README.md` | Butir uji HP dorongan (terlalu kecil/besar, kembali halus tanpa goyang); peta repo |
+
+#### Tes (label bahasa Indonesia, rujuk GDD 15)
+
+Logika murni (`TesInputMurni`): angka awal; nilai persis di 6,0 = (28, -14), 1,5 = (-20, +10), 3,0 = nol, 4,5 = (14, -7), 2,25 = (-10, +5); tanda (maju +/-, mundur -/+) dan monoton naik di 451 kecepatan 1,5..6,0; `dy = -dx / 2` persis di semua kecepatan dan hasil kali silang dengan arah jalan nol; dijepit di 100, INF, 0, -50, -INF; NaN = nol. Penghalusan: 3000 acak seed tetap (dt 0,0001 sampai 100000 detik) tidak pernah melewati atau menjauhi target; dt 100000 mendekati target, dt 100 = tepat target; dt 0/-0,1/-100/NaN/INF/-INF tidak berubah; geseran awal NaN dipulihkan, target NaN diabaikan; konvergen dalam 10 detik pada 60 fps; setelah satu konstanta waktu tercapai 1 - 1/e = 63,2%; bebas framerate (dua langkah dt/2 = satu langkah dt, selisih < 0,001 px; 30 fps dan 144 fps sama setelah 1 detik).
+
+Scene hidup (`TesInputScene`, jendela 1920x1080/2340x1080/2400x1080 = viewport 640/780/800, `dt` tetap 1/60, stick lewat aksi keyboard editor): santai mantap geseran nol dan sepeda di posisi dasar +-1 px; transform kanvas sepeda sama dengan perhitungan (kamera sungguh menerapkan geseran); santai -> ngebut: sepeda bergeser maju tanpa mundur sesaat; ngebut mantap = dasar + (28, -14) +-1 px; lepas stick: 0,1 detik kemudian kecepatan 5,0..6,0 dan geseran masih > 24 px (stick nol akan menariknya ke sekitar 21: membuktikan geseran dari kecepatan sebenarnya) lalu kembali ke dasar; melambat mantap = dasar - (20, -10) +-1 px; melambat -> ngebut langsung monoton dan tiba di dasar + (28, -14); sepanjang urutan: geseran di scene sama dengan `haluskan(sebelumnya, geser_target(kecepatan sebenarnya), dt)` tiap frame, kamera selalu bilangan bulat, posisi sepeda = `Iso.posisi_gambar(posisi dunia)` (dorongan tidak mengubah posisi dunia atau sprite), zoom 1, `CanvasLayer` HUD dan lapisan kontrol tanpa offset/skala/rotasi, tombol dan panel HUD tidak berpindah.
+
+Batas perpindahan per frame yang saya tentukan: geseran target terjauh (maju + mundur = 48 px datar, panjang = 48 x sqrt(1,25)) dikali bagian yang ditempuh satu langkah penghalusan pada 1/60 detik (alpha = 4,65%) ditambah 1,5 px pembulatan kamera = 4,0 px per frame. Terukur: paling besar 1,41 px per frame (satu piksel di tiap sumbu karena pembulatan) di semua peralihan, karena kecepatan sendiri berubah bertahap (3,0 u/d dan 2,0 u/d2) sehingga targetnya bergerak pelan; batas 4,0 px adalah batas teoretis yang aman, ditambah syarat "ada perpindahan nyata > 0,5 px" supaya tes tidak lolos kosong.
+
+Tes lama "sepeda di sepertiga kiri +-8 px" (`_test_scene_jalan_uji`) TIDAK diubah dan tidak dilemahkan: ia berjalan pada keadaan awal (santai, geseran 0) sehingga tetap menjaga posisi dasar; tes baru menambah ketelitian +-1 px untuk posisi dasar saat geseran nol dan +-1 px untuk geseran ngebut dan melambat.
+
+#### Uji mutasi (skrip sementara di scratchpad, dipulihkan tiap kali)
+
+18 mutan satu baris, 17 tertangkap (1 sampai 35 GAGAL), 1 setara. Yang diminta orchestrator, semuanya tertangkap: tanda dibalik (35), rasio bukan 2:1 (23, dan 4:1: 29), tanpa jepit kecepatan (2), overshoot alpha = dt/tau tanpa jepit (6) dan alpha digandakan (7), geser dari stick bukan kecepatan (7), kamera tidak dibulatkan (7), HUD ikut bergeser (`_hud.offset = geseran`: 3). Tambahan tertangkap: tidak nol di santai (25), penghalusan tidak bebas framerate (6), geseran langsung ke target tanpa penghalusan (3), sprite sepeda ikut digeser (12), geseran tidak diterapkan ke kamera (18), tanda geseran di kamera salah (18), `DORONGAN_MAJU_PX` 40 (4), `DORONGAN_RESPON_DETIK` 1,0 (12). Satu lolos dan setara: `dt <= 0.0` menjadi `dt < 0.0` (pada dt = 0 alpha = 0 sehingga hasilnya sama).
+
+#### Bukti visual dan selisih posisi sepeda (jendela asli macOS, OpenGL via Metal, skala x3 bulat)
+
+```
+godot --path . --resolution 2340x1080 --position 0,0 --script res://tests/probe_dorongan_jendela.gd -- docs/loop/20261009-fase0bc-input-export/shots/dorongan
+```
+
+Posisi sepeda di layar (koordinat viewport game, dari `get_global_transform_with_canvas`), setelah tunggu 7 detik dinding di tiap keadaan (stick ditahan lewat sentuhan sintetis; santai = tanpa sentuhan; melambat = stick digeser ke bawah penuh):
+
+| Lebar viewport | Santai (dasar) | Ngebut | Melambat | Lepas (kembali) | Ngebut - santai | Melambat - santai | Ngebut - melambat |
+|---|---|---|---|---|---|---|---|
+| 640 (1920x1080) | (213, 216) | (241, 202) | (193, 226) | (213, 216) | (+28, -14) | (-20, +10) | (+48, -24) |
+| 780 (2340x1080) | (260, 216) | (288, 202) | (240, 226) | (260, 216) | (+28, -14) | (-20, +10) | (+48, -24) |
+| 800 (2400x1080) | (267, 216) | (295, 202) | (247, 226) | (267, 216) | (+28, -14) | (-20, +10) | (+48, -24) |
+
+Dasar = pecahan `KAMERA_SEPEDA_*_PECAHAN` dibulatkan oleh kamera (213,3 / 260,0 / 266,6 -> bilangan bulat). Kecepatan terukur saat dipotret: 3,00 / 6,00 / 1,50 / 3,00 u/d. Selisih persis 2:1 dan sama di tiga lebar. 12 PNG `shots/dorongan/<ukuran>_<keadaan>.png` (keadaan: `melambat`, `santai`, `ngebut`, `lepas`). Ketajaman: `python3 tools/cek_blok_piksel.py 3 --kecualikan <kotak tombol> --kecualikan <kotak panel> <png>` (kotak dari keluaran probe, panel tidak bergeser karena HUD tidak ikut) pada ke-12 berkas: 0 blok tidak seragam (10.936 blok teks HUD dikecualikan, sisa tepi 0,0). Saya melihat PNG `2340x1080_ngebut` dan `2340x1080_melambat`: sepeda lebih ke atas-kanan di ngebut dan lebih ke bawah-kiri di melambat dibanding posisi dasar, jalan dan rumah graybox tajam, stick dan knob tajam, HUD di tempat yang sama.
+
+#### Gerbang (perintah persis)
+
+```
+godot --headless --import                                   # repo kerja: 0 ERROR/WARNING
+godot --headless --script res://tests/run_tests.gd 2>&1 | tee build/tests.log
+                                                            # ... 2102 lolos, 0 gagal (sebelum fitur: 1986)
+python3 tools/cek_keluaran_tes.py build/tests.log           # pemeriksa: lolos (2102 lolos, 0 gagal, 0 peringatan), exit 0
+python3 tools/cek_keluaran_tes.py --ketat build/tests.log   # exit 0
+python3 tools/tests_cek/uji_pemeriksa.py                    # uji pemeriksa: 16 kasus, 0 menyimpang
+godot --headless --path . --quit-after 2                    # hanya banner; 0 ERROR/WARNING
+# klon bersih (git clone --branch feat/fase0bc-input-export, scratchpad): lihat baris hasil di bawah
+git diff --name-only main...HEAD | grep -E "keystore|jks|p12|apk|aab|idsig|export_credentials|^.godot/|^build/|^builds/"   # kosong (exit 1)
+```
+
+#### Keputusan, deviasi, dan hal yang tidak bisa saya verifikasi
+
+- **Deviasi nama**: `DoronganKecepatan` (bukan `DorongKecepatan`), supaya nama berkas `dorongan_kecepatan.gd` sesuai rule `gdscript`.
+- **Kamera tetap mengikuti sepeda penuh** (keputusan lama Dev-0B); geseran dorongan hanya menggeser sasaran sepeda di layar, jadi geseran lateral dan dorongan saling menumpuk tanpa konflik.
+- **Angka usulan** 28/20/0,35 tidak diubah dan belum dinilai di HP (butir baru di `SETUP_ANDROID.md` bagian 8). Catatan GDD 15 sudah menyebut konsekuensinya (jalan di depan memendek saat ngebut); pada 28 px datar, jalan yang terlihat di depan memendek sekitar 28 px di sumbu datar dan 14 px di sumbu tegak (kira-kira satu ubin).
+- **Respon 0,35 detik** menghasilkan geseran yang tertinggal sedikit dari kecepatan; perilaku persisnya (terasa lamban/goyang atau tidak) hanya bisa dinilai di perangkat.
+- **Mutan setara** satu (`dt < 0.0`), bukan celah tes.
+- Ketergantungan: tidak ada perubahan di `BikeDrive` atau `Iso`; `DoronganKecepatan` hanya membaca `Config.KECEPATAN_*` dan `Iso`.
+
 ## Keputusan & catatan
 - Keputusan pemilik (2026-10-09): run 0B dan 0C digabung; izin pasang APK ke A54 (hanya orchestrator yang menyentuh HP); format terjemahan CSV `translations/ui.csv`; izin unduh export templates 4.7.2. Lihat SPEC.
 - Orchestrator: export templates 4.7.2 diunduh dari `godotengine/godot-builds` (`Godot_v4.7.2-stable_export_templates.tpz`, 1,2 GB) ke folder scratchpad, SHA-512 dicocokkan dengan `SHA512-SUMS.txt` rilis, lalu diekstrak ke `~/Library/Application Support/Godot/export_templates/4.7.2.stable/` (status di bagian bawah setelah selesai).
