@@ -23,7 +23,7 @@ Status: **Pra-produksi, Fase 0 berjalan** (per 2026-10-09). Desain inti, kamera,
 | [`DATA_SCHEMA.md`](./DATA_SCHEMA.md) | Format data misi, headline, segmen rute, dan file save (usulan) |
 | [`SOUND_DESIGN.md`](./SOUND_DESIGN.md) | Prinsip audio, daftar efek suara, ambience per distrik, spesifikasi teknis (draf) |
 | [`SETUP_ANDROID.md`](./SETUP_ANDROID.md) | Export Android tanpa Gradle: prasyarat mesin, preset `export_presets.cfg` beserta alasannya, ekspor APK debug dari CLI, pemeriksaan isi APK, pasang ke HP, checklist uji M0 |
-| [`LOOP-DEV-QA.md`](./LOOP-DEV-QA.md) | Brief loop dua agent (Dev dan QA) untuk mengerjakan fase development, dengan Fase 0 dipecah jadi run 0A–0C |
+| [`LOOP-DEV-QA.md`](./LOOP-DEV-QA.md) | Brief loop dua agent (Dev dan QA) untuk mengerjakan fase development, dengan Fase 0 dipecah jadi run 0A–0C dan perintah tempel untuk memulai run Fase 1 (Bagian 6b) |
 | [`loop/`](./loop/) | Satu folder per run loop (`<RUN_ID>/`): `SPEC.md` (kontrak run), `LOG.md` (temuan dan keputusan), `shots/` (tangkapan layar bukti) |
 | [`design/`](./design/) | [`DESIGN_SPEC.md`](./design/DESIGN_SPEC.md): token warna, font, dan spesifikasi HUD; `screens/` dan `source/`: render dan source mock HUD dan kontrol; [`character/`](./design/character/): indeks semua karakter; [`character/loper_agen/`](./design/character/loper_agen/): sprite produksi pemain; [`character/varian/`](./design/character/varian/): varian baju |
 

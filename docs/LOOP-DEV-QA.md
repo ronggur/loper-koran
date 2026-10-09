@@ -293,6 +293,89 @@ Urutan berurutan; satu PR per run, run berikutnya dimulai dari `main` setelah PR
 
 ---
 
+## 6b. Fase 1: perintah mulai run (tempel di sesi baru)
+
+Disimpan 2026-10-09 supaya Fase 1 bisa dimulai tanpa menulis ulang. Tiap blok ditempel **utuh sebagai pesan pertama sesi baru** (`/clear` atau sesi baru; Bagian 0c). Isi baris bertanda `ISI:` sebelum menempel; hapus baris izin HP kalau HP tidak boleh disentuh. Tanggal di `RUN_ID` diganti kalau run dimulai di hari lain.
+
+Prasyarat: PR run sprite lempar/melambat (`feat/sprite-lempar-melambat`) sudah di-merge ke `main`. Kalau belum, orchestrator berhenti dan minta merge dulu (branch kerja selalu dari `main` terbaru, `git-workflow.mdc`).
+
+Bahan yang ada di `main` untuk Fase 1: `Iso`, `BikeDrive`, `TouchRouter`, `DoronganKecepatan`, scene uji `jalan_uji.tscn` (run 0B+0C); sprite `melambat` dan `lempar` terpasang (run sprite); sprite `meluncur` dan `rem` untuk lima arah ada di `docs/design/character/loper_agen/rem_meluncur/` tetapi **belum dipasang** (PR #16, usulan: pergeseran 1 px, jumlah frame dan fps tebakan, belum ada pose "berhenti").
+
+### Run 1A — logika gerak inti
+
+```text
+Kamu adalah ORCHESTRATOR loop Dev↔QA untuk repo Loper Koran. Ikuti docs/LOOP-DEV-QA.md
+secara ketat (Bagian 1 prosedur orchestrator, Bagian 0c satu sesi satu run). Mulai dari
+main terbaru yang sudah memuat PR sprite lempar/melambat; kalau belum, berhenti dan minta
+saya merge dulu.
+
+SCOPE: Run 1A — Fase 1, logika gerak inti (DEV_PHASES Fase 1, TECH_PLAN Fase 1,
+  BALANCING 2-3, GDD 5.2). Batasi ke butir berikut; umpan balik (debu, garis kecepatan,
+  audio) dan penyetelan kamera/kontrol ada di Run 1B.
+  - `BikeMotion` murni di scripts/systems/ (TECH_PLAN Fase 1): masukan stick + dt, keluaran
+    kecepatan, posisi lateral, stamina, status rem. Boleh mengembangkan `BikeDrive` yang ada
+    atau menggantikannya; catat pilihannya dan jaga tes lama yang masih relevan.
+  - Rem tanpa tombol: stick di ujung bawah (>= 90%) ditahan 0,25 detik, berhenti dengan
+    5,0 u/d² (BALANCING 2); tidak aktif saat belok diagonal; lepas stick = batal.
+  - Meluncur: stick bawah menurunkan kecepatan ke 1,5 u/d, stamina pulih (BALANCING 2-3).
+  - Pindah sisi sungguhan: kunci ke sisi `seberang`/`dekat` dengan batas tepi jalan
+    (lebar jalan 2 ubin, lateral 3,0 u/d); nama sisi hanya seberang/dekat di kode; kidal
+    tidak mengubah arti sisi. Ganti geser bebas placeholder run 0B (D-3).
+  - Stamina (BALANCING 3): terkuras saat cepat/ngebut, pulih saat meluncur; efek saat habis
+    mengikuti BALANCING 3; bar stamina di HUD (DESIGN_SPEC 3.5); rem menyalakan cincin
+    bawah stick berwarna WARN (DESIGN_SPEC 3.7).
+  - Pause: simulasi benar-benar berhenti saat app di-background/kehilangan fokus dan lanjut
+    tanpa lompatan; stick dilepas bersih (sudah ada `batal_semua`).
+  - Laju kayuh mengikuti kecepatan (`LoperSprite.pedal_rate`).
+  - Pasang sprite `meluncur` dan `rem` (lima arah) ke SpriteFrames gabungan lewat skrip
+    pembangun yang sudah ada; sambungkan ke status meluncur dan rem. Putuskan dengan satu
+    REKOMENDASI TERTULIS di SPEC kapan memakai `melambat` (kayuh 4 fps) vs `meluncur` (kaki
+    diam) vs `rem`; jangan menebak diam-diam, dan jangan menggambar PNG sendiri.
+  - Tes headless untuk semua logika murni (ambang rem, tahan, lepas di tengah, dua jari,
+    diagonal, stamina habis dan pulih, pause, batas jalan) dengan mutan nyata.
+  Keputusan terbuka yang menghambat? Tanyakan SEKALI dengan satu rekomendasi per keputusan.
+HASIL UJI HP SEBELUMNYA (ISI: tempel catatan saya dari A54; kosongkan bila tidak ada):
+  ISI: dorongan kecepatan 28/20 px dan respon 0,35 dtk terasa ...; ukuran stick/tombol kidal ...;
+  melambat dan lempar ...; ambang swipe lempar 12 px ...
+DESIGN: docs/design/DESIGN_SPEC.md (token bagian 1, HUD 3.5, kontrol 3.7); belum ada mockup
+  layar lain — Dev boleh mendesain hanya untuk layar dev/jalan uji.
+IZIN HP: boleh memasang APK ke Samsung A54 (RRCWA05E2NN) setelah QA PASS; hanya
+  orchestrator yang menyentuh HP; cek layar menyala dulu; tidak ada pm clear/uninstall.
+RUN_ID: 20261010-fase1a-gerak
+```
+
+### Run 1B — umpan balik, penyetelan, dan penutup Fase 0
+
+```text
+Kamu adalah ORCHESTRATOR loop Dev↔QA untuk repo Loper Koran. Ikuti docs/LOOP-DEV-QA.md
+secara ketat. Mulai dari main terbaru yang sudah memuat PR Run 1A; kalau belum, berhenti
+dan minta saya merge dulu.
+
+SCOPE: Run 1B — Fase 1, umpan balik kecepatan dan penyetelan, sekaligus menutup butir Fase 0
+  yang tersisa (cek light 2D/glow/partikel/shader di renderer Compatibility pada A54).
+  - Debu roda dan garis kecepatan (placeholder, partikel dari kode); catat hasil cek light 2D,
+    glow, partikel, dan shader warna bayangan di Compatibility pada A54 sebagai bukti
+    (tangkapan layar + log) — ini menutup butir Fase 0 "Cek apakah light 2D ..." (Q-014).
+  - Audio placeholder (SOUND_DESIGN 3.2): kayuhan loop dengan pitch 1,0 / 1,15 / 1,3,
+    meluncur, rem. Dibuat lewat skrip di tools/ (sintesis sederhana) atau tanyakan saya;
+    JANGAN mengunduh aset dari internet. Ikuti TECH_PLAN 3.1 untuk autoload `Audio` dan
+    gotcha autoload di tes headless (rule gdscript). Berhenti saat app di-background.
+  - Ikon jeda sementara dan tombol jeda di luar zona stick/swipe (ui-scenes).
+  - Penyetelan dari uji A54: posisi sepeda lebih rendah di bingkai (usulan di DEV_PHASES
+    Fase 1; jangan menaikkan geser maju dorongan melewati sekitar 43 px tanpa itu), ukuran
+    stick dan tombol kidal (38 dp, di bawah 44 dp), teks HUD 6 px, angka dorongan; semua
+    lewat Config + BALANCING, tanpa mengubah skala x3.
+  - Perbarui checklist uji HP (docs/SETUP_ANDROID.md bagian 8) untuk uji 3-5 orang Fase 1.
+  Fase 1 baru selesai setelah uji 3-5 orang di HP (butir NEEDS-MANUAL); jangan dicentang
+  sebelum itu.
+HASIL UJI HP SEBELUMNYA (ISI: tempel catatan dari uji Run 1A di A54):
+  ISI: rem ..., pindah sisi ..., stamina ..., meluncur/rem sprite ...
+DESIGN: docs/design/DESIGN_SPEC.md (token bagian 1, HUD 3.5, kontrol 3.7).
+IZIN HP: boleh memasang APK ke Samsung A54 (RRCWA05E2NN) setelah QA PASS; hanya
+  orchestrator yang menyentuh HP; cek layar menyala dulu; tidak ada pm clear/uninstall.
+RUN_ID: 20261010-fase1b-umpan-balik
+```
+
 ## 7. Batasan yang perlu diketahui
 
 - QA berbasis agent tidak menggantikan uji di HP nyata untuk rasa kontrol, performa, dan tampilan rasio layar. Fase gameplay selalu ditutup dengan uji manual (`DEV_PHASES.md`).
