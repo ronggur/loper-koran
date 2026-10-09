@@ -66,6 +66,16 @@ const SPRITE_SUDUT_SIKU_DERAJAT: float = 67.5
 ## Toleransi pembulatan desimal saat membandingkan sudut dengan batasnya, derajat.
 const SPRITE_SUDUT_TOLERANSI_DERAJAT: float = 0.000001
 
+## --- Lempar koran dan melambat (animasi pemain, usulan, run sprite-lempar-melambat) ---
+## fps animasi (kayuh 8/10/12, melambat 4, lempar 12) dibaca dari `loper_agen_frames.tres`, bukan dari sini.
+
+## Panjang swipe terpendek yang masih melempar, piksel game, inklusif (swipe pendek harus tetap terbaca, rule `ui-scenes`). Dinilai lewat uji HP.
+const LEMPAR_SWIPE_AMBANG_PX: float = 12.0
+## Indeks frame saat koran lepas dari tangan (`release_frame` di loper_agen_lempar.json, README lempar).
+const LEMPAR_FRAME_LEPAS: int = 2
+## Toleransi derau float saat menentukan frame animasi dari waktu, detik (mencegah frame bergeser satu langkah di batas).
+const LEMPAR_TOLERANSI_DETIK: float = 0.000001
+
 ## --- Kontrol sentuh (DESIGN_SPEC 3.7, GDD 5.2; usulan, dinilai lewat uji HP) ---
 ## Zona diukur dari tepi layar sisi stick (kiri bila tangan kanan, bawaan; opsi kidal mencerminkannya).
 

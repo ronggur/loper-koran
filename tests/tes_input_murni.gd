@@ -631,11 +631,11 @@ func _test_stick_ke_animasi() -> void:
 	# Tingkat mengikuti kekuatan stick: 0,33 cepat, 0,80 cepat, 0,81 ngebut.
 	check(_animasi(_jalankan(Vector2(0, 0.34), 1, dt)) == &"cepat_normal" and _animasi(_jalankan(Vector2(0, 0.32), 1, dt)) == &"santai_normal", "10b: kekuatan stick 0,34 = cepat, 0,32 = santai (ambang 33%)")
 	check(_animasi(_jalankan(Vector2(0, 0.79), 1, dt)) == &"cepat_normal" and _animasi(_jalankan(Vector2(0, 0.81), 1, dt)) == &"ngebut_normal", "10b: kekuatan stick 0,79 = cepat, 0,81 = ngebut (ambang 80%; batas tepat 0,80 dites di LoperAnim karena Vector2 berpresisi tunggal)")
-	# (c) bawah penuh
+	# (c) bawah penuh: melambat (D-1 run sprite-lempar-melambat; sebelumnya santai_normal)
 	var c: BikeDrive.Hasil = _jalankan(Vector2(0, -1), 1, dt)
-	check(_animasi(c) == &"santai_normal", "10c: bawah penuh = santai_normal (stick negatif = santai), dapat %s" % _animasi(c))
+	check(c.tingkat_sprite == LoperAnim.TINGKAT_MELAMBAT and _animasi(c) == &"melambat_normal", "10c: bawah penuh = melambat_normal (komponen maju stick negatif), dapat %s" % _animasi(c))
 	c = _jalankan(Vector2(0, -1), 120, dt)
-	check(c.kecepatan_ud == 1.5 and _animasi(c) == &"santai_normal", "10c: bawah penuh turun ke 1,5 u/d dan tetap santai_normal, dapat %s %s" % [c.kecepatan_ud, _animasi(c)])
+	check(c.kecepatan_ud == 1.5 and _animasi(c) == &"melambat_normal", "10c: bawah penuh turun ke 1,5 u/d dan tetap melambat_normal, dapat %s %s" % [c.kecepatan_ud, _animasi(c)])
 	# (d) kiri penuh tanpa maju: 45 derajat, serong seberang
 	var d: BikeDrive.Hasil = _jalankan(Vector2(-1, 0), 1, dt)
 	check(is_equal_approx(d.kecepatan_ud, 3.0) and is_equal_approx(d.lateral_ud, -3.0), "10d: kiri penuh tanpa maju: maju 3,0 dan lateral -3,0 u/d (sudut 45 derajat), dapat %s dan %s" % [d.kecepatan_ud, d.lateral_ud])

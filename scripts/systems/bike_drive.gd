@@ -19,7 +19,7 @@ class Hasil extends RefCounted:
 	var maju_ubin: float = 0.0
 	## Kecepatan lateral efektif selama langkah (perpindahan nyata per detik), u/d. Nol bila terhalang tepi jalan.
 	var lateral_ud: float = 0.0
-	## Tingkat sprite 0..2 dari kekuatan stick ke atas (`LoperAnim.tingkat_dari_stick`, D-4).
+	## Tingkat sprite -1..2 dari komponen atas stick (`LoperAnim.tingkat_dari_stick`, D-4): -1 melambat (stick ke bawah), 0 santai, 1 cepat, 2 ngebut.
 	var tingkat_sprite: int = 0
 	## Arah sprite -2..2 dari gerak sebenarnya (`LoperAnim.arah_dari_gerak`, D-4).
 	var arah_sprite: int = 0

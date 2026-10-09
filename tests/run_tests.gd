@@ -8,6 +8,9 @@ extends SceneTree
 ## Exit code 1 bila ada yang gagal. Exit code saja tidak cukup: error skrip tidak mengubahnya,
 ## jadi pemeriksa keluaran (`tools/cek_keluaran_tes.py`) wajib dipakai juga.
 
+## Satu-satunya blok `const` di skrip yang boleh memuat string `kiri` / `kanan`: nama animasi aset yang dikunci (ART_DIRECTION 3.2).
+## Daftar putih kedua (`NAMA_SISI_LEMPAR`) ditambah di run sprite-lempar-melambat karena nama animasi lempar memuat sisi `kiri` / `kanan`.
+const BLOK_NAMA_SISI_SAH: Array[String] = ["const NAMA_ARAH", "const NAMA_SISI_LEMPAR"]
 const BERKAS_SHEET: String = "res://assets/sprites/loper/loper_agen.png"
 const BERKAS_FRAMES: String = "res://assets/sprites/loper/loper_agen_frames.tres"
 const BERKAS_JSON: String = "res://assets/sprites/loper/loper_agen.json"
@@ -198,20 +201,21 @@ func _test_tingkat_sprite() -> void:
 	check(LoperAnim.tingkat_dari_stick(1.0) == 2, "kekuatan penuh 1,0 = ngebut")
 	check(LoperAnim.tingkat_dari_stick(1.5) == 2, "nilai di atas 1 dijepit ke 1 = ngebut")
 	check(LoperAnim.tingkat_dari_stick(100.0) == 2, "nilai sangat besar dijepit = ngebut")
-	check(LoperAnim.tingkat_dari_stick(-0.1) == 0, "stick ke bawah (negatif) = santai")
-	check(LoperAnim.tingkat_dari_stick(-1.0) == 0, "stick penuh ke bawah = santai")
+	# Sejak run sprite-lempar-melambat (D-1) komponen maju negatif = melambat (tingkat -1), bukan santai.
+	check(LoperAnim.tingkat_dari_stick(-0.1) == LoperAnim.TINGKAT_MELAMBAT, "stick ke bawah (negatif) = melambat (-1)")
+	check(LoperAnim.tingkat_dari_stick(-1.0) == LoperAnim.TINGKAT_MELAMBAT, "stick penuh ke bawah = melambat (-1)")
 	check(LoperAnim.tingkat_dari_stick(NAN) == 0, "NaN = santai (tidak jatuh ke ngebut)")
 	check(LoperAnim.tingkat_dari_stick(INF) == 2, "tak hingga positif dijepit = ngebut")
-	check(LoperAnim.tingkat_dari_stick(-INF) == 0, "tak hingga negatif dijepit = santai")
-	# Tingkat tidak pernah turun saat kekuatan naik (monoton).
-	var terakhir: int = 0
+	check(LoperAnim.tingkat_dari_stick(-INF) == LoperAnim.TINGKAT_MELAMBAT, "tak hingga negatif = melambat (-1)")
+	# Tingkat tidak pernah turun saat kekuatan naik (monoton), dari stick penuh ke bawah sampai penuh ke atas.
+	var terakhir: int = LoperAnim.TINGKAT_MELAMBAT
 	var monoton: bool = true
-	for langkah: int in range(101):
+	for langkah: int in range(-100, 101):
 		var tingkat: int = LoperAnim.tingkat_dari_stick(float(langkah) / 100.0)
 		if tingkat < terakhir:
 			monoton = false
 		terakhir = tingkat
-	check(monoton, "tingkat sprite monoton naik terhadap kekuatan stick 0..1")
+	check(monoton, "tingkat sprite monoton naik terhadap kekuatan stick -1..1")
 
 
 # --- c. Arah sprite dari gerak (BALANCING 2) ---
@@ -290,19 +294,25 @@ func _test_nama_animasi_dan_frames() -> void:
 			check(frames.has_animation(nama), "animasi '%s' (tingkat %d, arah %d) ada di SpriteFrames" % [nama, tingkat, arah])
 	check(nama_dipakai.size() == 15, "15 pasangan tingkat x arah menghasilkan 15 nama berbeda, dapat %d" % nama_dipakai.size())
 	check(LoperAnim.nama_animasi(9, -9) == &"ngebut_kiri", "tingkat dan arah di luar jangkauan dijepit (9, -9) = ngebut_kiri")
-	check(LoperAnim.nama_animasi(-1, 9) == &"santai_kanan", "tingkat dan arah di luar jangkauan dijepit (-1, 9) = santai_kanan")
+	check(LoperAnim.nama_animasi(-1, 9) == &"melambat_kanan", "tingkat -1 = melambat dan arah di luar jangkauan dijepit: (-1, 9) = melambat_kanan (sebelum run sprite-lempar-melambat: santai_kanan)")
+	check(LoperAnim.nama_animasi(-9, 0) == &"melambat_normal", "tingkat jauh di bawah jangkauan dijepit ke melambat (-9, 0) = melambat_normal")
 
-	# Sejak run sprite-lempar-melambat SpriteFrames memuat 38 animasi (15 kayuh + 5 melambat + 18 lempar); pemeriksaan lengkapnya
-	# terhadap tiga JSON ada di `tests/tes_sprite.gd`. Di sini hanya kayuh yang dipilih `LoperAnim.nama_animasi(0..2, arah)`.
+	# Sejak run sprite-lempar-melambat SpriteFrames memuat 38 animasi (15 kayuh + 5 melambat + 18 lempar). Semua nama yang bisa
+	# dihasilkan LoperAnim (kayuh, melambat, lempar untuk semua kombinasi) ada di SpriteFrames dan sebaliknya: tidak ada yang yatim.
+	# Pemeriksaan isi (region, fps, loop) terhadap tiga JSON ada di `tests/tes_sprite.gd`.
+	for arah: int in range(-2, 3):
+		nama_dipakai[LoperAnim.nama_animasi(LoperAnim.TINGKAT_MELAMBAT, arah)] = true
+	for sisi: LoperAnim.Sisi in [LoperAnim.Sisi.SEBERANG, LoperAnim.Sisi.DEKAT]:
+		for tingkat: int in range(LoperAnim.TINGKAT_MELAMBAT, 3):
+			for arah: int in range(-2, 3):
+				nama_dipakai[LoperAnim.nama_lempar(sisi, tingkat, arah)] = true
+	check(nama_dipakai.size() == 38, "LoperAnim menghasilkan tepat 38 nama (15 kayuh + 5 melambat + 18 lempar), dapat %d" % nama_dipakai.size())
 	var nama_frames: PackedStringArray = frames.get_animation_names()
 	check(nama_frames.size() == 38, "SpriteFrames memuat tepat 38 animasi (15 kayuh + 5 melambat + 18 lempar), dapat %d" % nama_frames.size())
-	var jumlah_kayuh: int = 0
 	for nama: String in nama_frames:
-		if nama.begins_with("melambat_") or nama.begins_with("lempar_"):
-			continue
-		jumlah_kayuh += 1
-		check(nama_dipakai.has(StringName(nama)), "animasi kayuh SpriteFrames '%s' dipakai LoperAnim (tidak ada animasi yatim)" % nama)
-	check(jumlah_kayuh == 15, "15 animasi kayuh di antara 38, dapat %d" % jumlah_kayuh)
+		check(nama_dipakai.has(StringName(nama)), "animasi SpriteFrames '%s' dipakai LoperAnim (tidak ada animasi yatim)" % nama)
+	for nama: StringName in nama_dipakai:
+		check(frames.has_animation(nama), "nama '%s' dari LoperAnim ada di SpriteFrames" % nama)
 
 	# Bandingkan dengan metadata sprite (loper_agen.json): fps, loop, region tiap frame.
 	var json: Variant = JSON.parse_string(FileAccess.get_file_as_string(BERKAS_JSON))
@@ -358,7 +368,7 @@ func _test_scene_pemain() -> void:
 	check(pemain.scale == pemain.scale.round(), "skala node pemain bilangan bulat (AC-8)")
 	check(pemain.offset == Vector2(0.0, -17.0), "offset (0, -17) menaruh titik pijak (23, 46) sprite di origin node (README sprite)")
 
-	for tingkat: int in range(3):
+	for tingkat: int in range(LoperAnim.TINGKAT_MELAMBAT, 3):
 		for arah: int in range(-2, 3):
 			pemain.speed_level = tingkat
 			pemain.steer = arah
@@ -367,7 +377,7 @@ func _test_scene_pemain() -> void:
 	pemain.speed_level = 9
 	check(pemain.speed_level == 2, "speed_level 9 dijepit ke 2")
 	pemain.speed_level = -4
-	check(pemain.speed_level == 0, "speed_level -4 dijepit ke 0")
+	check(pemain.speed_level == LoperAnim.TINGKAT_MELAMBAT, "speed_level -4 dijepit ke -1 (melambat); sebelum run sprite-lempar-melambat dijepit ke 0")
 	pemain.steer = 7
 	check(pemain.steer == 2, "steer 7 dijepit ke 2")
 	pemain.steer = -7
@@ -914,6 +924,11 @@ func _test_penjaga_berkas() -> void:
 	check(not _string_kiri_kanan("\tvar nama: StringName = &\"serong_kiri\"").is_empty(), "string berisi kata kiri (serong_kiri) di luar NAMA_ARAH ditolak")
 	check(_string_kiri_kanan("const NAMA_ARAH: Dictionary = {\n\t-2: \"kiri\",\n\t2: \"kanan\",\n}\n\tvar x: String = \"seberang\"\n\t# kiri di komentar").is_empty(), "string kiri/kanan di dalam NAMA_ARAH dan di komentar diterima")
 	check(_string_kiri_kanan("\tvar x: String = \"kirimkan\"").is_empty(), "kata yang hanya memuat 'kiri' sebagai awalan (kirimkan) tidak salah dikenali")
+	# Daftar putih kedua (NAMA_SISI_LEMPAR) hanya berlaku di dalam bloknya sendiri, bukan nama blok lain atau sesudah blok ditutup.
+	check(_string_kiri_kanan("const NAMA_SISI_LEMPAR: Dictionary = {\n\tSisi.SEBERANG: \"kiri\",\n\tSisi.DEKAT: \"kanan\",\n}\n").is_empty(), "string kiri/kanan di dalam blok NAMA_SISI_LEMPAR diterima")
+	check(not _string_kiri_kanan("const NAMA_SISI_LAIN: Dictionary = {\n\t1: \"kiri\",\n}\n").is_empty(), "blok const dengan nama lain berisi string kiri ditolak (daftar putih tidak longgar)")
+	check(not _string_kiri_kanan("const NAMA_SISI_LEMPAR: Dictionary = {\n\t1: \"x\",\n}\nconst LAIN: String = \"kiri\"\n").is_empty(), "string kiri sesudah blok NAMA_SISI_LEMPAR ditutup ditolak")
+	check(not _string_kiri_kanan("func f() -> String:\n\treturn \"lempar_kiri_santai_normal\"\n").is_empty(), "nama animasi lempar yang ditulis langsung di fungsi ditolak (harus lewat NAMA_SISI_LEMPAR)")
 
 
 ## Pelanggaran zoom kamera: nilai pecahan atau di bawah 1 pada `zoom = Vector2(...)` atau `Vector2.ONE * x`.
@@ -948,7 +963,7 @@ func _warna_konstan(teks: String) -> Array[String]:
 	return hasil
 
 
-## String berkutip yang memuat kata `kiri` atau `kanan` di luar blok `const NAMA_ARAH` (nama animasi sprite yang dikunci).
+## String berkutip yang memuat kata `kiri` atau `kanan` di luar blok `const NAMA_ARAH` dan `const NAMA_SISI_LEMPAR` (nama animasi sprite yang dikunci).
 ## Sisi jalan di kode selalu `seberang` / `dekat`; nama aksi input juga tidak memakai kata itu (rule `gdscript`).
 func _string_kiri_kanan(teks: String) -> Array[String]:
 	var hasil: Array[String] = []
@@ -958,8 +973,9 @@ func _string_kiri_kanan(teks: String) -> Array[String]:
 	for baris: String in teks.split("\n"):
 		nomor += 1
 		var kode: String = _tanpa_komentar(baris)
-		if kode.begins_with("const NAMA_ARAH"):
-			dalam_blok = true
+		for blok: String in BLOK_NAMA_SISI_SAH:
+			if kode.begins_with(blok):
+				dalam_blok = true
 		if dalam_blok:
 			if kode.strip_edges() == "}":
 				dalam_blok = false
