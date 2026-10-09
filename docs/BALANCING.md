@@ -39,6 +39,19 @@ Stick analog dipetakan halus: sumbu atas memetakan santai → ngebut, sumbu bawa
 
 **Arah sprite** dipilih dari arah gerak sebenarnya (gabungan maju dan lateral), bukan dari stick langsung: sudut di bawah 22,5° = normal, 22,5–67,5° = serong, di atas 67,5° = 90°. Akibatnya, belok 90° hanya muncul saat sepeda pelan atau hampir berhenti, sesuai fisika.
 
+**Rumus gerak di run 0B** (`scripts/systems/bike_drive.gd`, tanpa stamina dan rem): kecepatan tujuan linear terhadap komponen atas stick, atas penuh 6,0 u/d, atas 0,5 = 4,5 u/d, netral 3,0 u/d, bawah penuh 1,5 u/d. Kecepatan naik 3,0 u/d² dan turun 2,0 u/d², tidak melewati tujuan dan tidak keluar dari 1,5 sampai 6,0 u/d. Lateral = komponen datar stick × 3,0 u/d, dijepit ke lebar jalan. Tingkat sprite memakai komponen atas stick saja (stick ke bawah atau ke samping tanpa atas = santai); arah sprite memakai gerak sebenarnya (kecepatan maju dan lateral nyata, nol bila terhalang tepi jalan). Diagonal atas + seberang pada kecepatan tujuan jatuh tepat di 22,5° (tan 22,5° = √2 − 1): hasilnya serong karena batas bawah serong inklusif.
+
+**Kontrol sentuh (usulan, run 0B, belum diuji di HP).** Angka ada di `scripts/config.gd` bagian "Kontrol sentuh" dan "Jalan uji"; ukuran visual dari `design/DESIGN_SPEC.md` 3.7.
+
+| Angka | Usulan | Catatan |
+|---|---|---|
+| Jangkauan penuh stick | 35 px game (sekitar 105 px layar di ×3) | `STICK_RADIUS_PX`; di atas jangkauan dijepit ke 1,0, arah dipertahankan |
+| Zona mati stick | 15% radial (inklusif) | 15,0% = nol, 15,1% = kekuatan kecil; di atasnya dipetakan ulang linear 0 sampai 1 tanpa lompatan |
+| Zona stick (tangan kanan) | x 8–192, y 186–352 | Stick melayang muncul di titik sentuh; opsi kidal mencerminkan |
+| Zona swipe | x 210 sampai lebar − 20, y 48–352 | Strip atas (y < 48) bebas dari kontrol untuk tombol HUD; kidal mencerminkan |
+| Lebar jalan scene uji | 2 ubin aspal, geser lateral ±1 ubin | `JALAN_LEBAR_UBIN`; placeholder run 0B, penguncian sisi dan batas resmi di Fase 1 |
+| Letak sepeda di layar | 33,33% lebar, 60% tinggi | `KAMERA_SEPEDA_*_PECAHAN`; sepertiga kiri (ART_DIRECTION 2.2), ±8 px di 640, 780, 800 |
+
 ---
 
 ## 3. Stamina
