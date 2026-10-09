@@ -143,7 +143,7 @@ const HUD_PANEL_PAD_Y_PX: int = 5
 const HUD_PANEL_PAD_X_PX: int = 7
 ## Tinggi bar kecepatan termasuk garis luar 1 px, piksel game (DESIGN_SPEC 1.3).
 const HUD_BAR_TINGGI_PX: int = 7
-## Tinggi tombol di strip atas, piksel game (sekitar 44 dp di A54, rule `ui-scenes`).
+## Tinggi tombol di strip atas, piksel game. Di A54 (450 dpi, skala x3) = 108 px layar = 38 dp, di bawah 44 dp rule `ui-scenes`; strip atas hanya 48 px sebelum zona swipe, jadi dinilai lewat uji HP.
 const HUD_TOMBOL_TINGGI_PX: int = 36
 ## Lebar minimum tombol di strip atas, piksel game.
 const HUD_TOMBOL_LEBAR_PX: int = 96
