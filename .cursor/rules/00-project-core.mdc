@@ -97,6 +97,7 @@ mkdir -p builds                                        # folder APK hasil ekspor
 godot --headless --path . --export-pack "Android" build/kring-uji.pck   # paket game dengan filter preset (tanpa Java), periksa tidak ada tests/ atau docs/
 godot --headless --path . --export-debug "Android" builds/kring-kring-debug.apk   # APK debug; butuh export templates 4.7.2 dan Java SDK Path di Editor Settings
 python3 tools/loper_art/produce.py --out build/loper_art   # render ulang sprite pemain (butuh numpy, pillow)
+python3 tools/loper_art/bangun_frames.py                   # bangun ulang loper_agen_frames.tres gabungan (38 animasi) dan salin PNG/JSON sprite ke assets/ (hanya stdlib)
 python3 tools/env_art/graybox.py                       # render ulang ubin dan kotak graybox (hanya stdlib)
 ```
 

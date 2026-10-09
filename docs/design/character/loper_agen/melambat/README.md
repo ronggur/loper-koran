@@ -1,6 +1,6 @@
 # Melambat (usulan)
 
-Tingkat kecepatan di bawah santai, untuk saat stick ditarik ke bawah dan sepeda melambat. Status: **usulan, belum dipakai di game** (belum ada di `loper_agen_frames.tres` maupun `loper_sprite.gd`).
+Tingkat kecepatan di bawah santai, untuk saat stick ditarik ke bawah dan sepeda melambat. Status: **usulan; dipakai di jalan uji sejak 2026-10-09** (run `sprite-lempar-melambat`): ada di `assets/sprites/loper/loper_agen_frames.tres` (dibangun `tools/loper_art/bangun_frames.py`) dan dipilih `LoperAnim` sebagai tingkat -1 saat stick ditarik ke bawah (komponen maju negatif sesudah zona mati 15%).
 
 Gambarnya **sama persis dengan santai** (5 arah × 4 frame kayuh); yang berbeda hanya putarannya, **4 fps** (santai 8 fps). Percobaan pertama menggeser badan atas supaya duduk lebih tegak, tapi bentuk topi jadi berbeda dari santai, jadi dibuang. Kalau nanti perlu pembeda gambar (mis. kaki turun menjejak tanah), itu pose baru yang harus disetujui dulu.
 
