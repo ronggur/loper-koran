@@ -6,13 +6,18 @@ Scope: pasang sprite melambat dan lempar koran (usulan, PR #15) ke game untuk di
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
 |---|---|---|---|---|---|
-| 1 | AC-1..AC-9 semua dikerjakan (8 commit di `feat/sprite-lempar-melambat`, tanpa push, tanpa `BLOCKED`): pembangun `.tres` stdlib + 38 animasi, `LoperAnim` (melambat, nama lempar, sisi dari swipe), `LemparWaktu`, `LoperSprite` (melambat, `lempar`, sinyal, Q-001), kabel swipe di `JalanUji`, Config + BALANCING 2, bukti visual 2340x1080, dokumen AC-7. Tes 2102 -> 3315, 65 mutan nyata (62 tertangkap, 3 hidup dan dijelaskan). | import bersih (juga di clone bersih, `git status --porcelain` kosong), `3315 lolos, 0 gagal` + pemeriksa `--ketat` exit 0, `uji_pemeriksa.py` 16 kasus 0 menyimpang, `uji_bangun_frames.py` 28 lolos, `--quit-after 2` 0 ERROR/WARNING, probe layar bersih | | | |
+| 1 | AC-1..AC-9 semua dikerjakan (8 commit di `feat/sprite-lempar-melambat`, tanpa push, tanpa `BLOCKED`): pembangun `.tres` stdlib + 38 animasi, `LoperAnim` (melambat, nama lempar, sisi dari swipe), `LemparWaktu`, `LoperSprite` (melambat, `lempar`, sinyal, Q-001), kabel swipe di `JalanUji`, Config + BALANCING 2, bukti visual 2340x1080, dokumen AC-7. Tes 2102 -> 3315, 65 mutan nyata (62 tertangkap, 3 hidup dan dijelaskan). | import bersih (juga di clone bersih, `git status --porcelain` kosong), `3315 lolos, 0 gagal` + pemeriksa `--ketat` exit 0, `uji_pemeriksa.py` 16 kasus 0 menyimpang, `uji_bangun_frames.py` 28 lolos, `--quit-after 2` 0 ERROR/WARNING, probe layar bersih | **PASS** (gerbang hijau di klon bersih, 0 Blocker, 0 Major; 2 Minor, 3 Nit, 6 NEEDS-MANUAL) | 5 (QS-001..QS-005) | 0 (tidak ada temuan sebelumnya) |
 
 ## Temuan
 Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MANUAL | BLOCKED
 
 | ID | Iter | Sev | Lokasi | Temuan & reproduksi/bukti | Status | Fix (file/commit) | Tes regresi |
 |---|---|---|---|---|---|---|---|
+| QS-001 | 1 | Minor | `scripts/systems/loper_anim.gd` `tingkat_dari_stick`, `scripts/systems/bike_drive.gd:73` | Melambat dipicu oleh TANDA komponen y stick saja (D-1, AC-3 literal), jadi berlaku juga untuk belok mendatar dengan jempol sedikit di bawah titik asal, bukan hanya "di sekitar zona mati" seperti catatan Dev. Bukti (simulasi `StickMap.petakan` -> `BikeDrive.langkah`, 600 langkah 1/60 detik, stick ke kanan 20 px, y bergetar sigma 1,5 px): 291 pergantian tingkat sprite (santai 8 fps <-> melambat 4 fps) dalam 10 detik, 4,7 detik di `melambat`, padahal kecepatan terendah 2,91 u/d (santai 3,0). Stick ke kanan 20 px dengan y tetap +2 px di bawah titik asal: `melambat` terus selama 10 detik pada 2,93 u/d. Gambar melambat = santai, jadi yang berubah hanya kecepatan putar (rata-rata kayuh jadi sekitar 6 fps dan tidak stabil), bukan kedipan gambar. Perilaku sesuai SPEC (D-1/AC-3: 15,1% bawah = melambat), jadi bukan cacat kode; risikonya ada di aturan. Rekomendasi (keputusan pemilik, mengubah angka AC-3, jangan diubah Dev tanpa keputusan): ambang atau histeresis (mis. melambat baru bila komponen y < -X dan keluar bila > -Y), atau dasarkan pada kecepatan target yang benar-benar turun; angka dari uji HP. Repro: lihat potongan di bagian QA. | DEFERRED (keputusan desain; uji HP, lihat NEEDS-MANUAL) | | |
+| QS-002 | 1 | Minor | git: `refs/remotes/origin/feat/sprite-lempar-melambat` | Branch kerja sudah ter-push ke `origin`: reflog `update by push` pada 2026-10-09 20:26:20 +0700 (commit terakhir Dev 20:22:45; QA mulai sesudahnya). SPEC AC-9 dan LOOP-DEV-QA bagian 0 menyatakan tidak ada push selama loop (push menunggu konfirmasi pemilik). Catatan Dev "tanpa push" benar saat ditulis (sebelum 20:26); pelaku push tidak bisa ditentukan dari repo (bukan QA: QA tidak push). Dampak: tidak ada (bukan `main`, belum ada PR), tetapi orchestrator perlu tahu bahwa isi branch sudah ada di GitHub. Bukti: `git reflog show --date=iso origin/feat/sprite-lempar-melambat`. | OPEN (untuk orchestrator; tidak butuh fix kode) | | |
+| QS-003 | 1 | Nit | `docs/ART_DIRECTION.md`, `docs/design/character/README.md`, `tools/loper_art/README.md` | `origin/main` sudah maju dua commit (#16 sprite meluncur dan rem, #17 perintah Fase 1) sejak branch dibuat. Uji merge di klon (`git merge --no-commit q/main`): konflik isi di tiga berkas dokumen itu (bukan di kode). Bukan kesalahan Dev, tetapi branch perlu `git rebase origin/main` (atau merge) sebelum PR; gerbang harus diulang sesudahnya. | OPEN (untuk orchestrator) | | |
+| QS-004 | 1 | Nit | `scripts/ui/kontrol_touch.gd` (run 0B) + zona swipe kidal | Dengan kidal, zona swipe pindah ke sisi kiri layar dan melewati sprite (x sekitar 260 piksel game); garis putus swipe digambar di `CanvasLayer` di atas sprite selama jari ditahan, jadi menutupi badan sprite sebentar (`shots/qa_2340x1080_kidal_swipe_ditahan.png`, `qa_1920x1080_kidal_swipe_ditahan.png`). Bukan regresi run ini (zona dan garis dari 0B); tidak menutupi sprite lempar sesudah jari diangkat (`qa_*_kidal_lempar_f2.png`). Tangan kanan (bawaan): stick, HUD, dan garis swipe tidak menyentuh sprite. | DEFERRED (nilai di HP) | | |
+| QS-005 | 1 | Nit | `tests/tes_input_scene.gd` | Semua tes scene mematikan `_process` sprite dan `JalanUji` (`set_process(false)`) dan memajukan waktu dengan `maju(dt)`/`perbarui(dt)`; jalur nyata `_process` -> `maju` hanya dites langsung lewat `_process(5.0)` di `_test_loper_sprite_di_tree`. Mutan QA N19 (`JalanUji._ready` memanggil `set_process(false)`) tidak tertangkap. Celah ini sudah ada sejak 0B; QA menutupinya dengan uji waktu nyata sementara (skrip scratchpad, tidak di-commit): koran_lepas di 0,165 detik dan lempar_selesai di 0,340 detik (harapan 0,167 dan 0,333), lima swipe 50 ms beruntun menghasilkan satu lempar, FOCUS_OUT/PAUSED di tengah lempar menutup lempar, 200 swipe acak tanpa ERROR dan tanpa lempar menggantung. Tidak ada bug; hanya catatan cakupan. | DEFERRED | | |
 
 ## NEEDS-MANUAL (uji di HP)
 Daftar awal ada di SPEC bagian "Butuh uji perangkat nyata". Dev dan QA menambah langkah di sini.
@@ -22,6 +27,14 @@ Tambahan Dev (iterasi 1), selain daftar SPEC (versi lengkap juga ada di `docs/SE
 - Lempar: titik kaki di frame 0 lempar adalah fase kayuh 0, jadi kaki bisa melompat satu fase saat swipe dilepas (kayuh frame 1 sampai 3 menjadi lempar frame 0); catat bila terasa.
 - Lempar: koran putih dan topi putih berdekatan di frame 1 dan 2 sisi seberang; nilai keterbacaan titik lepas di A54.
 - Kembali dari background saat lempar berjalan: animasi lempar ditutup tanpa melepas koran (tidak ada koran terbang di run ini).
+
+Tambahan QA (iterasi 1), langkah uji di A54:
+- [ ] **QS-001, melambat saat belok mendatar:** pada kecepatan santai tarik stick ke kanan (atau kiri) penuh sambil jempol dibiarkan wajar, 10 detik. Apakah kecepatan kayuh terlihat naik turun (4 fps lawan 8 fps) padahal kecepatan hampir tetap 3 u/d? Kalau ya, putuskan ambang atau histeresis (angka dari uji ini); lalu AC-3 (15,1% bawah) perlu diubah oleh pemilik.
+- [ ] **Kaki saat lempar dimulai:** swipe dilepas pada fase kayuh 0, 1, 2, dan 3 (urutan acak). Hanya fase 3 yang menyambung mulus ke lempar frame 0; fase lain memberi lompatan kecil pada kaki (terukur QA di render: frame kayuh -> lempar frame 0 -> kayuh frame 0). Catat apakah mengganggu.
+- [ ] **Keterbacaan titik lepas:** koran putih berdekatan dengan topi putih di frame 1 sisi seberang (`qa_*_lembar_lempar_kiri_*.png`, panel ke-3). Terbaca di layar desktop ×3; nilai di A54 (450 dpi, di luar ruangan).
+- [ ] **Garis swipe di atas sprite pada kidal (QS-004):** pada mode kidal, apakah garis putus yang melewati badan pemain mengganggu.
+- [ ] **CI GitHub:** langkah baru `Uji pembangun SpriteFrames` di `.github/workflows/tes.yml` hanya bisa dibuktikan di runner; PR baru boleh dianggap siap bila CI hijau (QA hanya membaca YAML: valid, tidak melonggarkan langkah lama, tanpa jaringan atau langkah berbahaya).
+- [ ] **Sebelum PR:** rebase atau merge `origin/main` (QS-003) lalu ulangi gerbang di klon bersih.
 
 ## Catatan Dev
 
@@ -139,6 +152,107 @@ git branch --show-current                                           # feat/sprit
 #### Hal yang tidak bisa saya verifikasi
 
 Rasa kontrol dan animasi di A54 (kayuh 4 fps, lempar 0,33 detik, ambang 12 px, abaikan swipe saat melempar, melambat berkedip), 60 fps, keterbacaan koran kecil di layar 450 dpi, perilaku sentuhan multi-jari dan background di Android sungguhan, dan CI GitHub (langkah baru `uji_bangun_frames.py`). Tidak ada APK dibangun atau dipasang oleh saya.
+
+### QA (iterasi 1)
+
+Peran: auditor independen. Semua hasil di bawah dijalankan sendiri oleh QA (klaim Dev tidak dipercaya). Klon bersih `git clone --branch feat/sprite-lempar-melambat` di scratchpad (`.../scratchpad/qa_sprite/klon`, commit `5ef5062`); `godot` 4.7.2.stable.official.ed1daf0bf, macOS Apple M1. Tidak ada `adb`, tidak ada unduhan, tidak ada push/PR/merge, Editor Settings tidak disentuh, tidak ada APK. Python yang membaca berkas selalu `python3 -I`. Eksperimen dan mutasi hanya di klon; repo kerja hanya ketambahan LOG ini dan tangkapan layar `shots/qa_*.png`.
+
+#### Gerbang objektif
+
+```
+godot --headless --import                                  # exit 0, 0 ERROR/WARNING/SCRIPT ERROR; git status --porcelain -uall = 0 baris
+godot --headless --script res://tests/run_tests.gd | tee   # 3315 lolos, 0 gagal (baseline main di klon main sendiri: 2102 lolos, 0 gagal)
+python3 -I tools/cek_keluaran_tes.py build/tests.log       # lolos, exit 0
+python3 -I tools/cek_keluaran_tes.py --ketat build/tests.log   # lolos (0 peringatan), exit 0
+python3 -I tools/tests_cek/uji_pemeriksa.py                # 16 kasus, 0 menyimpang
+python3 -I tools/tests_cek/uji_bangun_frames.py            # 28 lolos, 0 gagal
+godot --headless --path . --quit-after 2                   # hanya banner, 0 ERROR/WARNING
+godot --headless --path . --script res://tests/probe_layar.gd   # 0 ERROR, 0 PECAHAN (langkah CI)
+godot --headless --path . --export-pack "Android" <scratchpad>/qa-uji.pck   # exit 0; pck memuat PNG lempar+melambat dan .tres, tanpa tests/, docs/, atau .json
+git diff main...HEAD --name-only | grep -E "keystore|\.apk|\.aab|\.godot/|^build/|^builds/|\.jks|\.p12|export_credentials"   # kosong
+git diff --check main...HEAD                               # bersih
+```
+
+Tambahan yang diperiksa:
+- Commit: 9 commit di atas `main` (`007fc07` SPEC/LOG orchestrator + 8 Dev), semua `<tipe>: <ringkasan>` bahasa Indonesia, tidak ada commit di `main` (tetap `f6594cd`). `.import` kedua PNG, `lempar_waktu.gd.uid`, `tes_sprite.gd.uid`, `probe_lempar_jendela.gd.uid` hadir; `.import` sama dengan `loper_agen.png.import` selain uid/path. Catatan push: QS-002.
+- Aset: `cmp` 6 pasang PNG/JSON `assets/sprites/loper/` lawan `docs/design/character/loper_agen/{,melambat/,lempar/}` semuanya identik. `bangun_frames.py --out` dijalankan dua kali: `cmp` identik antar-run dan identik dengan `loper_agen_frames.tres` di repo.
+- `.tres` diperiksa dengan skrip QA sendiri (regex, bukan kode Dev; `scratchpad/qa_sprite/cek_tres.py`): tepat 38 animasi; nama, urutan, `loop`, `speed` dan 4 region + atlas (ext_resource -> sheet yang benar) tiap frame sama dengan tiga JSON; loop `false` tepat 18 (semua lempar), `release_frame` = 2 untuk semua lempar; himpunan fps {4, 8, 10, 12}; id sub_resource unik; 60 `AtlasTexture` pertama dan teks 15 animasi kayuh identik dengan `.tres` di `main`.
+- CI `tes.yml` (+3 baris): langkah `python3 tools/tests_cek/uji_bangun_frames.py` sebelum import. YAML valid (`ruby -ryaml YAML.load_file`), langkah lama tidak diubah atau dilonggarkan, langkah baru stdlib tanpa jaringan dan hanya menulis ke folder sementara. Tidak bisa dijalankan lokal di runner: NEEDS-MANUAL (CI hijau di PR).
+
+#### Telusur AC dan keputusan
+
+| Item | Verdict | Bukti QA |
+|---|---|---|
+| AC-1 | OK | Gerbang di atas; klon bersih tanpa berkas belum ter-commit sesudah import. |
+| AC-2 | OK | `cmp` 6 berkas, dua kali bangun identik, skrip `.tres` QA (38 animasi, loop/fps/region/release_frame). Mutan M03, M23, M24, M25 tertangkap (JSON aset diubah, lempar loop, melambat 8 fps, satu lempar 10 fps). |
+| AC-3 | OK | Tes `tes_sprite.gd` meliputi 14,9/15,0/15,1% lewat rantai `StickMap` -> `tingkat_dari_stick`, 40 kombinasi nama lempar (18 nama berbeda, semuanya ada di SpriteFrames), +-2 -> serong sisi sama, sisi swipe (kiri/kanan, vertikal, 45 derajat, 11,99/12,0, nol/NaN/INF). Mutan M01, M04, M05, M05b, M06, M08, M12, M13, M26, M30, M37 tertangkap. Semua pemakai tingkat -1 diperiksa (lihat di bawah): tidak ada indeks negatif ke `NAMA_TINGKAT`. |
+| AC-4 | OK | `LoperSprite`: sekali putar, `koran_lepas` tepat sekali di frame 2 (langkah 10), `lempar_selesai` sekali (langkah 20), kembali ke kayuh TERKINI (N02 tertangkap), lempar kedua ditolak (M27), `sprite_frames` null aman (Q-001a/b/c, M31), re-entrancy pendengar, `pedal_rate` 0. Waktu nyata (`_process`, bukan `maju`): 0,165 detik dan 0,340 detik. |
+| AC-5 | OK | Stick bawah -> `melambat_*` + dorongan kecepatan tetap (M19, N17); swipe sintetis (`Input.parse_input_event` + flush) di tiga tingkat kiri/kanan (M20, M21, M22); kidal tidak menukar sisi (N13); vertikal, pendek, tap tidak melempar; stick + swipe dua jari; FOCUS_OUT dan PAUSED menutup lempar (M10, M10b, M10c, M32). |
+| AC-6 | OK | Tiga konstanta `LEMPAR_*` satu baris literal di `config.gd` (lolos `ConfigParser`), tercatat di BALANCING 2 sebagai usulan, nilai sama dengan kode. `LEMPAR_FPS`/`MELAMBAT_FPS` tidak dibuat dan tidak dibutuhkan (fps dari SpriteFrames, `get_animation_speed`; N08 menolak fps literal). |
+| AC-7 | OK | README lempar dan melambat, `docs/design/character/README.md`, ART_DIRECTION 3.2/3.4/changelog, AGENTS.md, docs/README.md, SETUP_ANDROID bagian 8, `tools/loper_art/README.md`, perintah di `00-project-core.mdc` diperbarui; `DEV_PHASES.md` dan `ROADMAP.md` tidak disentuh. Tidak ada kata \"dikunci\" untuk hal usulan (semua ditulis \"usulan\", \"tetap usulan sampai dinilai di HP\"). |
+| AC-8 | OK | Tangkapan layar Dev ada dan terbaca; QA mengulang dengan skrip sendiri dan waktu nyata (bagian visual di bawah). |
+| AC-9 | OK dengan catatan | Commit kecil berformat benar, tidak ada commit di `main`; push: QS-002. |
+| D-1 | OK (lihat QS-001) | Tingkat melambat dari tanda komponen y stick sesudah zona mati; kecepatan dari `BikeDrive`. |
+| D-2 | OK | Kiri layar = seberang, kanan = dekat; ambang 12 px inklusif dari panjang swipe; vertikal/45 derajat tepat = tidak melempar (pilihan Dev, tercatat). |
+| D-3 | OK | `lempar_<sisi>_<kecepatan>_<arah>`, melambat -> santai, +-2 -> serong; swipe saat melempar diabaikan. |
+| D-4 | OK | Kembali ke kayuh tingkat/arah terkini; indeks frame dilanjutkan (frame lempar 3 -> kayuh 0, terlihat di render). |
+| D-5 | OK | `koran_lepas(sisi)` sekali di frame 2, `lempar_selesai` sekali; tidak ada pendengar selain tes. |
+| D-6 | OK | Satu `.tres` 38 animasi dibuat skrip stdlib dengan templat `produce.py`; 15 animasi kayuh tidak berubah. |
+
+Pemakai tingkat -1 yang diperiksa: `LoperAnim` (`jepit_tingkat`, `nama_animasi`, `tingkat_untuk_lempar`, `nama_lempar`: semua akses `NAMA_TINGKAT[...]` terjadi sesudah cabang melambat atau memakai `maxi(.., 0)`), `BikeDrive.Hasil.tingkat_sprite`, `SepedaUji.gerak`, `LoperSprite.speed_level` (`@export_range(-1, 2)`), `scenes/dev/graybox.tscn` (`speed_level = 1`), `tests/probe_lempar_jendela.gd`; `HudDev` tidak memakai tingkat sprite. Tes lama yang berubah (15 -> 38, stick bawah santai -> melambat, `speed_level` -4 -> -1, daftar putih kiri/kanan, `_test_input_terpadu`) dibandingkan baris demi baris dengan `git diff main...HEAD -- tests/`: semuanya beralasan, tidak ada yang dihapus, di-skip, atau dilonggarkan; baseline 2102 pemeriksaan di `main` terkonfirmasi dan sekarang 3315. Daftar putih kedua penjaga kiri/kanan (`NAMA_SISI_LEMPAR`) hanya berlaku di dalam bloknya, dengan 4 tes negatif (nama blok lain, sesudah blok ditutup, di fungsi, blok sah).
+
+#### Review kode terhadap rule
+
+`gdscript`: static typing lengkap (return type di semua fungsi, lambda `-> void`), logika murni di `systems/` (`LoperAnim`, `LemparWaktu` tanpa node, waktu sebagai parameter), `kiri`/`kanan` hanya sebagai nama animasi lewat `NAMA_SISI_LEMPAR` dan komentar, input dipisah dari logika, pause/background ditangani (`_notification` di `JalanUji`), tidak ada alokasi per frame (`_process` sprite hanya menyala saat melempar). `balancing`: tiga konstanta satu baris literal dan tercatat di BALANCING 2 (angka sama); `LEMPAR_FRAME_LEPAS` dan `LEMPAR_TOLERANSI_DETIK` bukan angka tuning tetapi sah ditaruh di Config karena penjaga literal; ada preseden (`SPRITE_SUDUT_TOLERANSI_DERAJAT`). `art-assets`: `.tres` lewat skrip, PNG/JSON byte-identik, impor Lossless/Nearest/tanpa mipmap, penamaan sesuai. `testing`: tes deterministik (`dt` tetap), tidak ada tes dihapus. `docs`: bahasa Indonesia, \"usulan\" dipertahankan. `git-workflow`: format commit dan tanpa berkas terlarang OK. Tidak ada teks pemain baru (tidak ada `tr()` baru dibutuhkan). Tidak ada keputusan terbuka (ROADMAP 5) yang diputuskan diam-diam; keputusan swipe 45 derajat dan \"abaikan swipe saat melempar\" tercatat sebagai usulan.
+
+#### Uji mutasi (QA, skrip scratchpad; tiap mutan satu suntingan di klon, `run_tests.gd` + pemeriksa `--ketat`, dipulihkan setelahnya)
+
+54 mutan valid: **52 tertangkap, 2 hidup**. Daftar permintaan orchestrator, semuanya tertangkap:
+
+| Mutan | Hasil |
+|---|---|
+| M01 balik sisi lempar di `sisi_dari_swipe` | tertangkap |
+| M21 arah swipe dibalik di `JalanUji` | tertangkap |
+| M02 `LEMPAR_FRAME_LEPAS` 3; M03 `release_frame` JSON 3 | tertangkap |
+| M23 satu lempar `loop: true` | tertangkap |
+| M04 lupa menjepit arah 90 derajat | tertangkap |
+| M05 melambat ambang -0,2; M05b melambat ambang <= 0 | tertangkap |
+| M06 fallback melambat -> santai dihapus | tertangkap |
+| M07 `koran_lepas` ganda; M07b `lempar_selesai` ganda; M16 lepas berulang | tertangkap |
+| M08 ambang swipe `>` bukan `>=`; M37 ambang 0; M12 45 derajat melempar; M13 tanpa penjaga vertikal | tertangkap |
+| N02 kembali ke animasi kayuh lama bukan terkini | tertangkap |
+| M10, M10b, M10c, M32 `batalkan_lempar`/FOCUS_OUT/PAUSED dihapus | tertangkap |
+| M11 `jepit_tingkat` -1 -> 0 | tertangkap |
+
+Lainnya tertangkap: M14 (`pause()` dihapus), M15 (kayuh tidak diputar lagi), M17 (delta tidak dijepit), M19/N17 (stick bawah tidak melambat), M20/M22 (swipe tidak diteruskan/disambung), M24/M25 (fps), M26 (lempar selalu santai), M27 (lempar saat melempar), M30 (NaN = melambat), M31 (frames diganti saat lempar), M34 (re-entrancy), M35 (dt negatif), M36 (nama arah), N03/N04 (tingkat/arah diabaikan), N05..N11, N13..N16, N18. Hidup: **M28** (reset `_waktu_lempar` di `lempar()` dihapus; setara karena `_akhiri_lempar` sudah menolkan waktu) dan **N19** (`JalanUji` mematikan `_process` sendiri; semua tes scene mematikannya sendiri, lihat QS-005). Tes bermakna, bukan tautologi: mutan yang menyentuh perilaku (sisi, frame lepas, sinyal, kembali ke kayuh terkini, batal) selalu gagal di pemeriksaan spesifiknya.
+
+#### Uji tambahan QA (tidak di-commit)
+
+- Waktu nyata headless (`qa_nyata.gd`, scene utama penuh, tanpa mematikan `_process`): 7 skenario, 0 gagal, 0 ERROR/WARNING: swipe kanan (lepas 0,165 s, selesai 0,340 s), lima swipe 50 ms beruntun (satu lempar), FOCUS_OUT dan PAUSED di tengah lempar (tidak ada sinyal sisa, swipe sesudahnya normal), stick bawah penuh + swipe (`lempar_kanan_santai_normal` lalu kembali `melambat_normal`, 4 fps), ngebut + stick dilepas di tengah lempar, 200 swipe acak dengan FOCUS_OUT berkala.
+- Repro QS-001 (headless; potongan, dijalankan sebagai `--script`):
+```gdscript
+var rng := RandomNumberGenerator.new(); rng.seed = 42
+var kec: float = Config.KECEPATAN_SANTAI_UD; var lat: float = 0.0; var lalu: int = 99; var ganti: int = 0
+for i in 600:
+	var h: BikeDrive.Hasil = BikeDrive.langkah(kec, lat, StickMap.petakan(Vector2(20.0, rng.randfn(0.0, 1.5))), 1.0 / 60.0)
+	kec = h.kecepatan_ud; lat = h.lateral_ubin
+	if lalu != 99 and h.tingkat_sprite != lalu: ganti += 1
+	lalu = h.tingkat_sprite
+# hasil: ganti = 291 dalam 10 detik, kecepatan terendah 2,91 u/d
+```
+
+#### Validasi visual (non-headless, jendela asli, waktu nyata)
+
+Skrip QA `qa_visual.gd` (scratchpad) pada 2340x1080 (viewport 780x360, x3) dan 1920x1080 (640x360, x3), OpenGL 4.1 Metal; tanpa `set_process(false)`, jadi `_process` sprite berjalan nyata. Pengukuran memakai latar rata (ubin, objek, HUD disembunyikan) dan membandingkan piksel render, bukan nilai node.
+- **Melambat berbeda dari santai hanya pada kecepatan putar:** 20/20 frame (5 arah x 4 frame) identik piksel demi piksel di render (kedua resolusi); kecepatan putar nyata (jumlah `frame_changed` selama 3 detik): santai 7,99 fps, melambat 4,00 fps, kecepatan sepeda 1,5 u/d (`qa_*_paritas_santai_atas_melambat_bawah.png`, `qa_*_melambat_normal_penuh.png`).
+- **Titik pijak tidak melompat:** pada keempat kasus (santai dan ngebut, swipe kiri dan kanan), baris alas sprite relatif titik pijak = +8 konstan (kayuh sebelum, lempar f0..f3, kayuh sesudah; sekitar 13 render per frame animasi), puncak sprite konstan (-42 santai, -43 ngebut); hanya jangkauan lengan berubah (kiri f2 x0 -23, kanan f2 x1 +20 santai dan +22 ngebut). Urutan kayuh yang terlihat: kayuh f3 -> lempar f0, f1, f2, f3 -> kayuh f0.
+- **Keempat frame lempar terbaca** kiri dan kanan (santai dan ngebut): f0 koran di sisi tas, f1 koran diangkat (kiri: di atas bahu dekat topi; kanan: ditarik ke badan), f2 lengan terjulur dengan koran di sisi yang benar (kiri: ke kiri atas = sisi seberang/fasad; kanan: ke kanan bawah = sisi dekat), f3 lengan tanpa koran. Kaki tetap mengayuh dan gambar tidak berpindah. Koran putih dan topi putih berdekatan di f1 kiri: terbaca di desktop, nilai di A54 (NEEDS-MANUAL).
+- **Ketajaman:** `python3 -I tools/cek_blok_piksel.py 3 --kecualikan <kotak HUD>`: 0 blok tidak seragam pada 21 tangkapan layar penuh per resolusi (16 frame lempar, 2 dua-jari, 2 kidal, 1 melambat) dan pada lembar potongan/paritas 2340x1080 tanpa pengecualian. Mode kidal memindahkan panel kecepatan ke kanan, jadi kotak pengecualian HUD-nya berbeda (`1200,950,1712,1060` di 2340; `780,950,1295,1060` di 1920).
+- **Tumpang tindih:** tangan kanan: cincin dan knob stick (kiri bawah), panel kecepatan, dan tombol Kidal tidak menyentuh sprite lempar (`qa_*_dua_jari_lempar_f2.png`: ngebut 5,1 u/d, lempar kiri, stick ditahan). Kidal: garis swipe melintasi sprite selama jari ditahan (QS-004), tidak sesudah jari diangkat.
+- Tidak bisa dinilai agent: rasa gerak, apakah 0,33 detik terasa cepat/lambat, kenyamanan ambang 12 px, kejelasan di A54 fisik (NEEDS-MANUAL di atas).
+
+#### Verdict QA iterasi 1: **PASS**
+Semua gerbang hijau, 0 Blocker, 0 Major OPEN. Temuan: 2 Minor (QS-001 DEFERRED desain, QS-002 untuk orchestrator), 3 Nit (QS-003..QS-005), 6 butir NEEDS-MANUAL (QA) di samping butir Dev dan SPEC. Hal yang paling perlu perhatian pemilik sebelum merge: QS-001 (aturan melambat dari tanda sumbu y) dan rebase ke `origin/main` (QS-003).
 
 ## Keputusan & catatan
 - Keputusan pemilik (2026-10-09): pasang sprite melambat dan lempar dulu untuk dilihat sebelum Fase 1; skala tetap x3; izin pasang APK ke A54 berlaku (hanya orchestrator yang menyentuh HP). Lihat SPEC.
