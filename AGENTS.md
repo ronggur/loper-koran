@@ -61,6 +61,7 @@ project.godot        Godot 4.7.2, Compatibility, landscape, 640x360 canvas_items
 scenes/              dev/jalan_uji.tscn (scene utama sementara, jalan tanpa ujung yang bisa digerakkan), dev/graybox.tscn (statis, untuk probe layar), entities/loper_agen.tscn (pemain) dan sepeda_uji.tscn, ui/hud_dev.tscn (HUD sementara)
 scripts/             config.gd (semua angka tuning), systems/ (logika murni: iso, touch_zones, stick_map, touch_router, bike_drive, jalan_daur, loper_anim), entities/ (sepeda_uji, jalan_uji, tanah_daur, objek_daur, loper_sprite), ui/ (palette, kontrol_touch, hud_dev, bar_kecepatan)
 assets/              sprites/ (loper/, _placeholder/), palette/, fonts/ (usulan), ui/theme.tres (font dan ukuran saja), LICENSES.md
+icon.svg             Ikon aplikasi sementara (bel, hanya warna Palette; pengganti final di Fase 14), dipakai ekspor Android
 export_presets.cfg   Preset export Android (satu preset, tanpa rahasia, dijaga tests/tes_export.gd); keystore dan kredensial tidak pernah di-commit
 builds/              APK hasil ekspor (di .gitignore, tidak di-commit)
 translations/        ui.csv (kolom keys,id) beserta ui.csv.import dan ui.id.translation hasil impor; semua teks pemain lewat kunci di sini

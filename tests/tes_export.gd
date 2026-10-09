@@ -12,6 +12,8 @@ const BERKAS_PRESET: String = "res://export_presets.cfg"
 const BERKAS_GITIGNORE: String = "res://.gitignore"
 const BERKAS_SETUP: String = "res://docs/SETUP_ANDROID.md"
 const BERKAS_README_DOCS: String = "res://docs/README.md"
+const BERKAS_IKON: String = "res://icon.svg"
+const BERKAS_PALET: String = "res://scripts/ui/palette.gd"
 
 ## Nama package final (pilihan user 2026-10-09, ROADMAP 4b). Tidak boleh diganti: terkunci setelah upload pertama ke Play Console.
 const PACKAGE_FINAL: String = "com.rmh.kring"
@@ -59,6 +61,7 @@ func check(kondisi: bool, label: String) -> void:
 func jalankan() -> void:
 	_test_preset_asli()
 	_test_preset_contoh_buruk()
+	_test_ikon_sementara()
 	_test_gitignore()
 	_test_berkas_dilacak()
 	_test_panduan_setup()
@@ -243,6 +246,48 @@ func _pelanggaran_preset(teks: String) -> Array[String]:
 			for pola: String in POLA_JALUR_LOKAL:
 				if isi.contains(pola):
 					hasil.append("jalur lokal atau keystore di %s/%s" % [bagian, kunci])
+	return hasil
+
+
+# --- Ikon aplikasi sementara (Godot mencetak ERROR: tanpa application/config/icon saat ekspor Android) ---
+
+func _test_ikon_sementara() -> void:
+	_judul.call("Ikon aplikasi sementara")
+	check(str(ProjectSettings.get_setting("application/config/icon", "")) == BERKAS_IKON, "application/config/icon = res://icon.svg (tanpa ikon, ekspor Android mencetak ERROR: No project icon specified)")
+	check(FileAccess.file_exists(BERKAS_IKON) and FileAccess.file_exists(BERKAS_IKON + ".import"), "icon.svg dan icon.svg.import ada (ter-commit)")
+	var teks: String = FileAccess.get_file_as_string(BERKAS_IKON)
+	check(teks.contains("<svg") and teks.contains("viewBox=\"0 0 128 128\""), "icon.svg berupa SVG persegi 128x128")
+	var sah: Array[String] = _warna_palet()
+	check(sah.size() >= 10, "daftar warna sah diambil dari Palette (%d warna)" % sah.size())
+	var asing: Array[String] = _warna_di_luar_palet(teks, sah)
+	check(asing.is_empty(), "icon.svg hanya memakai warna Palette; di luar palet: %s" % [asing])
+	var pakai: Array[String] = _warna_di_luar_palet(teks, [])
+	check(pakai.size() >= 3, "pemindai warna melihat warna di icon.svg (%d) sehingga tidak lolos kosong" % pakai.size())
+	check(_warna_di_luar_palet("<rect fill=\"#123456\"/>", sah) == ["#123456"], "warna di luar Palette (#123456) ditolak (contoh buruk)")
+	check(_warna_di_luar_palet("<rect fill=\"#ffb22e\"/>", sah).is_empty(), "warna Palette huruf kecil (#ffb22e) diterima")
+
+
+## Semua warna `#RRGGBB` konstanta `Color` di `scripts/ui/palette.gd`, huruf besar.
+func _warna_palet() -> Array[String]:
+	var hasil: Array[String] = []
+	var skrip: Script = load(BERKAS_PALET)
+	var konstanta: Dictionary = skrip.get_script_constant_map()
+	for nama: String in konstanta:
+		var nilai: Variant = konstanta[nama]
+		if nilai is Color:
+			var warna: Color = nilai
+			hasil.append("#" + warna.to_html(false).to_upper())
+	return hasil
+
+
+## Warna `#RRGGBB` pada `teks` yang tidak ada di daftar `sah` (huruf besar).
+func _warna_di_luar_palet(teks: String, sah: Array[String]) -> Array[String]:
+	var hasil: Array[String] = []
+	var re: RegEx = RegEx.create_from_string("#[0-9A-Fa-f]{6}(?![0-9A-Za-z])")
+	for cocok: RegExMatch in re.search_all(teks):
+		var kode: String = cocok.get_string().to_upper()
+		if not sah.has(kode) and not hasil.has(cocok.get_string()):
+			hasil.append(cocok.get_string())
 	return hasil
 
 

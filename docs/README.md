@@ -41,6 +41,7 @@ Mengikuti pola Brainy Dungeon: root repo git `loper-koran` sekaligus root projec
 AGENTS.md, CLAUDE.md   Pintu masuk agent coding (ada)
 docs/                  Dokumen desain (folder ini) + design/ + loop/ (ada)
 project.godot          Godot 4.7.2, landscape, renderer Compatibility, 640x360 canvas_items integer expand (ada)
+icon.svg               Ikon aplikasi sementara, dipakai ekspor Android (ada)
 export_presets.cfg     Preset export Android: satu preset, tanpa Gradle, arm64-v8a, tanpa rahasia (ada)
 scenes/                dev/jalan_uji.tscn (scene utama sementara), dev/graybox.tscn, entities/loper_agen.tscn dan sepeda_uji.tscn, ui/hud_dev.tscn (ada); Boot, Rute, Koran, Hasil, Bengkel menyusul
 assets/sprites/        loper/ dan _placeholder/ (ada); tiles/, houses/, props/, obstacles/, vfx/, ui/ menyusul
