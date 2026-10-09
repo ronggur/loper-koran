@@ -201,7 +201,7 @@ Layar penuh memakai latar `UI_BG` dan panel `UI_PANEL` seperti papan mock, denga
 
 ## 5. Teks UI
 
-- Semua teks UI ditulis di satu file (`translations/ui.csv`, usulan), bukan di scene, walaupun saat ini hanya Bahasa Indonesia.
+- Semua teks UI ditulis di satu file (`translations/ui.csv`, dikunci user 2026-10-09), bukan di scene, walaupun saat ini hanya Bahasa Indonesia. Scene boleh memuat kunci (mis. `HUD_KECEPATAN`) di properti teks, tidak pernah kalimat jadi.
 - Label HUD huruf kapital pendek: "MISI SAMPINGAN", "TERKIRIM", "KECEPATAN", "STAMINA", "KORAN".
 - Tombol kata kerja satu kata: "Ambil", "Lewati", "Berangkat", "Lanjut", "Servis".
 - Aturan panjang teks misi dan headline: `CONTENT_GUIDE.md` 2–3.
