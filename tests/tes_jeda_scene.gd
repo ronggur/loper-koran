@@ -150,6 +150,8 @@ func _test_tombol_dan_layar() -> void:
 	check(judul.text == "JEDA_JUDUL" and lanjut.text == "JEDA_LANJUT" and tr("JEDA_JUDUL") == "JEDA" and tr("JEDA_LANJUT") == "Lanjut", "teks layar jeda lewat kunci terjemahan (JEDA, Lanjut)")
 	var latar: ColorRect = _anak(layar, "Latar") as ColorRect
 	check(latar.color == Palette.HUD_PANEL and judul.get_theme_color(&"font_color") == Palette.TEXT, "lapisan gelap HUD_PANEL, judul TEXT (warna dari Palette)")
+	var gaya_lanjut: StyleBoxFlat = lanjut.get_theme_stylebox(&"normal") as StyleBoxFlat
+	check(gaya_lanjut != null and gaya_lanjut.border_color == Palette.TEXT and gaya_lanjut.bg_color == Palette.HUD_PANEL, "tombol Lanjut bergaris TEXT (terbaca di atas lapisan gelap)")
 	akar.minta_jeda()
 	await _tunggu(2)
 	var r_lanjut: Rect2 = layar.rect_tombol_lanjut()

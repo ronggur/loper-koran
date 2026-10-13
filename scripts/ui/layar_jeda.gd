@@ -21,6 +21,9 @@ func _ready() -> void:
 	_judul.add_theme_color_override(&"font_color", Palette.TEXT)
 	_tombol_lanjut.custom_minimum_size = Vector2(Config.JEDA_TOMBOL_LEBAR_PX, Config.HUD_TOMBOL_TINGGI_PX)
 	GayaHud.terapkan_tombol(_tombol_lanjut)
+	# Di atas lapisan gelap garis `OUTLINE` tidak terlihat; garis `TEXT` seperti tombol jeda supaya terbaca sebagai tombol.
+	_tombol_lanjut.add_theme_stylebox_override(&"normal", GayaHud.kotak(Palette.HUD_PANEL, Palette.TEXT))
+	_tombol_lanjut.add_theme_stylebox_override(&"hover", GayaHud.kotak(Palette.HUD_PANEL, Palette.TEXT))
 	_tombol_lanjut.ditekan.connect(lanjut_diminta.emit)
 
 
