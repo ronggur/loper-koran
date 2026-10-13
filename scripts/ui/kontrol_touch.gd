@@ -10,7 +10,9 @@ extends Node2D
 ## Tidak ada emulasi sentuhan dari mouse di proyek ini; keyboard hanya untuk tes di editor.
 ##
 ## Umpan balik (DESIGN_SPEC 3.7, warna dari `Palette`): stick digambar di titik sentuh (cincin radius 35 dengan isi
-## `TEXT` 14% dan garis `TEXT` 70%, knob radius 15 `ACCENT`), garis putus dari titik awal swipe ke jari.
+## `TEXT` 14% dan garis `TEXT` 70%, knob radius 15 `ACCENT`), garis putus dari titik awal swipe ke jari. Saat rem aktif
+## (`atur_rem`, diisi `JalanUji` dari `BikeMotion`) busur bawah cincin digambar `WARN` (seperempat lingkaran bawah, bentuk
+## yang berbeda dari cincin biasa), hilang saat rem padam.
 ## Semuanya dirasterisasi per piksel game (`PikselLingkaran`) supaya tepinya tajam di skala bulat.
 
 ## Pelacak jari. Instance `RefCounted` murni.
@@ -21,6 +23,8 @@ var keyboard_aktif: bool = OS.has_feature("editor")
 var _tekstur_isi: ImageTexture
 var _tekstur_cincin: ImageTexture
 var _tekstur_knob: ImageTexture
+var _tekstur_busur_rem: ImageTexture
+var _rem_aktif: bool = false
 var _setengah_cincin: Vector2 = Vector2.ZERO
 var _setengah_knob: Vector2 = Vector2.ZERO
 
@@ -30,6 +34,7 @@ func _ready() -> void:
 	_tekstur_isi = _buat_tekstur(radius_cincin, 0, Color(Palette.TEXT, Config.STICK_ISI_ALPHA))
 	_tekstur_cincin = _buat_tekstur(radius_cincin, Config.STICK_CINCIN_TEBAL_PX, Color(Palette.TEXT, Config.STICK_GARIS_ALPHA))
 	_tekstur_knob = _buat_tekstur(Config.STICK_KNOB_RADIUS_PX, 0, Palette.ACCENT)
+	_tekstur_busur_rem = _buat_tekstur_busur(radius_cincin, Config.STICK_CINCIN_TEBAL_PX, Palette.WARN)
 	_setengah_cincin = Vector2.ONE * radius_cincin
 	_setengah_knob = Vector2.ONE * Config.STICK_KNOB_RADIUS_PX
 
@@ -64,6 +69,9 @@ func _draw() -> void:
 		draw_texture(_tekstur_cincin, asal - _setengah_cincin)
 		var knob: Vector2 = (router.asal_stick() + router.geser_stick_terjepit()).round()
 		draw_texture(_tekstur_knob, knob - _setengah_knob)
+		# Busur rem digambar di atas knob: saat rem knob selalu di bawah cincin dan akan menutupi bagian tengah busur.
+		if _rem_aktif:
+			draw_texture(_tekstur_busur_rem, asal - _setengah_cincin)
 	if router.swipe_aktif():
 		_gambar_garis_putus(router.awal_swipe(), router.posisi_swipe())
 
@@ -84,6 +92,18 @@ func vektor_keyboard() -> Vector2:
 		Input.is_action_pressed(&"stick_ke_dekat"),
 		Input.is_action_pressed(&"stick_atas"),
 		Input.is_action_pressed(&"stick_bawah"))
+
+
+## Status rem untuk penanda di cincin stick. Menggambar ulang hanya bila berubah.
+func atur_rem(aktif: bool) -> void:
+	if aktif != _rem_aktif:
+		_rem_aktif = aktif
+		queue_redraw()
+
+
+## True bila penanda rem (busur bawah `WARN`) sedang digambar: rem aktif dan stick tampil.
+func busur_rem_tampil() -> bool:
+	return _rem_aktif and router.stick_aktif()
 
 
 ## Opsi kidal (runtime saja, D-5): menukar zona dan membatalkan jari aktif.
@@ -109,6 +129,17 @@ func _gambar_garis_putus(dari: Vector2, ke: Vector2) -> void:
 	while jarak <= panjang:
 		draw_rect(Rect2((dari + arah * jarak).round(), ukuran), Palette.TEXT)
 		jarak += float(Config.SWIPE_TITIK_JARAK_PX)
+
+
+## Tekstur piksel busur bawah cincin (`PikselLingkaran.di_busur_bawah`), sama ukuran dengan tekstur cincin.
+func _buat_tekstur_busur(radius: int, tebal: int, warna: Color) -> ImageTexture:
+	var sisi: int = PikselLingkaran.sisi(radius)
+	var gambar: Image = Image.create_empty(sisi, sisi, false, Image.FORMAT_RGBA8)
+	for y: int in range(sisi):
+		for x: int in range(sisi):
+			if PikselLingkaran.di_busur_bawah(x - radius, y - radius, radius, tebal):
+				gambar.set_pixel(x, y, warna)
+	return ImageTexture.create_from_image(gambar)
 
 
 ## Tekstur piksel: cakram penuh (tebal 0) atau cincin selebar `tebal` piksel, berjari-jari `radius`.

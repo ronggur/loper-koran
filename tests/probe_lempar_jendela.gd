@@ -25,6 +25,8 @@ const POTONG_Y: int = 62
 const TITIK_STICK: Vector2 = Vector2(100, 260)
 const TITIK_SWIPE_KANAN: Vector2 = Vector2(500, 200)
 const TITIK_SWIPE_KIRI: Vector2 = Vector2(440, 200)
+## Geseran jari ke bawah sebagai pecahan jangkauan stick yang belum memicu rem (run fase1a-gerak).
+const BAWAH_TANPA_REM: float = 0.85
 
 var _skala: float = 1.0
 var _folder: String = ""
@@ -65,15 +67,17 @@ func _initialize() -> void:
 ## Melambat: stick bawah penuh (lurus), bawah-dekat dan bawah-seberang (serong, sebelum lateral membentur tepi jalan), lalu 90 derajat
 ## kiri dan kanan. Sudut gerak terbesar yang bisa dicapai stick saat melambat = atan(3,0 / 1,5) = 63,4 derajat (< 67,5), jadi 90 derajat
 ## tidak pernah muncul dari stick; dua tangkapan terakhir mengatur `steer` langsung dengan permainan dihentikan, hanya untuk melihat gambarnya.
+## Sejak run fase1a-gerak stick bawah penuh yang ditahan 0,25 detik menjadi rem (D-2), jadi "bawah penuh" di sini diganti 85% jangkauan
+## (komponen bawah 0,82, tanpa rem): melambat_normal muncul setelah kecepatan sampai tujuan 1,76 u/d.
 func _urutan_melambat() -> void:
 	_sentuh(0, TITIK_STICK, true)
-	_geser(0, TITIK_STICK + Vector2(0, Config.STICK_RADIUS_PX))
+	_geser(0, TITIK_STICK + Vector2(0, Config.STICK_RADIUS_PX * BAWAH_TANPA_REM))
 	await create_timer(DETIK_MANTAP).timeout
 	await _foto("melambat_normal")
 	_geser(0, TITIK_STICK + Vector2(0.7, 0.7) * Config.STICK_RADIUS_PX)
 	await create_timer(DETIK_SERONG).timeout
 	await _foto("melambat_serong_kanan")
-	_geser(0, TITIK_STICK + Vector2(0, Config.STICK_RADIUS_PX))
+	_geser(0, TITIK_STICK + Vector2(0, Config.STICK_RADIUS_PX * BAWAH_TANPA_REM))
 	await create_timer(DETIK_MANTAP).timeout
 	_geser(0, TITIK_STICK + Vector2(-0.7, 0.7) * Config.STICK_RADIUS_PX)
 	await create_timer(DETIK_SERONG).timeout

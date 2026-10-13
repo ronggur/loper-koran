@@ -48,7 +48,8 @@ func _initialize() -> void:
 	_geser(0, Vector2(100, 225))
 	await create_timer(DETIK_MANTAP).timeout
 	await _foto("ngebut", sepeda)
-	# Melambat: stick digeser ke bawah penuh.
+	# Melambat: stick digeser ke bawah penuh. Sejak run fase1a-gerak bawah penuh ditahan = rem sampai berhenti (D-2); geseran dorongan
+	# tetap mundur penuh karena dijepit di 1,5 u/d (`DoronganKecepatan.geser_target`).
 	_geser(0, Vector2(100, 295))
 	await create_timer(DETIK_MANTAP).timeout
 	await _foto("melambat", sepeda)

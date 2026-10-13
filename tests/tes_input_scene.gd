@@ -239,9 +239,10 @@ func _test_jalan_tanpa_ujung() -> void:
 					sisa_gagal = "detik %d titik %s" % [detik, titik]
 		Input.action_release(&"stick_atas")
 		var tempuh: float = sepeda.jarak_ubin - jarak_awal
-		check(tempuh > 355.0, "lebar %d: 60 detik ngebut menempuh sekitar 358 ubin tanpa ujung (dapat %s)" % [lebar, tempuh])
+		# Sejak run fase1a-gerak stamina habis sekitar 9 detik lalu lelah menahan di 4,5 u/d (BALANCING 3): sekitar 282 ubin, dulu 358.
+		check(tempuh > 280.0 and tempuh < 285.0, "lebar %d: 60 detik stick atas penuh (ngebut lalu lelah di cepat) menempuh sekitar 282 ubin tanpa ujung (dapat %s)" % [lebar, tempuh])
 		check(terisi, "lebar %d: sepanjang 60 detik ngebut seluruh layar selalu tertutup ubin (tidak ada ujung terlihat), gagal: %s" % [lebar, sisa_gagal])
-		check(sepeda.kecepatan_ud == 6.0 and sepeda.nama_animasi() == &"ngebut_normal", "lebar %d: 60 detik ngebut: kecepatan 6,0 u/d dan animasi ngebut_normal" % lebar)
+		check(sepeda.kecepatan_ud == Config.KECEPATAN_CEPAT_UD and sepeda.lelah() and sepeda.nama_animasi() == &"cepat_normal", "lebar %d: 60 detik stick atas penuh: lelah, kecepatan 4,5 u/d dan animasi cepat_normal (sebelum run fase1a-gerak: 6,0 dan ngebut_normal), dapat %s %s" % [lebar, sepeda.kecepatan_ud, sepeda.nama_animasi()])
 		# Penanda gerak: rumah berkala tetap ada di sisi seberang di sekitar sepeda, jaraknya satu periode, dan daur tidak menumpuk.
 		var maju_rumah: Array[float] = []
 		for anak: Node in objek.get_children():
@@ -337,8 +338,13 @@ func _test_input_terpadu() -> void:
 	_tree.root.propagate_notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
 	check(router.jumlah_jari_aktif() == 0 and router.vektor_stick() == Vector2.ZERO, "NOTIFICATION_APPLICATION_FOCUS_OUT melepas semua jari dan menolkan vektor")
 	var lateral_fokus: float = sepeda.lateral_ubin
+	var jarak_fokus: float = sepeda.jarak_ubin
 	_langkah(akar, 120)
-	check(sepeda.lateral_ubin == lateral_fokus and sepeda.kecepatan_ud == 3.0, "setelah kehilangan fokus tidak ada gerak sendiri, kembali santai")
+	# Sejak run fase1a-gerak (D-6) kehilangan fokus juga menjeda simulasi: jarak pun tidak bertambah sampai fokus kembali.
+	check(akar.sedang_jeda() and sepeda.lateral_ubin == lateral_fokus and sepeda.jarak_ubin == jarak_fokus, "setelah kehilangan fokus tidak ada gerak sendiri: simulasi dijeda (lateral dan jarak tetap)")
+	_tree.root.propagate_notification(Node.NOTIFICATION_APPLICATION_FOCUS_IN)
+	_langkah(akar, 120)
+	check(not akar.sedang_jeda() and sepeda.lateral_ubin == lateral_fokus and sepeda.kecepatan_ud == 3.0 and sepeda.jarak_ubin > jarak_fokus, "fokus kembali: simulasi lanjut, santai 3,0 u/d tanpa geser lateral sendiri")
 	_sentuh(7, Vector2(100, 260), true)
 	_sentuh(8, Vector2(450, 200), true)
 	_tree.notification(Node.NOTIFICATION_APPLICATION_PAUSED)
@@ -412,9 +418,11 @@ func _jumlah(catatan: Array, jenis: String) -> int:
 	return hasil
 
 
-## Stick bawah di scene uji: animasi melambat_* bersama dorongan kecepatan; ambang zona mati 15%.
+## Stick bawah di scene uji: animasi melambat_* bersama dorongan kecepatan; ambang zona mati 15%. Sejak run fase1a-gerak (D-2, D-7)
+## stick bawah penuh yang ditahan menjadi rem dan kecepatan yang masih turun memakai meluncur_*, jadi "melambat mantap" diuji dengan
+## stick bawah 85% (komponen bawah 0,82 sesudah zona mati, di bawah ambang rem 0,90).
 func _test_melambat_stick() -> void:
-	_judul.call("Melambat dari stick di scene uji (AC-5, D-1)")
+	_judul.call("Melambat dari stick di scene uji (AC-5, D-1; meluncur dan rem run fase1a-gerak)")
 	var akar: JalanUji = await _siapkan(Vector2i(2340, 1080))
 	var sepeda: SepedaUji = _anak(akar, "Sepeda") as SepedaUji
 	var kontrol: KontrolTouch = _anak(akar, "KontrolTouch") as KontrolTouch
@@ -431,15 +439,19 @@ func _test_melambat_stick() -> void:
 	check(sepeda.nama_animasi() == &"santai_normal", "stick ke bawah tepat 15,0%% (tepi zona mati): santai_normal, dapat %s" % sepeda.nama_animasi())
 	_geser(0, Vector2(100, 260.0 + radius * 0.151))
 	_langkah(akar, 3)
-	check(sepeda.nama_animasi() == &"melambat_normal" and sprite.speed_level == -1, "stick ke bawah 15,1%% (tepat di luar zona mati): melambat_normal, dapat %s" % sepeda.nama_animasi())
-	# Stick bawah penuh: melambat_normal, kayuh 4 fps, kecepatan turun ke 1,5 u/d, dorongan kecepatan mundur.
-	_geser(0, Vector2(100, 260.0 + radius))
+	check(sepeda.nama_animasi() == &"melambat_normal" and sprite.speed_level == -1, "stick ke bawah 15,1%% (tepat di luar zona mati, tujuan 2,998 dalam toleransi pose): melambat_normal, dapat %s" % sepeda.nama_animasi())
+	# Stick bawah 85%: kecepatan masih di atas tujuan = meluncur (kaki diam), lalu melambat_normal 4 fps saat sampai.
+	_geser(0, Vector2(100, 260.0 + radius * 0.85))
 	_langkah(akar, 6)
-	check(sepeda.nama_animasi() == &"melambat_normal" and sepeda.kecepatan_ud < 3.0, "stick bawah penuh: melambat_normal dan kecepatan turun (%s u/d)" % sepeda.kecepatan_ud)
-	check(is_equal_approx(sprite.sprite_frames.get_animation_speed(sprite.animation), 4.0) and sprite.is_playing(), "melambat berkayuh 4 fps dan berputar")
+	check(sepeda.nama_animasi() == &"meluncur_normal" and sepeda.kecepatan_ud < 3.0 and not sepeda.rem_aktif(), "stick bawah 85%%: meluncur_normal selama kecepatan turun (%s u/d), tanpa rem" % sepeda.kecepatan_ud)
+	check(is_equal_approx(sprite.speed_scale, 1.0) and sprite.is_playing(), "meluncur tidak dikayuh: pedal_rate 1 (napas 4 fps dari .tres)")
 	_langkah(akar, 114)
-	check(sepeda.kecepatan_ud == 1.5 and sepeda.nama_animasi() == &"melambat_normal", "2 detik stick bawah penuh: 1,5 u/d dan tetap melambat_normal, dapat %s %s" % [sepeda.kecepatan_ud, sepeda.nama_animasi()])
-	check(akar.geser_dorongan().distance_to(Vector2(-Config.DORONGAN_MUNDUR_PX, Config.DORONGAN_MUNDUR_PX / 2)) < 1.0, "dorongan kecepatan yang sudah ada tetap bekerja bersama melambat: geseran mundur %s" % akar.geser_dorongan())
+	var tujuan: float = BikeMotion.kecepatan_tujuan_ud(kontrol.vektor_stick().y)
+	check(is_equal_approx(sepeda.kecepatan_ud, tujuan) and sepeda.nama_animasi() == &"melambat_normal", "2 detik stick bawah 85%%: di tujuan %s u/d dan melambat_normal, dapat %s %s" % [tujuan, sepeda.kecepatan_ud, sepeda.nama_animasi()])
+	check(is_equal_approx(sprite.sprite_frames.get_animation_speed(sprite.animation), 4.0) and sprite.is_playing(), "melambat berkayuh 4 fps dan berputar")
+	check(is_equal_approx(sprite.speed_scale, tujuan / Config.KECEPATAN_MELAMBAT_UD), "laju kayuh melambat = kecepatan / 1,5 (D-8), dapat %s" % sprite.speed_scale)
+	var mundur_parsial: float = DoronganKecepatan.geser_target(tujuan).x
+	check(absf(akar.geser_dorongan().x - mundur_parsial) < 1.0 and mundur_parsial < -15.0, "dorongan kecepatan yang sudah ada tetap bekerja bersama melambat: geseran mundur %s (target %s)" % [akar.geser_dorongan(), mundur_parsial])
 	# Bawah sambil ke sisi dekat: melambat dengan arah serong dari gerak sebenarnya.
 	_geser(0, Vector2(100.0 + radius * 0.7, 260.0 + radius * 0.7))
 	_langkah(akar, 4)
@@ -828,11 +840,12 @@ func _test_dorongan_kecepatan_scene() -> void:
 		keadaan = _jalankan_dorongan(akar, sepeda, kamera, ukuran, 360, keadaan)
 		layar = _layar_sepeda(sepeda, kamera, ukuran)
 		check(sepeda.kecepatan_ud == 3.0 and akar.geser_dorongan().length() < 0.01 and layar.distance_to(dasar) <= 1.0, "%s: stick dilepas lama: kembali halus ke posisi dasar %s +-1 px, dapat %s" % [tag, dasar, layar])
-		# Melambat mantap (stick bawah): sepeda mundur sedikit.
+		# Stick bawah keyboard = bawah penuh: sejak run fase1a-gerak rem aktif dan sepeda berhenti (0 u/d); geseran dorongan dijepit
+		# di kecepatan melambat, jadi tetap mundur penuh (dulu: melambat mantap 1,5 u/d).
 		Input.action_press(&"stick_bawah")
 		keadaan = _jalankan_dorongan(akar, sepeda, kamera, ukuran, 360, keadaan)
 		layar = _layar_sepeda(sepeda, kamera, ukuran)
-		check(sepeda.kecepatan_ud == 1.5 and akar.geser_dorongan().distance_to(mundur) < 0.01, "%s melambat mantap: geseran dorongan = %s (galat < 0,01 px), dapat %s" % [tag, mundur, akar.geser_dorongan()])
+		check(sepeda.kecepatan_ud == 0.0 and sepeda.rem_aktif() and akar.geser_dorongan().distance_to(mundur) < 0.01, "%s berhenti dengan rem: geseran dorongan = %s (galat < 0,01 px), dapat %s" % [tag, mundur, akar.geser_dorongan()])
 		check(layar.distance_to(dasar + mundur) <= 1.0, "%s melambat mantap: sepeda di dasar - (20, -10) = %s +-1 px, dapat %s (selisih dari dasar %s)" % [tag, dasar + mundur, layar, layar - dasar])
 		check(layar.x < dasar.x - 10.0 and layar.y > dasar.y + 5.0, "%s melambat: sepeda lebih ke kiri dan lebih ke bawah daripada posisi dasar (turun ke kiri bawah)" % tag)
 		var rect_panel_lambat: Rect2 = hud.rect_panel_kecepatan()

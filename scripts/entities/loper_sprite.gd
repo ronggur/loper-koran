@@ -1,8 +1,10 @@
 class_name LoperSprite
 extends AnimatedSprite2D
-## Sprite pemain (Kemeja Agen) yang memilih animasi dari tingkat kecepatan dan arah, dan memainkan lempar koran (ART_DIRECTION 3.2).
+## Sprite pemain (Kemeja Agen) yang memilih animasi dari pose, tingkat kecepatan, dan arah, dan memainkan lempar koran (ART_DIRECTION 3.2).
 ##
 ## Node hanya menampilkan: pemilihan nama animasi ada di `LoperAnim` dan garis waktu lempar di `LemparWaktu` (logika murni).
+## - `pose`: `KAYUH` (bawaan) memakai `speed_level`; `MELUNCUR` dan `REM` memakai `meluncur_<arah>` dan `rem_<arah>` (D-7 run
+##   fase1a-gerak); pemilihan pose dari keadaan gerak ada di `LoperAnim.pose_dari_gerak`, bukan di node ini;
 ## - `speed_level`: -1 = melambat (kayuh 4 fps), 0 = santai, 1 = cepat, 2 = ngebut (dijepit ke -1 sampai 2);
 ## - `steer`: -2 = 90 derajat ke sisi seberang, -1 = serong seberang, 0 = lurus, 1 = serong dekat,
 ##   2 = 90 derajat ke sisi dekat (dijepit ke -2 sampai 2). Nama animasi memakai `kiri` / `kanan`
@@ -30,6 +32,10 @@ signal lempar_selesai
 @export_range(-2, 2) var steer: int = 0:
 	set(nilai):
 		steer = LoperAnim.jepit_arah(nilai)
+		_terapkan_animasi()
+@export var pose: LoperAnim.Pose = LoperAnim.Pose.KAYUH:
+	set(nilai):
+		pose = nilai
 		_terapkan_animasi()
 @export var pedal_rate: float = 1.0:
 	set(nilai):
@@ -61,12 +67,12 @@ func sedang_melempar() -> bool:
 
 
 ## Mulai animasi lempar ke `sisi`. Mengembalikan true bila dimulai. Tidak melakukan apa pun (false) bila sedang melempar
-## (swipe berikutnya diabaikan), `sisi` adalah `TIDAK_ADA`, atau `sprite_frames` kosong. Animasi dipilih dari `speed_level` dan
-## `steer` saat ini (`LoperAnim.nama_lempar`).
+## (swipe berikutnya diabaikan), `sisi` adalah `TIDAK_ADA`, atau `sprite_frames` kosong. Animasi dipilih dari `pose`, `speed_level`,
+## dan `steer` saat ini (`LoperAnim.nama_lempar`; dari meluncur dan rem memakai santai, `LoperAnim.tingkat_lempar`).
 func lempar(sisi: LoperAnim.Sisi) -> bool:
 	if _sedang_melempar or sprite_frames == null:
 		return false
-	var nama: StringName = LoperAnim.nama_lempar(sisi, speed_level, steer)
+	var nama: StringName = LoperAnim.nama_lempar(sisi, LoperAnim.tingkat_lempar(pose, speed_level), steer)
 	if nama == &"":
 		return false
 	if not sprite_frames.has_animation(nama):
@@ -116,11 +122,12 @@ func _akhiri_lempar() -> void:
 	_mainkan_bila_siap()
 
 
-## Memasang animasi kayuh sesuai `speed_level` dan `steer`, menjaga fase kayuh saat berganti. Tidak menyentuh gambar selama melempar.
+## Memasang animasi sesuai `pose`, `speed_level`, dan `steer`, menjaga fase (indeks frame) saat berganti. Tidak menyentuh gambar
+## selama melempar.
 func _terapkan_animasi() -> void:
 	if sprite_frames == null or _sedang_melempar:
 		return
-	var nama: StringName = LoperAnim.nama_animasi(speed_level, steer)
+	var nama: StringName = LoperAnim.nama_animasi_pose(pose, speed_level, steer)
 	if not sprite_frames.has_animation(nama):
 		push_warning("LoperSprite: animasi '%s' tidak ada di SpriteFrames" % nama)
 		return
