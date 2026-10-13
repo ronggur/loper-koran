@@ -6,13 +6,20 @@ Scope: Run 1A Fase 1, logika gerak inti (BikeMotion, rem, meluncur, stamina, lat
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
 |---|---|---|---|---|---|
-| 1 | AC-1 sampai AC-15: `BikeMotion` (rem, meluncur, stamina/lelah, lateral berbatas, jeda via `JedaSim`), pose dan `pedal_rate` di `LoperAnim`, SpriteFrames 48 animasi, bar stamina + LELAH, busur rem `WARN`, tes murni dan scene, 40 mutan nyata (semua tertangkap), bukti visual 2340x1080, dokumen AC-14. 7 commit, tidak push | ✅ import 0 ERROR/WARNING; 3886 lolos 0 gagal; `--ketat` lolos; uji_pemeriksa 16/0; uji_bangun_frames 41/0; quit-after 0; klon bersih sama | | | |
+| 1 | AC-1 sampai AC-15: `BikeMotion` (rem, meluncur, stamina/lelah, lateral berbatas, jeda via `JedaSim`), pose dan `pedal_rate` di `LoperAnim`, SpriteFrames 48 animasi, bar stamina + LELAH, busur rem `WARN`, tes murni dan scene, 40 mutan nyata (semua tertangkap), bukti visual 2340x1080, dokumen AC-14. 7 commit, tidak push | ✅ import 0 ERROR/WARNING; 3886 lolos 0 gagal; `--ketat` lolos; uji_pemeriksa 16/0; uji_bangun_frames 41/0; quit-after 0; klon bersih sama | **PASS** (gerbang hijau, diulang QA di klon bersih dan working tree; 0 Blocker, 0 Major) | 7 (0 Blocker, 0 Major, 4 Minor, 3 Nit) | 0 (iterasi pertama, tidak ada FIXED) |
 
 ## Temuan
 Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MANUAL | BLOCKED
 
 | ID | Iter | Sev | Lokasi | Temuan & reproduksi/bukti | Status | Fix (file/commit) | Tes regresi |
 |---|---|---|---|---|---|---|---|
+| QA-001 | 1 | Minor | tests/tes_gerak_scene.gd:271, scripts/ui/hud_dev.gd:56 | Celah tes AC-9: penanda LELAH hanya dibuktikan di stamina 0 dan saat tidak lelah; tidak ada tes bahwa penanda tetap tampil selama lelah dengan 0 < stamina < 30 (fase pulih). Repro: mutan QA Q05 `_label_lelah.visible = stamina <= 0.0` -> 3886 lolos, 0 gagal (HIDUP). Perilaku kode sekarang benar (`visible = lelah`), hanya tidak dijaga. Saran: di `_test_stamina_di_scene` sesudah "meluncur 1,67 detik ... masih lelah" tambahkan `hud.penanda_lelah_tampil()`. | DEFERRED (Minor; perilaku benar, satu `check` di run berikut atau sebelum PR) | | |
+| QA-002 | 1 | Minor | scripts/systems/bike_motion.gd:192 | Celah tes D-7: pose dipilih dari kecepatan SESUDAH langkah, tetapi tidak ada tes yang memaku langkah tepat pergantian meluncur -> melambat (atau kayuh -> meluncur). Repro: mutan QA Q04 (pose dari `awal.kecepatan_ud`, tertinggal satu langkah) -> 3886 lolos, 0 gagal (HIDUP). Dampak hanya satu frame, jadi Minor. Saran: tes murni "langkah yang membawa kecepatan ke tujuan langsung `melambat`" (mis. dari 1,76 + 0,02 dengan dt 1/60). | DEFERRED (Minor) | | |
+| QA-003 | 1 | Nit | scripts/systems/bike_motion.gd:152, 181-184 | `lelah` dan tujuan lelah hanya berganti di batas langkah: langkah yang membuat stamina habis di tengahnya tetap memakai tujuan 6,0 sampai akhir langkah. Repro: mutan Q16 (tujuan dihitung ulang dengan `lelah` sesudah langkah) HIDUP. Galat paling lama satu langkah (<= `LANGKAH_WAKTU_MAKS_DETIK`), sudah dicatat jujur oleh Dev ("Pilihan di luar SPEC" 4). | DEFERRED (dicatat saja) | | |
+| QA-004 | 1 | Minor | git: `be27680`, `cd7c74f` | Dua commit tidak hijau bila diperiksa sendiri (runner di `cd7c74f` merujuk `TesGerakScene` yang baru masuk di `4e05da6`), bertentangan dengan `git-workflow` "perubahan yang saling bergantung masuk commit yang sama" dan menyulitkan bisect. Diakui Dev di Catatan Dev. Dampak hilang saat squash merge (satu commit di `main`). | DEFERRED (squash merge oleh pemilik menutupnya) | | |
+| QA-005 | 1 | Minor | docs/BALANCING.md:31, :97 | Dokumen berbeda angka dengan perilaku: tabel 2 masih "Melambat (stick bawah) turun ke 1,5 u/d", padahal sejak D-2 tarikan bawah tanpa rem paling dalam sekitar 0,899 (tujuan sekitar 1,65 u/d; dicatat hanya di paragraf rumus). Paragraf 3 "ngebut terus bertahan sekitar 8 detik" di samping angka baru "sekitar 9,0 detik (8,0-9,5)". Bukan keputusan diam-diam (konsekuensi D-2 dan D-5 dari SPEC, ditulis terbuka), tetapi pemilik perlu memilih: terima 1,65 sebagai "melambat paling pelan" atau ubah ambang/rumus. | NEEDS-MANUAL (keputusan pemilik sesudah uji HP; rapikan tabel bersama keputusannya) | | |
+| QA-006 | 1 | Nit | scripts/ui/kontrol_touch.gd:74 | Busur rem `WARN` (#FF8A3D) digambar di atas knob `ACCENT` (#FFB22E): dua oranye bersebelahan, kontras rendah di bagian tengah busur. Di tangkapan QA `shots/iter1/2340x1080_rem_berhenti.png` busur terlihat jelas di cincin kiri-kanan knob dan tipis di atas knob. Penanda rem juga dibantu sprite `rem_*` dan angka 0.0, jadi bukan satu-satunya isyarat. | NEEDS-MANUAL (keterbacaan di A54) | | |
+| QA-007 | 1 | Nit | scripts/entities/jalan_uji.gd:39-45, scripts/entities/loper_sprite.gd | Selama jeda (FOCUS_OUT) simulasi berhenti, tetapi `AnimatedSprite2D` tetap berputar (kayuh di tempat sementara dunia diam). Tidak melanggar D-6 (yang dihentikan simulasi), sudah dicatat Dev. Layar jeda Run 1B sebaiknya juga menghentikan pemutar sprite. | DEFERRED (Run 1B, layar jeda) | | |
 
 ## NEEDS-MANUAL (uji di HP)
 Daftar awal ada di SPEC bagian "Butuh uji perangkat nyata". Dev dan QA menambah langkah di sini.
@@ -24,6 +31,12 @@ Tambahan Dev (iterasi 1; juga di `docs/SETUP_ANDROID.md` 8.1):
 - [ ] Lelah: di 4,5 u/d stamina tetap 0 selama stick ditahan ke atas (disengaja, -4/d); pemain harus melonggarkan stick. Apakah tulisan LELAH cukup menjelaskan kenapa sepeda tidak bisa ngebut.
 - [ ] Laju kayuh `pedal_rate` maksimum 1,5: saat lelah turun dari 6,0 ke 4,5 kayuh cepat sempat berputar 1,33x; saat santai di atas 4,5 (sesudah melepas ngebut) kayuh santai bisa sampai 1,5x. Terlihat wajar atau "kaki ngebut".
 - [ ] Jeda di desktop/editor: kehilangan fokus jendela juga menjeda (FOCUS_OUT). Di HP: tarik bilah notifikasi saat ngebut lalu tutup: posisi, stamina, kecepatan tidak melompat; sprite tetap beranimasi selama jeda (pemutar bawaan tidak dihentikan, hanya simulasi).
+
+Tambahan QA (iterasi 1):
+- [ ] (QA-005) Tarik stick ke bawah pelan-pelan sampai tepat sebelum rem menyala dan tahan: kecepatan menetap sekitar 1,6-1,7 u/d. Apakah "melambat paling pelan" ini cukup pelan untuk membidik rumah, atau rem terlalu mudah menyala saat ingin pelan.
+- [ ] (QA-006) Saat rem aktif dengan jempol menutupi knob: apakah busur oranye `WARN` terbedakan dari knob oranye `ACCENT` di layar A54 di bawah cahaya luar ruangan.
+- [ ] (QA-001) Ngebut sampai LELAH, lalu meluncur: tulisan LELAH harus tetap tampil sampai stamina kembali sekitar 30 (sekitar 2 detik), bukan hilang begitu bar mulai terisi.
+- [ ] Rem sampai berhenti lalu geser ke samping sambil tetap menahan: sepeda bergeser lateral sampai sekitar 1,3 u/d dengan sprite `rem_kanan`/`rem_kiri` (90 derajat). Apakah "geser sambil berhenti" ini terlihat wajar.
 
 ## Keputusan & catatan
 - Keputusan pemilik 2026-10-13: pindah sisi analog bebas (bukan kunci jalur); sprite stick bawah ikuti fisika (D-7); PR #19 di-merge sebelum run; uji HP Fase 0 lolos tanpa angka yang diubah.
@@ -182,3 +195,56 @@ godot --headless --path . --quit-after 2                            # 0 ERROR/WA
 Rasa ambang rem (90%, 0,25 detik), rasa meluncur/melambat, durasi stamina di tangan, keterbacaan bar stamina, LELAH, dan busur rem di A54, laju kayuh secara visual, perilaku notifikasi jeda di Android sungguhan (urutan FOCUS/PAUSED), 60 fps, dan CI GitHub. Tidak ada APK yang dibangun atau dipasang.
 
 ## Catatan QA
+
+### QA (iterasi 1)
+
+Lingkungan: macOS, `godot --version` = `4.7.2.stable.official.ed1daf0bf` (`/opt/homebrew/bin/godot`), Python 3. Branch `feat/fase1a-gerak` HEAD `b85a9e3`. QA tidak menyentuh HP, tidak push, tidak mengubah kode fitur. Klaim di "Catatan Dev" tidak dipakai sebagai bukti; semua di bawah dijalankan ulang.
+
+**Gerbang (klon bersih** `git clone --branch feat/fase1a-gerak` di scratchpad**):**
+```
+godot --headless --import                                    # exit 0, 0 baris ERROR/WARNING/SCRIPT
+git status --porcelain                                       # kosong sesudah import (.uid/.import lengkap)
+godot --headless --script res://tests/run_tests.gd           # exit 0; "3886 lolos, 0 gagal"
+python3 tools/cek_keluaran_tes.py --ketat build/tests.log    # pemeriksa: lolos (3886 lolos, 0 gagal, 0 peringatan), exit 0
+python3 tools/tests_cek/uji_pemeriksa.py                     # 16 kasus, 0 menyimpang, exit 0
+python3 tools/tests_cek/uji_bangun_frames.py                 # 41 lolos, 0 gagal, exit 0
+godot --headless --path . --quit-after 2                     # exit 0, 0 ERROR/WARNING
+```
+Working tree: import + `run_tests` + `--ketat` sama (3886/0, lolos), `--quit-after 2` 0 ERROR/WARNING. Kebersihan: `git diff main...HEAD --name-only` tanpa keystore/APK/AAB/`.godot/`/`build/`/`builds/`/kredensial; `main` = `origin/main` = `f59c830` (tidak ada commit di `main`); 9 commit format `<tipe>: <ringkasan>` bahasa Indonesia; `.uid` untuk 5 `.gd` baru dan `.import` untuk 2 PNG baru ada; `bike_drive.gd`+`.uid` dihapus. PNG/JSON meluncur dan rem di `assets/` byte-identik dengan `docs/design/character/loper_agen/rem_meluncur/` (`cmp`), `.import` Lossless (`compress/mode=0`), tanpa mipmap; `.tres` 48 animasi, meluncur 4 fps, rem 8 fps; `rem_meluncur.py` tidak diubah.
+
+**Kepatuhan SPEC (ditelusuri ke kode dan tes, dibaca sendiri):** D-1 `BikeMotion.Keadaan`/`Hasil`/`langkah` murni (tes masukan tidak berubah + 2000 langkah acak berseed). D-2 syarat rem dari `-stick.y` saja (`syarat_rem_bawah`, >= 0,90 - 1e-6), lama tahan reset di cabang `else`, langkah dibelah di batas 0,25 (`waktu_biasa`/`waktu_rem`), `_gerak_rem` berhenti di 0; tes 0,899/0,90, 0,249/0,25, lepas/naik/samping memutus, diagonal 0,85+0,5 dan 45 derajat, 1/30 lawan 1/240 dan 0,35 = 35 x 0,01. D-5 laju linear per potong, rampa dipotong di 3,0 dan 4,5 (integral tepat), jepit 0..100, lelah di <= 0, padam di >= 30, tujuan dijepit 4,5. D-6 `JedaSim` + `JalanUji.perbarui` (dt 0 selama jeda dan langkah pertama sesudah lanjut), `SepedaUji.jeda` (tahan 0, rem padam, lempar ditutup), `KontrolTouch` `batal_semua`. D-7 urutan rem > meluncur (stick bawah dan v - tujuan > 0,05) > kayuh/melambat, tingkat dijepit cepat saat lelah, lempar dari meluncur/rem = santai. D-8 `pedal_rate` = v / nominal tingkat dijepit [0, 1,5], meluncur/rem = 1; lempar memakai `LemparWaktu` + `pause()`, jadi `speed_scale` tidak berpengaruh. D-9 48 animasi. AC-9 bar stamina (ACCENT, FAIL < 30, label LELAH teks), busur `WARN` seperempat bawah, kunci `HUD_STAMINA`/`HUD_LELAH` di `ui.csv` + `.translation`. Config: konstanta baru satu baris literal dan sama dengan BALANCING 2-3 (`JALAN_LEBAR_UBIN` dipindah, bukan diubah). Keputusan terbuka tidak dipilih diam-diam: ambang rem tetap 0,90/0,25 (usulan), lateral analog sesuai keputusan pemilik; angka baru (toleransi pose 0,05, `PEDAL_RATE_MAKS` 1,5) ditandai usulan.
+
+**Tes lama yang berubah (regresi):** dibandingkan `git diff main...HEAD -- tests/`: `_test_bike_drive` dipindah ke `tes_gerak.gd` (sapuan QB-002, deterministik 2000 langkah, jarak tepat, lateral, dt tidak sah semuanya ada lagi); yang diubah (bawah penuh 1,5 -> rem 0; 60 detik ngebut -> lelah 4,5; FOCUS_OUT -> jeda) sesuai D-2/D-5/D-6 dan tercatat di tabel "Tes lama" Dev. Tidak ada tes yang di-skip. Jumlah pemeriksaan 3315 -> 3886.
+
+**Mutan nyata QA (independen dari daftar Dev; di klon bersih, satu per satu, `run_tests` + `--ketat`, dipulihkan; `git status --porcelain` klon kosong sesudahnya):**
+
+| Mutan | Hasil | Penangkap / catatan |
+|---|---|---|
+| Q01 pose meluncur juga saat stick netral (`>=` -> `>`) | tertangkap (3 gagal) | "stick netral atau atas tidak pernah meluncur" |
+| Q02 lelah memaksa tingkat cepat walau stick netral/bawah | tertangkap (1) | "lelah tidak mengubah santai dan melambat" |
+| Q03 FOCUS_IN tanpa jeda menyalakan `baru_lanjut` | tertangkap (2) | `_test_jeda_sim` |
+| Q04 pose dari kecepatan awal langkah | **HIDUP** | QA-002 |
+| Q05 penanda LELAH hanya di stamina 0 | **HIDUP** | QA-001 |
+| Q06 lelah menjepit tujuan 4,5 juga untuk netral | tertangkap (2) | tujuan lelah netral 3,0 |
+| Q07 arah sprite dari lateral stick, bukan gerak nyata | tertangkap (2) | 10d tepi jalan |
+| Q08 lateral berhenti selama rem | tertangkap (2) | `rem_kanan`, `rem_serong_kanan` |
+| Q09 `BikeMotion.jeda` tidak memadamkan rem | tertangkap (2) | jeda saat rem aktif |
+| Q10 FOCUS_IN tidak melanjutkan | tertangkap (4) | scene jeda FOCUS |
+| Q11 `baru_lanjut` tidak pernah dipadamkan | tertangkap (4) | "langkah berikutnya normal" |
+| Q12 dorongan kamera memakai dt mentah | tertangkap (4) | jeda: dorongan tetap |
+| Q13 nominal melambat = santai di `pedal_rate` | tertangkap (4) | nominal tiap tingkat = 1 |
+| Q14 rem memakai laju stamina dari kecepatan | tertangkap (2) | rem 1 detik 50 -> 65, independen dt |
+| Q15 lelah padam baru di 100 | tertangkap (3) | 27 + 3 = 30 padam |
+| Q16 tujuan dari `lelah` sesudah langkah | **HIDUP** | QA-003 (batas langkah, Nit) |
+| Q17 warna bar stamina dari `lelah`, bukan < 30 | tertangkap (2) | 29,9 = FAIL |
+| Q18 `busur_rem_tampil` tanpa syarat stick aktif | HIDUP, setara | `_draw` sudah menggambar busur hanya bila stick aktif; hanya fungsi bantu tes yang berubah |
+| Q19 notifikasi jeda tanpa `atur_rem(false)` | HIDUP, setara | busur hanya digambar bila stick aktif dan `batal_semua` sudah melepas stick; `perbarui` berikutnya memadamkan |
+| Q20 `sisa` tidak nol saat rem sudah aktif | HIDUP, setara | rem aktif berarti tahan >= 0,25, jadi `sisa` = 0 juga |
+
+Ringkas: 20 mutan, 14 tertangkap, 3 hidup setara (bukan celah), 3 hidup nyata (QA-001, QA-002, QA-003), semuanya Minor/Nit. Tidak ada mutan perilaku inti (rem, stamina, jeda, `pedal_rate`) yang lolos.
+
+**Validasi visual (jendela asli, non-headless, driver macOS/OpenGL):** `godot --path . --resolution <W>x1080 --position 0,0 --script res://tests/probe_gerak_jendela.gd -- <folder>` untuk 2340x1080 (19,5:9, viewport 780x360 x3), 1920x1080 (16:9, 640x360 x3), dan 2400x1080 (20:9, 800x360 x3); exit 0, 0 ERROR/WARNING, tanpa jeda tak sengaja. Disimpan ke `docs/loop/20261013-fase1a-gerak/shots/iter1/`: 8 keadaan 2340x1080 + 5 lembar pergantian + `1920x1080_stamina_lelah.png` + `2400x1080_rem_bergerak.png`. `python3 tools/cek_blok_piksel.py 3 --kecualikan <kotak teks HUD dari probe> ...`: semua tangkapan tiga rasio 0 blok tidak seragam (exit 0); lima lembar tanpa pengecualian 0 tidak seragam; kontrol negatif `rem_berhenti` tanpa pengecualian = 560 blok tidak seragam (teks HUD). Yang saya lihat sendiri (Read PNG): `rem_berhenti` 0.0 u/d, bar kecepatan kosong, stamina oranye sekitar 60%, busur oranye `WARN` di seperempat bawah cincin dan melintas tipis di atas knob (diperbesar), sprite `rem_normal`; `stamina_lelah` (2340 dan 1920) 4.5 u/d, bar stamina kosong, tulisan LELAH merah rata kanan di baris STAMINA, panel tetap utuh di 16:9; `lembar_meluncur_ke_rem` roda dan bayangan tidak bergeser, hanya badan atas. Keluaran probe: kayuh -> meluncur 1 langkah, meluncur -> melambat 60 langkah, meluncur -> rem 12 langkah (0,2 + 0,05 detik), rem -> santai 1 langkah; nilai stamina/kecepatan di tiap foto sama dengan rumus.
+
+**Tidak bisa diverifikasi di sini:** rasa ambang rem dan tahan 0,25 detik di jempol, rasa meluncur/melambat dan durasi stamina, keterbacaan busur rem/LELAH/bar di A54 450 dpi, urutan notifikasi FOCUS/PAUSED di Android sungguhan, 60 fps, CI GitHub. Semuanya NEEDS-MANUAL.
+
+**Verdict iterasi 1: PASS.** Semua gerbang hijau; 0 Blocker, 0 Major; 4 Minor (3 DEFERRED, 1 NEEDS-MANUAL), 3 Nit (2 DEFERRED, 1 NEEDS-MANUAL). Fase 1 tidak boleh dicentang sebelum butir NEEDS-MANUAL diuji di HP.
