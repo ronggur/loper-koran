@@ -82,6 +82,20 @@ Stick analog dipetakan halus: sumbu atas memetakan santai → ngebut, sumbu bawa
 
 **Dorongan kecepatan** (`scripts/systems/dorongan_kecepatan.gd`, GDD 15): geseran sepeda di bingkai layar dihitung dari kecepatan SEBENARNYA, bukan dari stick. Nol di 3,0 u/d (santai), naik linear ke 36 px di 6,0 u/d (ngebut), turun linear ke −20 px di 1,5 u/d (melambat), dijepit di luar rentang itu; arah sejajar jalan (kemiringan persis 2:1). Hanya kamera yang bergeser (sepeda tampil di letak dasar + geseran); posisi dunia, posisi sprite, dan HUD tidak berubah. Geseran total ngebut ke melambat = 56 px game datar (sekitar 168 px layar di ×3). Konsekuensi yang sengaja disetel di HP: sepeda yang maju di layar memperpendek jalan yang terlihat di depan saat waktu bereaksi paling sempit, jadi nilainya sengaja kecil.
 
+**Umpan balik kecepatan** (`scripts/systems/umpan_balik_kecepatan.gd`, GDD 15, run fase1b-umpan-balik 2026-10-14; semua usulan, dinilai di HP). Dihitung dari kecepatan SEBENARNYA, bukan stick; NaN, tak hingga, dan negatif = 0.
+
+| Angka | Usulan | Catatan |
+|---|---|---|
+| Debu roda | 0 di bawah 3,0 u/d; dari 3,0 (inklusif) 4 naik linear ke 24 partikel/detik di 6,0, dijepit | `UMPAN_DEBU_*`; santai sudah berdebu tipis |
+| Debu rem | 40 partikel/detik selama rem aktif dan kecepatan > 0; 0 saat berhenti | `UMPAN_DEBU_REM_LAJU`; laju tersendiri, juga di bawah 3,0 |
+| Garis kecepatan | 0 di bawah 4,5 u/d; dari 4,5 (inklusif) kekuatan 0,25 naik linear ke 1 di 6,0, dijepit; laju = kekuatan × 14 garis/detik | `UMPAN_GARIS_*` |
+| Kurangi efek | garis mati, debu × 0,5; bawaan mati | `UMPAN_KURANGI_EFEK`, `UMPAN_KURANGI_DEBU_PENGALI`; rule `ui-scenes`, belum ada UI (Pengaturan Fase 3) |
+| Batas partikel hidup | 24 debu, 6 garis | `UMPAN_DEBU_BATAS`, `UMPAN_GARIS_BATAS` (TECH_PLAN 3.7) |
+| Debu: umur, kecepatan, ukuran | 0,4 detik, 40 px/detik ke belakang, kotak 1–2 px, muncul di (−12, +2) dari titik pijak, sebaran ±2 px | tampilan |
+| Garis: umur, kecepatan, panjang | 0,3 detik, 200 px/detik ke belakang, 14 px datar bertangga 2:1, muncul di (30, −24), sebaran ±26 px | tampilan |
+
+Selama jeda partikel berhenti (tidak memancar, tidak bergerak) karena `SceneTree.paused`.
+
 **Jalan terlihat di depan saat ngebut** (run fase1b-umpan-balik, dihitung dari garis tengah jalan: titik pijak sepeda + dorongan maju penuh sampai tepi layar, 1 ubin maju = 32 px datar, 6,0 u/d): 780 (A54) dari sekitar 2,10 detik (0,6 dan 28 px) menjadi sekitar **2,52 detik**; 800 dari 2,10 menjadi sekitar 2,59 detik. Di **640 (16:9)** jalan keluar layar lewat tepi kanan, bukan tepi atas, jadi menurunkan sepeda tidak menolong dan dorongan 36 sedikit memperpendek: dari sekitar 2,08 menjadi sekitar 2,03 detik (tanpa dorongan 2,22 detik di keduanya). Dinilai di HP (NEEDS-MANUAL).
 
 ---
@@ -215,7 +229,7 @@ Belum diisi. Diputuskan di Fase 6 bersama layar bengkel (GDD 12.5). Arah yang su
 
 ## 10. Catatan perubahan
 
-- **2026-10-14** — Run fase1b-umpan-balik (paket usulan pemilik, belum diuji di HP): jeda tanpa lanjut otomatis (tombol jeda, layar jeda, back Android); tinggi tombol strip atas dan "Lanjut" 36 → 42 px game (≥ 44 dp di A54), tombol jeda baru dengan area sentuh 42×42; sepeda turun dari 60% ke 75% tinggi layar (`KAMERA_SEPEDA_Y_PECAHAN` 0,75, tidak menabrak panel kecepatan di 640/780/800 kanan dan kidal); dorongan maju 28 → 36 px (mundur 20 dan respon 0,35 tetap); teks HUD terkecil (`HudLabel`) 6 → 8 px di `assets/ui/theme.tres` (DESIGN_SPEC 1.2). Radius stick tetap 35. Alasan: paket usulan pemilik dari pengamatan A54, belum diuji di HP.
+- **2026-10-14** — Run fase1b-umpan-balik (paket usulan pemilik, belum diuji di HP): jeda tanpa lanjut otomatis (tombol jeda, layar jeda, back Android); tinggi tombol strip atas dan "Lanjut" 36 → 42 px game (≥ 44 dp di A54), tombol jeda baru dengan area sentuh 42×42; sepeda turun dari 60% ke 75% tinggi layar (`KAMERA_SEPEDA_Y_PECAHAN` 0,75, tidak menabrak panel kecepatan di 640/780/800 kanan dan kidal); dorongan maju 28 → 36 px (mundur 20 dan respon 0,35 tetap); teks HUD terkecil (`HudLabel`) 6 → 8 px di `assets/ui/theme.tres` (DESIGN_SPEC 1.2). Radius stick tetap 35. Angka baru umpan balik kecepatan (debu roda, debu rem, garis kecepatan, kurangi efek, batas partikel) di bagian 2. Alasan: paket usulan pemilik dari pengamatan A54, belum diuji di HP.
 
 - **2026-10-13** — Run fase1a-gerak: `BikeMotion` menggantikan `BikeDrive` (bagian 2): rem tanpa tombol sampai berhenti, meluncur, stamina dengan laju linear per potong dan lelah (bagian 3), lateral analog dengan batas tepi jalan resmi ±1 ubin, jeda, pose meluncur/rem dari fisika, dan laju kayuh dari kecepatan. Angka lama BALANCING 2-3 tidak berubah (uji HP Fase 0 lolos tanpa permintaan ubah); angka baru: toleransi rem, toleransi pose 0,05 u/d, `PEDAL_RATE_MAKS` 1,5, bar stamina merah di bawah 30. Semua usulan sampai uji HP Run 1A.
 - **2026-10-07** — Angka awal ditulis sebagai usulan untuk Fase 0–3. Belum ada yang diuji.

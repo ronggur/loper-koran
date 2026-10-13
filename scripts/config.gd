@@ -104,6 +104,64 @@ const LEMPAR_FRAME_LEPAS: int = 2
 ## Toleransi derau float saat menentukan frame animasi dari waktu, detik (mencegah frame bergeser satu langkah di batas).
 const LEMPAR_TOLERANSI_DETIK: float = 0.000001
 
+## --- Umpan balik kecepatan (GDD 15; usulan run fase1b-umpan-balik, dinilai di HP) ---
+## Dihitung dari kecepatan SEBENARNYA (`UmpanBalikKecepatan`). Partikel digambar sendiri (`PancaranPiksel`), kotak 1-2 px game.
+
+## Debu roda: mulai berdebu di kecepatan ini, u/d (inklusif). Di bawahnya tanpa debu kecuali rem.
+const UMPAN_DEBU_AMBANG_UD: float = 3.0
+## Debu roda: kecepatan saat laju debu maksimum, u/d. Di atasnya dijepit.
+const UMPAN_DEBU_PENUH_UD: float = 6.0
+## Debu roda: laju pancar tepat di ambang, partikel per detik.
+const UMPAN_DEBU_LAJU_MIN: float = 4.0
+## Debu roda: laju pancar maksimum, partikel per detik.
+const UMPAN_DEBU_LAJU_MAKS: float = 24.0
+## Debu rem: laju pancar selama rem aktif dan kecepatan di atas 0, partikel per detik.
+const UMPAN_DEBU_REM_LAJU: float = 40.0
+## Garis kecepatan: mulai tampil di kecepatan ini, u/d (inklusif). Di bawahnya tanpa garis.
+const UMPAN_GARIS_AMBANG_UD: float = 4.5
+## Garis kecepatan: kekuatan penuh (1) di kecepatan ini, u/d. Di atasnya dijepit.
+const UMPAN_GARIS_PENUH_UD: float = 6.0
+## Garis kecepatan: kekuatan tepat di ambang (0 sampai 1); naik linear ke 1 di kecepatan penuh.
+const UMPAN_GARIS_KEKUATAN_MIN: float = 0.25
+## Garis kecepatan: laju pancar di kekuatan 1, garis per detik.
+const UMPAN_GARIS_LAJU_MAKS: float = 14.0
+## Kurangi efek (rule `ui-scenes`): mematikan garis kecepatan dan mengurangi debu. Bawaan mati; belum ada UI (Pengaturan, Fase 3).
+const UMPAN_KURANGI_EFEK: bool = false
+## Kurangi efek: pengali laju debu (0 sampai 1).
+const UMPAN_KURANGI_DEBU_PENGALI: float = 0.5
+## Batas jumlah partikel debu hidup sekaligus (anggaran TECH_PLAN 3.7).
+const UMPAN_DEBU_BATAS: int = 24
+## Batas jumlah garis kecepatan hidup sekaligus (anggaran TECH_PLAN 3.7).
+const UMPAN_GARIS_BATAS: int = 6
+## Debu: umur satu partikel, detik.
+const UMPAN_DEBU_UMUR_DETIK: float = 0.4
+## Debu: kecepatan partikel menjauh ke belakang sepanjang jalan, piksel game per detik.
+const UMPAN_DEBU_KECEPATAN_PX: float = 40.0
+## Debu: sebaran titik muncul tegak lurus jalan, plus-minus piksel game.
+const UMPAN_DEBU_SEBARAN_PX: float = 2.0
+## Debu: titik muncul (roda belakang) dari titik pijak sepeda, datar, piksel game (negatif = ke kiri).
+const UMPAN_DEBU_ASAL_X_PX: float = -12.0
+## Debu: titik muncul dari titik pijak sepeda, tegak, piksel game (positif = ke bawah).
+const UMPAN_DEBU_ASAL_Y_PX: float = 2.0
+## Debu: sisi kotak partikel terbesar, piksel game (acak 1 sampai nilai ini).
+const UMPAN_DEBU_UKURAN_MAKS_PX: int = 2
+## Debu: alpha warna `TEXT_2`.
+const UMPAN_DEBU_ALPHA: float = 0.85
+## Garis kecepatan: umur satu garis, detik.
+const UMPAN_GARIS_UMUR_DETIK: float = 0.3
+## Garis kecepatan: kecepatan garis melaju ke belakang sepanjang jalan, piksel game per detik.
+const UMPAN_GARIS_KECEPATAN_PX: float = 200.0
+## Garis kecepatan: titik muncul dari titik pijak sepeda, datar, piksel game (di depan pengendara).
+const UMPAN_GARIS_ASAL_X_PX: float = 30.0
+## Garis kecepatan: titik muncul dari titik pijak sepeda, tegak, piksel game (negatif = ke atas, setinggi badan).
+const UMPAN_GARIS_ASAL_Y_PX: float = -24.0
+## Garis kecepatan: sebaran titik muncul tegak lurus jalan, plus-minus piksel game.
+const UMPAN_GARIS_SEBARAN_PX: float = 26.0
+## Garis kecepatan: panjang garis (lebar datar), piksel game; digambar bertangga 2:1.
+const UMPAN_GARIS_PANJANG_PX: int = 14
+## Garis kecepatan: alpha warna `TEXT`.
+const UMPAN_GARIS_ALPHA: float = 0.7
+
 ## --- Kontrol sentuh (DESIGN_SPEC 3.7, GDD 5.2; usulan, dinilai lewat uji HP) ---
 ## Zona diukur dari tepi layar sisi stick (kiri bila tangan kanan, bawaan; opsi kidal mencerminkannya).
 
