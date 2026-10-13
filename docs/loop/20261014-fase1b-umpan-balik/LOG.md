@@ -6,6 +6,7 @@ Scope: Run 1B Fase 1, umpan balik kecepatan (debu, garis), audio placeholder + a
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
 |---|---|---|---|---|---|
+| 1 | 1a: jeda + layar jeda, penyetelan paket A54, debu/garis, QA-001/002 (7 commit). 1b: `BunyiSepeda` + autoload `Audio` + bus + 3 WAV sintesis, probe render `cek_render` + `tools/ekspor_cek_render.py`, mutan audio/probe, dokumen AC-13 (4 commit) | ✅ import 0 ERROR/WARNING; `run_tests` 4576 lolos 0 gagal, `--ketat` lolos; uji_pemeriksa/bangun_frames/sintesis lolos; `--quit-after 2` bersih; klon bersih per commit hijau, porcelain kosong | | | |
 
 ## Temuan
 Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MANUAL | BLOCKED
@@ -156,3 +157,132 @@ Sel sprite 46x58 (dari `tes_tata_letak.gd`, baris `[tata_letak]` di `build/tests
 - AC-11 mutan audio (pitch tangga, rem tiap frame, bunyi tidak berhenti saat jeda).
 - AC-13 sisanya: `SOUND_DESIGN.md`, `TECH_PLAN.md` 3.1, `SETUP_ANDROID.md`, `AGENTS.md` dan `.cursor/rules/00-project-core.mdc` (perintah probe jendela baru `tests/probe_umpan_balik_jendela.gd`, `scripts/autoload/`, `assets/audio/`, peta repo: `layar_jeda`, `tombol_jeda`, `tombol_sentuh`, `gaya_hud`, `umpan_balik_kecepatan`, `pancaran_piksel`, `umpan_balik_sepeda`, tes baru), `docs/README.md` (status).
 - AC-9 sisanya bila ada: tidak ada untuk 1a.
+
+### Catatan Dev iterasi 1b
+
+Bagian 1b dari iterasi 1 (audio, probe render, mutan, dokumen). Lingkungan sama dengan 1a (macOS, Apple M4, OpenGL 4.1 Metal, `godot` 4.7.2.stable.official.ed1daf0bf). Branch `feat/fase1b-umpan-balik`, tidak ada commit di `main`, **tidak push**, tidak menyentuh HP/`adb` (ekspor APK hanya menulis `builds/`), tidak mengunduh apa pun, Editor Settings tidak diubah. `DEV_PHASES.md` dan `ROADMAP.md` tidak diedit. Bagian 1a tidak diubah kecuali tambahan cek audio di `tes_jeda_scene.gd` dan kabel `Audio` di `JalanUji` (dicatat di bawah). **Tidak ada BLOCKED.**
+
+Commit (urut): `e37577c` feat: bunyi sepeda placeholder lewat autoload Audio dan sintesis stdlib (skrip sintesis + tiga WAV + `.import` di commit yang sama; `Config` + `BALANCING` di commit yang sama); `7e27409` feat: probe render Compatibility; `6cc6d83` test: perbarui_sepeda dengan jeda menghentikan decit (mutan M44); `57b4a0f` docs: probe di HP, checklist 8.2, perintah dan peta repo; lalu commit LOG ini.
+
+#### Bukti per AC (bagian 1b)
+
+| AC | Bukti |
+|---|---|
+| AC-1 | Lihat "Gerbang". Autoload terdaftar: `project.godot` `[autoload] Audio="*res://scripts/autoload/audio.gd"`; `--quit-after 2` 0 ERROR/WARNING dengan autoload itu. |
+| AC-4 | `scripts/systems/bunyi_sepeda.gd` (`loop_aktif`, `pitch_kayuh`, `rem_dipicu`), `scripts/autoload/audio.gd`, `default_bus_layout.tres` (Master -> SFX -> Sepeda, 0 dB, tanpa efek). `tests/tes_bunyi.gd`: pitch 1,0/1,15/1,3 di 3,0/4,5/6,0, 3,75 = 1,075 dan 5,25 = 1,225 (linear), dijepit di bawah (0, 1,5, -5, -INF, NaN = 1,0) dan di atas (6,0001..INF = 1,3), monoton, naik di >= 290 dari 300 langkah 0,01 (bukan tangga); tabel 18 baris pose x kecepatan x rem x jeda (kayuh/melambat = kayuh, meluncur = freewheel, rem = diam, 0/NaN/INF/negatif = diam, jeda = diam); tepi naik rem (urutan 17 langkah: dipicu hanya di 2, 6, 16; tidak tiap langkah selama ditahan; rem yang menyala selama jeda tidak menyusul sesudah lanjut); autoload `load().new()` tanpa tree lalu `free()` (keputusan dihitung, tidak ada stream diputar, `PROCESS_MODE_ALWAYS`, tiga pemutar di bus Sepeda dengan volume Config); `audio.gd` tanpa komentar tidak memuat nama autoload mana pun (dari `ProjectSettings` + daftar TECH_PLAN 3.1) dan tidak mencari `/root/` (pemeriksa punya kontrol negatif); bus dari `AudioServer`; tiga stream: PCM 16-bit mono 22050 Hz, durasi, `.import` loop_mode 2/2/1 dan compress 0; **loop sungguhan**: ketiganya diputar di driver Dummy, sesudah 1,3 detik kedua loop masih berbunyi dan posisinya kembali ke awal, decit berhenti sendiri (sekitar 450-500 ms). Scene `jalan_uji.tscn` + `/root/Audio`: santai = kayuh pitch 1,0; mempercepat = pitch dari kecepatan sebenarnya; ngebut = 1,3; meluncur = freewheel, kayuh diam; rem: 14 langkah belum, langkah 15 decit sekali, 90 langkah lagi tetap sekali, loop diam; lepas lalu tahan lagi = decit lagi; jeda saat decit berbunyi = semua berhenti, tetap diam walau `perbarui(0,1)`; lanjut = tanpa decit lama, kayuh lagi; FOCUS_OUT = jeda + diam, FOCUS_IN tidak menyalakan; scene dibuang = diam. |
+| AC-5 | `tools/audio_art/sintesis_sepeda.py` (stdlib `argparse, math, os, random, struct, sys, wave`; benih tetap 20261014) + README; WAV di `assets/audio/sfx/bike/` (nama SOUND_DESIGN 6): pedal 1,000 detik, freewheel 1,000 detik, rem 0,450 detik, total 108 KB (< 500 KB). `tools/tests_cek/uji_sintesis_sepeda.py` (32 pemeriksaan): stdlib saja (AST), dua kali jalan byte sama, berkas repo = keluaran skrip, format, durasi, tidak senyap, sambungan loop (sampel awal dan akhir <= 1% skala penuh, lompatan <= 2%; kenyataannya 0 dan 0), rem mulai dan berakhir tepat 0, `.import`, total, `assets/audio/LICENSES.md` mencatat ketiganya; kontrol negatif (1 byte diubah, loop berklik di awal/akhir, skrip yang mengimpor numpy/PIL). CI `.github/workflows/tes.yml` menjalankan uji ini bersama dua uji alat lain. |
+| AC-7 (audio) | `tes_jeda_scene.gd` `_test_jeda_lengkap` untuk lima pemicu: sebelum jeda loop kayuh berbunyi; selama jeda `ada_bunyi()` false dan `sedang_jeda()` true; sesudah lanjut rem ditahan ulang = decit tepat sekali (tidak ada decit tertunda). |
+| AC-8 | `scenes/dev/cek_render.tscn` + `scripts/dev/cek_render.gd`, `assets/shaders/warna_bayangan.gdshader`, token usulan `Palette.BAYANGAN_CONTOH` `#2E3550` (DESIGN_SPEC 1.1 "Dunia"), `tools/ekspor_cek_render.py`. Headless (`godot --headless --path . scenes/dev/cek_render.tscn`): 7 baris `[cek_render]` (perangkat, light2d, glow, cpu_partikel, gpu_partikel, shader_bayangan, ringkasan), piksel "tidak bisa dibaca headless", ringkasan `tidak_terbaca`, keluar sendiri, tanpa SCRIPT ERROR. `tests/tes_cek_render.gd`: pembantu murni (`adalah_penanda`, `campur`, `cocok`), node fitur (PointLight2D PCF5 + tekstur `GradientTexture2D`, occluder, CanvasModulate, WorldEnvironment Canvas glow layer 0, CPU + GPU partikel memancar, shader dengan BAYANGAN_CONTOH dan alpha 71/255, sprite kontrol tanpa shader), laporan headless tidak mengklaim apa pun, isolasi (scene utama jalan_uji, tidak ada `override.cfg`, `.gitignore` menutupnya, tidak ada skrip/scene game yang merujuk probe). Hasil desktop dan APK: lihat "Hasil probe desktop" dan "Cara membuka probe di APK". |
+| AC-11 (1b) | Lihat "Mutan nyata (bagian 1b)". |
+| AC-12 | Penjaga lama lolos untuk semua berkas baru (tab, typing, `##`, tanpa hex di luar palette, tanpa `Color.X`, tanpa kiri/kanan). Pemindai angka literal kini juga memindai `scripts/autoload/` (audio.gd tanpa literal; semua angka di Config `AUDIO_*`, satu baris, `ConfigParser` membaca semuanya). `scripts/dev/cek_render.gd` memakai konstanta bernama lokal (tata letak probe, bukan angka tuning game; tidak dipindai, lihat pilihan 6). `Audio` tidak mengalokasi per langkah (tiga fungsi statis murni, set `pitch_scale`). |
+| AC-13 (1b) | `SOUND_DESIGN.md` (status, 3.2 tabel placeholder dan tempo, 6 bus yang ada, perilaku jeda/background, 8), `TECH_PLAN.md` 3.1 (`Audio` sudah ada), `BALANCING.md` 2 (tabel bunyi sepeda: pitch, volume) dan 10, `SETUP_ANDROID.md` 6.1 (probe render: arti hasil, cara membuka, perintah desktop, perintah A54 untuk orchestrator) dan **8.2** (checklist 3-5 orang: gabungan 8.1 + 1B, QA-005, QA-006, kriteria "Selesai kalau", langkah per penguji, lembar catatan tanpa data pribadi; 8.1 ditandai digabung), `AGENTS.md` dan `00-project-core.mdc` (perintah sintesis, uji alat, probe render, ekspor probe, probe jendela umpan balik, peta repo `scripts/autoload/`, `assets/audio/`, `assets/shaders/`, berkas 1a, tes baru), `docs/README.md` (status: run 1A ter-merge PR #20, run 1B; struktur), `assets/LICENSES.md` (merujuk `assets/audio/LICENSES.md`), `DESIGN_SPEC.md` 1.1 (token BAYANGAN_CONTOH). Konsistensi dokumen 1a: README masih menyebut run 1A "belum di-merge" (diperbaiki); dokumen lain 1a sejalan. |
+
+#### Pilihan di luar SPEC (bisa ditolak di review)
+
+1. **Decit rem tidak dipicu di kecepatan 0** (tepi naik rem saat sepeda sudah diam, mis. menahan stick bawah dari awal). Sejalan dengan debu rem (0 di kecepatan 0, D-1); SPEC hanya menyebut "tepi naik". Praktis jarang: rem butuh 0,25 detik tahan dan sepeda sudah bergerak saat itu.
+2. **`Audio` `PROCESS_MODE_ALWAYS` dan menghentikan pemutar sendiri (`stop`)**, bukan mengandalkan `SceneTree.paused`. Diuji: pemutar yang ikut pause otomatis melanjutkan stream yang sama saat pohon lanjut, jadi decit rem yang terpotong jeda akan berbunyi lagi sesudah "Lanjut" (melanggar D-5). Bus `Sepeda` tidak diredam (pemutar sudah berhenti). `Audio` juga berhenti sendiri pada `APPLICATION_PAUSED`, `FOCUS_OUT`, dan `WM_CLOSE_REQUEST`.
+3. **Driver audio `Dummy` tidak memutar stream** kecuali `putar_di_driver_dummy` dinyalakan (runner tes menyalakannya). Alasan, dicoba 2026-10-14: playback yang masih aktif saat Godot keluar paksa (`--quit-after 2`, gerbang AC-1) tidak sempat dilepas AudioServer, tercetak `WARNING: 2 ObjectDB instances were leaked` dan `ERROR: 1 resources still in use` (AudioStreamPlaybackWAV + WAV). Berhenti di frame terakhir tidak cukup; AudioServer baru melepasnya sesudah driver mencampur lagi. Akibatnya runner menunggu **0,25 detik** sesudah `hentikan_sepeda` sebelum `quit()` (dua frame headless terlalu cepat: 5 playback bocor; 0,25 detik: 6 dari 6 putaran bersih). Di HP dan desktop jendela (driver nyata) stream diputar biasa.
+4. **`JalanUji` mencari `/root/Audio` lewat jalur node** (tipe dari `preload` skrip, konstanta `SKRIP_AUDIO`), bukan nama global `Audio`: scene tetap jalan tanpa autoload, dan skrip `class_name` tidak bergantung pada urutan registrasi autoload (gotcha rule `gdscript`). Data diberikan tiap `perbarui` sebagai argumen (`SepedaUji.pose()` baru, kecepatan, rem, jeda).
+5. **WAV diimpor PCM (`compress/mode=0`)**, bukan QOA bawaan 4.7, supaya stream sama persis dengan berkas hasil skrip dan latensi rendah (SOUND_DESIGN 6). Loop lewat `edit/loop_mode=2` (Forward), rem `1` (Disabled), sesuai SPEC. Godot mengisi `loop_end` = 22049 (sampel terakhir dilewati; sampel 0 dan 22049 sama-sama 0, jadi tetap mulus).
+6. **Probe di `scripts/dev/`** dengan konstanta tata letak lokal (bukan `Config`): angka panel, posisi lampu, ambang deteksi adalah alat ukur probe, bukan tuning game. Folder ini tidak masuk pemindai angka literal; hex dan `Color.X` tetap dipindai (warna dari `Palette`; satu `Color(0, 0, 0)` bernama `WARNA_PENANDA` untuk menghitung campuran kontrol).
+7. **Glow probe: ambang 0,5 dan intensitas 2,0.** Dengan ambang 0,8-0,9 glow Compatibility 2D (LDR) hampir tidak memendarkan kotak `TEXT` (halo 0,056 lawan latar 0,050); ambang 0,5 + intensitas 2 memberi halo 0,102 lawan 0,050. Glow hanya untuk layer 0 (`background_canvas_max_layer` 0), panel lain di CanvasLayer 1-2 supaya pengukurannya tidak tercemar. Catatan untuk ART_DIRECTION (orchestrator): ambang glow di game perlu disetel ulang untuk Compatibility.
+8. **Light probe:** `range_layer_min/max` = layer panel cahaya (1); tanpa itu PointLight2D di CanvasLayer 1 tidak menerangi apa pun (percobaan pertama: "tidak").
+9. **Shader tanpa hint `source_color`**: warna bayangan dipakai apa adanya di ruang warna 2D Compatibility; modulate node tetap berlaku lewat `varying`. Disimpan di `assets/shaders/` karena akan dipakai sprite dunia nanti (ART_DIRECTION 2.3); status usulan.
+10. **Pitch kayuhan mengubah tempo ketukan** (8 / 9,2 / 10,4 per detik), sedangkan animasi 8 / 10 / 12 fps (SOUND_DESIGN 3.2 meminta tempo disamakan). SPEC mengunci pitch 1,0/1,15/1,3; selisihnya dicatat di SOUND_DESIGN 3.2 dan checklist 8.2 untuk dinilai di HP.
+11. **Volume usulan** `AUDIO_KAYUH_VOLUME_DB` -6, `AUDIO_FREEWHEEL_VOLUME_DB` -10, `AUDIO_REM_VOLUME_DB` -3 (ketiga WAV dinormalkan ke puncak -1 dBFS). Tidak ada di SPEC; dicatat BALANCING 2/10.
+12. **APK normal ikut memuat berkas probe** (`cek_render.scn`, `.gdc`, shader; `export_filter` `all_resources`) tetapi tidak ada jalan untuk membukanya. Mengecualikannya lewat `exclude_filter` juga akan membuangnya dari build probe (preset sama), jadi tidak dilakukan.
+
+#### Cara membuka probe di APK (D-8)
+
+**Pilihan: build probe terpisah lewat `tools/ekspor_cek_render.py`** (stdlib): mengganti satu baris `run/main_scene` di `project.godot` ke `cek_render.tscn` hanya selama satu perintah ekspor (preset `Android` yang sama), memulihkan berkas byte demi byte di `finally` (juga saat gagal/Ctrl+C), lalu memeriksa `project.binary` di hasil ekspor. Scene utama yang di-commit tetap `jalan_uji.tscn`; tidak ada argumen atau tombol di game yang membuka probe.
+
+- **`override.cfg` dicoba dan ditolak** (2026-10-14): `override.cfg` berisi `run/main_scene="res://scenes/dev/graybox.tscn"` di root, `--export-pack "Android"`: `project.binary` di paket tetap `application/run/main_scene` = `res://scenes/dev/jalan_uji.tscn` dan berkas `override.cfg` tidak ada di paket. `override.cfg` sekarang di `.gitignore` dan `tes_cek_render` memastikan tidak ada.
+- **Argumen baris perintah di `JalanUji` tidak dipilih**: cara meneruskan argumen ke APK lewat `adb shell am start` tidak bisa dibuktikan tanpa HP, dan menambah jalan dari game ke probe.
+- Bukti: `python3 tools/ekspor_cek_render.py --pck build/kring-cek-render.pck` exit 0, "project.godot pulih byte demi byte: ya", `scene utama di project.binary = res://scenes/dev/cek_render.tscn` (463.328 byte). `python3 tools/ekspor_cek_render.py --apk builds/kring-cek-render-debug.apk` exit 0, 28.631.804 byte, `assets/project.binary` = cek_render, 0 entri `assets/tests/`; sekitar 5,5 detik. `godot --headless --path . --export-debug "Android" builds/kring-kring-debug.apk` (normal) 0 ERROR/WARNING, `assets/project.binary` = jalan_uji. `--export-pack` normal = jalan_uji. Dari folder kosong: `godot --main-pack build/kring-cek-render.pck --resolution 2340x1080 -- --tangkap=...` menjalankan probe (ringkasan semua ya/cocok); `godot --headless --main-pack build/kring-uji.pck --quit-after 30` tanpa satu pun baris `[cek_render]`. `git status` bersih sesudah semua ekspor; `tes_export.gd` tetap hijau (preset tidak diubah).
+- Perintah A54 untuk orchestrator (pasang probe, buka, `screencap`, `logcat -d -s godot | grep [cek_render]`, pasang ulang APK normal; tanpa `logcat -c`, `pm clear`, atau uninstall) di `SETUP_ANDROID.md` 6.1. APK probe memakai package yang sama, jadi menimpa build uji di HP sampai APK normal dipasang ulang.
+
+#### Hasil probe desktop (non-headless, renderer Compatibility)
+
+`godot --path . --resolution 2340x1080 --position 0,0 scenes/dev/cek_render.tscn -- --tangkap=docs/loop/20261014-fase1b-umpan-balik/shots/cek_render_2340x1080.png` (dan `1920x1080`):
+
+```
+[cek_render] perangkat: display=macOS os=macOS model="Mac16,10" renderer=gl_compatibility driver=opengl3 gpu="Apple M4" vendor="Apple" api="4.1 Metal - 90.5" jendela=(2340, 1080) viewport=(780.0, 360.0) skala=(3.0, 3.0) fps_rata=325.1 selama 5.0 detik
+[cek_render] light2d: ya (terang dekat lampu 0.950, tepi gelap 0.119; bayangan occluder 0.148 vs sisi lain 0.604)
+[cek_render] glow: ya (halo 4 px di luar kotak 0.102 vs latar jauh 0.050; inti #fff6e9)
+[cek_render] cpu_partikel: ya (96 piksel game ACCENT terlihat, memancar true, 24 partikel)
+[cek_render] gpu_partikel: ya (93 piksel game OK terlihat, memancar true, 24 partikel)
+[cek_render] shader_bayangan: cocok (penanda 13 diperiksa, salah 0; kontrol hitam sesuai campuran 13/13; piksel lain 25 diperiksa, berubah 0; latar #cdb9a3 kalibrasi cocok; warna bayangan #2e3550 alpha 71/255)
+[cek_render] ringkasan: light2d=ya glow=ya cpu_partikel=ya gpu_partikel=ya shader_bayangan=cocok renderer=gl_compatibility gpu="Apple M4" fps=325.1
+```
+
+(akhiran `| renderer=... gpu=... fps=...` di tiap baris fitur dipotong di sini). 1920x1080 (viewport 640): hasil sama, fps 361,3, cpu 93 / gpu 94 piksel. Yang saya lihat di `shots/cek_render_*.png`: panel 1 gelap dengan lingkaran cahaya hangat yang menerangi sprite pemain dan ubin, dan bayangan berbentuk baji di belakang kotak occluder; panel 2 kotak krem dengan pendar tipis; panel 3 titik oranye (CPU) dan hijau (GPU) naik; panel 4 dua sprite di latar krem, bayangan tanah sprite kanan kebiruan, kiri abu kehitaman. fps desktop tidak mewakili A54. **A54 belum dijalankan** (tugas orchestrator, NEEDS-MANUAL).
+
+#### Tes lama yang diubah (bagian 1b, alasan)
+
+| Tes | Perubahan | Alasan |
+|---|---|---|
+| `run_tests.gd` | Menyalakan `putar_di_driver_dummy` di awal; di akhir `hentikan_sepeda` + tunggu 0,25 detik sebelum `quit()`; memanggil `TesBunyi` dan `TesCekRender` | Pilihan 3 (tanpa tunggu: playback bocor saat keluar) |
+| `run_tests.gd` `_test_palet` | Tabel DESIGN_SPEC 1.1: 16 -> 17 token | Token usulan `BAYANGAN_CONTOH` (D-8) |
+| `run_tests.gd` pemindai angka | + `scripts/autoload/` (minimal 4 folder) | AC-12 untuk `audio.gd` |
+| `run_tests.gd` kebersihan | `.gitignore` harus menutup `override.cfg` | AC-1/AC-8 |
+| `tes_jeda_scene.gd` `_test_jeda_lengkap` | + 3 cek audio (kayuh sebelum jeda, diam selama jeda, decit sekali sesudah tahan ulang) | AC-7 "stream audio berhenti" |
+
+Tes baru: `tests/tes_bunyi.gd`, `tests/tes_cek_render.gd`, `tools/tests_cek/uji_sintesis_sepeda.py`. Jumlah pemeriksaan `run_tests` 4357 (1a) -> 4576.
+
+#### Gerbang (di `HEAD` `57b4a0f`, sebelum commit LOG)
+
+```
+godot --headless --import                                    # 0 baris ERROR/WARNING
+mkdir -p build && godot --headless --script res://tests/run_tests.gd 2>&1 | tee build/tests.log   # 4576 lolos, 0 gagal (3 putaran berturut-turut)
+python3 tools/cek_keluaran_tes.py --ketat build/tests.log    # pemeriksa: lolos (4576 lolos, 0 gagal, 0 peringatan)
+python3 tools/tests_cek/uji_pemeriksa.py                     # 16 kasus, 0 menyimpang
+python3 tools/tests_cek/uji_bangun_frames.py                 # 41 lolos, 0 gagal
+python3 tools/tests_cek/uji_sintesis_sepeda.py               # 32 lolos, 0 gagal
+godot --headless --path . --quit-after 2                     # 0 ERROR/WARNING (autoload Audio terdaftar)
+godot --headless --path . --script res://tests/probe_layar.gd   # 0 ERROR, 0 PECAHAN
+godot --headless --path . scenes/dev/cek_render.tscn         # 7 baris [cek_render], "tidak bisa dibaca headless", tanpa SCRIPT ERROR
+git diff main --name-only | grep -E "keystore|\.apk|\.aab|\.godot/|^build/|^builds/|\.jks|\.p12|export_credentials|override.cfg"   # kosong
+```
+
+Klon bersih per commit (`git clone` ke scratch, `checkout`, `git clean -fdx`, import, `run_tests` + `--ketat`, `--quit-after 2`, tiga uji alat, `git status --porcelain`): `e37577c` 4517 lolos, `7e27409` 4574, `6cc6d83` 4576, `57b4a0f` 4576; semua 0 ERROR/WARNING import dan buka, pemeriksa lolos, ketiga uji alat lolos, porcelain kosong.
+
+#### Mutan nyata (AC-11, bagian 1b)
+
+Skrip sementara di scratchpad (tidak di-commit): tiap mutan mengganti satu potongan kode, menjalankan `run_tests.gd` + `cek_keluaran_tes.py --ketat`, lalu memulihkan berkas (`git status` bersih sesudahnya). Mutan wajib SPEC bagian ini: pitch tangga (M32), rem dipicu tiap frame (M33), bunyi tidak berhenti saat jeda (M34, M35, M40, M44).
+
+| Mutan | Hasil | Tes yang menangkap (contoh) |
+|---|---|---|
+| M32 pitch tangga (santai sampai tepat 4,5, lalu 1,15) | 4 gagal | "3,75 = 1,075 (... linear, bukan tangga)" |
+| M33 rem dipicu tiap frame (status sebelum diabaikan) | 9 gagal | "rem masih ditahan: tidak dipicu lagi", scene "decit tidak diulang tiap langkah" |
+| M34 `atur_jeda` tidak menghentikan pemutar | 2 gagal | "jeda: semua bunyi sepeda berhenti, termasuk decit rem yang sedang berbunyi" |
+| M35 `loop_aktif` mengabaikan jeda | 9 gagal | "TOMBOL_EMIT: semua stream audio sepeda berhenti selama jeda (D-5)" |
+| M36 decit dipicu saat jeda (tertunda) | 4 gagal | "tepi naik selama jeda: tidak dipicu" |
+| M37 `Audio` tanpa `PROCESS_MODE_ALWAYS` | 1 gagal | "Audio PROCESS_MODE_ALWAYS ..." (perilakunya sendiri tertutup karena `stop` eksplisit; lihat pilihan 2) |
+| M38 pitch tidak dipasang ke pemutar | 2 gagal | "mempercepat (4.50 u/d): pitch mengikuti kecepatan sebenarnya (1.000)" |
+| M39 meluncur = loop kayuh | 3 gagal | "meluncur = loop freewheel" |
+| M40 `jeda_berubah` tidak disambung ke `Audio` | 2 gagal | "jeda: semua bunyi sepeda berhenti ..." |
+| M41 `_exit_tree` tidak menghentikan bunyi | 1 gagal | "scene dibuang: semua bunyi sepeda berhenti" |
+| M42 decit di kecepatan 0 | 2 gagal | "rem menyala di kecepatan 0: tidak berdecit" |
+| M43 `audio.gd` merujuk `/root/SaveManager` | 2 gagal | "audio.gd tidak merujuk autoload ...: [SaveManager]" |
+| M44 `perbarui_sepeda` tidak menghentikan decit saat jeda | **awalnya HIDUP**, kini 1 gagal | Hidup karena `atur_jeda` lewat sinyal sudah menghentikannya. Ditambah tes "perbarui_sepeda dengan jeda (tanpa atur_jeda): decit dan loop berhenti" (`6cc6d83`) |
+| M45 probe headless mengklaim `cocok` | 2 gagal | headless: pembacaan piksel shader ditulis 'tidak bisa dibaca headless' |
+| M46 skrip game menyebut `cek_render` | 1 gagal | "tidak ada skrip atau scene game yang merujuk probe" |
+| M47 GPUParticles2D tidak memancar | 1 gagal | "CPUParticles2D dan GPUParticles2D sama-sama memancar" |
+| M48 bayangan light mati | 1 gagal | "PointLight2D: bayangan lembut PCF5 ..." |
+| M49 status rem sebelumnya tidak dicatat | 7 gagal | "rem ditahan 30 langkah: decit dipicu sekali" |
+| M50 shader tidak mengganti penanda (jendela asli) | probe: `tidak cocok` (13/13 salah, mis. `#948576` lawan harapan `#a1948c`) | Probe desktop, bukan `run_tests` (piksel tidak terbaca headless) |
+| M51 shader mengabaikan alpha (semua piksel RGB 0 diganti) | **HIDUP** (probe tetap `cocok`) | Setara pada data sekarang: sheet `loper_agen.png` tidak punya piksel RGB 0 selain penanda alpha 71 (dihitung: 0). Akan tertangkap begitu sprite memuat hitam lain |
+| M52 `ekspor_cek_render.py` tanpa pemulihan | skrip menulis "project.godot pulih byte demi byte: TIDAK" + `GAGAL`, `git diff` menunjukkan `project.godot` berubah (dipulihkan dengan `git checkout`) | Pemeriksaan pemulihan di skrip |
+| M53 ketukan kayuh terakhir di ujung loop (aset ikut dibuat ulang) | uji_sintesis 1 gagal | "sambungan loop tanpa klik: ujung tidak dekat nol (10047, 723), lompatan 9324" |
+| M54 acak tanpa benih | uji_sintesis gagal | "dua kali jalan menghasilkan byte yang sama", byte-identik repo |
+| M55 WAV rem diedit 1 byte | uji_sintesis 1 gagal | "berkas di repo byte-identik dengan keluaran skrip" |
+| M56 `.import` kayuh `edit/loop_mode=0` (diimpor ulang) | run_tests 3 gagal + uji_sintesis 1 gagal | "loop maju dari sampel 0 sampai ujung (0..0 dari 22050)", "sesudah 1,3 detik ... kedua loop masih berbunyi" |
+
+Ringkas: 25 mutan; 23 tertangkap (M44 sesudah tes tambahan; M50 oleh probe jendela), 1 setara pada data sekarang (M51), M37 tertangkap hanya oleh cek langsung. Kode dikembalikan sesudah tiap mutan (`git status` bersih; aset dan `.import` dibuat/diimpor ulang ke keadaan semula).
+
+#### NEEDS-MANUAL tambahan dari bagian 1b
+
+- (orchestrator) Probe render di A54 (`SETUP_ANDROID.md` 6.1): tujuh baris `[cek_render]` + tangkapan layar ke `render_a54/`; glow mungkin perlu ambang lain di GPU Mali (desktop: ambang 0,8-0,9 hampir tanpa halo).
+- Bunyi di speaker A54: pitch naik saat ngebut, tempo ketukan lawan animasi (10,4 lawan 12 saat ngebut), freewheel, decit sekali, tanpa klik di sambungan loop, volume relatif (-6/-10/-3 dB), diam saat jeda dan background (checklist 8.2).
+- Uji 3-5 orang Fase 1: `SETUP_ANDROID.md` 8.2.
+
