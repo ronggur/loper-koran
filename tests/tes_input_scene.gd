@@ -839,7 +839,7 @@ func _test_dorongan_kecepatan_scene() -> void:
 		layar = _layar_sepeda(sepeda, kamera, ukuran)
 		check(naik_monoton, "%s: santai -> ngebut: sepeda bergeser maju di layar tanpa mundur sesaat (monoton)" % tag)
 		check(sepeda.kecepatan_ud == 6.0 and akar.geser_dorongan().distance_to(maju) < 0.01, "%s ngebut mantap: geseran dorongan = %s (galat < 0,01 px), dapat %s" % [tag, maju, akar.geser_dorongan()])
-		check(layar.distance_to(dasar + maju) <= 1.0, "%s ngebut mantap: sepeda di dasar + (28, -14) = %s +-1 px, dapat %s (selisih dari dasar %s)" % [tag, dasar + maju, layar, layar - dasar])
+		check(layar.distance_to(dasar + maju) <= 1.0, "%s ngebut mantap: sepeda di dasar + maju penuh = %s +-1 px, dapat %s (selisih dari dasar %s)" % [tag, dasar + maju, layar, layar - dasar])
 		check(layar.x > dasar.x + 20.0 and layar.y < dasar.y - 10.0, "%s ngebut: sepeda lebih ke kanan dan lebih ke atas daripada posisi dasar (naik ke kanan atas)" % tag)
 		var rect_tombol_ngebut: Rect2 = hud.rect_tombol_kidal()
 		var rect_panel_ngebut: Rect2 = hud.rect_panel_kecepatan()
@@ -875,7 +875,7 @@ func _test_dorongan_kecepatan_scene() -> void:
 			x_lambat = x_baru
 		Input.action_release(&"stick_atas")
 		layar = _layar_sepeda(sepeda, kamera, ukuran)
-		check(maju_monoton and layar.distance_to(dasar + maju) <= 1.0, "%s: melambat -> ngebut langsung: bergeser maju monoton dan tiba di dasar + (28, -14), dapat %s" % [tag, layar])
+		check(maju_monoton and layar.distance_to(dasar + maju) <= 1.0, "%s: melambat -> ngebut langsung: bergeser maju monoton dan tiba di dasar + maju penuh, dapat %s" % [tag, layar])
 		# Ukuran seluruh urutan: halus, bulat, posisi dunia dan sprite tak berubah, HUD dan lapisan kontrol tidak bergeser.
 		check(keadaan["loncat"] <= batas_loncat, "%s: perpindahan sepeda di layar per frame (dt 1/60) paling besar %s px, batas %s px (geseran total x alpha satu langkah + 1,5 px pembulatan)" % [tag, keadaan["loncat"], batas_loncat])
 		check(keadaan["loncat"] > 0.5, "%s: ada perpindahan nyata selama transisi (terbesar %s px per frame), tes tidak lolos kosong" % [tag, keadaan["loncat"]])
@@ -981,7 +981,7 @@ func _test_kidal_dan_hud() -> void:
 		var judul: Label = _anak(hud, "LabelKecepatan") as Label
 		check(bar != null and is_equal_approx(bar.nilai, 0.75), "%s: bar kecepatan 4,5 u/d = 75%% dari ngebut" % tag)
 		check(angka != null and angka.text == hud.tr("HUD_KECEPATAN_ANGKA").format({"v": "4.5"}) and angka.text.contains("4.5"), "%s: angka kecepatan 4.5 lewat kunci HUD_KECEPATAN_ANGKA, dapat '%s'" % [tag, angka.text if angka != null else ""])
-		check(angka != null and judul != null and angka.get_theme_font_size(&"font_size") == 10 and judul.get_theme_font_size(&"font_size") == 6, "%s: ukuran font dari tema: angka 10 (HudAngka), label 6 (HudLabel), DESIGN_SPEC 1.2" % tag)
+		check(angka != null and judul != null and angka.get_theme_font_size(&"font_size") == 10 and judul.get_theme_font_size(&"font_size") == 8, "%s: ukuran font dari tema: angka 10 (HudAngka), label 8 (HudLabel, paket pemilik 2026-10-14, dulu 6), DESIGN_SPEC 1.2" % tag)
 		check(judul != null and judul.text == "HUD_KECEPATAN", "%s: label judul bar berisi kunci HUD_KECEPATAN (diterjemahkan otomatis oleh Label)" % tag)
 		_bersihkan(akar)
 

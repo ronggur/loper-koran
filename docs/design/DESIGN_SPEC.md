@@ -64,9 +64,9 @@ Warna ini sudah ada di palet induk (ART_DIRECTION 2.4), kecuali token UI yang be
 | Angka HUD | Lexend SemiBold | 10 | Koin, sisa koran |
 | Teks utama HUD | Lexend SemiBold | 8 | Judul misi |
 | Teks kecil | Lexend Regular | 7 | Sub-judul, umpan balik |
-| Label | Lexend SemiBold, huruf kapital, spasi 0,1 em | 6 | "KECEPATAN", "MISI SAMPINGAN" |
+| Label | Lexend SemiBold, huruf kapital, spasi 0,1 em | 8 (dulu 6) | "KECEPATAN", "MISI SAMPINGAN" |
 
-Font sama dengan Brainy Dungeon dan **belum dikunci** (ART_DIRECTION 11). Ukuran 6 di kanvas dasar menjadi 18 px di layar 1080p; cek keterbacaannya di HP sebelum dikunci.
+Font sama dengan Brainy Dungeon dan **belum dikunci** (ART_DIRECTION 11). **Label 8 px (usulan dari uji A54, paket pemilik 2026-10-14):** ukuran 6 di kanvas dasar (18 px di layar 1080p) dinilai terlalu kecil, jadi `HudLabel` di `assets/ui/theme.tres` menjadi 8 (24 px di layar 1080p), sama dengan teks utama HUD. Panel kecepatan dan stamina ikut meninggi dari 57 menjadi 59 px game (y 293–352; baris pertama sudah setinggi angka 10 px, jadi hanya baris STAMINA yang bertambah) dan tetap di antara zona stick dan tengah layar tanpa menutupi sepeda (`tests/tes_tata_letak.gd`). Cek keterbacaannya di HP sebelum dikunci.
 
 ### 1.3 Bentuk
 

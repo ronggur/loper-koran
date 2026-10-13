@@ -146,13 +146,13 @@ const LAYAR_LEBAR_MAKS_PX: int = 800
 const JALAN_TROTOAR_UBIN: float = 1.0
 ## Letak sepeda pada sumbu datar layar sebagai pecahan lebar viewport (sepertiga kiri, ART_DIRECTION 2.2).
 const KAMERA_SEPEDA_X_PECAHAN: float = 0.3333
-## Letak sepeda pada sumbu tegak layar sebagai pecahan tinggi viewport.
-const KAMERA_SEPEDA_Y_PECAHAN: float = 0.6
+## Letak sepeda pada sumbu tegak layar sebagai pecahan tinggi viewport. 0,75 (dulu 0,6; paket pemilik 2026-10-14): jalan di depan terlihat lebih jauh; sprite di geseran dorongan terbesar tidak menabrak panel kecepatan di 640/780/800 (tes tata letak).
+const KAMERA_SEPEDA_Y_PECAHAN: float = 0.75
 ## Dorongan kecepatan (GDD 15, usulan, disetel di HP): sepeda bergeser di bingkai layar sejajar arah jalan (naik ke
 ## kanan atas, 2:1) sesuai kecepatan SEBENARNYA. Nol di `KECEPATAN_SANTAI_UD`, naik linear sampai nilai di bawah di
 ## `KECEPATAN_NGEBUT_UD`, turun linear ke arah sebaliknya di `KECEPATAN_MELAMBAT_UD`. Nilai = komponen datar geseran.
-## Geseran maju saat ngebut, komponen datar, piksel game (komponen tegak = setengahnya ke atas).
-const DORONGAN_MAJU_PX: float = 28.0
+## Geseran maju saat ngebut, komponen datar, piksel game (komponen tegak = setengahnya ke atas). 36 (dulu 28; paket pemilik 2026-10-14, dibarengi sepeda turun ke 0,75).
+const DORONGAN_MAJU_PX: float = 36.0
 ## Geseran mundur saat melambat, komponen datar, piksel game (komponen tegak = setengahnya ke bawah).
 const DORONGAN_MUNDUR_PX: float = 20.0
 ## Konstanta waktu penghalusan geseran (eksponensial, bebas framerate), detik. Setelah satu konstanta sisa jarak 37%.

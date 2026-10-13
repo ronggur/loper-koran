@@ -83,6 +83,8 @@ func _initialize() -> void:
 	await scene_gerak.jalankan()
 	var scene_jeda: TesJedaScene = TesJedaScene.new(check, _judul, self)
 	await scene_jeda.jalankan()
+	var tata_letak: TesTataLetak = TesTataLetak.new(check, _judul, self)
+	await tata_letak.jalankan()
 	root.size = ukuran_sebelum
 	print("%d lolos, %d gagal" % [_lolos, _gagal])
 	quit(1 if _gagal > 0 else 0)
