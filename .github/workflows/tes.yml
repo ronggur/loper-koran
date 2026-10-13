@@ -50,6 +50,9 @@ jobs:
       - name: Uji pembangun SpriteFrames (berkas di repo = hasil skrip, deterministik)
         run: python3 tools/tests_cek/uji_bangun_frames.py
 
+      - name: Uji sintesis bunyi sepeda (WAV di repo = hasil skrip, deterministik, loop tanpa klik)
+        run: python3 tools/tests_cek/uji_sintesis_sepeda.py
+
       - name: Import project (tanpa error, tanpa berkas yang belum di-commit)
         run: |
           set -uo pipefail

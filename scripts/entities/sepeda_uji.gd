@@ -64,6 +64,11 @@ func jeda() -> void:
 	gerak(Vector2.ZERO, 0.0)
 
 
+## Pose sprite pemain dari langkah terakhir (`LoperAnim.Pose`: kayuh/melambat, meluncur, rem); dipakai bunyi sepeda (`Audio`).
+func pose() -> LoperAnim.Pose:
+	return _sprite.pose
+
+
 ## True selama rem aktif (cincin rem di stick, DESIGN_SPEC 3.7).
 func rem_aktif() -> bool:
 	return keadaan.rem_aktif

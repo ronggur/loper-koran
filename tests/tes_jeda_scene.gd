@@ -1,8 +1,8 @@
 class_name TesJedaScene
 extends RefCounted
 ## Tes terpadu jeda run fase1b-umpan-balik (AC-7, D-6; QA-007 run fase1a-gerak): tombol jeda, layar jeda, tanpa lanjut otomatis,
-## back Android, `SceneTree.paused` menghentikan sprite, partikel, dan input. Event sentuh sintetis lewat `Input.parse_input_event`
-## di viewport 780x360 (pola `tests/tes_gerak_scene.gd`).
+## back Android, `SceneTree.paused` menghentikan sprite, partikel, dan input; autoload `Audio` menghentikan bunyi sepeda (bagian 1b).
+## Event sentuh sintetis lewat `Input.parse_input_event` di viewport 780x360 (pola `tests/tes_gerak_scene.gd`).
 ##
 ## Dipanggil dari `tests/run_tests.gd`. Scene dijalankan dengan `set_process(false)` pada akar; gerak lewat `JalanUji.perbarui(DT)`.
 ## Sprite pemain dan partikel TIDAK dimatikan prosesnya di sini (yang diuji justru bahwa pause pohon menghentikannya).
@@ -184,6 +184,9 @@ func _test_jeda_lengkap(pemicu: String) -> void:
 	_sentuh(2, SWIPE_KANAN, false)
 	sprite.set_process(false)
 	check(sepeda.sedang_melempar() and router.stick_aktif() and sepeda.kecepatan_ud == 6.0, "%s: sebelum jeda ngebut, melempar, stick aktif" % pemicu)
+	var audio: Node = _tree.root.get_node_or_null(^"Audio")
+	check(audio != null and (audio.call(&"pemutar_kayuh") as AudioStreamPlayer).playing, "%s: sebelum jeda loop kayuh (autoload Audio) berbunyi" % pemicu)
+	var rem_awal: int = audio.call(&"jumlah_rem_dipicu") if audio != null else 0
 	sepeda.batalkan_lempar()
 	sprite.set_process(true)
 	# Kontrol: tanpa jeda sprite berputar dengan sendirinya (pemutar bawaan AnimatedSprite2D).
@@ -221,6 +224,7 @@ func _test_jeda_lengkap(pemicu: String) -> void:
 	var progres_jeda: float = sprite.frame_progress
 	await _tunggu(FRAME_AMATI)
 	check(sprite.frame == frame_jeda and sprite.frame_progress == progres_jeda and not sprite.can_process(), "%s: frame AnimatedSprite2D pemain tidak maju selama jeda (QA-007)" % pemicu)
+	check(audio != null and not audio.call(&"ada_bunyi") and audio.call(&"sedang_jeda"), "%s: semua stream audio sepeda berhenti selama jeda (D-5)" % pemicu)
 	# Sentuhan di zona stick dan swipe tidak memunculkan apa pun.
 	_sentuh(3, TITIK_STICK, true)
 	_geser(3, TITIK_STICK - Vector2(0, Config.STICK_RADIUS_PX))
@@ -251,6 +255,7 @@ func _test_jeda_lengkap(pemicu: String) -> void:
 	check(not sepeda.rem_aktif(), "%s: sesudah lanjut, bawah penuh 14 langkah (0,233 detik): belum rem" % pemicu)
 	_langkah(akar, 1)
 	check(sepeda.rem_aktif(), "%s: 0,25 detik ditahan ulang: rem aktif" % pemicu)
+	check(audio != null and audio.call(&"jumlah_rem_dipicu") == rem_awal + 1, "%s: decit rem sekali sesudah ditahan ulang, tanpa decit tertunda dari jeda" % pemicu)
 	_sentuh(5, TITIK_STICK, false)
 	# Sprite berputar lagi sesudah lanjut.
 	sprite.set_process(true)

@@ -68,6 +68,12 @@ func _initialize() -> void:
 	_test_terjemahan()
 	_test_penjaga_berkas()
 	var ukuran_sebelum: Vector2i = root.size
+	# Autoload Audio: stream diputar sungguhan walau driver Dummy (headless), supaya tes bisa memeriksa `playing`. Sebelum `quit()`
+	# semua bunyi dihentikan lalu ditunggu 0,25 detik: AudioServer baru melepas playback yang dihentikan sesudah driver mencampur
+	# lagi, dan dua frame headless terlalu cepat (diuji 2026-10-14: playback bocor saat keluar). Lihat `scripts/autoload/audio.gd`.
+	var audio: Node = root.get_node_or_null(^"Audio")
+	if audio != null:
+		audio.set(&"putar_di_driver_dummy", true)
 	# Pembantu tes terpisah supaya berkas ini tidak membengkak; memakai `check` runner ini.
 	var murni: TesInputMurni = TesInputMurni.new(check, _judul)
 	murni.jalankan()
@@ -87,7 +93,13 @@ func _initialize() -> void:
 	await umpan_balik.jalankan()
 	var tata_letak: TesTataLetak = TesTataLetak.new(check, _judul, self)
 	await tata_letak.jalankan()
+	var bunyi: TesBunyi = TesBunyi.new(check, _judul, self)
+	await bunyi.jalankan()
 	root.size = ukuran_sebelum
+	if audio != null:
+		audio.call(&"hentikan_sepeda")
+		audio.set(&"putar_di_driver_dummy", false)
+		await create_timer(0.25).timeout
 	print("%d lolos, %d gagal" % [_lolos, _gagal])
 	quit(1 if _gagal > 0 else 0)
 
@@ -669,7 +681,7 @@ func _test_tanpa_hex_di_luar_palet() -> void:
 	var diizinkan: Array[String] = ["0", "1", "2", "-1", "-2", "0.0", "1.0"]
 	var re_angka: RegEx = RegEx.create_from_string("(?<![A-Za-z0-9_.])-?[0-9]+(?:\\.[0-9]+)?")
 	var dipindai: int = 0
-	for folder: String in ["res://scripts/systems", "res://scripts/entities", "res://scripts/ui"]:
+	for folder: String in ["res://scripts/systems", "res://scripts/entities", "res://scripts/ui", "res://scripts/autoload"]:
 		for berkas: String in _daftar_berkas(folder, ["gd"]):
 			if berkas.ends_with("/palette.gd"):
 				continue
@@ -682,7 +694,7 @@ func _test_tanpa_hex_di_luar_palet() -> void:
 					if not diizinkan.has(cocok.get_string()):
 						pelanggaran.append("baris %d: %s" % [nomor, cocok.get_string()])
 			check(pelanggaran.is_empty(), "%s: tanpa angka literal di luar config.gd (hanya 0, 1, 2, -1, -2 boleh): %s" % [berkas, "; ".join(pelanggaran)])
-	check(dipindai >= 3, "pemindai angka memeriksa skrip systems, entities, dan ui (%d berkas)" % dipindai)
+	check(dipindai >= 4, "pemindai angka memeriksa skrip systems, entities, ui, dan autoload (%d berkas)" % dipindai)
 	check(_kode_saja("var x: float = 3.5 # komentar 99") == "var x: float = 3.5 ", "pembersih baris membuang komentar dan teks berkutip")
 	check(_kode_saja("print(\"angka 42 di teks\") # 7").find("42") == -1, "pembersih baris membuang isi teks berkutip")
 

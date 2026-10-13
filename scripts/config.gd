@@ -162,6 +162,23 @@ const UMPAN_GARIS_PANJANG_PX: int = 14
 ## Garis kecepatan: alpha warna `TEXT`.
 const UMPAN_GARIS_ALPHA: float = 0.7
 
+## --- Audio sepeda placeholder (SOUND_DESIGN 3.2; usulan run fase1b-umpan-balik, dinilai di HP) ---
+## Pitch loop kayuhan dari kecepatan SEBENARNYA (`BunyiSepeda`), linear per potong di titik `KECEPATAN_SANTAI_UD`, `KECEPATAN_CEPAT_UD`,
+## dan `KECEPATAN_NGEBUT_UD`, dijepit di luar. Bunyi dibuat `tools/audio_art/sintesis_sepeda.py` dengan puncak sama; keras-pelan di sini.
+
+## Pitch loop kayuhan di kecepatan santai (3,0 u/d) dan di bawahnya.
+const AUDIO_KAYUH_PITCH_SANTAI: float = 1.0
+## Pitch loop kayuhan di kecepatan cepat (4,5 u/d).
+const AUDIO_KAYUH_PITCH_CEPAT: float = 1.15
+## Pitch loop kayuhan di kecepatan ngebut (6,0 u/d) dan di atasnya.
+const AUDIO_KAYUH_PITCH_NGEBUT: float = 1.3
+## Volume loop kayuhan, dB (kayuhan duduk di bawah suara sasaran, SOUND_DESIGN 6).
+const AUDIO_KAYUH_VOLUME_DB: float = -6.0
+## Volume loop freewheel saat meluncur, dB ("tik-tik-tik" pelan, SOUND_DESIGN 3.2).
+const AUDIO_FREEWHEEL_VOLUME_DB: float = -10.0
+## Volume decit rem sekali putar, dB.
+const AUDIO_REM_VOLUME_DB: float = -3.0
+
 ## --- Kontrol sentuh (DESIGN_SPEC 3.7, GDD 5.2; usulan, dinilai lewat uji HP) ---
 ## Zona diukur dari tepi layar sisi stick (kiri bila tangan kanan, bawaan; opsi kidal mencerminkannya).
 

@@ -13,14 +13,21 @@ extends Node2D
 ## Jeda (D-6 run fase1b-umpan-balik, `JedaSim`): tombol jeda di HUD, app di-background atau kehilangan fokus (PAUSED, FOCUS_OUT), dan
 ## tombol back Android saat berjalan membuka **layar jeda** (`LayarJeda`). Tidak ada lanjut otomatis: RESUMED dan FOCUS_IN tidak
 ## mengubah apa pun; pemain melanjutkan lewat tombol "Lanjut" atau back saat layar jeda terbuka. Selama jeda `SceneTree.paused`
-## menyala, jadi sprite pemain, partikel umpan balik, input stick dan swipe, dan (Run 1B bagian audio) pemutar bunyi yang ikut
-## pause berhenti; hanya layar jeda (`PROCESS_MODE_WHEN_PAUSED`) yang menerima sentuhan. `perbarui` tetap boleh dipanggil tetapi
+## menyala, jadi sprite pemain, partikel umpan balik, dan input stick dan swipe berhenti; bunyi sepeda dihentikan `Audio` lewat
+## `jeda_berubah` (lihat bawah); hanya layar jeda (`PROCESS_MODE_WHEN_PAUSED`) yang menerima sentuhan. `perbarui` tetap boleh dipanggil tetapi
 ## memakai `dt` 0, jadi kecepatan, jarak, stamina, lama tahan rem, dan geseran dorongan tidak berubah; saat menjeda stick dan swipe
 ## dilepas, lempar ditutup, dan lama tahan rem kembali 0 (`SepedaUji.jeda`). Langkah pertama sesudah lanjut ber-`dt` 0.
-## Titik kait untuk node lain (mis. autoload `Audio`): sinyal `jeda_berubah` dan `sedang_jeda()`.
+## Titik kait untuk node lain: sinyal `jeda_berubah` dan `sedang_jeda()`.
+##
+## Bunyi sepeda (D-3, D-5): tiap langkah keadaan sebenarnya (pose, kecepatan, rem, jeda) diberikan ke autoload `Audio` (`/root/Audio`,
+## dicari lewat jalur node, bukan nama global, supaya scene tetap jalan tanpa autoload); `jeda_berubah` disambungkan ke
+## `Audio.atur_jeda` (semua bunyi sepeda berhenti saat jeda, tanpa decit rem tertunda), dan keluar dari pohon menghentikannya.
 
 ## Status jeda berubah: true = layar jeda dibuka (simulasi, sprite, partikel, dan input berhenti), false = lanjut.
 signal jeda_berubah(jeda: bool)
+
+## Skrip autoload `Audio`, hanya untuk tipe (`Audio` tidak merujuk autoload lain, rule `gdscript`).
+const SKRIP_AUDIO := preload("res://scripts/autoload/audio.gd")
 
 ## Geseran sepeda di layar akibat dorongan kecepatan yang sudah dihaluskan, piksel game.
 var _geser_dorongan: Vector2 = Vector2.ZERO
@@ -28,6 +35,8 @@ var _geser_dorongan: Vector2 = Vector2.ZERO
 var _jeda: bool = false
 ## True bila langkah berikutnya adalah langkah pertama sesudah lanjut (memakai dt 0).
 var _baru_lanjut: bool = false
+## Autoload `Audio` bila terdaftar (null bila scene dijalankan tanpa autoload).
+var _audio: SKRIP_AUDIO = null
 
 @onready var _kamera: Camera2D = %Kamera
 @onready var _tanah: TanahDaur = %Tanah
@@ -44,6 +53,9 @@ func _ready() -> void:
 	_layar_jeda.lanjut_diminta.connect(minta_lanjut)
 	_kontrol.router.swipe_selesai.connect(_saat_swipe_selesai)
 	_layar_jeda.tampilkan(false)
+	_audio = get_node_or_null(^"/root/Audio") as SKRIP_AUDIO
+	if _audio != null:
+		jeda_berubah.connect(_audio.atur_jeda)
 	perbarui(0.0)
 
 
@@ -55,6 +67,8 @@ func _exit_tree() -> void:
 	# Scene keluar saat dijeda (mis. ganti scene atau tes selesai): pause pohon dilepas supaya tidak menahan scene lain.
 	if _jeda:
 		get_tree().paused = false
+	if _audio != null:
+		_audio.hentikan_sepeda()
 
 
 ## Tombol jeda di HUD: membuka layar jeda (tidak berpengaruh bila sudah jeda).
@@ -110,6 +124,8 @@ func perbarui(dt: float) -> void:
 	_hud.tampilkan_kecepatan(_sepeda.kecepatan_ud)
 	_hud.tampilkan_stamina(_sepeda.stamina(), _sepeda.lelah())
 	_kontrol.atur_rem(_sepeda.rem_aktif())
+	if _audio != null:
+		_audio.perbarui_sepeda(_sepeda.pose(), _sepeda.kecepatan_ud, _sepeda.rem_aktif(), _jeda)
 	_geser_dorongan = DoronganKecepatan.haluskan(_geser_dorongan, DoronganKecepatan.geser_target(_sepeda.kecepatan_ud), langkah_dt)
 	_kamera.position = posisi_kamera()
 

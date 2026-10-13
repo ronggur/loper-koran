@@ -47,6 +47,7 @@ Kedua font berstatus **usulan** (DESIGN_SPEC 1.2, ART_DIRECTION 11): dikunci ata
 
 - Sprite pemain Kemeja Agen: dirender oleh `tools/loper_art/`, salinan di `assets/sprites/loper/`.
 - Ubin dan kotak graybox: dirender oleh `tools/env_art/graybox.py`, di `assets/sprites/_placeholder/`.
+- Bunyi placeholder sepeda (`assets/audio/sfx/bike/*.wav`): dibuat dari rumus oleh `tools/audio_art/sintesis_sepeda.py`; dicatat di `assets/audio/LICENSES.md` (lisensi audio dicatat di sana, SOUND_DESIGN 7).
 - Token warna dan palet induk (`scripts/ui/palette.gd`, `assets/palette/loper_master.gpl`): dari dokumen desain repo ini (ART_DIRECTION 2.4 dan DESIGN_SPEC 1.1), berstatus usulan.
 
 ## Godot Engine

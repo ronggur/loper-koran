@@ -93,7 +93,7 @@ Mengikuti struktur di `README.md`. Bagian ini hanya menambahkan yang dibutuhkan 
 | `DialogPlayer` | Memutar adegan dari `scenes/*.json` | 6B |
 | `MilestoneTracker` | Progres milestone tiga tingkat | 6A (dasar), 13 (penuh) |
 | `AdService` | Pembungkus plugin iklan hadiah | 14 |
-| `Audio` | Bus, pitch kayuhan, variasi acak | 1 |
+| `Audio` | Bus, pitch kayuhan, variasi acak. Ada sejak run fase1b-umpan-balik (`scripts/autoload/audio.gd`): bunyi sepeda placeholder (kayuhan dengan pitch, freewheel, decit rem) dari keputusan murni `BunyiSepeda`, berhenti saat jeda; tidak merujuk autoload lain, data dari pemanggil (`JalanUji`). Variasi acak belum (fase lain) | 1 |
 
 Aturan: **logika murni ada di `scripts/systems/` tanpa node**, supaya bisa dites headless (`tests/run_tests.gd`). Node hanya menampilkan.
 
