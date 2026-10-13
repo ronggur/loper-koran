@@ -44,6 +44,7 @@ func jalankan() -> void:
 	_test_pose_dari_langkah()
 	_test_pedal_rate()
 	_test_jeda_sim()
+	_test_pose_langkah_tepat()
 	_test_busur_rem()
 
 
@@ -654,6 +655,27 @@ func _test_jeda_sim() -> void:
 	var tengah: BikeMotion.Hasil = _jalankan(_keadaan(), Vector2(0, -1), 12)
 	var lanjut: BikeMotion.Hasil = _jalankan(BikeMotion.jeda(tengah.keadaan), Vector2(0, -1), 6)
 	check(not lanjut.keadaan.rem_aktif, "jeda di tengah tahan rem (0,2 detik), lanjut 0,1 detik: rem tidak langsung aktif")
+
+
+# --- QA-002 run fase1a-gerak: pose dipilih dari kecepatan SESUDAH langkah ---
+
+func _test_pose_langkah_tepat() -> void:
+	_judul.call("QA-002: langkah tepat pergantian meluncur -> melambat (D-7 run fase1a-gerak)")
+	var stick: Vector2 = Vector2(0, -0.5)
+	var tujuan: float = BikeMotion.kecepatan_tujuan_ud(stick.y)
+	var tol: float = Config.POSE_MELUNCUR_TOLERANSI_UD
+	check(is_equal_approx(tujuan, 2.25), "stick bawah 0,5: tujuan 2,25 u/d, dapat %s" % tujuan)
+	# Langkah dari tujuan + 0,06 (di atas toleransi) turun 2,0 x 1/60 = 0,0333 ke tujuan + 0,0267 (di bawah toleransi): pose langkah
+	# ini sudah melambat, karena pose dipilih dari kecepatan sesudah langkah, bukan sebelumnya.
+	var h: BikeMotion.Hasil = BikeMotion.langkah(_keadaan(tujuan + 0.06), stick, DT)
+	check(h.keadaan.kecepatan_ud - tujuan < tol and h.keadaan.kecepatan_ud > tujuan, "kecepatan sesudah langkah %s di antara tujuan dan tujuan + toleransi" % h.keadaan.kecepatan_ud)
+	check(h.pose == LoperAnim.Pose.KAYUH and h.tingkat_sprite == -1, "langkah yang membawa kecepatan ke dalam toleransi langsung melambat (kayuh tingkat -1), bukan meluncur, dapat pose %d tingkat %d" % [h.pose, h.tingkat_sprite])
+	# Langkah sebelumnya (dari tujuan + 0,1 ke tujuan + 0,0667) masih meluncur.
+	var h0: BikeMotion.Hasil = BikeMotion.langkah(_keadaan(tujuan + 0.1), stick, DT)
+	check(h0.pose == LoperAnim.Pose.MELUNCUR, "langkah yang berakhir di atas toleransi masih meluncur, dapat %d" % h0.pose)
+	# Kebalikannya: dari kayuh santai 3,0 stick turun ke bawah 0,5: langkah pertama sudah meluncur (kecepatan sesudah 2,967 > 2,30).
+	var h1: BikeMotion.Hasil = BikeMotion.langkah(_keadaan(3.0), stick, DT)
+	check(h1.pose == LoperAnim.Pose.MELUNCUR, "kayuh -> meluncur di langkah pertama stick ke bawah, dapat %d" % h1.pose)
 
 
 # --- Busur rem di cincin stick (DESIGN_SPEC 3.7) ---

@@ -266,10 +266,22 @@ func _test_stamina_di_scene() -> void:
 	_langkah(akar, 60)
 	check(sepeda.kecepatan_ud == Config.KECEPATAN_CEPAT_UD and sepeda.nama_animasi() == &"cepat_normal", "lelah: kecepatan dijepit 4,5 dan sprite cepat_normal walau stick atas penuh, dapat %s %s" % [sepeda.kecepatan_ud, sepeda.nama_animasi()])
 	_geser(0, TITIK_STICK + Vector2(0, Config.STICK_RADIUS_PX * 0.85))
-	_langkah(akar, 100)
-	check(sepeda.lelah() and sepeda.stamina() > 20.0, "meluncur 1,67 detik: stamina naik (%s), masih lelah" % sepeda.stamina())
-	_langkah(akar, 30)
-	check(not sepeda.lelah() and not hud.penanda_lelah_tampil() and hud.warna_stamina() == Palette.ACCENT, "meluncur sekitar 2 detik: stamina >= 30 (%s), lelah padam, bar kembali ACCENT" % sepeda.stamina())
+	# QA-001 run fase1a-gerak: penanda LELAH tetap tampil di SETIAP langkah selama lelah, juga saat 0 < stamina < 30 (fase pulih).
+	var langkah_pulih: int = 0
+	var penanda_selama_lelah: bool = true
+	var pernah_di_tengah: bool = false
+	while sepeda.lelah() and langkah_pulih < 300:
+		akar.perbarui(DT)
+		langkah_pulih += 1
+		if sepeda.lelah():
+			if not hud.penanda_lelah_tampil():
+				penanda_selama_lelah = false
+			if sepeda.stamina() > 0.0 and sepeda.stamina() < Config.STAMINA_PULIH_AMBANG:
+				pernah_di_tengah = true
+	check(penanda_selama_lelah and pernah_di_tengah, "QA-001: selama lelah dengan 0 < stamina < 30 penanda LELAH tampil di setiap langkah (%d langkah pulih)" % langkah_pulih)
+	check(not sepeda.lelah() and not hud.penanda_lelah_tampil(), "QA-001: penanda LELAH hilang tepat pada langkah lelah padam")
+	akar.perbarui(DT)
+	check(langkah_pulih > 100 and langkah_pulih < 140 and not sepeda.lelah() and not hud.penanda_lelah_tampil() and hud.warna_stamina() == Palette.ACCENT, "meluncur sekitar 2 detik: stamina >= 30 (%s), lelah padam, bar kembali ACCENT" % sepeda.stamina())
 	_sentuh(0, TITIK_STICK, false)
 	_bersihkan(akar)
 
