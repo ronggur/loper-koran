@@ -287,6 +287,9 @@ func _test_back_dua_kali_dan_urutan() -> void:
 
 func _test_ketuk_jari_kedua() -> void:
 	_judul.call("Jeda: tombol jeda dan Lanjut bisa diketuk jari kedua saat jempol di stick (AC-7, TombolSentuh)")
+	# Keadaan input bersih: tes lain bisa meninggalkan jari yang belum diangkat, dan emulasi mouse Godot menempel ke jari pertama.
+	for i: int in range(12):
+		_sentuh(i, Vector2(-50, -50), false)
 	await _tree.process_frame
 	var akar: JalanUji = await _siapkan()
 	var hud: HudDev = _anak(akar, "Hud") as HudDev
