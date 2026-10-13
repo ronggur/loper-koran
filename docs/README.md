@@ -6,7 +6,7 @@ Judul game: **Kring Kring!** (diputuskan 2026-10-09, GDD 5.4). "Loper Koran" ada
 
 Game 2D mobile (Android) bergaya Paperboy modern: pemain mengayuh sepeda menyusuri jalan isometrik sambil melempar koran ke rumah pelanggan, dengan latar Indonesia, kecepatan yang diatur sendiri, dan isi koran yang ikut mengubah dunia.
 
-Status: **Fase 0 selesai, Fase 1 berikutnya** (per 2026-10-13). Desain inti, kamera, kontrol, dan karakter pemain sudah dikunci. Project Godot 4.7.2 dibuat di run 0A (Fase 0): layar 640×360 dengan skala bulat, `scripts/config.gd`, `scripts/ui/palette.gd`, sprite pemain Kemeja Agen dengan pemilih animasinya, ubin graybox, tes headless, dan CI. Run 0B menambah input touch (stick melayang, swipe, opsi kidal, keyboard editor), sepeda placeholder yang bergerak di jalan uji tanpa ujung, HUD kecepatan sementara, dan terjemahan `translations/ui.csv`. Run 0C menambah preset export Android (`export_presets.cfg`, tanpa Gradle) dan panduan [`SETUP_ANDROID.md`](./SETUP_ANDROID.md) untuk membangun APK debug. Run kecil `sprite-lempar-melambat` (2026-10-09) memasang sprite melambat (stick bawah) dan lempar koran (swipe horizontal) ke jalan uji sebagai animasi saja, tanpa proyektil atau skor (Fase 2). Uji HP di A54 lolos 2026-10-13, jadi Fase 0 dan M0 selesai; fase aktif sekarang Fase 1. Run 1A (2026-10-13, branch `feat/fase1a-gerak`, belum di-merge) mengganti gerak placeholder dengan `BikeMotion`: rem tanpa tombol, meluncur, stamina dan lelah, batas tepi jalan resmi, jeda saat app di-background, laju kayuh mengikuti kecepatan, sprite meluncur dan rem terpasang, bar stamina dan cincin rem di HUD; rasa kontrolnya belum dinilai di HP (gerak sepeda dan kecepatan, [`DEV_PHASES.md`](./DEV_PHASES.md)). Posisi lengkap ada di [`ROADMAP.md`](./ROADMAP.md).
+Status: **Fase 0 selesai, Fase 1 berjalan** (per 2026-10-14). Desain inti, kamera, kontrol, dan karakter pemain sudah dikunci. Project Godot 4.7.2 dibuat di run 0A (Fase 0): layar 640×360 dengan skala bulat, `scripts/config.gd`, `scripts/ui/palette.gd`, sprite pemain Kemeja Agen dengan pemilih animasinya, ubin graybox, tes headless, dan CI. Run 0B menambah input touch (stick melayang, swipe, opsi kidal, keyboard editor), sepeda placeholder yang bergerak di jalan uji tanpa ujung, HUD kecepatan sementara, dan terjemahan `translations/ui.csv`. Run 0C menambah preset export Android (`export_presets.cfg`, tanpa Gradle) dan panduan [`SETUP_ANDROID.md`](./SETUP_ANDROID.md) untuk membangun APK debug. Run kecil `sprite-lempar-melambat` (2026-10-09) memasang sprite melambat (stick bawah) dan lempar koran (swipe horizontal) ke jalan uji sebagai animasi saja, tanpa proyektil atau skor (Fase 2). Uji HP di A54 lolos 2026-10-13, jadi Fase 0 dan M0 selesai; fase aktif sekarang Fase 1. Run 1A (2026-10-13, PR #20, sudah di-merge) mengganti gerak placeholder dengan `BikeMotion`: rem tanpa tombol, meluncur, stamina dan lelah, batas tepi jalan resmi, jeda saat app di-background, laju kayuh mengikuti kecepatan, sprite meluncur dan rem terpasang, bar stamina dan cincin rem di HUD; rasa kontrolnya belum dinilai di HP (gerak sepeda dan kecepatan, [`DEV_PHASES.md`](./DEV_PHASES.md)). Run 1B (2026-10-14, branch `feat/fase1b-umpan-balik`, belum di-merge) menambah tombol dan layar jeda tanpa lanjut otomatis (juga untuk back Android dan background), debu roda dan garis kecepatan dari kode, bunyi placeholder kayuhan/freewheel/rem lewat autoload `Audio` (dibuat skrip sintesis `tools/audio_art/`), penyetelan paket A54 (sepeda 75% tinggi layar, dorongan 36, tombol 42 px, teks HUD 8 px), probe render Compatibility `scenes/dev/cek_render.tscn` (light 2D, glow, partikel CPU/GPU, shader warna bayangan; lolos di desktop, A54 belum), dan checklist uji 3-5 orang Fase 1 ([`SETUP_ANDROID.md`](./SETUP_ANDROID.md) 8.2). Fase 1 baru selesai sesudah uji itu. Posisi lengkap ada di [`ROADMAP.md`](./ROADMAP.md).
 
 ## Dokumen
 
@@ -22,7 +22,7 @@ Status: **Fase 0 selesai, Fase 1 berikutnya** (per 2026-10-13). Desain inti, kam
 | [`CONTENT_GUIDE.md`](./CONTENT_GUIDE.md) | Panduan menulis headline koran, misi sampingan, dan nama tokoh |
 | [`DATA_SCHEMA.md`](./DATA_SCHEMA.md) | Format data misi, headline, segmen rute, dan file save (usulan) |
 | [`SOUND_DESIGN.md`](./SOUND_DESIGN.md) | Prinsip audio, daftar efek suara, ambience per distrik, spesifikasi teknis (draf) |
-| [`SETUP_ANDROID.md`](./SETUP_ANDROID.md) | Export Android tanpa Gradle: prasyarat mesin, preset `export_presets.cfg` beserta alasannya, ekspor APK debug dari CLI, pemeriksaan isi APK, pasang ke HP, checklist uji M0 |
+| [`SETUP_ANDROID.md`](./SETUP_ANDROID.md) | Export Android tanpa Gradle: prasyarat mesin, preset `export_presets.cfg` beserta alasannya, ekspor APK debug dari CLI, pemeriksaan isi APK, pasang ke HP, probe render di HP (6.1), checklist uji M0 dan uji 3-5 orang Fase 1 (8.2) |
 | [`LOOP-DEV-QA.md`](./LOOP-DEV-QA.md) | Brief loop dua agent (Dev dan QA) untuk mengerjakan fase development, dengan Fase 0 dipecah jadi run 0A–0C dan perintah tempel untuk memulai run Fase 1 (Bagian 6b) |
 | [`loop/`](./loop/) | Satu folder per run loop (`<RUN_ID>/`): `SPEC.md` (kontrak run), `LOG.md` (temuan dan keputusan), `shots/` (tangkapan layar bukti) |
 | [`design/`](./design/) | [`DESIGN_SPEC.md`](./design/DESIGN_SPEC.md): token warna, font, dan spesifikasi HUD; `screens/` dan `source/`: render dan source mock HUD dan kontrol; [`character/`](./design/character/): indeks semua karakter; [`character/loper_agen/`](./design/character/loper_agen/): sprite produksi pemain; [`character/varian/`](./design/character/varian/): varian baju |
@@ -43,23 +43,28 @@ docs/                  Dokumen desain (folder ini) + design/ + loop/ (ada)
 project.godot          Godot 4.7.2, landscape, renderer Compatibility, 640x360 canvas_items integer expand (ada)
 icon.svg               Ikon aplikasi sementara, dipakai ekspor Android (ada)
 export_presets.cfg     Preset export Android: satu preset, tanpa Gradle, arm64-v8a, tanpa rahasia (ada)
-scenes/                dev/jalan_uji.tscn (scene utama sementara), dev/graybox.tscn, entities/loper_agen.tscn dan sepeda_uji.tscn, ui/hud_dev.tscn (ada); Boot, Rute, Koran, Hasil, Bengkel menyusul
+scenes/                dev/jalan_uji.tscn (scene utama sementara), dev/graybox.tscn, dev/cek_render.tscn (probe render, hanya build probe), entities/loper_agen.tscn, sepeda_uji.tscn, umpan_balik_sepeda.tscn, ui/hud_dev.tscn, ui/layar_jeda.tscn (ada); Boot, Rute, Koran, Hasil, Bengkel menyusul
 assets/sprites/        loper/ dan _placeholder/ (ada); tiles/, houses/, props/, obstacles/, vfx/, ui/ menyusul
 assets/palette/        loper_master.gpl (ada)
 assets/fonts/          Lexend dan Lilita One, usulan (ada)
+assets/audio/          sfx/bike/ tiga WAV placeholder hasil tools/audio_art/ + LICENSES.md (ada); ambience, SFX lain menyusul
+assets/shaders/        warna_bayangan.gdshader, usulan (ada)
+default_bus_layout.tres Bus audio Master -> SFX -> Sepeda (ada)
 assets/ui/             theme.tres: font dan ukuran saja, warna dari Palette (ada); panel 9-slice menyusul
 translations/          ui.csv (keys,id) + hasil impor .translation; semua teks pemain lewat kunci (ada)
 assets/LICENSES.md     Lisensi aset pihak ketiga (ada)
 assets/data/           Segmen rute, misi, headline (DATA_SCHEMA.md), menyusul
 scripts/config.gd      SEMUA angka tuning (BALANCING.md) (ada)
-scripts/autoload/      SaveManager, DayManager, Analytics (nanti)
-scripts/systems/       Logika murni: config_parser, loper_anim, iso, touch_zones, stick_map, touch_router, bike_motion (gerak, rem, stamina, lateral), jeda_sim, dorongan_kecepatan, jalan_daur, piksel_lingkaran, lempar_waktu (ada); lemparan, skor, misi, reputasi, kerusakan menyusul
-scripts/entities/      loper_sprite, sepeda_uji, jalan_uji, tanah_daur, objek_daur (ada)
-scripts/ui/            palette, kontrol_touch, hud_dev, bar_kecepatan (ada); HUD final dan layar menyusul
-tests/                 run_tests.gd, tes_input_murni.gd, tes_input_scene.gd, tes_sprite.gd, tes_gerak.gd, tes_gerak_scene.gd, tes_export.gd, probe_layar.gd, probe_layar_jendela.gd, probe_lempar_jendela.gd, probe_gerak_jendela.gd (ada)
+scripts/autoload/      audio.gd (autoload Audio, bunyi sepeda) (ada); SaveManager, DayManager menyusul
+scripts/systems/       Logika murni: config_parser, loper_anim, iso, touch_zones, stick_map, touch_router, bike_motion (gerak, rem, stamina, lateral), jeda_sim, dorongan_kecepatan, jalan_daur, piksel_lingkaran, lempar_waktu, umpan_balik_kecepatan, bunyi_sepeda (ada); lemparan, skor, misi, reputasi, kerusakan menyusul
+scripts/entities/      loper_sprite, sepeda_uji, jalan_uji, tanah_daur, objek_daur, pancaran_piksel, umpan_balik_sepeda (ada)
+scripts/dev/           cek_render.gd (probe render Compatibility) (ada)
+scripts/ui/            palette, kontrol_touch, hud_dev, bar_kecepatan, gaya_hud, tombol_jeda, tombol_sentuh, layar_jeda (ada); HUD final dan layar menyusul
+tests/                 run_tests.gd, tes_input_murni.gd, tes_input_scene.gd, tes_sprite.gd, tes_gerak.gd, tes_gerak_scene.gd, tes_jeda_scene.gd, tes_tata_letak.gd, tes_umpan_balik.gd, tes_bunyi.gd, tes_cek_render.gd, tes_export.gd, probe_layar.gd, probe_*_jendela.gd (ada)
 tools/loper_art/       Renderer sprite pemain (Python), lihat ART_DIRECTION bagian 4; bangun_frames.py membangun SpriteFrames gabungan 48 animasi (stdlib)
 tools/env_art/         Renderer aset lingkungan, termasuk graybox.py (ada)
-tools/                 cek_keluaran_tes.py dan tests_cek/ (termasuk uji_bangun_frames.py) (ada)
+tools/audio_art/       sintesis_sepeda.py: bunyi placeholder sepeda dari rumus (stdlib) (ada)
+tools/                 cek_keluaran_tes.py, cek_blok_piksel.py, ekspor_cek_render.py (build probe render), tests_cek/ (uji_pemeriksa, uji_bangun_frames, uji_sintesis_sepeda) (ada)
 .github/workflows/     tes.yml, CI import dan tes headless (ada)
 builds/                APK hasil export, perintah di SETUP_ANDROID.md (di .gitignore, tidak di-commit)
 ```

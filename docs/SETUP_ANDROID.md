@@ -195,6 +195,55 @@ python3 tools/cek_blok_piksel.py 3 build/hp_awal.png     # hasil yang diharapkan
 
 Teks HUD (font vektor) tidak berupa blok piksel; kecualikan kotaknya dengan `--kecualikan X0,Y0,X1,Y1` (lihat komentar di `tools/cek_blok_piksel.py`). Layar 2340×1080 harus menampilkan viewport 780×360 pada skala ×3. Bila yang terlihat ×2 (tepi kosong), bilah sistem tidak tersembunyi: catat dan coba `screen/edge_to_edge=true` di preset. Bukti yang dipakai sebagai hasil run disimpan di `docs/loop/<RUN_ID>/shots/`.
 
+### 6.1 Probe render Compatibility di HP (run fase1b-umpan-balik)
+
+Membuktikan apakah **light 2D, glow, partikel CPU dan GPU, dan shader warna bayangan** jalan di renderer Compatibility pada HP (butir Q-014, ART_DIRECTION 2.3 dan 7). Probe adalah scene dev `scenes/dev/cek_render.tscn` (`scripts/dev/cek_render.gd`): empat panel berdampingan, dan sesudah 5 detik ia mencetak satu baris `[cek_render]` per fitur (hasil dari **piksel hasil render**, renderer, GPU, fps rata-rata) lalu satu baris ringkasan. Arti hasil:
+
+| Baris | `ya` / `cocok` berarti |
+|---|---|
+| `perangkat:` | Nama renderer (`gl_compatibility`), driver, GPU, versi API, ukuran jendela dan viewport, skala, fps rata-rata selama 5 detik |
+| `light2d:` | Titik dekat `PointLight2D` jauh lebih terang dari tepi yang hanya kena `CanvasModulate` gelap, **dan** titik di belakang `LightOccluder2D` lebih gelap dari titik sejarak di sisi lain (bayangan lembut PCF5). `cahaya_tanpa_bayangan` = cahaya jalan, bayangan tidak |
+| `glow:` | Piksel 4 px di luar kotak terang lebih terang dari latar jauh (halo dari `WorldEnvironment` latar Canvas, glow menyala) |
+| `cpu_partikel:` / `gpu_partikel:` | Ada piksel berwarna partikel (`ACCENT` / `OK`) di separuh panel masing-masing; jumlah piksel ditulis |
+| `shader_bayangan:` | Piksel penanda bayangan (hitam alpha 71) di sprite ber-shader sama dengan campuran latar dan `#2E3550` alpha 71/255, piksel lain sama dengan sprite kontrol tanpa shader, dan latar terbaca benar (kalibrasi) |
+
+Di `--headless` piksel tidak bisa dibaca: baris fitur menulis "tidak bisa dibaca headless" dan ringkasan `tidak_terbaca`, **bukan** lolos.
+
+**Cara membuka tanpa mengganti scene utama.** Scene utama yang di-commit tetap `jalan_uji.tscn`, dan tidak ada skrip atau scene game yang merujuk probe (dijaga `tests/tes_cek_render.gd`), jadi pemain tidak bisa membukanya. Build probe dibuat terpisah oleh `tools/ekspor_cek_render.py`, yang mengganti baris `run/main_scene` di `project.godot` hanya selama satu perintah ekspor (preset `Android` yang sama), memulihkan berkas byte demi byte (juga bila gagal atau Ctrl+C), lalu memeriksa bahwa `project.binary` di hasil ekspor menunjuk ke probe. `override.cfg` sementara **tidak** bisa dipakai: dicoba 2026-10-14, berkas itu tidak ikut ke paket dan tidak digabung ke `project.binary`, jadi paket tetap membuka `jalan_uji.tscn` (`override.cfg` kini di `.gitignore`).
+
+```bash
+python3 tools/ekspor_cek_render.py --pck build/kring-cek-render.pck          # paket probe tanpa Java (cek cepat)
+python3 tools/ekspor_cek_render.py --apk builds/kring-cek-render-debug.apk   # APK debug probe (bagian 1 dan 2 harus beres)
+git status --short project.godot                                             # harus kosong (sudah dipulihkan)
+```
+
+Hasil di mesin pengembang 2026-10-14 (Apple M4): kedua perintah exit 0, "project.godot pulih byte demi byte: ya", `scene utama di project.binary = res://scenes/dev/cek_render.tscn`; APK probe 28.631.804 byte. APK normal (`--export-debug "Android"` biasa) tetap `res://scenes/dev/jalan_uji.tscn` di `assets/project.binary`; berkas probe (`cek_render.scn`, `cek_render.gdc`, shader) ikut ke APK normal karena `export_filter` `all_resources`, tetapi tidak ada jalan untuk membukanya.
+
+**Desktop** (bukti tanpa HP):
+
+```bash
+godot --path . --resolution 2340x1080 --position 0,0 scenes/dev/cek_render.tscn -- --tangkap=build/cek_render.png   # jendela asli: ukur, simpan tangkapan, keluar
+godot --headless --path . scenes/dev/cek_render.tscn                       # headless: baris [cek_render], piksel "tidak bisa dibaca headless", keluar sendiri
+godot --main-pack build/kring-cek-render.pck --resolution 2340x1080 --position 0,0 -- --keluar   # paket probe hasil ekspor (jalankan dari folder lain)
+```
+
+**Di A54 (orchestrator, sesudah QA PASS; aturan HP bagian 6 berlaku).** APK probe memakai package yang sama (`com.rmh.kring`), jadi memasangnya **menimpa** build uji di HP (data app tetap dengan `-r`); pasang ulang APK normal sesudahnya. Jangan `pm clear`, uninstall, atau `logcat -c` (log HP dipakai project lain).
+
+```bash
+adb devices                                                         # A54 "device"
+adb shell dumpsys power | grep -E "mWakefulness|mHoldingDisplay"    # layar menyala dan tidak sedang dipakai pemilik
+mkdir -p docs/loop/20261014-fase1b-umpan-balik/render_a54
+adb install -r builds/kring-cek-render-debug.apk
+adb shell am start -n com.rmh.kring/com.godot.game.GodotAppLauncher
+# tunggu sekitar 10 detik (pengukuran 5 detik), jangan sentuh layar
+adb exec-out screencap -p > docs/loop/20261014-fase1b-umpan-balik/render_a54/cek_render_a54.png
+adb logcat -d -s godot | grep "\[cek_render\]" | tail -8 > docs/loop/20261014-fase1b-umpan-balik/render_a54/cek_render_a54.log
+cat docs/loop/20261014-fase1b-umpan-balik/render_a54/cek_render_a54.log   # harus ada 7 baris: perangkat, 5 fitur, ringkasan
+adb install -r builds/kring-kring-debug.apk                          # kembalikan build normal (jalan_uji)
+```
+
+Probe tetap terbuka di HP (tidak keluar sendiri); tombol back tidak berbuat apa-apa di sini (`quit_on_go_back` false), jadi tinggalkan lewat tombol home. Hasilnya dicatat orchestrator di `ART_DIRECTION.md` 2.3/7. Bila `logcat` kosong, buka ulang app (pengukuran diulang tiap kali dibuka).
+
 ## 7. Masalah umum
 
 | Gejala | Penyebab dan solusi |
@@ -249,6 +298,8 @@ Dikerjakan manusia di HP asli; agent tidak bisa menilai rasa kontrol. Fase 0 **t
 
 ### 8.1 Uji Run 1A Fase 1: gerak inti (run `20261013-fase1a-gerak`, belum diuji)
 
+**Digabung ke bagian 8.2** (keputusan pemilik 2026-10-14): butir di bawah tetap sebagai rincian, tetapi dicentang di 8.2.
+
 Semua angka usulan (`scripts/config.gd`, BALANCING 2-3). Catat angka yang ingin diubah beserta alasannya; jangan diubah di run uji. Ambang rem masih keputusan terbuka (ROADMAP 5), diputuskan dari uji ini.
 
 - [ ] **Ambang rem:** tarik stick penuh ke bawah dan tahan: sesudah sekitar 0,25 detik sepeda mengerem (sprite `rem`, badan mundur 1 px dan bergetar) sampai berhenti; busur bawah cincin stick menyala oranye (`WARN`) selama rem aktif. Apakah 90% dan 0,25 detik terasa pas? Apakah sepeda pernah berhenti tak sengaja saat belok sambil menarik ke bawah, atau saat meluncur?
@@ -259,3 +310,51 @@ Semua angka usulan (`scripts/config.gd`, BALANCING 2-3). Catat angka yang ingin 
 - [ ] **Lateral sampai tepi aspal:** geser kiri dan kanan penuh: sepeda berhenti di tepi aspal (+-1 ubin) tanpa tersentak; geser saat berhenti dengan rem (sprite menghadap 90°) terlihat wajar atau aneh?
 - [ ] **Kembali dari background** (home, notifikasi ditarik, panggilan): tidak ada lompatan posisi, kecepatan, atau stamina; rem yang sedang ditahan tidak tersisa (harus ditahan ulang 0,25 detik); stick dan lempar dilepas bersih.
 - [ ] Dua jempol: swipe tetap melempar saat rem dan meluncur (lempar memakai gambar santai), stick tidak putus.
+
+### 8.2 Uji 3-5 orang Fase 1 (run 1A + 1B, menutup Fase 1)
+
+Menggabungkan 8.1 (gerak inti, run `20261013-fase1a-gerak`) dan run `20261014-fase1b-umpan-balik` (umpan balik, audio, jeda, penyetelan). **Fase 1 baru selesai** (`DEV_PHASES.md`) kalau 3-5 orang mencoba di HP dan **bisa mengatur kecepatan, mengerem, dan pindah sisi tanpa penjelasan panjang**, dan **ambang rem tidak membuat sepeda berhenti tak sengaja**. Semua angka usulan; catat angka yang ingin diubah, jangan diubah di sesi uji.
+
+**Persiapan (pemilik).** APK normal terbaru (`builds/kring-kring-debug.apk`, bagian 4) terpasang di A54; volume media sekitar setengah, uji suara di speaker HP (bukan headphone). Tiap penguji dicatat dengan kode (P1 sampai P5), **tanpa nama atau data pribadi**. Penjelasan ke penguji cukup satu kalimat: "Jempol kiri mengayuh dan mengarahkan, jempol kanan melempar." Amati dulu tanpa membantu; catat kapan penguji harus diberi tahu.
+
+**Langkah per penguji (sekitar 5 menit, tulis di lembar catatan di bawah):**
+
+1. Main bebas 1 menit tanpa petunjuk lain. Catat apakah ia menemukan sendiri cara ngebut, melambat, mengerem, dan pindah sisi.
+2. Minta "berhenti total" lalu "jalan lagi". Rem = stick ditarik penuh ke bawah dan ditahan sekitar 0,25 detik.
+3. Minta "pelan-pelan saja tanpa berhenti" selama 10 detik dan belok ke kiri dan kanan. Catat bila sepeda berhenti sendiri (rem tak sengaja).
+4. Minta jeda lewat tombol jeda (kiri atas), lalu lanjut. Lalu tekan home, buka lagi app, dan lanjut.
+
+**Butir yang dinilai (gabungan, centang bila sebagian besar penguji lancar):**
+
+- [ ] **Kecepatan:** ngebut, santai, dan melambat bisa diatur tanpa penjelasan; sprite berdiri saat ngebut, kayuh pelan saat melambat (8.1 laju kayuh).
+- [ ] **Rem:** berhenti dengan tarik penuh dan tahan; ambang 90% dan tahan 0,25 detik tidak membuat berhenti tak sengaja saat belok atau meluncur (8.1 ambang rem, rem lalu lepas). Busur rem oranye `WARN` terbaca di atas knob oranye `ACCENT` di luar ruangan (**QA-006**).
+- [ ] **Melambat paling pelan (QA-005):** tarik ke bawah sampai tepat sebelum rem dan tahan: kecepatan menetap sekitar 1,6-1,7 u/d. Cukup pelan untuk membidik, atau rem terlalu mudah menyala saat ingin pelan?
+- [ ] **Pindah sisi:** geser ke sisi seberang dan dekat sampai tepi aspal tanpa tersentak (8.1 lateral).
+- [ ] **Meluncur dan stamina:** meluncur (kaki diam) lalu melambat terbaca; stamina habis sekitar 8-9 detik ngebut, LELAH dan bar merah terbaca, meluncur sekitar 2 detik memulihkan (8.1 stamina).
+- [ ] **Debu dan garis kecepatan:** debu krem di roda belakang sejak santai, lebih tebal saat ngebut dan saat rem; garis putih bertangga hanya saat cepat/ngebut. Terbaca sebagai kecepatan dan tidak menutupi jalan di depan; tidak tersendat (60 fps terasa).
+- [ ] **Bunyi:** kayuhan terdengar dan nadanya naik saat ngebut (pitch 1,0 / 1,15 / 1,3); "tik-tik" freewheel saat meluncur; decit rem **sekali** saat rem menyala (tidak berulang selama ditahan); tidak ada klik di sambungan loop; volume relatif wajar di speaker HP. Catat bila tempo ketukan terasa tidak cocok dengan kayuhan saat ngebut (bunyi 10,4 ketuk/detik lawan animasi 12 fps).
+- [ ] **Jeda:** tombol jeda (gambar 24×24, area sentuh 42×42 px game sekitar 44 dp) mudah ditekan sengaja dan tidak tertekan saat bermain; jari kedua bisa mengetuknya saat jempol di stick; layar jeda gelap dengan "JEDA" dan "Lanjut"; semua diam dan bunyi berhenti selama jeda; back Android menjeda dan (di layar jeda) melanjutkan.
+- [ ] **Background:** home, notifikasi ditarik, atau panggilan masuk membuka layar jeda dan **tidak jalan sendiri** saat kembali; tidak ada decit rem yang menyusul sesudah Lanjut; rem harus ditahan ulang (8.1 kembali dari background).
+- [ ] **Posisi sepeda dan dorongan:** sepeda di sekitar 75% tinggi layar; saat ngebut maju sedikit (36 px) dan jalan di depan terasa cukup jauh (sekitar 2,5 detik di A54); sepeda tidak tertutup jempol atau panel kecepatan.
+- [ ] **Ukuran dan teks:** tombol kidal dan jeda (42 px game, 44 dp) nyaman; teks HUD 8 px (24 px layar) terbaca.
+- [ ] **Dua jempol:** swipe tetap melempar saat rem dan meluncur; stick tidak putus (8.1 dua jempol).
+
+**Lembar catatan per penguji (salin satu per orang; tanpa nama, umur pasti, kontak, atau foto):**
+
+```
+Penguji: P_   Tanggal: ____   HP: A54 / lainnya: ____   Build (commit): ____
+Tangan dominan: kanan / kiri (pakai opsi kidal: ya / tidak)   Biasa main game HP: sering / kadang / jarang
+1. Main bebas 1 menit, ditemukan sendiri tanpa diberi tahu:  ngebut [ ]  melambat [ ]  rem [ ]  pindah sisi [ ]  lempar [ ]
+   Yang harus diberi tahu (dan kapan): ________________________________
+2. Berhenti total lalu jalan lagi: lancar / perlu dicoba ulang ___ kali / tidak bisa
+3. Pelan 10 detik sambil belok: rem tak sengaja ___ kali   kecepatan paling pelan terasa: terlalu cepat / pas / terlalu pelan
+4. Jeda dan Lanjut: lancar / bingung   Home lalu kembali: layar jeda muncul ya / tidak   jalan sendiri ya / tidak
+Bunyi: kayuh naik saat ngebut terasa ya / tidak   decit rem sekali ya / berulang   klik di loop ya / tidak   volume: pelan / pas / keras
+Debu dan garis kecepatan: membantu / mengganggu / tidak terlihat
+Tombol jeda tertekan tak sengaja: ___ kali   Teks HUD terbaca: ya / sulit
+Angka yang ingin diubah dan alasannya: _______________________________
+Catatan lain (kutip kata-kata penguji, bukan nama): ___________________
+```
+
+**Hasil:** tulis ringkasan (berapa dari berapa penguji lolos tiap butir, angka yang diminta berubah) di PR uji atau `docs/loop/`, lalu pemilik memutuskan centang Fase 1 di `DEV_PHASES.md`.
+
