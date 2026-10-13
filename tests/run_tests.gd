@@ -95,6 +95,8 @@ func _initialize() -> void:
 	await tata_letak.jalankan()
 	var bunyi: TesBunyi = TesBunyi.new(check, _judul, self)
 	await bunyi.jalankan()
+	var cek_render: TesCekRender = TesCekRender.new(check, _judul, self)
+	await cek_render.jalankan()
 	root.size = ukuran_sebelum
 	if audio != null:
 		audio.call(&"hentikan_sepeda")
@@ -582,7 +584,7 @@ func _test_palet() -> void:
 			if not cocok.get_string(3).is_empty():
 				alpha_persen = cocok.get_string(3).to_float()
 			tabel[cocok.get_string(1)] = {"hex": cocok.get_string(2).to_lower(), "alpha": alpha_persen / 100.0}
-	check(tabel.size() == 16, "tabel DESIGN_SPEC 1.1 memuat 16 token (11 warna + 5 radar), terbaca %d" % tabel.size())
+	check(tabel.size() == 17, "tabel DESIGN_SPEC 1.1 memuat 17 token (11 warna + 5 radar + 1 dunia), terbaca %d" % tabel.size())
 	var skrip_palet: GDScript = load("res://scripts/ui/palette.gd") as GDScript
 	var peta: Dictionary = skrip_palet.get_script_constant_map()
 	check(peta.size() == tabel.size(), "Palette memuat tepat %d token seperti tabel, dapat %d" % [tabel.size(), peta.size()])
@@ -754,7 +756,7 @@ func _test_gaya_kode() -> void:
 
 	_judul("Kebersihan repo")
 	var gitignore: String = FileAccess.get_file_as_string("res://.gitignore")
-	for pola: String in [".godot/", "build/", "builds/", "*.apk", "*.aab"]:
+	for pola: String in [".godot/", "build/", "builds/", "*.apk", "*.aab", "override.cfg"]:
 		check(gitignore.split("\n").has(pola), ".gitignore menutup %s" % pola)
 
 

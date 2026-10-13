@@ -54,7 +54,13 @@ Radar (bagian 3.4):
 | `RADAR_MISI` | `#E98E3F` | Target misi |
 | `RADAR_BUKAN` | `#969AA0` | Rumah bukan pelanggan (hanya mode bantu, usulan) |
 
-Warna ini sudah ada di palet induk (ART_DIRECTION 2.4), kecuali token UI yang berasal dari Brainy Dungeon. **Warna jangan jadi satu-satunya pembeda**: penanda radar dan kotak progres juga dibedakan bentuk atau simbol (bagian 3.2 dan 3.4).
+Dunia (usulan, run fase1b-umpan-balik 2026-10-14):
+
+| Token | Hex | Pemakaian |
+|---|---|---|
+| `BAYANGAN_CONTOH` | `#2E3550` | Warna bayangan contoh (siang, ART_DIRECTION 2.5) untuk shader warna bayangan (ART_DIRECTION 2.1 no. 5, 2.3); sementara hanya dipakai probe render `scenes/dev/cek_render.tscn`. Warna bayangan per distrik dan waktu menggantikannya nanti |
+
+Warna ini sudah ada di palet induk (ART_DIRECTION 2.4), kecuali token UI yang berasal dari Brainy Dungeon dan `BAYANGAN_CONTOH` (dari tabel warna bayangan ART_DIRECTION 2.5). **Warna jangan jadi satu-satunya pembeda**: penanda radar dan kotak progres juga dibedakan bentuk atau simbol (bagian 3.2 dan 3.4).
 
 ### 1.2 Tipografi
 

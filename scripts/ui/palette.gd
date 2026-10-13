@@ -39,3 +39,7 @@ const RADAR_TIP: Color = Color("#56C46E")
 const RADAR_MISI: Color = Color("#E98E3F")
 ## Penanda radar: rumah bukan pelanggan (hanya mode bantu, usulan).
 const RADAR_BUKAN: Color = Color("#969AA0")
+
+## Warna bayangan contoh (siang, dongker tua, ART_DIRECTION 2.5; usulan run fase1b-umpan-balik): pengganti piksel penanda bayangan
+## `#000000` alpha 71 oleh shader warna bayangan (`assets/shaders/warna_bayangan.gdshader`), dipakai probe render Compatibility (`scenes/dev/`).
+const BAYANGAN_CONTOH: Color = Color("#2E3550")
