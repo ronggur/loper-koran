@@ -17,7 +17,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 
 | Fase | Nama | Milestone | Status | Selesai |
 |---|---|---|---|---|
-| 0 | Fondasi teknis | M0 | 🟨 kode selesai: run 0A (PR #12) dan 0B+0C (QA lolos); uji HP dan cek light 2D menunggu | |
+| 0 | Fondasi teknis | M0 | ✅ run 0A (PR #12), 0B+0C (PR #14), uji HP di A54 lolos | 2026-10-13 |
 | 1 | Gerak sepeda & kecepatan (prototype 1) | M1 | ⬜ | |
 | 2 | Lemparan koran (prototype 2) | M1 | ⬜ | |
 | 3 | Satu rute perumahan (prototype 3) | M2 | ⬜ | |
@@ -27,7 +27,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 | 7 | Vertical slice perumahan & audio dasar | M3 | ⬜ | |
 | 8 | Distrik berikutnya, iklan, rilis | M4 | ⬜ | |
 
-**Fase aktif: Fase 0**, dikerjakan lewat loop Dev↔QA dalam tiga run (`LOOP-DEV-QA.md` Bagian 6). Run 0A (fondasi project) lolos QA 2026-10-09; run 0B dan 0C dijalankan sebagai satu run (keputusan pemilik) dan lolos QA 2026-10-09 (input touch, sepeda placeholder, export Android, APK debug terpasang di A54). Yang tersisa untuk menutup Fase 0: uji di HP (rasa kontrol, ketajaman dan skala) dan cek light 2D/glow/partikel/shader di Compatibility.
+**Fase aktif: Fase 1**, dikerjakan lewat loop Dev↔QA dalam dua run (`LOOP-DEV-QA.md` Bagian 6: Run 1A logika gerak, Run 1B umpan balik dan penyetelan). Fase 0 selesai 2026-10-13: run 0A dan 0B+0C lolos QA 2026-10-09, dan uji HP di A54 (checklist `SETUP_ANDROID.md` bagian 8) dinyatakan lolos oleh pemilik 2026-10-13. Cek light 2D/glow/partikel/shader di Compatibility dipindah ke Fase 1 (Run 1B) karena butuh scene uji yang belum ada.
 
 ---
 
@@ -38,9 +38,8 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 - [x] Putuskan nama package Android: `com.rmh.kring` (2026-10-09, ROADMAP 4b)
 - [x] Repo git `loper-koran`: root repo = root project Godot, dokumen di `docs/` (folder ini) dengan `docs/.gdignore`
 - [x] Project Godot 4.7.2 landscape, renderer Compatibility (run 0A, 2026-10-09)
-- [ ] Cek apakah light 2D, glow, partikel, dan shader warna bayangan yang dibutuhkan jalan di renderer Compatibility di HP target (ART_DIRECTION 2.3, 7)
 - [x] Resolusi dasar 640×360 dan stretch `canvas_items` + integer scale + `expand`, skala ×3 (dipilih 2026-10-09, ROADMAP 4b); diverifikasi di jendela desktop pada rasio 16:9, 19.5:9, 20:9 (run 0A, hasil di ROADMAP 4b)
-- [ ] Uji ketajaman piksel dan skala di HP (A54 2340×1080 → 780×360 ×3), termasuk memastikan tinggi jendela 1080 di Android supaya skala tidak turun ke ×2 (dikerjakan bersama run 0C)
+- [x] Uji ketajaman piksel dan skala di HP (A54 2340×1080 → 780×360 ×3), termasuk memastikan tinggi jendela 1080 di Android supaya skala tidak turun ke ×2 (lolos di A54, dikonfirmasi pemilik 2026-10-13)
 - [x] Import filter Nearest dan tanpa mipmap untuk sprite dunia; `snap_2d_transforms_to_pixel` aktif
 - [x] `scripts/config.gd` berisi angka awal dari `BALANCING.md`
 - [x] Input touch: stick melayang di zona kiri bawah, swipe di zona kanan, opsi kidal menukar zona; input keyboard untuk tes di editor (run 0B+0C, 2026-10-09; logika dites headless, rasa kontrol diuji di HP lewat butir "Uji APK di HP")
@@ -48,7 +47,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 - [x] Tes logika headless (`tests/run_tests.gd`) dan CI sederhana (CI hijau di PR #12)
 - [x] `CLAUDE.md` / `AGENTS.md` dengan aturan coding dan Definition of Done
 - [x] Preset export Android dan APK debug; panduan `SETUP_ANDROID.md` diadaptasi dari Brainy Dungeon (run 0B+0C, 2026-10-09; APK debug `com.rmh.kring` 0.1.0 dibangun lewat CLI dan terpasang di A54)
-- [ ] Uji APK di HP
+- [x] Uji APK di HP (checklist `SETUP_ANDROID.md` bagian 8 lolos di A54, dikonfirmasi pemilik 2026-10-13)
 
 **Selesai kalau:** APK terpasang di HP dan sepeda placeholder bisa digerakkan dengan stick di layar sentuh.
 
@@ -68,6 +67,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 - [ ] Animasi pemain memilih `kecepatan_arah` dari input lewat `loper_sprite.gd`, laju kayuh mengikuti kecepatan
 - [ ] Umpan balik kecepatan dasar: debu roda, garis kecepatan (placeholder)
 - [ ] HUD sementara: bar kecepatan dan stamina
+- [ ] Cek apakah light 2D, glow, partikel, dan shader warna bayangan yang dibutuhkan jalan di renderer Compatibility di HP target (ART_DIRECTION 2.3, 7); dipindah dari Fase 0 pada 2026-10-13, dikerjakan di Run 1B bersama partikel debu roda
 - [ ] Uji di HP: ambang rem, rasa stick, keterbacaan sprite di skala ×3
 
 **Selesai kalau:** 3–5 orang mencoba di HP dan bisa mengatur kecepatan, mengerem, dan pindah sisi tanpa penjelasan panjang; ambang rem tidak membuat sepeda berhenti tak sengaja.

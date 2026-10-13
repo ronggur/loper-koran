@@ -217,30 +217,32 @@ Teks HUD (font vektor) tidak berupa blok piksel; kecualikan kotaknya dengan `--k
 
 Dikerjakan manusia di HP asli; agent tidak bisa menilai rasa kontrol. Fase 0 **tidak dicentang** sebelum butir inti selesai (`DEV_PHASES.md`). Catat angka yang ingin diubah, jangan mengubahnya di run ini.
 
+**Hasil:** semua butir di bawah lolos di A54, dikonfirmasi pemilik 2026-10-13 (Fase 0 dan M0 selesai). Uji light 2D/glow/partikel/shader pindah ke Fase 1 (Run 1B).
+
 **Inti M0**
 
-- [ ] APK terpasang dan app terbuka dalam landscape; tidak ada crash di `adb logcat -s godot`.
-- [ ] Stick muncul di bawah jempol kiri, sepeda bergerak naik ke kanan atas. Atas: ngebut (sprite berdiri). Netral: santai. Bawah: melambat. Kiri/kanan: sprite serong (sekitar 45° sampai 63°) dan sepeda bergeser. Sprite 90° belum bisa muncul di run ini (butuh rem Fase 1), jadi jangan dicatat sebagai cacat. Tidak ada animasi yang berkedip di sekitar batas sudut 22,5°.
-- [ ] Dua jempol bersamaan: stick dan garis swipe jalan tanpa saling mengganggu; mengangkat satu jari tidak mematikan yang lain.
-- [ ] Tombol kidal menukar zona dan panel kecepatan; tombol di strip atas tidak tersentuh tak sengaja saat bermain.
-- [ ] Kembali dari background (tombol home lalu buka lagi): stick tidak macet dan tidak ada gerak sendiri.
-- [ ] Ukuran stick (radius 35 px game, sekitar 105 px layar), zona mati 15%, ambang tingkat 33% dan 80% terasa wajar. Catat angka yang ingin diubah.
-- [ ] Ketajaman dan skala: tangkapan layar `adb exec-out screencap -p`, lalu `python3 tools/cek_blok_piksel.py 3 <png>` memberi 0 blok tidak seragam di luar teks HUD; layar 2340×1080 menampilkan viewport 780×360 skala ×3 tanpa bilah sistem.
-- [ ] Kinerja terasa 60 fps (belum ada pengukur resmi).
+- [x] APK terpasang dan app terbuka dalam landscape; tidak ada crash di `adb logcat -s godot`.
+- [x] Stick muncul di bawah jempol kiri, sepeda bergerak naik ke kanan atas. Atas: ngebut (sprite berdiri). Netral: santai. Bawah: melambat. Kiri/kanan: sprite serong (sekitar 45° sampai 63°) dan sepeda bergeser. Sprite 90° belum bisa muncul di run ini (butuh rem Fase 1), jadi jangan dicatat sebagai cacat. Tidak ada animasi yang berkedip di sekitar batas sudut 22,5°.
+- [x] Dua jempol bersamaan: stick dan garis swipe jalan tanpa saling mengganggu; mengangkat satu jari tidak mematikan yang lain.
+- [x] Tombol kidal menukar zona dan panel kecepatan; tombol di strip atas tidak tersentuh tak sengaja saat bermain.
+- [x] Kembali dari background (tombol home lalu buka lagi): stick tidak macet dan tidak ada gerak sendiri.
+- [x] Ukuran stick (radius 35 px game, sekitar 105 px layar), zona mati 15%, ambang tingkat 33% dan 80% terasa wajar. Catat angka yang ingin diubah.
+- [x] Ketajaman dan skala: tangkapan layar `adb exec-out screencap -p`, lalu `python3 tools/cek_blok_piksel.py 3 <png>` memberi 0 blok tidak seragam di luar teks HUD; layar 2340×1080 menampilkan viewport 780×360 skala ×3 tanpa bilah sistem.
+- [x] Kinerja terasa 60 fps (belum ada pengukur resmi).
 
 **Tambahan dari Dev-0B dan Dev-0C**
 
-- [ ] Tepi layar: zona stick mulai x = 8 px game (sekitar 24 px layar). Gestur kembali sistem di tepi kiri atau kanan bisa mencuri sentuhan; catat bila stick sering putus saat jempol dekat tepi.
-- [ ] Cutout kamera A54 di landscape tidak menutupi zona stick (x mulai 8, y 186..352) atau panel kecepatan.
-- [ ] Tombol kidal (strip atas, tinggi 36 px game, sekitar 108 px layar) mudah ditekan sengaja; panel kecepatan tidak tertutup jempol kanan saat swipe.
-- [ ] Garis bidik swipe (2 px tiap 4 px) terbaca di bawah jempol; knob (radius 15) yang menonjol saat tarikan penuh terlihat wajar.
-- [ ] Keterbacaan teks HUD (6 px game = 18 px layar) dinilai dengan mata.
-- [ ] Dorongan kecepatan (GDD 15, `DORONGAN_*` di `scripts/config.gd`, usulan awal 28 px maju, 20 px mundur, respon 0,35 detik): saat ngebut sepeda maju sedikit di layar (naik ke kanan atas); saat melambat mundur sedikit; stick dilepas: kembali halus ke posisi dasar tanpa goyang atau tersentak. Catat apakah geser terasa terlalu kecil atau terlalu besar (dan apakah jalan di depan jadi terasa terlalu pendek saat ngebut) beserta angka yang diinginkan; jangan diubah di run ini.
-- [ ] **Melambat (run sprite-lempar-melambat, usulan):** stick ditarik ke bawah penuh: kayuh jelas lebih pelan dari santai (4 fps lawan 8 fps), tidak terasa patah, kecepatan turun ke 1,5 u/d dan dorongan kecepatan menarik sepeda mundur sedikit. Tarik sedikit ke bawah sambil belok kiri atau kanan: apakah animasi berkedip antara santai dan melambat (kalau ya, catat; belum ada ambang selain zona mati 15%).
-- [ ] **Lempar kiri dan kanan (usulan):** swipe di zona kanan ke kiri dan ke kanan di santai, cepat, dan ngebut: lengan dan titik lepas koran terbaca, sprite tidak melompat saat berganti dari dan ke kayuh. Ke kiri = sisi seberang, ke kanan = sisi dekat. Sambil serong (stick kiri atau kanan) memakai varian serong yang benar; arah 90° belum ada gambarnya (pakai serong, jangan dicatat sebagai cacat). Belum ada koran terbang, skor, atau sasaran (Fase 2).
-- [ ] **Ambang swipe 12 px dan abaikan swipe saat melempar (usulan):** swipe pendek tetap melempar, tap tanpa geser dan gerak vertikal tidak; swipe kedua saat masih melempar (sekitar 0,33 detik) diabaikan dan terasa wajar. Catat angka ambang yang diinginkan; jangan diubah di run ini.
-- [ ] **Dua jempol saat melempar:** stick tetap menggerakkan sepeda dan tidak putus selama animasi lempar berjalan; kembali dari background saat melempar tidak meninggalkan animasi lempar yang menggantung.
-- [ ] Orientasi terkunci: memutar HP 180° tidak membalik tampilan atau menjadikannya portrait (`screenOrientation=0`, bukan sensor).
-- [ ] Ikon di launcher: bel oranye di latar gelap (`icon.svg` sementara, tidak terpotong oleh bentuk ikon adaptif); nilai dengan mata, ikon final di Fase 14.
-- [ ] Opsional: sambungkan keyboard fisik; panah dan WASD **tidak** boleh menggerakkan sepeda di APK (keyboard hanya untuk editor, `OS.has_feature("editor")`).
-- [ ] Tetap terbuka dan bukan bagian checklist ini: uji light 2D, glow, partikel, dan shader di Compatibility (DEV_PHASES Fase 0).
+- [x] Tepi layar: zona stick mulai x = 8 px game (sekitar 24 px layar). Gestur kembali sistem di tepi kiri atau kanan bisa mencuri sentuhan; catat bila stick sering putus saat jempol dekat tepi.
+- [x] Cutout kamera A54 di landscape tidak menutupi zona stick (x mulai 8, y 186..352) atau panel kecepatan.
+- [x] Tombol kidal (strip atas, tinggi 36 px game, sekitar 108 px layar) mudah ditekan sengaja; panel kecepatan tidak tertutup jempol kanan saat swipe.
+- [x] Garis bidik swipe (2 px tiap 4 px) terbaca di bawah jempol; knob (radius 15) yang menonjol saat tarikan penuh terlihat wajar.
+- [x] Keterbacaan teks HUD (6 px game = 18 px layar) dinilai dengan mata.
+- [x] Dorongan kecepatan (GDD 15, `DORONGAN_*` di `scripts/config.gd`, usulan awal 28 px maju, 20 px mundur, respon 0,35 detik): saat ngebut sepeda maju sedikit di layar (naik ke kanan atas); saat melambat mundur sedikit; stick dilepas: kembali halus ke posisi dasar tanpa goyang atau tersentak. Catat apakah geser terasa terlalu kecil atau terlalu besar (dan apakah jalan di depan jadi terasa terlalu pendek saat ngebut) beserta angka yang diinginkan; jangan diubah di run ini.
+- [x] **Melambat (run sprite-lempar-melambat, usulan):** stick ditarik ke bawah penuh: kayuh jelas lebih pelan dari santai (4 fps lawan 8 fps), tidak terasa patah, kecepatan turun ke 1,5 u/d dan dorongan kecepatan menarik sepeda mundur sedikit. Tarik sedikit ke bawah sambil belok kiri atau kanan: apakah animasi berkedip antara santai dan melambat (kalau ya, catat; belum ada ambang selain zona mati 15%).
+- [x] **Lempar kiri dan kanan (usulan):** swipe di zona kanan ke kiri dan ke kanan di santai, cepat, dan ngebut: lengan dan titik lepas koran terbaca, sprite tidak melompat saat berganti dari dan ke kayuh. Ke kiri = sisi seberang, ke kanan = sisi dekat. Sambil serong (stick kiri atau kanan) memakai varian serong yang benar; arah 90° belum ada gambarnya (pakai serong, jangan dicatat sebagai cacat). Belum ada koran terbang, skor, atau sasaran (Fase 2).
+- [x] **Ambang swipe 12 px dan abaikan swipe saat melempar (usulan):** swipe pendek tetap melempar, tap tanpa geser dan gerak vertikal tidak; swipe kedua saat masih melempar (sekitar 0,33 detik) diabaikan dan terasa wajar. Catat angka ambang yang diinginkan; jangan diubah di run ini.
+- [x] **Dua jempol saat melempar:** stick tetap menggerakkan sepeda dan tidak putus selama animasi lempar berjalan; kembali dari background saat melempar tidak meninggalkan animasi lempar yang menggantung.
+- [x] Orientasi terkunci: memutar HP 180° tidak membalik tampilan atau menjadikannya portrait (`screenOrientation=0`, bukan sensor).
+- [x] Ikon di launcher: bel oranye di latar gelap (`icon.svg` sementara, tidak terpotong oleh bentuk ikon adaptif); nilai dengan mata, ikon final di Fase 14.
+- [x] Opsional: sambungkan keyboard fisik; panah dan WASD **tidak** boleh menggerakkan sepeda di APK (keyboard hanya untuk editor, `OS.has_feature("editor")`).
+- Bukan bagian checklist ini: uji light 2D, glow, partikel, dan shader di Compatibility (dipindah ke DEV_PHASES Fase 1, Run 1B).

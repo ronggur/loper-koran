@@ -355,7 +355,8 @@ SCOPE: Run 1B — Fase 1, umpan balik kecepatan dan penyetelan, sekaligus menutu
   yang tersisa (cek light 2D/glow/partikel/shader di renderer Compatibility pada A54).
   - Debu roda dan garis kecepatan (placeholder, partikel dari kode); catat hasil cek light 2D,
     glow, partikel, dan shader warna bayangan di Compatibility pada A54 sebagai bukti
-    (tangkapan layar + log) — ini menutup butir Fase 0 "Cek apakah light 2D ..." (Q-014).
+    (tangkapan layar + log) — ini menutup butir "Cek apakah light 2D ..." yang dipindah
+    dari Fase 0 ke Fase 1 pada 2026-10-13 (Q-014).
   - Audio placeholder (SOUND_DESIGN 3.2): kayuhan loop dengan pitch 1,0 / 1,15 / 1,3,
     meluncur, rem. Dibuat lewat skrip di tools/ (sintesis sederhana) atau tanyakan saya;
     JANGAN mengunduh aset dari internet. Ikuti TECH_PLAN 3.1 untuk autoload `Audio` dan
