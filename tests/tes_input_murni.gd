@@ -1,7 +1,8 @@
 class_name TesInputMurni
 extends RefCounted
-## Tes logika murni run 0B (AC-5 sampai AC-10, AC-13 fungsi tombol): zona sentuh, stick, pelacak jari, gerak
-## sepeda, proyeksi isometrik, stick ke animasi, jalan tanpa ujung, dan cakram piksel stick.
+## Tes logika murni run 0B (AC-5 sampai AC-10, AC-13 fungsi tombol): zona sentuh, stick, pelacak jari, proyeksi
+## isometrik, stick ke animasi (lewat `BikeMotion` sejak run fase1a-gerak), jalan tanpa ujung, dan cakram piksel stick.
+## Tes gerak sepeda (`BikeMotion`, pengganti `BikeDrive`) ada di `tests/tes_gerak.gd`.
 ##
 ## Dipanggil dari `tests/run_tests.gd` (`TesInputMurni.new(check, judul).jalankan()`), memakai `check` milik runner supaya
 ## hitungan lolos/gagal dan ringkasan tetap satu. Semua tes tanpa node: waktu dan RNG adalah parameter (rule `testing`).
@@ -30,7 +31,6 @@ func jalankan() -> void:
 	_test_stick_map()
 	_test_tombol_keyboard()
 	_test_touch_router()
-	_test_bike_drive()
 	_test_iso()
 	_test_stick_ke_animasi()
 	_test_jalan_daur()
@@ -426,138 +426,7 @@ func _router_lain() -> void:
 	check(r.vektor_stick() == Vector2.ZERO and r.geser_stick_terjepit() == Vector2.ZERO, "tanpa stick aktif, vektor dan geseran knob nol")
 
 
-# --- AC-8: BikeDrive (BALANCING 2) ---
-
-func _test_bike_drive() -> void:
-	_judul.call("BikeDrive")
-	check(Config.JALAN_LEBAR_UBIN == 2.0, "lebar jalan placeholder 2 ubin (BALANCING 2, usulan)")
-	check(BikeDrive.batas_lateral_ubin() == 1.0, "batas geser lateral = setengah lebar jalan = 1 ubin ke tiap sisi")
-	# Kecepatan target.
-	check(BikeDrive.kecepatan_target_ud(0.0) == 3.0, "stick netral -> target 3,0 u/d (santai)")
-	check(is_equal_approx(BikeDrive.kecepatan_target_ud(0.5), 4.5), "stick atas 0,5 -> target 4,5 u/d (linear santai ke ngebut)")
-	check(BikeDrive.kecepatan_target_ud(1.0) == 6.0, "stick atas penuh -> target 6,0 u/d (ngebut)")
-	check(BikeDrive.kecepatan_target_ud(-1.0) == 1.5, "stick bawah penuh -> target 1,5 u/d (melambat)")
-	check(is_equal_approx(BikeDrive.kecepatan_target_ud(-0.5), 2.25), "stick bawah 0,5 -> target 2,25 u/d (linear santai ke melambat)")
-	check(BikeDrive.kecepatan_target_ud(7.0) == 6.0 and BikeDrive.kecepatan_target_ud(-7.0) == 1.5 and BikeDrive.kecepatan_target_ud(NAN) == 3.0, "target dijepit untuk stick di luar -1..1 dan NaN dianggap netral")
-	# Akselerasi, perlambatan, dan batas.
-	var h: BikeDrive.Hasil = BikeDrive.langkah(3.0, 0.0, Vector2(0, 1), 1.0 / 60.0)
-	check(is_equal_approx(h.kecepatan_ud, 3.0 + 3.0 / 60.0), "akselerasi 3,0 u/d2: satu langkah 1/60 detik menambah 0,05 u/d, dapat %s" % h.kecepatan_ud)
-	var v: float = 3.0
-	for i: int in range(60):
-		v = BikeDrive.langkah(v, 0.0, Vector2(0, 1), 1.0 / 60.0).kecepatan_ud
-	check(is_equal_approx(v, 6.0), "dari 3,0 ke ngebut butuh 1 detik (3,0 u/d2), dapat %s" % v)
-	for i: int in range(120):
-		v = BikeDrive.langkah(v, 0.0, Vector2(0, 1), 1.0 / 60.0).kecepatan_ud
-	check(v == 6.0, "kecepatan tidak melampaui ngebut walau stick tetap penuh, dapat %s" % v)
-	h = BikeDrive.langkah(6.0, 0.0, Vector2.ZERO, 1.0)
-	check(is_equal_approx(h.kecepatan_ud, 4.0), "perlambatan 2,0 u/d2: dari 6,0 netral 1 detik = 4,0, dapat %s" % h.kecepatan_ud)
-	h = BikeDrive.langkah(6.0, 0.0, Vector2.ZERO, 100.0)
-	check(h.kecepatan_ud == 3.0, "dt besar tidak melewati target (turun): 6,0 -> tepat 3,0, dapat %s" % h.kecepatan_ud)
-	h = BikeDrive.langkah(3.0, 0.0, Vector2(0, 1), 100.0)
-	check(h.kecepatan_ud == 6.0, "dt besar tidak melewati target (naik): 3,0 -> tepat 6,0, dapat %s" % h.kecepatan_ud)
-	h = BikeDrive.langkah(3.0, 0.0, Vector2(0, -1), 100.0)
-	check(h.kecepatan_ud == 1.5, "stick bawah penuh dengan dt besar berhenti di 1,5 (tidak di bawah KECEPATAN_MELAMBAT_UD), dapat %s" % h.kecepatan_ud)
-	# QB-002: naik ke target MENENGAH tidak boleh melewati target. Batas atas clampf (6,0) hanya menutupi kasus target ngebut.
-	h = BikeDrive.langkah(3.0, 0.0, Vector2(0, 0.5), 1.0)
-	check(is_equal_approx(h.kecepatan_ud, 4.5), "target menengah, dt besar: dari 3,0 dengan stick atas 0,5 selama 1 detik = 4,5 u/d (bukan 6,0), dapat %s" % h.kecepatan_ud)
-	h = BikeDrive.langkah(3.0, 0.0, Vector2(0, 0.5), 100.0)
-	check(is_equal_approx(h.kecepatan_ud, 4.5), "target menengah, dt sangat besar = tepat 4,5 u/d, dapat %s" % h.kecepatan_ud)
-	h = BikeDrive.langkah(4.4, 0.0, Vector2(0, 0.5), 0.1)
-	check(is_equal_approx(h.kecepatan_ud, 4.5), "dt 0,1 dari 0,1 u/d di bawah target 4,5: berhenti di 4,5, tidak 4,7, dapat %s" % h.kecepatan_ud)
-	h = BikeDrive.langkah(6.0, 0.0, Vector2(0, 0.5), 1.0)
-	check(is_equal_approx(h.kecepatan_ud, 4.5), "turun ke target menengah: dari 6,0 dengan stick atas 0,5 selama 1 detik = 4,5 u/d (tidak di bawah target), dapat %s" % h.kecepatan_ud)
-	var melewati: bool = false
-	for atas: float in [0.1, 0.25, 0.5, 0.75, 0.9, -0.25, -0.5, -0.9]:
-		var tujuan: float = BikeDrive.kecepatan_target_ud(atas)
-		for selisih: float in [-1.0, -0.5, -0.1, -0.01, 0.0, 0.01, 0.1, 0.5, 1.0]:
-			for dt_uji: float in [0.016, 0.1, 0.5, 1.0, 100.0]:
-				var awal: float = clampf(tujuan + selisih, Config.KECEPATAN_MELAMBAT_UD, Config.KECEPATAN_NGEBUT_UD)
-				var hasil_uji: BikeDrive.Hasil = BikeDrive.langkah(awal, 0.0, Vector2(0, atas), dt_uji)
-				# Dari bawah target tidak boleh melewati; dari atas tidak boleh di bawah; selalu mendekat atau tetap.
-				if awal <= tujuan and hasil_uji.kecepatan_ud > tujuan + 0.000001:
-					melewati = true
-				if awal >= tujuan and hasil_uji.kecepatan_ud < tujuan - 0.000001:
-					melewati = true
-	check(not melewati, "sapuan: stick atas -0,9..0,9 x selisih awal x dt 0,016..100 detik: kecepatan tidak pernah melewati target dari arah mana pun")
-	# QB-011: trapesium tepat selama dt tidak melebihi waktu rampa; pada batas dt scene galatnya kecil.
-	var galat_maks: float = 0.0
-	var galat_tepat: float = 0.0
-	for atas: float in [0.0, 0.5, 1.0, -0.5, -1.0]:
-		var tujuan: float = BikeDrive.kecepatan_target_ud(atas)
-		for selisih: float in [-1.0, -0.15, -0.05, 0.0, 0.05, 0.15, 1.0]:
-			var awal: float = clampf(tujuan + selisih, Config.KECEPATAN_MELAMBAT_UD, Config.KECEPATAN_NGEBUT_UD)
-			var laju_rampa: float = Config.AKSELERASI_UD2 if awal < tujuan else Config.PERLAMBATAN_MELAMBAT_UD2
-			var waktu_rampa: float = absf(tujuan - awal) / laju_rampa
-			# dt di dalam rampa: trapesium = integral tepat.
-			var dt_dalam: float = waktu_rampa * 0.5
-			if dt_dalam > 0.0:
-				var arah: float = signf(tujuan - awal)
-				var akhir: float = awal + arah * laju_rampa * dt_dalam
-				var eksak_dalam: float = (awal + akhir) / 2 * dt_dalam
-				galat_tepat = maxf(galat_tepat, absf(BikeDrive.langkah(awal, 0.0, Vector2(0, atas), dt_dalam).maju_ubin - eksak_dalam))
-			# dt = batas scene: galat terhadap integral tepat (rampa lalu konstan).
-			var dt_batas: float = Config.LANGKAH_WAKTU_MAKS_DETIK
-			var eksak: float = 0.0
-			if dt_batas <= waktu_rampa:
-				var akhir_batas: float = awal + signf(tujuan - awal) * laju_rampa * dt_batas
-				eksak = (awal + akhir_batas) / 2 * dt_batas
-			else:
-				eksak = (awal + tujuan) / 2 * waktu_rampa + tujuan * (dt_batas - waktu_rampa)
-			galat_maks = maxf(galat_maks, absf(BikeDrive.langkah(awal, 0.0, Vector2(0, atas), dt_batas).maju_ubin - eksak))
-	check(galat_tepat < 0.000001, "QB-011: trapesium tepat bila dt di dalam waktu rampa (galat terbesar %s ubin)" % galat_tepat)
-	check(galat_maks < 0.005, "QB-011: pada dt = LANGKAH_WAKTU_MAKS_DETIK galat jarak per langkah di bawah 0,005 ubin (terbesar %s)" % galat_maks)
-	h = BikeDrive.langkah(4.2, 0.4, Vector2(1, 1), 0.0)
-	check(h.kecepatan_ud == 4.2 and h.lateral_ubin == 0.4 and h.maju_ubin == 0.0 and h.lateral_ud == 0.0, "dt = 0: kecepatan, lateral, dan jarak tidak berubah")
-	for dt_aneh: float in [-1.0, NAN, INF]:
-		h = BikeDrive.langkah(4.2, 0.4, Vector2(1, 1), dt_aneh)
-		check(h.kecepatan_ud == 4.2 and h.lateral_ubin == 0.4 and h.maju_ubin == 0.0, "dt %s dianggap 0: keadaan tidak berubah" % dt_aneh)
-	# Lateral: geser bebas dibatasi lebar jalan.
-	h = BikeDrive.langkah(3.0, 0.0, Vector2(1, 0), 0.1)
-	check(is_equal_approx(h.lateral_ubin, 0.3) and is_equal_approx(h.lateral_ud, 3.0), "lateral = sumbu datar x 3,0 u/d x dt: 0,1 detik ke sisi dekat = +0,3 ubin, 3,0 u/d")
-	h = BikeDrive.langkah(3.0, 0.0, Vector2(-0.5, 0), 0.2)
-	check(is_equal_approx(h.lateral_ubin, -0.3) and is_equal_approx(h.lateral_ud, -1.5), "stick datar -0,5 selama 0,2 detik = -0,3 ubin ke sisi seberang")
-	var lat: float = 0.0
-	for i: int in range(120):
-		lat = BikeDrive.langkah(3.0, lat, Vector2(1, 0), 1.0 / 60.0).lateral_ubin
-	check(lat == 1.0, "lateral dijepit di tepi jalan sisi dekat (+1 ubin) setelah 2 detik, dapat %s" % lat)
-	for i: int in range(120):
-		lat = BikeDrive.langkah(3.0, lat, Vector2(-1, 0), 1.0 / 60.0).lateral_ubin
-	check(lat == -1.0, "lateral dijepit di tepi jalan sisi seberang (-1 ubin), dapat %s" % lat)
-	h = BikeDrive.langkah(3.0, 1.0, Vector2(1, 0), 0.1)
-	check(h.lateral_ubin == 1.0 and h.lateral_ud == 0.0, "menekan keluar tepi jalan: tidak bergeser dan kecepatan lateral efektif 0")
-	h = BikeDrive.langkah(3.0, 5.0, Vector2.ZERO, 0.1)
-	check(h.lateral_ubin == 1.0, "posisi lateral di luar jalan dikembalikan ke tepi jalan")
-	# Diagonal: maju dan lateral dalam satu langkah.
-	h = BikeDrive.langkah(3.0, 0.0, Vector2(-0.7, 0.7), 0.1)
-	check(h.kecepatan_ud > 3.0 and h.lateral_ubin < 0.0 and h.maju_ubin > 0.0, "diagonal: kecepatan naik dan lateral bergeser dalam satu langkah (%s, %s)" % [h.kecepatan_ud, h.lateral_ubin])
-	# Jarak maju = integral kecepatan (trapesium), tepat untuk rampa linear.
-	var jarak: float = 0.0
-	v = 3.0
-	for i: int in range(60):
-		var langkah: BikeDrive.Hasil = BikeDrive.langkah(v, 0.0, Vector2(0, 1), 1.0 / 60.0)
-		v = langkah.kecepatan_ud
-		jarak += langkah.maju_ubin
-	check(absf(jarak - 4.5) < 0.0001, "jarak 1 detik rampa 3,0 -> 6,0 = 4,5 ubin (rata-rata 4,5 u/d), dapat %s" % jarak)
-	# Murni dan deterministik, batas aman untuk rangkaian acak dengan seed tetap.
-	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-	rng.seed = 20261009
-	var kec: float = 3.0
-	var lat2: float = 0.0
-	var aman: bool = true
-	var sama: bool = true
-	for i: int in range(2000):
-		var stick: Vector2 = Vector2(rng.randf_range(-1.5, 1.5), rng.randf_range(-1.5, 1.5))
-		var dt: float = rng.randf_range(0.0, 0.3)
-		var a: BikeDrive.Hasil = BikeDrive.langkah(kec, lat2, stick, dt)
-		var b: BikeDrive.Hasil = BikeDrive.langkah(kec, lat2, stick, dt)
-		if a.kecepatan_ud != b.kecepatan_ud or a.lateral_ubin != b.lateral_ubin or a.arah_sprite != b.arah_sprite:
-			sama = false
-		if a.kecepatan_ud < Config.KECEPATAN_MELAMBAT_UD or a.kecepatan_ud > Config.KECEPATAN_NGEBUT_UD or absf(a.lateral_ubin) > 1.0 or a.maju_ubin < 0.0:
-			aman = false
-		kec = a.kecepatan_ud
-		lat2 = a.lateral_ubin
-	check(sama, "BikeDrive deterministik: masukan sama (2000 rangkaian acak seed tetap) menghasilkan keluaran sama")
-	check(aman, "kecepatan selalu di antara melambat dan ngebut, lateral di dalam jalan, jarak tidak negatif (2000 rangkaian acak)")
+# --- AC-8 run 0B: tes BikeDrive dipindah ke `tests/tes_gerak.gd` (BikeMotion, run fase1a-gerak D-1) ---
 
 
 # --- AC-9: Iso (ART_DIRECTION 2.2) ---
@@ -601,65 +470,69 @@ func _test_iso() -> void:
 	check(Iso.posisi_gambar(Vector2(1, 0)) == Vector2(32, 16), "posisi gambar tepat untuk posisi ubin bulat")
 
 
-# --- AC-10: stick -> BikeDrive -> LoperAnim (terpadu, tanpa node) ---
+# --- AC-10: stick -> BikeMotion -> LoperAnim (terpadu, tanpa node; run 0B, BikeDrive diganti BikeMotion di run fase1a-gerak) ---
 
-## Menjalankan `langkah` berulang: mengembalikan hasil langkah terakhir. `v0` dan `lat0` = keadaan awal.
-func _jalankan(stick: Vector2, jumlah: int, dt: float, v0: float = 3.0, lat0: float = 0.0) -> BikeDrive.Hasil:
-	var v: float = v0
-	var lat: float = lat0
-	var hasil: BikeDrive.Hasil = null
+## Menjalankan `BikeMotion.langkah` berulang dari keadaan awal (`v0`, `lat0`, stamina penuh): mengembalikan hasil langkah terakhir.
+func _jalankan(stick: Vector2, jumlah: int, dt: float, v0: float = 3.0, lat0: float = 0.0) -> BikeMotion.Hasil:
+	var keadaan: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
+	keadaan.kecepatan_ud = v0
+	keadaan.lateral_ubin = lat0
+	var hasil: BikeMotion.Hasil = null
 	for i: int in range(jumlah):
-		hasil = BikeDrive.langkah(v, lat, stick, dt)
-		v = hasil.kecepatan_ud
-		lat = hasil.lateral_ubin
+		hasil = BikeMotion.langkah(keadaan, stick, dt)
+		keadaan = hasil.keadaan
 	return hasil
 
 
-func _animasi(h: BikeDrive.Hasil) -> StringName:
-	return LoperAnim.nama_animasi(h.tingkat_sprite, h.arah_sprite)
+func _animasi(h: BikeMotion.Hasil) -> StringName:
+	return LoperAnim.nama_animasi_pose(h.pose, h.tingkat_sprite, h.arah_sprite)
 
 
 func _test_stick_ke_animasi() -> void:
 	_judul.call("Stick ke gerak ke animasi (terpadu)")
 	var dt: float = 1.0 / 60.0
 	# (a) netral
-	var a: BikeDrive.Hasil = _jalankan(Vector2.ZERO, 60, dt)
-	check(a.kecepatan_ud == 3.0 and _animasi(a) == &"santai_normal", "10a: stick netral -> 3,0 u/d dan santai_normal, dapat %s %s" % [a.kecepatan_ud, _animasi(a)])
-	# (b) atas penuh lurus
-	var b: BikeDrive.Hasil = _jalankan(Vector2(0, 1), 120, dt)
-	check(b.kecepatan_ud == 6.0 and _animasi(b) == &"ngebut_normal", "10b: atas penuh lurus -> 6,0 u/d dan ngebut_normal, dapat %s %s" % [b.kecepatan_ud, _animasi(b)])
+	var a: BikeMotion.Hasil = _jalankan(Vector2.ZERO, 60, dt)
+	check(a.keadaan.kecepatan_ud == 3.0 and _animasi(a) == &"santai_normal", "10a: stick netral -> 3,0 u/d dan santai_normal, dapat %s %s" % [a.keadaan.kecepatan_ud, _animasi(a)])
+	# (b) atas penuh lurus (2 detik: stamina 83,5, belum lelah)
+	var b: BikeMotion.Hasil = _jalankan(Vector2(0, 1), 120, dt)
+	check(b.keadaan.kecepatan_ud == 6.0 and _animasi(b) == &"ngebut_normal", "10b: atas penuh lurus -> 6,0 u/d dan ngebut_normal, dapat %s %s" % [b.keadaan.kecepatan_ud, _animasi(b)])
 	# Tingkat mengikuti kekuatan stick: 0,33 cepat, 0,80 cepat, 0,81 ngebut.
 	check(_animasi(_jalankan(Vector2(0, 0.34), 1, dt)) == &"cepat_normal" and _animasi(_jalankan(Vector2(0, 0.32), 1, dt)) == &"santai_normal", "10b: kekuatan stick 0,34 = cepat, 0,32 = santai (ambang 33%)")
 	check(_animasi(_jalankan(Vector2(0, 0.79), 1, dt)) == &"cepat_normal" and _animasi(_jalankan(Vector2(0, 0.81), 1, dt)) == &"ngebut_normal", "10b: kekuatan stick 0,79 = cepat, 0,81 = ngebut (ambang 80%; batas tepat 0,80 dites di LoperAnim karena Vector2 berpresisi tunggal)")
-	# (c) bawah penuh: melambat (D-1 run sprite-lempar-melambat; sebelumnya santai_normal)
-	var c: BikeDrive.Hasil = _jalankan(Vector2(0, -1), 1, dt)
-	check(c.tingkat_sprite == LoperAnim.TINGKAT_MELAMBAT and _animasi(c) == &"melambat_normal", "10c: bawah penuh = melambat_normal (komponen maju stick negatif), dapat %s" % _animasi(c))
+	# (c) bawah penuh: sejak run fase1a-gerak (D-7) langkah pertama MELUNCUR (kecepatan masih di atas tujuan 1,5); run sprite: melambat_normal.
+	var c: BikeMotion.Hasil = _jalankan(Vector2(0, -1), 1, dt)
+	check(c.tingkat_sprite == LoperAnim.TINGKAT_MELAMBAT and _animasi(c) == &"meluncur_normal", "10c: bawah penuh langkah pertama = meluncur_normal (kecepatan 2,97 di atas tujuan 1,5, D-7), dapat %s" % _animasi(c))
+	# Bawah penuh ditahan 2 detik: rem aktif sesudah 0,25 detik, berhenti di 0 (D-2); run sprite: 1,5 u/d dan melambat_normal.
 	c = _jalankan(Vector2(0, -1), 120, dt)
-	check(c.kecepatan_ud == 1.5 and _animasi(c) == &"melambat_normal", "10c: bawah penuh turun ke 1,5 u/d dan tetap melambat_normal, dapat %s %s" % [c.kecepatan_ud, _animasi(c)])
+	check(c.keadaan.kecepatan_ud == 0.0 and c.keadaan.rem_aktif and _animasi(c) == &"rem_normal", "10c: bawah penuh 2 detik = rem, berhenti 0 u/d, rem_normal, dapat %s %s" % [c.keadaan.kecepatan_ud, _animasi(c)])
+	# Bawah 0,8 (di bawah ambang rem 0,90) 2 detik: sampai tujuan 1,8 u/d lalu melambat_normal (kayuh 4 fps).
+	c = _jalankan(Vector2(0, -0.8), 120, dt)
+	check(is_equal_approx(c.keadaan.kecepatan_ud, 1.8) and not c.keadaan.rem_aktif and _animasi(c) == &"melambat_normal", "10c: bawah 0,8 2 detik = 1,8 u/d dan melambat_normal (tanpa rem), dapat %s %s" % [c.keadaan.kecepatan_ud, _animasi(c)])
 	# (d) kiri penuh tanpa maju: 45 derajat, serong seberang
-	var d: BikeDrive.Hasil = _jalankan(Vector2(-1, 0), 1, dt)
-	check(is_equal_approx(d.kecepatan_ud, 3.0) and is_equal_approx(d.lateral_ud, -3.0), "10d: kiri penuh tanpa maju: maju 3,0 dan lateral -3,0 u/d (sudut 45 derajat), dapat %s dan %s" % [d.kecepatan_ud, d.lateral_ud])
+	var d: BikeMotion.Hasil = _jalankan(Vector2(-1, 0), 1, dt)
+	check(is_equal_approx(d.keadaan.kecepatan_ud, 3.0) and is_equal_approx(d.lateral_ud, -3.0), "10d: kiri penuh tanpa maju: maju 3,0 dan lateral -3,0 u/d (sudut 45 derajat), dapat %s dan %s" % [d.keadaan.kecepatan_ud, d.lateral_ud])
 	check(d.arah_sprite == -1 and _animasi(d) == &"santai_serong_kiri", "10d: kiri penuh = serong seberang (santai_serong_kiri), dapat %s" % _animasi(d))
 	d = _jalankan(Vector2(-1, 0), 10, dt)
 	check(_animasi(d) == &"santai_serong_kiri", "10d: tetap serong seberang selama lateral belum membentur tepi jalan (setelah 10 langkah)")
 	d = _jalankan(Vector2(-1, 0), 60, dt)
-	check(d.lateral_ubin == -1.0 and d.arah_sprite == 0, "10d: setelah membentur tepi jalan seberang lateral nyata 0 -> sprite kembali normal (arah dari gerak sebenarnya, D-4)")
+	check(d.keadaan.lateral_ubin == -1.0 and d.arah_sprite == 0, "10d: setelah membentur tepi jalan seberang lateral nyata 0 -> sprite kembali normal (arah dari gerak sebenarnya, D-4)")
 	# (e) kanan penuh: serong dekat
-	var e: BikeDrive.Hasil = _jalankan(Vector2(1, 0), 1, dt)
+	var e: BikeMotion.Hasil = _jalankan(Vector2(1, 0), 1, dt)
 	check(e.arah_sprite == 1 and _animasi(e) == &"santai_serong_kanan", "10e: kanan penuh = serong dekat (santai_serong_kanan), dapat %s" % _animasi(e))
 	# Lateral murni sangat lambat (stick datar kecil) tetap normal bila sudut di bawah 22,5 derajat.
-	var f0: BikeDrive.Hasil = _jalankan(Vector2(0.1, 0), 1, dt)
+	var f0: BikeMotion.Hasil = _jalankan(Vector2(0.1, 0), 1, dt)
 	check(f0.arah_sprite == 0, "10: lateral kecil (stick datar 0,1: sudut 5,7 derajat) = normal")
 	# (f) diagonal atas-seberang tepat di batas 22,5 derajat.
 	var diagonal: Vector2 = StickMap.dari_tombol(true, false, true, false)
-	var kec_target: float = BikeDrive.kecepatan_target_ud(diagonal.y)
-	var f: BikeDrive.Hasil = _jalankan(diagonal, 1, dt, kec_target)
-	var sudut: float = rad_to_deg(atan2(absf(f.lateral_ud), f.kecepatan_ud))
+	var kec_target: float = BikeMotion.kecepatan_tujuan_ud(diagonal.y)
+	var f: BikeMotion.Hasil = _jalankan(diagonal, 1, dt, kec_target)
+	var sudut: float = rad_to_deg(atan2(absf(f.lateral_ud), f.keadaan.kecepatan_ud))
 	check(absf(sudut - 22.5) < 0.000001, "10f: diagonal keyboard atas + seberang pada kecepatan target (%s u/d) bergerak tepat 22,5 derajat dari arah jalan, dapat %s" % [kec_target, sudut])
 	check(f.arah_sprite == -1 and _animasi(f) == &"cepat_serong_kiri", "10f: tepat di batas 22,5 derajat hasilnya serong seberang (cepat_serong_kiri): batas bawah serong inklusif dengan toleransi 1e-6 derajat (LoperAnim.besar_arah_dari_sudut), dapat %s" % _animasi(f))
-	var sedikit_kurang: BikeDrive.Hasil = _jalankan(Vector2(diagonal.x * 0.99, diagonal.y), 1, dt, kec_target)
+	var sedikit_kurang: BikeMotion.Hasil = _jalankan(Vector2(diagonal.x * 0.99, diagonal.y), 1, dt, kec_target)
 	check(sedikit_kurang.arah_sprite == 0, "10f: lateral 1%% lebih kecil dari batas -> sudut di bawah 22,5 derajat -> normal (batas tidak berkedip karena derau)")
-	var sedikit_lebih: BikeDrive.Hasil = _jalankan(Vector2(diagonal.x * 1.01, diagonal.y), 1, dt, kec_target)
+	var sedikit_lebih: BikeMotion.Hasil = _jalankan(Vector2(diagonal.x * 1.01, diagonal.y), 1, dt, kec_target)
 	check(sedikit_lebih.arah_sprite == -1, "10f: lateral 1%% lebih besar dari batas -> serong seberang")
 	# Stick kiri tidak mengubah tingkat kecuali ada komponen atas (tingkat dari kekuatan ke atas, D-4).
 	check(_jalankan(Vector2(-1, 0), 1, dt).tingkat_sprite == 0 and _jalankan(Vector2(-1, 0.5), 1, dt).tingkat_sprite == 1, "tingkat sprite dari komponen atas stick: kiri penuh santai, kiri + atas 0,5 cepat")

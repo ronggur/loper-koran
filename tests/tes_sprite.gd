@@ -1,7 +1,7 @@
 class_name TesSprite
 extends RefCounted
-## Tes sprite pemain run sprite-lempar-melambat: `SpriteFrames` gabungan 38 animasi (AC-2), pemilih animasi melambat dan
-## lempar (AC-3), `LoperSprite` (AC-4). Wiring stick dan swipe di scene uji ada di `tests/tes_input_scene.gd` (AC-5).
+## Tes sprite pemain run sprite-lempar-melambat: `SpriteFrames` gabungan (AC-2; 48 animasi sejak run fase1a-gerak D-9, dengan
+## meluncur dan rem), pemilih animasi melambat dan lempar (AC-3), `LoperSprite` (AC-4) termasuk pose meluncur dan rem. Wiring stick dan swipe di scene uji ada di `tests/tes_input_scene.gd` (AC-5).
 ##
 ## Dipanggil dari `tests/run_tests.gd` (`TesSprite.new(check, judul, tree).jalankan()`), memakai `check` milik runner supaya
 ## hitungan lolos/gagal dan ringkasan tetap satu. Waktu selalu parameter: node dijalankan lewat `LoperSprite.maju(dt)` dengan `dt`
@@ -11,12 +11,17 @@ const FOLDER_ASET: String = "res://assets/sprites/loper/"
 const FOLDER_SUMBER: String = "res://docs/design/character/loper_agen/"
 const BERKAS_FRAMES: String = "res://assets/sprites/loper/loper_agen_frames.tres"
 const BERKAS_SCENE_PEMAIN: String = "res://scenes/entities/loper_agen.tscn"
-## Tiga sheet: nama berkas JSON di aset, JSON sumber, PNG di aset dan sumber, jumlah animasi, jumlah baris, fps tiap animasi dibaca dari JSON.
+## Lima sheet: nama berkas JSON di aset, JSON sumber, PNG di aset dan sumber, jumlah animasi, jumlah baris, fps tiap animasi dibaca dari JSON.
+## Meluncur dan rem ditambah di run fase1a-gerak (D-9), urutan sesudah lempar.
 const SHEET: Array = [
 	{"tag": "kayuh", "json": "loper_agen.json", "png": "loper_agen.png", "sumber": "", "animasi": 15, "baris": 15},
 	{"tag": "melambat", "json": "loper_agen_melambat.json", "png": "loper_agen_melambat.png", "sumber": "melambat/", "animasi": 5, "baris": 5},
 	{"tag": "lempar", "json": "loper_agen_lempar.json", "png": "loper_agen_lempar.png", "sumber": "lempar/", "animasi": 18, "baris": 18},
+	{"tag": "meluncur", "json": "loper_agen_meluncur.json", "png": "loper_agen_meluncur.png", "sumber": "rem_meluncur/", "animasi": 5, "baris": 5},
+	{"tag": "rem", "json": "loper_agen_rem.json", "png": "loper_agen_rem.png", "sumber": "rem_meluncur/", "animasi": 5, "baris": 5},
 ]
+## Jumlah animasi di SpriteFrames gabungan: 15 kayuh + 5 melambat + 18 lempar + 5 meluncur + 5 rem.
+const JUMLAH_ANIMASI: int = 48
 const SEL: Vector2i = Vector2i(46, 58)
 const KOLOM: int = 4
 const DT: float = 1.0 / 60.0
@@ -43,6 +48,7 @@ func jalankan() -> void:
 	_test_sisi_dari_swipe()
 	_test_lempar_waktu()
 	_test_loper_sprite_tingkat()
+	_test_loper_sprite_pose()
 	_test_loper_sprite_lempar()
 	_test_loper_sprite_lempar_semua_kombinasi()
 	_test_loper_sprite_lempar_tepi()
@@ -57,10 +63,10 @@ func _baca_json(nama: String) -> Dictionary:
 	return hasil if hasil is Dictionary else {}
 
 
-# --- AC-2: aset tersalin byte-identik dan SpriteFrames gabungan 38 animasi ---
+# --- AC-2: aset tersalin byte-identik dan SpriteFrames gabungan (48 animasi sejak run fase1a-gerak) ---
 
 func _test_aset_dan_frames() -> void:
-	_judul.call("Aset melambat dan lempar, SpriteFrames gabungan (AC-2)")
+	_judul.call("Aset melambat, lempar, meluncur, rem, SpriteFrames gabungan (AC-2, AC-7 run fase1a-gerak)")
 	# PNG dan JSON di assets/ harus byte-identik dengan sumber di docs/design/ (aset tidak diedit dengan tangan, rule `art-assets`).
 	for sheet: Dictionary in SHEET:
 		for nama: String in [sheet["png"], sheet["json"]]:
@@ -77,7 +83,7 @@ func _test_aset_dan_frames() -> void:
 	check(frames != null, "loper_agen_frames.tres termuat sebagai SpriteFrames")
 	if frames == null:
 		return
-	# Urutan animasi di berkas .tres: kayuh (15), melambat (5), lempar (18), masing-masing menurut urutan JSON.
+	# Urutan animasi di berkas .tres: kayuh (15), melambat (5), lempar (18), meluncur (5), rem (5), masing-masing menurut urutan JSON.
 	var nama_diharapkan: Array[String] = []
 	var jumlah_json: int = 0
 	for sheet: Dictionary in SHEET:
@@ -88,15 +94,15 @@ func _test_aset_dan_frames() -> void:
 		for entri: Dictionary in daftar:
 			nama_diharapkan.append(String(entri["name"]))
 		jumlah_json += daftar.size()
-	check(jumlah_json == 38 and nama_diharapkan.size() == 38, "tiga JSON sumber mendaftar 15 + 5 + 18 = 38 animasi, dapat %d" % jumlah_json)
+	check(jumlah_json == JUMLAH_ANIMASI and nama_diharapkan.size() == JUMLAH_ANIMASI, "lima JSON sumber mendaftar 15 + 5 + 18 + 5 + 5 = 48 animasi, dapat %d" % jumlah_json)
 	var nama_di_berkas: Array[String] = _nama_urut_di_tres(FileAccess.get_file_as_string(BERKAS_FRAMES))
-	check(nama_di_berkas == nama_diharapkan, "urutan animasi di .tres = urutan JSON (kayuh, melambat, lempar); dapat %d nama" % nama_di_berkas.size())
+	check(nama_di_berkas == nama_diharapkan, "urutan animasi di .tres = urutan JSON (kayuh, melambat, lempar, meluncur, rem); dapat %d nama" % nama_di_berkas.size())
 	var nama_frames: PackedStringArray = frames.get_animation_names()
-	check(nama_frames.size() == 38, "SpriteFrames memuat tepat 38 animasi, dapat %d" % nama_frames.size())
+	check(nama_frames.size() == JUMLAH_ANIMASI, "SpriteFrames memuat tepat 48 animasi, dapat %d" % nama_frames.size())
 	var tanpa_ganda: Dictionary = {}
 	for nama: String in nama_frames:
 		tanpa_ganda[nama] = true
-	check(tanpa_ganda.size() == 38, "38 nama animasi berbeda semua")
+	check(tanpa_ganda.size() == JUMLAH_ANIMASI, "48 nama animasi berbeda semua")
 
 	# Tiap animasi cocok dengan JSON-nya: 4 frame, region, atlas, fps, loop.
 	for sheet: Dictionary in SHEET:
@@ -116,11 +122,11 @@ func _test_aset_dan_frames() -> void:
 				continue
 			check(frames.get_frame_count(nama) == 4, "[%s] '%s' punya 4 frame" % [tag, nama])
 			var loop_harapan: bool = tag != "lempar"
-			check(frames.get_animation_loop(nama) == loop_harapan and bool(entri["loop"]) == loop_harapan, "[%s] '%s': loop = %s (kayuh dan melambat berulang, lempar sekali)" % [tag, nama, loop_harapan])
+			check(frames.get_animation_loop(nama) == loop_harapan and bool(entri["loop"]) == loop_harapan, "[%s] '%s': loop = %s (kayuh, melambat, meluncur, rem berulang; lempar sekali)" % [tag, nama, loop_harapan])
 			var fps_json: float = entri["fps"]
 			check(is_equal_approx(frames.get_animation_speed(nama), fps_json), "[%s] fps '%s' sama dengan JSON (%s)" % [tag, nama, fps_json])
 			var fps_harapan: float = _fps_diharapkan(tag, String(entri.get("speed", "")))
-			check(is_equal_approx(fps_json, fps_harapan), "[%s] fps '%s' = %s (kayuh 8/10/12, melambat 4, lempar 12)" % [tag, nama, fps_harapan])
+			check(is_equal_approx(fps_json, fps_harapan), "[%s] fps '%s' = %s (kayuh 8/10/12, melambat 4, lempar 12, meluncur 4, rem 8)" % [tag, nama, fps_harapan])
 			check(int(entri["row"]) == baris_ke, "[%s] '%s' di baris sheet %d sesuai urutan" % [tag, nama, baris_ke])
 			baris_ke += 1
 			var regions: Array = entri["regions"]
@@ -138,8 +144,8 @@ func _test_aset_dan_frames() -> void:
 			if tag == "lempar":
 				check(int(entri["release_frame"]) == 2, "[lempar] '%s': release_frame = 2 (frame Lepas, README lempar), dapat %s" % [nama, entri["release_frame"]])
 				check(String(nama) == "lempar_%s_%s_%s" % [entri["side"], entri["speed"], entri["heading"]], "[lempar] nama '%s' = lempar_<sisi>_<kecepatan>_<arah> dari kolom JSON" % nama)
-			if tag == "melambat":
-				check(String(nama) == "melambat_%s" % entri["heading"], "[melambat] nama '%s' = melambat_<arah>" % nama)
+			if tag == "melambat" or tag == "meluncur" or tag == "rem":
+				check(String(nama) == "%s_%s" % [tag, entri["heading"]], "[%s] nama '%s' = %s_<arah>" % [tag, nama, tag])
 		check(baris_ke == int(sheet["animasi"]), "[%s] semua %d baris sheet terpakai" % [tag, sheet["animasi"]])
 	var json_lempar: Dictionary = _baca_json("loper_agen_lempar.json")
 	check(int(json_lempar.get("release_frame", -1)) == 2, "loper_agen_lempar.json: release_frame global = 2")
@@ -154,10 +160,12 @@ func _nama_urut_di_tres(teks: String) -> Array[String]:
 	return hasil
 
 
-## fps yang diharapkan: kayuh 8/10/12 menurut kecepatan, melambat 4, lempar 12 (BALANCING 2, README sprite).
+## fps yang diharapkan: kayuh 8/10/12 menurut kecepatan, melambat 4, lempar 12, meluncur 4, rem 8 (BALANCING 2, README sprite).
 func _fps_diharapkan(tag: String, kecepatan: String) -> float:
-	if tag == "melambat":
+	if tag == "melambat" or tag == "meluncur":
 		return 4.0
+	if tag == "rem":
+		return 8.0
 	if tag == "lempar":
 		return 12.0
 	var fps_kayuh: Dictionary = {"santai": 8.0, "cepat": 10.0, "ngebut": 12.0}
@@ -210,15 +218,24 @@ func _test_melambat_dari_stick() -> void:
 	check(LoperAnim.tingkat_dari_stick(0.0) == 0 and LoperAnim.tingkat_dari_stick(-0.0) == 0, "komponen maju tepat nol (dan -0,0) = santai")
 	check(LoperAnim.tingkat_dari_stick(-0.000001) == LoperAnim.TINGKAT_MELAMBAT and LoperAnim.tingkat_dari_stick(-1.0) == LoperAnim.TINGKAT_MELAMBAT, "komponen maju negatif sekecil 1e-6 sampai -1 = melambat")
 	check(LoperAnim.tingkat_dari_stick(NAN) == 0, "NaN tetap santai, bukan melambat")
-	# Terpadu dengan BikeDrive: bawah di luar zona mati memberi melambat_normal sementara kecepatan menuju 1,5 u/d.
+	# Terpadu dengan BikeMotion (sejak run fase1a-gerak; dulu BikeDrive): bawah 15,1% memberi tujuan 2,998 u/d, kecepatan 3,0 sudah
+	# di dalam toleransi pose, jadi pose kayuh tingkat melambat (melambat_normal), bukan meluncur (D-7).
+	var awal: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
 	var geser_151: Vector2 = StickMap.petakan(Vector2(0.0, Config.STICK_RADIUS_PX * 0.151))
-	var hasil_151: BikeDrive.Hasil = BikeDrive.langkah(3.0, 0.0, geser_151, DT)
-	check(hasil_151.tingkat_sprite == LoperAnim.TINGKAT_MELAMBAT, "BikeDrive: stick bawah 15,1% memberi tingkat sprite melambat")
-	var hasil_149: BikeDrive.Hasil = BikeDrive.langkah(3.0, 0.0, StickMap.petakan(Vector2(0.0, Config.STICK_RADIUS_PX * 0.149)), DT)
-	check(hasil_149.tingkat_sprite == 0 and hasil_149.kecepatan_ud == 3.0, "BikeDrive: stick bawah 14,9% tetap santai 3,0 u/d")
-	# Bawah sambil ke samping: melambat dengan arah dari gerak sebenarnya.
-	var serong: BikeDrive.Hasil = BikeDrive.langkah(3.0, 0.0, StickMap.petakan(Vector2(Config.STICK_RADIUS_PX * 0.7, Config.STICK_RADIUS_PX * 0.7)), DT)
-	check(serong.tingkat_sprite == LoperAnim.TINGKAT_MELAMBAT and LoperAnim.nama_animasi(serong.tingkat_sprite, serong.arah_sprite) == &"melambat_serong_kanan", "stick ke bawah-dekat: melambat_serong_kanan (arah dari gerak), dapat %s" % LoperAnim.nama_animasi(serong.tingkat_sprite, serong.arah_sprite))
+	var hasil_151: BikeMotion.Hasil = BikeMotion.langkah(awal, geser_151, DT)
+	check(hasil_151.tingkat_sprite == LoperAnim.TINGKAT_MELAMBAT and hasil_151.pose == LoperAnim.Pose.KAYUH, "BikeMotion: stick bawah 15,1% memberi tingkat sprite melambat dengan pose kayuh (melambat_normal)")
+	var hasil_149: BikeMotion.Hasil = BikeMotion.langkah(awal, StickMap.petakan(Vector2(0.0, Config.STICK_RADIUS_PX * 0.149)), DT)
+	check(hasil_149.tingkat_sprite == 0 and hasil_149.keadaan.kecepatan_ud == 3.0, "BikeMotion: stick bawah 14,9% tetap santai 3,0 u/d")
+	# Bawah sambil ke samping: dari 3,0 u/d kecepatan masih jauh di atas tujuan (1,95) = meluncur serong; di tujuan = melambat serong.
+	var stick_serong: Vector2 = StickMap.petakan(Vector2(Config.STICK_RADIUS_PX * 0.7, Config.STICK_RADIUS_PX * 0.7))
+	var serong: BikeMotion.Hasil = BikeMotion.langkah(awal, stick_serong, DT)
+	var nama_serong: StringName = LoperAnim.nama_animasi_pose(serong.pose, serong.tingkat_sprite, serong.arah_sprite)
+	check(serong.tingkat_sprite == LoperAnim.TINGKAT_MELAMBAT and nama_serong == &"meluncur_serong_kanan", "stick ke bawah-dekat dari 3,0 u/d: meluncur_serong_kanan (arah dari gerak, D-7), dapat %s" % nama_serong)
+	var di_tujuan: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
+	di_tujuan.kecepatan_ud = BikeMotion.kecepatan_tujuan_ud(stick_serong.y)
+	serong = BikeMotion.langkah(di_tujuan, stick_serong, DT)
+	nama_serong = LoperAnim.nama_animasi_pose(serong.pose, serong.tingkat_sprite, serong.arah_sprite)
+	check(nama_serong == &"melambat_serong_kanan", "stick ke bawah-dekat di kecepatan tujuan: melambat_serong_kanan, dapat %s" % nama_serong)
 
 
 func _test_nama_lempar() -> void:
@@ -462,6 +479,49 @@ func _test_loper_sprite_tingkat() -> void:
 	check(pemain.animation == &"melambat_normal" and pemain.frame == 2 and is_equal_approx(pemain.frame_progress, 0.4), "santai -> melambat menjaga frame (2) dan progres (0,4) kayuh")
 	pemain.speed_level = 0
 	check(pemain.animation == &"santai_normal" and pemain.frame == 2 and is_equal_approx(pemain.frame_progress, 0.4), "melambat -> santai menjaga frame dan progres")
+	pemain.free()
+
+
+## Pose meluncur dan rem di `LoperSprite` (D-7 run fase1a-gerak): nama animasi, fps, frame dijaga, lempar dari pose memakai santai.
+func _test_loper_sprite_pose() -> void:
+	_judul.call("LoperSprite: pose meluncur dan rem (AC-6 run fase1a-gerak)")
+	var pemain: LoperSprite = _pemain_baru()
+	var frames: SpriteFrames = pemain.sprite_frames
+	check(pemain.pose == LoperAnim.Pose.KAYUH, "pose bawaan = kayuh")
+	for pose: LoperAnim.Pose in [LoperAnim.Pose.MELUNCUR, LoperAnim.Pose.REM]:
+		pemain.pose = pose
+		for tingkat: int in range(LoperAnim.TINGKAT_MELAMBAT, 3):
+			pemain.speed_level = tingkat
+			for arah: int in range(-2, 3):
+				pemain.steer = arah
+				var harapan: StringName = LoperAnim.nama_animasi_pose(pose, tingkat, arah)
+				check(pemain.animation == harapan and frames.has_animation(harapan), "pose %d tingkat %d arah %d memilih '%s' (tingkat diabaikan), dapat '%s'" % [pose, tingkat, arah, harapan, pemain.animation])
+	pemain.speed_level = 0
+	pemain.steer = 0
+	pemain.pose = LoperAnim.Pose.MELUNCUR
+	check(pemain.animation == &"meluncur_normal" and is_equal_approx(frames.get_animation_speed(pemain.animation), 4.0), "meluncur_normal 4 fps")
+	pemain.pose = LoperAnim.Pose.REM
+	check(pemain.animation == &"rem_normal" and is_equal_approx(frames.get_animation_speed(pemain.animation), 8.0), "rem_normal 8 fps")
+	pemain.pose = LoperAnim.Pose.KAYUH
+	check(pemain.animation == &"santai_normal", "kembali ke pose kayuh: santai_normal")
+	# Frame dijaga saat berganti kayuh <-> meluncur <-> rem (keempatnya 4 frame).
+	pemain.set_frame_and_progress(3, 0.25)
+	pemain.pose = LoperAnim.Pose.MELUNCUR
+	check(pemain.animation == &"meluncur_normal" and pemain.frame == 3 and is_equal_approx(pemain.frame_progress, 0.25), "kayuh -> meluncur menjaga frame 3 dan progres 0,25")
+	pemain.pose = LoperAnim.Pose.REM
+	check(pemain.animation == &"rem_normal" and pemain.frame == 3, "meluncur -> rem menjaga frame")
+	# Lempar dari rem dan meluncur memakai santai, apa pun tingkatnya; sesudah lempar kembali ke pose.
+	pemain.speed_level = 2
+	check(pemain.lempar(LoperAnim.Sisi.DEKAT) and pemain.animation == &"lempar_kanan_santai_normal", "lempar dari rem (tingkat ngebut tersimpan) memakai santai: lempar_kanan_santai_normal, dapat %s" % pemain.animation)
+	pemain.batalkan_lempar()
+	check(pemain.animation == &"rem_normal", "lempar ditutup: kembali ke rem_normal")
+	pemain.pose = LoperAnim.Pose.MELUNCUR
+	pemain.steer = -1
+	check(pemain.lempar(LoperAnim.Sisi.SEBERANG) and pemain.animation == &"lempar_kiri_santai_serong_kiri", "lempar dari meluncur serong seberang: lempar_kiri_santai_serong_kiri, dapat %s" % pemain.animation)
+	pemain.batalkan_lempar()
+	pemain.pose = LoperAnim.Pose.KAYUH
+	check(pemain.lempar(LoperAnim.Sisi.SEBERANG) and pemain.animation == &"lempar_kiri_ngebut_serong_kiri", "kontrol: dari kayuh ngebut, lempar tetap ngebut")
+	pemain.batalkan_lempar()
 	pemain.free()
 
 
@@ -738,7 +798,7 @@ func _alas(gambar: Image, frame: int, baris: int) -> Array:
 ## frame melambat identik piksel demi piksel dengan santai. Sel, titik pijak (23, 46), dan offset sama untuk ketiga sheet
 ## (dites di AC-2). Jadi gambar sprite tidak bergeser vertikal maupun horizontal di alas saat kayuh -> lempar -> kayuh.
 func _test_titik_pijak_sama() -> void:
-	_judul.call("Titik pijak sama: kayuh, melambat, lempar (AC-8)")
+	_judul.call("Titik pijak sama: kayuh, melambat, lempar, meluncur, rem (AC-8, AC-13 run fase1a-gerak)")
 	var kayuh: Image = (load(FOLDER_ASET + "loper_agen.png") as Texture2D).get_image()
 	var melambat: Image = (load(FOLDER_ASET + "loper_agen_melambat.png") as Texture2D).get_image()
 	var lempar: Image = (load(FOLDER_ASET + "loper_agen_lempar.png") as Texture2D).get_image()
@@ -768,6 +828,28 @@ func _test_titik_pijak_sama() -> void:
 			if melambat.get_region(rect).get_data() != kayuh.get_region(rect).get_data():
 				identik = false
 	check(identik, "20 frame melambat identik piksel demi piksel dengan baris santai di sheet kayuh (hanya fps berbeda)")
+	# Meluncur dan rem (run fase1a-gerak, AC-13): tiap frame berasal dari santai frame 2 (`source` di JSON) dengan badan atas
+	# digeser kaku; alas (piksel terbawah) dan tapak tiga baris terbawah harus sama dengan santai frame 2 dan baris terbawahnya sama
+	# dengan keempat frame santai, jadi sprite tidak melompat saat berganti kayuh <-> meluncur <-> rem.
+	for tag: String in ["meluncur", "rem"]:
+		var gambar: Image = (load(FOLDER_ASET + "loper_agen_%s.png" % tag) as Texture2D).get_image()
+		var json_pose: Dictionary = _baca_json("loper_agen_%s.json" % tag)
+		var dicek: int = 0
+		var beda: Array[String] = []
+		for entri: Dictionary in json_pose.get("animations", []):
+			var baris: int = int(entri["row"])
+			check(String(entri.get("source", "")) == "santai row %d frame 2" % baris, "[%s] '%s' bersumber santai baris %d frame 2, dapat '%s'" % [tag, entri["name"], baris, entri.get("source", "")])
+			var acuan: Array = _alas(kayuh, 2, baris)
+			for frame: int in range(4):
+				dicek += 1
+				var ukur: Array = _alas(gambar, frame, baris)
+				if ukur[0] != acuan[0] or ukur[0] < 0 or ukur[1] != acuan[1]:
+					beda.append("%s f%d (%d lawan %d)" % [entri["name"], frame, ukur[0], acuan[0]])
+				for frame_kayuh: int in range(4):
+					if int(_alas(kayuh, frame_kayuh, baris)[0]) != int(ukur[0]):
+						beda.append("%s f%d lawan santai f%d" % [entri["name"], frame, frame_kayuh])
+		check(dicek == 20, "[%s] 20 frame dibandingkan (5 arah x 4), dapat %d" % [tag, dicek])
+		check(beda.is_empty(), "[%s] alas dan tapak tiap frame = santai frame 2, baris terbawah = keempat frame santai (tidak melompat): %s" % [tag, "; ".join(beda)])
 	# Kontrol negatif: pengukur membedakan sel yang digeser satu piksel ke bawah.
 	var geser: Image = Image.create_empty(SEL.x * KOLOM, SEL.y, false, Image.FORMAT_RGBA8)
 	geser.blit_rect(kayuh, Rect2i(0, 0, SEL.x * KOLOM, SEL.y - 1), Vector2i(0, 1))

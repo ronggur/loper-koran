@@ -39,7 +39,22 @@ Stick analog dipetakan halus: sumbu atas memetakan santai → ngebut, sumbu bawa
 
 **Arah sprite** dipilih dari arah gerak sebenarnya (gabungan maju dan lateral), bukan dari stick langsung: sudut di bawah 22,5° = normal, 22,5–67,5° = serong, di atas 67,5° = 90°. Akibatnya, belok 90° hanya muncul saat sepeda pelan atau hampir berhenti, sesuai fisika.
 
-**Rumus gerak di run 0B** (`scripts/systems/bike_drive.gd`, tanpa stamina dan rem): kecepatan tujuan linear terhadap komponen atas stick, atas penuh 6,0 u/d, atas 0,5 = 4,5 u/d, netral 3,0 u/d, bawah penuh 1,5 u/d. Kecepatan naik 3,0 u/d² dan turun 2,0 u/d², tidak melewati tujuan dan tidak keluar dari 1,5 sampai 6,0 u/d. Lateral = komponen datar stick × 3,0 u/d, dijepit ke lebar jalan. Tingkat sprite memakai komponen atas stick saja (ke samping tanpa atas = santai; sejak run sprite-lempar-melambat stick ke bawah = melambat, bukan lagi santai); arah sprite memakai gerak sebenarnya (kecepatan maju dan lateral nyata, nol bila terhalang tepi jalan). Diagonal atas + seberang pada kecepatan tujuan jatuh tepat di 22,5° (tan 22,5° = √2 − 1): hasilnya serong karena batas bawah serong inklusif.
+**Rumus gerak `BikeMotion`** (`scripts/systems/bike_motion.gd`, run fase1a-gerak 2026-10-13, menggantikan `BikeDrive` run 0B; semua angka usulan sampai uji HP). Satu langkah `langkah(keadaan, stick, dt)` murni: keadaan = kecepatan, lateral, stamina, lama tahan rem, rem aktif, lelah; masukan tidak diubah.
+- **Kecepatan tujuan** linear terhadap komponen maju stick (sesudah zona mati): atas penuh 6,0, atas 0,5 = 4,5, netral 3,0, bawah penuh 1,5 u/d. Naik 3,0 u/d², turun 2,0 u/d², tidak melewati tujuan. Selama **lelah** tujuan dijepit ke 4,5. Jarak per langkah dihitung tepat (rampa linear lalu tetap), jadi tidak bergantung pada `dt`.
+- **Rem tanpa tombol** (GDD 5.2): syarat = komponen **bawah** stick ≥ 0,90 (`REM_AMBANG_STICK`, inklusif; toleransi 1e-6 untuk presisi tunggal Vector2). Diagonal penuh 45° (0,707) tidak pernah memenuhi; bawah penuh dengan geser datar kecil (bawah ≥ 0,90) tetap memenuhi. Lama tahan bertambah selama syarat terpenuhi dan kembali 0 begitu tidak (stick naik, ke samping, atau dilepas). Rem **aktif** saat lama tahan ≥ 0,25 detik (`REM_TAHAN_DETIK`); selama aktif kecepatan turun 5,0 u/d² sampai **0** dan tetap 0. Sebelum aktif, stick bawah berperilaku meluncur biasa. Langkah yang melewati batas 0,25 detik dibagi: sisa sebelum batas gerak biasa, sesudahnya pengereman. Lepas rem: naik 3,0 u/d² ke tujuan stick. Jangkauan kecepatan 0 sampai 6,0; hanya rem yang membawa di bawah 1,5. Akibatnya stick bawah tanpa rem paling dalam sekitar 0,899 (tujuan sekitar 1,65 u/d); 1,5 hanya tujuan selama 0,25 detik pertama tarikan penuh.
+- **Lateral** analog bebas (keputusan pemilik 2026-10-13, tanpa kunci atau snap jalur): komponen datar × 3,0 u/d, dijepit ke tepi aspal ±1,0 ubin (`JALAN_LEBAR_UBIN` / 2) sebagai **batas tepi jalan resmi**. Positif = sisi `dekat`, negatif = sisi `seberang`; kidal tidak mengubah arti sumbu. Kecepatan lateral efektif 0 bila terhalang tepi. Lateral tetap bekerja saat berhenti dengan rem (arah sprite 90°).
+- **Pose sprite** (`LoperAnim.pose_dari_gerak`, keputusan pemilik "ikuti fisika"): (1) rem aktif = `rem_<arah>`, juga di kecepatan 0; (2) stick ke bawah dan kecepatan sebenarnya masih di atas tujuan lebih dari `POSE_MELUNCUR_TOLERANSI_UD` (0,05 u/d) = `meluncur_<arah>` (kaki diam); (3) stick ke bawah dan sudah sampai tujuan = `melambat_<arah>` (kayuh 4 fps); (4) selain itu kayuh dengan tingkat dari stick, **dijepit ke cepat selama lelah**. Toleransi 0,05 mencegah stick yang hanya bergetar membuat pose berkedip; akibatnya stick bawah 15,1% (tujuan 2,998) langsung melambat. Lempar dari meluncur atau rem memakai lempar santai.
+- **Laju kayuh** (`LoperAnim.pedal_rate`): untuk kayuh dan melambat = kecepatan sebenarnya / kecepatan nominal tingkat (santai 3,0, cepat 4,5, ngebut 6,0, melambat 1,5), dijepit 0 sampai `PEDAL_RATE_MAKS` (1,5). Meluncur dan rem = 1 (animasinya napas dan getar dari `.tres`). Lempar tidak terpengaruh.
+- **Jeda** (`JedaSim`, GDD rule `gdscript`): app di-background atau kehilangan fokus menghentikan simulasi (dt 0), melepas stick dan swipe, menutup lempar, dan mengembalikan lama tahan rem ke 0; lanjut otomatis dan langkah pertama sesudahnya ber-dt 0.
+
+| Angka baru (run fase1a-gerak) | Usulan | Catatan |
+|---|---|---|
+| Batas tepi jalan resmi | ±1,0 ubin (setengah `JALAN_LEBAR_UBIN` 2,0) | Dipindah ke bagian "Kecepatan dan kontrol" di `config.gd` |
+| Toleransi ambang rem | 0,000001 | `REM_AMBANG_TOLERANSI`; hanya presisi tunggal, tidak mengubah rasa |
+| Toleransi lama tahan rem | 0,000001 detik | `REM_TAHAN_TOLERANSI_DETIK`; jumlah 15 × 1/60 tidak tepat 0,25 |
+| Toleransi pose meluncur | 0,05 u/d | `POSE_MELUNCUR_TOLERANSI_UD`; usulan, dinilai di HP |
+| Batas laju kayuh | 1,5 | `PEDAL_RATE_MAKS`; usulan |
+| Bar stamina merah | di bawah 30 | `HUD_STAMINA_AMBANG_RENDAH` (DESIGN_SPEC 3.5); usulan |
 
 **Kontrol sentuh (usulan, run 0B, belum diuji di HP).** Angka ada di `scripts/config.gd` bagian "Kontrol sentuh" dan "Jalan uji"; ukuran visual dari `design/DESIGN_SPEC.md` 3.7.
 
@@ -49,7 +64,7 @@ Stick analog dipetakan halus: sumbu atas memetakan santai → ngebut, sumbu bawa
 | Zona mati stick | 15% radial (inklusif) | 15,0% = nol, 15,1% = kekuatan kecil; di atasnya dipetakan ulang linear 0 sampai 1 tanpa lompatan |
 | Zona stick (tangan kanan) | x 8–192, y 186–352 | Stick melayang muncul di titik sentuh; opsi kidal mencerminkan |
 | Zona swipe | x 210 sampai lebar − 20, y 48–352 | Strip atas (y < 48) bebas dari kontrol untuk tombol HUD; kidal mencerminkan |
-| Lebar jalan scene uji | 2 ubin aspal, geser lateral ±1 ubin | `JALAN_LEBAR_UBIN`; placeholder run 0B, penguncian sisi dan batas resmi di Fase 1 |
+| Lebar jalan scene uji | 2 ubin aspal, geser lateral ±1 ubin | `JALAN_LEBAR_UBIN`; sejak run fase1a-gerak batas tepi jalan resmi (lateral analog bebas, tanpa kunci jalur, keputusan pemilik 2026-10-13) |
 | Letak dasar sepeda di layar | 33,33% lebar, 60% tinggi | `KAMERA_SEPEDA_*_PECAHAN`; sepertiga kiri (ART_DIRECTION 2.2), ±8 px di 640, 780, 800 saat geseran dorongan = 0 (santai) |
 | Dorongan maju (ngebut) | 28 px game datar, naik ke kanan atas 2:1 (28, −14) | `DORONGAN_MAJU_PX`; GDD 15, usulan (permintaan Ronggur 2026-10-09), disetel di HP |
 | Dorongan mundur (melambat) | 20 px game datar, turun ke kiri bawah 2:1 (−20, +10) | `DORONGAN_MUNDUR_PX`; usulan |
@@ -80,6 +95,12 @@ Stick analog dipetakan halus: sumbu atas memetakan santai → ngebut, sumbu bawa
 | Stamina habis | Kecepatan maksimum turun ke cepat sampai stamina kembali 30 |
 
 Dari penuh, ngebut terus bertahan sekitar 8 detik, dan cepat terus sekitar 25 detik. Meluncur mengisi penuh dalam sekitar 7 detik. Tujuannya: ngebut dipakai untuk menyusul tenggat atau melewati rintangan, bukan sepanjang rute (GDD 2, prinsip 1).
+
+**Rumus stamina** (`BikeMotion`, run fase1a-gerak; angka di `config.gd` bagian "Stamina", semua usulan). Maksimum dan awal 100, dijepit 0..100. Laju per detik:
+- stick ke bawah (meluncur atau melambat) atau rem aktif: **+15** (`STAMINA_LAJU_MELUNCUR`);
+- selain itu dari **kecepatan sebenarnya**, linear per potong: ≤ 3,0 u/d → +2, 4,5 → −4, ≥ 6,0 → −12, di antaranya interpolasi linear (mis. 3,75 → −1, 5,25 → −8). Tidak ada lompatan di ambang tingkat, dan percepatan dari santai ke ngebut ikut menguras bertahap. Per langkah dihitung trapesium per bagian (galat dt 1/30 lawan 1/240 di bawah 0,05 poin, dites).
+- **Habis:** stamina mencapai 0 menyalakan `lelah`; selama lelah kecepatan tujuan dijepit ke 4,5 (turun dengan 2,0 u/d² bila di atasnya) dan sprite dijepit ke cepat. Lelah padam saat stamina **≥ 30** (`STAMINA_PULIH_AMBANG`). Di 4,5 lajunya −4, jadi stamina tetap 0 sampai pemain melonggarkan stick: disengaja (ngebut punya harga, prinsip 1).
+- Durasi hasil rumus (dites): dari penuh, ngebut terus mulai santai habis sekitar 9,0 detik (8,0-9,5); cepat terus sekitar 25,4 detik (24-27); dari 0 meluncur penuh 6,7 detik; lelah padam sesudah sekitar 2 detik meluncur. Turunan (+10) belum dipakai (distrik bermedan, di luar run ini).
 
 ---
 
@@ -190,4 +211,5 @@ Belum diisi. Diputuskan di Fase 6 bersama layar bengkel (GDD 12.5). Arah yang su
 
 ## 10. Catatan perubahan
 
+- **2026-10-13** — Run fase1a-gerak: `BikeMotion` menggantikan `BikeDrive` (bagian 2): rem tanpa tombol sampai berhenti, meluncur, stamina dengan laju linear per potong dan lelah (bagian 3), lateral analog dengan batas tepi jalan resmi ±1 ubin, jeda, pose meluncur/rem dari fisika, dan laju kayuh dari kecepatan. Angka lama BALANCING 2-3 tidak berubah (uji HP Fase 0 lolos tanpa permintaan ubah); angka baru: toleransi rem, toleransi pose 0,05 u/d, `PEDAL_RATE_MAKS` 1,5, bar stamina merah di bawah 30. Semua usulan sampai uji HP Run 1A.
 - **2026-10-07** — Angka awal ditulis sebagai usulan untuk Fase 0–3. Belum ada yang diuji.
