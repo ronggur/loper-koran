@@ -279,6 +279,13 @@ func _test_loop_sungguhan() -> void:
 	audio.call("hentikan_sepeda")
 	await _tree.process_frame
 	check(not audio.call("ada_bunyi"), "hentikan_sepeda menghentikan semua")
+	# perbarui_sepeda sendiri (tanpa atur_jeda) juga menghentikan decit dan loop saat jeda.
+	audio.call("perbarui_sepeda", LoperAnim.Pose.KAYUH, 4.0, false, false)
+	audio.call("perbarui_sepeda", LoperAnim.Pose.REM, 4.0, true, false)
+	check(rem.playing and not kayuh.playing, "perbarui_sepeda: tepi naik rem memutar decit, loop diam")
+	audio.call("perbarui_sepeda", LoperAnim.Pose.REM, 4.0, true, true)
+	check(not audio.call("ada_bunyi"), "perbarui_sepeda dengan jeda (tanpa atur_jeda): decit dan loop berhenti")
+	audio.call("hentikan_sepeda")
 
 
 # --- Scene: bunyi mengikuti gerak, rem sekali, jeda diam ---
