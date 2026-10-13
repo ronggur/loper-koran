@@ -6,17 +6,27 @@ Scope: Run 1B Fase 1, umpan balik kecepatan (debu, garis), audio placeholder + a
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
 |---|---|---|---|---|---|
-| 1 | 1a: jeda + layar jeda, penyetelan paket A54, debu/garis, QA-001/002 (7 commit). 1b: `BunyiSepeda` + autoload `Audio` + bus + 3 WAV sintesis, probe render `cek_render` + `tools/ekspor_cek_render.py`, mutan audio/probe, dokumen AC-13 (4 commit) | ✅ import 0 ERROR/WARNING; `run_tests` 4576 lolos 0 gagal, `--ketat` lolos; uji_pemeriksa/bangun_frames/sintesis lolos; `--quit-after 2` bersih; klon bersih per commit hijau, porcelain kosong | | | |
+| 1 | 1a: jeda + layar jeda, penyetelan paket A54, debu/garis, QA-001/002 (7 commit). 1b: `BunyiSepeda` + autoload `Audio` + bus + 3 WAV sintesis, probe render `cek_render` + `tools/ekspor_cek_render.py`, mutan audio/probe, dokumen AC-13 (4 commit) | ✅ import 0 ERROR/WARNING; `run_tests` 4576 lolos 0 gagal, `--ketat` lolos; uji_pemeriksa/bangun_frames/sintesis lolos; `--quit-after 2` bersih; klon bersih per commit hijau, porcelain kosong | **PASS** (QA: gerbang hijau di klon bersih + 6 putaran ulang; 0 Blocker, 0 Major) | QA-001..QA-006: 0 Blocker, 0 Major, 5 Minor (QA-001..003 OPEN, QA-004 DEFERRED, QA-005 NEEDS-MANUAL), 1 Nit (QA-006 DEFERRED) | AC-1..AC-14 lewat kode + tes + perintah QA sendiri (AC-8/AC-9 desktop, A54 belum); 23 mutan QA: 13 mati, 4 hidup bermakna (QA-001), 6 setara |
 
 ## Temuan
 Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MANUAL | BLOCKED
 
 | ID | Iter | Sev | Lokasi | Temuan & reproduksi/bukti | Status | Fix (file/commit) | Tes regresi |
 |---|---|---|---|---|---|---|---|
+| QA-001 | 1 | Minor | `scripts/entities/jalan_uji.gd:96`, `scripts/autoload/audio.gd:51-53`, `scripts/ui/tombol_sentuh.gd:36,40-43` | Empat cabang pertahanan tanpa tes (mutan QA hidup, `run_tests` 4576 lolos 0 gagal dengan mutan): **Q01** hapus `_kontrol.atur_rem(false)` saat menjeda (cincin rem tetap menyala di bawah lapisan jeda sampai lanjut); **Q02** `Audio._notification` tidak menghentikan pemutar pada `APPLICATION_PAUSED`/`FOCUS_OUT` (jalur sendiri yang diklaim SOUND_DESIGN "Perilaku di Android"; kini hanya jalur sinyal `jeda_berubah` yang teruji); **Q03** `TombolSentuh._notification` tidak melupakan jari pada `PAUSED`/visibilitas; **Q04** sentuhan `canceled` di dalam tombol tetap memicu. Perilaku kode sekarang benar menurut pembacaan dan percobaan QA, tetapi tidak dijaga tes. Reproduksi: ganti potongan kode di lokasi, `godot --headless --script res://tests/run_tests.gd`, hasil 0 gagal. Saran: satu cek scene per cabang (cincin `atur_rem` padam selama jeda; `Audio` yang di-`add_child` tanpa `JalanUji` diam sesudah `propagate_notification(FOCUS_OUT)`; jari turun di tombol jeda lalu `NOTIFICATION_PAUSED` lalu naik = tidak memicu; naik `canceled` = tidak memicu) | OPEN | | |
+| QA-002 | 1 | Minor | `scripts/ui/tombol_jeda.gd:31`, `scripts/ui/tombol_sentuh.gd:40-43` | Gambar tombol jeda tertinggal dalam keadaan "ditekan" (`UI_PANEL_RAISED`) sesudah lanjut bila jari masih di tombol saat jeda datang dari jalur lain. Reproduksi (skrip QA sementara, headless, jendela 2340x1080): jari 1 turun di pusat tombol jeda, `propagate_notification(FOCUS_OUT)` (jeda), jari 1 naik `canceled`, `FOCUS_IN`, `minta_lanjut()` → `TombolJeda.is_pressed()` = **true** sesudah lanjut (emulasi mouse tidak pernah menerima naik karena pohon dijeda). Ketukan berikutnya tetap menjeda dan memulihkan gambar, jadi fungsi aman; hanya tampilan menipu. Di HP: jempol di tombol jeda lalu tombol home/notifikasi. Saran: lepaskan status tekan (`button_pressed = false` atau `queue_redraw` dengan status sendiri) saat `NOTIFICATION_PAUSED`/`UNPAUSED` | OPEN | | |
+| QA-003 | 1 | Minor | `tests/probe_umpan_balik_jendela.gd:88` | Probe jendela AC-9 keluar dengan `WARNING: 2 ObjectDB instances were leaked at exit` dan `ERROR: 1 resources still in use at exit`, di 2340x1080 dan 1920x1080. Penyebab: driver audio nyata (macOS) memutar loop kayuhan dan probe `quit()` tanpa `Audio.hentikan_sepeda()` + jeda singkat seperti runner tes (pilihan 1b-3 di Catatan Dev). Reproduksi: `godot --path . --resolution 2340x1080 --position 0,0 --script res://tests/probe_umpan_balik_jendela.gd -- <folder>`, lihat dua baris terakhir. Tangkapan tetap benar; tetapi baris `ERROR` di keluaran probe membuat "tanpa ERROR" tidak bisa dipakai sebagai penanda. Catatan: `godot --path . --quit-after 180` (game, jendela) keluar bersih karena jendela tanpa fokus langsung menjeda (bunyi berhenti); keluar saat bunyi berjalan (tutup jendela di desktop) belum diuji QA | OPEN | | |
+| QA-004 | 1 | Minor | `export_presets.cfg:9-11`, `tools/ekspor_cek_render.py` | AC-8 meminta probe "tidak mengubah scene utama **atau isi APK normal**". Paket normal (`--export-pack "Android" build/qa-normal.pck`, QA) memuat `cek_render.scn`, `scripts/dev/cek_render.gdc` (+ `.remap`) dan shader; scene utama tetap `jalan_uji.tscn` dan tidak ada jalan pemain ke probe (diakui Dev, pilihan 1b-12). Perbaikan mungkin: `exclude_filter` preset normal mengecualikan berkas probe, dan `ekspor_cek_render.py` (yang sudah memulihkan `project.godot` byte demi byte) melepas pengecualian itu sementara. Tidak berbahaya untuk pemain; diputuskan di review PR | DEFERRED (tidak bisa dipicu pemain; ukuran kecil; keputusan pemilik di PR) | | |
+| QA-005 | 1 | Minor | `scripts/config.gd` `KAMERA_SEPEDA_Y_PECAHAN`, `DORONGAN_MAJU_PX`; `docs/BALANCING.md` 2 | Angka paket pemilik dipasang benar dan lolos AC-6, tetapi dari ukuran QA (probe 640/780): (a) mundur penuh, sel sprite y 234–292 dan panel y 293: **jarak 1 px** di semua lebar; (b) 640 tangan kanan mundur penuh sprite x 170–216 berpotongan zona stick (x ≤ 192) 22×58 px; (c) jalan terlihat saat ngebut di 780 naik 2,10 → ~2,52 detik (+20%, SPEC menyebut "sekitar 25%"), di 640 justru turun 2,08 → ~2,03 detik (prinsip 1 dan 3: waktu bereaksi ngebut). Semua dicatat Dev; tidak ada pelanggaran SPEC, tetapi pemilik harus menilainya | NEEDS-MANUAL (uji 8.2: sepeda tertutup jempol di 16:9, jalan di depan saat ngebut di A54 dan layar 16:9) | | |
+| QA-006 | 1 | Nit | `scripts/entities/umpan_balik_sepeda.gd`, `scripts/entities/pancaran_piksel.gd` | Partikel di ruang lokal sepeda: jejak debu ikut bergeser bersama sepeda saat pindah sisi (tidak tertinggal di jalan), dan garis kecepatan yang muncul di depan pengendara (asal x +30) tetap digambar di belakang sprite. Di tangkapan QA `iter1-qa/2340x1080_ngebut.png` 10 debu menumpuk menjadi satu goresan tipis krem di belakang roda dan 4 garis pendek; terbaca tapi samar. Placeholder (SPEC D-2), pengganti final `vfx_debu_roda.png` | DEFERRED (placeholder; keterbacaan di checklist 8.2) | | |
 
 ## NEEDS-MANUAL (uji di HP)
 - [ ] (orchestrator) Probe render di A54: light 2D, glow, CPU/GPU partikel, shader warna bayangan; tangkapan layar + log ke `render_a54/`.
 - [ ] Checklist uji 3-5 orang Fase 1 (`SETUP_ANDROID.md` 8.2).
+- [ ] (QA-005) Di A54 dan satu HP 16:9 bila ada: tahan stick bawah sampai rem berhenti, lihat apakah jempol menutupi sepeda dan apakah sepeda nyaris menyentuh panel kecepatan; ngebut 6,0 u/d dan nilai apakah jalan di depan cukup jauh untuk bereaksi.
+- [ ] (QA-002) Tahan jempol di tombol jeda, tekan home, kembali, ketuk "Lanjut": ikon jeda harus tampil normal (bukan terang/ditekan).
+- [ ] Back Android: di jalan = layar jeda; di layar jeda = lanjut; app tidak keluar (`quit_on_go_back=false` hanya terbukti di desktop/tes).
+- [ ] Ketukan tombol jeda dengan jari kedua saat jempol di stick (`TombolSentuh`), dan swipe sistem (gesture navigasi) di atas tombol tidak memicu jeda/lanjut (sentuhan `canceled`, QA-001 Q04).
 
 ## Keputusan & catatan
 - Keputusan pemilik 2026-10-14 (lihat SPEC): lanjut tanpa catatan uji HP Run 1A; paket penyetelan usulan (tombol 42 px game ≈ 44 dp, HudLabel 8 px, stick 35 tetap, sepeda ~75% tinggi, dorongan maju 36); background/back/tombol membuka layar jeda tanpa lanjut otomatis.
@@ -286,3 +296,87 @@ Ringkas: 25 mutan; 23 tertangkap (M44 sesudah tes tambahan; M50 oleh probe jende
 - Bunyi di speaker A54: pitch naik saat ngebut, tempo ketukan lawan animasi (10,4 lawan 12 saat ngebut), freewheel, decit sekali, tanpa klik di sambungan loop, volume relatif (-6/-10/-3 dB), diam saat jeda dan background (checklist 8.2).
 - Uji 3-5 orang Fase 1: `SETUP_ANDROID.md` 8.2.
 
+
+## Catatan QA iterasi 1
+
+Agent 2 (QA), 2026-10-14, `HEAD` `ee0bd07`, macOS Apple M4, `godot` 4.7.2.stable.official.ed1daf0bf (`/opt/homebrew/bin/godot`). Tidak ada kode fitur yang diubah; tidak push; HP/`adb` tidak disentuh; `DEV_PHASES.md`/`ROADMAP.md` tidak diedit. Klaim di Catatan Dev tidak dipakai sebagai bukti: semua di bawah dijalankan ulang oleh QA.
+
+**Verdict: PASS** (semua gerbang hijau; 0 Blocker, 0 Major). Minor/Nit: QA-001..QA-006. Fase 1 tetap **tidak** boleh dicentang selesai: NEEDS-MANUAL (probe A54, checklist 8.2, QA-005) belum dilakukan.
+
+### Gerbang (dijalankan QA)
+
+Klon bersih (`git clone` ke scratch, checkout `feat/fase1b-umpan-balik`, `rm -rf .godot`):
+```
+godot --headless --import                                      # exit 0, 0 baris ERROR/WARNING
+git status --porcelain -uall                                   # kosong sesudah import
+godot --headless --script res://tests/run_tests.gd > build/tests.log 2>&1   # exit 0, "4576 lolos, 0 gagal"
+python3 tools/cek_keluaran_tes.py --ketat build/tests.log      # pemeriksa: lolos (4576 lolos, 0 gagal, 0 peringatan)
+python3 tools/tests_cek/uji_pemeriksa.py                       # 16 kasus, 0 menyimpang
+python3 tools/tests_cek/uji_bangun_frames.py                   # 41 lolos, 0 gagal
+python3 tools/tests_cek/uji_sintesis_sepeda.py                 # 32 lolos, 0 gagal
+godot --headless --path . --quit-after 2                       # exit 0, 0 ERROR/WARNING (autoload Audio terdaftar)
+git status --porcelain -uall                                   # kosong
+```
+- Kestabilan (Dev melaporkan satu `ERROR` saat keluar di `304fe06` yang tidak terulang): `run_tests` + `--ketat` 6 putaran berturut-turut di klon `HEAD`: 6/6 lolos. Klon bersih per commit (`git clean -fdx`, `rm -rf .godot`, import, tes, `--ketat`): `304fe06` 4071, `e17131e` 4349, `e37577c` 4517, `7e27409` 4574 lolos, semua 0 gagal, porcelain kosong.
+- Kebersihan: `git diff main...HEAD --name-only | grep -E "keystore|\.apk|\.aab|\.godot/|^build/|^builds/|\.jks|\.p12|export_credentials|override.cfg"` kosong; tidak ada password/secret/token di diff; `.gitignore` menutup `override.cfg`. `main` = `f36c8be` (PR #20), tidak ada commit run ini di `main`. 14 commit `<tipe>: <ringkasan>` bahasa Indonesia (`feat`, `tune`, `fix`, `test`, `docs`), skrip sintesis + WAV di commit yang sama (`e37577c`), `Config` + `BALANCING` di commit yang sama. Semua `.gd` baru punya `.uid`; tiga WAV punya `.import` (loop_mode 2/2/1). Audio total 108 KB.
+- Ekspor: `godot --headless --path . --export-pack "Android" build/qa-normal.pck` exit 0, 0 ERROR/WARNING; `project.binary` `run/main_scene` = `res://scenes/dev/jalan_uji.tscn`; tidak ada `tests/` atau `docs/` di paket; berkas probe ikut (QA-004). `python3 tools/ekspor_cek_render.py --pck build/qa-cek.pck`: scene utama paket = `cek_render.tscn`, "project.godot pulih byte demi byte: ya", md5 `project.godot` sebelum = sesudah, `git status` bersih. APK (`--export-debug`) tidak dijalankan QA (butuh Java SDK Path; klaim APK Dev tidak terverifikasi QA, paket `.pck` setara untuk isi dan scene utama).
+- Probe render headless: `godot --headless --path . scenes/dev/cek_render.tscn`: 7 baris `[cek_render]`, 0 `SCRIPT ERROR`/`ERROR`, shader "tidak bisa dibaca headless", ringkasan `tidak_terbaca`.
+
+### Kepatuhan SPEC (AC per AC)
+
+| AC | Hasil QA | Bukti yang diperiksa |
+|---|---|---|
+| AC-1 | Terbukti | Gerbang di atas. |
+| AC-2 | Terbukti | `umpan_balik_kecepatan.gd` dibaca (murni, `is_finite`, jepit `_pecahan`); `tes_umpan_balik.gd`; mutan QA Q16 (negatif dianggap positif) mati. Ambang debu 3,0 inklusif (santai sudah berdebu tipis) adalah tafsiran Dev atas "di bawah 3,0 tidak berdebu": sesuai teks, dicatat BALANCING 2. |
+| AC-3 | Terbukti | `PancaranPiksel` (`_draw`, bukan GPU/CPUParticles2D, larik dipesan sekali, RNG berbenih), anak `SepedaUji` (pausable). Tes scene; mutan Q19 (alpha garis bukan dari Config) mati; Q13 (batas: ganti partikel terakhir, bukan tolak) hidup tapi setara terhadap SPEC (jumlah tidak melewati batas). Visual: lihat bawah. |
+| AC-4 | Terbukti | `bunyi_sepeda.gd`, `audio.gd` (tidak merujuk autoload lain; `/root/Audio` dicari `JalanUji`, bukan sebaliknya), `default_bus_layout.tres` (`Sepeda` → `SFX` → `Master`). Mutan Q05 (pose REM diabaikan), Q07 (status rem tidak dilupakan), Q14 (pitch tidak linear di atas 4,5), Q15 (decit tidak dihentikan), Q20 (`perbarui_sepeda` saat jeda tidak menghentikan decit) mati. Q02 hidup (QA-001). Bunyi nyata di speaker: NEEDS-MANUAL. |
+| AC-5 | Terbukti | `uji_sintesis_sepeda.py` 32 lolos (byte-identik, dua kali jalan sama, stdlib via AST, sambungan loop, `.import`, LICENSES); 108 KB; nama sesuai SOUND_DESIGN 6. |
+| AC-6 | Terbukti (dengan catatan QA-005) | `Config`: tombol 42, jeda 42, Y 0,75, maju 36, mundur 20, respon 0,35, stick 35; `theme.tres` HudLabel 8. Probe QA: 780 dan 640 tombol jeda (17, 4, 42×42), gambar (26, 8, 24×24), kidal 96×42, panel y 293–352; sepeda mundur penuh y sampai 292 (1 px dari panel). Mutan Q12 (mundur 21) mati. |
+| AC-7 | Terbukti | `JedaSim` + kabel `JalanUji` dibaca; mutan Q18 (jari tidak dilepas), Q22 (back saat jeda tidak lanjut), Q23 (RESUMED melanjutkan), Q17 (layar jeda ALWAYS) mati. Percobaan QA headless (skrip sementara, tidak di-commit): ketuk sentuh tombol jeda → jeda; ketuk sentuh "Lanjut" → lanjut; ketuk lagi → jeda; `WM_GO_BACK_REQUEST` saat jeda → lanjut dan pohon lepas pause, saat jalan → jeda; FOCUS_OUT dengan jari di tombol lalu FOCUS_IN → tetap jeda (tanpa lanjut otomatis). `quit_on_go_back=false` di `project.godot`. Q01, Q03, Q04 hidup (QA-001), status tekan tertinggal (QA-002). |
+| AC-8 | Terbukti di desktop | Headless dan jendela asli 2340x1080 (Compatibility, Apple M4): `light2d=ya glow=ya cpu_partikel=ya gpu_partikel=ya shader_bayangan=cocok` (penanda 13/13, piksel lain 25 tidak berubah), tangkapan `shots/iter1-qa/cek_render_2340x1080.png` dilihat: lingkaran cahaya + baji bayangan occluder, kotak berpendar tipis, titik oranye (CPU) dan hijau (GPU), bayangan tanah sprite kanan kebiruan. Isolasi: lihat Ekspor. A54: NEEDS-MANUAL (orchestrator). |
+| AC-9 | Terbukti | QA menjalankan ulang `tests/probe_umpan_balik_jendela.gd` di 2340x1080 dan 1920x1080 ke `shots/iter1-qa/` (12 berkas). `cek_blok_piksel.py 3` dengan kotak teks yang dicetak probe: 12/12 berkas 0 blok tidak seragam; kontrol negatif `2340x1080_ngebut.png` tanpa pengecualian = 664 blok, gagal. Yang QA lihat: santai tanpa garis, debu 1; ngebut 4 garis putih pendek bertangga 2:1 dan goresan debu krem di belakang roda (samar, QA-006); rem debu bertitik di belakang roda; layar jeda gelap dengan "JEDA" dan "Lanjut" bergaris terang, stick hilang; 640 mundur penuh sepeda tepat di atas panel dan cincin stick di kirinya. Probe keluar dengan ERROR/WARNING (QA-003). |
+| AC-10 | Terbukti | Mutan QA Q21 (= Q05 lama: LELAH hanya di stamina 0) mati oleh tes QA-001; `_test_pose_langkah_tepat` ada (M28 tidak diulang QA). |
+| AC-11 | Terbukti | Tabel mutan Dev lengkap untuk semua mutan wajib SPEC; QA menjalankan 23 mutan sendiri (bawah). |
+| AC-12 | Terbukti | Penjaga gaya lolos di runner; pembacaan QA: tab, typing, `##` Indonesia, warna dari `Palette` (token baru `BAYANGAN_CONTOH` di `palette.gd`), teks lewat kunci `JEDA_*`, tanpa kiri/kanan untuk sisi jalan (kiri/kanan hanya sumbu layar di komentar Config), tanpa alokasi di `_process` (`PancaranPiksel.maju`, `Audio.perbarui_sepeda`). `scripts/dev/` tidak dipindai angka (alat ukur probe, dicatat Dev). |
+| AC-13 | Terbukti | BALANCING 2/10 (angka sama dengan Config: debu 4→24, rem 40, garis 0,25/14, batas 24/6, pitch 1,0/1,15/1,3, volume −6/−10/−3, 0,75, 36/20/0,35, tombol 42), DESIGN_SPEC 1.2/3.1/4, SOUND_DESIGN 3.2/6/perilaku Android, TECH_PLAN 3.1, SETUP_ANDROID 6.1 + 8.2, GDD 15, AGENTS, 00-project-core: tidak ada angka yang saling berbeda. |
+| AC-14 | Terbukti | Lihat Kebersihan. |
+
+### Mutan QA (dijalankan sendiri, kode dipulihkan `git checkout --` tiap mutan; `git status` bersih sesudahnya)
+
+| Mutan | Hasil |
+|---|---|
+| Q01 jeda tidak memadamkan cincin rem (`jalan_uji.gd:96`) | **HIDUP** (QA-001) |
+| Q02 `Audio` tidak berhenti sendiri pada PAUSED/FOCUS_OUT | **HIDUP** (QA-001) |
+| Q03 `TombolSentuh` tidak melupakan jari saat PAUSED/visibilitas | **HIDUP** (QA-001) |
+| Q04 `TombolSentuh` memicu walau sentuhan `canceled` | **HIDUP** (QA-001) |
+| Q05 `loop_aktif` mengabaikan pose REM | mati (1) |
+| Q06 `perbarui` selalu mematikan `baru_lanjut` | hidup, setara (dt dihitung sebelum direset; `baru_lanjut` selalu false selama jeda) |
+| Q07 `hentikan_sepeda` tidak melupakan status rem | mati (1) |
+| Q08 sisa akumulasi pancar tidak direset saat laju 0 | hidup, nyaris setara (pancaran pertama maju < 1 partikel) |
+| Q09 jari kedua merebut pelacakan tombol | hidup, setara praktis (tetap memicu sekali) |
+| Q10 `_sepeda.jeda()` hanya saat status berubah | hidup, setara (selama jeda input dan proses berhenti) |
+| Q11 pencegah pemicu ganda per frame dihapus | hidup, setara (JEDA/LANJUT idempoten) |
+| Q12 `DORONGAN_MUNDUR_PX` 20 → 21 | mati (5) |
+| Q13 batas partikel: ganti partikel terakhir saat penuh | hidup, setara terhadap SPEC (jumlah ≤ batas) |
+| Q14 pitch cepat→ngebut kuadrat, bukan linear | mati (2) |
+| Q15 `_hentikan_pemutar` tidak menghentikan decit | mati (2) |
+| Q16 debu dari kecepatan absolut | mati (2) |
+| Q17 layar jeda `process_mode` ALWAYS | mati (1) |
+| Q18 kontrol tidak dilepas saat jeda | mati (4) |
+| Q19 alpha garis 1,0 (bukan Config) | mati (1) |
+| Q20 `perbarui_sepeda` saat jeda tidak menghentikan decit | mati (1) |
+| Q21 LELAH hanya di stamina 0 (Q05 Run 1A) | mati (1) |
+| Q22 back saat jeda tidak melanjutkan | mati (10) |
+| Q23 `RESUMED` melanjutkan | mati (14) |
+
+Ringkas: 23 mutan, 13 mati, 4 hidup bermakna (QA-001, Minor: cabang pertahanan, perilaku benar), 6 hidup setara.
+
+### Regresi
+
+`git diff main...HEAD -- tests/`: tidak ada tes yang di-skip. Cek yang dihapus/diubah semuanya terkait keputusan SPEC (lanjut otomatis D-6, 28→36, font 6→8, tabel token 16→17, awalan `JEDA_`, kontainer HUD ketiga) dan tercatat di tabel "Tes lama yang diubah" Dev; `_test_jeda` lama digantikan `tes_jeda_scene.gd` yang lebih luas. Jumlah pemeriksaan 3886 (`main`, menurut Dev) → 4576.
+
+### Tidak bisa diverifikasi QA
+
+- Semua di HP (A54): probe render, bunyi di speaker (pitch, klik sambungan, volume), back Android dan home sungguhan, sentuhan jari kedua dan `canceled` dari gesture sistem, keterbacaan debu/garis, 60 fps, rasa posisi sepeda 75% dan dorongan 36. Lihat NEEDS-MANUAL.
+- APK `--export-debug` normal dan probe (butuh Java SDK Path); QA memakai `--export-pack` yang memakai filter preset yang sama.
+- Keluar dari game desktop saat bunyi sedang berjalan (QA-003 catatan): tidak diuji karena jendela yang dibuka QA langsung kehilangan fokus dan menjeda.
