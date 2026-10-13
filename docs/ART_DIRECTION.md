@@ -204,8 +204,8 @@ Tujuh varian dari eksplorasi tetap ada di `tools/loper_art/loper.py` dan bisa di
 |---|---|---|
 | Lempar ke sisi seberang | Fase 2 | Lengan kiri, 4 frame, arah normal dan dua serong sudah ada sebagai usulan dan dipakai di jalan uji sejak 2026-10-09 (3.2); arah 90° belum |
 | Lempar ke sisi dekat | Fase 2 | Lengan kanan, sama |
-| Meluncur | Fase 1 | Pedal datar, kaki diam. **Usulan sudah dibuat** (`design/character/loper_agen/rem_meluncur/`), 5 arah, belum dipasang |
-| Rem | Fase 1 | Badan sedikit mundur. **Usulan sudah dibuat** (`design/character/loper_agen/rem_meluncur/`), 5 arah, belum dipasang |
+| Meluncur | Fase 1 | Pedal datar, kaki diam. **Usulan, dipasang di jalan uji sejak 2026-10-13** (`design/character/loper_agen/rem_meluncur/`, `meluncur_<arah>`, 5 arah, 4 fps): dipakai selama stick ke bawah dan kecepatan masih di atas tujuan (BALANCING 2). Pergeseran 1 px dan fps masih tebakan, dinilai di HP |
+| Rem | Fase 1 | Badan sedikit mundur. **Usulan, dipasang di jalan uji sejak 2026-10-13** (`rem_<arah>`, 5 arah, 8 fps): dipakai selama rem aktif, juga saat sudah berhenti. Pose "berhenti" (kaki turun) tetap Fase 4 |
 | Berhenti | Fase 4 (menangkap kucing) | Satu kaki turun ke tanah |
 | Tabrakan / oleng | Fase 3 | Tidak jatuh dramatis; kerusakan hanya menghambat |
 
@@ -535,6 +535,7 @@ Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dib
 
 ## Changelog Keputusan
 
+- **2026-10-13** — **Meluncur dan rem dipasang di jalan uji** (bagian 3.4), tetap usulan sampai dinilai di HP. `loper_agen_frames.tres` kini 48 animasi (15 kayuh, 5 melambat, 18 lempar, 5 meluncur, 5 rem), dibangun `tools/loper_art/bangun_frames.py` dari lima JSON sumber; PNG tidak diubah. Alas dan tapak roda tiap frame sama dengan santai frame 2, jadi sprite tidak melompat saat berganti kayuh, meluncur, dan rem (dites). Pemilihan pose mengikuti fisika (keputusan pemilik 2026-10-13, BALANCING 2).
 - **2026-10-09** — **Melambat dan lempar koran dipasang di jalan uji** (bagian 3.2, 3.4), tetap usulan sampai dinilai di HP. `loper_agen_frames.tres` kini gabungan 38 animasi (15 kayuh, 5 melambat, 18 lempar) yang dibangun `tools/loper_art/bangun_frames.py` dari tiga JSON sumber; sel, titik pijak, dan offset sama dengan sheet kayuh. Hanya animasi pemain: proyektil, skor, dan arah lempar 90° tetap Fase 2 dan aset berikutnya.
 - **2026-10-09** — **Judul game "Kring Kring!" dan bel sebagai ciri khas** (GDD 5.4). Aset bel ditambahkan sebagai usulan: tombol bel HUD tiga keadaan, efek garis getar dan teks "KRING!" / "KRING KRING!" di atas setang, dan ikon "!" untuk warga atau hewan yang menepi (`design/bel/`, `tools/ui_art/bel.py`). Logo "Kring Kring!" masuk daftar aset. Animasi pemain tidak berubah: bel di sprite rute hanya 1–2 piksel, jadi efeknya cukup lewat VFX.
 - **2026-10-08** — **Gambar full body diganti dengan konversi gambar AI** (bagian 3.5). `loper_agen_fullbody.png` sekarang 240×292 px dari `konversi2.py` (sumber di `design/character/loper_agen/konversi2/`), menggantikan gambar 294×283 lima nada dari `fullbody.py`. Kepala terpisah tanpa leher dengan dagu sedikit menumpuk kerah belakang, koran diangkat tinggi, tas boncengan terbuka berisi koran, satu gir belakang, dua engkol segaris, dua kabel rem. Spakbor dan tas satu sisi berbeda dari 3.1, hanya di gambar ini. Pertanyaan terbuka soal gaya lima nada untuk skala besar ditutup. Gambar ini jadi acuan gambar skala besar berikutnya, dan gambar skala besar seperti ini akan dipakai sebagai gambar adegan (cutscene) saat jalan cerita maju dan di adegan pembuka.

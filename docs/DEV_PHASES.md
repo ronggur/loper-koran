@@ -18,7 +18,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 | Fase | Nama | Milestone | Status | Selesai |
 |---|---|---|---|---|
 | 0 | Fondasi teknis | M0 | ✅ run 0A (PR #12), 0B+0C (PR #14), uji HP di A54 lolos | 2026-10-13 |
-| 1 | Gerak sepeda & kecepatan (prototype 1) | M1 | ⬜ | |
+| 1 | Gerak sepeda & kecepatan (prototype 1) | M1 | 🟡 run 1A selesai (PR #20); run 1B dan uji HP menunggu | |
 | 2 | Lemparan koran (prototype 2) | M1 | ⬜ | |
 | 3 | Satu rute perumahan (prototype 3) | M2 | ⬜ | |
 | 4 | Halaman depan koran & misi kucing (prototype 4) | M2 | ⬜ | |
@@ -27,7 +27,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 | 7 | Vertical slice perumahan & audio dasar | M3 | ⬜ | |
 | 8 | Distrik berikutnya, iklan, rilis | M4 | ⬜ | |
 
-**Fase aktif: Fase 1**, dikerjakan lewat loop Dev↔QA dalam dua run (`LOOP-DEV-QA.md` Bagian 6: Run 1A logika gerak, Run 1B umpan balik dan penyetelan). Fase 0 selesai 2026-10-13: run 0A dan 0B+0C lolos QA 2026-10-09, dan uji HP di A54 (checklist `SETUP_ANDROID.md` bagian 8) dinyatakan lolos oleh pemilik 2026-10-13. Cek light 2D/glow/partikel/shader di Compatibility dipindah ke Fase 1 (Run 1B) karena butuh scene uji yang belum ada.
+**Fase aktif: Fase 1**, dikerjakan lewat loop Dev↔QA dalam dua run (`LOOP-DEV-QA.md` Bagian 6: Run 1A logika gerak, Run 1B umpan balik dan penyetelan). Run 1A (logika gerak inti) lolos QA 2026-10-14 di iterasi 1 (PR #20); berikutnya Run 1B. Fase 0 selesai 2026-10-13: run 0A dan 0B+0C lolos QA 2026-10-09, dan uji HP di A54 (checklist `SETUP_ANDROID.md` bagian 8) dinyatakan lolos oleh pemilik 2026-10-13. Cek light 2D/glow/partikel/shader di Compatibility dipindah ke Fase 1 (Run 1B) karena butuh scene uji yang belum ada.
 
 ---
 
@@ -60,13 +60,13 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 - [ ] Sistem koordinat dunia ↔ layar isometrik 2:1, jalan lurus naik ke kanan atas, ubin placeholder (ART_DIRECTION 2.2)
 - [ ] Kamera: sepeda di sepertiga kiri layar; saat ngebut sepeda bergeser maju sedikit di bingkai dan saat melambat mundur sedikit (dorongan kecepatan, permintaan Ronggur 2026-10-09; versi awalnya dikerjakan di PR #14, disetel di HP). Coba juga menurunkan posisi sepeda di layar: di A54 rumput kanan bawah kosong dan tinggi layar yang membatasi jalan ke depan (sekitar 2 detik saat ngebut), jadi sepeda lebih rendah memberi sekitar 30% lebih jauh tanpa mengubah skala ×3 (usulan dari uji A54, 2026-10-09; skala ×4 ditolak sementara karena viewport turun ke 585×270)
 - [ ] Uji ukuran kontrol dan HUD di A54: radius stick 35 px game, tombol kidal 38 dp (di bawah 44 dp rule `ui-scenes`), teks HUD 6 px. Perbesar kontrol dan HUD tanpa mengubah skala dunia bila perlu
-- [ ] Gerak maju terus dengan tiga tingkat kecepatan dari stick (santai/cepat/ngebut) dan transisi halus (BALANCING 2)
-- [ ] Melambat dan meluncur (stick bawah), rem saat ditarik penuh dan ditahan dengan ambang di ujung bawah
-- [ ] Pindah posisi lateral ke sisi seberang dan sisi dekat; batas tepi jalan
-- [ ] Stamina: terkuras saat cepat dan ngebut, pulih saat meluncur (BALANCING 3)
-- [ ] Animasi pemain memilih `kecepatan_arah` dari input lewat `loper_sprite.gd`, laju kayuh mengikuti kecepatan
+- [x] Gerak maju terus dengan tiga tingkat kecepatan dari stick (santai/cepat/ngebut) dan transisi halus (BALANCING 2) (run 1A, PR #20, 2026-10-14; rasa dinilai di uji HP)
+- [x] Melambat dan meluncur (stick bawah), rem saat ditarik penuh dan ditahan dengan ambang di ujung bawah (run 1A, PR #20, 2026-10-14; rasa dinilai di uji HP); ambang rem tetap usulan, ROADMAP 5
+- [x] Pindah posisi lateral ke sisi seberang dan sisi dekat; batas tepi jalan (analog bebas, keputusan pemilik 2026-10-13; batas tepi aspal ±1 ubin; run 1A, PR #20)
+- [x] Stamina: terkuras saat cepat dan ngebut, pulih saat meluncur (BALANCING 3) (run 1A, PR #20, 2026-10-14; rasa dinilai di uji HP)
+- [x] Animasi pemain memilih `kecepatan_arah` dari input lewat `loper_sprite.gd`, laju kayuh mengikuti kecepatan (termasuk pose meluncur dan rem; run 1A, PR #20)
 - [ ] Umpan balik kecepatan dasar: debu roda, garis kecepatan (placeholder)
-- [ ] HUD sementara: bar kecepatan dan stamina
+- [x] HUD sementara: bar kecepatan dan stamina (run 1A, PR #20)
 - [ ] Cek apakah light 2D, glow, partikel, dan shader warna bayangan yang dibutuhkan jalan di renderer Compatibility di HP target (ART_DIRECTION 2.3, 7); dipindah dari Fase 0 pada 2026-10-13, dikerjakan di Run 1B bersama partikel debu roda
 - [ ] Uji di HP: ambang rem, rasa stick, keterbacaan sprite di skala ×3
 

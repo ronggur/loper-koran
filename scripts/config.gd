@@ -50,8 +50,31 @@ const REM_AMBANG_STICK: float = 0.90
 const REM_TAHAN_DETIK: float = 0.25
 ## Zona mati stick sebagai pecahan jangkauan (0,15 = 15%).
 const ZONA_MATI_STICK: float = 0.15
-## Kecepatan pindah sisi (lateral), ubin per detik.
+## Kecepatan pindah sisi (lateral), ubin per detik. Posisi lateral analog bebas, tanpa kunci jalur (keputusan pemilik 2026-10-13).
 const KECEPATAN_LATERAL_UD: float = 3.0
+## Lebar aspal, ubin (BALANCING 2). Batas tepi jalan resmi = setengahnya ke tiap sisi dari garis tengah (`BikeMotion`).
+const JALAN_LEBAR_UBIN: float = 2.0
+## Toleransi presisi tunggal saat membandingkan komponen bawah stick dengan `REM_AMBANG_STICK` (Vector2 berpresisi tunggal: 0,90 tersimpan 0,8999999762).
+const REM_AMBANG_TOLERANSI: float = 0.000001
+## Toleransi derau float saat membandingkan lama tahan rem dengan `REM_TAHAN_DETIK`, detik (jumlah 15 x 1/60 tidak tepat 0,25).
+const REM_TAHAN_TOLERANSI_DETIK: float = 0.000001
+
+## --- Stamina (BALANCING 3, GDD 6; usulan) ---
+## Laju per detik dari kecepatan SEBENARNYA, linear per potong di antara tiga titik (santai, cepat, ngebut); di bawah santai
+## sama dengan santai, di atas ngebut sama dengan ngebut. Stick ke bawah atau rem aktif memakai laju meluncur.
+
+## Stamina maksimum (dan stamina awal).
+const STAMINA_MAKS: float = 100.0
+## Laju pulih saat stick ke bawah (meluncur atau melambat) atau rem aktif, per detik.
+const STAMINA_LAJU_MELUNCUR: float = 15.0
+## Laju di kecepatan santai (3,0 u/d) dan di bawahnya, per detik (pulih pelan).
+const STAMINA_LAJU_SANTAI: float = 2.0
+## Laju di kecepatan cepat (4,5 u/d), per detik (negatif = terkuras).
+const STAMINA_LAJU_CEPAT: float = -4.0
+## Laju di kecepatan ngebut (6,0 u/d), per detik.
+const STAMINA_LAJU_NGEBUT: float = -12.0
+## Stamina habis menyalakan lelah (kecepatan tujuan dijepit ke cepat); lelah padam saat stamina kembali sebesar ini atau lebih.
+const STAMINA_PULIH_AMBANG: float = 30.0
 
 ## --- Pemilih animasi sprite pemain (BALANCING 2, ART_DIRECTION 3.2) ---
 
@@ -65,6 +88,11 @@ const SPRITE_SUDUT_SERONG_DERAJAT: float = 22.5
 const SPRITE_SUDUT_SIKU_DERAJAT: float = 67.5
 ## Toleransi pembulatan desimal saat membandingkan sudut dengan batasnya, derajat.
 const SPRITE_SUDUT_TOLERANSI_DERAJAT: float = 0.000001
+## Pose meluncur (kaki diam) dipakai selama stick ke bawah dan kecepatan sebenarnya masih di atas kecepatan tujuan lebih dari ini, u/d.
+## Selisih sekecil ini dianggap sudah sampai (melambat, kayuh 4 fps), supaya stick yang hanya bergetar tidak membuat pose berkedip.
+const POSE_MELUNCUR_TOLERANSI_UD: float = 0.05
+## Batas atas pengali laju kayuh (`pedal_rate` = kecepatan sebenarnya / kecepatan nominal tingkat animasi).
+const PEDAL_RATE_MAKS: float = 1.5
 
 ## --- Lempar koran dan melambat (animasi pemain, usulan, run sprite-lempar-melambat) ---
 ## fps animasi (kayuh 8/10/12, melambat 4, lempar 12) dibaca dari `loper_agen_frames.tres`, bukan dari sini.
@@ -114,8 +142,6 @@ const SWIPE_TITIK_JARAK_PX: int = 4
 
 ## Lebar viewport terbesar yang didukung (20:9), piksel game. Menentukan luas ubin yang disiapkan.
 const LAYAR_LEBAR_MAKS_PX: int = 800
-## Lebar aspal jalan uji, ubin (BALANCING 2). Batas geser sepeda = setengahnya ke tiap sisi.
-const JALAN_LEBAR_UBIN: float = 2.0
 ## Lebar trotoar di tiap sisi aspal, ubin. Selebihnya rumput.
 const JALAN_TROTOAR_UBIN: float = 1.0
 ## Letak sepeda pada sumbu datar layar sebagai pecahan lebar viewport (sepertiga kiri, ART_DIRECTION 2.2).
@@ -160,8 +186,10 @@ const HUD_PANEL_KECEPATAN_LEBAR_PX: int = 170
 const HUD_PANEL_PAD_Y_PX: int = 5
 ## Isi panel HUD: jarak ke tepi kiri dan kanan, piksel game (DESIGN_SPEC 1.3).
 const HUD_PANEL_PAD_X_PX: int = 7
-## Tinggi bar kecepatan termasuk garis luar 1 px, piksel game (DESIGN_SPEC 1.3).
+## Tinggi bar kecepatan dan stamina termasuk garis luar 1 px, piksel game (DESIGN_SPEC 1.3).
 const HUD_BAR_TINGGI_PX: int = 7
+## Bar stamina berganti warna dari `ACCENT` ke `FAIL` di bawah nilai ini (DESIGN_SPEC 3.5, usulan).
+const HUD_STAMINA_AMBANG_RENDAH: float = 30.0
 ## Tinggi tombol di strip atas, piksel game. Di A54 (450 dpi, skala x3) = 108 px layar = 38 dp, di bawah 44 dp rule `ui-scenes`; strip atas hanya 48 px sebelum zona swipe, jadi dinilai lewat uji HP.
 const HUD_TOMBOL_TINGGI_PX: int = 36
 ## Lebar minimum tombol di strip atas, piksel game.

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Uji `tools/loper_art/bangun_frames.py` (pembangun SpriteFrames gabungan). Hanya pustaka standar.
 
-Membuktikan: (1) `loper_agen_frames.tres` dan salinan aset di repo sama persis dengan hasil skrip dari tiga JSON sumber
-(tidak ada yang diedit dengan tangan), (2) skrip deterministik (dua kali jalan = byte sama), (3) hasilnya 38 animasi dengan
-loop dan fps yang benar, (4) skrip menolak sumber yang rusak (nama ganda, region di luar PNG, PNG hilang, ukuran sheet
-tidak cocok dengan JSON) dan `--cek` menolak berkas hasil yang diubah.
+Membuktikan: (1) `loper_agen_frames.tres` dan salinan aset di repo sama persis dengan hasil skrip dari lima JSON sumber
+(tidak ada yang diedit dengan tangan), (2) skrip deterministik (dua kali jalan = byte sama), (3) hasilnya 48 animasi
+(15 kayuh + 5 melambat + 18 lempar + 5 meluncur + 5 rem) dengan urutan, loop, dan fps yang benar, (4) skrip menolak sumber
+yang rusak (nama ganda, region di luar PNG, PNG hilang, ukuran sheet tidak cocok dengan JSON, juga untuk sheet meluncur dan
+rem) dan `--cek` menolak berkas hasil yang diubah.
 
 Cara pakai (dari root repo):
     python3 tools/tests_cek/uji_bangun_frames.py
@@ -25,7 +26,9 @@ SKRIP = os.path.join(ROOT, 'tools', 'loper_art', 'bangun_frames.py')
 SUMBER = os.path.join(ROOT, 'docs', 'design', 'character', 'loper_agen')
 HASIL_REPO = os.path.join(ROOT, 'assets', 'sprites', 'loper')
 BERKAS_SUMBER = ['loper_agen.json', 'loper_agen.png', 'melambat/loper_agen_melambat.json', 'melambat/loper_agen_melambat.png',
-                 'lempar/loper_agen_lempar.json', 'lempar/loper_agen_lempar.png']
+                 'lempar/loper_agen_lempar.json', 'lempar/loper_agen_lempar.png',
+                 'rem_meluncur/loper_agen_meluncur.json', 'rem_meluncur/loper_agen_meluncur.png',
+                 'rem_meluncur/loper_agen_rem.json', 'rem_meluncur/loper_agen_rem.png']
 
 gagal = 0
 lolos = 0
@@ -72,22 +75,28 @@ def main():
         kode_b, _ = jalankan('--out', b)
         periksa(kode_a == 0 and kode_b == 0, 'skrip berhasil ditulis dua kali ke folder berbeda')
         daftar = sorted(os.listdir(a))
-        periksa(daftar == sorted(os.listdir(b)) and len(daftar) == 7, f'dua kali jalan menghasilkan 7 berkas yang sama, dapat {daftar}')
+        periksa(daftar == sorted(os.listdir(b)) and len(daftar) == 11, f'dua kali jalan menghasilkan 11 berkas yang sama, dapat {daftar}')
         periksa(all(baca(os.path.join(a, n)) == baca(os.path.join(b, n)) for n in daftar), 'dua kali jalan menghasilkan byte yang sama')
         periksa(baca(os.path.join(a, 'loper_agen_frames.tres')) == baca(os.path.join(HASIL_REPO, 'loper_agen_frames.tres')),
                 '.tres hasil = .tres di repo')
 
-        # (3) Isi .tres: 38 animasi, loop dan fps menurut JSON.
+        # (3) Isi .tres: 48 animasi, loop dan fps menurut JSON.
         tres = baca(os.path.join(a, 'loper_agen_frames.tres')).decode('utf-8')
-        periksa(tres.count('"name": &"') == 38, '.tres memuat 38 animasi')
-        periksa(tres.count('"loop": false') == 18 and tres.count('"loop": true') == 20, 'loop false untuk 18 lempar saja, true untuk 15 kayuh + 5 melambat')
-        periksa(tres.count('"speed": 4.0') == 5 and tres.count('"speed": 12.0') == 18 + 5 and tres.count('"speed": 8.0') == 5 and tres.count('"speed": 10.0') == 5,
-                'fps: 4 untuk 5 melambat, 8 dan 10 untuk 5 kayuh masing-masing, 12 untuk 5 kayuh ngebut + 18 lempar')
-        periksa(tres.count('[sub_resource') == 152 and tres.count('[ext_resource') == 3 and 'load_steps=156' in tres, '152 AtlasTexture, 3 sheet, load_steps 156')
+        periksa(tres.count('"name": &"') == 48, '.tres memuat 48 animasi')
+        periksa(tres.count('"loop": false') == 18 and tres.count('"loop": true') == 30, 'loop false untuk 18 lempar saja, true untuk 15 kayuh + 5 melambat + 5 meluncur + 5 rem')
+        periksa(tres.count('"speed": 4.0') == 5 + 5 and tres.count('"speed": 12.0') == 18 + 5 and tres.count('"speed": 8.0') == 5 + 5 and tres.count('"speed": 10.0') == 5,
+                'fps: 4 untuk 5 melambat + 5 meluncur, 8 untuk 5 santai + 5 rem, 10 untuk 5 cepat, 12 untuk 5 ngebut + 18 lempar')
+        periksa(tres.count('[sub_resource') == 192 and tres.count('[ext_resource') == 5 and 'load_steps=198' in tres, '192 AtlasTexture, 5 sheet, load_steps 198')
+        periksa(re.search(r'"name": &"meluncur_normal",\n"speed": 4.0', tres) is not None and re.search(r'"name": &"rem_normal",\n"speed": 8.0', tres) is not None,
+                'meluncur_normal 4 fps dan rem_normal 8 fps')
         periksa(re.search(r'"name": &"lempar_[a-z_]+",\n"speed": 12.0', tres) is not None, 'animasi lempar ditulis dengan nama lempar_... dan speed 12.0')
         meta = json.loads(baca(os.path.join(SUMBER, 'lempar', 'loper_agen_lempar.json')))
         urut = [m for m in re.findall(r'"name": &"([^"]+)"', tres)]
-        periksa(urut[20:] == [x['name'] for x in meta['animations']], 'urutan 18 animasi lempar di .tres = urutan JSON')
+        periksa(urut[20:38] == [x['name'] for x in meta['animations']], 'urutan 18 animasi lempar di .tres = urutan JSON')
+        for i, rel in ((38, 'rem_meluncur/loper_agen_meluncur.json'), (43, 'rem_meluncur/loper_agen_rem.json')):
+            meta_baru = json.loads(baca(os.path.join(SUMBER, rel)))
+            periksa(urut[i:i + 5] == [x['name'] for x in meta_baru['animations']], f'urutan 5 animasi {os.path.basename(rel)} di .tres = urutan JSON, sesudah lempar')
+        periksa(len(urut) == len(set(urut)) == 48, '48 nama animasi berbeda semua')
 
         # (4) Sumber rusak ditolak (exit 2), --cek menolak hasil yang diubah (exit 1).
         def sumber_rusak(ubah, label, harapan=2):
@@ -114,6 +123,13 @@ def main():
         sumber_rusak(lambda folder: os.remove(os.path.join(folder, 'melambat', 'loper_agen_melambat.png')), 'PNG melambat hilang')
         sumber_rusak(lambda folder: os.remove(os.path.join(folder, 'lempar', 'loper_agen_lempar.json')), 'JSON lempar hilang')
         sumber_rusak(lambda folder: open(os.path.join(folder, 'loper_agen.png'), 'wb').write(b'bukan png'), 'berkas PNG rusak')
+        rem = 'rem_meluncur/loper_agen_rem.json'
+        meluncur = 'rem_meluncur/loper_agen_meluncur.json'
+        sumber_rusak(ubah_json(rem, lambda d: d['animations'][0].update(name='meluncur_normal')), 'nama rem sama dengan nama meluncur (ganda lintas sheet)')
+        sumber_rusak(ubah_json(meluncur, lambda d: d['animations'][4]['regions'][0].__setitem__(1, 300)), 'region meluncur di luar PNG')
+        sumber_rusak(ubah_json(rem, lambda d: d.update(rows=6)), 'jumlah baris JSON rem tidak cocok dengan tinggi PNG')
+        sumber_rusak(lambda folder: os.remove(os.path.join(folder, 'rem_meluncur', 'loper_agen_rem.png')), 'PNG rem hilang')
+        sumber_rusak(lambda folder: os.remove(os.path.join(folder, 'rem_meluncur', 'loper_agen_meluncur.json')), 'JSON meluncur hilang')
 
         # --cek menolak berkas hasil yang diubah, dihapus, atau hilang foldernya.
         tres_ubah = os.path.join(a, 'loper_agen_frames.tres')

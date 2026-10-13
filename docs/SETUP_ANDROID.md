@@ -246,3 +246,16 @@ Dikerjakan manusia di HP asli; agent tidak bisa menilai rasa kontrol. Fase 0 **t
 - [x] Ikon di launcher: bel oranye di latar gelap (`icon.svg` sementara, tidak terpotong oleh bentuk ikon adaptif); nilai dengan mata, ikon final di Fase 14.
 - [x] Opsional: sambungkan keyboard fisik; panah dan WASD **tidak** boleh menggerakkan sepeda di APK (keyboard hanya untuk editor, `OS.has_feature("editor")`).
 - Bukan bagian checklist ini: uji light 2D, glow, partikel, dan shader di Compatibility (dipindah ke DEV_PHASES Fase 1, Run 1B).
+
+### 8.1 Uji Run 1A Fase 1: gerak inti (run `20261013-fase1a-gerak`, belum diuji)
+
+Semua angka usulan (`scripts/config.gd`, BALANCING 2-3). Catat angka yang ingin diubah beserta alasannya; jangan diubah di run uji. Ambang rem masih keputusan terbuka (ROADMAP 5), diputuskan dari uji ini.
+
+- [ ] **Ambang rem:** tarik stick penuh ke bawah dan tahan: sesudah sekitar 0,25 detik sepeda mengerem (sprite `rem`, badan mundur 1 px dan bergetar) sampai berhenti; busur bawah cincin stick menyala oranye (`WARN`) selama rem aktif. Apakah 90% dan 0,25 detik terasa pas? Apakah sepeda pernah berhenti tak sengaja saat belok sambil menarik ke bawah, atau saat meluncur?
+- [ ] **Rem lalu lepas:** dari berhenti, angkat jempol: rem padam, busur hilang, sepeda jalan lagi ke santai (3,0 u/d2) dengan kayuh yang mulai pelan dan makin cepat. Getar rem 1 px terbaca di x3 atau terlalu halus?
+- [ ] **Meluncur lalu melambat:** dari ngebut tarik stick ke bawah sebagian (belum penuh): kaki diam (`meluncur`) selama kecepatan turun, lalu kayuh 4 fps (`melambat`) saat kecepatan sudah rendah. Pergantiannya terbaca atau mengganggu? Tidak ada lompatan posisi sprite.
+- [ ] **Stamina:** ngebut terus dari penuh habis sekitar 8-9 detik; bar stamina (oranye) berubah merah di bawah 30 dan muncul tulisan LELAH; selama lelah kecepatan tertahan di 4,5 u/d dan sprite kayuh cepat walau stick penuh ke atas. Meluncur sekitar 2 detik memadamkan LELAH. Bar dan tulisannya terbaca?
+- [ ] **Laju kayuh:** mempercepat dari berhenti ke ngebut: kayuh mulai pelan dan menyusul kecepatan, tidak terasa "kaki berputar di tempat".
+- [ ] **Lateral sampai tepi aspal:** geser kiri dan kanan penuh: sepeda berhenti di tepi aspal (+-1 ubin) tanpa tersentak; geser saat berhenti dengan rem (sprite menghadap 90°) terlihat wajar atau aneh?
+- [ ] **Kembali dari background** (home, notifikasi ditarik, panggilan): tidak ada lompatan posisi, kecepatan, atau stamina; rem yang sedang ditahan tidak tersisa (harus ditahan ulang 0,25 detik); stick dan lempar dilepas bersih.
+- [ ] Dua jempol: swipe tetap melempar saat rem dan meluncur (lempar memakai gambar santai), stick tidak putus.

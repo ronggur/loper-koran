@@ -1,13 +1,15 @@
 class_name HudDev
 extends CanvasLayer
-## HUD sementara Fase 0 (AC-15): panel kecepatan di bawah dan tombol kidal di strip atas.
+## HUD sementara (Fase 0 AC-15, Fase 1 run 1A): panel kecepatan dan stamina di bawah, tombol kidal di strip atas.
 ##
 ## `CanvasLayer` terpisah dari dunia. Tata letak memakai anchor dan Container (bukan posisi piksel absolut):
 ## panel kecepatan menempel di bawah dengan margin dari tepi layar sisi stick (DESIGN_SPEC 3.5) dan pindah
 ## sisi saat kidal; tombol kidal ada di strip atas (tinggi `Config.HUD_STRIP_ATAS_TINGGI_PX`), di luar kedua
 ## zona kontrol (DESIGN_SPEC 3.7), jadi sentuhannya tidak pernah menjadi stick atau swipe. Teks hanya kunci
 ## terjemahan (`translations/ui.csv`); warna dari `Palette` lewat skrip, font dari `assets/ui/theme.tres`.
-## Tidak ada panel stamina atau koran di run ini.
+## Panel bawah memuat dua bar (DESIGN_SPEC 3.5): kecepatan (isi `TEXT`) dan stamina (isi `ACCENT`, `FAIL` di bawah
+## `Config.HUD_STAMINA_AMBANG_RENDAH`). Saat lelah label `HUD_LELAH` tampil di samping label stamina: penanda bukan warna
+## (rule `ui-scenes`). Panel koran belum ada di run ini.
 
 ## Tombol kidal diubah: True = zona ditukar untuk tangan kiri.
 signal kidal_diubah(nilai: bool)
@@ -20,6 +22,9 @@ var _angka_terakhir: String = ""
 @onready var _label_angka: Label = %LabelAngka
 @onready var _label_judul: Label = %LabelKecepatan
 @onready var _bar: BarKecepatan = %BarKecepatan
+@onready var _label_stamina: Label = %LabelStamina
+@onready var _label_lelah: Label = %LabelLelah
+@onready var _bar_stamina: BarKecepatan = %BarStamina
 @onready var _tombol_kidal: Button = %TombolKidal
 
 
@@ -31,6 +36,7 @@ func _ready() -> void:
 	_tombol_kidal.toggled.connect(_saat_tombol_kidal)
 	atur_kidal(false)
 	tampilkan_kecepatan(Config.KECEPATAN_SANTAI_UD)
+	tampilkan_stamina(Config.STAMINA_MAKS, false)
 
 
 ## Menampilkan kecepatan (u/d) di bar dan angka. Angka hanya diperbarui bila teksnya berubah.
@@ -40,6 +46,34 @@ func tampilkan_kecepatan(kecepatan_ud: float) -> void:
 	if angka != _angka_terakhir:
 		_angka_terakhir = angka
 		_label_angka.text = tr("HUD_KECEPATAN_ANGKA").format({"v": angka})
+
+
+## Menampilkan stamina (0..`Config.STAMINA_MAKS`) di bar: isi `ACCENT`, `FAIL` di bawah `Config.HUD_STAMINA_AMBANG_RENDAH`.
+## `lelah` menampilkan label `HUD_LELAH` (penanda teks, bukan hanya warna).
+func tampilkan_stamina(stamina: float, lelah: bool) -> void:
+	_bar_stamina.nilai = stamina / Config.STAMINA_MAKS
+	_bar_stamina.warna_isi = Palette.FAIL if stamina < Config.HUD_STAMINA_AMBANG_RENDAH else Palette.ACCENT
+	_label_lelah.visible = lelah
+
+
+## Warna isi bar stamina saat ini (untuk tes).
+func warna_stamina() -> Color:
+	return _bar_stamina.warna_isi
+
+
+## Isi bar stamina saat ini, 0 sampai 1 (untuk tes).
+func nilai_stamina() -> float:
+	return _bar_stamina.nilai
+
+
+## Isi bar kecepatan saat ini, 0 sampai 1 (untuk tes).
+func nilai_kecepatan() -> float:
+	return _bar.nilai
+
+
+## True bila penanda lelah tampil (untuk tes).
+func penanda_lelah_tampil() -> bool:
+	return _label_lelah.visible
 
 
 ## Memindahkan panel kecepatan ke sisi tangan yang dipakai dan menyamakan tombol (tanpa memancarkan sinyal).
@@ -73,6 +107,8 @@ func _terapkan_gaya() -> void:
 	_panel_kecepatan.add_theme_stylebox_override(&"panel", _kotak(Palette.HUD_PANEL, Palette.OUTLINE))
 	_label_judul.add_theme_color_override(&"font_color", Palette.ACCENT)
 	_label_angka.add_theme_color_override(&"font_color", Palette.TEXT)
+	_label_stamina.add_theme_color_override(&"font_color", Palette.ACCENT)
+	_label_lelah.add_theme_color_override(&"font_color", Palette.FAIL)
 	_tombol_kidal.add_theme_stylebox_override(&"normal", _kotak(Palette.HUD_PANEL, Palette.OUTLINE))
 	_tombol_kidal.add_theme_stylebox_override(&"hover", _kotak(Palette.HUD_PANEL, Palette.OUTLINE))
 	_tombol_kidal.add_theme_stylebox_override(&"pressed", _kotak(Palette.UI_PANEL_RAISED, Palette.ACCENT))

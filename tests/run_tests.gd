@@ -71,12 +71,16 @@ func _initialize() -> void:
 	# Pembantu tes terpisah supaya berkas ini tidak membengkak; memakai `check` runner ini.
 	var murni: TesInputMurni = TesInputMurni.new(check, _judul)
 	murni.jalankan()
+	var gerak: TesGerak = TesGerak.new(check, _judul)
+	gerak.jalankan()
 	var sprite: TesSprite = TesSprite.new(check, _judul, self)
 	sprite.jalankan()
 	var ekspor: TesExport = TesExport.new(check, _judul)
 	ekspor.jalankan()
 	var scene_input: TesInputScene = TesInputScene.new(check, _judul, self)
 	await scene_input.jalankan()
+	var scene_gerak: TesGerakScene = TesGerakScene.new(check, _judul, self)
+	await scene_gerak.jalankan()
 	root.size = ukuran_sebelum
 	print("%d lolos, %d gagal" % [_lolos, _gagal])
 	quit(1 if _gagal > 0 else 0)
@@ -297,18 +301,21 @@ func _test_nama_animasi_dan_frames() -> void:
 	check(LoperAnim.nama_animasi(-1, 9) == &"melambat_kanan", "tingkat -1 = melambat dan arah di luar jangkauan dijepit: (-1, 9) = melambat_kanan (sebelum run sprite-lempar-melambat: santai_kanan)")
 	check(LoperAnim.nama_animasi(-9, 0) == &"melambat_normal", "tingkat jauh di bawah jangkauan dijepit ke melambat (-9, 0) = melambat_normal")
 
-	# Sejak run sprite-lempar-melambat SpriteFrames memuat 38 animasi (15 kayuh + 5 melambat + 18 lempar). Semua nama yang bisa
-	# dihasilkan LoperAnim (kayuh, melambat, lempar untuk semua kombinasi) ada di SpriteFrames dan sebaliknya: tidak ada yang yatim.
-	# Pemeriksaan isi (region, fps, loop) terhadap tiga JSON ada di `tests/tes_sprite.gd`.
+	# SpriteFrames memuat 48 animasi sejak run fase1a-gerak (38 sejak run sprite-lempar-melambat): 15 kayuh + 5 melambat + 18 lempar
+	# + 5 meluncur + 5 rem. Semua nama yang bisa dihasilkan LoperAnim (kayuh, melambat, lempar, pose meluncur dan rem untuk semua
+	# kombinasi) ada di SpriteFrames dan sebaliknya: tidak ada yang yatim. Pemeriksaan isi (region, fps, loop) terhadap lima JSON
+	# ada di `tests/tes_sprite.gd`.
 	for arah: int in range(-2, 3):
 		nama_dipakai[LoperAnim.nama_animasi(LoperAnim.TINGKAT_MELAMBAT, arah)] = true
-	for sisi: LoperAnim.Sisi in [LoperAnim.Sisi.SEBERANG, LoperAnim.Sisi.DEKAT]:
+	for pose: LoperAnim.Pose in [LoperAnim.Pose.KAYUH, LoperAnim.Pose.MELUNCUR, LoperAnim.Pose.REM]:
 		for tingkat: int in range(LoperAnim.TINGKAT_MELAMBAT, 3):
 			for arah: int in range(-2, 3):
-				nama_dipakai[LoperAnim.nama_lempar(sisi, tingkat, arah)] = true
-	check(nama_dipakai.size() == 38, "LoperAnim menghasilkan tepat 38 nama (15 kayuh + 5 melambat + 18 lempar), dapat %d" % nama_dipakai.size())
+				nama_dipakai[LoperAnim.nama_animasi_pose(pose, tingkat, arah)] = true
+				for sisi: LoperAnim.Sisi in [LoperAnim.Sisi.SEBERANG, LoperAnim.Sisi.DEKAT]:
+					nama_dipakai[LoperAnim.nama_lempar(sisi, LoperAnim.tingkat_lempar(pose, tingkat), arah)] = true
+	check(nama_dipakai.size() == 48, "LoperAnim menghasilkan tepat 48 nama (15 kayuh + 5 melambat + 18 lempar + 5 meluncur + 5 rem), dapat %d" % nama_dipakai.size())
 	var nama_frames: PackedStringArray = frames.get_animation_names()
-	check(nama_frames.size() == 38, "SpriteFrames memuat tepat 38 animasi (15 kayuh + 5 melambat + 18 lempar), dapat %d" % nama_frames.size())
+	check(nama_frames.size() == 48, "SpriteFrames memuat tepat 48 animasi (15 kayuh + 5 melambat + 18 lempar + 5 meluncur + 5 rem), dapat %d" % nama_frames.size())
 	for nama: String in nama_frames:
 		check(nama_dipakai.has(StringName(nama)), "animasi SpriteFrames '%s' dipakai LoperAnim (tidak ada animasi yatim)" % nama)
 	for nama: StringName in nama_dipakai:
