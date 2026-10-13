@@ -48,7 +48,7 @@ godot --headless --path . --export-pack "Android" build/kring-uji.pck   # paket 
 godot --headless --path . --export-debug "Android" builds/kring-kring-debug.apk   # APK debug; butuh export templates 4.7.2 dan Java SDK Path di Editor Settings
 python3 tools/env_art/graybox.py                       # render ulang ubin dan kotak graybox (hanya stdlib)
 python3 tools/loper_art/produce.py --out build/loper_art   # render ulang sprite pemain (butuh numpy, pillow)
-python3 tools/loper_art/bangun_frames.py                   # bangun ulang loper_agen_frames.tres (38 animasi) dan salin PNG/JSON sprite ke assets/ (hanya stdlib)
+python3 tools/loper_art/bangun_frames.py                   # bangun ulang loper_agen_frames.tres (48 animasi) dan salin PNG/JSON sprite ke assets/ (hanya stdlib)
 python3 tools/tests_cek/uji_bangun_frames.py               # bukti berkas di assets/ = hasil skrip pembangun, deterministik, sumber rusak ditolak
 ```
 
@@ -61,13 +61,13 @@ Export Android (preset `Android` di `export_presets.cfg`, tanpa Gradle, arm64-v8
 ```
 project.godot        Godot 4.7.2, Compatibility, landscape, 640x360 canvas_items + integer + expand, scene utama jalan_uji.tscn, aksi InputMap stick_* (keyboard hanya editor), terjemahan dan tema terdaftar
 scenes/              dev/jalan_uji.tscn (scene utama sementara, jalan tanpa ujung yang bisa digerakkan), dev/graybox.tscn (statis, untuk probe layar), entities/loper_agen.tscn (pemain) dan sepeda_uji.tscn, ui/hud_dev.tscn (HUD sementara)
-scripts/             config.gd (semua angka tuning), systems/ (logika murni: iso, touch_zones, stick_map, touch_router, bike_drive, dorongan_kecepatan, jalan_daur, loper_anim, lempar_waktu), entities/ (sepeda_uji, jalan_uji, tanah_daur, objek_daur, loper_sprite), ui/ (palette, kontrol_touch, hud_dev, bar_kecepatan)
-assets/              sprites/ (loper/: sheet kayuh, melambat, dan lempar + loper_agen_frames.tres gabungan 38 animasi, _placeholder/), palette/, fonts/ (usulan), ui/theme.tres (font dan ukuran saja), LICENSES.md
+scripts/             config.gd (semua angka tuning), systems/ (logika murni: iso, touch_zones, stick_map, touch_router, bike_motion (gerak, rem, stamina, lateral), jeda_sim, dorongan_kecepatan, jalan_daur, loper_anim (animasi, pose, laju kayuh), lempar_waktu), entities/ (sepeda_uji, jalan_uji, tanah_daur, objek_daur, loper_sprite), ui/ (palette, kontrol_touch, hud_dev, bar_kecepatan)
+assets/              sprites/ (loper/: sheet kayuh, melambat, lempar, meluncur, dan rem + loper_agen_frames.tres gabungan 48 animasi, _placeholder/), palette/, fonts/ (usulan), ui/theme.tres (font dan ukuran saja), LICENSES.md
 icon.svg             Ikon aplikasi sementara (bel, hanya warna Palette; pengganti final di Fase 14), dipakai ekspor Android
 export_presets.cfg   Preset export Android (satu preset, tanpa rahasia, dijaga tests/tes_export.gd); keystore dan kredensial tidak pernah di-commit
 builds/              APK hasil ekspor (di .gitignore, tidak di-commit)
 translations/        ui.csv (kolom keys,id) beserta ui.csv.import dan ui.id.translation hasil impor; semua teks pemain lewat kunci di sini
-tests/               run_tests.gd (runner), tes_input_murni.gd, tes_input_scene.gd, tes_sprite.gd, dan tes_export.gd (pembantu runner), probe_layar*.gd (ukur skala layar), probe_input_jendela.gd, probe_dorongan_jendela.gd, dan probe_lempar_jendela.gd (tangkapan layar skenario sentuh, melambat, lempar)
+tests/               run_tests.gd (runner), tes_input_murni.gd, tes_input_scene.gd, tes_sprite.gd, tes_gerak.gd, tes_gerak_scene.gd, dan tes_export.gd (pembantu runner), probe_layar*.gd (ukur skala layar), probe_input_jendela.gd, probe_dorongan_jendela.gd, probe_lempar_jendela.gd, dan probe_gerak_jendela.gd (tangkapan layar skenario sentuh, melambat, lempar, meluncur, rem, stamina)
 docs/                Dokumen desain (GDD, STORY, TECH_PLAN, ART_DIRECTION, BALANCING, DATA_SCHEMA, dst.), SETUP_ANDROID.md (export dan uji HP) + design/ + loop/
 docs/design/         Token desain, mock HUD, sprite produksi pemain (character/loper_agen/)
 tools/loper_art/     Renderer sprite pemain (Python) + bangun_frames.py (SpriteFrames gabungan, stdlib), lihat tools/loper_art/README.md
