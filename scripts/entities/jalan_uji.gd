@@ -10,14 +10,21 @@ extends Node2D
 ## halus tetap float di `SepedaUji`; hanya posisi gambar yang dibulatkan. Swipe di zona swipe memainkan animasi lempar
 ## (`_saat_swipe_selesai`, tanpa proyektil; Fase 2). Stamina dan rem tampil di HUD dan cincin stick.
 ##
-## Jeda (D-6 run fase1a-gerak): app di-background atau kehilangan fokus menjeda simulasi (`JedaSim`): `perbarui` tetap boleh
-## dipanggil tetapi memakai `dt` 0, jadi kecepatan, jarak, stamina, lama tahan rem, dan geseran dorongan tidak berubah; stick dan
-## swipe dilepas (`KontrolTouch`), lempar ditutup, dan lama tahan rem kembali 0 (`SepedaUji.jeda`). Lanjut otomatis saat app
-## kembali; langkah pertama sesudahnya juga ber-`dt` 0. `set_process` tidak disentuh. Garis kecepatan, debu, dan getar kamera Run 1B.
+## Jeda (D-6 run fase1b-umpan-balik, `JedaSim`): tombol jeda di HUD, app di-background atau kehilangan fokus (PAUSED, FOCUS_OUT), dan
+## tombol back Android saat berjalan membuka **layar jeda** (`LayarJeda`). Tidak ada lanjut otomatis: RESUMED dan FOCUS_IN tidak
+## mengubah apa pun; pemain melanjutkan lewat tombol "Lanjut" atau back saat layar jeda terbuka. Selama jeda `SceneTree.paused`
+## menyala, jadi sprite pemain, partikel umpan balik, input stick dan swipe, dan (Run 1B bagian audio) pemutar bunyi yang ikut
+## pause berhenti; hanya layar jeda (`PROCESS_MODE_WHEN_PAUSED`) yang menerima sentuhan. `perbarui` tetap boleh dipanggil tetapi
+## memakai `dt` 0, jadi kecepatan, jarak, stamina, lama tahan rem, dan geseran dorongan tidak berubah; saat menjeda stick dan swipe
+## dilepas, lempar ditutup, dan lama tahan rem kembali 0 (`SepedaUji.jeda`). Langkah pertama sesudah lanjut ber-`dt` 0.
+## Titik kait untuk node lain (mis. autoload `Audio`): sinyal `jeda_berubah` dan `sedang_jeda()`.
+
+## Status jeda berubah: true = layar jeda dibuka (simulasi, sprite, partikel, dan input berhenti), false = lanjut.
+signal jeda_berubah(jeda: bool)
 
 ## Geseran sepeda di layar akibat dorongan kecepatan yang sudah dihaluskan, piksel game.
 var _geser_dorongan: Vector2 = Vector2.ZERO
-## True selama simulasi dijeda (`JedaSim`).
+## True selama layar jeda terbuka (`JedaSim`).
 var _jeda: bool = false
 ## True bila langkah berikutnya adalah langkah pertama sesudah lanjut (memakai dt 0).
 var _baru_lanjut: bool = false
@@ -28,21 +35,57 @@ var _baru_lanjut: bool = false
 @onready var _sepeda: SepedaUji = %Sepeda
 @onready var _kontrol: KontrolTouch = %KontrolTouch
 @onready var _hud: HudDev = %Hud
+@onready var _layar_jeda: LayarJeda = %LayarJeda
 
 
 func _ready() -> void:
 	_hud.kidal_diubah.connect(_kontrol.atur_kidal)
+	_hud.jeda_diminta.connect(minta_jeda)
+	_layar_jeda.lanjut_diminta.connect(minta_lanjut)
 	_kontrol.router.swipe_selesai.connect(_saat_swipe_selesai)
+	_layar_jeda.tampilkan(false)
 	perbarui(0.0)
 
 
 func _notification(what: int) -> void:
-	var jeda_baru: bool = JedaSim.jeda_sesudah(_jeda, what)
-	_baru_lanjut = JedaSim.baru_lanjut_sesudah(_jeda, _baru_lanjut, what)
+	_terapkan_jeda(JedaSim.peristiwa_dari_notifikasi(what))
+
+
+func _exit_tree() -> void:
+	# Scene keluar saat dijeda (mis. ganti scene atau tes selesai): pause pohon dilepas supaya tidak menahan scene lain.
+	if _jeda:
+		get_tree().paused = false
+
+
+## Tombol jeda di HUD: membuka layar jeda (tidak berpengaruh bila sudah jeda).
+func minta_jeda() -> void:
+	_terapkan_jeda(JedaSim.Peristiwa.JEDA)
+
+
+## Tombol "Lanjut" di layar jeda: menutup layar jeda dan melanjutkan (langkah pertama ber-`dt` 0).
+func minta_lanjut() -> void:
+	_terapkan_jeda(JedaSim.Peristiwa.LANJUT)
+
+
+## Menerapkan satu peristiwa jeda. Saat menjeda (juga bila sudah jeda): sepeda dijeda, jari dilepas, cincin rem padam. Saat status
+## berubah: layar jeda tampil atau hilang, `SceneTree.paused` mengikuti, dan `jeda_berubah` dipancarkan.
+func _terapkan_jeda(peristiwa: JedaSim.Peristiwa) -> void:
+	if peristiwa == JedaSim.Peristiwa.TIDAK_ADA or not is_node_ready():
+		return
+	var jeda_baru: bool = JedaSim.jeda_sesudah(_jeda, peristiwa)
+	_baru_lanjut = JedaSim.baru_lanjut_sesudah(_jeda, _baru_lanjut, peristiwa)
+	var berubah: bool = jeda_baru != _jeda
 	_jeda = jeda_baru
-	if JedaSim.notifikasi_jeda(what) and _sepeda != null:
+	if _jeda:
 		_sepeda.jeda()
+		_kontrol.lepas_semua()
 		_kontrol.atur_rem(false)
+	if not berubah:
+		return
+	_layar_jeda.tampilkan(_jeda)
+	if is_inside_tree():
+		get_tree().paused = _jeda
+	jeda_berubah.emit(_jeda)
 
 
 func _process(delta: float) -> void:
@@ -71,7 +114,7 @@ func perbarui(dt: float) -> void:
 	_kamera.position = posisi_kamera()
 
 
-## True selama simulasi dijeda (app di-background atau kehilangan fokus).
+## True selama layar jeda terbuka (simulasi, sprite, partikel, dan input berhenti).
 func sedang_jeda() -> bool:
 	return _jeda
 

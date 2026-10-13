@@ -149,16 +149,19 @@ func _test_scene_jalan_uji() -> void:
 	var tema: Theme = load("res://assets/ui/theme.tres") as Theme
 	check(strip != null and panel_bawah != null and strip.theme == tema and panel_bawah.theme == tema and tema != null, "HUD memakai assets/ui/theme.tres (dipasang di scene, bukan gui/theme/custom: tema proyek memuat font saat impor pertama di clone bersih dan menghasilkan ERROR)")
 	check(str(ProjectSettings.get_setting("gui/theme/custom", "")).is_empty(), "gui/theme/custom tidak diisi (impor pertama di clone bersih harus tanpa ERROR)")
+	# Run fase1b-umpan-balik: kontainer anchor ketiga StripJeda (pojok kiri atas, anchor bawaan) memuat tombol jeda.
+	var strip_jeda: MarginContainer = _anak(hud, "StripJeda") as MarginContainer
+	check(strip_jeda != null and strip_jeda.anchor_left == 0.0 and strip_jeda.anchor_right == 0.0 and strip_jeda.anchor_top == 0.0 and strip_jeda.anchor_bottom == 0.0 and strip_jeda.theme == tema, "HUD: strip jeda ber-anchor di pojok kiri atas, margin dari Config (bukan posisi piksel)")
 	var tanpa_posisi_absolut: bool = true
 	var hanya_tombol_menerima: bool = true
 	for node: Node in _semua_node(hud):
 		if node is Control:
 			var kontrol_hud: Control = node as Control
-			if kontrol_hud != strip and kontrol_hud != panel_bawah and not kontrol_hud.get_parent() is Container:
+			if kontrol_hud != strip and kontrol_hud != panel_bawah and kontrol_hud != strip_jeda and not kontrol_hud.get_parent() is Container:
 				tanpa_posisi_absolut = false
 			if not kontrol_hud is Button and kontrol_hud.mouse_filter != Control.MOUSE_FILTER_IGNORE:
 				hanya_tombol_menerima = false
-	check(tanpa_posisi_absolut, "HUD: semua Control selain dua kontainer anchor ditata oleh Container induknya (tanpa posisi piksel absolut)")
+	check(tanpa_posisi_absolut, "HUD: semua Control selain tiga kontainer anchor ditata oleh Container induknya (tanpa posisi piksel absolut)")
 	check(hanya_tombol_menerima, "HUD: hanya tombol yang menerima sentuhan (kontainer, panel, label, dan bar memakai MOUSE_FILTER_IGNORE)")
 	# Umpan balik stick (AC-14): tekstur cakram/cincin/knob dirasterisasi per piksel game dengan warna dari Palette.
 	var tekstur_isi: ImageTexture = kontrol.get("_tekstur_isi") as ImageTexture
@@ -342,13 +345,17 @@ func _test_input_terpadu() -> void:
 	_langkah(akar, 120)
 	# Sejak run fase1a-gerak (D-6) kehilangan fokus juga menjeda simulasi: jarak pun tidak bertambah sampai fokus kembali.
 	check(akar.sedang_jeda() and sepeda.lateral_ubin == lateral_fokus and sepeda.jarak_ubin == jarak_fokus, "setelah kehilangan fokus tidak ada gerak sendiri: simulasi dijeda (lateral dan jarak tetap)")
+	# Sejak run fase1b-umpan-balik (D-6) fokus kembali tidak melanjutkan; pemain mengetuk Lanjut di layar jeda.
 	_tree.root.propagate_notification(Node.NOTIFICATION_APPLICATION_FOCUS_IN)
+	check(akar.sedang_jeda(), "fokus kembali: layar jeda tetap terbuka (tanpa lanjut otomatis)")
+	akar.minta_lanjut()
 	_langkah(akar, 120)
-	check(not akar.sedang_jeda() and sepeda.lateral_ubin == lateral_fokus and sepeda.kecepatan_ud == 3.0 and sepeda.jarak_ubin > jarak_fokus, "fokus kembali: simulasi lanjut, santai 3,0 u/d tanpa geser lateral sendiri")
+	check(not akar.sedang_jeda() and sepeda.lateral_ubin == lateral_fokus and sepeda.kecepatan_ud == 3.0 and sepeda.jarak_ubin > jarak_fokus, "Lanjut: simulasi lanjut, santai 3,0 u/d tanpa geser lateral sendiri")
 	_sentuh(7, Vector2(100, 260), true)
 	_sentuh(8, Vector2(450, 200), true)
 	_tree.notification(Node.NOTIFICATION_APPLICATION_PAUSED)
 	check(router.jumlah_jari_aktif() == 0 and router.jumlah_swipe_selesai == 1, "NOTIFICATION_APPLICATION_PAUSED melepas kedua jari tanpa mencatat swipe")
+	akar.minta_lanjut()
 	# Lepas susulan dari jari yang sudah dibatalkan tidak membuat apa-apa.
 	_sentuh(7, Vector2(100, 260), false)
 	_sentuh(8, Vector2(450, 200), false)
@@ -692,12 +699,15 @@ func _test_lempar_batal() -> void:
 	_geser(1, Vector2(500, 200))
 	_tree.root.propagate_notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
 	check(not router.swipe_aktif() and router.jumlah_jari_aktif() == 0, "FOCUS_OUT membatalkan swipe yang ditahan")
+	# Sejak run fase1b-umpan-balik jeda membuka layar jeda dan menahan input sampai Lanjut; jari diangkat sesudah lanjut.
+	akar.minta_lanjut()
 	_sentuh(1, Vector2(500, 200), false)
 	check(router.jumlah_swipe_selesai == 0 and not sepeda.sedang_melempar() and catatan.is_empty(), "jari swipe diangkat sesudah dibatalkan: tidak tercatat dan tidak melempar")
 	# (b) Sama untuk PAUSED lewat SceneTree.
 	_sentuh(2, Vector2(440, 200), true)
 	_geser(2, Vector2(500, 200))
 	_tree.notification(Node.NOTIFICATION_APPLICATION_PAUSED)
+	akar.minta_lanjut()
 	_sentuh(2, Vector2(500, 200), false)
 	check(router.jumlah_swipe_selesai == 0 and not sepeda.sedang_melempar(), "PAUSED membatalkan swipe yang ditahan: tidak melempar")
 	# (c) Kidal berganti saat swipe ditahan -> batal_semua -> tidak melempar.
@@ -716,6 +726,7 @@ func _test_lempar_batal() -> void:
 	check(sepeda.sedang_melempar() and sprite.is_processing() == false, "lempar berjalan (6 langkah, belum lepas)")
 	_tree.root.propagate_notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
 	check(not sepeda.sedang_melempar() and sepeda.nama_animasi() == &"santai_normal" and sprite.is_playing(), "FOCUS_OUT menutup lempar yang berjalan: kembali ke santai_normal yang berputar")
+	akar.minta_lanjut()
 	for i: int in range(40):
 		sprite.maju(DT)
 	check(catatan.is_empty(), "lempar yang ditutup sebelum lepas tidak memancarkan koran_lepas maupun lempar_selesai")
@@ -726,6 +737,7 @@ func _test_lempar_batal() -> void:
 		sprite.maju(DT)
 	_tree.notification(Node.NOTIFICATION_APPLICATION_PAUSED)
 	check(not sepeda.sedang_melempar() and _jumlah(catatan, "lepas") == 1 and _jumlah(catatan, "selesai") == 0, "PAUSED sesudah lepas: koran_lepas tetap sekali, tidak ada lempar_selesai, tidak menggantung")
+	akar.minta_lanjut()
 	# (f) Sesudah pembatalan, swipe baru melempar normal.
 	_swipe(akar, 1, Vector2(440, 200), Vector2(500, 200))
 	sprite = _sprite(akar)

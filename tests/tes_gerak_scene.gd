@@ -1,6 +1,6 @@
 class_name TesGerakScene
 extends RefCounted
-## Tes terpadu run fase1a-gerak yang butuh scene tree (AC-8 jeda, AC-9 HUD dan cincin rem, AC-10 kabel scene): event sentuh
+## Tes terpadu run fase1a-gerak yang butuh scene tree (AC-8 jeda di tengah tahan rem, AC-9 HUD dan cincin rem, AC-10 kabel scene): event sentuh
 ## sintetis lewat `Input.parse_input_event` di viewport 780x360 (pola run 0B, `tests/tes_input_scene.gd`).
 ##
 ## Dipanggil dari `tests/run_tests.gd` (`await TesGerakScene.new(check, judul, self).jalankan()`). Scene dijalankan dengan
@@ -36,7 +36,6 @@ func jalankan() -> void:
 	await _test_dua_jari_rem_dan_meluncur()
 	await _test_stamina_di_scene()
 	await _test_kidal_rem()
-	await _test_jeda()
 	await _test_jeda_di_tengah_tahan_rem()
 
 
@@ -303,40 +302,8 @@ func _test_kidal_rem() -> void:
 
 
 # --- AC-8: jeda ---
-
-func _test_jeda() -> void:
-	_judul.call("Jeda: PAUSED dan FOCUS_OUT menghentikan simulasi, lanjut tanpa lompatan (AC-8, D-6)")
-	for urutan: Array in [["FOCUS_OUT", "FOCUS_IN"], ["PAUSED", "RESUMED"]]:
-		var akar: JalanUji = await _siapkan()
-		var sepeda: SepedaUji = _anak(akar, "Sepeda") as SepedaUji
-		var kontrol: KontrolTouch = _anak(akar, "KontrolTouch") as KontrolTouch
-		var router: TouchRouter = kontrol.router
-		var tag: String = "%s/%s" % urutan
-		_sentuh(0, TITIK_STICK, true)
-		_geser(0, TITIK_STICK - Vector2(0, Config.STICK_RADIUS_PX))
-		_langkah(akar, 120)
-		_swipe(akar, 1, SWIPE_KIRI, SWIPE_KANAN)
-		var sprite: LoperSprite = _sprite(akar)
-		check(sepeda.sedang_melempar() and router.stick_aktif() and sepeda.kecepatan_ud == 6.0, "%s: sebelum jeda ngebut, melempar, stick aktif" % tag)
-		var v: float = sepeda.kecepatan_ud
-		var jarak: float = sepeda.jarak_ubin
-		var stamina: float = sepeda.stamina()
-		var dorongan: Vector2 = akar.geser_dorongan()
-		_kirim(urutan[0])
-		check(akar.sedang_jeda() and router.jumlah_jari_aktif() == 0 and router.vektor_stick() == Vector2.ZERO, "%s: jeda, stick dan swipe dilepas" % tag)
-		check(not sepeda.sedang_melempar() and sprite.animation != &"lempar_kanan_ngebut_normal", "%s: lempar ditutup" % tag)
-		for dt: float in [DT, 0.1, 5.0, 100.0]:
-			akar.perbarui(dt)
-			akar._process(dt)
-		check(sepeda.kecepatan_ud == v and sepeda.jarak_ubin == jarak and sepeda.stamina() == stamina and akar.geser_dorongan() == dorongan and sepeda.keadaan.tahan_rem_detik == 0.0, "%s: perbarui dan _process dengan dt besar tidak mengubah kecepatan, jarak, stamina, lama tahan rem, dorongan" % tag)
-		_kirim(urutan[1])
-		check(not akar.sedang_jeda(), "%s: lanjut otomatis" % tag)
-		akar.perbarui(0.1)
-		check(sepeda.kecepatan_ud == v and sepeda.jarak_ubin == jarak and sepeda.stamina() == stamina and akar.geser_dorongan() == dorongan, "%s: langkah pertama sesudah lanjut ber-dt 0 (tidak ada lompatan, juga tidak 0,1 detik)" % tag)
-		akar.perbarui(DT)
-		check(sepeda.kecepatan_ud < v and sepeda.jarak_ubin > jarak and sepeda.jarak_ubin - jarak < v * DT + 0.000001, "%s: langkah berikutnya normal (stick sudah lepas: kecepatan turun, maju satu langkah %s ubin)" % [tag, sepeda.jarak_ubin - jarak])
-		_bersihkan(akar)
-
+# Tes jeda lengkap (tombol, layar jeda, tanpa lanjut otomatis, back) dipindah ke `tests/tes_jeda_scene.gd` (run fase1b-umpan-balik,
+# D-6): tes lama "lanjut otomatis saat FOCUS_IN/RESUMED" tidak berlaku lagi (keputusan pemilik 2026-10-14).
 
 ## Kirim notifikasi aplikasi seperti dari platform (FOCUS lewat root, PAUSED/RESUMED lewat SceneTree).
 func _kirim(nama: String) -> void:
@@ -365,6 +332,9 @@ func _test_jeda_di_tengah_tahan_rem() -> void:
 	_kirim("PAUSED")
 	_kirim("RESUMED")
 	_kirim("FOCUS_IN")
+	# Sejak run fase1b-umpan-balik tidak ada lanjut otomatis: pemain mengetuk Lanjut di layar jeda.
+	check(akar.sedang_jeda(), "RESUMED dan FOCUS_IN tidak melanjutkan (layar jeda tetap)")
+	akar.minta_lanjut()
 	_sentuh(1, TITIK_STICK, true)
 	_geser(1, TITIK_STICK + Vector2(0, Config.STICK_RADIUS_PX))
 	_langkah(akar, 1 + 6)
@@ -375,6 +345,7 @@ func _test_jeda_di_tengah_tahan_rem() -> void:
 	_kirim("FOCUS_OUT")
 	check(not sepeda.rem_aktif() and not kontrol.busur_rem_tampil(), "jeda saat rem aktif: rem padam, busur hilang")
 	_kirim("FOCUS_IN")
+	akar.minta_lanjut()
 	_langkah(akar, 2)
 	check(not sepeda.rem_aktif(), "sesudah lanjut tanpa jari: tidak ada rem yang tersisa")
 	_bersihkan(akar)

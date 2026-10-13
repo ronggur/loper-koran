@@ -190,12 +190,28 @@ const HUD_PANEL_PAD_X_PX: int = 7
 const HUD_BAR_TINGGI_PX: int = 7
 ## Bar stamina berganti warna dari `ACCENT` ke `FAIL` di bawah nilai ini (DESIGN_SPEC 3.5, usulan).
 const HUD_STAMINA_AMBANG_RENDAH: float = 30.0
-## Tinggi tombol di strip atas, piksel game. Di A54 (450 dpi, skala x3) = 108 px layar = 38 dp, di bawah 44 dp rule `ui-scenes`; strip atas hanya 48 px sebelum zona swipe, jadi dinilai lewat uji HP.
-const HUD_TOMBOL_TINGGI_PX: int = 36
+## Tinggi tombol di strip atas dan tombol layar jeda, piksel game. Di A54 (450 dpi, skala x3) 44 dp sekitar 41,7 px game, jadi 42 (paket pemilik 2026-10-14); muat di strip atas: margin 4 + 42 = 46 < 48.
+const HUD_TOMBOL_TINGGI_PX: int = 42
 ## Lebar minimum tombol di strip atas, piksel game.
 const HUD_TOMBOL_LEBAR_PX: int = 96
 ## Jarak tombol strip atas dari tepi atas layar, piksel game. Tombol berakhir di bawah `HUD_STRIP_ATAS_TINGGI_PX`.
 const HUD_TOMBOL_MARGIN_ATAS_PX: int = 4
+## Tombol jeda (DESIGN_SPEC 3.1): sisi area sentuh persegi, piksel game (≥ 44 dp di A54, paket pemilik 2026-10-14). Lebih besar dari gambarnya.
+const HUD_JEDA_SENTUH_PX: int = 42
+## Tombol jeda: sisi gambar persegi (kotak bergaris `TEXT`), piksel game.
+const HUD_JEDA_GAMBAR_PX: int = 24
+## Tombol jeda: letak pojok kiri atas gambar dari tepi kiri layar, piksel game. Tidak dicerminkan saat kidal.
+const HUD_JEDA_GAMBAR_X_PX: int = 26
+## Tombol jeda: letak pojok kiri atas gambar dari tepi atas layar, piksel game.
+const HUD_JEDA_GAMBAR_Y_PX: int = 8
+## Tombol jeda: lebar satu batang ikon, piksel game.
+const HUD_JEDA_BATANG_LEBAR_PX: int = 3
+## Tombol jeda: tinggi batang ikon, piksel game.
+const HUD_JEDA_BATANG_TINGGI_PX: int = 10
+## Tombol jeda: celah di antara dua batang ikon, piksel game.
+const HUD_JEDA_BATANG_CELAH_PX: int = 4
+## Layar jeda: lebar minimum tombol "Lanjut", piksel game (tingginya `HUD_TOMBOL_TINGGI_PX`).
+const JEDA_TOMBOL_LEBAR_PX: int = 96
 ## Objek berkala di sisi seberang: berapa ubin di belakang sepeda yang masih disiapkan.
 const JALAN_UJI_DAUR_MUNDUR_UBIN: int = 12
 ## Objek berkala di sisi seberang: berapa ubin di depan sepeda yang sudah disiapkan.

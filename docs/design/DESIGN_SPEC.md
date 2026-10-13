@@ -94,8 +94,10 @@ Informasi diletakkan di tepi layar supaya tengah, tempat jalan dan rumah, tetap 
 
 | Elemen | Posisi | Ukuran | Isi |
 |---|---|---|---|
-| Tombol jeda | x 26, y 8 | 24×24 | Dua batang 3×10 `TEXT`, garis luar panel `TEXT` supaya terlihat sebagai tombol |
+| Tombol jeda | x 26, y 8 | 24×24 (gambar); area sentuh 42×42 | Dua batang 3×10 `TEXT`, garis luar panel `TEXT` supaya terlihat sebagai tombol |
 | Kartu misi | x 26, y 40 | lebar 145 | Ikon misi 14 px, label "MISI SAMPINGAN" (`ACCENT`), judul misi, progres dan sisa rumah ("Kucing 0/1 · 8 rumah") |
+
+**Area sentuh tombol jeda (usulan, paket pemilik 2026-10-14, run fase1b-umpan-balik):** gambar tetap 24×24 di (26, 8), tetapi area sentuhnya 42×42 px game (≥ 44 dp di A54: 450 dpi ×3, 44 dp ≈ 41,7 px game), x 17–59 (dipusatkan mendatar pada gambar), y 4–46 (sejajar tombol strip atas, berakhir sebelum zona swipe di y 48). Tidak masuk zona stick maupun swipe di 640, 780, dan 800, tidak menumpuk dengan tombol kidal (tengah atas), dan **tidak dicerminkan saat kidal** (strip atas bebas dari kontrol). Gambar dari kode (`scripts/ui/tombol_jeda.gd`), tanpa PNG. Ketukan diterima dari jari mana pun, juga saat jempol lain masih di stick (`TombolSentuh`). Konstanta `HUD_JEDA_*` di `scripts/config.gd`. Kartu misi nanti digeser bila menumpuk dengan area sentuh ini.
 
 Kartu misi hanya muncul kalau misi diambil. Saat misi selesai atau gagal, kartu berganti banner singkat 1,5 detik (`CONTENT_GUIDE.md` 3) lalu hilang.
 
@@ -191,7 +193,7 @@ Status: ⬜ belum · 🟡 sketsa · ✅ disetujui
 | Halaman depan koran | Fase 4 | ⬜ | Nama koran dan hari, tiga headline (berita utama dengan ikon efek, misi sampingan dengan ringkasan satu baris dan tombol Ambil/Lewati, berita ringan), tombol Berangkat. Terbaca dalam 10 detik (GDD 10.1, `CONTENT_GUIDE.md` 2) |
 | Hasil harian | Fase 3–4 | ⬜ | Terkirim, meleset, tip, koin hari itu, perubahan reputasi, hasil misi dan efeknya ke pelanggan, pelanggan baru atau berhenti, milestone yang hampir tercapai, tombol iklan hadiah opsional (GDD 3.1, 13, 14.2) |
 | Bengkel | Fase 6 | ⬜ | Kondisi tiap komponen, harga servis, upgrade, milestone target aktif, tombol iklan hadiah opsional (GDD 12.3, 13) |
-| Jeda | Fase 1 | ⬜ | Lanjut, pengaturan, keluar ke menu. Game benar-benar berhenti |
+| Jeda | Fase 1 | 🟡 | Lanjut, pengaturan, keluar ke menu. Game benar-benar berhenti. **Versi sementara (usulan, run fase1b-umpan-balik 2026-10-14):** `scenes/ui/layar_jeda.tscn`, lapisan gelap `HUD_PANEL` penuh layar di atas jalan dan HUD, judul "JEDA" (`JudulLayar`, `TEXT`), tombol "Lanjut" (tinggi 42 px game, gaya tombol HUD). Dibuka oleh tombol jeda, app ke background atau kehilangan fokus, dan back Android; ditutup hanya oleh "Lanjut" atau back (tanpa lanjut otomatis). Pengaturan dan keluar ke menu belum ada |
 | Pengaturan | Fase 3 | ⬜ | Opsi kidal, mode bantu, volume suasana dan efek suara (`SOUND_DESIGN.md` 6), getar |
 | Peta distrik | M3 | ⬜ | Tergantung keputusan distrik bebas dipilih atau berurutan (GDD 9.5) |
 

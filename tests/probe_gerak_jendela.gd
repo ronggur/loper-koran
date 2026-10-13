@@ -111,11 +111,12 @@ func _maju_sampai(syarat: Callable, maks_detik: float) -> void:
 	await _tunggu(2)
 
 
-## Satu langkah simulasi. Bila jendela kehilangan fokus (desktop), simulasi dijeda; probe mencatatnya lalu melanjutkan.
+## Satu langkah simulasi. Bila jendela kehilangan fokus (desktop), layar jeda terbuka; probe mencatatnya lalu menekan Lanjut
+## (sejak run fase1b-umpan-balik FOCUS_IN tidak melanjutkan).
 func _langkah() -> void:
 	if _akar.sedang_jeda():
-		print("PERINGATAN: simulasi dijeda (jendela kehilangan fokus); probe melanjutkan dengan FOCUS_IN")
-		root.propagate_notification(Node.NOTIFICATION_APPLICATION_FOCUS_IN)
+		print("PERINGATAN: layar jeda terbuka (jendela kehilangan fokus); probe melanjutkan lewat minta_lanjut")
+		_akar.minta_lanjut()
 	_akar.perbarui(DT)
 
 

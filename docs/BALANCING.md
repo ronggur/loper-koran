@@ -45,7 +45,7 @@ Stick analog dipetakan halus: sumbu atas memetakan santai → ngebut, sumbu bawa
 - **Lateral** analog bebas (keputusan pemilik 2026-10-13, tanpa kunci atau snap jalur): komponen datar × 3,0 u/d, dijepit ke tepi aspal ±1,0 ubin (`JALAN_LEBAR_UBIN` / 2) sebagai **batas tepi jalan resmi**. Positif = sisi `dekat`, negatif = sisi `seberang`; kidal tidak mengubah arti sumbu. Kecepatan lateral efektif 0 bila terhalang tepi. Lateral tetap bekerja saat berhenti dengan rem (arah sprite 90°).
 - **Pose sprite** (`LoperAnim.pose_dari_gerak`, keputusan pemilik "ikuti fisika"): (1) rem aktif = `rem_<arah>`, juga di kecepatan 0; (2) stick ke bawah dan kecepatan sebenarnya masih di atas tujuan lebih dari `POSE_MELUNCUR_TOLERANSI_UD` (0,05 u/d) = `meluncur_<arah>` (kaki diam); (3) stick ke bawah dan sudah sampai tujuan = `melambat_<arah>` (kayuh 4 fps); (4) selain itu kayuh dengan tingkat dari stick, **dijepit ke cepat selama lelah**. Toleransi 0,05 mencegah stick yang hanya bergetar membuat pose berkedip; akibatnya stick bawah 15,1% (tujuan 2,998) langsung melambat. Lempar dari meluncur atau rem memakai lempar santai.
 - **Laju kayuh** (`LoperAnim.pedal_rate`): untuk kayuh dan melambat = kecepatan sebenarnya / kecepatan nominal tingkat (santai 3,0, cepat 4,5, ngebut 6,0, melambat 1,5), dijepit 0 sampai `PEDAL_RATE_MAKS` (1,5). Meluncur dan rem = 1 (animasinya napas dan getar dari `.tres`). Lempar tidak terpengaruh.
-- **Jeda** (`JedaSim`, GDD rule `gdscript`): app di-background atau kehilangan fokus menghentikan simulasi (dt 0), melepas stick dan swipe, menutup lempar, dan mengembalikan lama tahan rem ke 0; lanjut otomatis dan langkah pertama sesudahnya ber-dt 0.
+- **Jeda** (`JedaSim`, rule `gdscript`; diubah run fase1b-umpan-balik 2026-10-14, keputusan pemilik): tombol jeda, app di-background atau kehilangan fokus, dan tombol back Android membuka **layar jeda**; simulasi berhenti (dt 0), `SceneTree.paused` menghentikan sprite, partikel, dan input, stick dan swipe dilepas, lempar ditutup, lama tahan rem kembali 0. **Tidak ada lanjut otomatis** (RESUMED dan FOCUS_IN tidak berpengaruh); lanjut hanya lewat tombol "Lanjut" atau back saat layar jeda terbuka. Langkah pertama sesudah lanjut ber-dt 0, stick harus disentuh ulang, rem harus ditahan ulang 0,25 detik.
 
 | Angka baru (run fase1a-gerak) | Usulan | Catatan |
 |---|---|---|
@@ -69,6 +69,8 @@ Stick analog dipetakan halus: sumbu atas memetakan santai → ngebut, sumbu bawa
 | Dorongan maju (ngebut) | 28 px game datar, naik ke kanan atas 2:1 (28, −14) | `DORONGAN_MAJU_PX`; GDD 15, usulan (permintaan Ronggur 2026-10-09), disetel di HP |
 | Dorongan mundur (melambat) | 20 px game datar, turun ke kiri bawah 2:1 (−20, +10) | `DORONGAN_MUNDUR_PX`; usulan |
 | Respon dorongan | 0,35 detik | `DORONGAN_RESPON_DETIK`; konstanta waktu penghalusan eksponensial, bebas framerate |
+| Tinggi tombol strip atas dan tombol "Lanjut" | 42 px game (44 dp di A54 450 dpi ×3 = 41,7) | `HUD_TOMBOL_TINGGI_PX`; paket pemilik 2026-10-14 (dulu 36 = 38 dp); muat di strip atas: 4 + 42 = 46 < 48. Usulan, belum diuji di HP |
+| Tombol jeda | area sentuh 42×42 px game, gambar 24×24 di (26, 8) | `HUD_JEDA_*`; area sentuh x 17–59, y 4–46 di strip atas, tidak dicerminkan saat kidal (DESIGN_SPEC 3.1); usulan |
 | Ambang swipe lempar | 12 px game, inklusif | `LEMPAR_SWIPE_AMBANG_PX`; usulan (run sprite-lempar-melambat), diukur dari panjang swipe awal ke akhir; belum diuji di HP, jangan dikunci sebelum uji |
 | Frame koran lepas | indeks 2 | `LEMPAR_FRAME_LEPAS`; fakta sprite (`release_frame` di `loper_agen_lempar.json`), bukan angka tuning; dijaga tes terhadap JSON |
 | Toleransi waktu frame | 0,000001 detik | `LEMPAR_TOLERANSI_DETIK`; hanya meredam derau float di batas frame, tidak mengubah rasa |
@@ -210,6 +212,8 @@ Belum diisi. Diputuskan di Fase 6 bersama layar bengkel (GDD 12.5). Arah yang su
 ---
 
 ## 10. Catatan perubahan
+
+- **2026-10-14** — Run fase1b-umpan-balik (paket usulan pemilik, belum diuji di HP): jeda tanpa lanjut otomatis (tombol jeda, layar jeda, back Android); tinggi tombol strip atas dan "Lanjut" 36 → 42 px game (≥ 44 dp di A54), tombol jeda baru dengan area sentuh 42×42.
 
 - **2026-10-13** — Run fase1a-gerak: `BikeMotion` menggantikan `BikeDrive` (bagian 2): rem tanpa tombol sampai berhenti, meluncur, stamina dengan laju linear per potong dan lelah (bagian 3), lateral analog dengan batas tepi jalan resmi ±1 ubin, jeda, pose meluncur/rem dari fisika, dan laju kayuh dari kecepatan. Angka lama BALANCING 2-3 tidak berubah (uji HP Fase 0 lolos tanpa permintaan ubah); angka baru: toleransi rem, toleransi pose 0,05 u/d, `PEDAL_RATE_MAKS` 1,5, bar stamina merah di bawah 30. Semua usulan sampai uji HP Run 1A.
 - **2026-10-07** — Angka awal ditulis sebagai usulan untuk Fase 0–3. Belum ada yang diuji.

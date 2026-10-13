@@ -1,0 +1,48 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/layar_jeda.gd" id="1_script"]
+[ext_resource type="Theme" path="res://assets/ui/theme.tres" id="2_theme"]
+[ext_resource type="Script" path="res://scripts/ui/tombol_sentuh.gd" id="3_tombol"]
+
+[node name="LayarJeda" type="CanvasLayer"]
+process_mode = 2
+layer = 20
+visible = false
+script = ExtResource("1_script")
+
+[node name="Latar" type="ColorRect" parent="."]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+
+[node name="Tengah" type="CenterContainer" parent="Latar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Isi" type="VBoxContainer" parent="Latar/Tengah"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="JudulJeda" type="Label" parent="Latar/Tengah/Isi"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"JudulLayar"
+text = "JEDA_JUDUL"
+horizontal_alignment = 1
+
+[node name="TombolLanjut" type="Button" parent="Latar/Tengah/Isi"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+focus_mode = 0
+text = "JEDA_LANJUT"
+script = ExtResource("3_tombol")

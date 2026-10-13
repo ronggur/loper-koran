@@ -58,8 +58,14 @@ func _input(event: InputEvent) -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_APPLICATION_FOCUS_OUT:
-		router.batal_semua()
-		queue_redraw()
+		lepas_semua()
+
+
+## Melepas semua jari tanpa mencatat swipe (jeda dari tombol, background, atau back; `JalanUji`). Selama jeda node ini tidak
+## menerima sentuhan (`SceneTree.paused`), jadi stick harus disentuh ulang sesudah lanjut.
+func lepas_semua() -> void:
+	router.batal_semua()
+	queue_redraw()
 
 
 func _draw() -> void:
