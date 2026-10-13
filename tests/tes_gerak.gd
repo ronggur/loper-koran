@@ -9,8 +9,8 @@ extends RefCounted
 
 const DT: float = 1.0 / 60.0
 const BERKAS_FRAMES: String = "res://assets/sprites/loper/loper_agen_frames.tres"
-## Toleransi independensi pembagian dt untuk stamina (trapesium per bagian), poin stamina.
-const TOLERANSI_STAMINA_DT: float = 0.05
+## Toleransi independensi pembagian dt untuk stamina (integral tepat per bagian), poin stamina.
+const TOLERANSI_STAMINA_DT: float = 0.000001
 ## Toleransi independensi pembagian dt untuk kecepatan dan jarak (rumus tepat), u/d dan ubin.
 const TOLERANSI_TEPAT: float = 0.000001
 
@@ -316,8 +316,9 @@ func _test_rem_diagonal() -> void:
 
 
 ## Hasil tidak bergantung pada pembagian dt: skenario sama dengan dt 1/30 dan 1/240.
-func _skenario(dt: float) -> Array:
+func _skenario(dt: float, stamina: float = 50.0) -> Array:
 	var keadaan: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
+	keadaan.stamina = stamina
 	var jarak: float = 0.0
 	# [stick, detik]: ngebut, bawah penuh (rem aktif di tengah langkah 1/30), lepas, bawah 0,5, cepat.
 	for bagian: Array in [[Vector2(0, 1), 2.0], [Vector2(0, -1), 1.0], [Vector2.ZERO, 0.7], [Vector2(0, -0.5), 1.3], [Vector2(0.4, 0.5), 3.0]]:
@@ -339,6 +340,11 @@ func _test_independen_dt() -> void:
 	check(absf(float(kasar[1]) - float(halus[1])) < 0.0001, "jarak total dt 1/30 = dt 1/240 (galat < 1e-4 ubin): %s lawan %s" % [kasar[1], halus[1]])
 	check(absf(a.stamina - b.stamina) < TOLERANSI_STAMINA_DT, "stamina akhir dt 1/30 lawan 1/240 dalam toleransi %s: %s lawan %s" % [TOLERANSI_STAMINA_DT, a.stamina, b.stamina])
 	check(absf(a.lateral_ubin - b.lateral_ubin) < TOLERANSI_TEPAT and a.rem_aktif == b.rem_aktif and a.lelah == b.lelah, "lateral, rem, dan lelah sama")
+	# Dari stamina penuh: jepit 100 hanya diterapkan di akhir langkah, sedangkan laju di 3,0-3,5 u/d masih positif; selisih
+	# karena jepit itu kecil (di bawah 0,01 poin untuk dt 1/30) dan memang sifat jepit, bukan pembagian rampa.
+	var penuh_kasar: BikeMotion.Keadaan = _skenario(1.0 / 30.0, 100.0)[0]
+	var penuh_halus: BikeMotion.Keadaan = _skenario(1.0 / 240.0, 100.0)[0]
+	check(absf(penuh_kasar.stamina - penuh_halus.stamina) < 0.01 and absf(penuh_kasar.kecepatan_ud - penuh_halus.kecepatan_ud) < TOLERANSI_TEPAT, "dari stamina penuh (jepit 100 di awal rampa): dt 1/30 lawan 1/240 berbeda < 0,01 poin (%s lawan %s)" % [penuh_kasar.stamina, penuh_halus.stamina])
 	# Langkah yang melewati batas 0,25 detik dibagi: rem mulai tepat di 0,25 detik.
 	var satu: BikeMotion.Hasil = BikeMotion.langkah(_keadaan(3.0), Vector2(0, -1), 0.35)
 	# 0,25 detik meluncur dari 3,0 (2,0 u/d2) = 2,5, lalu 0,1 detik rem (5,0 u/d2) = 2,0.
@@ -377,6 +383,13 @@ func _test_stamina_laju() -> void:
 	rem.tahan_rem_detik = 1.0
 	h = BikeMotion.langkah(rem, Vector2(0, -1), 1.0)
 	check(is_equal_approx(h.keadaan.stamina, 65.0), "rem aktif 1 detik dari 50 = 65, dapat %s" % h.keadaan.stamina)
+	# Stamina tepat selama rampa: 3,0 -> 6,0 dalam 1 detik = 0,5 detik rata-rata -1 lalu 0,5 detik rata-rata -8 = -4,5 (bukan -5
+	# dari trapesium ujung-ujung, bukan -12 dari laju tujuan). Satu langkah 1 detik = 240 langkah kecil.
+	h = BikeMotion.langkah(_keadaan(3.0, 50.0), Vector2(0, 1), 1.0)
+	var h_kecil: BikeMotion.Hasil = _jalankan(_keadaan(3.0, 50.0), Vector2(0, 1), 240, 1.0 / 240.0)
+	check(is_equal_approx(h.keadaan.stamina, 45.5) and absf(h_kecil.keadaan.stamina - h.keadaan.stamina) < TOLERANSI_TEPAT, "rampa 3,0 -> 6,0 dalam 1 detik: stamina 50 -> 45,5 tepat, satu langkah = 240 langkah (dapat %s dan %s)" % [h.keadaan.stamina, h_kecil.keadaan.stamina])
+	h = BikeMotion.langkah(_keadaan(6.0, 50.0), Vector2.ZERO, 2.0)
+	check(is_equal_approx(h.keadaan.stamina, 44.25), "rampa turun 6,0 -> 3,0 (1,5 detik) lalu santai 0,5 detik: 50 - 6,75 + 1,0 = 44,25, dapat %s" % h.keadaan.stamina)
 	h = BikeMotion.langkah(_keadaan(3.0, 99.0), Vector2(0, -0.5), 1.0)
 	check(h.keadaan.stamina == 100.0, "stamina dijepit di 100, dapat %s" % h.keadaan.stamina)
 	h = BikeMotion.langkah(_keadaan(6.0, 1.0), Vector2(0, 1), 1.0)

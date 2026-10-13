@@ -18,7 +18,8 @@ extends RefCounted
 ##   -4 (4,5), -12 (>= 6,0). Dijepit 0..100. Mencapai 0 menyalakan `lelah`; `lelah` padam saat stamina >= 30.
 ## - Lateral (D-4): komponen datar stick x 3,0 u/d, dijepit ke tepi aspal (+-`JALAN_LEBAR_UBIN` / 2) sebagai batas tepi jalan
 ##   resmi; positif = sisi `dekat`, negatif = sisi `seberang`. Tanpa kunci atau snap jalur (keputusan pemilik 2026-10-13).
-## Jarak maju dihitung tepat (rampa linear lalu tetap), stamina dengan trapesium per bagian (galat kecil, dites 1/30 lawan 1/240).
+## Jarak maju dan stamina dihitung tepat per bagian (rampa linear lalu tetap, rampa dipotong di titik patah laju stamina), jadi
+## hasil tidak bergantung pada pembagian `dt` (dites dengan langkah tunggal lawan 1/240).
 
 
 ## Keadaan sepeda. Dibuat baru oleh `langkah`; pemanggil hanya menyimpannya.
@@ -196,8 +197,9 @@ static func langkah(keadaan: Keadaan, stick: Vector2, dt: float) -> Hasil:
 
 
 ## Gerak biasa selama `t` detik dari kecepatan `v` menuju `tujuan`: [jarak ubin, kecepatan akhir, perubahan stamina].
-## Rampa linear (naik `AKSELERASI_UD2`, turun `PERLAMBATAN_MELAMBAT_UD2`) sampai tujuan, lalu tetap. Jarak tepat; stamina
-## trapesium per bagian (rampa dan tetap).
+## Rampa linear (naik `AKSELERASI_UD2`, turun `PERLAMBATAN_MELAMBAT_UD2`) sampai tujuan, lalu tetap. Jarak tepat. Stamina juga
+## tepat: rampa dipotong di titik patah laju stamina (santai dan cepat), dan di tiap potongan laju linear terhadap waktu, jadi
+## trapesium = integral.
 static func _gerak_biasa(v: float, tujuan: float, maju: float, t: float) -> Array[float]:
 	var laju_rampa: float = Config.AKSELERASI_UD2 if v < tujuan else Config.PERLAMBATAN_MELAMBAT_UD2
 	var waktu_rampa: float = absf(tujuan - v) / laju_rampa
@@ -205,9 +207,19 @@ static func _gerak_biasa(v: float, tujuan: float, maju: float, t: float) -> Arra
 	var akhir_rampa: float = tujuan if t >= waktu_rampa else v + signf(tujuan - v) * laju_rampa * t_rampa
 	var t_tetap: float = t - t_rampa
 	var jarak: float = (v + akhir_rampa) / 2 * t_rampa + akhir_rampa * t_tetap
-	var laju_awal: float = laju_stamina(maju, false, v)
-	var laju_akhir: float = laju_stamina(maju, false, akhir_rampa)
-	var stamina: float = (laju_awal + laju_akhir) / 2 * t_rampa + laju_akhir * t_tetap
+	var titik: Array[float] = [v]
+	var patah: Array[float] = [Config.KECEPATAN_SANTAI_UD, Config.KECEPATAN_CEPAT_UD]
+	if akhir_rampa < v:
+		patah.reverse()
+	for batas: float in patah:
+		if (batas - v) * (batas - akhir_rampa) < 0.0:
+			titik.append(batas)
+	titik.append(akhir_rampa)
+	var stamina: float = 0.0
+	for i: int in range(titik.size() - 1):
+		var lama: float = absf(titik[i + 1] - titik[i]) / laju_rampa
+		stamina += (laju_stamina(maju, false, titik[i]) + laju_stamina(maju, false, titik[i + 1])) / 2 * lama
+	stamina += laju_stamina(maju, false, akhir_rampa) * t_tetap
 	return [jarak, akhir_rampa, stamina]
 
 
