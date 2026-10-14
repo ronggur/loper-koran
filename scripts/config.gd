@@ -146,14 +146,16 @@ const JENDELA_KENA_BONUS: bool = false
 
 ## Koran gulung berputar 4 langkah (4 frame pola) selama terbang, frame per detik (sama dengan animasi lempar 12 fps).
 const KORAN_PUTAR_FPS: float = 12.0
-## Bayangan koran: lebar elips saat koran di tanah, piksel game (tinggi elips setengahnya).
-const KORAN_BAYANGAN_LEBAR_MAKS_PX: int = 8
-## Bayangan koran: lebar elips terkecil (koran paling tinggi), piksel game.
-const KORAN_BAYANGAN_LEBAR_MIN_PX: int = 4
+## Bayangan koran: lebar elips saat koran di tanah, piksel game (tinggi elips setengahnya). 10 (dulu 8; QA-007 iterasi 2: lebih lebar dari
+## koran 8 px supaya terbaca di ×3).
+const KORAN_BAYANGAN_LEBAR_MAKS_PX: int = 10
+## Bayangan koran: lebar elips terkecil (koran paling tinggi), piksel game. 6 (dulu 4; QA-007 iterasi 2).
+const KORAN_BAYANGAN_LEBAR_MIN_PX: int = 6
 ## Bayangan koran mengecil sekian piksel game per ubin tinggi koran.
 const KORAN_BAYANGAN_SUSUT_PX_PER_UBIN: float = 2.0
-## Alpha bayangan koran (warna `OUTLINE`).
-const KORAN_BAYANGAN_ALPHA: float = 0.5
+## Alpha bayangan koran (warna `OUTLINE`). 0,85 (dulu 0,5; QA-007 iterasi 2): kontras bayangan di atas aspal graybox naik dari sekitar
+## 2,1:1 ke sekitar 3,2:1 (dites >= 3:1 di aspal, trotoar, dan rumput); masih sedikit tembus supaya terbaca sebagai bayangan.
+const KORAN_BAYANGAN_ALPHA: float = 0.85
 ## Penanda kena/meleset digambar sekian piksel game di atas titik mendarat (kaki penanda), di atas koran yang tergeletak (tinggi 6).
 const PENANDA_ATAS_PX: int = 7
 ## Jumlah sampel `posisi_pada` sepanjang lintasan untuk menaruh titik garis bidik (titik dipilih dari sampel ini tiap `SWIPE_TITIK_JARAK_PX`).

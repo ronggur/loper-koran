@@ -62,6 +62,7 @@ func jalankan() -> void:
 	_test_titik_bidik()
 	_test_pola_piksel()
 	_test_tertutup_rumah()
+	_test_bayangan_kontras()
 
 
 # --- Pembantu ---
@@ -717,7 +718,8 @@ func _test_koran_lempar() -> void:
 	check(jumlah_sah > 20 and jumlah_jendela > 0, "kontrol: sampel memuat pendaratan sah (%d) dan jendela (%d)" % [jumlah_sah, jumlah_jendela])
 	check(KoranLempar.prediksi_antaran(null, true) == ZonaSasaran.Antaran.TIDAK_SAH and KoranLempar.hasil_mendarat(null) == ZonaSasaran.Hasil.MELESET, "lintasan null = meleset, tidak sah")
 	# Bayangan mengecil saat tinggi naik, dijepit.
-	check(KoranLempar.lebar_bayangan_px(0.0) == Config.KORAN_BAYANGAN_LEBAR_MAKS_PX and KoranLempar.lebar_bayangan_px(100.0) == Config.KORAN_BAYANGAN_LEBAR_MIN_PX and KoranLempar.lebar_bayangan_px(NAN) == Config.KORAN_BAYANGAN_LEBAR_MAKS_PX, "bayangan: 8 px di tanah, 4 px paling kecil, NaN = di tanah")
+	check(KoranLempar.lebar_bayangan_px(0.0) == Config.KORAN_BAYANGAN_LEBAR_MAKS_PX and KoranLempar.lebar_bayangan_px(100.0) == Config.KORAN_BAYANGAN_LEBAR_MIN_PX and KoranLempar.lebar_bayangan_px(NAN) == Config.KORAN_BAYANGAN_LEBAR_MAKS_PX, "bayangan: %d px di tanah, %d px paling kecil, NaN = di tanah" % [Config.KORAN_BAYANGAN_LEBAR_MAKS_PX, Config.KORAN_BAYANGAN_LEBAR_MIN_PX])
+	check(Config.KORAN_BAYANGAN_LEBAR_MAKS_PX > PolaPiksel.ukuran(PolaPiksel.pola_koran(0)).x and Config.KORAN_BAYANGAN_LEBAR_MIN_PX >= 6, "bayangan koran di tanah lebih lebar dari koran 8 px, paling kecil 6 px (QA-007)")
 	var naik: bool = true
 	for i: int in range(1, 20):
 		if KoranLempar.lebar_bayangan_px(float(i) / 10.0) > KoranLempar.lebar_bayangan_px(float(i - 1) / 10.0):
@@ -896,6 +898,37 @@ func _test_tertutup_rumah() -> void:
 		if ZonaSasaran.tertutup_rumah_jalan_uji(Vector2(q.x, q.y), 0.0) and not KoranLempar.tertutup_pada(masuk_rumah, t):
 			ada_tinggi_terlihat = true
 	check(ada_tinggi_terlihat, "titik garis bidik yang tinggi (di atas garis atap dari kamera) tetap terlihat walau titik tanahnya tertutup: tinggi koran ikut dihitung")
+
+
+## Luminansi relatif WCAG warna sRGB.
+func _luminansi(c: Color) -> float:
+	var hasil: float = 0.0
+	var bobot: Array[float] = [0.2126, 0.7152, 0.0722]
+	var kanal: Array[float] = [c.r, c.g, c.b]
+	for i: int in range(3):
+		var v: float = kanal[i]
+		var linear: float = v / 12.92 if v <= 0.04045 else pow((v + 0.055) / 1.055, 2.4)
+		hasil += bobot[i] * linear
+	return hasil
+
+
+## QA-007 (iterasi 2): bayangan koran (`OUTLINE` alpha `KORAN_BAYANGAN_ALPHA`, dicampur di ruang sRGB seperti kanvas 2D) di atas warna
+## tengah ubin graybox aspal, trotoar, dan rumput (dibaca dari PNG) punya kontras WCAG >= 3:1 (batas komponen non-teks). Keterbacaan di
+## layar HP tetap NEEDS-MANUAL.
+func _test_bayangan_kontras() -> void:
+	_judul.call("Kontras bayangan koran di atas ubin graybox (QA-007)")
+	for nama: String in ["aspal", "trotoar", "rumput"]:
+		var gambar: Image = Image.new()
+		var galat: int = gambar.load_png_from_buffer(FileAccess.get_file_as_bytes("res://assets/sprites/_placeholder/tile_graybox_%s.png" % nama))
+		check(galat == OK and gambar.get_width() > 0, "ubin graybox %s terbaca" % nama)
+		if galat != OK:
+			continue
+		var dasar: Color = gambar.get_pixel(gambar.get_width() / 2, gambar.get_height() / 2)
+		var bayangan: Color = dasar.lerp(Palette.OUTLINE, Config.KORAN_BAYANGAN_ALPHA)
+		var terang: float = maxf(_luminansi(dasar), _luminansi(bayangan))
+		var gelap: float = minf(_luminansi(dasar), _luminansi(bayangan))
+		var rasio: float = (terang + 0.05) / (gelap + 0.05)
+		check(dasar.a == 1.0 and rasio >= 3.0, "bayangan koran di atas %s %s: kontras %.2f:1 (>= 3:1)" % [nama, dasar.to_html(false), rasio])
 
 
 ## Himpunan piksel tidak kosong pola (bentuk, tanpa warna).
