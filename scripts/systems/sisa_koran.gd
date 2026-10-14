@@ -100,3 +100,11 @@ static func isi_ulang_jalan_uji(keadaan: Keadaan, jarak_ubin: float) -> Keadaan:
 		baru.sisa = baru.penuh
 		baru.habis_di_ubin = NAN
 	return baru
+
+
+## Ikon koran HUD (DESIGN_SPEC 3.5, tafsiran usulan run fase2a-lemparan bagian 1b): x = jumlah ikon (penuh, paling banyak `maks_ikon`),
+## y = ikon terang (sisa, paling banyak jumlah ikon); sisanya redup (terpakai). Satu ikon = satu koran untuk delapan koran terakhir,
+## jadi saat sisa masih di atas `maks_ikon` semua ikon terang dan angka sisa yang menunjukkan jumlahnya. Masukan negatif = 0.
+static func ikon_hud(sisa: int, penuh: int, maks_ikon: int) -> Vector2i:
+	var jumlah: int = clampi(penuh, 0, maxi(maks_ikon, 0))
+	return Vector2i(jumlah, clampi(sisa, 0, jumlah))

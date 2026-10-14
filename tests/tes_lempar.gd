@@ -58,6 +58,9 @@ func jalankan() -> void:
 	_test_sisa_koran()
 	_test_jeda_antar_lempar()
 	_test_isi_ulang()
+	_test_koran_lempar()
+	_test_titik_bidik()
+	_test_pola_piksel()
 
 
 # --- Pembantu ---
@@ -648,3 +651,197 @@ func _test_isi_ulang() -> void:
 	check(SisaKoran.isi_ulang_jalan_uji(sisa, 500.0).sisa == 29, "belum habis: tidak diisi ulang walau sudah jauh (isi ulang hanya bila habis)")
 	check(SisaKoran.isi_ulang_jalan_uji(k, NAN).sisa == 0 and SisaKoran.isi_ulang_jalan_uji(k, INF).sisa == 0, "jarak tidak hingga: tidak diisi ulang")
 	check(SisaKoran.isi_ulang_jalan_uji(penuh, 100.0).sisa == 2, "sesudah diisi ulang tidak terisi lagi (sudah penuh)")
+
+
+# --- Bagian 1b: KoranLempar (D-4, D-5, D-10, D-11 bagian murni) dan PolaPiksel ---
+
+func _lintasan_uji(u: float, sisi: LoperAnim.Sisi, v: float, maju: float = 10.0) -> ThrowSolver.Lintasan:
+	return ThrowSolver.hitung(_panjang(u, 780.0), 780.0, sisi, Vector2(0.2, -maju), v, 0.0, _jeda_lepas())
+
+
+func _test_koran_lempar() -> void:
+	_judul.call("KoranLempar: waktu, lepas, mendarat, penanda, beku saat dt 0 (D-4, D-10, D-11)")
+	var l: ThrowSolver.Lintasan = _lintasan_uji(0.5, LoperAnim.Sisi.SEBERANG, 4.5)
+	var k: KoranLempar.Koran = KoranLempar.baru(l)
+	check(k.lintasan == l and k.detik == 0.0 and not k.mendarat, "koran baru: lintasan beku, detik 0, belum mendarat")
+	check(not KoranLempar.di_udara(k) and KoranLempar.posisi(k) == Vector3(l.titik_lepas.x, l.titik_lepas.y, l.tinggi_tangan), "sebelum jeda lepas: belum di udara, di titik lepas setinggi tangan")
+	for dt: float in [0.0, -1.0, NAN, INF, -INF]:
+		var sama: KoranLempar.Koran = KoranLempar.langkah(k, dt, false)
+		check(sama.detik == 0.0 and not sama.mendarat, "dt %s tidak memajukan koran (jeda game membeku)" % dt)
+	var maju: KoranLempar.Koran = KoranLempar.langkah(k, 0.1, false)
+	check(k.detik == 0.0 and maju != k and is_equal_approx(maju.detik, 0.1), "langkah mengembalikan objek baru, masukan tidak berubah")
+	var lepas: KoranLempar.Koran = KoranLempar.langkah(k, l.jeda_lepas, false)
+	check(KoranLempar.di_udara(lepas) and KoranLempar.frame_putar(lepas, 4) == 0, "tepat jeda lepas: di udara, frame putar 0")
+	check(KoranLempar.frame_putar(KoranLempar.langkah(lepas, 1.0 / 12.0, false), 4) == 1 and KoranLempar.frame_putar(KoranLempar.langkah(lepas, 4.0 / 12.0, false), 4) == 0, "frame putar 12 fps, 4 langkah berulang")
+	# Mendarat tepat sekali pada langkah yang melewati lama total, di titik mendarat persis.
+	var total: float = ThrowSolver.lama_total(l)
+	for dt: float in [1.0 / 30.0, 1.0 / 60.0, 1.0 / 240.0]:
+		var c: KoranLempar.Koran = KoranLempar.baru(l)
+		var kali: int = 0
+		var mendarat_di: float = -1.0
+		while c.detik < total + 0.2:
+			var baru: KoranLempar.Koran = KoranLempar.langkah(c, dt, false)
+			if baru.mendarat and not c.mendarat:
+				kali += 1
+				mendarat_di = baru.detik
+			c = baru
+		check(kali == 1 and mendarat_di + 0.000001 >= total and mendarat_di - dt < total, "dt 1/%d: mendarat tepat sekali pada langkah yang melewati jeda lepas + lama terbang (%s, total %s)" % [roundi(1.0 / dt), mendarat_di, total])
+		check(KoranLempar.posisi(c) == Vector3(l.titik_mendarat.x, l.titik_mendarat.y, 0.0), "dt 1/%d: posisi sesudah mendarat = titik mendarat persis, tinggi 0" % roundi(1.0 / dt))
+	# Penanda: penuh sebelum mendarat, berkurang sejak mendarat, selesai sesudah PENANDA_LAMA_DETIK.
+	var d: KoranLempar.Koran = KoranLempar.langkah(k, total, false)
+	check(d.mendarat and is_equal_approx(KoranLempar.sisa_penanda(d), Config.PENANDA_LAMA_DETIK) and not KoranLempar.selesai(d), "tepat mendarat: penanda penuh 0,8 detik")
+	check(is_equal_approx(KoranLempar.sisa_penanda(KoranLempar.langkah(d, 0.5, false)), Config.PENANDA_LAMA_DETIK - 0.5), "0,5 detik sesudah mendarat: sisa penanda 0,3")
+	check(not KoranLempar.selesai(KoranLempar.langkah(d, Config.PENANDA_LAMA_DETIK - 0.01, false)) and KoranLempar.selesai(KoranLempar.langkah(d, Config.PENANDA_LAMA_DETIK, false)), "selesai tepat sesudah 0,8 detik penanda")
+	check(not KoranLempar.di_udara(d), "sesudah mendarat tidak di udara")
+	# Penilaian di titik mendarat sama dengan prediksi elips (fungsi yang sama), kedua nilai sakelar jendela.
+	var cocok: bool = true
+	var jumlah_sah: int = 0
+	var jumlah_jendela: int = 0
+	for maju_ubin: int in range(0, 24):
+		for langkah_u: int in range(21):
+			var u: float = float(langkah_u) / 20.0
+			for sisi: LoperAnim.Sisi in [LoperAnim.Sisi.SEBERANG, LoperAnim.Sisi.DEKAT]:
+				var lin: ThrowSolver.Lintasan = _lintasan_uji(u, sisi, 3.0, float(maju_ubin) / 2.0)
+				for bonus: bool in [false, true]:
+					var akhir: KoranLempar.Koran = KoranLempar.langkah(KoranLempar.baru(lin), ThrowSolver.lama_total(lin), bonus)
+					if akhir.antaran != KoranLempar.prediksi_antaran(lin, bonus) or akhir.hasil != ZonaSasaran.klasifikasi_jalan_uji(lin.titik_mendarat, sisi) or akhir.penanda != ZonaSasaran.penanda(akhir.antaran):
+						cocok = false
+					if ZonaSasaran.sah(akhir.antaran):
+						jumlah_sah += 1
+					if akhir.hasil == ZonaSasaran.Hasil.JENDELA:
+						jumlah_jendela += 1
+						if (akhir.antaran == ZonaSasaran.Antaran.SAH_BONUS) != bonus:
+							cocok = false
+	check(cocok, "1008 lintasan x 2 sakelar: hasil, antaran, dan penanda saat mendarat = prediksi elips garis bidik (KoranLempar.prediksi_antaran)")
+	check(jumlah_sah > 20 and jumlah_jendela > 0, "kontrol: sampel memuat pendaratan sah (%d) dan jendela (%d)" % [jumlah_sah, jumlah_jendela])
+	check(KoranLempar.prediksi_antaran(null, true) == ZonaSasaran.Antaran.TIDAK_SAH and KoranLempar.hasil_mendarat(null) == ZonaSasaran.Hasil.MELESET, "lintasan null = meleset, tidak sah")
+	# Bayangan mengecil saat tinggi naik, dijepit.
+	check(KoranLempar.lebar_bayangan_px(0.0) == Config.KORAN_BAYANGAN_LEBAR_MAKS_PX and KoranLempar.lebar_bayangan_px(100.0) == Config.KORAN_BAYANGAN_LEBAR_MIN_PX and KoranLempar.lebar_bayangan_px(NAN) == Config.KORAN_BAYANGAN_LEBAR_MAKS_PX, "bayangan: 8 px di tanah, 4 px paling kecil, NaN = di tanah")
+	var naik: bool = true
+	for i: int in range(1, 20):
+		if KoranLempar.lebar_bayangan_px(float(i) / 10.0) > KoranLempar.lebar_bayangan_px(float(i - 1) / 10.0):
+			naik = false
+	check(naik and KoranLempar.lebar_bayangan_px(1.6) < KoranLempar.lebar_bayangan_px(0.7), "bayangan tidak membesar saat tinggi naik (puncak 1,6 lebih kecil dari tangan 0,7)")
+
+
+func _test_titik_bidik() -> void:
+	_judul.call("Titik garis bidik = sampel posisi_pada tiap 4 px (D-5, AC-4)")
+	for u: float in [0.0, 0.5, 1.0]:
+		for v: float in KECEPATAN:
+			var l: ThrowSolver.Lintasan = _lintasan_uji(u, LoperAnim.Sisi.DEKAT, v)
+			var waktu: PackedFloat32Array = KoranLempar.waktu_titik_bidik(l, 4.0, Config.GARIS_BIDIK_SAMPEL)
+			var tag: String = "u %s, %s u/d" % [u, v]
+			check(waktu.size() >= 8 and waktu[0] == 0.0, "%s: titik pertama di t = 0 (titik lepas), %d titik" % [tag, waktu.size()])
+			var sampel: bool = true
+			var jarak_cukup: bool = true
+			for i: int in range(waktu.size()):
+				var indeks: float = waktu[i] * float(Config.GARIS_BIDIK_SAMPEL) / l.lama_terbang
+				if absf(indeks - roundf(indeks)) > 0.001 or waktu[i] > l.lama_terbang + 0.000001:
+					sampel = false
+				if i > 0:
+					# Jarak sepanjang lengkung (sampel merata di antara dua titik) >= 4 px; jarak lurus >= 2 px (titik 2 px tidak menumpuk).
+					var lengkung: float = 0.0
+					var n_awal: int = roundi(waktu[i - 1] * float(Config.GARIS_BIDIK_SAMPEL) / l.lama_terbang)
+					var n_akhir: int = roundi(waktu[i] * float(Config.GARIS_BIDIK_SAMPEL) / l.lama_terbang)
+					for n: int in range(n_awal, n_akhir):
+						var t0: float = l.lama_terbang * float(n) / float(Config.GARIS_BIDIK_SAMPEL)
+						var t1: float = l.lama_terbang * float(n + 1) / float(Config.GARIS_BIDIK_SAMPEL)
+						lengkung += KoranLempar.layar_pada(l, t0).distance_to(KoranLempar.layar_pada(l, t1))
+					if lengkung < 4.0 - 0.001 or KoranLempar.layar_pada(l, waktu[i - 1]).distance_to(KoranLempar.layar_pada(l, waktu[i])) < 2.0:
+						jarak_cukup = false
+			check(sampel, "%s: tiap titik adalah salah satu dari %d sampel merata posisi_pada" % [tag, Config.GARIS_BIDIK_SAMPEL + 1])
+			check(jarak_cukup, "%s: titik berurutan berjarak >= 4 px sepanjang lengkung dan >= 2 px lurus di layar" % tag)
+			var p: Vector3 = ThrowSolver.posisi_pada(l, 0.3)
+			check(KoranLempar.layar_pada(l, 0.3) == Iso.dunia_tinggi_ke_layar(Vector2(p.x, p.y), p.z), "%s: layar_pada = proyeksi Iso posisi_pada" % tag)
+	check(KoranLempar.waktu_titik_bidik(null, 4.0, 96).is_empty() and KoranLempar.waktu_titik_bidik(_lintasan_uji(0.5, LoperAnim.Sisi.DEKAT, 3.0), NAN, 96).is_empty() and KoranLempar.waktu_titik_bidik(_lintasan_uji(0.5, LoperAnim.Sisi.DEKAT, 3.0), 4.0, 0).is_empty(), "masukan tidak sah: tanpa titik")
+
+
+func _test_pola_piksel() -> void:
+	_judul.call("PolaPiksel: pola koran, elips, penanda, ikon; rasterisasi zona dan elips (D-5, D-10, DESIGN_SPEC 3.5-3.7)")
+	var semua: Dictionary = {"ikon": PolaPiksel.IKON_KORAN, "elips biasa": PolaPiksel.ELIPS_BIASA, "elips sah": PolaPiksel.ELIPS_SAH, "centang": PolaPiksel.PENANDA_CENTANG, "setengah": PolaPiksel.PENANDA_SETENGAH, "bintang": PolaPiksel.PENANDA_BINTANG, "silang": PolaPiksel.PENANDA_SILANG, "bukan pelanggan": PolaPiksel.TANDA_BUKAN_PELANGGAN}
+	for f: int in range(PolaPiksel.KORAN_PUTAR.size()):
+		semua["koran %d" % f] = PolaPiksel.pola_koran(f)
+	for nama: String in semua:
+		var pola: Array[String] = []
+		pola.assign(semua[nama])
+		var persegi: bool = not pola.is_empty()
+		var huruf_sah: bool = true
+		for baris: String in pola:
+			if baris.length() != pola[0].length():
+				persegi = false
+			for c: String in baris:
+				if not ".otsw".contains(c):
+					huruf_sah = false
+		check(persegi and huruf_sah, "pola %s: semua baris sama panjang, hanya huruf peran . o t s w" % nama)
+	check(PolaPiksel.KORAN_PUTAR.size() == 4, "koran berputar 4 langkah")
+	var bentuk_koran: Array = []
+	for f: int in range(4):
+		check(PolaPiksel.ukuran(PolaPiksel.pola_koran(f)) == Vector2i(8, 6), "koran frame %d: 8x6 (ART_DIRECTION 6.2)" % f)
+		bentuk_koran.append(_bentuk(PolaPiksel.pola_koran(f)))
+	check(_semua_beda(bentuk_koran), "empat frame koran berbeda bentuk (berputar)")
+	check(PolaPiksel.pola_koran(5) == PolaPiksel.pola_koran(1) and PolaPiksel.pola_koran(-1) == PolaPiksel.pola_koran(3), "frame di luar jangkauan memutar (posmod)")
+	check(PolaPiksel.ukuran(PolaPiksel.ELIPS_BIASA) == Vector2i(10, 5) and PolaPiksel.ukuran(PolaPiksel.ELIPS_SAH) == Vector2i(10, 5), "elips pendaratan 10x5 (DESIGN_SPEC 3.7)")
+	check(_bentuk(PolaPiksel.ELIPS_BIASA) != _bentuk(PolaPiksel.ELIPS_SAH) and _jumlah_isi(PolaPiksel.ELIPS_SAH) > _jumlah_isi(PolaPiksel.ELIPS_BIASA) + 10, "elips sah TERISI (bentuk berbeda dari cincin biasa, bukan hanya warna)")
+	check(PolaPiksel.ukuran(PolaPiksel.IKON_KORAN) == Vector2i(12, 12), "ikon koran HUD 12x12 (DESIGN_SPEC 3.5)")
+	var penanda: Array = []
+	for p: ZonaSasaran.Penanda in [ZonaSasaran.Penanda.SILANG, ZonaSasaran.Penanda.CENTANG, ZonaSasaran.Penanda.SETENGAH, ZonaSasaran.Penanda.BINTANG]:
+		penanda.append(_bentuk(PolaPiksel.pola_penanda(p)))
+	check(_semua_beda(penanda), "empat bentuk penanda (silang, centang, setengah, bintang) berbeda bentuk satu sama lain")
+	for hasil: ZonaSasaran.Hasil in ZonaSasaran.Hasil.values():
+		for bonus: bool in [false, true]:
+			var bentuk: Array = _bentuk(PolaPiksel.pola_penanda(ZonaSasaran.penanda_hasil(hasil, bonus)))
+			var sah: bool = ZonaSasaran.sah(ZonaSasaran.status_antaran(hasil, bonus))
+			check(sah == (bentuk != _bentuk(PolaPiksel.PENANDA_SILANG)), "hasil %s (bonus %s): bentuk penanda %s silang meleset" % [ZonaSasaran.Hasil.keys()[hasil], bonus, "berbeda dari" if sah else "sama dengan"])
+	# Elips terisi: tiap baris ada, simetris, di dalam kotak.
+	for ukuran: Vector2i in [Vector2i(8, 4), Vector2i(4, 2), Vector2i(5, 2), Vector2i(10, 5)]:
+		var rentang: Array[Vector3i] = PolaPiksel.rentang_elips(ukuran.x, ukuran.y)
+		var baik: bool = rentang.size() == ukuran.y
+		for r: Vector3i in rentang:
+			if r.y < 0 or r.z > ukuran.x or r.z <= r.y or r.y != ukuran.x - r.z:
+				baik = false
+		check(baik, "elips %s: satu rentang per baris, simetris, di dalam kotak" % ukuran)
+	check(PolaPiksel.rentang_elips(0, 4).is_empty(), "elips ukuran 0 kosong")
+	# Zona iso: luas piksel = luas belah ketupat (64x32 per ubin persegi = 1024 px), tepi bagian dari isi, sudut bulat.
+	for persegi: Rect2 in [Rect2(-3.0, -0.5, 1.0, 3.0), Rect2(1.375, 0.875, 0.5, 0.5), Rect2(-3.0, 1.5, 0.25, 0.75)]:
+		var isi: Array[Vector3i] = PolaPiksel.rentang_poligon(PolaPiksel.sudut_zona(persegi))
+		var luas: int = 0
+		for r: Vector3i in isi:
+			luas += r.z - r.y
+		var harapan: float = persegi.size.x * persegi.size.y * 1024.0
+		check(absf(float(luas) - harapan) <= harapan * 0.05 + 4.0, "zona %s: %d piksel, luas belah ketupat %s" % [persegi, luas, harapan])
+		var tepi: Array[Vector3i] = PolaPiksel.rentang_tepi(isi)
+		var bagian: bool = true
+		var luas_tepi: int = 0
+		for t: Vector3i in tepi:
+			luas_tepi += t.z - t.y
+			var ada: bool = false
+			for r: Vector3i in isi:
+				if r.x == t.x and t.y >= r.y and t.z <= r.z:
+					ada = true
+			if not ada:
+				bagian = false
+		check(bagian and luas_tepi > 0 and luas_tepi < luas, "zona %s: tepi (%d px) bagian dari isi dan lebih kecil" % [persegi, luas_tepi])
+	check(PolaPiksel.rentang_poligon(PackedVector2Array([Vector2.ZERO, Vector2.ONE])).is_empty(), "poligon kurang dari 3 sudut kosong")
+	check(PolaPiksel.rentang_huruf([".ww.o", "wwwww"], "w") == [Vector3i(0, 1, 3), Vector3i(1, 0, 5)], "rentang huruf: deret huruf berurutan per baris")
+
+
+## Himpunan piksel tidak kosong pola (bentuk, tanpa warna).
+func _bentuk(pola: Array[String]) -> Array:
+	var hasil: Array = []
+	for y: int in range(pola.size()):
+		for x: int in range(pola[y].length()):
+			if pola[y][x] != ".":
+				hasil.append(Vector2i(x, y))
+	return hasil
+
+
+func _jumlah_isi(pola: Array[String]) -> int:
+	return _bentuk(pola).size()
+
+
+func _semua_beda(daftar: Array) -> bool:
+	for i: int in range(daftar.size()):
+		for j: int in range(i + 1, daftar.size()):
+			if daftar[i] == daftar[j]:
+				return false
+	return true

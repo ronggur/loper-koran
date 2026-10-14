@@ -140,6 +140,27 @@ const PENANDA_LAMA_DETIK: float = 0.8
 ## 2026-10-14: antaran tidak sah seperti meleset, tanpa potong koin), true = bonus (antaran sah, ditandai bonus).
 const JENDELA_KENA_BONUS: bool = false
 
+## --- Koran terbang, garis bidik, penanda, dan zona (placeholder dari kode, usulan run fase2a-lemparan bagian 1b) ---
+## Digambar per piksel game (persegi bulat) supaya tajam di skala bulat; warna hanya dari `Palette` (DESIGN_SPEC 3.6, 3.7,
+## ART_DIRECTION 6.2). Bukan angka lintasan: lintasan tetap hanya dari `ThrowSolver`.
+
+## Koran gulung berputar 4 langkah (4 frame pola) selama terbang, frame per detik (sama dengan animasi lempar 12 fps).
+const KORAN_PUTAR_FPS: float = 12.0
+## Bayangan koran: lebar elips saat koran di tanah, piksel game (tinggi elips setengahnya).
+const KORAN_BAYANGAN_LEBAR_MAKS_PX: int = 8
+## Bayangan koran: lebar elips terkecil (koran paling tinggi), piksel game.
+const KORAN_BAYANGAN_LEBAR_MIN_PX: int = 4
+## Bayangan koran mengecil sekian piksel game per ubin tinggi koran.
+const KORAN_BAYANGAN_SUSUT_PX_PER_UBIN: float = 2.0
+## Alpha bayangan koran (warna `OUTLINE`).
+const KORAN_BAYANGAN_ALPHA: float = 0.5
+## Penanda kena/meleset digambar sekian piksel game di atas titik mendarat (kaki penanda), di atas koran yang tergeletak (tinggi 6).
+const PENANDA_ATAS_PX: int = 7
+## Jumlah sampel `posisi_pada` sepanjang lintasan untuk menaruh titik garis bidik (titik dipilih dari sampel ini tiap `SWIPE_TITIK_JARAK_PX`).
+const GARIS_BIDIK_SAMPEL: int = 96
+## Alpha garis tepi halaman dan isi zona placeholder di jalan uji.
+const ZONA_GARIS_ALPHA: float = 0.7
+
 ## --- Umpan balik kecepatan (GDD 15; usulan run fase1b-umpan-balik, dinilai di HP) ---
 ## Dihitung dari kecepatan SEBENARNYA (`UmpanBalikKecepatan`). Partikel digambar sendiri (`PancaranPiksel`), kotak 1-2 px game.
 
@@ -302,6 +323,16 @@ const HUD_PANEL_PAD_X_PX: int = 7
 const HUD_BAR_TINGGI_PX: int = 7
 ## Bar stamina berganti warna dari `ACCENT` ke `FAIL` di bawah nilai ini (DESIGN_SPEC 3.5, usulan).
 const HUD_STAMINA_AMBANG_RENDAH: float = 30.0
+## Panel sisa koran: jarak dari tepi layar sisi stick, piksel game (DESIGN_SPEC 3.5: x 400). Celah ke panel kecepatan = sisa sesudah panel kecepatan.
+const HUD_PANEL_KORAN_GESER_PX: int = 400
+## Panel sisa koran: jumlah ikon koran paling banyak (DESIGN_SPEC 3.5).
+const HUD_KORAN_IKON_MAKS: int = 8
+## Panel sisa koran: sisi ikon koran, piksel game (DESIGN_SPEC 3.5).
+const HUD_KORAN_IKON_PX: int = 12
+## Panel sisa koran: jarak antar ikon, piksel game.
+const HUD_KORAN_IKON_JARAK_PX: int = 1
+## Panel sisa koran: alpha ikon koran yang sudah terpakai (DESIGN_SPEC 3.5: redup 28%).
+const HUD_KORAN_REDUP_ALPHA: float = 0.28
 ## Tinggi tombol di strip atas dan tombol layar jeda, piksel game. Di A54 (450 dpi, skala x3) 44 dp sekitar 41,7 px game, jadi 42 (paket pemilik 2026-10-14); muat di strip atas: margin 4 + 42 = 46 < 48.
 const HUD_TOMBOL_TINGGI_PX: int = 42
 ## Lebar minimum tombol di strip atas, piksel game.
