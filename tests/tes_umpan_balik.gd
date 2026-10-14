@@ -3,6 +3,8 @@ extends RefCounted
 ## Tes umpan balik kecepatan run fase1b-umpan-balik: `UmpanBalikKecepatan` murni (AC-2, D-1), `PancaranPiksel` (D-2), dan partikel
 ## di scene `jalan_uji.tscn` (AC-3): santai tanpa garis, ngebut dengan garis, debu ikut kecepatan, debu rem, batas jumlah, berhenti
 ## saat jeda, tanpa `GPUParticles2D`, warna dari `Palette`. Scene dijalankan dengan `perbarui(DT)` dan `PancaranPiksel.maju(DT)`.
+## Run fase1c-perapian (QA-006, D-5): debu roda di ruang dunia (tertinggal di jalan saat maju dan pindah sisi), garis kecepatan tetap
+## di ruang lokal sepeda, debu digambar di belakang sprite pemain.
 
 const BERKAS_JALAN_UJI: String = "res://scenes/dev/jalan_uji.tscn"
 const DT: float = 1.0 / 60.0
@@ -33,6 +35,7 @@ func jalankan() -> void:
 	_test_pancaran()
 	await _test_scene()
 	await _test_scene_jeda()
+	await _test_debu_ruang_dunia()
 
 
 func _test_config() -> void:
@@ -289,5 +292,89 @@ func _test_scene_jeda() -> void:
 	for i: int in range(3):
 		await _tree.process_frame
 	check(debu.posisi_partikel() != debu_jeda, "sesudah lanjut partikel bergerak lagi")
+	_sentuh(0, TITIK_STICK, false)
+	_bersihkan(akar)
+
+
+# --- Debu roda di ruang dunia (QA-006 run fase1b-umpan-balik, D-5 run fase1c-perapian) ---
+
+## Posisi lateral dunia (ubin) dari posisi global kanvas (`Objek` dan `JalanUji` di titik asal, jadi kanvas = layar dunia `Iso`).
+func _lateral(posisi_global: Vector2) -> float:
+	return Iso.layar_ke_dunia(posisi_global).x
+
+
+## Titik muncul debu sekarang (roda belakang sepeda), global.
+func _titik_muncul(debu: PancaranPiksel) -> Vector2:
+	return debu.get_global_transform() * debu.asal
+
+
+func _test_debu_ruang_dunia() -> void:
+	_judul.call("Debu roda di ruang dunia: tertinggal saat maju dan pindah sisi, muncul di roda, di belakang pemain (QA-006, D-5)")
+	var akar: JalanUji = await _siapkan()
+	var sepeda: SepedaUji = _anak(akar, "Sepeda") as SepedaUji
+	var umpan: UmpanBalikSepeda = sepeda.umpan_balik()
+	var debu: PancaranPiksel = umpan.debu()
+	var garis: PancaranPiksel = umpan.garis()
+	var sprite: LoperSprite = _anak(akar, "LoperAgen") as LoperSprite
+	# (e) Urutan gambar: debu anak sepeda sebelum sprite pemain, tanpa top_level, z tidak di atas pemain.
+	check(debu.ruang_dunia and not garis.ruang_dunia, "debu di ruang dunia, garis kecepatan tetap di ruang lokal sepeda")
+	check(umpan.get_parent() == sepeda and sprite.get_parent() == sepeda and umpan.get_index() < sprite.get_index(), "UmpanBalik anak SepedaUji sebelum LoperAgen (digambar lebih dulu = di belakang pemain)")
+	check(not debu.top_level and not umpan.top_level and debu.z_index == 0 and umpan.z_index == 0 and debu.z_as_relative and sprite.z_index >= 0, "debu tanpa top_level dan tanpa z di atas pemain (urutan gambar tetap di belakang sprite)")
+	# Ngebut lurus: debu tertinggal jauh di belakang roda (gerak sepeda), bukan hanya sejauh gerak debu sendiri.
+	_sentuh(0, TITIK_STICK, true)
+	_geser(0, TITIK_STICK - Vector2(0, Config.STICK_RADIUS_PX))
+	_maju(akar, 120)
+	var terjauh: float = 0.0
+	for p: Vector2 in debu.posisi_global_partikel():
+		terjauh = maxf(terjauh, p.distance_to(_titik_muncul(debu)))
+	var gerak_sendiri: float = Config.UMPAN_DEBU_KECEPATAN_PX * Config.UMPAN_DEBU_UMUR_DETIK + Config.UMPAN_DEBU_SEBARAN_PX
+	check(sepeda.kecepatan_ud == 6.0 and debu.jumlah_aktif() >= 4, "kontrol: ngebut 6,0 dengan debu hidup (%d)" % debu.jumlah_aktif())
+	check(terjauh > gerak_sendiri * 2.0, "ngebut: debu tertinggal di jalan, terjauh %.1f px dari roda (gerak debu sendiri paling jauh %.1f px)" % [terjauh, gerak_sendiri])
+	# (a) Pindah sisi tanpa waktu berlalu: posisi global debu yang sudah ada tidak berubah; garis ikut sepeda.
+	var debu_sebelum: PackedVector2Array = debu.posisi_global_partikel()
+	var garis_sebelum: PackedVector2Array = garis.posisi_global_partikel()
+	var sepeda_sebelum: Vector2 = sepeda.global_position
+	sepeda.lateral_ubin = sepeda.lateral_ubin - 0.8 if sepeda.lateral_ubin > 0.0 else sepeda.lateral_ubin + 0.8
+	sepeda.gerak(Vector2.ZERO, 0.0)
+	var geser_lateral: Vector2 = sepeda.global_position - sepeda_sebelum
+	check(geser_lateral.length() > 20.0, "kontrol: sepeda pindah sisi 0,8 ubin = %s px" % geser_lateral)
+	check(debu.posisi_global_partikel() == debu_sebelum, "(a) pindah sisi: posisi global debu yang sudah ada tidak ikut bergeser (%d partikel)" % debu_sebelum.size())
+	var garis_ikut: bool = garis_sebelum.size() > 0
+	var garis_sesudah: PackedVector2Array = garis.posisi_global_partikel()
+	for i: int in range(mini(garis_sebelum.size(), garis_sesudah.size())):
+		if not (garis_sesudah[i] - garis_sebelum[i]).is_equal_approx(geser_lateral):
+			garis_ikut = false
+	check(garis_ikut, "garis kecepatan tetap di ruang lokal: ikut bergeser bersama sepeda (efek kamera)")
+	# (b) Maju tanpa waktu berlalu: sama.
+	sepeda_sebelum = sepeda.global_position
+	sepeda.jarak_ubin += 1.5
+	sepeda.gerak(Vector2.ZERO, 0.0)
+	check((sepeda.global_position - sepeda_sebelum).length() > 40.0, "kontrol: sepeda maju 1,5 ubin = %s px" % (sepeda.global_position - sepeda_sebelum))
+	check(debu.posisi_global_partikel() == debu_sebelum, "(b) maju: posisi global debu yang sudah ada tidak ikut maju")
+	# Dorongan kamera hanya mengubah transform kanvas (Camera2D), bukan posisi global; debu bergeser di layar sama dengan jalan.
+	var kamera: Camera2D = _anak(akar, "Kamera") as Camera2D
+	check(kamera != null and kamera.zoom == Vector2.ONE, "kamera tanpa zoom: posisi global = posisi di jalan, dorongan kamera menggeser jalan dan debu bersama")
+	# (c) Partikel baru muncul di roda belakang posisi sepeda sekarang.
+	debu.kosongkan()
+	var langkah: int = 0
+	while debu.jumlah_aktif() == 0 and langkah < 30:
+		_maju(akar, 1)
+		langkah += 1
+	var baru: PackedVector2Array = debu.posisi_global_partikel()
+	check(baru.size() == 1 and baru[0].distance_to(_titik_muncul(debu)) <= Config.UMPAN_DEBU_SEBARAN_PX + 0.001, "(c) debu baru muncul di roda belakang posisi sepeda sekarang (jarak %.2f px, sebaran %s)" % [baru[0].distance_to(_titik_muncul(debu)) if baru.size() > 0 else -1.0, Config.UMPAN_DEBU_SEBARAN_PX])
+	# Pindah sisi sambil ngebut (langkah biasa): jejak debu tertinggal di sisi lama.
+	_maju(akar, 30)
+	var lateral_awal: float = sepeda.lateral_ubin
+	var ke_sisi: float = -1.0 if lateral_awal > 0.0 else 1.0
+	_geser(0, TITIK_STICK + Vector2(ke_sisi * Config.STICK_RADIUS_PX, 0))
+	_maju(akar, 12)
+	var pindah: float = sepeda.lateral_ubin - lateral_awal
+	var muncul_lateral: float = _lateral(_titik_muncul(debu))
+	var tertinggal: float = 0.0
+	for p: Vector2 in debu.posisi_global_partikel():
+		tertinggal = maxf(tertinggal, (_lateral(p) - muncul_lateral) * -signf(pindah))
+	check(absf(pindah) >= 0.5 and debu.jumlah_aktif() > 0, "kontrol: pindah sisi %.2f ubin dalam 12 langkah sambil berdebu (%d)" % [pindah, debu.jumlah_aktif()])
+	check(tertinggal >= 0.45, "pindah sisi sambil ngebut: jejak debu tertinggal di sisi lama (%.2f ubin dari roda sekarang ke arah sisi lama)" % tertinggal)
+	check(debu.jumlah_aktif() <= Config.UMPAN_DEBU_BATAS, "(d) jumlah debu tetap <= batas %d" % Config.UMPAN_DEBU_BATAS)
 	_sentuh(0, TITIK_STICK, false)
 	_bersihkan(akar)

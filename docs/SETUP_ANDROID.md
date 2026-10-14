@@ -64,7 +64,7 @@ File di root repo, **di-commit**, tanpa rahasia. Tes `tests/tes_export.gd` memba
 | `permissions/*` | semua `false`, `custom_permissions` kosong | Tanpa izin kustom. Daftar penuh izin Godot ditulis eksplisit supaya penyimpangan terlihat di diff |
 | `keystore/debug*`, `keystore/release*` | kosong | Debug keystore diurus Godot lewat Editor Settings; keystore rilis di luar folder project dan tidak pernah di-commit |
 | `package/signed` | `true` | APK ditandatangani dengan debug keystore |
-| `exclude_filter` | `docs/*, tests/*, tools/*, build/*, builds/*` | Skrip tes (`tests/*.gd`) ikut ke APK kalau tidak dikecualikan; `docs/` sudah diabaikan lewat `docs/.gdignore` |
+| `exclude_filter` | `docs/*, tests/*, tools/*, build/*, builds/*, scenes/dev/cek_render.tscn, scripts/dev/cek_render.gd, assets/shaders/warna_bayangan.gdshader` | Skrip tes (`tests/*.gd`) ikut ke APK kalau tidak dikecualikan; `docs/` sudah diabaikan lewat `docs/.gdignore`. Tiga berkas terakhir = probe render (bagian 6.1): **usulan** run fase1c-perapian (QA-004), APK normal tanpa probe; build probe melepasnya sementara lewat `tools/ekspor_cek_render.py`. `tests/tes_export.gd` menjaga pola ini, kecocokannya dengan `POLA_PROBE` di skrip itu, dan bahwa tidak ada berkas game yang memuat berkas probe |
 | `export_filter` | `all_resources` | Semua resource yang dikenal Godot; `.json` data konten juga ikut (terbukti: `assets/sprites/loper/loper_agen.json` masuk paket) |
 | `script_export_mode` | `2` (terkompresi) | Hanya memadatkan skrip, **bukan** perlindungan: isi APK tetap bisa dibongkar |
 | `package/name` | kosong | Label app = nama project, `Kring Kring!` |
@@ -209,15 +209,15 @@ Membuktikan apakah **light 2D, glow, partikel CPU dan GPU, dan shader warna baya
 
 Di `--headless` piksel tidak bisa dibaca: baris fitur menulis "tidak bisa dibaca headless" dan ringkasan `tidak_terbaca`, **bukan** lolos.
 
-**Cara membuka tanpa mengganti scene utama.** Scene utama yang di-commit tetap `jalan_uji.tscn`, dan tidak ada skrip atau scene game yang merujuk probe (dijaga `tests/tes_cek_render.gd`), jadi pemain tidak bisa membukanya. Build probe dibuat terpisah oleh `tools/ekspor_cek_render.py`, yang mengganti baris `run/main_scene` di `project.godot` hanya selama satu perintah ekspor (preset `Android` yang sama), memulihkan berkas byte demi byte (juga bila gagal atau Ctrl+C), lalu memeriksa bahwa `project.binary` di hasil ekspor menunjuk ke probe. `override.cfg` sementara **tidak** bisa dipakai: dicoba 2026-10-14, berkas itu tidak ikut ke paket dan tidak digabung ke `project.binary`, jadi paket tetap membuka `jalan_uji.tscn` (`override.cfg` kini di `.gitignore`).
+**Build normal tidak memuat probe; build probe hanya lewat skrip.** Scene utama yang di-commit tetap `jalan_uji.tscn`, tidak ada skrip atau scene game yang merujuk probe (dijaga `tests/tes_cek_render.gd` dan `tests/tes_export.gd`), dan `exclude_filter` preset `Android` mengecualikan `scenes/dev/cek_render.tscn`, `scripts/dev/cek_render.gd`, dan `assets/shaders/warna_bayangan.gdshader` (bagian 3; usulan run fase1c-perapian, QA-004), jadi APK dan paket normal tidak memuatnya sama sekali. Build probe dibuat terpisah oleh `tools/ekspor_cek_render.py`, yang hanya selama satu perintah ekspor (preset `Android` yang sama) mengganti baris `run/main_scene` di `project.godot` ke probe dan melepas ketiga pola itu dari `exclude_filter`, lalu memulihkan **kedua** berkas byte demi byte di `finally` (juga bila Godot gagal, tidak ditemukan, atau Ctrl+C), dan memeriksa bahwa hasil ekspor memuat berkas probe dan `project.binary`-nya menunjuk ke probe. Exit 1 bila salah satu berkas tidak pulih. `override.cfg` sementara **tidak** bisa dipakai: dicoba 2026-10-14, berkas itu tidak ikut ke paket dan tidak digabung ke `project.binary`, jadi paket tetap membuka `jalan_uji.tscn` (`override.cfg` kini di `.gitignore`).
 
 ```bash
 python3 tools/ekspor_cek_render.py --pck build/kring-cek-render.pck          # paket probe tanpa Java (cek cepat)
 python3 tools/ekspor_cek_render.py --apk builds/kring-cek-render-debug.apk   # APK debug probe (bagian 1 dan 2 harus beres)
-git status --short project.godot                                             # harus kosong (sudah dipulihkan)
+git status --short project.godot export_presets.cfg                          # harus kosong (sudah dipulihkan)
 ```
 
-Hasil di mesin pengembang 2026-10-14 (Apple M4): kedua perintah exit 0, "project.godot pulih byte demi byte: ya", `scene utama di project.binary = res://scenes/dev/cek_render.tscn`; APK probe 28.631.804 byte. APK normal (`--export-debug "Android"` biasa) tetap `res://scenes/dev/jalan_uji.tscn` di `assets/project.binary`; berkas probe (`cek_render.scn`, `cek_render.gdc`, shader) ikut ke APK normal karena `export_filter` `all_resources`, tetapi tidak ada jalan untuk membukanya.
+Hasil di mesin pengembang 2026-10-14 (Apple M4): kedua perintah exit 0, "project.godot pulih byte demi byte: ya", `scene utama di project.binary = res://scenes/dev/cek_render.tscn`; APK probe 28.631.804 byte. APK normal (`--export-debug "Android"` biasa) tetap `res://scenes/dev/jalan_uji.tscn` di `assets/project.binary`. Sampai run fase1c-perapian berkas probe (`cek_render.scn`, `cek_render.gdc`, shader) ikut ke APK normal karena `export_filter` `all_resources`; sejak `exclude_filter` di atas, paket normal tidak memuatnya (cek: `godot --headless --path . --export-pack "Android" build/kring-uji.pck` lalu `grep -a -c cek_render build/kring-uji.pck` = 0; hasil run fase1c-perapian dicatat di `docs/loop/20261014-fase1c-perapian/LOG.md`), sedangkan paket probe memuatnya ("berkas probe di hasil ekspor: semua ada", "export_presets.cfg pulih byte demi byte: ya").
 
 **Desktop** (bukti tanpa HP):
 
@@ -311,9 +311,11 @@ Semua angka usulan (`scripts/config.gd`, BALANCING 2-3). Catat angka yang ingin 
 - [ ] **Kembali dari background** (home, notifikasi ditarik, panggilan): tidak ada lompatan posisi, kecepatan, atau stamina; rem yang sedang ditahan tidak tersisa (harus ditahan ulang 0,25 detik); stick dan lempar dilepas bersih.
 - [ ] Dua jempol: swipe tetap melempar saat rem dan meluncur (lempar memakai gambar santai), stick tidak putus.
 
-### 8.2 Uji 3-5 orang Fase 1 (run 1A + 1B, menutup Fase 1)
+### 8.2 Uji Fase 1 di HP (run 1A + 1B, menutup Fase 1)
 
-Menggabungkan 8.1 (gerak inti, run `20261013-fase1a-gerak`) dan run `20261014-fase1b-umpan-balik` (umpan balik, audio, jeda, penyetelan). **Fase 1 baru selesai** (`DEV_PHASES.md`) kalau 3-5 orang mencoba di HP dan **bisa mengatur kecepatan, mengerem, dan pindah sisi tanpa penjelasan panjang**, dan **ambang rem tidak membuat sepeda berhenti tak sengaja**. Semua angka usulan; catat angka yang ingin diubah, jangan diubah di sesi uji.
+> **Keputusan pemilik 2026-10-14:** uji HP cukup dilakukan pemilik sendiri (tidak ada penguji lain), bukan 3-5 orang. Pemilik menyatakan uji Fase 1 oke pada 2026-10-14. Langkah dan lembar di bawah tetap dipakai sebagai daftar periksa; kode P1 sampai P5 cukup P1.
+
+Menggabungkan 8.1 (gerak inti, run `20261013-fase1a-gerak`) dan run `20261014-fase1b-umpan-balik` (umpan balik, audio, jeda, penyetelan). **Fase 1 baru selesai** (`DEV_PHASES.md`) kalau pemilik mencoba di HP dan **bisa mengatur kecepatan, mengerem, dan pindah sisi tanpa penjelasan panjang**, dan **ambang rem tidak membuat sepeda berhenti tak sengaja**. Semua angka usulan; catat angka yang ingin diubah, jangan diubah di sesi uji.
 
 **Persiapan (pemilik).** APK normal terbaru (`builds/kring-kring-debug.apk`, bagian 4) terpasang di A54; volume media sekitar setengah, uji suara di speaker HP (bukan headphone). Tiap penguji dicatat dengan kode (P1 sampai P5), **tanpa nama atau data pribadi**. Penjelasan ke penguji cukup satu kalimat: "Jempol kiri mengayuh dan mengarahkan, jempol kanan melempar." Amati dulu tanpa membantu; catat kapan penguji harus diberi tahu.
 
@@ -331,7 +333,7 @@ Menggabungkan 8.1 (gerak inti, run `20261013-fase1a-gerak`) dan run `20261014-fa
 - [ ] **Melambat paling pelan (QA-005):** tarik ke bawah sampai tepat sebelum rem dan tahan: kecepatan menetap sekitar 1,6-1,7 u/d. Cukup pelan untuk membidik, atau rem terlalu mudah menyala saat ingin pelan?
 - [ ] **Pindah sisi:** geser ke sisi seberang dan dekat sampai tepi aspal tanpa tersentak (8.1 lateral).
 - [ ] **Meluncur dan stamina:** meluncur (kaki diam) lalu melambat terbaca; stamina habis sekitar 8-9 detik ngebut, LELAH dan bar merah terbaca, meluncur sekitar 2 detik memulihkan (8.1 stamina).
-- [ ] **Debu dan garis kecepatan:** debu krem di roda belakang sejak santai, lebih tebal saat ngebut dan saat rem; garis putih bertangga hanya saat cepat/ngebut. Terbaca sebagai kecepatan dan tidak menutupi jalan di depan; tidak tersendat (60 fps terasa).
+- [ ] **Debu dan garis kecepatan:** debu krem di roda belakang sejak santai, lebih tebal saat ngebut dan saat rem; garis putih bertangga hanya saat cepat/ngebut. Sejak run fase1c-perapian debu tertinggal di jalan sebagai jejak titik (saat pindah sisi jejaknya tetap di sisi lama, QA-006 Run 1B): jejak terbaca dan tidak mengganggu? Terbaca sebagai kecepatan dan tidak menutupi jalan di depan; tidak tersendat (60 fps terasa).
 - [ ] **Bunyi:** kayuhan terdengar dan nadanya naik saat ngebut (pitch 1,0 / 1,15 / 1,3); "tik-tik" freewheel saat meluncur; decit rem **sekali** saat rem menyala (tidak berulang selama ditahan); tidak ada klik di sambungan loop; volume relatif wajar di speaker HP. Catat bila tempo ketukan terasa tidak cocok dengan kayuhan saat ngebut (bunyi 10,4 ketuk/detik lawan animasi 12 fps).
 - [ ] **Jeda:** tombol jeda (gambar 24×24, area sentuh 42×42 px game sekitar 44 dp) mudah ditekan sengaja dan tidak tertekan saat bermain; jari kedua bisa mengetuknya saat jempol di stick; layar jeda gelap dengan "JEDA" dan "Lanjut"; semua diam dan bunyi berhenti selama jeda; back Android menjeda dan (di layar jeda) melanjutkan.
 - [ ] **Background:** home, notifikasi ditarik, atau panggilan masuk membuka layar jeda dan **tidak jalan sendiri** saat kembali; tidak ada decit rem yang menyusul sesudah Lanjut; rem harus ditahan ulang (8.1 kembali dari background).

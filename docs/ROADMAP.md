@@ -1,6 +1,6 @@
 # Roadmap — Loper Koran
 
-Status per **13 Oktober 2026**. Dokumen ini mencatat kesiapan sebelum produksi, milestone sampai rilis, dan keputusan yang masih terbuka. Rincian kerja per fase ada di [`DEV_PHASES.md`](./DEV_PHASES.md).
+Status per **14 Oktober 2026**. Dokumen ini mencatat kesiapan sebelum produksi, milestone sampai rilis, dan keputusan yang masih terbuka. Rincian kerja per fase ada di [`DEV_PHASES.md`](./DEV_PHASES.md).
 
 Status: ⬜ belum mulai · 🟡 sedang dikerjakan · ✅ selesai
 
@@ -42,7 +42,7 @@ Milestone mengikuti urutan prototype di GDD 17. Rinciannya jadi fase dengan chec
 | Milestone | Isi | Selesai kalau |
 |---|---|---|
 | **M0 — Fondasi teknis** ✅ 2026-10-13 | Repo, project Godot landscape, skala piksel bulat, input touch (stick + swipe), sprite pemain terpasang, export APK. | APK terpasang di HP, sepeda placeholder bisa digerakkan dengan stick di HP. |
-| **M1 — Terasa enak di HP** | Prototype 1 dan 2: gerak sepeda dengan 3 kecepatan, stamina, rem, pindah sisi; lemparan yang mewarisi kecepatan dengan garis bidik. | Mengayuh dan melempar terasa enak di HP asli menurut 3–5 orang yang mencoba, dan dua pertanyaan kontrol di GDD 17 terjawab. |
+| **M1 — Terasa enak di HP** | Prototype 1 dan 2: gerak sepeda dengan 3 kecepatan, stamina, rem, pindah sisi; lemparan yang mewarisi kecepatan dengan garis bidik. | Mengayuh dan melempar terasa enak di HP asli menurut pemilik yang mencoba (keputusan pemilik 2026-10-14: uji HP cukup oleh pemilik sendiri, semula 3–5 orang), dan dua pertanyaan kontrol di GDD 17 terjawab. |
 | **M2 — Satu hari penuh** | Prototype 3 dan 4: satu rute perumahan dari segmen, 25 pelanggan, dua rintangan, radar, HUD, tenggat, layar hasil; halaman depan koran dengan misi P1 kucing hilang. | Satu hari bisa dimainkan dari koran sampai hasil, dengan placeholder atau aset gelombang 1. |
 | **M3 — Vertical slice perumahan** | Aset final distrik perumahan, reputasi, bengkel dan kerusakan, ekonomi, milestone dasar, audio dasar, beberapa hari berturut-turut dengan flag lanjutan. | Seminggu dalam game di distrik perumahan bisa dimainkan tanpa kebuntuan. |
 | **M4 — Konten & rilis** | Distrik berikutnya, misi per distrik, iklan hadiah, kebijakan privasi, store listing, uji tertutup. | Lolos review Play Console. |
@@ -67,7 +67,7 @@ Skala dipilih Ronggur; sisanya didelegasikan ke agent dengan alasan tertulis. Bi
 |---|---|
 | Ukuran ubin (usulan 64×32) | Semua aset dunia. Dikunci setelah graybox Fase 1 (skala piksel sudah ×3). |
 | Subjudul Inggris dan cek ketersediaan nama "Kring Kring!" (Play Store, App Store, Steam, PDKI/DJKI) | Fase 0 (export). Nama package sudah `com.rmh.kring` (4b), jadi cek ini sebaiknya selesai sebelum upload pertama ke Play Console |
-| Ambang rem di stick dan ketelitian swipe pendek | M1 (diputuskan lewat uji HP) |
+| Ketelitian swipe pendek (ambang rem: lolos uji HP pemilik 2026-10-14, angka ≥90% ditahan 0,25 detik dipakai) | M1, Fase 2 (diputuskan lewat uji HP) |
 | Jendela kena koran: bonus atau penalti (GDD 4.1) | Fase 2–3 (skor) |
 | Cara menampilkan rumah di sisi dekat | Fase 3 (rute), aset rumah |
 | Struktur sesi: hari berurutan atau run roguelite | M2 |

@@ -67,6 +67,7 @@ func _initialize() -> void:
 	_test_gaya_kode()
 	_test_terjemahan()
 	_test_penjaga_berkas()
+	_test_probe_keluar_bersih()
 	var ukuran_sebelum: Vector2i = root.size
 	# Autoload Audio: stream diputar sungguhan walau driver Dummy (headless), supaya tes bisa memeriksa `playing`. Sebelum `quit()`
 	# semua bunyi dihentikan lalu ditunggu 0,25 detik: AudioServer baru melepas playback yang dihentikan sesudah driver mencampur
@@ -958,6 +959,43 @@ func _test_penjaga_berkas() -> void:
 	check(not _string_kiri_kanan("const NAMA_SISI_LAIN: Dictionary = {\n\t1: \"kiri\",\n}\n").is_empty(), "blok const dengan nama lain berisi string kiri ditolak (daftar putih tidak longgar)")
 	check(not _string_kiri_kanan("const NAMA_SISI_LEMPAR: Dictionary = {\n\t1: \"x\",\n}\nconst LAIN: String = \"kiri\"\n").is_empty(), "string kiri sesudah blok NAMA_SISI_LEMPAR ditutup ditolak")
 	check(not _string_kiri_kanan("func f() -> String:\n\treturn \"lempar_kiri_santai_normal\"\n").is_empty(), "nama animasi lempar yang ditulis langsung di fungsi ditolak (harus lewat NAMA_SISI_LEMPAR)")
+
+
+## QA-003 run fase1b-umpan-balik (D-3 run fase1c-perapian): probe jendela tidak bisa dijalankan di CI (butuh jendela asli), jadi
+## teksnya dijaga di sini: setiap `tests/probe_*.gd` yang memuat scene utama keluar hanya lewat `ProbeKeluar.keluar` (bunyi
+## dihentikan dan ditunggu dulu), termasuk jalur gagal; tidak ada `quit(` langsung.
+func _test_probe_keluar_bersih() -> void:
+	_judul("Probe jendela keluar lewat ProbeKeluar di semua jalur (QA-003, D-3)")
+	var probe_scene: int = 0
+	for berkas: String in _daftar_berkas("res://tests", ["gd"]):
+		if not berkas.get_file().begins_with("probe_") or berkas.ends_with("/probe_keluar.gd"):
+			continue
+		var teks: String = FileAccess.get_file_as_string(berkas)
+		if not teks.contains("application/run/main_scene"):
+			continue
+		probe_scene += 1
+		var langsung: Array[String] = _quit_langsung(teks)
+		check(langsung.is_empty() and teks.contains("await ProbeKeluar.keluar(self"), "%s: semua jalur keluar lewat await ProbeKeluar.keluar (tanpa quit langsung): %s" % [berkas, "; ".join(langsung)])
+	check(probe_scene >= 6, "pemindai menemukan probe jendela yang memuat scene utama (%d)" % probe_scene)
+	var pembantu: String = FileAccess.get_file_as_string("res://tests/probe_keluar.gd")
+	check(pembantu.contains("tree.paused = true") and pembantu.contains("hentikan_sepeda") and pembantu.contains("create_timer(TUNGGU_DETIK") and pembantu.contains("tree.quit(kode)"), "ProbeKeluar menjeda pohon, menghentikan bunyi, menunggu, lalu keluar")
+	check(not _quit_langsung("	if gagal:
+		quit(1)
+		return
+").is_empty() and not _quit_langsung("	quit()").is_empty(), "contoh buruk: quit(1) dan quit() langsung ditolak")
+	check(_quit_langsung("	await ProbeKeluar.keluar(self, 1)
+	# quit() lama di komentar
+").is_empty(), "ProbeKeluar.keluar dan quit di komentar diterima")
+
+
+## Baris yang memanggil `quit(` langsung (bukan lewat `ProbeKeluar.keluar`), di luar komentar.
+func _quit_langsung(teks: String) -> Array[String]:
+	var hasil: Array[String] = []
+	for baris: String in teks.split("\n"):
+		var kode: String = _kode_saja(baris)
+		if kode.replace("ProbeKeluar.keluar(", "").contains("quit("):
+			hasil.append(baris.strip_edges())
+	return hasil
 
 
 ## Pelanggaran zoom kamera: nilai pecahan atau di bawah 1 pada `zoom = Vector2(...)` atau `Vector2.ONE * x`.

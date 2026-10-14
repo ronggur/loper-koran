@@ -4,8 +4,10 @@ extends Node2D
 ##
 ## Anak `SepedaUji` (ruang lokal = titik pijak sepeda, digambar di belakang sprite pemain). Tipis: tiap langkah `SepedaUji` memanggil
 ## `perbarui(kecepatan sebenarnya, rem aktif)`, node ini mengisi laju dua `PancaranPiksel` dari `UmpanBalikKecepatan` (logika murni).
-## Debu: kotak 1-2 px `Palette.TEXT_2` dari roda belakang, menjauh ke belakang sepanjang jalan (2:1). Garis kecepatan: garis
-## bertangga 2:1 `Palette.TEXT` di sekitar pengendara, melaju ke belakang. Semua angka dari `Config` bagian "Umpan balik kecepatan";
+## Debu: kotak 1-2 px `Palette.TEXT_2` dari roda belakang, menjauh ke belakang sepanjang jalan (2:1), di **ruang dunia** (QA-006,
+## D-5 run fase1c-perapian): sesudah dipancarkan debu diam di jalan, jadi tertinggal di belakang saat sepeda maju dan tertinggal di
+## sisi lama saat pindah sisi. Garis kecepatan: garis bertangga 2:1 `Palette.TEXT` di sekitar pengendara, melaju ke belakang, tetap
+## di ruang lokal sepeda (efek kamera, bukan benda di jalan). Semua angka dari `Config` bagian "Umpan balik kecepatan";
 ## batas jumlah `UMPAN_DEBU_BATAS` dan `UMPAN_GARIS_BATAS`. `kurangi_efek` bawaan dari `Config.UMPAN_KURANGI_EFEK` (belum ada UI).
 
 ## Saklar kurangi efek (rule `ui-scenes`): garis mati, debu dikurangi.
@@ -18,6 +20,7 @@ var kurangi_efek: bool = Config.UMPAN_KURANGI_EFEK
 func _ready() -> void:
 	# Arah jalan di layar (naik ke kanan atas, 2:1) dari `Iso`; partikel melaju ke arah sebaliknya.
 	var mundur: Vector2 = -Iso.dunia_ke_layar(Iso.ARAH_MAJU).normalized()
+	_debu.ruang_dunia = true
 	_debu.siapkan(Config.UMPAN_DEBU_BATAS, 1)
 	_debu.arah = mundur
 	_debu.asal = Vector2(Config.UMPAN_DEBU_ASAL_X_PX, Config.UMPAN_DEBU_ASAL_Y_PX)

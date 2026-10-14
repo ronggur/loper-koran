@@ -3,6 +3,8 @@ extends RefCounted
 ## Tes terpadu jeda run fase1b-umpan-balik (AC-7, D-6; QA-007 run fase1a-gerak): tombol jeda, layar jeda, tanpa lanjut otomatis,
 ## back Android, `SceneTree.paused` menghentikan sprite, partikel, dan input; autoload `Audio` menghentikan bunyi sepeda (bagian 1b).
 ## Event sentuh sintetis lewat `Input.parse_input_event` di viewport 780x360 (pola `tests/tes_gerak_scene.gd`).
+## Run fase1c-perapian: cabang pertahanan QA-001 (cincin rem padam saat jeda; `TombolSentuh` melupakan jari dan menolak sentuhan
+## `canceled`) dan regresi QA-002 (status tekan tombol jeda dilepas saat jeda dan lanjut).
 ##
 ## Dipanggil dari `tests/run_tests.gd`. Scene dijalankan dengan `set_process(false)` pada akar; gerak lewat `JalanUji.perbarui(DT)`.
 ## Sprite pemain dan partikel TIDAK dimatikan prosesnya di sini (yang diuji justru bahwa pause pohon menghentikannya).
@@ -38,6 +40,10 @@ func jalankan() -> void:
 		await _test_jeda_lengkap(pemicu)
 	await _test_back_dua_kali_dan_urutan()
 	await _test_ketuk_jari_kedua()
+	for pemicu: String in ["TOMBOL_EMIT", "FOCUS_OUT", "PAUSED", "BACK"]:
+		await _test_rem_padam_saat_jeda(pemicu)
+	await _test_tombol_sentuh_terpisah()
+	await _test_tekan_tidak_tertinggal()
 
 
 # --- Pembantu ---
@@ -80,6 +86,24 @@ func _geser(index: int, posisi_viewport: Vector2) -> void:
 	peristiwa.position = posisi_viewport * float(SKALA)
 	Input.parse_input_event(peristiwa)
 	Input.flush_buffered_events()
+
+
+## Jari `index` naik karena dibatalkan sistem (gesture navigasi, notifikasi): `pressed` false, `canceled` true.
+func _batal(index: int, posisi_viewport: Vector2) -> void:
+	var peristiwa: InputEventScreenTouch = InputEventScreenTouch.new()
+	peristiwa.index = index
+	peristiwa.position = posisi_viewport * float(SKALA)
+	peristiwa.pressed = false
+	peristiwa.canceled = true
+	Input.parse_input_event(peristiwa)
+	Input.flush_buffered_events()
+
+
+## Mengangkat semua jari sintetis yang mungkin tertinggal dari tes lain (emulasi mouse Godot menempel ke jari pertama).
+func _angkat_semua_jari() -> void:
+	for i: int in range(12):
+		_sentuh(i, Vector2(-50, -50), false)
+	await _tree.process_frame
 
 
 ## Ketukan satu jari (turun lalu naik di titik yang sama).
@@ -293,9 +317,7 @@ func _test_back_dua_kali_dan_urutan() -> void:
 func _test_ketuk_jari_kedua() -> void:
 	_judul.call("Jeda: tombol jeda dan Lanjut bisa diketuk jari kedua saat jempol di stick (AC-7, TombolSentuh)")
 	# Keadaan input bersih: tes lain bisa meninggalkan jari yang belum diangkat, dan emulasi mouse Godot menempel ke jari pertama.
-	for i: int in range(12):
-		_sentuh(i, Vector2(-50, -50), false)
-	await _tree.process_frame
+	await _angkat_semua_jari()
 	var akar: JalanUji = await _siapkan()
 	var hud: HudDev = _anak(akar, "Hud") as HudDev
 	var layar: LayarJeda = _anak(akar, "LayarJeda") as LayarJeda
@@ -339,4 +361,148 @@ func _test_ketuk_jari_kedua() -> void:
 	_sentuh(3, tombol + Vector2(0, 60), false)
 	await _tree.process_frame
 	check(not akar.sedang_jeda(), "jari yang hanya naik atau hanya turun di dalam tombol jeda tidak menjeda")
+	_bersihkan(akar)
+
+
+# --- Cincin rem padam saat jeda (QA-001 Q01 run fase1b-umpan-balik) ---
+
+## `JalanUji._terapkan_jeda` memadamkan penanda rem saat menjeda. Selama jeda `perbarui` tidak dipanggil (pohon dijeda), jadi tanpa
+## pemadaman itu status rem lama tersimpan di `KontrolTouch` dan busur `WARN` muncul lagi begitu stick disentuh ulang sesudah lanjut,
+## sebelum rem benar-benar ditahan ulang 0,25 detik.
+func _test_rem_padam_saat_jeda(pemicu: String) -> void:
+	_judul.call("Jeda lewat %s: cincin rem padam selama jeda dan sesudah lanjut sampai rem ditahan ulang (QA-001 Q01)" % pemicu)
+	var akar: JalanUji = await _siapkan()
+	var sepeda: SepedaUji = _anak(akar, "Sepeda") as SepedaUji
+	var kontrol: KontrolTouch = _anak(akar, "KontrolTouch") as KontrolTouch
+	var hud: HudDev = _anak(akar, "Hud") as HudDev
+	var bawah: Vector2 = TITIK_STICK + Vector2(0, Config.STICK_RADIUS_PX)
+	_sentuh(1, TITIK_STICK, true)
+	_geser(1, bawah)
+	_langkah(akar, 20)
+	check(sepeda.rem_aktif() and kontrol.busur_rem_tampil(), "%s: kontrol: stick bawah penuh 20 langkah, rem aktif dan busur rem menyala" % pemicu)
+	match pemicu:
+		"TOMBOL_EMIT":
+			(_anak(hud, "TombolJeda") as TombolJeda).pressed.emit()
+		_:
+			_kirim(pemicu)
+	check(akar.sedang_jeda() and not kontrol.busur_rem_tampil(), "%s: selama jeda busur rem padam" % pemicu)
+	_sentuh(1, bawah, false)
+	if pemicu == "BACK":
+		_kirim("BACK")
+	else:
+		akar.minta_lanjut()
+	# Stick disentuh ulang di tengah, tanpa satu langkah pun: penanda rem harus sudah padam.
+	_sentuh(2, TITIK_STICK, true)
+	check(not akar.sedang_jeda() and kontrol.router.stick_aktif() and not kontrol.busur_rem_tampil(), "%s: sesudah lanjut stick disentuh ulang: busur rem tetap padam (status rem lama tidak tersisa)" % pemicu)
+	# Langkah pertama sesudah lanjut ber-dt 0 (JedaSim); sesudahnya rem butuh 15 langkah (0,25 detik) penuh.
+	_langkah(akar, 1)
+	check(not kontrol.busur_rem_tampil(), "%s: langkah pertama sesudah lanjut: busur rem padam" % pemicu)
+	_geser(2, bawah)
+	_langkah(akar, 14)
+	check(not kontrol.busur_rem_tampil(), "%s: sesudah lanjut bawah penuh 14 langkah: busur rem belum menyala" % pemicu)
+	_langkah(akar, 1)
+	check(sepeda.rem_aktif() and kontrol.busur_rem_tampil(), "%s: kontrol: rem ditahan ulang 0,25 detik: busur rem menyala lagi" % pemicu)
+	_sentuh(2, bawah, false)
+	_bersihkan(akar)
+
+
+# --- TombolSentuh terpisah: jari dilupakan, sentuhan batal (QA-001 Q03, Q04 run fase1b-umpan-balik) ---
+
+## Satu `TombolSentuh` sendirian di viewport (tanpa scene), supaya tiap cabang `_notification` dan `_input` teruji tersendiri: jari
+## yang turun di dalam tombol lalu tombol menerima `NOTIFICATION_PAUSED`, `NOTIFICATION_UNPAUSED`, pohon dijeda lalu lanjut, atau
+## tombol disembunyikan lalu ditampilkan, lalu naik di dalam tombol, tidak memicu `ditekan`; jari yang naik `canceled` juga tidak.
+## `ditekan` dihitung dari kedua jalur sekaligus: jalur sentuhan `TombolSentuh._input` dan `pressed` bawaan `Button` dari emulasi
+## mouse. Catatan (dicoba 2026-10-14, Godot 4.7.2): jari 3 yang turun saat jari 0 masih menempel tetap diemulasi menjadi tekan mouse
+## (`is_pressed()` true), jadi tanpa pelepasan status tekan bawaan (QA-002) jari yang dilupakan tetap memicu lewat `pressed`.
+func _test_tombol_sentuh_terpisah() -> void:
+	_judul.call("TombolSentuh: jari dilupakan saat jeda atau disembunyikan, naik canceled tidak memicu (QA-001 Q03, Q04)")
+	await _angkat_semua_jari()
+	_tree.root.size = Vector2i(2340, 1080)
+	var tombol: TombolSentuh = TombolSentuh.new()
+	_tree.root.add_child(tombol)
+	tombol.position = Vector2(200, 100)
+	tombol.size = Vector2(42, 42)
+	var jumlah: Array[int] = [0]
+	tombol.ditekan.connect(func() -> void: jumlah[0] += 1)
+	await _tree.process_frame
+	var pusat: Vector2 = tombol.get_global_rect().get_center()
+	var luar: Vector2 = Vector2(600, 300)
+	_sentuh(0, luar, true)
+	_sentuh(3, pusat, true)
+	_sentuh(3, pusat, false)
+	check(jumlah[0] == 1, "kontrol: jari kedua turun dan naik di dalam tombol memicu ditekan sekali, dapat %d" % jumlah[0])
+	for kasus: String in ["NOTIFICATION_PAUSED", "NOTIFICATION_UNPAUSED", "POHON_DIJEDA_LALU_LANJUT", "DISEMBUNYIKAN_LALU_DITAMPILKAN"]:
+		await _tree.process_frame
+		_sentuh(3, pusat, true)
+		match kasus:
+			"NOTIFICATION_PAUSED":
+				tombol.notification(Node.NOTIFICATION_PAUSED)
+			"NOTIFICATION_UNPAUSED":
+				tombol.notification(Node.NOTIFICATION_UNPAUSED)
+			"POHON_DIJEDA_LALU_LANJUT":
+				_tree.paused = true
+				_tree.paused = false
+			"DISEMBUNYIKAN_LALU_DITAMPILKAN":
+				tombol.hide()
+				tombol.show()
+		_sentuh(3, pusat, false)
+		check(jumlah[0] == 1, "jari turun di tombol, lalu %s, lalu naik di dalam tombol: tidak memicu (jari dilupakan), dapat %d" % [kasus, jumlah[0]])
+	await _tree.process_frame
+	_sentuh(3, pusat, true)
+	_batal(3, pusat)
+	check(jumlah[0] == 1, "jari kedua turun di tombol lalu naik canceled di dalam tombol: tidak memicu (gesture sistem), dapat %d" % jumlah[0])
+	_sentuh(0, luar, false)
+	await _tree.process_frame
+	_sentuh(0, pusat, true)
+	check(tombol.is_pressed(), "kontrol: jari pertama di tombol: status tekan bawaan Button menyala (emulasi mouse)")
+	_batal(0, pusat)
+	check(jumlah[0] == 1 and not tombol.is_pressed(), "jari pertama (emulasi mouse) naik canceled di dalam tombol: tidak memicu, status tekan lepas, dapat %d" % jumlah[0])
+	await _tree.process_frame
+	_ketuk(pusat)
+	check(jumlah[0] == 2, "kontrol: ketukan biasa sesudahnya tetap memicu tepat sekali, dapat %d" % jumlah[0])
+	_tree.root.remove_child(tombol)
+	tombol.free()
+
+
+# --- Gambar tombol jeda tidak tertinggal ditekan (QA-002 run fase1b-umpan-balik, D-2 run fase1c-perapian) ---
+
+## Skenario reproduksi QA run fase1b-umpan-balik: jari pertama turun di pusat tombol jeda, jeda datang dari jalur lain (FOCUS_OUT),
+## jari naik `canceled` selama jeda (tombol dijeda, naik tidak sampai), FOCUS_IN, lalu "Lanjut". Sesudah lanjut status tekan bawaan
+## `Button` (yang dipakai `TombolJeda._draw`) harus lepas. Ketukan biasa sesudahnya menjeda tepat sekali. Jari pertama yang menahan
+## tombol melewati jeda dan lanjut lalu naik di dalam tombol tidak menjeda lagi (jalur emulasi mouse, bukan hanya jalur sentuhan).
+func _test_tekan_tidak_tertinggal() -> void:
+	_judul.call("Tombol jeda: status tekan dilepas saat jeda dan lanjut, gambar tidak tertinggal ditekan (QA-002, D-2)")
+	await _angkat_semua_jari()
+	var akar: JalanUji = await _siapkan()
+	var hud: HudDev = _anak(akar, "Hud") as HudDev
+	var tombol: TombolJeda = _anak(hud, "TombolJeda") as TombolJeda
+	var pusat: Vector2 = hud.rect_tombol_jeda().get_center()
+	var catatan: Array[bool] = []
+	akar.jeda_berubah.connect(func(nilai: bool) -> void: catatan.append(nilai))
+	_sentuh(0, pusat, true)
+	check(tombol.is_pressed() and not akar.sedang_jeda(), "kontrol: jari pertama di pusat tombol jeda: tombol tergambar ditekan (UI_PANEL_RAISED), belum jeda")
+	_kirim("FOCUS_OUT")
+	check(akar.sedang_jeda() and not tombol.is_pressed(), "FOCUS_OUT saat jari di tombol: jeda, status tekan tombol jeda dilepas")
+	_batal(0, pusat)
+	_kirim("FOCUS_IN")
+	akar.minta_lanjut()
+	await _tree.process_frame
+	check(not akar.sedang_jeda() and not tombol.is_pressed(), "sesudah lanjut: tombol jeda tidak dalam keadaan ditekan (gambar HUD_PANEL)")
+	check(catatan == [true, false], "jeda dan lanjut masing-masing sekali, dapat %s" % [catatan])
+	_sentuh(0, pusat, true)
+	await _tree.process_frame
+	_sentuh(0, pusat, false)
+	await _tree.process_frame
+	check(akar.sedang_jeda() and catatan == [true, false, true] and not tombol.is_pressed(), "ketukan biasa sesudahnya menjeda tepat sekali, dapat %s" % [catatan])
+	akar.minta_lanjut()
+	await _tree.process_frame
+	_sentuh(0, pusat, true)
+	_kirim("FOCUS_OUT")
+	_kirim("FOCUS_IN")
+	akar.minta_lanjut()
+	await _tree.process_frame
+	check(not tombol.is_pressed(), "jari pertama masih menahan tombol jeda melewati jeda dan lanjut: status tekan tetap lepas")
+	_sentuh(0, pusat, false)
+	await _tree.process_frame
+	check(not akar.sedang_jeda() and catatan == [true, false, true, false, true, false], "jari itu naik di dalam tombol sesudah lanjut: tidak menjeda lagi, dapat %s" % [catatan])
 	_bersihkan(akar)

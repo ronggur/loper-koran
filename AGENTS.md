@@ -47,7 +47,7 @@ godot --headless --path . --script res://tests/probe_layar.gd   # skala bulat da
 godot --path .                                         # jalankan scene utama sementara (jalan_uji.tscn): stick di layar sentuh, panah atau WASD di editor
 godot --path . --resolution 2340x1080 --position 0,0 --script res://tests/probe_umpan_balik_jendela.gd -- docs/loop/<RUN_ID>/shots   # tangkapan layar debu, garis, rem, jeda, kidal
 godot --headless --path . scenes/dev/cek_render.tscn   # probe render Compatibility (light 2D, glow, partikel, shader); jendela asli: tambah --resolution 2340x1080 dan -- --tangkap=<png>
-python3 tools/ekspor_cek_render.py --apk builds/kring-cek-render-debug.apk   # APK probe render terpisah (scene utama diganti hanya selama ekspor); --pck <berkas> tanpa Java
+python3 tools/ekspor_cek_render.py --apk builds/kring-cek-render-debug.apk   # APK probe render terpisah (scene utama diganti dan pengecualian probe di preset dilepas hanya selama ekspor; APK normal tanpa probe); --pck <berkas> tanpa Java
 mkdir -p builds                                        # folder APK hasil ekspor, tidak di-commit
 godot --headless --path . --export-pack "Android" build/kring-uji.pck   # paket game dengan filter preset (tanpa Java); periksa tidak ada tests/ atau docs/
 godot --headless --path . --export-debug "Android" builds/kring-kring-debug.apk   # APK debug; butuh export templates 4.7.2 dan Java SDK Path di Editor Settings
@@ -73,13 +73,13 @@ icon.svg             Ikon aplikasi sementara (bel, hanya warna Palette; penggant
 export_presets.cfg   Preset export Android (satu preset, tanpa rahasia, dijaga tests/tes_export.gd); keystore dan kredensial tidak pernah di-commit
 builds/              APK hasil ekspor (di .gitignore, tidak di-commit)
 translations/        ui.csv (kolom keys,id) beserta ui.csv.import dan ui.id.translation hasil impor; semua teks pemain lewat kunci di sini
-tests/               run_tests.gd (runner), tes_input_murni.gd, tes_input_scene.gd, tes_sprite.gd, tes_gerak.gd, tes_gerak_scene.gd, tes_jeda_scene.gd, tes_tata_letak.gd, tes_umpan_balik.gd, tes_bunyi.gd, tes_cek_render.gd, dan tes_export.gd (pembantu runner), probe_layar*.gd (ukur skala layar), probe_input_jendela.gd, probe_dorongan_jendela.gd, probe_lempar_jendela.gd, probe_gerak_jendela.gd, dan probe_umpan_balik_jendela.gd (tangkapan layar skenario sentuh, melambat, lempar, meluncur, rem, stamina, debu, garis, jeda)
+tests/               run_tests.gd (runner), tes_input_murni.gd, tes_input_scene.gd, tes_sprite.gd, tes_gerak.gd, tes_gerak_scene.gd, tes_jeda_scene.gd, tes_tata_letak.gd, tes_umpan_balik.gd, tes_bunyi.gd, tes_cek_render.gd, dan tes_export.gd (pembantu runner), probe_layar*.gd (ukur skala layar), probe_input_jendela.gd, probe_dorongan_jendela.gd, probe_lempar_jendela.gd, probe_gerak_jendela.gd, dan probe_umpan_balik_jendela.gd (tangkapan layar skenario sentuh, melambat, lempar, meluncur, rem, stamina, debu, garis, jeda), probe_keluar.gd (`ProbeKeluar`: semua probe jendela keluar lewat sini, bunyi dihentikan dulu supaya keluar tanpa ERROR/WARNING)
 docs/                Dokumen desain (GDD, STORY, TECH_PLAN, ART_DIRECTION, BALANCING, DATA_SCHEMA, dst.), SETUP_ANDROID.md (export dan uji HP) + design/ + loop/
 docs/design/         Token desain, mock HUD, sprite produksi pemain (character/loper_agen/)
 tools/loper_art/     Renderer sprite pemain (Python) + bangun_frames.py (SpriteFrames gabungan, stdlib), lihat tools/loper_art/README.md
 tools/env_art/       Renderer aset lingkungan (usulan) + graybox.py (ubin graybox)
 tools/audio_art/     sintesis_sepeda.py: bunyi placeholder sepeda dari rumus (stdlib, deterministik), lihat tools/audio_art/README.md
-tools/               cek_keluaran_tes.py (pemeriksa keluaran tes), tests_cek/ (contoh log baik dan buruk, uji_bangun_frames.py, uji_sintesis_sepeda.py), cek_blok_piksel.py (ketajaman tangkapan layar), ekspor_cek_render.py (build probe render terpisah)
+tools/               cek_keluaran_tes.py (pemeriksa keluaran tes), tests_cek/ (contoh log baik dan buruk, uji_bangun_frames.py, uji_sintesis_sepeda.py), cek_blok_piksel.py (ketajaman tangkapan layar), ekspor_cek_render.py (build probe render terpisah; probe dikecualikan dari build normal oleh exclude_filter preset)
 .github/workflows/   tes.yml (CI: uji alat Python, import, tes, pemeriksa keluaran)
 .cursor/rules/       Aturan agent (sumber tunggal)
 ```

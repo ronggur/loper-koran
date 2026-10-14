@@ -1,7 +1,8 @@
 class_name TesExport
 extends RefCounted
 ## Tes export Android run 0C (AC-19, AC-23): isi `export_presets.cfg`, `.gitignore`, berkas yang dilacak git,
-## dan penjaga `docs/SETUP_ANDROID.md` (AC-20).
+## dan penjaga `docs/SETUP_ANDROID.md` (AC-20). Run fase1c-perapian (D-4, QA-004): berkas probe render dikecualikan dari APK
+## normal, dan polanya sama dengan yang dilepas sementara oleh `tools/ekspor_cek_render.py`.
 ##
 ## Dipanggil dari `tests/run_tests.gd` (`TesExport.new(check, judul).jalankan()`), memakai `check` milik runner supaya
 ## hitungan lolos/gagal dan ringkasan tetap satu. Tes hanya membaca berkas teks di repo: TIDAK butuh APK, export templates,
@@ -24,6 +25,12 @@ const ARSITEKTUR_AKTIF: String = "architectures/arm64-v8a"
 const ARSITEKTUR_MATI: Array[String] = ["architectures/armeabi-v7a", "architectures/x86", "architectures/x86_64"]
 ## Folder yang tidak boleh ikut APK walau berisi skrip (tests/) atau berkas dev lain.
 const FILTER_DIKECUALIKAN: Array[String] = ["docs/*", "tests/*", "tools/*", "build/*", "builds/*"]
+## Berkas probe render (QA-004 run fase1b-umpan-balik, D-4 run fase1c-perapian): tidak ikut APK normal; build probe dibuat
+## `tools/ekspor_cek_render.py` yang melepas pola ini sementara (`POLA_PROBE` di skrip itu harus sama persis).
+const FILTER_PROBE: Array[String] = ["scenes/dev/cek_render.tscn", "scripts/dev/cek_render.gd", "assets/shaders/warna_bayangan.gdshader"]
+const BERKAS_EKSPOR_PROBE: String = "res://tools/ekspor_cek_render.py"
+## Folder yang dipindai: tidak ada berkas game yang boleh memuat berkas probe (kalau ada, mengecualikannya merusak game).
+const FOLDER_GAME: Array[String] = ["res://scripts", "res://scenes", "res://assets"]
 ## Potongan nama kunci yang nilainya wajib kosong di preset (rahasia tidak boleh masuk repo).
 const KUNCI_RAHASIA: Array[String] = ["password", "secret", "token", "encryption_key", "salt"]
 ## Potongan nilai yang menandakan jalur lokal atau berkas keystore di dalam preset.
@@ -61,6 +68,7 @@ func check(kondisi: bool, label: String) -> void:
 func jalankan() -> void:
 	_test_preset_asli()
 	_test_preset_contoh_buruk()
+	_test_probe_tidak_ikut()
 	_test_ikon_sementara()
 	_test_gitignore()
 	_test_berkas_dilacak()
@@ -124,7 +132,10 @@ func _test_preset_contoh_buruk() -> void:
 		['screen/immersive_mode=true', 'screen/immersive_mode=false', "imersif", "mode imersif mati"],
 		['user_data_backup/allow=false', 'user_data_backup/allow=true', "user_data_backup", "cadangan data pengguna menyala"],
 		['tests/*, ', '', "tests/*", "tests/ tidak dikecualikan dari APK"],
-		['exclude_filter="docs/*, tests/*, tools/*, build/*, builds/*"', 'exclude_filter=""', "exclude_filter", "filter pengecualian kosong"],
+		['exclude_filter="docs/*, tests/*, tools/*, build/*, builds/*, scenes/dev/cek_render.tscn, scripts/dev/cek_render.gd, assets/shaders/warna_bayangan.gdshader"', 'exclude_filter=""', "exclude_filter", "filter pengecualian kosong"],
+		[', scenes/dev/cek_render.tscn', '', "scenes/dev/cek_render.tscn", "scene probe render ikut APK normal (QA-004)"],
+		[', scripts/dev/cek_render.gd', '', "scripts/dev/cek_render.gd", "skrip probe render ikut APK normal (QA-004)"],
+		[', assets/shaders/warna_bayangan.gdshader', '', "warna_bayangan.gdshader", "shader probe render ikut APK normal (QA-004)"],
 		['export_path=""', 'export_path="/Users/dev/builds/kring.apk"', "export_path", "jalur ekspor lokal"],
 		['custom_template/debug=""', 'custom_template/debug="/Users/dev/templat/android_debug.apk"', "custom_template", "template kustom lokal"],
 		['seed=0', 'seed=0\nscript_encryption_key="0123456789abcdef"', "encryption_key", "kunci enkripsi skrip terisi"],
@@ -191,6 +202,9 @@ func _pelanggaran_preset(teks: String) -> Array[String]:
 	for wajib: String in FILTER_DIKECUALIKAN:
 		if not kecuali.has(wajib):
 			hasil.append("exclude_filter harus memuat %s (tidak ikut APK)" % wajib)
+	for probe: String in FILTER_PROBE:
+		if not kecuali.has(probe):
+			hasil.append("exclude_filter harus memuat %s (probe render tidak ikut APK normal, QA-004)" % probe)
 	if str(cfg.get_value(kepala, "export_path", "")) != "":
 		hasil.append("export_path harus kosong (jalur ekspor lokal tidak di-commit)")
 	# Opsi Android.
@@ -249,6 +263,75 @@ func _pelanggaran_preset(teks: String) -> Array[String]:
 			for pola: String in POLA_JALUR_LOKAL:
 				if isi.contains(pola):
 					hasil.append("jalur lokal atau keystore di %s/%s" % [bagian, kunci])
+	return hasil
+
+
+# --- QA-004: probe render tidak ikut APK normal, pola sama dengan tools/ekspor_cek_render.py ---
+
+func _test_probe_tidak_ikut() -> void:
+	_judul.call("Probe render tidak ikut APK normal; pola preset = pola skrip ekspor probe (QA-004, D-4)")
+	for pola: String in FILTER_PROBE:
+		check(FileAccess.file_exists("res://" + pola), "pola probe %s menunjuk berkas yang ada (probe dipindah atau diganti nama = pola harus ikut)" % pola)
+	var skrip: String = FileAccess.get_file_as_string(BERKAS_EKSPOR_PROBE)
+	var pola_skrip: Array[String] = _pola_probe_skrip(skrip)
+	check(_sama_tanpa_urutan(pola_skrip, FILTER_PROBE), "POLA_PROBE di tools/ekspor_cek_render.py = pola probe di exclude_filter preset, dapat %s" % [pola_skrip])
+	check(skrip.contains("export_presets.cfg") and skrip.contains("finally:") and skrip.contains("pulih_preset"), "tools/ekspor_cek_render.py memulihkan export_presets.cfg (finally) dan memeriksa pemulihannya")
+	# Penjaga kecocokan harus menangkap skrip yang berpisah dari preset.
+	var kurang: String = skrip.replace(", 'assets/shaders/warna_bayangan.gdshader'", "")
+	check(kurang != skrip and not _sama_tanpa_urutan(_pola_probe_skrip(kurang), FILTER_PROBE), "contoh buruk: skrip tanpa pola shader dikenali berbeda dari preset")
+	var lebih: String = skrip.replace("POLA_PROBE = [", "POLA_PROBE = ['scenes/dev/jalan_uji.tscn', ")
+	check(lebih != skrip and not _sama_tanpa_urutan(_pola_probe_skrip(lebih), FILTER_PROBE), "contoh buruk: skrip yang melepas pola tambahan dikenali berbeda dari preset")
+	check(_pola_probe_skrip("tanpa daftar").is_empty(), "contoh buruk: skrip tanpa POLA_PROBE menghasilkan daftar kosong")
+	# Berkas game tidak boleh memakai berkas probe: mengecualikannya dari APK akan merusak game.
+	var pemakai: Array[String] = _pemakai_probe()
+	check(pemakai.is_empty(), "tidak ada scene, skrip, atau resource game yang memuat berkas probe (res://...): %s" % [pemakai])
+
+
+## Isi daftar `POLA_PROBE = [...]` di teks skrip Python (string bertanda petik tunggal), atau kosong bila tidak ada.
+func _pola_probe_skrip(teks: String) -> Array[String]:
+	var hasil: Array[String] = []
+	var re_daftar: RegEx = RegEx.create_from_string("(?m)^POLA_PROBE = \\[([^\\]]*)\\]")
+	var cocok: RegExMatch = re_daftar.search(teks)
+	if cocok == null:
+		return hasil
+	var re_isi: RegEx = RegEx.create_from_string("'([^']+)'")
+	for isi: RegExMatch in re_isi.search_all(cocok.get_string(1)):
+		hasil.append(isi.get_string(1))
+	return hasil
+
+
+func _sama_tanpa_urutan(a: Array[String], b: Array[String]) -> bool:
+	var x: Array[String] = a.duplicate()
+	var y: Array[String] = b.duplicate()
+	x.sort()
+	y.sort()
+	return x == y
+
+
+## Berkas `.gd`, `.tscn`, `.tres`, `.gdshader` di folder game (selain berkas probe sendiri) yang memuat `res://<pola probe>`.
+func _pemakai_probe() -> Array[String]:
+	var hasil: Array[String] = []
+	for folder: String in FOLDER_GAME:
+		for berkas: String in _daftar_berkas(folder):
+			if FILTER_PROBE.has(berkas.trim_prefix("res://")):
+				continue
+			var teks: String = FileAccess.get_file_as_string(berkas)
+			for pola: String in FILTER_PROBE:
+				if teks.contains("res://" + pola):
+					hasil.append("%s -> %s" % [berkas, pola])
+	return hasil
+
+
+func _daftar_berkas(folder: String) -> Array[String]:
+	var hasil: Array[String] = []
+	var dir: DirAccess = DirAccess.open(folder)
+	if dir == null:
+		return hasil
+	for nama: String in dir.get_files():
+		if [".gd", ".tscn", ".tres", ".gdshader"].has("." + nama.get_extension()):
+			hasil.append(folder.path_join(nama))
+	for sub: String in dir.get_directories():
+		hasil.append_array(_daftar_berkas(folder.path_join(sub)))
 	return hasil
 
 
