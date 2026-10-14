@@ -20,6 +20,7 @@ extends RefCounted
 ## `const NAMA_SISI_LEMPAR` (penjaga di `tests/run_tests.gd`). Ambang dan sudut dibaca dari `Config`.
 
 ## Sisi lempar. `TIDAK_ADA` = tidak ada lemparan (swipe tidak sah). Swipe ke kiri layar = `SEBERANG`, ke kanan layar = `DEKAT` (GDD 5.2).
+## Sisi dari swipe dihitung `ThrowSolver.sisi_dari_swipe` (sejak run fase2a-lemparan, ambang 6% lebar viewport menggantikan 12 px).
 enum Sisi { TIDAK_ADA, SEBERANG, DEKAT }
 ## Pose sprite. `KAYUH` memakai tingkat (`<tingkat>_<arah>` atau `melambat_<arah>` untuk tingkat -1); `MELUNCUR` dan `REM`
 ## memakai `meluncur_<arah>` dan `rem_<arah>` tanpa tingkat (kaki tidak mengayuh).
@@ -138,22 +139,6 @@ static func nama_lempar(sisi: Sisi, tingkat: int, arah: int) -> StringName:
 	var nama_tingkat: String = NAMA_TINGKAT[tingkat_untuk_lempar(tingkat)]
 	var nama_arah: String = NAMA_ARAH[arah_untuk_lempar(arah)]
 	return StringName("lempar_%s_%s_%s" % [NAMA_SISI_LEMPAR[sisi], nama_tingkat, nama_arah])
-
-
-## Sisi lempar dari satu swipe: titik awal dan akhir dalam piksel game (GDD 5.2, D-2 run sprite-lempar-melambat).
-## Swipe ke kiri layar = `SEBERANG`, ke kanan layar = `DEKAT`, tidak bergantung opsi kidal (kidal hanya menukar zona).
-## Tidak melempar (`TIDAK_ADA`) bila: titik tidak hingga atau NaN; panjang swipe kurang dari `LEMPAR_SWIPE_AMBANG_PX`
-## (tepat di ambang melempar); atau gerak tegak sama besar atau lebih besar dari gerak datar (vertikal dominan, 45 derajat
-## tepat dianggap ambigu dan tidak melempar).
-static func sisi_dari_swipe(awal: Vector2, akhir: Vector2) -> Sisi:
-	if not awal.is_finite() or not akhir.is_finite():
-		return Sisi.TIDAK_ADA
-	var geser: Vector2 = akhir - awal
-	if geser.length() < Config.LEMPAR_SWIPE_AMBANG_PX:
-		return Sisi.TIDAK_ADA
-	if absf(geser.x) <= absf(geser.y):
-		return Sisi.TIDAK_ADA
-	return Sisi.SEBERANG if geser.x < 0.0 else Sisi.DEKAT
 
 
 ## Pose sprite dari keadaan gerak (D-7), urutan prioritas:

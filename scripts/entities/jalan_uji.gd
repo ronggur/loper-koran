@@ -107,9 +107,10 @@ func _process(delta: float) -> void:
 
 
 ## Satu swipe selesai: sisi lempar dari arah swipe (kiri layar = seberang, kanan layar = dekat, GDD 5.2), lalu animasi lempar
-## pemain. Swipe vertikal atau lebih pendek dari ambang tidak melempar (`LoperAnim.sisi_dari_swipe`). Tanpa proyektil (Fase 2).
+## pemain. Swipe dominan tegak atau dengan |dx| di bawah 6% lebar viewport tidak melempar (`ThrowSolver.sisi_dari_swipe`, D-2 run
+## fase2a-lemparan). Proyektil, garis bidik, dan sisa koran menyusul (run fase2a-lemparan bagian 1b).
 func _saat_swipe_selesai(awal: Vector2, akhir: Vector2, _durasi_detik: float) -> void:
-	_sepeda.lempar(LoperAnim.sisi_dari_swipe(awal, akhir))
+	_sepeda.lempar(ThrowSolver.sisi_dari_swipe(awal, akhir, get_viewport_rect().size.x))
 
 
 ## Satu langkah permainan selama `dt` detik. Publik supaya tes terpadu bisa menjalankannya tanpa menunggu frame. Selama jeda

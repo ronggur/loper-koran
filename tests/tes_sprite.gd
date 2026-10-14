@@ -276,34 +276,36 @@ func _test_nama_lempar() -> void:
 
 
 func _test_sisi_dari_swipe() -> void:
-	_judul.call("Sisi lempar dari swipe (AC-3, D-2)")
-	var ambang: float = Config.LEMPAR_SWIPE_AMBANG_PX
-	check(ambang == 12.0, "ambang swipe lempar usulan 12 px game")
+	# Run fase2a-lemparan (D-2): fungsi pindah dari `LoperAnim` ke `ThrowSolver`; ambang 12 px (panjang total) diganti |dx| >= 6% lebar
+	# viewport game (inklusif). Aturan arah (kiri layar = seberang), tegak dominan, 45 derajat, dan nilai tidak sah tetap.
+	_judul.call("Sisi lempar dari swipe (AC-3 run sprite-lempar-melambat; ambang D-2 run fase2a-lemparan)")
+	var lebar: float = 780.0
+	var ambang: float = ThrowSolver.swipe_min_px(lebar)
+	check(is_equal_approx(ambang, 46.8), "ambang swipe lempar di lebar 780 = 6%% = 46,8 px game, dapat %s" % ambang)
 	var awal: Vector2 = Vector2(450.0, 200.0)
 	# Kiri layar = seberang, kanan layar = dekat (GDD 5.2), di berbagai panjang.
-	for panjang: float in [12.0, 20.0, 60.0, 200.0]:
-		check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(-panjang, 0.0)) == LoperAnim.Sisi.SEBERANG, "swipe %s px ke kiri layar = SEBERANG" % panjang)
-		check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(panjang, 0.0)) == LoperAnim.Sisi.DEKAT, "swipe %s px ke kanan layar = DEKAT" % panjang)
+	for panjang: float in [47.0, 60.0, 200.0, 400.0]:
+		check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(-panjang, 0.0), lebar) == LoperAnim.Sisi.SEBERANG, "swipe %s px ke kiri layar = SEBERANG" % panjang)
+		check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(panjang, 0.0), lebar) == LoperAnim.Sisi.DEKAT, "swipe %s px ke kanan layar = DEKAT" % panjang)
 	# Miring tapi masih dominan datar (tegak lebih kecil): sisi mengikuti tanda gerak datar, naik atau turun.
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(-40.0, -30.0)) == LoperAnim.Sisi.SEBERANG and LoperAnim.sisi_dari_swipe(awal, awal + Vector2(-40.0, 30.0)) == LoperAnim.Sisi.SEBERANG, "kiri-atas dan kiri-bawah (datar dominan) = SEBERANG")
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(40.0, -30.0)) == LoperAnim.Sisi.DEKAT and LoperAnim.sisi_dari_swipe(awal, awal + Vector2(40.0, 30.0)) == LoperAnim.Sisi.DEKAT, "kanan-atas dan kanan-bawah (datar dominan) = DEKAT")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(-80.0, -60.0), lebar) == LoperAnim.Sisi.SEBERANG and ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(-80.0, 60.0), lebar) == LoperAnim.Sisi.SEBERANG, "kiri-atas dan kiri-bawah (datar dominan) = SEBERANG")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(80.0, -60.0), lebar) == LoperAnim.Sisi.DEKAT and ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(80.0, 60.0), lebar) == LoperAnim.Sisi.DEKAT, "kanan-atas dan kanan-bawah (datar dominan) = DEKAT")
 	# Vertikal dominan tidak melempar.
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(0.0, -60.0)) == LoperAnim.Sisi.TIDAK_ADA and LoperAnim.sisi_dari_swipe(awal, awal + Vector2(0.0, 60.0)) == LoperAnim.Sisi.TIDAK_ADA, "swipe lurus ke atas atau ke bawah tidak melempar")
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(-30.0, -40.0)) == LoperAnim.Sisi.TIDAK_ADA and LoperAnim.sisi_dari_swipe(awal, awal + Vector2(30.0, 40.0)) == LoperAnim.Sisi.TIDAK_ADA, "swipe miring dengan gerak tegak lebih besar (kiri-atas 30/40, kanan-bawah 30/40) tidak melempar")
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(-50.0, -50.0)) == LoperAnim.Sisi.TIDAK_ADA and LoperAnim.sisi_dari_swipe(awal, awal + Vector2(50.0, 50.0)) == LoperAnim.Sisi.TIDAK_ADA, "tepat 45 derajat (datar = tegak) ambigu: tidak melempar")
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(51.0, 50.0)) == LoperAnim.Sisi.DEKAT and LoperAnim.sisi_dari_swipe(awal, awal + Vector2(-51.0, 50.0)) == LoperAnim.Sisi.SEBERANG, "sedikit di atas 45 derajat ke arah datar (51/50) melempar")
-	# Ambang panjang: 11,99 tidak, tepat 12 ya (inklusif), diukur dari panjang swipe, bukan hanya komponen datar.
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(11.99, 0.0)) == LoperAnim.Sisi.TIDAK_ADA and LoperAnim.sisi_dari_swipe(awal, awal + Vector2(-11.99, 0.0)) == LoperAnim.Sisi.TIDAK_ADA, "swipe 11,99 px (di bawah ambang) tidak melempar, kedua arah")
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(12.0, 0.0)) == LoperAnim.Sisi.DEKAT and LoperAnim.sisi_dari_swipe(awal, awal + Vector2(-12.0, 0.0)) == LoperAnim.Sisi.SEBERANG, "swipe tepat 12 px (di ambang, inklusif) melempar, kedua arah")
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(11.0, 5.0)) == LoperAnim.Sisi.DEKAT, "swipe 11 datar + 5 tegak (panjang 12,08, datar dominan) melempar karena panjangnya melewati ambang")
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(8.5, 8.4)) == LoperAnim.Sisi.TIDAK_ADA, "swipe 8,5 + 8,4 (panjang 11,95) tidak melempar")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(0.0, -60.0), lebar) == LoperAnim.Sisi.TIDAK_ADA and ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(0.0, 60.0), lebar) == LoperAnim.Sisi.TIDAK_ADA, "swipe lurus ke atas atau ke bawah tidak melempar")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(-60.0, -80.0), lebar) == LoperAnim.Sisi.TIDAK_ADA and ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(60.0, 80.0), lebar) == LoperAnim.Sisi.TIDAK_ADA, "swipe miring dengan gerak tegak lebih besar (60/80) tidak melempar walau |dx| di atas ambang")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(-50.0, -50.0), lebar) == LoperAnim.Sisi.TIDAK_ADA and ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(50.0, 50.0), lebar) == LoperAnim.Sisi.TIDAK_ADA, "tepat 45 derajat (datar = tegak) ambigu: tidak melempar")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(51.0, 50.0), lebar) == LoperAnim.Sisi.DEKAT and ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(-51.0, 50.0), lebar) == LoperAnim.Sisi.SEBERANG, "sedikit di atas 45 derajat ke arah datar (51/50) melempar")
+	# Ambang: |dx| saja (komponen mendatar), bukan panjang total.
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(46.7, 0.0), lebar) == LoperAnim.Sisi.TIDAK_ADA and ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(-46.7, 0.0), lebar) == LoperAnim.Sisi.TIDAK_ADA, "swipe 46,7 px (di bawah 46,8) tidak melempar, kedua arah")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(ambang, 0.0), lebar) == LoperAnim.Sisi.DEKAT and ThrowSolver.sisi_dari_swipe(awal, awal - Vector2(ambang, 0.0), lebar) == LoperAnim.Sisi.SEBERANG, "swipe tepat di ambang (presisi tunggal Vector2) melempar, kedua arah (inklusif)")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(46.0, 20.0), lebar) == LoperAnim.Sisi.TIDAK_ADA, "46 datar + 20 tegak (panjang total 50,2 di atas ambang) tidak melempar: yang dihitung |dx| saja")
 	# Tidak bergantung pada posisi awal.
-	check(LoperAnim.sisi_dari_swipe(Vector2(0.0, 0.0), Vector2(-20.0, 3.0)) == LoperAnim.Sisi.SEBERANG and LoperAnim.sisi_dari_swipe(Vector2(779.0, 359.0), Vector2(759.0, 357.0)) == LoperAnim.Sisi.SEBERANG, "hasil hanya bergantung pada selisih, bukan letak titik awal")
+	check(ThrowSolver.sisi_dari_swipe(Vector2(0.0, 0.0), Vector2(-60.0, 3.0), lebar) == LoperAnim.Sisi.SEBERANG and ThrowSolver.sisi_dari_swipe(Vector2(779.0, 359.0), Vector2(719.0, 357.0), lebar) == LoperAnim.Sisi.SEBERANG, "hasil hanya bergantung pada selisih, bukan letak titik awal")
 	# Vektor nol dan nilai tidak sah.
-	check(LoperAnim.sisi_dari_swipe(awal, awal) == LoperAnim.Sisi.TIDAK_ADA, "vektor nol (tap tanpa geser) tidak melempar")
-	check(LoperAnim.sisi_dari_swipe(Vector2(NAN, 0.0), awal) == LoperAnim.Sisi.TIDAK_ADA and LoperAnim.sisi_dari_swipe(awal, Vector2(NAN, NAN)) == LoperAnim.Sisi.TIDAK_ADA, "NaN pada titik awal atau akhir tidak melempar")
-	check(LoperAnim.sisi_dari_swipe(awal, Vector2(INF, 200.0)) == LoperAnim.Sisi.TIDAK_ADA and LoperAnim.sisi_dari_swipe(Vector2(-INF, 0.0), awal) == LoperAnim.Sisi.TIDAK_ADA, "tak hingga pada titik awal atau akhir tidak melempar")
-	check(LoperAnim.sisi_dari_swipe(Vector2.ZERO, Vector2(1.0e30, 0.0)) == LoperAnim.Sisi.DEKAT, "swipe sangat panjang tetap hingga dan melempar ke dekat")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal, lebar) == LoperAnim.Sisi.TIDAK_ADA, "vektor nol (tap tanpa geser) tidak melempar")
+	check(ThrowSolver.sisi_dari_swipe(Vector2(NAN, 0.0), awal, lebar) == LoperAnim.Sisi.TIDAK_ADA and ThrowSolver.sisi_dari_swipe(awal, Vector2(NAN, NAN), lebar) == LoperAnim.Sisi.TIDAK_ADA, "NaN pada titik awal atau akhir tidak melempar")
+	check(ThrowSolver.sisi_dari_swipe(awal, Vector2(INF, 200.0), lebar) == LoperAnim.Sisi.TIDAK_ADA and ThrowSolver.sisi_dari_swipe(Vector2(-INF, 0.0), awal, lebar) == LoperAnim.Sisi.TIDAK_ADA, "tak hingga pada titik awal atau akhir tidak melempar")
+	check(ThrowSolver.sisi_dari_swipe(Vector2.ZERO, Vector2(1.0e30, 0.0), lebar) == LoperAnim.Sisi.DEKAT, "swipe sangat panjang tetap hingga dan melempar ke dekat")
 
 
 # --- LemparWaktu: garis waktu animasi lempar (murni) ---

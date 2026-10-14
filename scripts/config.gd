@@ -96,13 +96,44 @@ const PEDAL_RATE_MAKS: float = 1.5
 
 ## --- Lempar koran dan melambat (animasi pemain, usulan, run sprite-lempar-melambat) ---
 ## fps animasi (kayuh 8/10/12, melambat 4, lempar 12) dibaca dari `loper_agen_frames.tres`, bukan dari sini.
+## Ambang swipe 12 px (run sprite-lempar-melambat) diganti `LEMPAR_SWIPE_MIN_PECAHAN` di bawah (run fase2a-lemparan, D-2).
 
-## Panjang swipe terpendek yang masih melempar, piksel game, inklusif (swipe pendek harus tetap terbaca, rule `ui-scenes`). Dinilai lewat uji HP.
-const LEMPAR_SWIPE_AMBANG_PX: float = 12.0
 ## Indeks frame saat koran lepas dari tangan (`release_frame` di loper_agen_lempar.json, README lempar).
 const LEMPAR_FRAME_LEPAS: int = 2
 ## Toleransi derau float saat menentukan frame animasi dari waktu, detik (mencegah frame bergeser satu langkah di batas).
 const LEMPAR_TOLERANSI_DETIK: float = 0.000001
+
+## --- Lemparan koran (BALANCING 4, GDD 5.1-5.2; usulan run fase2a-lemparan, dinilai lewat uji HP, jangan dikunci) ---
+## `ThrowSolver` satu-satunya pemakai angka lintasan. Panjang swipe = komponen MENDATAR |dx| (piksel game) terhadap lebar viewport
+## game saat itu; u = jepit((|dx| - min) / (maks - min), 0, 1). Jarak ke samping, lama terbang, dan tinggi puncak linear dari u.
+## Koran mewarisi kecepatan maju sepeda; tidak ada warisan lateral selama terbang. Tinggi dalam ubin (1 ubin = 32 px tegak, `Iso`).
+
+## Swipe terpendek yang masih melempar, pecahan lebar viewport game, inklusif (6%). Di bawahnya tidak melempar: tanpa garis bidik, koran tidak terpakai.
+const LEMPAR_SWIPE_MIN_PECAHAN: float = 0.06
+## Swipe terpanjang yang masih dihitung, pecahan lebar viewport game (35%). Lebih panjang dijepit ke lemparan terjauh.
+const LEMPAR_SWIPE_MAKS_PECAHAN: float = 0.35
+## Toleransi saat membandingkan |dx| dengan swipe minimum, piksel game (posisi sentuh berpresisi tunggal: 46,8 tersimpan 46,7999992).
+const LEMPAR_SWIPE_TOLERANSI_PX: float = 0.001
+## Jarak mendarat ke samping dari titik lepas pada swipe minimum (u = 0), ubin.
+const LEMPAR_JARAK_MIN_UBIN: float = 1.5
+## Jarak mendarat ke samping dari titik lepas pada swipe maksimum (u = 1), ubin.
+const LEMPAR_JARAK_MAKS_UBIN: float = 5.0
+## Lama terbang pada swipe minimum, detik.
+const LEMPAR_TERBANG_MIN_DETIK: float = 0.45
+## Lama terbang pada swipe maksimum, detik.
+const LEMPAR_TERBANG_MAKS_DETIK: float = 0.75
+## Tinggi puncak lengkung pada swipe minimum, ubin di atas tanah.
+const LEMPAR_PUNCAK_MIN_UBIN: float = 1.0
+## Tinggi puncak lengkung pada swipe maksimum, ubin di atas tanah.
+const LEMPAR_PUNCAK_MAKS_UBIN: float = 1.6
+## Bagian kecepatan maju sepeda yang diwarisi koran selama terbang (1,0 = 100%, GDD 5.1): ngebut = mendarat lebih jauh ke depan.
+const LEMPAR_WARISAN_MAJU: float = 1.0
+## Tinggi tangan saat koran lepas, ubin di atas tanah (0,7 = sekitar 22 px, setinggi setang pada sel 46x58). Lengkung mulai di sini.
+const LEMPAR_TINGGI_TANGAN_UBIN: float = 0.7
+## Jeda antar lemparan, detik: dari lemparan diterima (jari dilepas) sampai lemparan berikutnya boleh diterima, inklusif (toleransi `LEMPAR_TOLERANSI_DETIK`).
+const LEMPAR_JEDA_DETIK: float = 0.35
+## Koran di awal jalan uji (25 pelanggan + 20%, BALANCING 4). Tiap lemparan yang diterima mengurangi tepat 1.
+const KORAN_AWAL: int = 30
 
 ## --- Umpan balik kecepatan (GDD 15; usulan run fase1b-umpan-balik, dinilai di HP) ---
 ## Dihitung dari kecepatan SEBENARNYA (`UmpanBalikKecepatan`). Partikel digambar sendiri (`PancaranPiksel`), kotak 1-2 px game.
@@ -291,3 +322,4 @@ const JEDA_TOMBOL_LEBAR_PX: int = 96
 const JALAN_UJI_DAUR_MUNDUR_UBIN: int = 12
 ## Objek berkala di sisi seberang: berapa ubin di depan sepeda yang sudah disiapkan.
 const JALAN_UJI_DAUR_MAJU_UBIN: int = 16
+

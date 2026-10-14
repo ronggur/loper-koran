@@ -80,6 +80,8 @@ func _initialize() -> void:
 	murni.jalankan()
 	var gerak: TesGerak = TesGerak.new(check, _judul)
 	gerak.jalankan()
+	var lempar: TesLempar = TesLempar.new(check, _judul)
+	lempar.jalankan()
 	var sprite: TesSprite = TesSprite.new(check, _judul, self)
 	sprite.jalankan()
 	var ekspor: TesExport = TesExport.new(check, _judul)
