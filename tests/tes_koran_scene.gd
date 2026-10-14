@@ -451,11 +451,11 @@ func _test_flick(dt: float) -> void:
 	_bersihkan(akar)
 
 
-## QA-001: jari yang diangkat sesudah langkah terakhir di posisi yang sendirian TIDAK melempar (di bawah 6%, atau dominan tegak) tetap
-## melempar garis bidik yang terakhir tampil (yang terlihat = yang terjadi). Swipe yang menyusut di bawah 6% pada langkah biasa
-## menyembunyikan garis bidik lebih dulu, jadi tidak melempar (bukan kasus flick).
+## QA-001: jari yang diangkat sesudah langkah terakhir di posisi yang sendirian TIDAK melempar (ditarik kembali di bawah 6%, atau
+## berbelok dominan tegak) membatalkan lemparan walau garis bidik masih tampil: tidak ada koran, jadi tidak ada hasil yang berbeda dari
+## prediksi. Pola yang sama pada langkah biasa (garis bidik hilang lebih dulu) juga tidak melempar.
 func _test_flick_arah_lain() -> void:
-	_judul.call("Flick ke posisi yang sendirian tidak melempar: tetap garis bidik terakhir yang tampil (QA-001, D-4)")
+	_judul.call("Jari ditarik kembali atau tegak saat diangkat: batal walau garis bidik tampil (QA-001, D-4)")
 	var akar: JalanUji = await _siapkan()
 	var garis: GarisBidik = akar.garis_bidik()
 	var catatan: Dictionary = _catat(akar)
@@ -464,6 +464,7 @@ func _test_flick_arah_lain() -> void:
 	var kasus: Array = [
 		["di bawah 6%", _akhir(sisi, ThrowSolver.swipe_min_px(LEBAR) - 2.0)],
 		["dominan tegak", _awal(sisi) + Vector2(_dx(0.4), -_dx(0.8))],
+		["kembali ke titik awal", _awal(sisi)],
 	]
 	for k: Array in kasus:
 		akar.perbarui(Config.LEMPAR_JEDA_DETIK)
@@ -472,10 +473,11 @@ func _test_flick_arah_lain() -> void:
 		_sentuh(1, _awal(sisi), true)
 		_geser(1, _akhir(sisi, _dx(0.4)))
 		akar.perbarui(DT)
-		var tampil: ThrowSolver.Lintasan = garis.lintasan()
+		check(garis.tampil(), "%s: kontrol: garis bidik tampil sebelum jari diangkat" % k[0])
+		var sisa: int = akar.koran.sisa
+		_geser(1, lepas)
 		_sentuh(1, lepas, false)
-		check(tampil != null and dilempar.size() > 0 and dilempar[dilempar.size() - 1] == tampil, "%s: lemparan = garis bidik terakhir yang tampil" % k[0])
-	var jumlah: int = dilempar.size()
+		check(dilempar.is_empty() and akar.koran.sisa == sisa and not garis.tampil(), "%s: jari diangkat tanpa langkah di antaranya: batal, koran tetap %d, garis bidik hilang" % [k[0], sisa])
 	akar.perbarui(Config.LEMPAR_JEDA_DETIK)
 	_sentuh(1, _awal(sisi), true)
 	_geser(1, _akhir(sisi, _dx(0.4)))
@@ -484,7 +486,7 @@ func _test_flick_arah_lain() -> void:
 	akar.perbarui(DT)
 	check(not garis.tampil(), "jari ditarik kembali di bawah 6% pada langkah biasa: garis bidik hilang")
 	_sentuh(1, _akhir(sisi, ThrowSolver.swipe_min_px(LEBAR) - 2.0), false)
-	check(dilempar.size() == jumlah, "jari diangkat sesudah garis bidik hilang: tidak melempar")
+	check(dilempar.is_empty(), "jari diangkat sesudah garis bidik hilang: tidak melempar")
 	_bersihkan(akar)
 
 
