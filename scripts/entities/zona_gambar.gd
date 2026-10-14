@@ -11,7 +11,8 @@ extends Node2D
 ## Sisi dekat hanya placeholder datar tanpa fasad dan tanpa jendela supaya lempar ke sisi dekat bisa diuji; ini TIDAK memutuskan cara
 ## menampilkan rumah di sisi dekat (ROADMAP 5).
 ## Node di antara ubin tanah dan objek dunia (di bawah rumah, sepeda, dan koran). Kavling yang digambar sama dengan slot rumah
-## `ObjekDaur` (`JalanDaur`); gambar ulang hanya saat kavling pertama berganti. Pola rentang dihitung sekali per jenis kavling.
+## `ObjekDaur` (`JalanDaur`); gambar ulang hanya saat kavling pertama berganti. Pola rentang dihitung sekali per jenis kavling. Apa yang
+## digambar diputuskan `perintah_kavling_tampil` (perintah `GambarPiksel`, dites headless; QA-003 iterasi 2); `_draw` hanya menjalankannya.
 
 ## Kavling pertama yang sedang digambar.
 var _pertama: int = -1
@@ -44,14 +45,27 @@ func kavling_tampil() -> Array[int]:
 	return hasil
 
 
-func _draw() -> void:
+## Perintah gambar (`GambarPiksel`) kavling bernomor `indeks`: pola kavling pelanggan atau bukan pelanggan menurut
+## `ZonaSasaran.pelanggan_jalan_uji` (sama dengan penilaian), digeser ke letak kavling itu di jalan.
+func perintah_kavling_tampil(indeks: int) -> Array:
+	var geser: Vector2 = Iso.posisi_gambar(Vector2(0.0, -float(indeks * Config.JALAN_UJI_RUMAH_PERIODE_UBIN)))
+	var daftar: Array = _pola_pelanggan if ZonaSasaran.pelanggan_jalan_uji(indeks) else _pola_bukan
+	var hasil: Array = []
+	for perintah: Array in daftar:
+		hasil.append([perintah[0], geser, perintah[1]])
+	return hasil
+
+
+## Perintah gambar semua kavling yang tampil (urut). `_draw` menjalankan ini.
+func perintah_tampil() -> Array:
+	var hasil: Array = []
 	for indeks: int in kavling_tampil():
-		var geser: Vector2 = Iso.posisi_gambar(Vector2(0.0, -float(indeks * Config.JALAN_UJI_RUMAH_PERIODE_UBIN)))
-		var daftar: Array = _pola_pelanggan if ZonaSasaran.pelanggan_jalan_uji(indeks) else _pola_bukan
-		for perintah: Array in daftar:
-			var rentang: Array[Vector3i] = []
-			rentang.assign(perintah[0])
-			GambarPiksel.rentang(self, rentang, geser, perintah[1])
+		hasil.append_array(perintah_kavling_tampil(indeks))
+	return hasil
+
+
+func _draw() -> void:
+	GambarPiksel.gambar(self, perintah_tampil())
 
 
 ## Perintah gambar kavling 0 (rumah seberang pelanggan atau bukan): [rentang, warna], urut dari bawah ke atas. Publik untuk tes.

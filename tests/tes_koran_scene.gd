@@ -60,6 +60,8 @@ func jalankan() -> void:
 	await _test_input_dan_kidal()
 	await _test_elips_dan_jendela()
 	await _test_hud_dan_zona()
+	_test_perintah_gambar_koran()
+	await _test_gambar_koran_terbang()
 
 
 # --- Pembantu ---
@@ -151,6 +153,27 @@ func _swipe(sisi: LoperAnim.Sisi, dx: float, index: int = 1) -> void:
 	_sentuh(index, _awal(sisi), true)
 	_geser(index, _akhir(sisi, dx))
 	_sentuh(index, _akhir(sisi, dx), false)
+
+
+## Pola penanda yang DIHARAPKAN per bentuk (ditulis eksplisit, bukan lewat `PolaPiksel.pola_penanda`, supaya kabel gambar ikut dijaga).
+func _pola_penanda_harapan(penanda: ZonaSasaran.Penanda) -> Array[String]:
+	match penanda:
+		ZonaSasaran.Penanda.CENTANG:
+			return PolaPiksel.PENANDA_CENTANG
+		ZonaSasaran.Penanda.SETENGAH:
+			return PolaPiksel.PENANDA_SETENGAH
+		ZonaSasaran.Penanda.BINTANG:
+			return PolaPiksel.PENANDA_BINTANG
+	return PolaPiksel.PENANDA_SILANG
+
+
+## Perintah gambar deret ikon HUD yang diharapkan: `jumlah` ikon, `terang` pertama alpha 1, sisanya `HUD_KORAN_REDUP_ALPHA`.
+func _deret_harapan(jumlah: int, terang: int) -> Array:
+	var hasil: Array = []
+	for i: int in range(jumlah):
+		var alpha: float = 1.0 if i < terang else Config.HUD_KORAN_REDUP_ALPHA
+		hasil.append_array(GambarPiksel.perintah_pola(PolaPiksel.IKON_KORAN, Vector2(i * (Config.HUD_KORAN_IKON_PX + Config.HUD_KORAN_IKON_JARAK_PX), 0), Palette.TEXT, alpha))
+	return hasil
 
 
 ## Mencatat sinyal `koran_dilempar` (lintasan) dan `koran_mendarat` (koran) akar.
@@ -580,9 +603,12 @@ func _test_habis_dan_isi_ulang() -> void:
 		_swipe(LoperAnim.Sisi.DEKAT if i % 2 == 0 else LoperAnim.Sisi.SEBERANG, _dx(0.4))
 		if i == 25:
 			check(hud.teks_koran() == "4" and hud.ikon_koran() == Vector2i(8, 4), "sisa 4: angka 4, 4 dari 8 ikon terang (sisanya redup)")
+			var deret: DeretKoran = _anak(hud, "DeretKoran") as DeretKoran
+			check(deret.perintah_tampil() == _deret_harapan(8, 4) and deret.alpha_ikon(3) == 1.0 and deret.alpha_ikon(4) == Config.HUD_KORAN_REDUP_ALPHA, "sisa 4: gambar deret = 4 ikon alpha 1 lalu 4 ikon redup alpha 0,28 (QA-003)")
 	check((catatan["lempar"] as Array).size() == 30 and akar.koran.sisa == 0, "30 lemparan diterima, sisa 0")
 	akar.perbarui(Config.LEMPAR_JEDA_DETIK)
 	check(hud.teks_koran() == "0" and hud.ikon_koran() == Vector2i(8, 0) and hud.penanda_habis_tampil(), "habis: angka 0, semua ikon redup, penanda HABIS tampil (bukan hanya warna)")
+	check((_anak(hud, "DeretKoran") as DeretKoran).perintah_tampil() == _deret_harapan(8, 0), "habis: gambar deret = 8 ikon redup alpha 0,28 (QA-003)")
 	_sentuh(1, _awal(LoperAnim.Sisi.DEKAT), true)
 	_geser(1, _akhir(LoperAnim.Sisi.DEKAT, _dx(0.4)))
 	akar.perbarui(DT)
@@ -816,6 +842,14 @@ func _test_elips_dan_jendela() -> void:
 		check(mendarat != null and mendarat.hasil == sasaran and mendarat.penanda == k[3] and ZonaSasaran.sah(mendarat.antaran) == k[2], "%s: mendarat dengan hasil sama dengan prediksi elips, penanda %s" % [nama, ZonaSasaran.Penanda.keys()[k[3]]])
 		check(mendarat != null and _dekat_v(Vector2(KoranLempar.posisi(mendarat).x, KoranLempar.posisi(mendarat).y), l.titik_mendarat), "%s: titik mendarat = titik akhir garis bidik" % nama)
 		check(KoranGambar.warna_penanda(mendarat.antaran if mendarat != null else ZonaSasaran.Antaran.TIDAK_SAH) == (Palette.OK if k[2] else Palette.FAIL), "%s: warna penanda %s" % [nama, "OK" if k[2] else "FAIL"])
+		if mendarat != null:
+			var udara: KoranGambar = _anak(akar, "KoranUdara") as KoranGambar
+			var tanah: KoranGambar = _anak(akar, "KoranTanah") as KoranGambar
+			var pola: Array[String] = _pola_penanda_harapan(k[3])
+			var ukuran: Vector2i = PolaPiksel.ukuran(pola)
+			var pojok: Vector2 = Iso.posisi_gambar(l.titik_mendarat) - Vector2(floori(float(ukuran.x) / 2), ukuran.y + Config.PENANDA_ATAS_PX)
+			check(udara.perintah_tampil() == GambarPiksel.perintah_pola(pola, pojok, Palette.OK if k[2] else Palette.FAIL), "%s: node UDARA menggambar penanda %s warna %s di atas titik mendarat (QA-003)" % [nama, ZonaSasaran.Penanda.keys()[k[3]], "OK" if k[2] else "FAIL"])
+			check(tanah.perintah_tampil() == GambarPiksel.perintah_pola(PolaPiksel.pola_koran(0), Iso.posisi_gambar(l.titik_mendarat) - Vector2(4, 6), Palette.TEXT), "%s: node TANAH menggambar koran tergeletak di titik mendarat" % nama)
 		_langkah(akar, roundi(Config.PENANDA_LAMA_DETIK / DT) + 2)
 	check(akar.koran_terbang().is_empty(), "semua penanda habis sesudah 0,8 detik")
 	_bersihkan(akar)
@@ -859,4 +893,112 @@ func _test_hud_dan_zona() -> void:
 		if p[1] == Palette.UI_PANEL_RAISED:
 			jumlah_teras_bukan += 1
 	check(jumlah_teras_bukan == 1, "kavling bukan pelanggan: hanya teras sisi dekat yang tetap warna teras pelanggan")
+	# Kabel gambar zona (QA-003): kavling yang tampil ikut jarak sepeda dan sama dengan slot rumah ObjekDaur; tiap kavling digambar dengan
+	# pola bukan pelanggan tepat bila rumahnya bukan pelanggan, di letak kavling itu.
+	var sepeda: SepedaUji = _sepeda(akar)
+	var awal_kavling: int = kavling[0]
+	sepeda.jarak_ubin = 53.7
+	akar.perbarui(0.0)
+	kavling = zona.kavling_tampil()
+	var pertama: int = JalanDaur.indeks_pertama(53.7, Config.JALAN_UJI_RUMAH_PERIODE_UBIN, Config.JALAN_UJI_DAUR_MUNDUR_UBIN)
+	check(kavling[0] == pertama and pertama != awal_kavling, "zona ikut jarak sepeda: kavling pertama %d (dari %d) = JalanDaur.indeks_pertama(53,7) %d" % [kavling[0], awal_kavling, pertama])
+	var letak_rumah: Array[Vector2] = []
+	for anak: Node in objek.get_children():
+		if anak.name.begins_with("Rumah"):
+			letak_rumah.append((anak as Node2D).position)
+	var rumah_cocok: bool = letak_rumah.size() == kavling.size()
+	var tanda_benar: bool = true
+	var letak_benar: bool = true
+	for indeks: int in kavling:
+		var maju: float = JalanDaur.maju_objek_ubin(indeks, Config.JALAN_UJI_RUMAH_PERIODE_UBIN, Config.JALAN_UJI_RUMAH_MAJU_UBIN)
+		if not letak_rumah.has(Iso.posisi_gambar(Vector2(Config.JALAN_UJI_RUMAH_X_UBIN, -maju))):
+			rumah_cocok = false
+		var perintah: Array = zona.perintah_kavling_tampil(indeks)
+		var ada_bukan_warna: bool = false
+		for p: Array in perintah:
+			if p[2] == Palette.RADAR_BUKAN:
+				ada_bukan_warna = true
+			if p[1] != Iso.posisi_gambar(Vector2(0.0, -float(indeks * Config.JALAN_UJI_RUMAH_PERIODE_UBIN))):
+				letak_benar = false
+		if ada_bukan_warna == ZonaSasaran.pelanggan_jalan_uji(indeks):
+			tanda_benar = false
+	check(rumah_cocok, "tiap kavling zona yang tampil punya rumah graybox ObjekDaur di letak kavling itu (zona tidak bergeser dari rumah)")
+	check(tanda_benar, "node zona: kavling bukan pelanggan (RADAR_BUKAN, tanda bentuk) tepat untuk rumah bukan pelanggan %s" % [kavling.filter(func(i: int) -> bool: return not ZonaSasaran.pelanggan_jalan_uji(i))])
+	check(letak_benar, "node zona: perintah gambar tiap kavling digeser ke letak kavling itu")
+	var total: int = 0
+	for indeks: int in kavling:
+		total += zona.perintah_kavling_tampil(indeks).size()
+	check(zona.perintah_tampil().size() == total and total > 0, "node zona menggambar semua kavling yang tampil (%d perintah)" % total)
+	_bersihkan(akar)
+
+
+## Kabel gambar koran tanpa scene (QA-003): perintah tiap lapisan untuk koran yang dibuat langsung. Bonus jendela (sakelar true, tidak
+## terjadi di scene bawaan) = bintang `OK`; sebelum lepas tidak ada gambar; penanda habis = tidak ada gambar.
+func _test_perintah_gambar_koran() -> void:
+	_judul.call("Perintah gambar koran per lapisan (QA-003, D-10)")
+	# Simpanan rentang pola (QA-006): dihitung sekali per isi pola, sama dengan hasil parse, hanya-baca, dan pola berbeda tidak tertukar.
+	var a: Array = GambarPiksel.rentang_pola(PolaPiksel.PENANDA_CENTANG)
+	var b: Array = GambarPiksel.rentang_pola(PolaPiksel.PENANDA_CENTANG.duplicate())
+	var c: Array = GambarPiksel.rentang_pola(PolaPiksel.PENANDA_SILANG)
+	var sama_parse: bool = a.size() == GambarPiksel.HURUF.size()
+	for i: int in range(GambarPiksel.HURUF.size()):
+		if a[i] != PolaPiksel.rentang_huruf(PolaPiksel.PENANDA_CENTANG, GambarPiksel.HURUF[i]) or c[i] != PolaPiksel.rentang_huruf(PolaPiksel.PENANDA_SILANG, GambarPiksel.HURUF[i]):
+			sama_parse = false
+	check(is_same(a, b) and a.is_read_only() and (a[0] as Array).is_read_only(), "simpanan rentang pola: isi pola sama = objek yang sama (tidak di-parse ulang), hanya-baca")
+	check(sama_parse and not is_same(a, c), "simpanan rentang pola: hasil = parse PolaPiksel.rentang_huruf per huruf, pola berbeda tidak tertukar")
+	var l: ThrowSolver.Lintasan = ThrowSolver.hitung(120.0, LEBAR, LoperAnim.Sisi.SEBERANG, Vector2(0.0, -10.0), 3.0, 0.0, 1.0 / 6.0)
+	var koran: KoranLempar.Koran = KoranLempar.baru(l)
+	check(KoranGambar.perintah_koran(KoranGambar.Lapisan.TANAH, koran).is_empty() and KoranGambar.perintah_koran(KoranGambar.Lapisan.UDARA, koran).is_empty(), "sebelum jeda lepas: koran belum digambar (masih di tangan sprite)")
+	var kasus: Array = [
+		[ZonaSasaran.Antaran.SAH_PENUH, ZonaSasaran.Penanda.CENTANG, Palette.OK],
+		[ZonaSasaran.Antaran.SAH_SETENGAH, ZonaSasaran.Penanda.SETENGAH, Palette.OK],
+		[ZonaSasaran.Antaran.SAH_BONUS, ZonaSasaran.Penanda.BINTANG, Palette.OK],
+		[ZonaSasaran.Antaran.TIDAK_SAH, ZonaSasaran.Penanda.SILANG, Palette.FAIL],
+	]
+	for k: Array in kasus:
+		var mendarat: KoranLempar.Koran = koran.salin()
+		mendarat.detik = ThrowSolver.lama_total(l) + 0.1
+		mendarat.mendarat = true
+		mendarat.antaran = k[0]
+		mendarat.penanda = k[1]
+		var pola: Array[String] = _pola_penanda_harapan(k[1])
+		var pojok: Vector2 = Iso.posisi_gambar(l.titik_mendarat) - Vector2(floori(float(PolaPiksel.ukuran(pola).x) / 2), PolaPiksel.ukuran(pola).y + Config.PENANDA_ATAS_PX)
+		check(KoranGambar.perintah_koran(KoranGambar.Lapisan.UDARA, mendarat) == GambarPiksel.perintah_pola(pola, pojok, k[2]), "%s: lapisan UDARA = penanda %s" % [ZonaSasaran.Antaran.keys()[k[0]], ZonaSasaran.Penanda.keys()[k[1]]])
+		mendarat.detik = ThrowSolver.lama_total(l) + Config.PENANDA_LAMA_DETIK + 0.01
+		check(KoranGambar.perintah_koran(KoranGambar.Lapisan.UDARA, mendarat).is_empty(), "%s: penanda habis = tidak digambar" % ZonaSasaran.Antaran.keys()[k[0]])
+
+
+## Kabel gambar koran terbang di scene (QA-003): bayangan di TANAH di titik tanah koran (bukan posisi udaranya), mengecil saat tinggi
+## naik; koran berputar di lapisan UDARA di posisi udaranya.
+func _test_gambar_koran_terbang() -> void:
+	_judul.call("Gambar koran terbang: bayangan di tanah, koran di udara (QA-003, D-10)")
+	var akar: JalanUji = await _siapkan()
+	var tanah: KoranGambar = _anak(akar, "KoranTanah") as KoranGambar
+	var udara: KoranGambar = _anak(akar, "KoranUdara") as KoranGambar
+	_swipe(LoperAnim.Sisi.SEBERANG, _dx(0.8))
+	var tinggi_maks: float = 0.0
+	var bayangan_benar: bool = true
+	var koran_benar: bool = true
+	var jumlah_udara: int = 0
+	for i: int in range(60):
+		_langkah(akar, 1)
+		if akar.koran_terbang().is_empty():
+			break
+		var koran: KoranLempar.Koran = akar.koran_terbang()[0]
+		if not KoranLempar.di_udara(koran):
+			continue
+		jumlah_udara += 1
+		var p: Vector3 = KoranLempar.posisi(koran)
+		tinggi_maks = maxf(tinggi_maks, p.z)
+		var lebar: int = KoranLempar.lebar_bayangan_px(p.z)
+		var tinggi: int = maxi(floori(float(lebar) / 2), 1)
+		var asal_tanah: Vector2 = Iso.posisi_gambar(Vector2(p.x, p.y)) - Vector2(floori(float(lebar) / 2), floori(float(tinggi) / 2))
+		if tanah.perintah_tampil() != GambarPiksel.perintah_rentang(PolaPiksel.rentang_elips(lebar, tinggi), asal_tanah, Color(Palette.OUTLINE, Config.KORAN_BAYANGAN_ALPHA)):
+			bayangan_benar = false
+		var pola: Array[String] = PolaPiksel.pola_koran(KoranLempar.frame_putar(koran, 4))
+		if udara.perintah_tampil() != GambarPiksel.perintah_pola(pola, Iso.posisi_gambar_tinggi(Vector2(p.x, p.y), p.z) - Vector2(4, 6), Palette.TEXT):
+			koran_benar = false
+	check(jumlah_udara > 10 and tinggi_maks > 1.0, "kontrol: koran terbang %d langkah, tinggi sampai %.2f ubin (posisi udara jauh dari tanah)" % [jumlah_udara, tinggi_maks])
+	check(bayangan_benar, "tiap langkah terbang: node TANAH menggambar bayangan elips OUTLINE di titik TANAH koran, lebar dari tinggi")
+	check(koran_benar, "tiap langkah terbang: node UDARA menggambar koran berputar di posisi udaranya")
 	_bersihkan(akar)

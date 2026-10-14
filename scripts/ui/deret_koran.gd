@@ -23,11 +23,22 @@ func _ready() -> void:
 	_atur_ukuran()
 
 
-func _draw() -> void:
+## Alpha ikon ke-`i` (dari kiri): 1 untuk koran tersisa (`i < terang`), `HUD_KORAN_REDUP_ALPHA` untuk yang terpakai.
+func alpha_ikon(i: int) -> float:
+	return 1.0 if i < terang else Config.HUD_KORAN_REDUP_ALPHA
+
+
+## Perintah gambar (`GambarPiksel`) semua ikon yang tampil, urut dari kiri; `_draw` menjalankan ini (dites headless, QA-003 iterasi 2).
+func perintah_tampil() -> Array:
+	var hasil: Array = []
 	var langkah: int = Config.HUD_KORAN_IKON_PX + Config.HUD_KORAN_IKON_JARAK_PX
 	for i: int in range(jumlah):
-		var alpha: float = 1.0 if i < terang else Config.HUD_KORAN_REDUP_ALPHA
-		GambarPiksel.pola(self, PolaPiksel.IKON_KORAN, Vector2(i * langkah, 0), Palette.TEXT, alpha)
+		hasil.append_array(GambarPiksel.perintah_pola(PolaPiksel.IKON_KORAN, Vector2(i * langkah, 0), Palette.TEXT, alpha_ikon(i)))
+	return hasil
+
+
+func _draw() -> void:
+	GambarPiksel.gambar(self, perintah_tampil())
 
 
 func _atur_ukuran() -> void:

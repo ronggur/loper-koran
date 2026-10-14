@@ -7,7 +7,8 @@ extends Node2D
 ## - `UDARA` (di atas objek dunia): koran gulung 8x6 berputar 4 langkah (`PolaPiksel.KORAN_PUTAR`) di posisi udaranya, dan penanda
 ##   kena/meleset di atas titik mendarat selama `Config.PENANDA_LAMA_DETIK`: bentuk dari `ZonaSasaran.Penanda` (centang, setengah,
 ##   bintang, silang kecil), warna `OK` untuk sah, `FAIL` untuk tidak sah.
-## Node tipis: daftar koran dan semua waktunya ada di `JalanUji` + `KoranLempar` (murni); node hanya menggambar `tampilkan(daftar)`.
+## Node tipis: daftar koran dan semua waktunya ada di `JalanUji` + `KoranLempar` (murni). Apa yang digambar diputuskan SATU fungsi statis
+## `perintah_koran` (perintah `GambarPiksel`, dites headless; QA-003 iterasi 2); `_draw` hanya menjalankan `perintah_tampil`.
 ## Posisi gambar dibulatkan ke piksel game (`Iso.posisi_gambar_tinggi`, `Iso.posisi_gambar`).
 
 ## Lapisan gambar.
@@ -35,42 +36,63 @@ func jumlah_tampil() -> int:
 	return jumlah
 
 
-## Pojok kiri atas gambar koran di udara (piksel game ruang dunia), atau penanda bila sudah mendarat; untuk tes dan probe.
-func pojok_koran(koran: KoranLempar.Koran) -> Vector2:
-	var p: Vector3 = KoranLempar.posisi(koran)
-	var ukuran: Vector2i = PolaPiksel.ukuran(PolaPiksel.pola_koran(0))
-	return Iso.posisi_gambar_tinggi(Vector2(p.x, p.y), p.z) - Vector2(floori(float(ukuran.x) / 2), ukuran.y)
+## Perintah gambar semua koran yang sedang digambar lapisan ini (`perintah_koran` tiap koran, urut). `_draw` menjalankan ini.
+func perintah_tampil() -> Array:
+	var hasil: Array = []
+	for koran: KoranLempar.Koran in _daftar:
+		hasil.append_array(perintah_koran(lapisan, koran))
+	return hasil
 
 
 func _draw() -> void:
-	for koran: KoranLempar.Koran in _daftar:
-		if lapisan == Lapisan.TANAH:
-			_gambar_tanah(koran)
-		else:
-			_gambar_udara(koran)
+	GambarPiksel.gambar(self, perintah_tampil())
 
 
-func _gambar_tanah(koran: KoranLempar.Koran) -> void:
+## Perintah gambar (`GambarPiksel`) lapisan `lapisan_gambar` untuk satu koran; kosong = koran tidak tampil di lapisan ini.
+## - `TANAH`: koran terbang = bayangan elips di titik TANAH koran (`pojok_bayangan`, lebar `KoranLempar.lebar_bayangan_px`, `OUTLINE`
+##   alpha `KORAN_BAYANGAN_ALPHA`); sudah mendarat = koran tergeletak (frame 0) di titik mendarat.
+## - `UDARA`: koran terbang = koran berputar (`KoranLempar.frame_putar`) di posisi udaranya; sudah mendarat dan penanda masih tampil =
+##   penanda bentuk `ZonaSasaran.Penanda` di atas titik mendarat, warna `warna_penanda`.
+static func perintah_koran(lapisan_gambar: Lapisan, koran: KoranLempar.Koran) -> Array:
+	if lapisan_gambar == Lapisan.TANAH:
+		if KoranLempar.di_udara(koran):
+			var lebar: int = KoranLempar.lebar_bayangan_px(KoranLempar.posisi(koran).z)
+			var warna: Color = Color(Palette.OUTLINE, Config.KORAN_BAYANGAN_ALPHA)
+			return GambarPiksel.perintah_rentang(PolaPiksel.rentang_elips(lebar, tinggi_bayangan_px(lebar)), pojok_bayangan(koran), warna)
+		if koran.mendarat:
+			return GambarPiksel.perintah_pola(PolaPiksel.pola_koran(0), pojok_koran(koran), Palette.TEXT)
+		return []
+	if KoranLempar.di_udara(koran):
+		var frame: int = KoranLempar.frame_putar(koran, PolaPiksel.KORAN_PUTAR.size())
+		return GambarPiksel.perintah_pola(PolaPiksel.pola_koran(frame), pojok_koran(koran), Palette.TEXT)
+	if koran.mendarat and KoranLempar.sisa_penanda(koran) > 0.0:
+		return GambarPiksel.perintah_pola(PolaPiksel.pola_penanda(koran.penanda), pojok_penanda(koran), warna_penanda(koran.antaran))
+	return []
+
+
+## Tinggi elips bayangan selebar `lebar` piksel: setengahnya, paling sedikit 1 piksel.
+static func tinggi_bayangan_px(lebar: int) -> int:
+	return maxi(floori(float(lebar) / 2), 1)
+
+
+## Pojok kiri atas elips bayangan koran (piksel game ruang dunia): elips berpusat di titik TANAH koran (bukan posisi udaranya).
+static func pojok_bayangan(koran: KoranLempar.Koran) -> Vector2:
 	var p: Vector3 = KoranLempar.posisi(koran)
-	var tanah: Vector2 = Iso.posisi_gambar(Vector2(p.x, p.y))
-	if KoranLempar.di_udara(koran):
-		var lebar: int = KoranLempar.lebar_bayangan_px(p.z)
-		var tinggi: int = maxi(floori(float(lebar) / 2), 1)
-		var asal: Vector2 = tanah - Vector2(floori(float(lebar) / 2), floori(float(tinggi) / 2))
-		GambarPiksel.rentang(self, PolaPiksel.rentang_elips(lebar, tinggi), asal, Color(Palette.OUTLINE, Config.KORAN_BAYANGAN_ALPHA))
-	elif koran.mendarat:
-		GambarPiksel.pola(self, PolaPiksel.pola_koran(0), pojok_koran(koran), Palette.TEXT)
+	var lebar: int = KoranLempar.lebar_bayangan_px(p.z)
+	return Iso.posisi_gambar(Vector2(p.x, p.y)) - Vector2(floori(float(lebar) / 2), floori(float(tinggi_bayangan_px(lebar)) / 2))
 
 
-func _gambar_udara(koran: KoranLempar.Koran) -> void:
-	if KoranLempar.di_udara(koran):
-		GambarPiksel.pola(self, PolaPiksel.pola_koran(KoranLempar.frame_putar(koran, PolaPiksel.KORAN_PUTAR.size())), pojok_koran(koran), Palette.TEXT)
-	elif koran.mendarat and KoranLempar.sisa_penanda(koran) > 0.0:
-		var pola: Array[String] = PolaPiksel.pola_penanda(koran.penanda)
-		var ukuran: Vector2i = PolaPiksel.ukuran(pola)
-		var tanah: Vector2 = Iso.posisi_gambar(koran.lintasan.titik_mendarat)
-		var pojok: Vector2 = tanah - Vector2(floori(float(ukuran.x) / 2), ukuran.y + Config.PENANDA_ATAS_PX)
-		GambarPiksel.pola(self, pola, pojok, warna_penanda(koran.antaran))
+## Pojok kiri atas penanda (piksel game ruang dunia): kaki penanda `PENANDA_ATAS_PX` di atas titik mendarat, tengah mendatar.
+static func pojok_penanda(koran: KoranLempar.Koran) -> Vector2:
+	var ukuran: Vector2i = PolaPiksel.ukuran(PolaPiksel.pola_penanda(koran.penanda))
+	return Iso.posisi_gambar(koran.lintasan.titik_mendarat) - Vector2(floori(float(ukuran.x) / 2), ukuran.y + Config.PENANDA_ATAS_PX)
+
+
+## Pojok kiri atas gambar koran (piksel game ruang dunia): di posisi udaranya, atau tergeletak di titik mendarat bila sudah mendarat.
+static func pojok_koran(koran: KoranLempar.Koran) -> Vector2:
+	var p: Vector3 = KoranLempar.posisi(koran)
+	var ukuran: Vector2i = PolaPiksel.ukuran(PolaPiksel.pola_koran(0))
+	return Iso.posisi_gambar_tinggi(Vector2(p.x, p.y), p.z) - Vector2(floori(float(ukuran.x) / 2), ukuran.y)
 
 
 ## Warna utama penanda: `OK` untuk antaran sah (penuh, setengah, bonus), `FAIL` untuk tidak sah. Bentuknya yang membedakan (D-10).
