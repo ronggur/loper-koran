@@ -68,7 +68,8 @@ func _process(delta: float) -> void:
 
 
 func _notification(what: int) -> void:
-	# Ruang dunia: induk bergeser = letak gambar partikel di ruang lokal berubah walau partikel diam.
+	# Ruang dunia: induk bergeser = letak gambar partikel di ruang lokal berubah walau partikel diam, juga tanpa `maju` (mis. sepeda
+	# dipasang ulang saat jeda, atau `_process` mati). Dites (P-2 run fase2a-lemparan): induk digeser tanpa `maju` = digambar ulang.
 	if what == NOTIFICATION_TRANSFORM_CHANGED and ruang_dunia:
 		queue_redraw()
 
@@ -147,11 +148,20 @@ func _pancar() -> void:
 	_jumlah += 1
 
 
-func _draw() -> void:
-	# Ruang dunia: posisi global dibulatkan ke piksel game dulu, lalu dibawa ke ruang lokal (induk di piksel bulat, jadi tetap bulat).
+## Titik gambar partikel ke-`i` (0 sampai `jumlah_aktif() - 1`) di ruang lokal node, piksel game bulat; dipakai `_draw` (QA-001 run
+## fase1c-perapian, P-1 run fase2a-lemparan). Ruang dunia: posisi global dibulatkan ke piksel game dulu, lalu dibawa ke ruang lokal
+## dengan transform global terbalik (induk di piksel bulat, jadi tetap bulat), sehingga transform global x titik gambar = posisi global
+## dibulatkan. Ruang lokal: posisi tersimpan dibulatkan. Indeks di luar rentang = nol.
+func titik_gambar(i: int) -> Vector2:
+	if i < 0 or i >= _jumlah:
+		return Vector2.ZERO
 	var ke_lokal: Transform2D = get_global_transform().affine_inverse() if ruang_dunia else Transform2D.IDENTITY
+	return (ke_lokal * _posisi[i].round()).round()
+
+
+func _draw() -> void:
 	for i: int in range(_jumlah):
-		var p: Vector2 = (ke_lokal * _posisi[i].round()).round()
+		var p: Vector2 = titik_gambar(i)
 		if panjang_px <= 0:
 			draw_rect(Rect2(p, Vector2.ONE * float(_ukuran[i])), warna)
 			continue
