@@ -56,11 +56,11 @@ assets/LICENSES.md     Lisensi aset pihak ketiga (ada)
 assets/data/           Segmen rute, misi, headline (DATA_SCHEMA.md), menyusul
 scripts/config.gd      SEMUA angka tuning (BALANCING.md) (ada)
 scripts/autoload/      audio.gd (autoload Audio, bunyi sepeda) (ada); SaveManager, DayManager menyusul
-scripts/systems/       Logika murni: config_parser, loper_anim, iso, touch_zones, stick_map, touch_router, bike_motion (gerak, rem, stamina, lateral), jeda_sim, dorongan_kecepatan, jalan_daur, piksel_lingkaran, lempar_waktu, umpan_balik_kecepatan, bunyi_sepeda, throw_solver, zona_sasaran, sisa_koran (ada); skor, misi, reputasi, kerusakan menyusul
-scripts/entities/      loper_sprite, sepeda_uji, jalan_uji, tanah_daur, objek_daur, pancaran_piksel, umpan_balik_sepeda (ada)
+scripts/systems/       Logika murni: config_parser, loper_anim, iso, touch_zones, stick_map, touch_router, bike_motion (gerak, rem, stamina, lateral), jeda_sim, dorongan_kecepatan, jalan_daur, piksel_lingkaran, lempar_waktu, umpan_balik_kecepatan, bunyi_sepeda, throw_solver, zona_sasaran, sisa_koran, koran_lempar, pola_piksel (ada); skor, misi, reputasi, kerusakan menyusul
+scripts/entities/      loper_sprite, sepeda_uji, jalan_uji, tanah_daur, objek_daur, zona_gambar, koran_gambar, pancaran_piksel, umpan_balik_sepeda (ada)
 scripts/dev/           cek_render.gd (probe render Compatibility) (ada)
-scripts/ui/            palette, kontrol_touch, hud_dev, bar_kecepatan, gaya_hud, tombol_jeda, tombol_sentuh, layar_jeda (ada); HUD final dan layar menyusul
-tests/                 run_tests.gd, tes_input_murni.gd, tes_input_scene.gd, tes_sprite.gd, tes_gerak.gd, tes_gerak_scene.gd, tes_jeda_scene.gd, tes_tata_letak.gd, tes_umpan_balik.gd, tes_bunyi.gd, tes_cek_render.gd, tes_lempar.gd, tes_export.gd, probe_layar.gd, probe_*_jendela.gd (ada)
+scripts/ui/            palette, kontrol_touch, hud_dev, bar_kecepatan, deret_koran, gambar_piksel, garis_bidik, gaya_hud, tombol_jeda, tombol_sentuh, layar_jeda (ada); HUD final dan layar menyusul
+tests/                 run_tests.gd, tes_input_murni.gd, tes_input_scene.gd, tes_sprite.gd, tes_gerak.gd, tes_gerak_scene.gd, tes_jeda_scene.gd, tes_tata_letak.gd, tes_umpan_balik.gd, tes_bunyi.gd, tes_cek_render.gd, tes_lempar.gd, tes_koran_scene.gd, tes_export.gd, probe_layar.gd, probe_*_jendela.gd (ada)
 tools/loper_art/       Renderer sprite pemain (Python), lihat ART_DIRECTION bagian 4; bangun_frames.py membangun SpriteFrames gabungan 48 animasi (stdlib)
 tools/env_art/         Renderer aset lingkungan, termasuk graybox.py (ada)
 tools/audio_art/       sintesis_sepeda.py: bunyi placeholder sepeda dari rumus (stdlib) (ada)

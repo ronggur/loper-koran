@@ -360,3 +360,17 @@ Catatan lain (kutip kata-kata penguji, bukan nama): ___________________
 
 **Hasil:** tulis ringkasan (berapa dari berapa penguji lolos tiap butir, angka yang diminta berubah) di PR uji atau `docs/loop/`, lalu pemilik memutuskan centang Fase 1 di `DEV_PHASES.md`.
 
+
+### 8.3 Uji Run 2A Fase 2: lemparan koran (run `20261014-fase2a-lemparan`, belum diuji)
+
+Penguji: pemilik sendiri (keputusan 2026-10-14). APK normal terbaru (bagian 4) di vivo V2108 (`12d8c9da`), atau A54 bila tersambung. Semua angka usulan (`scripts/config.gd`, BALANCING 4-5): catat angka yang ingin diubah beserta alasannya, jangan diubah di sesi uji. Jalan uji mulai dengan 30 koran; sesudah habis, bersepeda sekitar 16 ubin (sekitar 5 detik santai) mengisi ulang (alat uji, bukan aturan game). Rumah bukan pelanggan diberi tanda lingkaran bergaris miring abu-abu di halaman; sisi dekat hanya kavling datar placeholder. Bukti desktop: tangkapan `docs/loop/20261014-fase2a-lemparan/shots/` (`tests/probe_koran_jendela.gd`).
+
+- [ ] **Swipe pendek:** swipe datar sekitar 6% lebar layar (sekitar 1,5 cm di HP 6,5 inci) terbaca sebagai lempar dekat; sentuhan tak sengaja, ketukan, dan swipe tegak tidak melempar. Swipe panjang sekitar 35% lebar layar nyaman dijangkau jempol kanan.
+- [ ] **Garis bidik:** selama jari ditahan titik-titik putih melengkung dari tangan ke elips di tanah dan ikut berubah saat sepeda mempercepat atau melambat; tidak tertutup jempol. Elips ke sasaran sah (kotak surat, teras, halaman) berubah jadi elips hijau **terisi**; terbaca tanpa mengandalkan warna. Garis hilang saat jari dilepas.
+- [ ] **Kena dengan sengaja:** kenai kotak surat di santai, cepat, dan ngebut. Saat ngebut garis bidik membantu melempar lebih awal (koran mewarisi kecepatan maju). Koran mendarat tepat di elips terakhir sebelum jari dilepas, walau sesudah itu sepeda direm atau pindah sisi.
+- [ ] **Koran dan penanda:** koran gulung berputar dengan lengkung dan bayangan yang mengecil saat tinggi, terbaca di ×3; penanda centang (kotak surat, teras), setengah (halaman), dan silang kecil (meleset, bukan pelanggan, jendela) terbaca dan meleset tidak terasa menghukum.
+- [ ] **Sisi dekat:** lempar ke sisi dekat (swipe ke kanan) terasa wajar walau zonanya placeholder datar.
+- [ ] **HUD koran:** panel KORAN (angka dan 8 ikon) terbaca dan tidak tertutup jempol kanan saat swipe; swipe yang mulai di atas panel tetap melempar. Lempar sampai habis: HABIS tampil, garis bidik tidak muncul, swipe tidak melempar; lalu terisi ulang. Kidal: panel ikut pindah.
+- [ ] **Jeda 0,35 detik:** dua swipe cepat berturut-turut: swipe kedua yang terlalu cepat diabaikan; apakah 0,35 detik terasa menelan swipe yang disengaja?
+- [ ] **Background saat koran terbang:** tekan home atau tarik notifikasi saat koran di udara (dan tepat sesudah jari dilepas): layar jeda muncul, koran diam; sesudah Lanjut koran melanjutkan dan mendarat tanpa lompatan, koran berkurang satu saja.
+- [ ] **Jendela penalti ringan:** lempar ke strip jendela di kaki fasad: silang kecil (tidak sah, tanpa hukuman lain). Apakah terasa adil? Catat sebagai bahan keputusan jendela (ROADMAP 5).

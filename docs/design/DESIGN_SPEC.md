@@ -154,11 +154,14 @@ GDD 4.3. Strip tipis di tepi kiri dan kanan, di separuh atas layar supaya tidak 
 
 Panel bawah diletakkan di antara zona stick dan tengah layar, jadi tidak tertutup jempol kiri dan tidak menutupi jalan di depan sepeda.
 
+**Tafsiran HUD sementara sisa koran (usulan, run fase2a-lemparan 2026-10-14; `scripts/ui/hud_dev.gd`, `deret_koran.gd`):** panel koran satu baris dengan panel kecepatan (`BarisBawah`), celah 20 px sehingga mulai di x 400 (`HUD_PANEL_KORAN_GESER_PX`); baris atas label `HUD_KORAN` ("KORAN", `ACCENT`) dan angka sisa (`HUD_KORAN_ANGKA`, `TEXT`), baris bawah 8 ikon koran 12×12 dari kode berjarak 1 px (panel sekitar 117×39, berakhir di x sekitar 517). Delapan ikon dibaca sebagai **delapan koran terakhir**: selama sisa ≥ 8 semua ikon terang dan angkanya yang menunjukkan jumlah; di bawah 8 satu ikon redup (alpha 28%) per koran terpakai (`SisaKoran.ikon_hud`). Saat habis tampil label `HUD_KORAN_HABIS` ("HABIS", `FAIL`) di samping angka 0 dan semua ikon redup, jadi habis terbaca tanpa warna. Kidal: baris dicerminkan (panel kecepatan 210 dari tepi kanan, panel koran 400 dari tepi kanan). Panel di dalam zona swipe dan tidak menerima sentuhan (swipe yang dimulai di atasnya tetap melempar). Cek keterbacaan di HP sebelum dikunci.
+
 ### 3.6 Umpan balik melayang
 
 - Muncul di atas rumah sasaran saat koran mendarat: panel kecil berisi ikon koin, angka, dan alasan ("+15 · teras tepat", "pelanggan puas").
 - Naik 12 px dan memudar dalam 0,8 detik (usulan). Maksimal dua sekaligus; yang lama hilang lebih dulu.
 - Meleset tidak memunculkan panel merah besar; cukup ikon × kecil di tempat koran jatuh, supaya gagal tidak terasa menghukum.
+- **Penanda sementara Fase 2 (usulan, run fase2a-lemparan 2026-10-14; `scripts/entities/koran_gambar.gd`, `scripts/systems/pola_piksel.gd`):** belum ada panel koin (skor Fase 3), jadi yang tampil hanya penanda bentuk piksel dari kode 7 px di atas titik mendarat selama 0,8 detik (`PENANDA_LAMA_DETIK`), di atas koran yang tergeletak: centang 9×7 `OK` (kotak surat, teras), belah ketupat terisi separuh `OK` (halaman, sah setengah), bintang 9×9 `OK` (jendela bila sakelar bonus), silang kecil 7×7 `FAIL` (meleset, sisi salah, rumah bukan pelanggan, jendela dengan sakelar bawaan penalti ringan). Semua bergaris luar `OUTLINE`; bentuk yang membedakan, bukan hanya warna. Tidak naik atau memudar (penyederhanaan placeholder).
 
 ### 3.7 Kontrol — `screens/kontrol.png`
 
@@ -172,6 +175,8 @@ GDD 5.2.
 | Garis bidik | titik 2 px tiap 4 px, `TEXT` | Berakhir di elips pendaratan 10×5 px yang sudah memperhitungkan kecepatan sepeda (BALANCING 4). Elips berubah `OK` kalau mengarah ke sasaran sah |
 
 Opsi kidal menukar zona kiri dan kanan beserta panel bawah dan tombol bel. Mode bantu menyembunyikan stick dan memakai tap di sisi layar (GDD 5.3).
+
+**Tafsiran garis bidik (usulan, run fase2a-lemparan 2026-10-14; `scripts/ui/garis_bidik.gd`):** garis bidik digambar di **ruang dunia** (ikut kamera, di atas rumah dan sepeda), bukan dari titik awal swipe ke jari: titik 2×2 `TEXT` tiap 4 px sepanjang lengkung koran yang sebenarnya, mulai dari titik lepas setinggi tangan (sudah termasuk gerak sepeda selama jeda lepas, jadi saat ngebut garis mulai sedikit di depan pengendara) sampai elips pendaratan di tanah. Titiknya sampel lintasan `ThrowSolver` yang sama dengan lemparan, diperbarui tiap frame dari kecepatan sebenarnya. Elips biasa = cincin 10×5 `TEXT`; elips ke sasaran sah = elips **terisi** `OK` bergaris luar `OUTLINE` (berubah bentuk, bukan hanya warna). Garis bidik hanya tampil selama jari ditahan, |dx| ≥ 6% lebar viewport, swipe dominan datar, koran masih ada, dan jeda antar lempar 0,35 detik sudah lewat; hilang saat jari dilepas, dibatalkan, atau jeda. Garis putus lama dari titik awal swipe ke jari dihapus. Kekuatan titik di bawah jempol dinilai di HP.
 
 ### 3.8 Tombol bel dan efek "kring" (usulan, 2026-10-09)
 
