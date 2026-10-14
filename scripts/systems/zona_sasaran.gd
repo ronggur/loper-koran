@@ -7,8 +7,9 @@ extends RefCounted
 ## sepanjang jalan; dunia y = -maju, `Iso`). Tepi min inklusif, tepi maks eksklusif, di kedua sumbu: dua zona yang bersebelahan tidak
 ## pernah sama-sama memuat satu titik. Penilaian dari TITIK MENDARAT saja (D-4 run fase2-arah-bebas): zona yang memuat titik itu menilai
 ## koran apa pun arah atau sisi lemparannya, jadi fungsi di sini tidak menerima sisi lempar (penyaring sisi Run 2A dihapus). `Zona.sisi`
-## hanya untuk gambar. Zona seberang dan zona dekat jalan uji tidak bertumpuk (dites). Bila beberapa zona memuat titik mendarat, prioritas jenis: kotak surat > jendela > teras > halaman (`PRIORITAS`); jenis sama =
-## yang pertama di daftar. Sesudah itu: zona rumah bukan pelanggan = `BUKAN_PELANGGAN`. Tidak ada zona = `MELESET`.
+## hanya untuk gambar. Zona seberang dan zona dekat jalan uji tidak bertumpuk (dites). Bila beberapa zona memuat titik mendarat,
+## prioritas jenis: kotak surat > jendela > teras > halaman (`PRIORITAS`); jenis sama = yang pertama di daftar. Sesudah itu: zona rumah
+## bukan pelanggan = `BUKAN_PELANGGAN`. Tidak ada zona = `MELESET`.
 ##
 ## Status antaran (BALANCING 5): kotak surat dan teras sah penuh, halaman sah setengah, bukan pelanggan dan meleset tidak sah, jendela
 ## menurut sakelar (`Config.JENDELA_KENA_BONUS`, KEPUTUSAN TERBUKA ROADMAP 5; bawaan penalti ringan = tidak sah tanpa hukuman lain),
