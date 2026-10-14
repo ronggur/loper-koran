@@ -583,9 +583,16 @@ func _kena_kotak_seberang_depan(akar: JalanUji, l: ThrowSolver.Lintasan) -> bool
 	return zona != null and zona.sisi == LoperAnim.Sisi.SEBERANG and zona.pelanggan and zona.persegi.position.y > _sepeda(akar).jarak_ubin and ZonaSasaran.sah(KoranLempar.prediksi_antaran(l, Config.JENDELA_KENA_BONUS))
 
 
+## Swipe ke atas yang ditolak aturan Run 2A: |dy| > |dx| tegas dan dy ke atas (y layar ke bawah). Run 2A menolak |dy| >= |dx|.
+func _ditolak_run_2a(awal: Vector2, akhir: Vector2) -> bool:
+	var geser: Vector2 = akhir - awal
+	return geser.y < 0.0 and absf(geser.y) > absf(geser.x)
+
+
 ## AC-6 run fase2-arah-bebas, regresi laporan pemilik (vivo V2108): di santai, cepat, dan ngebut (kecepatan sebenarnya dari stick) jari
-## ditahan bersudut 45 sampai 135 derajat (ditolak Run 2A) sampai garis bidik yang TAMPIL mengarah ke kotak surat seberang pelanggan di
-## depan sepeda; dilepas lewat event sentuh, koran mendarat di sana dan dinilai `ZonaSasaran` sebagai antaran sah.
+## ditahan bersudut 46 sampai 134 derajat sampai garis bidik yang TAMPIL mengarah ke kotak surat seberang pelanggan di depan sepeda;
+## dilepas lewat event sentuh, koran mendarat di sana dan dinilai `ZonaSasaran` sebagai antaran sah. Swipe yang dipakai wajib |dy| > |dx|
+## tegas (ditolak Run 2A, yang menolak |dy| >= |dx|); 45 derajat tepat tidak dipakai karena derau float bisa membuatnya |dx| > |dy| (QA-001).
 func _test_regresi_pemilik() -> void:
 	_judul.call("Regresi laporan pemilik di scene: swipe ke atas ke kotak surat seberang di depan, santai/cepat/ngebut (AC-6)")
 	var akar: JalanUji = await _siapkan()
@@ -608,12 +615,12 @@ func _test_regresi_pemilik() -> void:
 		var akhir: Vector2 = awal
 		for i: int in range(120):
 			var pilihan: Vector2 = Vector2.INF
-			var derajat: float = 45.0
-			while derajat <= 135.0 and pilihan == Vector2.INF:
+			var derajat: float = 46.0
+			while derajat <= 134.0 and pilihan == Vector2.INF:
 				var panjang: float = ceilf(ThrowSolver.swipe_min_px(LEBAR))
 				while panjang <= ThrowSolver.swipe_maks_px(LEBAR):
 					var coba: Vector2 = _akhir_sudut(awal, derajat, panjang)
-					if _kena_kotak_seberang_depan(akar, akar.lintasan_swipe(awal, coba)):
+					if _ditolak_run_2a(awal, coba) and _kena_kotak_seberang_depan(akar, akar.lintasan_swipe(awal, coba)):
 						pilihan = coba
 						break
 					panjang += 3.0
@@ -631,7 +638,8 @@ func _test_regresi_pemilik() -> void:
 				ketemu = true
 				break
 		var sudut: float = _sudut(awal, akhir)
-		check(ketemu and sudut >= 45.0 - 0.001 and sudut <= 135.0 + 0.001, "%s: garis bidik tampil ke kotak surat seberang pelanggan di depan dengan swipe %.1f derajat (rentang yang ditolak Run 2A)" % [t[0], sudut])
+		var geser: Vector2 = akhir - awal
+		check(ketemu and _ditolak_run_2a(awal, akhir) and sudut >= 46.0 - 0.001 and sudut <= 134.0 + 0.001, "%s: garis bidik tampil ke kotak surat seberang pelanggan di depan dengan swipe %.1f derajat, |dx| %.4f < |dy| %.4f (ditolak Run 2A)" % [t[0], sudut, absf(geser.x), absf(geser.y)])
 		if not ketemu:
 			continue
 		var tampil: ThrowSolver.Lintasan = garis.lintasan()
