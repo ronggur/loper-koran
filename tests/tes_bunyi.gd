@@ -3,7 +3,8 @@ extends RefCounted
 ## Tes bunyi sepeda run fase1b-umpan-balik (AC-4, AC-5 sisi Godot, D-3 sampai D-5): `BunyiSepeda` murni (pitch, loop, tepi naik rem,
 ## jeda), autoload `Audio` tanpa scene tree, teks `audio.gd` tidak merujuk autoload lain, bus `Sepeda` -> `SFX` -> `Master`, tiga
 ## stream (format, loop), dan bunyi di scene `jalan_uji.tscn` lewat `/root/Audio` (stream sungguhan diputar di driver Dummy karena
-## runner menyalakan `putar_di_driver_dummy`). Scene dijalankan dengan `perbarui(DT)` seperti tes scene lain.
+## runner menyalakan `putar_di_driver_dummy`). Scene dijalankan dengan `perbarui(DT)` seperti tes scene lain. Run fase1c-perapian:
+## jalur berhenti `Audio` sendiri pada notifikasi app (QA-001 Q02).
 
 const BERKAS_JALAN_UJI: String = "res://scenes/dev/jalan_uji.tscn"
 const BERKAS_AUDIO: String = "res://scripts/autoload/audio.gd"
@@ -43,6 +44,7 @@ func jalankan() -> void:
 	_test_bus()
 	_test_stream()
 	await _test_loop_sungguhan()
+	await _test_notifikasi_sendiri()
 	await _test_scene()
 
 
@@ -286,6 +288,40 @@ func _test_loop_sungguhan() -> void:
 	audio.call("perbarui_sepeda", LoperAnim.Pose.REM, 4.0, true, true)
 	check(not audio.call("ada_bunyi"), "perbarui_sepeda dengan jeda (tanpa atur_jeda): decit dan loop berhenti")
 	audio.call("hentikan_sepeda")
+
+
+# --- Jalur berhenti milik Audio sendiri (QA-001 Q02 run fase1b-umpan-balik) ---
+
+## `Audio._notification` menghentikan semua pemutar pada `APPLICATION_PAUSED`, `APPLICATION_FOCUS_OUT`, dan `WM_CLOSE_REQUEST` lewat
+## jalurnya sendiri: instans baru di pohon tanpa `JalanUji` (tidak ada sinyal `jeda_berubah`, tidak ada `atur_jeda`). Tiap notifikasi
+## dites dengan instans tersendiri supaya mutan yang menghapus salah satunya mati.
+func _test_notifikasi_sendiri() -> void:
+	_judul.call("Audio berhenti sendiri pada PAUSED, FOCUS_OUT, dan tutup jendela, tanpa JalanUji (QA-001 Q02, rule gdscript)")
+	var skrip: GDScript = load(BERKAS_AUDIO) as GDScript
+	var kasus: Array = [
+		["APPLICATION_PAUSED", Node.NOTIFICATION_APPLICATION_PAUSED],
+		["APPLICATION_FOCUS_OUT", Node.NOTIFICATION_APPLICATION_FOCUS_OUT],
+		["WM_CLOSE_REQUEST", Node.NOTIFICATION_WM_CLOSE_REQUEST],
+	]
+	for baris: Array in kasus:
+		var nama: String = baris[0]
+		var notifikasi: int = baris[1]
+		var audio: Node = skrip.new() as Node
+		audio.name = "AudioUjiNotifikasi"
+		audio.set(&"putar_di_driver_dummy", true)
+		_tree.root.add_child(audio)
+		audio.call(&"perbarui_sepeda", LoperAnim.Pose.KAYUH, 4.0, false, false)
+		(audio.call(&"pemutar_freewheel") as AudioStreamPlayer).play()
+		(audio.call(&"pemutar_rem") as AudioStreamPlayer).play()
+		var kayuh: AudioStreamPlayer = audio.call(&"pemutar_kayuh")
+		var freewheel: AudioStreamPlayer = audio.call(&"pemutar_freewheel")
+		var rem: AudioStreamPlayer = audio.call(&"pemutar_rem")
+		check(kayuh.playing and freewheel.playing and rem.playing and not audio.call(&"sedang_jeda"), "%s: kontrol: sebelum notifikasi ketiga pemutar berbunyi, tanpa jeda dari pemanggil" % nama)
+		audio.propagate_notification(notifikasi)
+		check(not kayuh.playing and not freewheel.playing and not rem.playing and not audio.call(&"ada_bunyi"), "%s: semua pemutar sepeda berhenti lewat Audio._notification sendiri (tanpa JalanUji dan jeda_berubah)" % nama)
+		_tree.root.remove_child(audio)
+		audio.free()
+	await _tree.process_frame
 
 
 # --- Scene: bunyi mengikuti gerak, rem sekali, jeda diam ---

@@ -3,8 +3,8 @@ extends RefCounted
 ## Tes terpadu jeda run fase1b-umpan-balik (AC-7, D-6; QA-007 run fase1a-gerak): tombol jeda, layar jeda, tanpa lanjut otomatis,
 ## back Android, `SceneTree.paused` menghentikan sprite, partikel, dan input; autoload `Audio` menghentikan bunyi sepeda (bagian 1b).
 ## Event sentuh sintetis lewat `Input.parse_input_event` di viewport 780x360 (pola `tests/tes_gerak_scene.gd`).
-## Run fase1c-perapian: cabang pertahanan QA-001 (`TombolSentuh` melupakan jari dan menolak sentuhan `canceled`) dan regresi QA-002
-## (status tekan tombol jeda dilepas saat jeda dan lanjut).
+## Run fase1c-perapian: cabang pertahanan QA-001 (cincin rem padam saat jeda; `TombolSentuh` melupakan jari dan menolak sentuhan
+## `canceled`) dan regresi QA-002 (status tekan tombol jeda dilepas saat jeda dan lanjut).
 ##
 ## Dipanggil dari `tests/run_tests.gd`. Scene dijalankan dengan `set_process(false)` pada akar; gerak lewat `JalanUji.perbarui(DT)`.
 ## Sprite pemain dan partikel TIDAK dimatikan prosesnya di sini (yang diuji justru bahwa pause pohon menghentikannya).
@@ -40,6 +40,8 @@ func jalankan() -> void:
 		await _test_jeda_lengkap(pemicu)
 	await _test_back_dua_kali_dan_urutan()
 	await _test_ketuk_jari_kedua()
+	for pemicu: String in ["TOMBOL_EMIT", "FOCUS_OUT", "PAUSED", "BACK"]:
+		await _test_rem_padam_saat_jeda(pemicu)
 	await _test_tombol_sentuh_terpisah()
 	await _test_tekan_tidak_tertinggal()
 
@@ -359,6 +361,48 @@ func _test_ketuk_jari_kedua() -> void:
 	_sentuh(3, tombol + Vector2(0, 60), false)
 	await _tree.process_frame
 	check(not akar.sedang_jeda(), "jari yang hanya naik atau hanya turun di dalam tombol jeda tidak menjeda")
+	_bersihkan(akar)
+
+
+# --- Cincin rem padam saat jeda (QA-001 Q01 run fase1b-umpan-balik) ---
+
+## `JalanUji._terapkan_jeda` memadamkan penanda rem saat menjeda. Selama jeda `perbarui` tidak dipanggil (pohon dijeda), jadi tanpa
+## pemadaman itu status rem lama tersimpan di `KontrolTouch` dan busur `WARN` muncul lagi begitu stick disentuh ulang sesudah lanjut,
+## sebelum rem benar-benar ditahan ulang 0,25 detik.
+func _test_rem_padam_saat_jeda(pemicu: String) -> void:
+	_judul.call("Jeda lewat %s: cincin rem padam selama jeda dan sesudah lanjut sampai rem ditahan ulang (QA-001 Q01)" % pemicu)
+	var akar: JalanUji = await _siapkan()
+	var sepeda: SepedaUji = _anak(akar, "Sepeda") as SepedaUji
+	var kontrol: KontrolTouch = _anak(akar, "KontrolTouch") as KontrolTouch
+	var hud: HudDev = _anak(akar, "Hud") as HudDev
+	var bawah: Vector2 = TITIK_STICK + Vector2(0, Config.STICK_RADIUS_PX)
+	_sentuh(1, TITIK_STICK, true)
+	_geser(1, bawah)
+	_langkah(akar, 20)
+	check(sepeda.rem_aktif() and kontrol.busur_rem_tampil(), "%s: kontrol: stick bawah penuh 20 langkah, rem aktif dan busur rem menyala" % pemicu)
+	match pemicu:
+		"TOMBOL_EMIT":
+			(_anak(hud, "TombolJeda") as TombolJeda).pressed.emit()
+		_:
+			_kirim(pemicu)
+	check(akar.sedang_jeda() and not kontrol.busur_rem_tampil(), "%s: selama jeda busur rem padam" % pemicu)
+	_sentuh(1, bawah, false)
+	if pemicu == "BACK":
+		_kirim("BACK")
+	else:
+		akar.minta_lanjut()
+	# Stick disentuh ulang di tengah, tanpa satu langkah pun: penanda rem harus sudah padam.
+	_sentuh(2, TITIK_STICK, true)
+	check(not akar.sedang_jeda() and kontrol.router.stick_aktif() and not kontrol.busur_rem_tampil(), "%s: sesudah lanjut stick disentuh ulang: busur rem tetap padam (status rem lama tidak tersisa)" % pemicu)
+	# Langkah pertama sesudah lanjut ber-dt 0 (JedaSim); sesudahnya rem butuh 15 langkah (0,25 detik) penuh.
+	_langkah(akar, 1)
+	check(not kontrol.busur_rem_tampil(), "%s: langkah pertama sesudah lanjut: busur rem padam" % pemicu)
+	_geser(2, bawah)
+	_langkah(akar, 14)
+	check(not kontrol.busur_rem_tampil(), "%s: sesudah lanjut bawah penuh 14 langkah: busur rem belum menyala" % pemicu)
+	_langkah(akar, 1)
+	check(sepeda.rem_aktif() and kontrol.busur_rem_tampil(), "%s: kontrol: rem ditahan ulang 0,25 detik: busur rem menyala lagi" % pemicu)
+	_sentuh(2, bawah, false)
 	_bersihkan(akar)
 
 
