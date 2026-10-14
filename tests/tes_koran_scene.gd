@@ -45,6 +45,7 @@ func jalankan() -> void:
 	for dt: float in [1.0 / 30.0, 1.0 / 240.0]:
 		for skenario: String in ["A", "B"]:
 			await _test_prediksi_sama_hasil(dt, skenario)
+	await _test_titik_lepas_lateral()
 	await _test_sisa_koran_dan_jeda()
 	await _test_dua_lempar_cepat()
 	await _test_habis_dan_isi_ulang()
@@ -341,6 +342,28 @@ func _test_prediksi_sama_hasil(dt: float, skenario: String) -> void:
 	_bersihkan(akar)
 
 
+## D-4: titik lepas memakai kecepatan lateral EFEKTIF langkah terakhir (`BikeMotion.Hasil.lateral_ud`, disimpan `SepedaUji.lateral_ud`):
+## pindah sisi saat jari dilepas menggeser titik lepas; di tepi jalan (terhalang) lateral efektif 0.
+func _test_titik_lepas_lateral() -> void:
+	_judul.call("Titik lepas memakai kecepatan lateral efektif sepeda (AC-4, D-4)")
+	var akar: JalanUji = await _siapkan()
+	var sepeda: SepedaUji = _sepeda(akar)
+	var catatan: Dictionary = _catat(akar)
+	_sentuh(0, TITIK_STICK, true)
+	_geser(0, TITIK_STICK + Vector2(Config.STICK_RADIUS_PX, 0))
+	_langkah(akar, 6)
+	check(is_equal_approx(sepeda.lateral_ud, Config.KECEPATAN_LATERAL_UD), "stick penuh ke sisi dekat: kecepatan lateral efektif %s u/d" % sepeda.lateral_ud)
+	var posisi: Vector2 = sepeda.posisi_dunia()
+	var lateral_ud: float = sepeda.lateral_ud
+	_swipe(LoperAnim.Sisi.SEBERANG, _dx(0.5))
+	var l: ThrowSolver.Lintasan = (catatan["lempar"] as Array)[0]
+	check(l.titik_lepas == ThrowSolver.titik_lepas(posisi, sepeda.kecepatan_ud, lateral_ud, l.jeda_lepas) and l.titik_lepas.x > posisi.x + 0.4, "titik lepas = posisi + (maju, lateral) x jeda lepas: lateral %s -> %s" % [posisi.x, l.titik_lepas.x])
+	_langkah(akar, 60)
+	check(sepeda.lateral_ubin == BikeMotion.batas_lateral_ubin() and sepeda.lateral_ud == 0.0, "di tepi jalan (terhalang) kecepatan lateral efektif 0")
+	_sentuh(0, TITIK_STICK, false)
+	_bersihkan(akar)
+
+
 # --- AC-6: sisa koran, jeda antar lempar, dua lempar cepat ---
 
 func _test_sisa_koran_dan_jeda() -> void:
@@ -470,12 +493,17 @@ func _test_jeda_game_saat_terbang(pemicu: String) -> void:
 	for dt: float in [DT, 0.1, 5.0, 100.0]:
 		akar.perbarui(dt)
 		akar._process(dt)
+	check(akar.koran_terbang().size() == 1, "%s: koran yang terbang tetap ada selama jeda (%d)" % [pemicu, akar.koran_terbang().size()])
+	if akar.koran_terbang().size() != 1:
+		akar.minta_lanjut()
+		_bersihkan(akar)
+		return
 	koran = akar.koran_terbang()[0]
 	check(koran.detik == detik and KoranLempar.posisi(koran) == posisi and akar.koran.sejak_lempar_detik == sejak and (catatan["mendarat"] as Array).is_empty(), "%s: perbarui dan _process dengan dt besar tidak memajukan koran (waktu %s, posisi %s), jeda antar lempar, atau pendaratan" % [pemicu, koran.detik, KoranLempar.posisi(koran)])
 	check(akar.koran.sisa == 29 and akar.koran_terbang().size() == 1, "%s: koran yang sudah diterima tidak hilang dan tidak dihitung dua kali" % pemicu)
 	akar.minta_lanjut()
 	akar.perbarui(0.1)
-	check(akar.koran_terbang()[0].detik == detik, "%s: langkah pertama sesudah lanjut ber-dt 0 (tanpa lompatan)" % pemicu)
+	check(akar.koran_terbang().size() == 1 and akar.koran_terbang()[0].detik == detik, "%s: langkah pertama sesudah lanjut ber-dt 0 (tanpa lompatan)" % pemicu)
 	var mendarat: KoranLempar.Koran = _sampai_mendarat(akar, catatan)
 	check(mendarat != null and _dekat_v(Vector2(KoranLempar.posisi(mendarat).x, KoranLempar.posisi(mendarat).y), lintasan.titik_mendarat), "%s: sesudah lanjut koran mendarat di titik prediksi" % pemicu)
 	# Penanda ikut beku saat jeda.
@@ -504,6 +532,10 @@ func _test_jeda_sebelum_lepas() -> void:
 	_tree.root.propagate_notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
 	check(akar.sedang_jeda() and not sepeda.sedang_melempar(), "FOCUS_OUT: animasi lempar ditutup")
 	check(akar.koran.sisa == 29 and akar.koran_terbang().size() == 1, "lemparan tetap tercatat: koran 29, satu koran menunggu lepas")
+	if akar.koran_terbang().is_empty():
+		akar.minta_lanjut()
+		_bersihkan(akar)
+		return
 	akar.perbarui(1.0)
 	akar.minta_lanjut()
 	var mendarat: KoranLempar.Koran = _sampai_mendarat(akar, catatan)
