@@ -141,6 +141,18 @@ const PENANDA_LAMA_DETIK: float = 0.8
 ## 2026-10-14: antaran tidak sah seperti meleset, tanpa potong koin), true = bonus (antaran sah, ditandai bonus).
 const JENDELA_KENA_BONUS: bool = false
 
+## --- Mode bantu (GDD 5.3, BALANCING 4b; usulan run fase2b-bantu-audio, dinilai lewat uji HP) ---
+## Tap di zona swipe melempar otomatis ke kotak surat pelanggan terdekat di depan pada sisi tap (`BantuLempar`). Lintasan tetap dari
+## `ThrowSolver.hitung`, jadi angka lintasan, jeda lepas, dan jeda antar lempar tidak berubah (K-4). Tap = |v| maksimum < swipe minimum,
+## tanpa batas durasi (D-1), jadi tidak ada angka tap di sini.
+
+## Toleransi pencarian kekuatan u ke pusat kotak surat (f(u) = |R(u)| - jarak tanah), ubin. Jauh di bawah setengah lebar zona (0,25).
+const BANTU_TOLERANSI_UBIN: float = 0.000001
+## Jumlah langkah bisection pencarian u; 48 langkah = ketelitian u sekitar 3,6e-15 (jarak tanah sekitar 1e-14 ubin).
+const BANTU_CARI_ULANGAN: int = 48
+## Lama tanda "tidak ada sasaran" di titik tap (cincin kecil `TEXT_2`, DESIGN_SPEC 3.7), detik.
+const BANTU_TANDA_LAMA_DETIK: float = 0.6
+
 ## --- Koran terbang, garis bidik, penanda, dan zona (placeholder dari kode, usulan run fase2a-lemparan bagian 1b) ---
 ## Digambar per piksel game (persegi bulat) supaya tajam di skala bulat; warna hanya dari `Palette` (DESIGN_SPEC 3.6, 3.7,
 ## ART_DIRECTION 6.2). Bukan angka lintasan: lintasan tetap hanya dari `ThrowSolver`.
@@ -351,6 +363,8 @@ const HUD_KORAN_REDUP_ALPHA: float = 0.28
 const HUD_TOMBOL_TINGGI_PX: int = 42
 ## Lebar minimum tombol di strip atas, piksel game.
 const HUD_TOMBOL_LEBAR_PX: int = 96
+## Jarak antar tombol di strip atas (tombol kidal dan tombol mode bantu), piksel game.
+const HUD_TOMBOL_JARAK_PX: int = 8
 ## Jarak tombol strip atas dari tepi atas layar, piksel game. Tombol berakhir di bawah `HUD_STRIP_ATAS_TINGGI_PX`.
 const HUD_TOMBOL_MARGIN_ATAS_PX: int = 4
 ## Tombol jeda (DESIGN_SPEC 3.1): sisi area sentuh persegi, piksel game (≥ 44 dp di A54, paket pemilik 2026-10-14). Lebih besar dari gambarnya.

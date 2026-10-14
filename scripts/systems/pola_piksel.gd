@@ -36,6 +36,10 @@ const PENANDA_SILANG: Array[String] = ["oo...oo", "owo.owo", ".owowo.", "..owo..
 ## pelanggan.
 const TANDA_BUKAN_PELANGGAN: Array[String] = ["..ooooo..", ".owwwwoo.", "owwwwoowo", "owwwoowwo", "owwoowwwo", "owoowwwwo", ".oowwwwo.", "..ooooo.."]
 
+## Tanda "tidak ada sasaran" mode bantu di titik tap (D-6 run fase2b-bantu-audio): cincin kecil `w` (TEXT_2) bergaris luar di dalam dan
+## di luar, bentuk berbeda dari silang meleset dan dari elips pendaratan; bukan teks dan bukan warna saja.
+const TANDA_TANPA_SASARAN: Array[String] = ["...ooo...", ".oowwwoo.", ".owooowo.", "owo...owo", "owo...owo", "owo...owo", ".owooowo.", ".oowwwoo.", "...ooo..."]
+
 
 ## Pola penanda untuk bentuk `penanda` (`ZonaSasaran.Penanda`).
 static func pola_penanda(penanda: ZonaSasaran.Penanda) -> Array[String]:

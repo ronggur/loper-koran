@@ -144,6 +144,22 @@ static func tinggi_puncak_ubin(u: float) -> float:
 	return lerpf(Config.LEMPAR_PUNCAK_MIN_UBIN, Config.LEMPAR_PUNCAK_MAKS_UBIN, _u_bersih(u))
 
 
+## Geser maju selama terbang (warisan kecepatan maju) untuk kekuatan u, ubin: kecepatan maju (NaN, tak hingga, negatif = 0) x
+## `LEMPAR_WARISAN_MAJU` x `lama_terbang_detik(u)`. Dipakai `hitung` dan pencarian sasaran mode bantu (`BantuLempar`), jadi warisan
+## kecepatan hanya dirumuskan di sini.
+static func geser_maju_ubin(kecepatan_maju_ud: float, u: float) -> float:
+	return _tak_negatif(kecepatan_maju_ud) * Config.LEMPAR_WARISAN_MAJU * lama_terbang_detik(u)
+
+
+## Panjang swipe |v| (piksel game) yang memberi kekuatan u (dijepit 0..1; NaN = 0) di viewport selebar `lebar_viewport_px`: kebalikan
+## `kekuatan`. Lebar tidak sah = INF. Dipakai mode bantu supaya lemparan otomatis tetap lewat `hitung`.
+static func panjang_untuk_kekuatan(u: float, lebar_viewport_px: float) -> float:
+	if not _lebar_sah(lebar_viewport_px):
+		return INF
+	var bawah: float = swipe_min_px(lebar_viewport_px)
+	return bawah + _u_bersih(u) * (swipe_maks_px(lebar_viewport_px) - bawah)
+
+
 ## Arah tanah melintang murni ke sisi (`Iso.ARAH_SEBERANG` / `Iso.ARAH_DEKAT`); `TIDAK_ADA` = nol. Untuk tes dan probe (lemparan
 ## tegak lurus jalan, sama dengan swipe yang searah `Iso.dunia_ke_layar` arah itu).
 static func arah_sisi(sisi: LoperAnim.Sisi) -> Vector2:
@@ -188,7 +204,7 @@ static func hitung(panjang_swipe_px: float, lebar_viewport_px: float, arah: Vect
 	hasil.titik_lepas = titik_lepas(posisi_sepeda, kecepatan_maju_ud, kecepatan_lateral_ud, jeda_lepas_detik)
 	hasil.jarak = jarak_ubin(u)
 	hasil.lama_terbang = lama_terbang_detik(u)
-	hasil.geser_maju = hasil.kecepatan_maju_ud * Config.LEMPAR_WARISAN_MAJU * hasil.lama_terbang
+	hasil.geser_maju = geser_maju_ubin(hasil.kecepatan_maju_ud, u)
 	hasil.titik_mendarat = hasil.titik_lepas + satuan * hasil.jarak + Iso.ARAH_MAJU * hasil.geser_maju
 	hasil.tinggi_tangan = maxf(Config.LEMPAR_TINGGI_TANGAN_UBIN, 0.0)
 	hasil.tinggi_puncak = maxf(tinggi_puncak_ubin(u), hasil.tinggi_tangan)

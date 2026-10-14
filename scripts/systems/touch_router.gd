@@ -12,9 +12,19 @@ extends RefCounted
 ## - jari dengan `index` tak dikenal (drag atau lepas tanpa turun) dan turun ganda dengan `index` sama diabaikan;
 ## - waktu selalu parameter (`waktu_detik`), tidak pernah memanggil `Time`.
 ## Koordinat semuanya dalam ruang viewport game (bukan piksel jendela).
+##
+## Tap (mode bantu, GDD 5.3; D-1 run fase2b-bantu-audio): sentuhan yang mengklaim slot swipe dan, SELAMA SELURUH HIDUPNYA, panjang swipe
+## |v| (dari titik awal ke posisi mana pun yang pernah dicapai, termasuk posisi lepas) tidak pernah cukup untuk melempar
+## (`ThrowSolver.cukup_panjang`: < min 6% lebar viewport; tepat min = swipe). Sentuhan yang pernah mencapai min lalu ditarik kembali
+## BUKAN tap (tetap batal). Tap tidak dibatasi durasi. Saat jari tap diangkat, `swipe_selesai` tetap dipancarkan seperti biasa (jalan uji
+## menolaknya karena pendek), lalu `tap_selesai` dengan posisi tap = titik awal sentuhan. `batal`/`batal_semua` tidak pernah menjadi tap,
+## dan sentuhan yang mulai di luar zona swipe (stick, tombol HUD) tidak pernah diklaim, jadi juga bukan tap.
 
 ## Satu swipe selesai: titik awal, titik akhir (koordinat viewport game), durasi dari parameter waktu.
 signal swipe_selesai(awal: Vector2, akhir: Vector2, durasi_detik: float)
+## Satu tap selesai (D-1): posisi tap = titik awal sentuhan (koordinat viewport game), durasi dari parameter waktu. Dipancarkan sesudah
+## `swipe_selesai` untuk sentuhan yang sama.
+signal tap_selesai(posisi: Vector2, durasi_detik: float)
 
 const TIDAK_ADA: int = -1
 
@@ -25,6 +35,8 @@ var jumlah_swipe_selesai: int = 0
 ## Nomor swipe terakhir yang diklaim (naik 1 tiap jari mengklaim slot swipe, tidak berubah saat jari dilepas atau batal). Selama
 ## `swipe_selesai` dipancarkan, nilainya = nomor swipe yang baru selesai, jadi pemakai bisa mengenali data yang dihitung untuk swipe itu.
 var nomor_swipe: int = 0
+## Jumlah tap yang selesai sejak instance dibuat.
+var jumlah_tap_selesai: int = 0
 
 var _kidal: bool = false
 var _index_stick: int = TIDAK_ADA
@@ -34,6 +46,8 @@ var _index_swipe: int = TIDAK_ADA
 var _awal_swipe: Vector2 = Vector2.ZERO
 var _posisi_swipe: Vector2 = Vector2.ZERO
 var _waktu_awal_swipe: float = 0.0
+## Panjang swipe |v| terbesar yang pernah dicapai jari swipe yang sedang ditahan, piksel game (D-1).
+var _maks_swipe_px: float = 0.0
 
 
 ## Opsi kidal: True menukar zona. Mengganti nilai membatalkan semua jari aktif.
@@ -67,6 +81,7 @@ func tekan(index: int, posisi: Vector2, waktu_detik: float) -> void:
 				_awal_swipe = posisi
 				_posisi_swipe = posisi
 				_waktu_awal_swipe = waktu_detik
+				_maks_swipe_px = 0.0
 
 
 ## Jari bergeser. Hanya jari yang sudah mengklaim yang berpengaruh. `index` negatif sama dengan sentinel
@@ -78,6 +93,7 @@ func geser(index: int, posisi: Vector2) -> void:
 		_posisi_stick = posisi
 	elif index == _index_swipe:
 		_posisi_swipe = posisi
+		_catat_panjang(posisi)
 
 
 ## Jari diangkat. Stick: vektor kembali nol dan slot bebas. Swipe: hasilnya dicatat tepat sekali.
@@ -91,9 +107,14 @@ func lepas(index: int, posisi: Vector2, waktu_detik: float) -> void:
 		var akhir: Vector2 = posisi if posisi.is_finite() else _posisi_swipe
 		var durasi: float = maxf(0.0, waktu_detik - _waktu_awal_swipe) if is_finite(waktu_detik) else 0.0
 		var awal: Vector2 = _awal_swipe
+		_catat_panjang(akhir)
+		var tap: bool = not ThrowSolver.cukup_panjang(_maks_swipe_px, float(lebar_viewport))
 		_bebaskan_swipe()
 		jumlah_swipe_selesai += 1
 		swipe_selesai.emit(awal, akhir, durasi)
+		if tap:
+			jumlah_tap_selesai += 1
+			tap_selesai.emit(awal, durasi)
 
 
 ## Satu jari dibatalkan sistem (mis. gestur sistem mengambil alih): dilepas tanpa mencatat swipe.
@@ -154,6 +175,18 @@ func posisi_swipe() -> Vector2:
 	return _posisi_swipe
 
 
+## Panjang swipe |v| terbesar yang sudah dicapai jari swipe yang sedang ditahan, piksel game (0 bila tidak ada swipe).
+func panjang_swipe_maks() -> float:
+	return _maks_swipe_px
+
+
+## Mencatat |v| dari titik awal ke `posisi` bila lebih panjang dari yang sudah tercatat (D-1).
+func _catat_panjang(posisi: Vector2) -> void:
+	var panjang: float = ThrowSolver.panjang_swipe(_awal_swipe, posisi)
+	if is_finite(panjang) and panjang > _maks_swipe_px:
+		_maks_swipe_px = panjang
+
+
 func _bebaskan_stick() -> void:
 	_index_stick = TIDAK_ADA
 	_asal_stick = Vector2.ZERO
@@ -165,3 +198,4 @@ func _bebaskan_swipe() -> void:
 	_awal_swipe = Vector2.ZERO
 	_posisi_swipe = Vector2.ZERO
 	_waktu_awal_swipe = 0.0
+	_maks_swipe_px = 0.0
