@@ -381,3 +381,8 @@ Ringkas: 23 mutan, 13 mati, 4 hidup bermakna (QA-001, Minor: cabang pertahanan, 
 - Semua di HP (A54): probe render, bunyi di speaker (pitch, klik sambungan, volume), back Android dan home sungguhan, sentuhan jari kedua dan `canceled` dari gesture sistem, keterbacaan debu/garis, 60 fps, rasa posisi sepeda 75% dan dorongan 36. Lihat NEEDS-MANUAL.
 - APK `--export-debug` normal dan probe (butuh Java SDK Path); QA memakai `--export-pack` yang memakai filter preset yang sama.
 - Keluar dari game desktop saat bunyi sedang berjalan (QA-003 catatan): tidak diuji karena jendela yang dibuka QA langsung kehilangan fokus dan menjeda.
+
+## Pemasangan di HP (orchestrator, 2026-10-14)
+- Pemilik mengizinkan push dan pemasangan ke `adb` 12d8c9da: vivo V2108 (Android 12 / API 31, 2400×1080 = 20:9, 440 dpi, arm64-v8a). Bukan A54; dipakai bersama project lain (`com.rmh.quicksplit`, `startlights`, `brainydungeon` ada, tidak disentuh). Layar menyala dan tidak terkunci sebelum dipasang.
+- APK debug dari HEAD branch (`--export-debug "Android"`, exit 0, 28,6 MB, `project.binary` scene utama `jalan_uji.tscn`, package `com.rmh.kring` 0.1.0) dipasang dengan `adb install -r` (Success), dibuka lewat launcher. Proses hidup, fokus `com.godot.game.GodotAppLauncher`. Tangkapan `hp_vivo/jalan_uji_awal.png` (2400×1080): landscape, viewport 800×360 ×3, tombol jeda, tombol kidal, panel kecepatan/stamina 8 px, busur rem menyala (HP sedang dipegang, orchestrator tidak mengirim ketukan). `logcat --pid` vivo kosong (ROM membatasi log), jadi error runtime tidak bisa dibaca dari sini.
+- Probe render belum dijalankan di HP mana pun: APK probe memakai package yang sama dan akan menimpa game sementara; menunggu izin pemilik (dan A54 untuk bukti Q-014).
