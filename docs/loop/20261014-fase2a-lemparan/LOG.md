@@ -1,7 +1,7 @@
 # Loop Log — 20261014-fase2a-lemparan
 Scope: Run 2A Fase 2, inti lemparan koran (`ThrowSolver`, garis bidik = hasil, koran terbang, zona sasaran placeholder, sisa koran, jeda 0,35 detik) + perapian Run 1C (QA-001, QA-002, QA-005)  ·  Branch: `feat/fase2a-lemparan`  ·  Mulai: 2026-10-14  ·  Godot: 4.7.2
 
-## Status: IN_PROGRESS   (iterasi saat ini: 1/2)
+## Status: IN_PROGRESS   (iterasi saat ini: 2/2)
 
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
