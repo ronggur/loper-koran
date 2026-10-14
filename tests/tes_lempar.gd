@@ -186,6 +186,7 @@ func _test_rumus() -> void:
 		check(ThrowSolver.hitung(100.0, 780.0, arah_salah, Vector2.ZERO, 3.0, 0.0, 0.0) == null, "arah %s: tidak ada lintasan" % arah_salah)
 	var panjang_arah: ThrowSolver.Lintasan = ThrowSolver.hitung(100.0, 780.0, Vector2(-3.0, -4.0), Vector2.ZERO, 3.0, 0.0, 0.0)
 	check(panjang_arah != null and _dekat_v(panjang_arah.arah, Vector2(-0.6, -0.8)) and panjang_arah.sisi == LoperAnim.Sisi.SEBERANG, "arah tidak satuan dinormalkan (-3, -4) -> (-0,6, -0,8), sisi dari arah = seberang")
+	check(panjang_arah != null and _dekat_v(panjang_arah.titik_mendarat - panjang_arah.titik_lepas - Iso.ARAH_MAJU * panjang_arah.geser_maju, Vector2(-0.6, -0.8) * panjang_arah.jarak), "arah tidak satuan: titik mendarat tetap jarak tanah searah arah SATUAN (panjang vektor arah tidak ikut)")
 	check(ThrowSolver.arah_sisi(LoperAnim.Sisi.SEBERANG) == Iso.ARAH_SEBERANG and ThrowSolver.arah_sisi(LoperAnim.Sisi.DEKAT) == Iso.ARAH_DEKAT and ThrowSolver.arah_sisi(LoperAnim.Sisi.TIDAK_ADA) == Vector2.ZERO, "arah sisi dari Iso.ARAH_SEBERANG / ARAH_DEKAT")
 	# dari_swipe = hitung(|v|, arah_tanah(v)) (pengganti sisi_dari_swipe + hitung(|dx|) Run 2A).
 	var awal: Vector2 = Vector2(600.0, 200.0)
