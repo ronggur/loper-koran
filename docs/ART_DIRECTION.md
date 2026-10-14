@@ -429,7 +429,7 @@ Aturan (usulan):
 - **Gabungkan ke atlas per konteks** (pemain, distrik, UI) untuk menurunkan draw call.
 - **Fill rate** adalah leher botol utama di HP murah: hindari menumpuk banyak sprite transparan besar dan efek layar penuh.
 - Sprite piksel diimpor **Lossless**, filter **Nearest**, tanpa mipmap.
-- Renderer **Compatibility** (usulan) untuk HP kelas bawah. Cek di Fase 0 apakah light 2D, glow, partikel, dan shader warna bayangan yang dibutuhkan jalan di renderer ini.
+- Renderer **Compatibility** (usulan) untuk HP kelas bawah. Cek di Fase 0 apakah light 2D, glow, partikel, dan shader warna bayangan yang dibutuhkan jalan di renderer ini. **Hasil 2026-10-14 (probe `scenes/dev/cek_render.tscn`, run 1B) di vivo V2108, Android 12, Adreno 618, OpenGL ES 3.2, 2400×1080 ×3:** light 2D + bayangan occluder ya, glow 2D (`WorldEnvironment` latar Canvas) ya tetapi halonya tipis (0,101 lawan latar 0,050), partikel CPU dan GPU ya, shader warna bayangan cocok (13/13 piksel penanda, piksel lain tidak berubah), 60,6 fps rata-rata. HP uji dipilih pemilik ("pakai yang ada"); A54 (GPU Mali) belum dicek. Bukti: `docs/loop/20261014-fase1b-umpan-balik/render_vivo/`.
 - **Anggaran ukuran APK: target di bawah 100 MB.**
 
 ### Penamaan file
@@ -527,7 +527,7 @@ Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dib
 - **Ukuran ubin (64×32)**: dikunci setelah graybox Fase 1. Skala piksel sudah dikunci ×3 (2026-10-09).
 - **Stretch mode dan resolusi dasar** (bagian 7): sudah dipilih 2026-10-09, diverifikasi di desktop pada run 0A (hasil di ROADMAP 4b); uji di HP menunggu.
 - **Palet induk** (bagian 2.4): dikunci setelah aset gelombang 1.
-- **Warna bayangan per waktu dan distrik** (bagian 2.5): dikunci bersama palet induk, setelah shader-nya dicek di Fase 0.
+- **Warna bayangan per waktu dan distrik** (bagian 2.5): dikunci bersama palet induk, setelah shader-nya dicek di Fase 0 (shader jalan di Compatibility, dicek 2026-10-14 di vivo V2108; bagian 7).
 - **Cara menampilkan rumah di sisi dekat**, yang hanya terlihat belakangnya.
 - **Font HUD**: mock memakai Lexend + Lilita One (sama dengan Brainy Dungeon). Kunci atau pilih identitas sendiri.
 - **Apakah sprite pemain dipoles manual** sebelum rilis, terutama wajah dari arah depan.

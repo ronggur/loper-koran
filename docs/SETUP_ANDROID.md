@@ -242,7 +242,7 @@ cat docs/loop/20261014-fase1b-umpan-balik/render_a54/cek_render_a54.log   # haru
 adb install -r builds/kring-kring-debug.apk                          # kembalikan build normal (jalan_uji)
 ```
 
-Probe tetap terbuka di HP (tidak keluar sendiri); tombol back tidak berbuat apa-apa di sini (`quit_on_go_back` false), jadi tinggalkan lewat tombol home. Hasilnya dicatat orchestrator di `ART_DIRECTION.md` 2.3/7. Bila `logcat` kosong, buka ulang app (pengukuran diulang tiap kali dibuka).
+Probe tetap terbuka di HP (tidak keluar sendiri); tombol back tidak berbuat apa-apa di sini (`quit_on_go_back` false), jadi tinggalkan lewat tombol home. Hasilnya dicatat orchestrator di `ART_DIRECTION.md` 2.3/7. Bila `logcat` kosong, buka ulang app (pengukuran diulang tiap kali dibuka). Sebagian ROM (mis. vivo V2108, 2026-10-14) memasang `log.tag=E`, jadi log info Godot dibuang: buka sementara dengan `adb shell setprop log.tag.godot V`, buka ulang app (`am force-stop com.rmh.kring` lalu `am start`), ambil log, lalu kembalikan dengan `adb shell setprop log.tag.godot "''"` (tidak persisten, hilang saat reboot).
 
 ## 7. Masalah umum
 

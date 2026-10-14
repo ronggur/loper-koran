@@ -67,7 +67,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 - [x] Animasi pemain memilih `kecepatan_arah` dari input lewat `loper_sprite.gd`, laju kayuh mengikuti kecepatan (termasuk pose meluncur dan rem; run 1A, PR #20)
 - [x] Umpan balik kecepatan dasar: debu roda, garis kecepatan (placeholder) (run 1B, PR #21, 2026-10-14; keterbacaan dinilai di uji HP); bunyi kayuhan, freewheel, dan rem placeholder lewat autoload `Audio`; tombol dan layar jeda
 - [x] HUD sementara: bar kecepatan dan stamina (run 1A, PR #20)
-- [ ] Cek apakah light 2D, glow, partikel, dan shader warna bayangan yang dibutuhkan jalan di renderer Compatibility di HP target (ART_DIRECTION 2.3, 7); dipindah dari Fase 0 pada 2026-10-13, dikerjakan di Run 1B bersama partikel debu roda
+- [x] Cek apakah light 2D, glow, partikel, dan shader warna bayangan yang dibutuhkan jalan di renderer Compatibility di HP target (ART_DIRECTION 2.3, 7); dipindah dari Fase 0 pada 2026-10-13, dikerjakan di Run 1B bersama partikel debu roda (2026-10-14: semua lolos di vivo V2108 / Adreno 618, 60,6 fps, HP uji dipilih pemilik; glow tipis; A54 belum dicek, bukti `docs/loop/20261014-fase1b-umpan-balik/render_vivo/`)
 - [ ] Uji di HP: ambang rem, rasa stick, keterbacaan sprite di skala ×3
 
 **Selesai kalau:** 3–5 orang mencoba di HP dan bisa mengatur kecepatan, mengerem, dan pindah sisi tanpa penjelasan panjang; ambang rem tidak membuat sepeda berhenti tak sengaja.
