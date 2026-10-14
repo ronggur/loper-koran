@@ -201,7 +201,7 @@ Skrip penggantian teks di luar repo (scratchpad), `run_tests` penuh per mutan, t
 | S17 titik garis bidik bukan sampel (garis lurus lepas-mendarat) | mati, 16 gagal | "u 0.0, 0.0 u/d: layar_pada = proyeksi Iso posisi_pada" |
 | S18 elips sah tidak berubah bentuk | mati, 1 gagal | "elips sah TERISI (bentuk berbeda dari cincin biasa, bukan hanya warna)" |
 | S19 bayangan tidak mengecil saat tinggi naik | mati, 2 gagal | "bayangan: 8 px di tanah, 4 px paling kecil ..."; "bayangan tidak membesar saat tinggi naik" |
-| S20 swipe yang ditolak jeda tetap memakai koran (scene) | mati, 1+ gagal | "swipe dilepas di 0,349 detik: ditolak, koran tetap 29" |
+| S20 swipe yang ditolak jeda tetap memakai koran (scene) | mati, 6 gagal | "swipe dilepas di 0,349 detik: ditolak, koran tetap 29" |
 
 Pemetaan ke sisa daftar AC-10 dari 1a: garis bidik kecepatan frame sebelumnya (S01), garis bidik rumus sendiri (S02; penjaga teks `_test_penjaga_rumus` 1a tetap lolos dengan skrip baru), lintasan dihitung ulang saat frame lepas (S03), jeda game tidak membekukan koran (S04, ditambah S05). Kontrol di tes AC-4 membuktikan skenario membedakan mutan ini: keadaan sepeda berubah di frame terakhir bidik, lintasan yang dihitung ulang saat lepas berbeda > 0,001 ubin, dan kecepatan berubah selama terbang.
 
@@ -228,3 +228,4 @@ Pemetaan ke sisa daftar AC-10 dari 1a: garis bidik kecepatan frame sebelumnya (S
 - Viewport 800 (20:9) tidak ada di probe (jendela 2400×1080 tidak muat di monitor); 800 dicakup tes tata letak headless.
 - Penanda kena/meleset dan koran berukuran kecil di ×3 (koran 8×6, penanda 7-9 px); keterbacaannya NEEDS-MANUAL (SETUP_ANDROID 8.3).
 - Tidak ada BLOCKED.
+- Klon bersih `0e61e33` (commit LOG): `godot --headless --import` 0 `ERROR`/`WARNING`, 5776 lolos 0 gagal, `--ketat` lolos, `--quit-after 2` 0 `ERROR`/`WARNING`, `git status --porcelain` kosong.
