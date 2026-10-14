@@ -27,7 +27,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 | 7 | Vertical slice perumahan & audio dasar | M3 | ⬜ | |
 | 8 | Distrik berikutnya, iklan, rilis | M4 | ⬜ | |
 
-**Fase aktif: Fase 2** (lemparan koran). Fase 1 selesai 2026-10-14: run 1A, 1B, dan 1C (perapian temuan Run 1B, PR #23) lolos QA, dan uji di HP dinyatakan oke oleh pemilik 2026-10-14. Uji HP dilakukan pemilik sendiri, bukan 3-5 orang (keputusan pemilik 2026-10-14: uji HP cukup oleh pemilik sendiri, tanpa 3-5 penguji lain; tidak ada penguji lain). Riwayat Fase 1: dikerjakan lewat loop Dev↔QA (`LOOP-DEV-QA.md` Bagian 6). Run 1A (logika gerak inti) lolos QA 2026-10-14 di iterasi 1 (PR #20). Run 1B (umpan balik, audio placeholder, layar jeda, penyetelan, probe render) lolos QA 2026-10-14 di iterasi 1 (PR #21); APK terpasang di vivo V2108 (Android 12, 2400×1080) 2026-10-14. Yang tersisa: bukti probe render di A54 dan uji 3-5 orang (`SETUP_ANDROID.md` 8.2). Fase 0 selesai 2026-10-13: run 0A dan 0B+0C lolos QA 2026-10-09, dan uji HP di A54 (checklist `SETUP_ANDROID.md` bagian 8) dinyatakan lolos oleh pemilik 2026-10-13. Cek light 2D/glow/partikel/shader di Compatibility dipindah ke Fase 1 (Run 1B) karena butuh scene uji yang belum ada.
+**Fase aktif: Fase 2** (lemparan koran). Run 2A (inti lemparan) lolos QA 2026-10-14 di iterasi 2 (PR #24) dan terpasang di vivo V2108; mode bantu, audio lempar/mendarat, uji HP Fase 2, dan QA-008 (DEFERRED) di Run 2B. Fase 1 selesai 2026-10-14: run 1A, 1B, dan 1C (perapian temuan Run 1B, PR #23) lolos QA, dan uji di HP dinyatakan oke oleh pemilik 2026-10-14. Uji HP dilakukan pemilik sendiri, bukan 3-5 orang (keputusan pemilik 2026-10-14: uji HP cukup oleh pemilik sendiri, tanpa 3-5 penguji lain; tidak ada penguji lain). Riwayat Fase 1: dikerjakan lewat loop Dev↔QA (`LOOP-DEV-QA.md` Bagian 6). Run 1A (logika gerak inti) lolos QA 2026-10-14 di iterasi 1 (PR #20). Run 1B (umpan balik, audio placeholder, layar jeda, penyetelan, probe render) lolos QA 2026-10-14 di iterasi 1 (PR #21); APK terpasang di vivo V2108 (Android 12, 2400×1080) 2026-10-14. Yang tersisa: bukti probe render di A54 dan uji 3-5 orang (`SETUP_ANDROID.md` 8.2). Fase 0 selesai 2026-10-13: run 0A dan 0B+0C lolos QA 2026-10-09, dan uji HP di A54 (checklist `SETUP_ANDROID.md` bagian 8) dinyatakan lolos oleh pemilik 2026-10-13. Cek light 2D/glow/partikel/shader di Compatibility dipindah ke Fase 1 (Run 1B) karena butuh scene uji yang belum ada.
 
 ---
 
@@ -78,11 +78,11 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 
 **Tujuan:** lemparan yang mewarisi kecepatan terasa memuaskan dan bisa dikuasai.
 
-- [ ] Swipe kiri/kanan di zona kanan menentukan sisi; panjang swipe menentukan kekuatan dan jarak (BALANCING 4)
-- [ ] Garis bidik putus-putus selama jari ditahan, lempar saat dilepas
-- [ ] Koran mewarisi kecepatan sepeda, lengkung lemparan terlihat (tinggi + bayangan di tanah)
-- [ ] Zona sasaran placeholder: kotak surat, teras, halaman, jendela (nilai di BALANCING 5)
-- [ ] Sisa koran terbatas dan tampil di HUD
+- [x] Swipe kiri/kanan di zona kanan menentukan sisi; panjang swipe menentukan kekuatan dan jarak (BALANCING 4) (run 2A, PR #24, 2026-10-14: `ThrowSolver`, panjang = komponen mendatar 6–35% lebar viewport; ambang usulan, ketelitian dinilai di uji HP)
+- [x] Garis bidik putus-putus selama jari ditahan, lempar saat dilepas (run 2A, PR #24, 2026-10-14: garis bidik dan lemparan satu lintasan, dites termasuk flick; rasa dinilai di uji HP)
+- [x] Koran mewarisi kecepatan sepeda, lengkung lemparan terlihat (tinggi + bayangan di tanah) (run 2A, PR #24, 2026-10-14; rasa dinilai di uji HP)
+- [x] Zona sasaran placeholder: kotak surat, teras, halaman, jendela (nilai di BALANCING 5) (run 2A, PR #24, 2026-10-14; jendela lewat sakelar `Config`, bawaan penalti ringan, keputusan akhir ROADMAP 5; sisi dekat datar placeholder)
+- [x] Sisa koran terbatas dan tampil di HUD (run 2A, PR #24, 2026-10-14; jeda antar lempar 0,35 detik; isi ulang khusus jalan uji)
 - [ ] Mode bantu: tap sisi layar untuk lempar otomatis ke kotak surat terdekat; kecepatan otomatis
 - [ ] Animasi lempar pemain ke sisi seberang dan sisi dekat (aset Fase 5)
 - [ ] Uji di HP: ketelitian swipe pendek di layar kecil, lemparan saat ngebut
