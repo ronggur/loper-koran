@@ -10,7 +10,8 @@ extends Node2D
 ## Tidak ada emulasi sentuhan dari mouse di proyek ini; keyboard hanya untuk tes di editor.
 ##
 ## Umpan balik (DESIGN_SPEC 3.7, warna dari `Palette`): stick digambar di titik sentuh (cincin radius 35 dengan isi
-## `TEXT` 14% dan garis `TEXT` 70%, knob radius 15 `ACCENT`), garis putus dari titik awal swipe ke jari. Saat rem aktif
+## `TEXT` 14% dan garis `TEXT` 70%, knob radius 15 `ACCENT`). Garis putus lama dari titik awal swipe ke jari dihapus di run
+## fase2a-lemparan (D-5): penggantinya garis bidik lintasan koran di ruang dunia (`GarisBidik`, diisi `JalanUji`). Saat rem aktif
 ## (`atur_rem`, diisi `JalanUji` dari `BikeMotion`) busur bawah cincin digambar `WARN` (seperempat lingkaran bawah, bentuk
 ## yang berbeda dari cincin biasa), hilang saat rem padam.
 ## Semuanya dirasterisasi per piksel game (`PikselLingkaran`) supaya tepinya tajam di skala bulat.
@@ -78,8 +79,6 @@ func _draw() -> void:
 		# Busur rem digambar di atas knob: saat rem knob selalu di bawah cincin dan akan menutupi bagian tengah busur.
 		if _rem_aktif:
 			draw_texture(_tekstur_busur_rem, asal - _setengah_cincin)
-	if router.swipe_aktif():
-		_gambar_garis_putus(router.awal_swipe(), router.posisi_swipe())
 
 
 ## Vektor stick yang dipakai gerak: sentuhan bila stick aktif, kalau tidak keyboard (hanya di editor).
@@ -124,17 +123,6 @@ func _sinkronkan_lebar() -> void:
 
 func _waktu_detik() -> float:
 	return float(Time.get_ticks_msec()) / Config.WAKTU_MS_PER_DETIK
-
-
-## Garis putus: titik `SWIPE_TITIK_UKURAN_PX` persegi tiap `SWIPE_TITIK_JARAK_PX` dari `dari` ke `ke`.
-func _gambar_garis_putus(dari: Vector2, ke: Vector2) -> void:
-	var panjang: float = dari.distance_to(ke)
-	var arah: Vector2 = dari.direction_to(ke)
-	var ukuran: Vector2 = Vector2.ONE * Config.SWIPE_TITIK_UKURAN_PX
-	var jarak: float = 0.0
-	while jarak <= panjang:
-		draw_rect(Rect2((dari + arah * jarak).round(), ukuran), Palette.TEXT)
-		jarak += float(Config.SWIPE_TITIK_JARAK_PX)
 
 
 ## Tekstur piksel busur bawah cincin (`PikselLingkaran.di_busur_bawah`), sama ukuran dengan tekstur cincin.

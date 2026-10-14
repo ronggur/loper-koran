@@ -85,6 +85,14 @@ func _test_tata_letak(kasus: Array, kidal: bool) -> void:
 	var swipe: Rect2 = TouchZones.rect_swipe(lebar, kidal)
 	# (c) Panel bawah di dalam layar dan tidak masuk zona stick.
 	check(layar.encloses(panel) and not panel.intersects(stick, true), "%s: panel bawah %s di dalam layar dan tidak masuk zona stick %s" % [tag, panel, stick])
+	# (d) Panel sisa koran (DESIGN_SPEC 3.5, run fase2a-lemparan): x 400 dari tepi sisi stick (dicerminkan saat kidal), bawah 8, di dalam
+	# layar, tidak menumpuk zona stick, panel kecepatan, tombol jeda, atau tombol kidal; tidak menutupi sprite pemain.
+	var koran: Rect2 = hud.rect_panel_koran()
+	var x_harapan: float = float(lebar - Config.HUD_PANEL_KORAN_GESER_PX) - koran.size.x if kidal else float(Config.HUD_PANEL_KORAN_GESER_PX)
+	check(absf(koran.position.x - x_harapan) <= 1.0 and absf(koran.end.y - float(360 - Config.HUD_MARGIN_TEPI_PX)) <= 1.0, "%s: panel koran %s di x %s (400 dari tepi sisi stick), bawah 8" % [tag, koran, x_harapan])
+	check(layar.encloses(koran) and not koran.intersects(stick, true) and not koran.intersects(panel, true), "%s: panel koran di dalam layar, tidak masuk zona stick dan tidak menumpuk panel kecepatan" % tag)
+	check(not koran.intersects(hud.rect_tombol_jeda(), true) and not koran.intersects(hud.rect_tombol_kidal(), true), "%s: panel koran tidak menumpuk tombol jeda dan tombol kidal" % tag)
+	check(TouchZones.rect_swipe(lebar, kidal).encloses(koran), "%s: panel koran di dalam zona swipe (sentuhannya tetap swipe, AC-8)" % tag)
 	# (a) Sprite di dorongan maju penuh dan mundur penuh tidak menabrak panel dan tetap di dalam layar.
 	kontrol.keyboard_aktif = true
 	var keadaan: Dictionary = {}
@@ -100,6 +108,7 @@ func _test_tata_letak(kasus: Array, kidal: bool) -> void:
 		var rect: Rect2 = _rect_sprite(sprite)
 		keadaan[arah] = rect
 		check(not rect.intersects(panel, true), "%s %s: persegi sprite %s tidak berpotongan dengan panel kecepatan %s (jarak tegak %s px)" % [tag, arah, rect, panel, panel.position.y - rect.end.y])
+		check(not rect.intersects(koran, true), "%s %s: persegi sprite %s tidak berpotongan dengan panel koran %s" % [tag, arah, rect, koran])
 		check(layar.encloses(rect), "%s %s: persegi sprite %s di dalam layar" % [tag, arah, rect])
 		print("[tata_letak] %s %s: sprite %s, panel %s, jarak tegak sprite ke panel %s px" % [tag, arah, rect, panel, panel.position.y - rect.end.y])
 		for i: int in range(LANGKAH_MANTAP):

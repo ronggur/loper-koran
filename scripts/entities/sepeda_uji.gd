@@ -5,13 +5,18 @@ extends Node2D
 ## Node hanya menyimpan keadaan dan menampilkannya: seluruh perhitungan (kecepatan, rem, stamina, lateral, pose, tingkat, arah,
 ## laju kayuh) ada di `BikeMotion` dan `LoperAnim` (logika murni). Keadaan gerak = `BikeMotion.Keadaan` ditambah jarak yang sudah
 ## ditempuh sepanjang jalan (ubin). Posisi dunia = (lateral, -jarak) lalu diproyeksikan oleh `Iso` dan dibulatkan ke piksel; origin
-## node = titik pijak sprite (Y-sort benar). Lempar koran hanya animasi (`lempar`, Fase 2 untuk proyektil). Umpan balik kecepatan (debu
-## roda, garis kecepatan; `UmpanBalikSepeda`, run fase1b-umpan-balik) diisi tiap langkah dari kecepatan sebenarnya dan status rem.
+## node = titik pijak sprite (Y-sort benar). `lempar` hanya animasi pemain; koran terbang diurus `JalanUji` + `KoranLempar` (run
+## fase2a-lemparan), yang membaca keadaan sepeda di sini: posisi dunia, kecepatan maju, kecepatan lateral efektif langkah terakhir
+## (`lateral_ud`, D-4), dan jeda lepas animasi (`jeda_lepas`). Umpan balik kecepatan (debu roda, garis kecepatan; `UmpanBalikSepeda`,
+## run fase1b-umpan-balik) diisi tiap langkah dari kecepatan sebenarnya dan status rem.
 
 ## Keadaan gerak saat ini (kecepatan, lateral, stamina, rem, lelah). Diganti objek baru tiap langkah, tidak diubah di tempat.
 var keadaan: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
 ## Jarak yang sudah ditempuh sepanjang jalan, ubin.
 var jarak_ubin: float = 0.0
+## Kecepatan lateral efektif langkah terakhir (`BikeMotion.Hasil.lateral_ud`), u/d, positif = ke sisi dekat; 0 bila terhalang tepi
+## jalan atau langkah ber-`dt` 0. Dipakai titik lepas koran (D-4) untuk garis bidik dan lemparan.
+var lateral_ud: float = 0.0
 
 @onready var _sprite: LoperSprite = %LoperAgen
 @onready var _umpan: UmpanBalikSepeda = %UmpanBalik
@@ -48,6 +53,7 @@ func gerak(stick: Vector2, dt: float) -> void:
 	var hasil: BikeMotion.Hasil = BikeMotion.langkah(keadaan, stick, dt)
 	keadaan = hasil.keadaan
 	jarak_ubin += hasil.maju_ubin
+	lateral_ud = hasil.lateral_ud
 	_sprite.pose = hasil.pose
 	_sprite.speed_level = hasil.tingkat_sprite
 	_sprite.steer = hasil.arah_sprite
@@ -94,10 +100,16 @@ func nama_animasi() -> StringName:
 	return _sprite.animation
 
 
-## Melempar koran ke `sisi`: hanya animasi pemain (D-3 run sprite), tanpa proyektil, skor, atau sasaran (Fase 2). Gerak sepeda tidak
-## terganggu. True bila animasi dimulai; false bila sisi kosong atau pemain masih melempar (swipe berikutnya diabaikan).
+## Animasi lempar koran ke `sisi` (D-3 run sprite). Koran, sisa koran, dan jeda antar lempar diurus `JalanUji` (run fase2a-lemparan);
+## node ini tidak menolak lempar sendiri (D-9, `LoperSprite.lempar`). Gerak sepeda tidak terganggu. True bila animasi dimulai; false bila
+## sisi kosong.
 func lempar(sisi: LoperAnim.Sisi) -> bool:
 	return _sprite.lempar(sisi)
+
+
+## Jeda dari jari dilepas sampai koran lepas dari tangan untuk lempar ke `sisi` sekarang, detik (`LoperSprite.jeda_lepas`, D-4).
+func jeda_lepas(sisi: LoperAnim.Sisi) -> float:
+	return _sprite.jeda_lepas(sisi)
 
 
 ## True selama animasi lempar berjalan.

@@ -50,6 +50,7 @@ func jalankan() -> void:
 	_test_loper_sprite_tingkat()
 	_test_loper_sprite_pose()
 	_test_loper_sprite_lempar()
+	_test_loper_sprite_lempar_menyela()
 	_test_loper_sprite_lempar_semua_kombinasi()
 	_test_loper_sprite_lempar_tepi()
 	_test_loper_sprite_di_tree()
@@ -547,12 +548,12 @@ func _test_loper_sprite_lempar() -> void:
 		if pemain.animation != &"lempar_kanan_cepat_serong_kanan":
 			nama_dalam = false
 		if langkah == 3:
-			# Perubahan tingkat dan arah di tengah lempar disimpan, tidak mengganti gambar (D-4). Lempar kedua diabaikan (D-3).
+			# Perubahan tingkat dan arah di tengah lempar disimpan, tidak mengganti gambar (D-4). Sejak run fase2a-lemparan (D-9) lempar
+			# kedua tidak lagi ditolak sprite (penolakan pindah ke jeda antar lempar `SisaKoran`); perilaku menyela dites di
+			# `_test_loper_sprite_lempar_menyela`.
 			pemain.speed_level = 2
 			pemain.steer = -1
 			check(pemain.animation == &"lempar_kanan_cepat_serong_kanan" and pemain.speed_level == 2 and pemain.steer == -1, "speed_level dan steer berubah di tengah lempar: tersimpan, gambar lempar tidak berganti")
-			check(not pemain.lempar(LoperAnim.Sisi.SEBERANG), "lempar(SEBERANG) saat sedang melempar diabaikan (false)")
-			check(pemain.animation == &"lempar_kanan_cepat_serong_kanan" and pemain.frame == 0, "lempar yang diabaikan tidak mengulang atau mengganti animasi")
 		if langkah == 9:
 			check(_hitung(catatan, "lepas") == 0, "sampai langkah 9 (frame 1) koran belum lepas")
 		if langkah == 10:
@@ -575,6 +576,51 @@ func _test_loper_sprite_lempar() -> void:
 	for i: int in range(20):
 		pemain.maju(DT)
 	check(catatan.size() == 4 and catatan[2][1] == int(LoperAnim.Sisi.SEBERANG) and catatan[3][0] == "selesai", "lempar kedua juga memancarkan koran_lepas (SEBERANG) dan lempar_selesai tepat sekali")
+	pemain.free()
+
+
+## D-9 run fase2a-lemparan: sprite tidak lagi menolak lempar sendiri. Lempar baru saat lempar lama masih berjalan menutup lempar lama
+## dulu (koran_lepas yang belum terjadi dipancarkan sekali, lalu lempar_selesai), lalu mulai dari frame 0: tiap lempar tetap memancarkan
+## koran_lepas dan lempar_selesai tepat sekali, animasi tidak rusak. `jeda_lepas` = waktu frame lepas animasi yang akan dipakai.
+func _test_loper_sprite_lempar_menyela() -> void:
+	_judul.call("LoperSprite: lempar menyela lempar yang berjalan (D-9 run fase2a-lemparan)")
+	var pemain: LoperSprite = _pemain_baru()
+	var catatan: Array = _catat(pemain)
+	check(is_equal_approx(pemain.jeda_lepas(LoperAnim.Sisi.DEKAT), 2.0 / 12.0) and is_equal_approx(pemain.jeda_lepas(LoperAnim.Sisi.SEBERANG), 2.0 / 12.0), "jeda lepas = frame lepas 2 di 12 fps (LemparWaktu.waktu_lepas), dapat %s" % pemain.jeda_lepas(LoperAnim.Sisi.DEKAT))
+	check(pemain.jeda_lepas(LoperAnim.Sisi.TIDAK_ADA) == 0.0, "jeda lepas sisi kosong = 0")
+	# (a) Menyela SEBELUM frame lepas: koran_lepas lama dipancarkan saat disela.
+	check(pemain.lempar(LoperAnim.Sisi.DEKAT), "lempar pertama (dekat) dimulai")
+	for i: int in range(3):
+		pemain.maju(DT)
+	check(_hitung(catatan, "lepas") == 0, "3 langkah: belum lepas")
+	check(pemain.lempar(LoperAnim.Sisi.SEBERANG), "lempar kedua (seberang) saat lempar pertama berjalan: dimulai (true), tidak ditolak sprite")
+	check(catatan.size() == 2 and catatan[0][0] == "lepas" and catatan[0][1] == int(LoperAnim.Sisi.DEKAT) and catatan[1][0] == "selesai", "lempar pertama ditutup dengan koran_lepas (dekat) lalu lempar_selesai, masing-masing sekali, dapat %s" % [catatan])
+	check(pemain.sedang_melempar() and pemain.animation == &"lempar_kiri_santai_normal" and pemain.frame == 0 and not pemain.is_playing(), "lempar kedua mulai dari frame 0 (lempar_kiri_santai_normal), tidak diputar pemutar bawaan")
+	for i: int in range(20):
+		pemain.maju(DT)
+	check(catatan.size() == 4 and catatan[2][0] == "lepas" and catatan[2][1] == int(LoperAnim.Sisi.SEBERANG) and catatan[2][2] == 2 and catatan[3][0] == "selesai", "lempar kedua: koran_lepas (seberang) di frame 2 lalu lempar_selesai, masing-masing sekali")
+	check(not pemain.sedang_melempar() and pemain.animation == &"santai_normal" and pemain.is_playing(), "sesudah lempar kedua kembali ke santai_normal yang berputar")
+	# (b) Menyela SESUDAH frame lepas: koran_lepas lama TIDAK dipancarkan dua kali.
+	catatan.clear()
+	pemain.lempar(LoperAnim.Sisi.DEKAT)
+	for i: int in range(12):
+		pemain.maju(DT)
+	check(_hitung(catatan, "lepas") == 1 and pemain.sedang_melempar(), "12 langkah: koran sudah lepas sekali, masih melempar")
+	check(pemain.lempar(LoperAnim.Sisi.DEKAT), "lempar baru sesudah frame lepas dimulai")
+	check(_hitung(catatan, "lepas") == 1 and _hitung(catatan, "selesai") == 1, "koran_lepas lama tidak diulang; lempar_selesai lama sekali")
+	for i: int in range(20):
+		pemain.maju(DT)
+	check(_hitung(catatan, "lepas") == 2 and _hitung(catatan, "selesai") == 2, "dua lempar = 2 koran_lepas dan 2 lempar_selesai")
+	# (c) batalkan_lempar tetap tanpa sinyal (jeda game, D-11), dan lempar sesudahnya normal.
+	catatan.clear()
+	pemain.lempar(LoperAnim.Sisi.SEBERANG)
+	pemain.maju(DT)
+	pemain.batalkan_lempar()
+	check(catatan.is_empty() and not pemain.sedang_melempar(), "batalkan_lempar menutup tanpa sinyal")
+	pemain.lempar(LoperAnim.Sisi.SEBERANG)
+	for i: int in range(20):
+		pemain.maju(DT)
+	check(_hitung(catatan, "lepas") == 1 and _hitung(catatan, "selesai") == 1, "lempar sesudah batal memancarkan sinyalnya sekali (penanda lepas direset saat batal)")
 	pemain.free()
 
 
