@@ -1,7 +1,7 @@
 # Loop Log — 20261015-fase2-arah-bebas
 Scope: arah lempar koran bebas (perbaikan uji HP Run 2A)  ·  Branch: feat/lempar-arah-bebas  ·  Mulai: 2026-10-15  ·  Godot: 4.7.2.stable.official.ed1daf0bf
 
-## Status: IN_PROGRESS   (iterasi saat ini: 1/2)
+## Status: IN_PROGRESS   (iterasi saat ini: 2/2)
 
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
