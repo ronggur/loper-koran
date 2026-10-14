@@ -280,3 +280,9 @@ Mutan SPEC (AC-2: Q01-Q04 dan Q02 per notifikasi; AC-3: pelepasan dihapus; AC-5:
 - Kebocoran `probe_dorongan_jendela.gd` yang menurut Dev muncul sekali sebelum `8e583d2`: tidak bisa saya ulangi: satu putaran `probe_dorongan_jendela` di `main` bersih keluar tanpa ERROR/WARNING (kebocoran itu bergantung fokus jendela); perbaikan jeda pohon saya nilai lewat kode dan mutan M20.
 - Tes Godot memakai event sentuh sintetis dan driver audio Dummy (headless); perilaku `BaseButton` atas `SCROLL_BEGIN` hanya terbukti di 4.7.2 desktop.
 - Penghentian skrip ekspor dengan SIGTERM/SIGKILL (tidak dipulihkan; hanya Ctrl+C/SIGINT yang diuji dan dipulihkan).
+
+## Pemasangan di HP (orchestrator, 2026-10-14)
+- Izin pemilik di perintah run: vivo V2108 (`adb` 12d8c9da) sesudah QA PASS. A54 tidak tersambung. Sebelum dipasang: `mWakefulness=Awake`, `isKeyguardShowing=false`, fokus di launcher (tidak ada app lain di depan).
+- APK debug dari HEAD branch (`--export-debug "Android"`, exit 0, tanpa `ERROR`/`WARNING`, 28,6 MB). `unzip -l`: **tidak ada** `cek_render` maupun `warna_bayangan` di APK normal (QA-004); `jalan_uji.scn`/`.gdc` ada.
+- `adb install -r` sukses, dibuka lewat launcher, proses hidup, fokus `com.rmh.kring/com.godot.game.GodotAppLauncher`. Tangkapan `hp_vivo/jalan_uji_awal.png` (2400×1080): tombol jeda tampil normal, panel kecepatan/stamina, dua titik debu tertinggal di jalan di belakang roda. Orchestrator tidak mengirim ketukan. Tidak ada `pm clear`/uninstall/`logcat -c`.
+- Rasa dan keterbacaan (QA-002 home/lanjut, jejak debu saat pindah sisi, gesture sistem di tombol jeda) tetap NEEDS-MANUAL.
