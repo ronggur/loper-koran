@@ -11,9 +11,13 @@ extends Node2D
 ##
 ## Lemparan koran (run fase2a-lemparan bagian 1b): SATU fungsi `lintasan_swipe` (`ThrowSolver.dari_swipe` dari posisi sepeda, kecepatan
 ## maju sebenarnya, kecepatan lateral efektif langkah terakhir, dan jeda lepas animasi) dipakai garis bidik tiap langkah (sesudah sepeda
-## digerakkan) dan lemparan saat jari dilepas, jadi garis bidik yang tampil pada frame jari dilepas = lintasan koran (D-4). Lemparan
-## diterima bila `SisaKoran` mengizinkan (koran ada, jeda antar lempar 0,35 detik lewat; D-8, D-9): koran berkurang tepat 1, animasi
-## lempar dimulai, dan `KoranLempar` membekukan lintasannya. Koran terbang, mendarat, dinilai zona (`ZonaSasaran`), dan penandanya tampil
+## digerakkan). Saat jari dilepas, lemparan memakai OBJEK lintasan garis bidik yang sedang tampil untuk swipe itu (dibekukan pada langkah
+## terakhir), bukan menghitung ulang dari posisi lepas: jari yang masih bergerak saat diangkat (flick) sesudah langkah terakhir tidak
+## mengubah lemparan, jadi koran mendarat tepat di elips terakhir yang terlihat (D-4, QA-001 iterasi 2). Bila tidak ada garis bidik
+## yang tampil untuk swipe itu (swipe turun dan naik di antara dua langkah, atau langkah terakhir menolak swipe karena masih pendek atau
+## tegak), lemparan dihitung dari posisi lepas dengan `lintasan_swipe` yang sama dan keadaan sepeda yang sama (keadaan langkah terakhir):
+## tidak ada prediksi tampil yang bisa berbeda. Lemparan diterima bila `SisaKoran` mengizinkan (koran ada, jeda antar lempar 0,35 detik
+## lewat; D-8, D-9): koran berkurang tepat 1, animasi lempar dimulai, dan `KoranLempar` membekukan lintasannya. Koran terbang, mendarat, dinilai zona (`ZonaSasaran`), dan penandanya tampil
 ## sesuai waktu langkah (`dt` efektif), digambar `KoranGambar` (bayangan di tanah, koran dan penanda di atas objek). Garis bidik
 ## (`GarisBidik`, D-5) hanya tampil selama swipe ditahan, |dx| cukup, dan lempar diizinkan. Isi ulang koran khusus jalan uji
 ## (`SisaKoran.isi_ulang_jalan_uji`, alat uji). Zona placeholder digambar `ZonaGambar` di bawah objek dunia.
@@ -55,6 +59,8 @@ var _audio: SKRIP_AUDIO = null
 var koran: SisaKoran.Keadaan = SisaKoran.awal(Config.KORAN_AWAL)
 ## Koran yang sudah dilempar dan belum selesai (terbang, atau penandanya masih tampil).
 var _terbang: Array[KoranLempar.Koran] = []
+## Nomor swipe (`TouchRouter.nomor_swipe`) yang garis bidiknya sedang tampil; -1 bila belum ada.
+var _bidik_nomor: int = -1
 
 @onready var _kamera: Camera2D = %Kamera
 @onready var _tanah: TanahDaur = %Tanah
@@ -139,13 +145,15 @@ func lintasan_swipe(awal: Vector2, akhir: Vector2) -> ThrowSolver.Lintasan:
 	return ThrowSolver.dari_swipe(awal, akhir, lebar, _sepeda.posisi_dunia(), _sepeda.kecepatan_ud, _sepeda.lateral_ud, _sepeda.jeda_lepas(sisi))
 
 
-## Satu swipe selesai (jari dilepas): lempar bila diizinkan (D-8, D-9) dan swipe cukup panjang dan datar (D-2). Ditolak = koran tidak
-## berkurang dan jeda tidak mulai ulang. Garis bidik selalu hilang saat jari dilepas.
+## Satu swipe selesai (jari dilepas): lempar bila diizinkan (D-8, D-9). Lintasan = garis bidik yang sedang tampil untuk swipe ini
+## (`lintasan_bidik_tampil`, D-4); tanpa garis bidik tampil, dihitung dari posisi lepas bila swipe cukup panjang dan datar (D-2).
+## Ditolak = koran tidak berkurang dan jeda tidak mulai ulang. Garis bidik selalu hilang saat jari dilepas.
 func _saat_swipe_selesai(awal: Vector2, akhir: Vector2, _durasi_detik: float) -> void:
+	var bidik: ThrowSolver.Lintasan = lintasan_bidik_tampil(_kontrol.router.nomor_swipe)
 	_garis_bidik.sembunyikan()
 	if _jeda or not SisaKoran.boleh_lempar(koran):
 		return
-	var lintasan: ThrowSolver.Lintasan = lintasan_swipe(awal, akhir)
+	var lintasan: ThrowSolver.Lintasan = bidik if bidik != null else lintasan_swipe(awal, akhir)
 	if lintasan == null:
 		return
 	var hasil: SisaKoran.Hasil = SisaKoran.terima(koran, _sepeda.jarak_ubin)
@@ -156,6 +164,14 @@ func _saat_swipe_selesai(awal: Vector2, akhir: Vector2, _durasi_detik: float) ->
 	_sepeda.lempar(lintasan.sisi)
 	_hud.tampilkan_koran(koran.sisa, koran.penuh)
 	koran_dilempar.emit(lintasan)
+
+
+## Lintasan garis bidik yang sedang tampil bila dihitung untuk swipe bernomor `nomor` (`TouchRouter.nomor_swipe`), atau null (tidak
+## tampil, atau sisa garis bidik swipe lain yang dibatalkan sebelum langkah berikutnya menyembunyikannya).
+func lintasan_bidik_tampil(nomor: int) -> ThrowSolver.Lintasan:
+	if not _garis_bidik.tampil() or _bidik_nomor != nomor:
+		return null
+	return _garis_bidik.lintasan()
 
 
 ## Koran yang sedang dilempar (terbang atau penandanya masih tampil), urut dari yang pertama dilempar. Untuk tes dan probe.
@@ -209,6 +225,7 @@ func _perbarui_lemparan(langkah_dt: float) -> void:
 		var lintasan: ThrowSolver.Lintasan = lintasan_swipe(router.awal_swipe(), router.posisi_swipe())
 		if lintasan != null:
 			_garis_bidik.tampilkan(lintasan, ZonaSasaran.sah(KoranLempar.prediksi_antaran(lintasan, Config.JENDELA_KENA_BONUS)))
+			_bidik_nomor = router.nomor_swipe
 			return
 	_garis_bidik.sembunyikan()
 
