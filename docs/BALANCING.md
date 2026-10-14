@@ -45,7 +45,7 @@ Stick analog dipetakan halus: sumbu atas memetakan santai → ngebut, sumbu bawa
 - **Lateral** analog bebas (keputusan pemilik 2026-10-13, tanpa kunci atau snap jalur): komponen datar × 3,0 u/d, dijepit ke tepi aspal ±1,0 ubin (`JALAN_LEBAR_UBIN` / 2) sebagai **batas tepi jalan resmi**. Positif = sisi `dekat`, negatif = sisi `seberang`; kidal tidak mengubah arti sumbu. Kecepatan lateral efektif 0 bila terhalang tepi. Lateral tetap bekerja saat berhenti dengan rem (arah sprite 90°).
 - **Pose sprite** (`LoperAnim.pose_dari_gerak`, keputusan pemilik "ikuti fisika"): (1) rem aktif = `rem_<arah>`, juga di kecepatan 0; (2) stick ke bawah dan kecepatan sebenarnya masih di atas tujuan lebih dari `POSE_MELUNCUR_TOLERANSI_UD` (0,05 u/d) = `meluncur_<arah>` (kaki diam); (3) stick ke bawah dan sudah sampai tujuan = `melambat_<arah>` (kayuh 4 fps); (4) selain itu kayuh dengan tingkat dari stick, **dijepit ke cepat selama lelah**. Toleransi 0,05 mencegah stick yang hanya bergetar membuat pose berkedip; akibatnya stick bawah 15,1% (tujuan 2,998) langsung melambat. Lempar dari meluncur atau rem memakai lempar santai.
 - **Laju kayuh** (`LoperAnim.pedal_rate`): untuk kayuh dan melambat = kecepatan sebenarnya / kecepatan nominal tingkat (santai 3,0, cepat 4,5, ngebut 6,0, melambat 1,5), dijepit 0 sampai `PEDAL_RATE_MAKS` (1,5). Meluncur dan rem = 1 (animasinya napas dan getar dari `.tres`). Lempar tidak terpengaruh.
-- **Jeda** (`JedaSim`, GDD rule `gdscript`): app di-background atau kehilangan fokus menghentikan simulasi (dt 0), melepas stick dan swipe, menutup lempar, dan mengembalikan lama tahan rem ke 0; lanjut otomatis dan langkah pertama sesudahnya ber-dt 0.
+- **Jeda** (`JedaSim`, rule `gdscript`; diubah run fase1b-umpan-balik 2026-10-14, keputusan pemilik): tombol jeda, app di-background atau kehilangan fokus, dan tombol back Android membuka **layar jeda**; simulasi berhenti (dt 0), `SceneTree.paused` menghentikan sprite, partikel, dan input, stick dan swipe dilepas, lempar ditutup, lama tahan rem kembali 0. **Tidak ada lanjut otomatis** (RESUMED dan FOCUS_IN tidak berpengaruh); lanjut hanya lewat tombol "Lanjut" atau back saat layar jeda terbuka. Langkah pertama sesudah lanjut ber-dt 0, stick harus disentuh ulang, rem harus ditahan ulang 0,25 detik.
 
 | Angka baru (run fase1a-gerak) | Usulan | Catatan |
 |---|---|---|
@@ -65,10 +65,12 @@ Stick analog dipetakan halus: sumbu atas memetakan santai → ngebut, sumbu bawa
 | Zona stick (tangan kanan) | x 8–192, y 186–352 | Stick melayang muncul di titik sentuh; opsi kidal mencerminkan |
 | Zona swipe | x 210 sampai lebar − 20, y 48–352 | Strip atas (y < 48) bebas dari kontrol untuk tombol HUD; kidal mencerminkan |
 | Lebar jalan scene uji | 2 ubin aspal, geser lateral ±1 ubin | `JALAN_LEBAR_UBIN`; sejak run fase1a-gerak batas tepi jalan resmi (lateral analog bebas, tanpa kunci jalur, keputusan pemilik 2026-10-13) |
-| Letak dasar sepeda di layar | 33,33% lebar, 60% tinggi | `KAMERA_SEPEDA_*_PECAHAN`; sepertiga kiri (ART_DIRECTION 2.2), ±8 px di 640, 780, 800 saat geseran dorongan = 0 (santai) |
-| Dorongan maju (ngebut) | 28 px game datar, naik ke kanan atas 2:1 (28, −14) | `DORONGAN_MAJU_PX`; GDD 15, usulan (permintaan Ronggur 2026-10-09), disetel di HP |
+| Letak dasar sepeda di layar | 33,33% lebar, **75% tinggi** (dulu 60%) | `KAMERA_SEPEDA_*_PECAHAN`; sepertiga kiri dikunci (ART_DIRECTION 2.2), ±8 px di 640, 780, 800 saat geseran dorongan = 0 (santai). 75% dari paket pemilik 2026-10-14 (usulan): dengan dorongan mundur penuh, sel sprite 46×58 berakhir di y 292, satu piksel di atas panel kecepatan (y 293, tinggi 59 dengan teks 8 px) di 640, 780, dan 800, tangan kanan dan kidal (`tests/tes_tata_letak.gd`); 0,75 tidak menabrak, jadi dipakai apa adanya |
+| Dorongan maju (ngebut) | **36** px game datar (dulu 28), naik ke kanan atas 2:1 (36, −18) | `DORONGAN_MAJU_PX`; GDD 15, usulan (permintaan Ronggur 2026-10-09; 36 dari paket pemilik 2026-10-14 bersama sepeda turun ke 75%), disetel di HP |
 | Dorongan mundur (melambat) | 20 px game datar, turun ke kiri bawah 2:1 (−20, +10) | `DORONGAN_MUNDUR_PX`; usulan |
 | Respon dorongan | 0,35 detik | `DORONGAN_RESPON_DETIK`; konstanta waktu penghalusan eksponensial, bebas framerate |
+| Tinggi tombol strip atas dan tombol "Lanjut" | 42 px game (44 dp di A54 450 dpi ×3 = 41,7) | `HUD_TOMBOL_TINGGI_PX`; paket pemilik 2026-10-14 (dulu 36 = 38 dp); muat di strip atas: 4 + 42 = 46 < 48. Usulan, belum diuji di HP |
+| Tombol jeda | area sentuh 42×42 px game, gambar 24×24 di (26, 8) | `HUD_JEDA_*`; area sentuh x 17–59, y 4–46 di strip atas, tidak dicerminkan saat kidal (DESIGN_SPEC 3.1); usulan |
 | Ambang swipe lempar | 12 px game, inklusif | `LEMPAR_SWIPE_AMBANG_PX`; usulan (run sprite-lempar-melambat), diukur dari panjang swipe awal ke akhir; belum diuji di HP, jangan dikunci sebelum uji |
 | Frame koran lepas | indeks 2 | `LEMPAR_FRAME_LEPAS`; fakta sprite (`release_frame` di `loper_agen_lempar.json`), bukan angka tuning; dijaga tes terhadap JSON |
 | Toleransi waktu frame | 0,000001 detik | `LEMPAR_TOLERANSI_DETIK`; hanya meredam derau float di batas frame, tidak mengubah rasa |
@@ -78,7 +80,30 @@ Stick analog dipetakan halus: sumbu atas memetakan santai → ngebut, sumbu bawa
 - **Animasi** `lempar_<sisi>_<kecepatan>_<arah>` dengan kecepatan = tingkat sprite saat swipe dilepas (melambat memakai santai, tidak ada lempar melambat) dan arah = arah sprite saat itu (arah 90° belum ada gambarnya, jadi memakai serong di sisi yang sama). Sekali putar, 4 frame, 12 fps, sekitar 0,33 detik; koran lepas di frame 2 (sekitar 0,17 detik).
 - Swipe berikutnya diabaikan selama animasi lempar berjalan (usulan sederhana). Setelah selesai sprite kembali ke animasi kayuh sesuai tingkat dan arah saat itu.
 
-**Dorongan kecepatan** (`scripts/systems/dorongan_kecepatan.gd`, GDD 15): geseran sepeda di bingkai layar dihitung dari kecepatan SEBENARNYA, bukan dari stick. Nol di 3,0 u/d (santai), naik linear ke 28 px di 6,0 u/d (ngebut), turun linear ke −20 px di 1,5 u/d (melambat), dijepit di luar rentang itu; arah sejajar jalan (kemiringan persis 2:1). Hanya kamera yang bergeser (sepeda tampil di letak dasar + geseran); posisi dunia, posisi sprite, dan HUD tidak berubah. Geseran total ngebut ke melambat = 48 px game datar (sekitar 144 px layar di ×3). Konsekuensi yang sengaja disetel di HP: sepeda yang maju di layar memperpendek jalan yang terlihat di depan saat waktu bereaksi paling sempit, jadi nilainya sengaja kecil.
+**Dorongan kecepatan** (`scripts/systems/dorongan_kecepatan.gd`, GDD 15): geseran sepeda di bingkai layar dihitung dari kecepatan SEBENARNYA, bukan dari stick. Nol di 3,0 u/d (santai), naik linear ke 36 px di 6,0 u/d (ngebut), turun linear ke −20 px di 1,5 u/d (melambat), dijepit di luar rentang itu; arah sejajar jalan (kemiringan persis 2:1). Hanya kamera yang bergeser (sepeda tampil di letak dasar + geseran); posisi dunia, posisi sprite, dan HUD tidak berubah. Geseran total ngebut ke melambat = 56 px game datar (sekitar 168 px layar di ×3). Konsekuensi yang sengaja disetel di HP: sepeda yang maju di layar memperpendek jalan yang terlihat di depan saat waktu bereaksi paling sempit, jadi nilainya sengaja kecil.
+
+**Umpan balik kecepatan** (`scripts/systems/umpan_balik_kecepatan.gd`, GDD 15, run fase1b-umpan-balik 2026-10-14; semua usulan, dinilai di HP). Dihitung dari kecepatan SEBENARNYA, bukan stick; NaN, tak hingga, dan negatif = 0.
+
+| Angka | Usulan | Catatan |
+|---|---|---|
+| Debu roda | 0 di bawah 3,0 u/d; dari 3,0 (inklusif) 4 naik linear ke 24 partikel/detik di 6,0, dijepit | `UMPAN_DEBU_*`; santai sudah berdebu tipis |
+| Debu rem | 40 partikel/detik selama rem aktif dan kecepatan > 0; 0 saat berhenti | `UMPAN_DEBU_REM_LAJU`; laju tersendiri, juga di bawah 3,0 |
+| Garis kecepatan | 0 di bawah 4,5 u/d; dari 4,5 (inklusif) kekuatan 0,25 naik linear ke 1 di 6,0, dijepit; laju = kekuatan × 14 garis/detik | `UMPAN_GARIS_*` |
+| Kurangi efek | garis mati, debu × 0,5; bawaan mati | `UMPAN_KURANGI_EFEK`, `UMPAN_KURANGI_DEBU_PENGALI`; rule `ui-scenes`, belum ada UI (Pengaturan Fase 3) |
+| Batas partikel hidup | 24 debu, 6 garis | `UMPAN_DEBU_BATAS`, `UMPAN_GARIS_BATAS` (TECH_PLAN 3.7) |
+| Debu: umur, kecepatan, ukuran | 0,4 detik, 40 px/detik ke belakang, kotak 1–2 px, muncul di (−12, +2) dari titik pijak, sebaran ±2 px | tampilan |
+| Garis: umur, kecepatan, panjang | 0,3 detik, 200 px/detik ke belakang, 14 px datar bertangga 2:1, muncul di (30, −24), sebaran ±26 px | tampilan |
+
+Selama jeda partikel berhenti (tidak memancar, tidak bergerak) karena `SceneTree.paused`.
+
+**Bunyi sepeda** (`scripts/systems/bunyi_sepeda.gd` + autoload `Audio`, SOUND_DESIGN 3.2, run fase1b-umpan-balik 2026-10-14; semua usulan, dinilai di HP). Dari keadaan SEBENARNYA: pose kayuh atau melambat = loop kayuhan, meluncur = loop freewheel, rem = decit sekali di tepi naik rem (tidak diulang selama ditahan, tidak di kecepatan 0) lalu diam, kecepatan 0 tanpa rem = diam, jeda = semua diam tanpa decit tertunda.
+
+| Angka | Usulan | Catatan |
+|---|---|---|
+| Pitch loop kayuhan | 1,0 di santai 3,0 u/d, 1,15 di cepat 4,5, 1,3 di ngebut 6,0; linear per potong di antaranya, dijepit 1,0..1,3 (melambat tetap 1,0) | `AUDIO_KAYUH_PITCH_*` (SOUND_DESIGN 3.2); titik kecepatan dari `KECEPATAN_*_UD` |
+| Volume kayuhan, freewheel, rem | −6, −10, −3 dB | `AUDIO_*_VOLUME_DB`; ketiga WAV dinormalkan ke puncak yang sama (−1 dBFS), jadi keras-pelan relatif hanya di sini. Kayuhan di bawah suara sasaran (SOUND_DESIGN 6), freewheel pelan |
+
+**Jalan terlihat di depan saat ngebut** (run fase1b-umpan-balik, dihitung dari garis tengah jalan: titik pijak sepeda + dorongan maju penuh sampai tepi layar, 1 ubin maju = 32 px datar, 6,0 u/d): 780 (A54) dari sekitar 2,10 detik (0,6 dan 28 px) menjadi sekitar **2,52 detik**; 800 dari 2,10 menjadi sekitar 2,59 detik. Di **640 (16:9)** jalan keluar layar lewat tepi kanan, bukan tepi atas, jadi menurunkan sepeda tidak menolong dan dorongan 36 sedikit memperpendek: dari sekitar 2,08 menjadi sekitar 2,03 detik (tanpa dorongan 2,22 detik di keduanya). Dinilai di HP (NEEDS-MANUAL).
 
 ---
 
@@ -210,6 +235,8 @@ Belum diisi. Diputuskan di Fase 6 bersama layar bengkel (GDD 12.5). Arah yang su
 ---
 
 ## 10. Catatan perubahan
+
+- **2026-10-14** — Run fase1b-umpan-balik (paket usulan pemilik, belum diuji di HP): jeda tanpa lanjut otomatis (tombol jeda, layar jeda, back Android); tinggi tombol strip atas dan "Lanjut" 36 → 42 px game (≥ 44 dp di A54), tombol jeda baru dengan area sentuh 42×42; sepeda turun dari 60% ke 75% tinggi layar (`KAMERA_SEPEDA_Y_PECAHAN` 0,75, tidak menabrak panel kecepatan di 640/780/800 kanan dan kidal); dorongan maju 28 → 36 px (mundur 20 dan respon 0,35 tetap); teks HUD terkecil (`HudLabel`) 6 → 8 px di `assets/ui/theme.tres` (DESIGN_SPEC 1.2). Radius stick tetap 35. Angka baru umpan balik kecepatan (debu roda, debu rem, garis kecepatan, kurangi efek, batas partikel) dan bunyi sepeda (pitch kayuhan 1,0 / 1,15 / 1,3 dari SOUND_DESIGN 3.2, volume tiga bunyi) di bagian 2. Alasan: paket usulan pemilik dari pengamatan A54, belum diuji di HP.
 
 - **2026-10-13** — Run fase1a-gerak: `BikeMotion` menggantikan `BikeDrive` (bagian 2): rem tanpa tombol sampai berhenti, meluncur, stamina dengan laju linear per potong dan lelah (bagian 3), lateral analog dengan batas tepi jalan resmi ±1 ubin, jeda, pose meluncur/rem dari fisika, dan laju kayuh dari kecepatan. Angka lama BALANCING 2-3 tidak berubah (uji HP Fase 0 lolos tanpa permintaan ubah); angka baru: toleransi rem, toleransi pose 0,05 u/d, `PEDAL_RATE_MAKS` 1,5, bar stamina merah di bawah 30. Semua usulan sampai uji HP Run 1A.
 - **2026-10-07** — Angka awal ditulis sebagai usulan untuk Fase 0–3. Belum ada yang diuji.

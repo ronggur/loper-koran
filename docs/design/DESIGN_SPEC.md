@@ -54,7 +54,13 @@ Radar (bagian 3.4):
 | `RADAR_MISI` | `#E98E3F` | Target misi |
 | `RADAR_BUKAN` | `#969AA0` | Rumah bukan pelanggan (hanya mode bantu, usulan) |
 
-Warna ini sudah ada di palet induk (ART_DIRECTION 2.4), kecuali token UI yang berasal dari Brainy Dungeon. **Warna jangan jadi satu-satunya pembeda**: penanda radar dan kotak progres juga dibedakan bentuk atau simbol (bagian 3.2 dan 3.4).
+Dunia (usulan, run fase1b-umpan-balik 2026-10-14):
+
+| Token | Hex | Pemakaian |
+|---|---|---|
+| `BAYANGAN_CONTOH` | `#2E3550` | Warna bayangan contoh (siang, ART_DIRECTION 2.5) untuk shader warna bayangan (ART_DIRECTION 2.1 no. 5, 2.3); sementara hanya dipakai probe render `scenes/dev/cek_render.tscn`. Warna bayangan per distrik dan waktu menggantikannya nanti |
+
+Warna ini sudah ada di palet induk (ART_DIRECTION 2.4), kecuali token UI yang berasal dari Brainy Dungeon dan `BAYANGAN_CONTOH` (dari tabel warna bayangan ART_DIRECTION 2.5). **Warna jangan jadi satu-satunya pembeda**: penanda radar dan kotak progres juga dibedakan bentuk atau simbol (bagian 3.2 dan 3.4).
 
 ### 1.2 Tipografi
 
@@ -64,9 +70,9 @@ Warna ini sudah ada di palet induk (ART_DIRECTION 2.4), kecuali token UI yang be
 | Angka HUD | Lexend SemiBold | 10 | Koin, sisa koran |
 | Teks utama HUD | Lexend SemiBold | 8 | Judul misi |
 | Teks kecil | Lexend Regular | 7 | Sub-judul, umpan balik |
-| Label | Lexend SemiBold, huruf kapital, spasi 0,1 em | 6 | "KECEPATAN", "MISI SAMPINGAN" |
+| Label | Lexend SemiBold, huruf kapital, spasi 0,1 em | 8 (dulu 6) | "KECEPATAN", "MISI SAMPINGAN" |
 
-Font sama dengan Brainy Dungeon dan **belum dikunci** (ART_DIRECTION 11). Ukuran 6 di kanvas dasar menjadi 18 px di layar 1080p; cek keterbacaannya di HP sebelum dikunci.
+Font sama dengan Brainy Dungeon dan **belum dikunci** (ART_DIRECTION 11). **Label 8 px (usulan dari uji A54, paket pemilik 2026-10-14):** ukuran 6 di kanvas dasar (18 px di layar 1080p) dinilai terlalu kecil, jadi `HudLabel` di `assets/ui/theme.tres` menjadi 8 (24 px di layar 1080p), sama dengan teks utama HUD. Panel kecepatan dan stamina ikut meninggi dari 57 menjadi 59 px game (y 293–352; baris pertama sudah setinggi angka 10 px, jadi hanya baris STAMINA yang bertambah) dan tetap di antara zona stick dan tengah layar tanpa menutupi sepeda (`tests/tes_tata_letak.gd`). Cek keterbacaannya di HP sebelum dikunci.
 
 ### 1.3 Bentuk
 
@@ -94,8 +100,10 @@ Informasi diletakkan di tepi layar supaya tengah, tempat jalan dan rumah, tetap 
 
 | Elemen | Posisi | Ukuran | Isi |
 |---|---|---|---|
-| Tombol jeda | x 26, y 8 | 24×24 | Dua batang 3×10 `TEXT`, garis luar panel `TEXT` supaya terlihat sebagai tombol |
+| Tombol jeda | x 26, y 8 | 24×24 (gambar); area sentuh 42×42 | Dua batang 3×10 `TEXT`, garis luar panel `TEXT` supaya terlihat sebagai tombol |
 | Kartu misi | x 26, y 40 | lebar 145 | Ikon misi 14 px, label "MISI SAMPINGAN" (`ACCENT`), judul misi, progres dan sisa rumah ("Kucing 0/1 · 8 rumah") |
+
+**Area sentuh tombol jeda (usulan, paket pemilik 2026-10-14, run fase1b-umpan-balik):** gambar tetap 24×24 di (26, 8), tetapi area sentuhnya 42×42 px game (≥ 44 dp di A54: 450 dpi ×3, 44 dp ≈ 41,7 px game), x 17–59 (dipusatkan mendatar pada gambar), y 4–46 (sejajar tombol strip atas, berakhir sebelum zona swipe di y 48). Tidak masuk zona stick maupun swipe di 640, 780, dan 800, tidak menumpuk dengan tombol kidal (tengah atas), dan **tidak dicerminkan saat kidal** (strip atas bebas dari kontrol). Gambar dari kode (`scripts/ui/tombol_jeda.gd`), tanpa PNG. Ketukan diterima dari jari mana pun, juga saat jempol lain masih di stick (`TombolSentuh`). Konstanta `HUD_JEDA_*` di `scripts/config.gd`. Kartu misi nanti digeser bila menumpuk dengan area sentuh ini.
 
 Kartu misi hanya muncul kalau misi diambil. Saat misi selesai atau gagal, kartu berganti banner singkat 1,5 detik (`CONTENT_GUIDE.md` 3) lalu hilang.
 
@@ -191,7 +199,7 @@ Status: ⬜ belum · 🟡 sketsa · ✅ disetujui
 | Halaman depan koran | Fase 4 | ⬜ | Nama koran dan hari, tiga headline (berita utama dengan ikon efek, misi sampingan dengan ringkasan satu baris dan tombol Ambil/Lewati, berita ringan), tombol Berangkat. Terbaca dalam 10 detik (GDD 10.1, `CONTENT_GUIDE.md` 2) |
 | Hasil harian | Fase 3–4 | ⬜ | Terkirim, meleset, tip, koin hari itu, perubahan reputasi, hasil misi dan efeknya ke pelanggan, pelanggan baru atau berhenti, milestone yang hampir tercapai, tombol iklan hadiah opsional (GDD 3.1, 13, 14.2) |
 | Bengkel | Fase 6 | ⬜ | Kondisi tiap komponen, harga servis, upgrade, milestone target aktif, tombol iklan hadiah opsional (GDD 12.3, 13) |
-| Jeda | Fase 1 | ⬜ | Lanjut, pengaturan, keluar ke menu. Game benar-benar berhenti |
+| Jeda | Fase 1 | 🟡 | Lanjut, pengaturan, keluar ke menu. Game benar-benar berhenti. **Versi sementara (usulan, run fase1b-umpan-balik 2026-10-14):** `scenes/ui/layar_jeda.tscn`, lapisan gelap `HUD_PANEL` penuh layar di atas jalan dan HUD, judul "JEDA" (`JudulLayar`, `TEXT`), tombol "Lanjut" (tinggi 42 px game, gaya tombol HUD). Dibuka oleh tombol jeda, app ke background atau kehilangan fokus, dan back Android; ditutup hanya oleh "Lanjut" atau back (tanpa lanjut otomatis). Pengaturan dan keluar ke menu belum ada |
 | Pengaturan | Fase 3 | ⬜ | Opsi kidal, mode bantu, volume suasana dan efek suara (`SOUND_DESIGN.md` 6), getar |
 | Peta distrik | M3 | ⬜ | Tergantung keputusan distrik bebas dipilih atau berurutan (GDD 9.5) |
 

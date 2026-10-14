@@ -1,6 +1,6 @@
 class_name HudDev
 extends CanvasLayer
-## HUD sementara (Fase 0 AC-15, Fase 1 run 1A): panel kecepatan dan stamina di bawah, tombol kidal di strip atas.
+## HUD sementara (Fase 0 AC-15, Fase 1 run 1A dan 1B): panel kecepatan dan stamina di bawah, tombol jeda dan tombol kidal di strip atas.
 ##
 ## `CanvasLayer` terpisah dari dunia. Tata letak memakai anchor dan Container (bukan posisi piksel absolut):
 ## panel kecepatan menempel di bawah dengan margin dari tepi layar sisi stick (DESIGN_SPEC 3.5) dan pindah
@@ -10,9 +10,14 @@ extends CanvasLayer
 ## Panel bawah memuat dua bar (DESIGN_SPEC 3.5): kecepatan (isi `TEXT`) dan stamina (isi `ACCENT`, `FAIL` di bawah
 ## `Config.HUD_STAMINA_AMBANG_RENDAH`). Saat lelah label `HUD_LELAH` tampil di samping label stamina: penanda bukan warna
 ## (rule `ui-scenes`). Panel koran belum ada di run ini.
+## Tombol jeda (`TombolJeda`, DESIGN_SPEC 3.1, run fase1b-umpan-balik): kiri atas, area sentuh `Config.HUD_JEDA_SENTUH_PX` persegi di
+## strip atas dengan gambar 24×24 di x `HUD_JEDA_GAMBAR_X_PX`, y `HUD_JEDA_GAMBAR_Y_PX`; tidak dicerminkan saat kidal (strip atas
+## bebas dari kontrol). Menekannya memancarkan `jeda_diminta` (layar jeda ada di `JalanUji`).
 
 ## Tombol kidal diubah: True = zona ditukar untuk tangan kiri.
 signal kidal_diubah(nilai: bool)
+## Tombol jeda ditekan.
+signal jeda_diminta
 
 var _angka_terakhir: String = ""
 
@@ -26,14 +31,23 @@ var _angka_terakhir: String = ""
 @onready var _label_lelah: Label = %LabelLelah
 @onready var _bar_stamina: BarKecepatan = %BarStamina
 @onready var _tombol_kidal: Button = %TombolKidal
+@onready var _strip_jeda: MarginContainer = %StripJeda
+@onready var _tombol_jeda: TombolJeda = %TombolJeda
 
 
 func _ready() -> void:
 	_strip_atas.add_theme_constant_override(&"margin_top", Config.HUD_TOMBOL_MARGIN_ATAS_PX)
 	_tombol_kidal.custom_minimum_size = Vector2(Config.HUD_TOMBOL_LEBAR_PX, Config.HUD_TOMBOL_TINGGI_PX)
 	_panel_kecepatan.custom_minimum_size = Vector2(Config.HUD_PANEL_KECEPATAN_LEBAR_PX, 0)
+	# Area sentuh jeda dipusatkan mendatar pada gambarnya; tepi atasnya sejajar tombol kidal.
+	var sisa: float = float(Config.HUD_JEDA_SENTUH_PX - Config.HUD_JEDA_GAMBAR_PX) / 2
+	var tepi_jeda: int = Config.HUD_JEDA_GAMBAR_X_PX - floori(sisa)
+	_strip_jeda.add_theme_constant_override(&"margin_left", tepi_jeda)
+	_strip_jeda.add_theme_constant_override(&"margin_top", Config.HUD_TOMBOL_MARGIN_ATAS_PX)
+	_tombol_jeda.geser_gambar = Vector2(Config.HUD_JEDA_GAMBAR_X_PX - tepi_jeda, Config.HUD_JEDA_GAMBAR_Y_PX - Config.HUD_TOMBOL_MARGIN_ATAS_PX)
 	_terapkan_gaya()
 	_tombol_kidal.toggled.connect(_saat_tombol_kidal)
+	_tombol_jeda.ditekan.connect(jeda_diminta.emit)
 	atur_kidal(false)
 	tampilkan_kecepatan(Config.KECEPATAN_SANTAI_UD)
 	tampilkan_stamina(Config.STAMINA_MAKS, false)
@@ -92,6 +106,11 @@ func rect_tombol_kidal() -> Rect2:
 	return _tombol_kidal.get_global_rect()
 
 
+## Persegi area sentuh tombol jeda dalam koordinat viewport game.
+func rect_tombol_jeda() -> Rect2:
+	return _tombol_jeda.get_global_rect()
+
+
 ## Persegi panel kecepatan dalam koordinat viewport game.
 func rect_panel_kecepatan() -> Rect2:
 	return _panel_kecepatan.get_global_rect()
@@ -104,29 +123,9 @@ func _saat_tombol_kidal(nilai: bool) -> void:
 
 ## Warna dan bentuk panel dan tombol dari `Palette` (DESIGN_SPEC 1.3): garis luar 1 px, sudut tegas.
 func _terapkan_gaya() -> void:
-	_panel_kecepatan.add_theme_stylebox_override(&"panel", _kotak(Palette.HUD_PANEL, Palette.OUTLINE))
+	_panel_kecepatan.add_theme_stylebox_override(&"panel", GayaHud.kotak(Palette.HUD_PANEL, Palette.OUTLINE))
 	_label_judul.add_theme_color_override(&"font_color", Palette.ACCENT)
 	_label_angka.add_theme_color_override(&"font_color", Palette.TEXT)
 	_label_stamina.add_theme_color_override(&"font_color", Palette.ACCENT)
 	_label_lelah.add_theme_color_override(&"font_color", Palette.FAIL)
-	_tombol_kidal.add_theme_stylebox_override(&"normal", _kotak(Palette.HUD_PANEL, Palette.OUTLINE))
-	_tombol_kidal.add_theme_stylebox_override(&"hover", _kotak(Palette.HUD_PANEL, Palette.OUTLINE))
-	_tombol_kidal.add_theme_stylebox_override(&"pressed", _kotak(Palette.UI_PANEL_RAISED, Palette.ACCENT))
-	_tombol_kidal.add_theme_stylebox_override(&"hover_pressed", _kotak(Palette.UI_PANEL_RAISED, Palette.ACCENT))
-	_tombol_kidal.add_theme_color_override(&"font_color", Palette.TEXT)
-	_tombol_kidal.add_theme_color_override(&"font_hover_color", Palette.TEXT)
-	_tombol_kidal.add_theme_color_override(&"font_pressed_color", Palette.ACCENT)
-	_tombol_kidal.add_theme_color_override(&"font_hover_pressed_color", Palette.ACCENT)
-
-
-func _kotak(isi: Color, garis: Color) -> StyleBoxFlat:
-	var kotak: StyleBoxFlat = StyleBoxFlat.new()
-	kotak.bg_color = isi
-	kotak.border_color = garis
-	kotak.set_border_width_all(1)
-	kotak.anti_aliasing = false
-	kotak.content_margin_left = float(Config.HUD_PANEL_PAD_X_PX)
-	kotak.content_margin_right = float(Config.HUD_PANEL_PAD_X_PX)
-	kotak.content_margin_top = float(Config.HUD_PANEL_PAD_Y_PX)
-	kotak.content_margin_bottom = float(Config.HUD_PANEL_PAD_Y_PX)
-	return kotak
+	GayaHud.terapkan_tombol(_tombol_kidal)

@@ -63,6 +63,7 @@ Ukuran relatif (usulan, dicek di graybox Fase 1):
 - **Bayangan berwarna** (usulan): bayangan tanah, bayangan jatuh dari objek tinggi, dan bayangan lembut engine memakai warna bayangan dari bagian 2.5, bukan hitam. Nada gelap material tidak berubah; yang berwarna hanya bayangan yang jatuh ke permukaan lain. Cara kerjanya: satu shader mengganti piksel `#000000` alpha 71 dengan warna bayangan aktif, jadi sprite yang sudah ada (termasuk pemain) tidak perlu dirender ulang.
 - Glow dan cahaya lampu memakai cincin piksel semi-transparan bertumpuk atau light 2D engine, bukan gradien di dalam sprite.
 - Partikel (debu roda, percikan genangan, kertas koran) digambar sebagai sprite piksel kecil dengan palet yang sama.
+  - **Placeholder Fase 1 (usulan, run fase1b-umpan-balik 2026-10-14):** debu roda dan garis kecepatan digambar dari kode (`scripts/entities/pancaran_piksel.gd`, `umpan_balik_sepeda.gd`), bukan `GPUParticles2D`/`CPUParticles2D` (posisi partikel CPUParticles2D tidak dibulatkan ke piksel game sehingga jatuh di antara blok ×3). Debu: kotak 1–2 px `TEXT_2` (krem, alpha 85%) dari roda belakang, melaju ke belakang sejajar jalan 2:1. Garis kecepatan: garis bertangga 2:1 (anak tangga 2×1 px) `TEXT` alpha 70% di sekitar pengendara. Tidak ada token warna baru (memakai `TEXT_2` dan `TEXT` dari `palette.gd`). Laju dari kecepatan sebenarnya (`BALANCING.md` 2), batas 24 debu + 6 garis. `vfx_debu_roda.png` (bagian 7) menggantikannya nanti.
 - Depth of field dan bloom dipakai ringan dan tidak pernah membuat objek gameplay kabur. Apakah semuanya jalan di renderer Compatibility di HP kelas bawah harus dicek di Fase 0 (bagian 7).
 
 ### 2.4 Palet induk (usulan)
@@ -428,7 +429,7 @@ Aturan (usulan):
 - **Gabungkan ke atlas per konteks** (pemain, distrik, UI) untuk menurunkan draw call.
 - **Fill rate** adalah leher botol utama di HP murah: hindari menumpuk banyak sprite transparan besar dan efek layar penuh.
 - Sprite piksel diimpor **Lossless**, filter **Nearest**, tanpa mipmap.
-- Renderer **Compatibility** (usulan) untuk HP kelas bawah. Cek di Fase 0 apakah light 2D, glow, partikel, dan shader warna bayangan yang dibutuhkan jalan di renderer ini.
+- Renderer **Compatibility** (usulan) untuk HP kelas bawah. Cek di Fase 0 apakah light 2D, glow, partikel, dan shader warna bayangan yang dibutuhkan jalan di renderer ini. **Hasil 2026-10-14 (probe `scenes/dev/cek_render.tscn`, run 1B) di vivo V2108, Android 12, Adreno 618, OpenGL ES 3.2, 2400×1080 ×3:** light 2D + bayangan occluder ya, glow 2D (`WorldEnvironment` latar Canvas) ya tetapi halonya tipis (0,101 lawan latar 0,050), partikel CPU dan GPU ya, shader warna bayangan cocok (13/13 piksel penanda, piksel lain tidak berubah), 60,6 fps rata-rata. HP uji dipilih pemilik ("pakai yang ada"); A54 (GPU Mali) belum dicek. Bukti: `docs/loop/20261014-fase1b-umpan-balik/render_vivo/`.
 - **Anggaran ukuran APK: target di bawah 100 MB.**
 
 ### Penamaan file
@@ -526,7 +527,7 @@ Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dib
 - **Ukuran ubin (64×32)**: dikunci setelah graybox Fase 1. Skala piksel sudah dikunci ×3 (2026-10-09).
 - **Stretch mode dan resolusi dasar** (bagian 7): sudah dipilih 2026-10-09, diverifikasi di desktop pada run 0A (hasil di ROADMAP 4b); uji di HP menunggu.
 - **Palet induk** (bagian 2.4): dikunci setelah aset gelombang 1.
-- **Warna bayangan per waktu dan distrik** (bagian 2.5): dikunci bersama palet induk, setelah shader-nya dicek di Fase 0.
+- **Warna bayangan per waktu dan distrik** (bagian 2.5): dikunci bersama palet induk, setelah shader-nya dicek di Fase 0 (shader jalan di Compatibility, dicek 2026-10-14 di vivo V2108; bagian 7).
 - **Cara menampilkan rumah di sisi dekat**, yang hanya terlihat belakangnya.
 - **Font HUD**: mock memakai Lexend + Lilita One (sama dengan Brainy Dungeon). Kunci atau pilih identitas sendiri.
 - **Apakah sprite pemain dipoles manual** sebelum rilis, terutama wajah dari arah depan.

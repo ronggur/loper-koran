@@ -5,7 +5,8 @@ extends Node2D
 ## Node hanya menyimpan keadaan dan menampilkannya: seluruh perhitungan (kecepatan, rem, stamina, lateral, pose, tingkat, arah,
 ## laju kayuh) ada di `BikeMotion` dan `LoperAnim` (logika murni). Keadaan gerak = `BikeMotion.Keadaan` ditambah jarak yang sudah
 ## ditempuh sepanjang jalan (ubin). Posisi dunia = (lateral, -jarak) lalu diproyeksikan oleh `Iso` dan dibulatkan ke piksel; origin
-## node = titik pijak sprite (Y-sort benar). Lempar koran hanya animasi (`lempar`, Fase 2 untuk proyektil).
+## node = titik pijak sprite (Y-sort benar). Lempar koran hanya animasi (`lempar`, Fase 2 untuk proyektil). Umpan balik kecepatan (debu
+## roda, garis kecepatan; `UmpanBalikSepeda`, run fase1b-umpan-balik) diisi tiap langkah dari kecepatan sebenarnya dan status rem.
 
 ## Keadaan gerak saat ini (kecepatan, lateral, stamina, rem, lelah). Diganti objek baru tiap langkah, tidak diubah di tempat.
 var keadaan: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
@@ -13,6 +14,7 @@ var keadaan: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
 var jarak_ubin: float = 0.0
 
 @onready var _sprite: LoperSprite = %LoperAgen
+@onready var _umpan: UmpanBalikSepeda = %UmpanBalik
 
 ## Kecepatan maju saat ini, u/d.
 var kecepatan_ud: float:
@@ -50,6 +52,7 @@ func gerak(stick: Vector2, dt: float) -> void:
 	_sprite.speed_level = hasil.tingkat_sprite
 	_sprite.steer = hasil.arah_sprite
 	_sprite.pedal_rate = hasil.pedal_rate
+	_umpan.perbarui(keadaan.kecepatan_ud, keadaan.rem_aktif)
 	position = Iso.posisi_gambar(posisi_dunia())
 
 
@@ -59,6 +62,11 @@ func jeda() -> void:
 	keadaan = BikeMotion.jeda(keadaan)
 	batalkan_lempar()
 	gerak(Vector2.ZERO, 0.0)
+
+
+## Pose sprite pemain dari langkah terakhir (`LoperAnim.Pose`: kayuh/melambat, meluncur, rem); dipakai bunyi sepeda (`Audio`).
+func pose() -> LoperAnim.Pose:
+	return _sprite.pose
 
 
 ## True selama rem aktif (cincin rem di stick, DESIGN_SPEC 3.7).
@@ -74,6 +82,11 @@ func stamina() -> float:
 ## True selama lelah (stamina habis dan belum kembali ke `Config.STAMINA_PULIH_AMBANG`).
 func lelah() -> bool:
 	return keadaan.lelah
+
+
+## Node umpan balik kecepatan (debu roda dan garis kecepatan; untuk tes dan probe).
+func umpan_balik() -> UmpanBalikSepeda:
+	return _umpan
 
 
 ## Animasi yang sedang dipilih sprite (untuk tes dan HUD uji).

@@ -18,7 +18,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 | Fase | Nama | Milestone | Status | Selesai |
 |---|---|---|---|---|
 | 0 | Fondasi teknis | M0 | ✅ run 0A (PR #12), 0B+0C (PR #14), uji HP di A54 lolos | 2026-10-13 |
-| 1 | Gerak sepeda & kecepatan (prototype 1) | M1 | 🟡 run 1A selesai (PR #20); run 1B dan uji HP menunggu | |
+| 1 | Gerak sepeda & kecepatan (prototype 1) | M1 | 🟡 run 1A selesai (PR #20), run 1B lolos QA (PR #21); bukti render A54 dan uji HP 3-5 orang menunggu | |
 | 2 | Lemparan koran (prototype 2) | M1 | ⬜ | |
 | 3 | Satu rute perumahan (prototype 3) | M2 | ⬜ | |
 | 4 | Halaman depan koran & misi kucing (prototype 4) | M2 | ⬜ | |
@@ -27,7 +27,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 | 7 | Vertical slice perumahan & audio dasar | M3 | ⬜ | |
 | 8 | Distrik berikutnya, iklan, rilis | M4 | ⬜ | |
 
-**Fase aktif: Fase 1**, dikerjakan lewat loop Dev↔QA dalam dua run (`LOOP-DEV-QA.md` Bagian 6: Run 1A logika gerak, Run 1B umpan balik dan penyetelan). Run 1A (logika gerak inti) lolos QA 2026-10-14 di iterasi 1 (PR #20); berikutnya Run 1B. Fase 0 selesai 2026-10-13: run 0A dan 0B+0C lolos QA 2026-10-09, dan uji HP di A54 (checklist `SETUP_ANDROID.md` bagian 8) dinyatakan lolos oleh pemilik 2026-10-13. Cek light 2D/glow/partikel/shader di Compatibility dipindah ke Fase 1 (Run 1B) karena butuh scene uji yang belum ada.
+**Fase aktif: Fase 1**, dikerjakan lewat loop Dev↔QA dalam dua run (`LOOP-DEV-QA.md` Bagian 6: Run 1A logika gerak, Run 1B umpan balik dan penyetelan). Run 1A (logika gerak inti) lolos QA 2026-10-14 di iterasi 1 (PR #20). Run 1B (umpan balik, audio placeholder, layar jeda, penyetelan, probe render) lolos QA 2026-10-14 di iterasi 1 (PR #21); APK terpasang di vivo V2108 (Android 12, 2400×1080) 2026-10-14. Yang tersisa: bukti probe render di A54 dan uji 3-5 orang (`SETUP_ANDROID.md` 8.2). Fase 0 selesai 2026-10-13: run 0A dan 0B+0C lolos QA 2026-10-09, dan uji HP di A54 (checklist `SETUP_ANDROID.md` bagian 8) dinyatakan lolos oleh pemilik 2026-10-13. Cek light 2D/glow/partikel/shader di Compatibility dipindah ke Fase 1 (Run 1B) karena butuh scene uji yang belum ada.
 
 ---
 
@@ -65,9 +65,9 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 - [x] Pindah posisi lateral ke sisi seberang dan sisi dekat; batas tepi jalan (analog bebas, keputusan pemilik 2026-10-13; batas tepi aspal ±1 ubin; run 1A, PR #20)
 - [x] Stamina: terkuras saat cepat dan ngebut, pulih saat meluncur (BALANCING 3) (run 1A, PR #20, 2026-10-14; rasa dinilai di uji HP)
 - [x] Animasi pemain memilih `kecepatan_arah` dari input lewat `loper_sprite.gd`, laju kayuh mengikuti kecepatan (termasuk pose meluncur dan rem; run 1A, PR #20)
-- [ ] Umpan balik kecepatan dasar: debu roda, garis kecepatan (placeholder)
+- [x] Umpan balik kecepatan dasar: debu roda, garis kecepatan (placeholder) (run 1B, PR #21, 2026-10-14; keterbacaan dinilai di uji HP); bunyi kayuhan, freewheel, dan rem placeholder lewat autoload `Audio`; tombol dan layar jeda
 - [x] HUD sementara: bar kecepatan dan stamina (run 1A, PR #20)
-- [ ] Cek apakah light 2D, glow, partikel, dan shader warna bayangan yang dibutuhkan jalan di renderer Compatibility di HP target (ART_DIRECTION 2.3, 7); dipindah dari Fase 0 pada 2026-10-13, dikerjakan di Run 1B bersama partikel debu roda
+- [x] Cek apakah light 2D, glow, partikel, dan shader warna bayangan yang dibutuhkan jalan di renderer Compatibility di HP target (ART_DIRECTION 2.3, 7); dipindah dari Fase 0 pada 2026-10-13, dikerjakan di Run 1B bersama partikel debu roda (2026-10-14: semua lolos di vivo V2108 / Adreno 618, 60,6 fps, HP uji dipilih pemilik; glow tipis; A54 belum dicek, bukti `docs/loop/20261014-fase1b-umpan-balik/render_vivo/`)
 - [ ] Uji di HP: ambang rem, rasa stick, keterbacaan sprite di skala ×3
 
 **Selesai kalau:** 3–5 orang mencoba di HP dan bisa mengatur kecepatan, mengerem, dan pindah sisi tanpa penjelasan panjang; ambang rem tidak membuat sepeda berhenti tak sengaja.

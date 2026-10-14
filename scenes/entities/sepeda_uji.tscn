@@ -1,10 +1,14 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/entities/sepeda_uji.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/entities/loper_agen.tscn" id="2_loper"]
+[ext_resource type="PackedScene" path="res://scenes/entities/umpan_balik_sepeda.tscn" id="3_umpan"]
 
 [node name="SepedaUji" type="Node2D"]
 script = ExtResource("1_script")
+
+[node name="UmpanBalik" parent="." instance=ExtResource("3_umpan")]
+unique_name_in_owner = true
 
 [node name="LoperAgen" parent="." instance=ExtResource("2_loper")]
 unique_name_in_owner = true

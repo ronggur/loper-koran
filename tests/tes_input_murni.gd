@@ -641,12 +641,12 @@ func _test_piksel_lingkaran() -> void:
 
 func _test_dorongan_kecepatan() -> void:
 	_judul.call("DoronganKecepatan (GDD 15)")
-	check(Config.DORONGAN_MAJU_PX == 28.0 and Config.DORONGAN_MUNDUR_PX == 20.0 and Config.DORONGAN_RESPON_DETIK == 0.35, "angka awal dorongan: maju 28 px, mundur 20 px, respon 0,35 detik (usulan, disetel di HP)")
+	check(Config.DORONGAN_MAJU_PX == 36.0 and Config.DORONGAN_MUNDUR_PX == 20.0 and Config.DORONGAN_RESPON_DETIK == 0.35, "angka dorongan: maju 36 px (paket pemilik 2026-10-14, dulu 28), mundur 20 px, respon 0,35 detik (usulan, disetel di HP)")
 	# Nilai persis di kecepatan acuan (BALANCING 2): 1,5 / 3,0 / 4,5 / 6,0 u/d.
 	check(DoronganKecepatan.geser_target(Config.KECEPATAN_SANTAI_UD) == Vector2.ZERO, "santai (3,0 u/d): geseran nol")
-	check(DoronganKecepatan.geser_target(6.0) == Vector2(28, -14), "ngebut (6,0 u/d): geseran (+28, -14) naik ke kanan atas, dapat %s" % DoronganKecepatan.geser_target(6.0))
+	check(DoronganKecepatan.geser_target(6.0) == Vector2(36, -18), "ngebut (6,0 u/d): geseran (+36, -18) naik ke kanan atas, dapat %s" % DoronganKecepatan.geser_target(6.0))
 	check(DoronganKecepatan.geser_target(1.5) == Vector2(-20, 10), "melambat (1,5 u/d): geseran (-20, +10) turun ke kiri bawah, dapat %s" % DoronganKecepatan.geser_target(1.5))
-	check(DoronganKecepatan.geser_target(4.5) == Vector2(14, -7), "4,5 u/d (separuh antara santai dan ngebut): geseran separuh (14, -7), dapat %s" % DoronganKecepatan.geser_target(4.5))
+	check(DoronganKecepatan.geser_target(4.5) == Vector2(18, -9), "4,5 u/d (separuh antara santai dan ngebut): geseran separuh (18, -9), dapat %s" % DoronganKecepatan.geser_target(4.5))
 	check(DoronganKecepatan.geser_target(2.25) == Vector2(-10, 5), "2,25 u/d (separuh antara santai dan melambat): geseran separuh (-10, 5), dapat %s" % DoronganKecepatan.geser_target(2.25))
 	# Tanda: maju positif (naik ke kanan atas), mundur negatif; skala dari kecepatan, bukan dari stick (fungsi tak punya masukan stick).
 	var tanda_benar: bool = true
@@ -674,7 +674,7 @@ func _test_dorongan_kecepatan() -> void:
 	check(rasio_tepat, "kemiringan geseran persis 2:1 (dy = -dx / 2) untuk semua kecepatan")
 	check(sejajar_jalan, "geseran sejajar arah jalan di layar (hasil kali silang dengan Iso.ARAH_MAJU nol)")
 	# Dijepit di luar rentang kecepatan sah; masukan aneh aman.
-	check(DoronganKecepatan.geser_target(100.0) == Vector2(28, -14) and DoronganKecepatan.geser_target(INF) == Vector2(28, -14), "kecepatan di atas ngebut dijepit ke geseran maksimum (28, -14)")
+	check(DoronganKecepatan.geser_target(100.0) == Vector2(36, -18) and DoronganKecepatan.geser_target(INF) == Vector2(36, -18), "kecepatan di atas ngebut dijepit ke geseran maksimum (36, -18)")
 	check(DoronganKecepatan.geser_target(0.0) == Vector2(-20, 10) and DoronganKecepatan.geser_target(-50.0) == Vector2(-20, 10) and DoronganKecepatan.geser_target(-INF) == Vector2(-20, 10), "kecepatan di bawah melambat dijepit ke geseran mundur maksimum (-20, 10)")
 	check(DoronganKecepatan.geser_target(NAN) == Vector2.ZERO, "kecepatan NaN dianggap santai (geseran nol)")
 
@@ -700,21 +700,21 @@ func _test_dorongan_kecepatan() -> void:
 	check(tanpa_lewat, "penghalusan tidak pernah melewati target (3000 acak seed tetap, dt 0,0001..100000 detik); gagal: %s" % contoh_lewat)
 	check(mendekat, "penghalusan tidak pernah menjauhi target")
 	check(DoronganKecepatan.haluskan(Vector2(10, -5), Vector2(0, 0), 1000000.0).is_equal_approx(Vector2.ZERO), "dt sangat besar mendekati target")
-	check(DoronganKecepatan.haluskan(Vector2(10, -5), Vector2(28, -14), 100.0) == Vector2(28, -14), "dt 100 detik = tepat target (alpha 1, tanpa lewat)")
+	check(DoronganKecepatan.haluskan(Vector2(10, -5), Vector2(36, -18), 100.0) == Vector2(36, -18), "dt 100 detik = tepat target (alpha 1, tanpa lewat)")
 	for dt_aman: float in [0.0, -0.1, -100.0, NAN, INF, -INF]:
-		check(DoronganKecepatan.haluskan(Vector2(10, -5), Vector2(28, -14), dt_aman) == Vector2(10, -5), "dt %s: geseran tidak berubah" % dt_aman)
-	check(DoronganKecepatan.haluskan(Vector2(NAN, 0), Vector2(28, -14), 0.016) == Vector2(28, -14), "geseran awal NaN dipulihkan ke target")
+		check(DoronganKecepatan.haluskan(Vector2(10, -5), Vector2(36, -18), dt_aman) == Vector2(10, -5), "dt %s: geseran tidak berubah" % dt_aman)
+	check(DoronganKecepatan.haluskan(Vector2(NAN, 0), Vector2(36, -18), 0.016) == Vector2(36, -18), "geseran awal NaN dipulihkan ke target")
 	check(DoronganKecepatan.haluskan(Vector2(10, -5), Vector2(NAN, 0), 0.016) == Vector2(10, -5), "target NaN diabaikan (geseran tidak berubah)")
 	# Konvergen: 10 detik pada 60 fps; satu konstanta waktu menyisakan 1/e.
 	var geser: Vector2 = Vector2.ZERO
 	for i: int in range(600):
-		geser = DoronganKecepatan.haluskan(geser, Vector2(28, -14), 1.0 / 60.0)
-	check(geser.distance_to(Vector2(28, -14)) < 0.001, "konvergen ke target setelah 10 detik pada 60 fps, sisa %s" % geser.distance_to(Vector2(28, -14)))
+		geser = DoronganKecepatan.haluskan(geser, Vector2(36, -18), 1.0 / 60.0)
+	check(geser.distance_to(Vector2(36, -18)) < 0.001, "konvergen ke target setelah 10 detik pada 60 fps, sisa %s" % geser.distance_to(Vector2(36, -18)))
 	geser = Vector2.ZERO
 	var langkah_tau: int = int(round(Config.DORONGAN_RESPON_DETIK * 6000.0))
 	for i: int in range(langkah_tau):
-		geser = DoronganKecepatan.haluskan(geser, Vector2(28, -14), 1.0 / 6000.0)
-	check(absf(geser.x / 28.0 - (1.0 - exp(-1.0))) < 0.002, "setelah satu konstanta waktu (0,35 detik) tercapai 1 - 1/e = 63,2%%, dapat %s" % (geser.x / 28.0))
+		geser = DoronganKecepatan.haluskan(geser, Vector2(36, -18), 1.0 / 6000.0)
+	check(absf(geser.x / 36.0 - (1.0 - exp(-1.0))) < 0.002, "setelah satu konstanta waktu (0,35 detik) tercapai 1 - 1/e = 63,2%%, dapat %s" % (geser.x / 36.0))
 	# Bebas framerate: dua langkah dt/2 setara satu langkah dt; 30 fps dan 144 fps mencapai nilai sama pada waktu sama.
 	var beda_maks: float = 0.0
 	for i: int in range(500):
@@ -728,7 +728,7 @@ func _test_dorongan_kecepatan() -> void:
 	var g30: Vector2 = Vector2.ZERO
 	var g144: Vector2 = Vector2.ZERO
 	for i: int in range(30):
-		g30 = DoronganKecepatan.haluskan(g30, Vector2(28, -14), 1.0 / 30.0)
+		g30 = DoronganKecepatan.haluskan(g30, Vector2(36, -18), 1.0 / 30.0)
 	for i: int in range(144):
-		g144 = DoronganKecepatan.haluskan(g144, Vector2(28, -14), 1.0 / 144.0)
+		g144 = DoronganKecepatan.haluskan(g144, Vector2(36, -18), 1.0 / 144.0)
 	check(g30.distance_to(g144) < 0.01, "satu detik pada 30 fps dan 144 fps memberi geseran sama (%s dan %s)" % [g30, g144])

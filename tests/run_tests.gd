@@ -68,6 +68,12 @@ func _initialize() -> void:
 	_test_terjemahan()
 	_test_penjaga_berkas()
 	var ukuran_sebelum: Vector2i = root.size
+	# Autoload Audio: stream diputar sungguhan walau driver Dummy (headless), supaya tes bisa memeriksa `playing`. Sebelum `quit()`
+	# semua bunyi dihentikan lalu ditunggu 0,25 detik: AudioServer baru melepas playback yang dihentikan sesudah driver mencampur
+	# lagi, dan dua frame headless terlalu cepat (diuji 2026-10-14: playback bocor saat keluar). Lihat `scripts/autoload/audio.gd`.
+	var audio: Node = root.get_node_or_null(^"Audio")
+	if audio != null:
+		audio.set(&"putar_di_driver_dummy", true)
 	# Pembantu tes terpisah supaya berkas ini tidak membengkak; memakai `check` runner ini.
 	var murni: TesInputMurni = TesInputMurni.new(check, _judul)
 	murni.jalankan()
@@ -81,7 +87,21 @@ func _initialize() -> void:
 	await scene_input.jalankan()
 	var scene_gerak: TesGerakScene = TesGerakScene.new(check, _judul, self)
 	await scene_gerak.jalankan()
+	var scene_jeda: TesJedaScene = TesJedaScene.new(check, _judul, self)
+	await scene_jeda.jalankan()
+	var umpan_balik: TesUmpanBalik = TesUmpanBalik.new(check, _judul, self)
+	await umpan_balik.jalankan()
+	var tata_letak: TesTataLetak = TesTataLetak.new(check, _judul, self)
+	await tata_letak.jalankan()
+	var bunyi: TesBunyi = TesBunyi.new(check, _judul, self)
+	await bunyi.jalankan()
+	var cek_render: TesCekRender = TesCekRender.new(check, _judul, self)
+	await cek_render.jalankan()
 	root.size = ukuran_sebelum
+	if audio != null:
+		audio.call(&"hentikan_sepeda")
+		audio.set(&"putar_di_driver_dummy", false)
+		await create_timer(0.25).timeout
 	print("%d lolos, %d gagal" % [_lolos, _gagal])
 	quit(1 if _gagal > 0 else 0)
 
@@ -564,7 +584,7 @@ func _test_palet() -> void:
 			if not cocok.get_string(3).is_empty():
 				alpha_persen = cocok.get_string(3).to_float()
 			tabel[cocok.get_string(1)] = {"hex": cocok.get_string(2).to_lower(), "alpha": alpha_persen / 100.0}
-	check(tabel.size() == 16, "tabel DESIGN_SPEC 1.1 memuat 16 token (11 warna + 5 radar), terbaca %d" % tabel.size())
+	check(tabel.size() == 17, "tabel DESIGN_SPEC 1.1 memuat 17 token (11 warna + 5 radar + 1 dunia), terbaca %d" % tabel.size())
 	var skrip_palet: GDScript = load("res://scripts/ui/palette.gd") as GDScript
 	var peta: Dictionary = skrip_palet.get_script_constant_map()
 	check(peta.size() == tabel.size(), "Palette memuat tepat %d token seperti tabel, dapat %d" % [tabel.size(), peta.size()])
@@ -663,7 +683,7 @@ func _test_tanpa_hex_di_luar_palet() -> void:
 	var diizinkan: Array[String] = ["0", "1", "2", "-1", "-2", "0.0", "1.0"]
 	var re_angka: RegEx = RegEx.create_from_string("(?<![A-Za-z0-9_.])-?[0-9]+(?:\\.[0-9]+)?")
 	var dipindai: int = 0
-	for folder: String in ["res://scripts/systems", "res://scripts/entities", "res://scripts/ui"]:
+	for folder: String in ["res://scripts/systems", "res://scripts/entities", "res://scripts/ui", "res://scripts/autoload"]:
 		for berkas: String in _daftar_berkas(folder, ["gd"]):
 			if berkas.ends_with("/palette.gd"):
 				continue
@@ -676,7 +696,7 @@ func _test_tanpa_hex_di_luar_palet() -> void:
 					if not diizinkan.has(cocok.get_string()):
 						pelanggaran.append("baris %d: %s" % [nomor, cocok.get_string()])
 			check(pelanggaran.is_empty(), "%s: tanpa angka literal di luar config.gd (hanya 0, 1, 2, -1, -2 boleh): %s" % [berkas, "; ".join(pelanggaran)])
-	check(dipindai >= 3, "pemindai angka memeriksa skrip systems, entities, dan ui (%d berkas)" % dipindai)
+	check(dipindai >= 4, "pemindai angka memeriksa skrip systems, entities, ui, dan autoload (%d berkas)" % dipindai)
 	check(_kode_saja("var x: float = 3.5 # komentar 99") == "var x: float = 3.5 ", "pembersih baris membuang komentar dan teks berkutip")
 	check(_kode_saja("print(\"angka 42 di teks\") # 7").find("42") == -1, "pembersih baris membuang isi teks berkutip")
 
@@ -736,7 +756,7 @@ func _test_gaya_kode() -> void:
 
 	_judul("Kebersihan repo")
 	var gitignore: String = FileAccess.get_file_as_string("res://.gitignore")
-	for pola: String in [".godot/", "build/", "builds/", "*.apk", "*.aab"]:
+	for pola: String in [".godot/", "build/", "builds/", "*.apk", "*.aab", "override.cfg"]:
 		check(gitignore.split("\n").has(pola), ".gitignore menutup %s" % pola)
 
 
@@ -771,7 +791,9 @@ func _test_terjemahan() -> void:
 	check(baris.size() >= 3, "CSV memuat kunci HUD sementara (%d baris)" % baris.size())
 	var kunci_sah: Array[String] = []
 	var rapi: bool = true
-	var re_kunci: RegEx = RegEx.create_from_string("^HUD_[A-Z0-9]+(?:_[A-Z0-9]+)*$")
+	# Awalan layar atau fitur (rule `content-data`): HUD_ (run 0B), JEDA_ (layar jeda, run fase1b-umpan-balik).
+	var re_kunci: RegEx = RegEx.create_from_string("^(?:HUD|JEDA)_[A-Z0-9]+(?:_[A-Z0-9]+)*$")
+	check(re_kunci.search("JEDA_LANJUT") != null and re_kunci.search("LANJUT") == null and re_kunci.search("MENU_X") == null and re_kunci.search("jeda_lanjut") == null, "pemeriksa kunci menerima awalan HUD_/JEDA_ dan menolak tanpa awalan, awalan lain, huruf kecil")
 	var re_pengganti: RegEx = RegEx.create_from_string("\\{([^}]*)\\}")
 	for entri: PackedStringArray in baris:
 		if entri.size() != 2:
@@ -780,7 +802,7 @@ func _test_terjemahan() -> void:
 			continue
 		var kunci: String = entri[0]
 		var nilai: String = entri[1]
-		check(re_kunci.search(kunci) != null, "kunci %s UPPER_SNAKE_CASE berawalan HUD_" % kunci)
+		check(re_kunci.search(kunci) != null, "kunci %s UPPER_SNAKE_CASE berawalan HUD_ atau JEDA_" % kunci)
 		check(not kunci_sah.has(kunci), "kunci %s tidak duplikat" % kunci)
 		check(not nilai.strip_edges().is_empty(), "kunci %s punya nilai (tidak kosong)" % kunci)
 		for cocok: RegExMatch in re_pengganti.search_all(nilai):

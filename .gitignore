@@ -14,6 +14,10 @@ builds/
 *.p12
 export_credentials.cfg
 
+# override.cfg mengubah pengaturan proyek diam-diam di mesin lokal; tidak pernah di-commit (probe render memakai
+# tools/ekspor_cek_render.py, bukan override.cfg).
+override.cfg
+
 # .cursor/rules adalah sumber aturan agent dan harus ikut di-commit,
 # walau .gitignore global mengabaikan .cursor/
 !.cursor/

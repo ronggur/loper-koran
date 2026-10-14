@@ -104,6 +104,81 @@ const LEMPAR_FRAME_LEPAS: int = 2
 ## Toleransi derau float saat menentukan frame animasi dari waktu, detik (mencegah frame bergeser satu langkah di batas).
 const LEMPAR_TOLERANSI_DETIK: float = 0.000001
 
+## --- Umpan balik kecepatan (GDD 15; usulan run fase1b-umpan-balik, dinilai di HP) ---
+## Dihitung dari kecepatan SEBENARNYA (`UmpanBalikKecepatan`). Partikel digambar sendiri (`PancaranPiksel`), kotak 1-2 px game.
+
+## Debu roda: mulai berdebu di kecepatan ini, u/d (inklusif). Di bawahnya tanpa debu kecuali rem.
+const UMPAN_DEBU_AMBANG_UD: float = 3.0
+## Debu roda: kecepatan saat laju debu maksimum, u/d. Di atasnya dijepit.
+const UMPAN_DEBU_PENUH_UD: float = 6.0
+## Debu roda: laju pancar tepat di ambang, partikel per detik.
+const UMPAN_DEBU_LAJU_MIN: float = 4.0
+## Debu roda: laju pancar maksimum, partikel per detik.
+const UMPAN_DEBU_LAJU_MAKS: float = 24.0
+## Debu rem: laju pancar selama rem aktif dan kecepatan di atas 0, partikel per detik.
+const UMPAN_DEBU_REM_LAJU: float = 40.0
+## Garis kecepatan: mulai tampil di kecepatan ini, u/d (inklusif). Di bawahnya tanpa garis.
+const UMPAN_GARIS_AMBANG_UD: float = 4.5
+## Garis kecepatan: kekuatan penuh (1) di kecepatan ini, u/d. Di atasnya dijepit.
+const UMPAN_GARIS_PENUH_UD: float = 6.0
+## Garis kecepatan: kekuatan tepat di ambang (0 sampai 1); naik linear ke 1 di kecepatan penuh.
+const UMPAN_GARIS_KEKUATAN_MIN: float = 0.25
+## Garis kecepatan: laju pancar di kekuatan 1, garis per detik.
+const UMPAN_GARIS_LAJU_MAKS: float = 14.0
+## Kurangi efek (rule `ui-scenes`): mematikan garis kecepatan dan mengurangi debu. Bawaan mati; belum ada UI (Pengaturan, Fase 3).
+const UMPAN_KURANGI_EFEK: bool = false
+## Kurangi efek: pengali laju debu (0 sampai 1).
+const UMPAN_KURANGI_DEBU_PENGALI: float = 0.5
+## Batas jumlah partikel debu hidup sekaligus (anggaran TECH_PLAN 3.7).
+const UMPAN_DEBU_BATAS: int = 24
+## Batas jumlah garis kecepatan hidup sekaligus (anggaran TECH_PLAN 3.7).
+const UMPAN_GARIS_BATAS: int = 6
+## Debu: umur satu partikel, detik.
+const UMPAN_DEBU_UMUR_DETIK: float = 0.4
+## Debu: kecepatan partikel menjauh ke belakang sepanjang jalan, piksel game per detik.
+const UMPAN_DEBU_KECEPATAN_PX: float = 40.0
+## Debu: sebaran titik muncul tegak lurus jalan, plus-minus piksel game.
+const UMPAN_DEBU_SEBARAN_PX: float = 2.0
+## Debu: titik muncul (roda belakang) dari titik pijak sepeda, datar, piksel game (negatif = ke kiri).
+const UMPAN_DEBU_ASAL_X_PX: float = -12.0
+## Debu: titik muncul dari titik pijak sepeda, tegak, piksel game (positif = ke bawah).
+const UMPAN_DEBU_ASAL_Y_PX: float = 2.0
+## Debu: sisi kotak partikel terbesar, piksel game (acak 1 sampai nilai ini).
+const UMPAN_DEBU_UKURAN_MAKS_PX: int = 2
+## Debu: alpha warna `TEXT_2`.
+const UMPAN_DEBU_ALPHA: float = 0.85
+## Garis kecepatan: umur satu garis, detik.
+const UMPAN_GARIS_UMUR_DETIK: float = 0.3
+## Garis kecepatan: kecepatan garis melaju ke belakang sepanjang jalan, piksel game per detik.
+const UMPAN_GARIS_KECEPATAN_PX: float = 200.0
+## Garis kecepatan: titik muncul dari titik pijak sepeda, datar, piksel game (di depan pengendara).
+const UMPAN_GARIS_ASAL_X_PX: float = 30.0
+## Garis kecepatan: titik muncul dari titik pijak sepeda, tegak, piksel game (negatif = ke atas, setinggi badan).
+const UMPAN_GARIS_ASAL_Y_PX: float = -24.0
+## Garis kecepatan: sebaran titik muncul tegak lurus jalan, plus-minus piksel game.
+const UMPAN_GARIS_SEBARAN_PX: float = 26.0
+## Garis kecepatan: panjang garis (lebar datar), piksel game; digambar bertangga 2:1.
+const UMPAN_GARIS_PANJANG_PX: int = 14
+## Garis kecepatan: alpha warna `TEXT`.
+const UMPAN_GARIS_ALPHA: float = 0.7
+
+## --- Audio sepeda placeholder (SOUND_DESIGN 3.2; usulan run fase1b-umpan-balik, dinilai di HP) ---
+## Pitch loop kayuhan dari kecepatan SEBENARNYA (`BunyiSepeda`), linear per potong di titik `KECEPATAN_SANTAI_UD`, `KECEPATAN_CEPAT_UD`,
+## dan `KECEPATAN_NGEBUT_UD`, dijepit di luar. Bunyi dibuat `tools/audio_art/sintesis_sepeda.py` dengan puncak sama; keras-pelan di sini.
+
+## Pitch loop kayuhan di kecepatan santai (3,0 u/d) dan di bawahnya.
+const AUDIO_KAYUH_PITCH_SANTAI: float = 1.0
+## Pitch loop kayuhan di kecepatan cepat (4,5 u/d).
+const AUDIO_KAYUH_PITCH_CEPAT: float = 1.15
+## Pitch loop kayuhan di kecepatan ngebut (6,0 u/d) dan di atasnya.
+const AUDIO_KAYUH_PITCH_NGEBUT: float = 1.3
+## Volume loop kayuhan, dB (kayuhan duduk di bawah suara sasaran, SOUND_DESIGN 6).
+const AUDIO_KAYUH_VOLUME_DB: float = -6.0
+## Volume loop freewheel saat meluncur, dB ("tik-tik-tik" pelan, SOUND_DESIGN 3.2).
+const AUDIO_FREEWHEEL_VOLUME_DB: float = -10.0
+## Volume decit rem sekali putar, dB.
+const AUDIO_REM_VOLUME_DB: float = -3.0
+
 ## --- Kontrol sentuh (DESIGN_SPEC 3.7, GDD 5.2; usulan, dinilai lewat uji HP) ---
 ## Zona diukur dari tepi layar sisi stick (kiri bila tangan kanan, bawaan; opsi kidal mencerminkannya).
 
@@ -146,13 +221,13 @@ const LAYAR_LEBAR_MAKS_PX: int = 800
 const JALAN_TROTOAR_UBIN: float = 1.0
 ## Letak sepeda pada sumbu datar layar sebagai pecahan lebar viewport (sepertiga kiri, ART_DIRECTION 2.2).
 const KAMERA_SEPEDA_X_PECAHAN: float = 0.3333
-## Letak sepeda pada sumbu tegak layar sebagai pecahan tinggi viewport.
-const KAMERA_SEPEDA_Y_PECAHAN: float = 0.6
+## Letak sepeda pada sumbu tegak layar sebagai pecahan tinggi viewport. 0,75 (dulu 0,6; paket pemilik 2026-10-14): jalan di depan terlihat lebih jauh; sprite di geseran dorongan terbesar tidak menabrak panel kecepatan di 640/780/800 (tes tata letak).
+const KAMERA_SEPEDA_Y_PECAHAN: float = 0.75
 ## Dorongan kecepatan (GDD 15, usulan, disetel di HP): sepeda bergeser di bingkai layar sejajar arah jalan (naik ke
 ## kanan atas, 2:1) sesuai kecepatan SEBENARNYA. Nol di `KECEPATAN_SANTAI_UD`, naik linear sampai nilai di bawah di
 ## `KECEPATAN_NGEBUT_UD`, turun linear ke arah sebaliknya di `KECEPATAN_MELAMBAT_UD`. Nilai = komponen datar geseran.
-## Geseran maju saat ngebut, komponen datar, piksel game (komponen tegak = setengahnya ke atas).
-const DORONGAN_MAJU_PX: float = 28.0
+## Geseran maju saat ngebut, komponen datar, piksel game (komponen tegak = setengahnya ke atas). 36 (dulu 28; paket pemilik 2026-10-14, dibarengi sepeda turun ke 0,75).
+const DORONGAN_MAJU_PX: float = 36.0
 ## Geseran mundur saat melambat, komponen datar, piksel game (komponen tegak = setengahnya ke bawah).
 const DORONGAN_MUNDUR_PX: float = 20.0
 ## Konstanta waktu penghalusan geseran (eksponensial, bebas framerate), detik. Setelah satu konstanta sisa jarak 37%.
@@ -190,12 +265,28 @@ const HUD_PANEL_PAD_X_PX: int = 7
 const HUD_BAR_TINGGI_PX: int = 7
 ## Bar stamina berganti warna dari `ACCENT` ke `FAIL` di bawah nilai ini (DESIGN_SPEC 3.5, usulan).
 const HUD_STAMINA_AMBANG_RENDAH: float = 30.0
-## Tinggi tombol di strip atas, piksel game. Di A54 (450 dpi, skala x3) = 108 px layar = 38 dp, di bawah 44 dp rule `ui-scenes`; strip atas hanya 48 px sebelum zona swipe, jadi dinilai lewat uji HP.
-const HUD_TOMBOL_TINGGI_PX: int = 36
+## Tinggi tombol di strip atas dan tombol layar jeda, piksel game. Di A54 (450 dpi, skala x3) 44 dp sekitar 41,7 px game, jadi 42 (paket pemilik 2026-10-14); muat di strip atas: margin 4 + 42 = 46 < 48.
+const HUD_TOMBOL_TINGGI_PX: int = 42
 ## Lebar minimum tombol di strip atas, piksel game.
 const HUD_TOMBOL_LEBAR_PX: int = 96
 ## Jarak tombol strip atas dari tepi atas layar, piksel game. Tombol berakhir di bawah `HUD_STRIP_ATAS_TINGGI_PX`.
 const HUD_TOMBOL_MARGIN_ATAS_PX: int = 4
+## Tombol jeda (DESIGN_SPEC 3.1): sisi area sentuh persegi, piksel game (≥ 44 dp di A54, paket pemilik 2026-10-14). Lebih besar dari gambarnya.
+const HUD_JEDA_SENTUH_PX: int = 42
+## Tombol jeda: sisi gambar persegi (kotak bergaris `TEXT`), piksel game.
+const HUD_JEDA_GAMBAR_PX: int = 24
+## Tombol jeda: letak pojok kiri atas gambar dari tepi kiri layar, piksel game. Tidak dicerminkan saat kidal.
+const HUD_JEDA_GAMBAR_X_PX: int = 26
+## Tombol jeda: letak pojok kiri atas gambar dari tepi atas layar, piksel game.
+const HUD_JEDA_GAMBAR_Y_PX: int = 8
+## Tombol jeda: lebar satu batang ikon, piksel game.
+const HUD_JEDA_BATANG_LEBAR_PX: int = 3
+## Tombol jeda: tinggi batang ikon, piksel game.
+const HUD_JEDA_BATANG_TINGGI_PX: int = 10
+## Tombol jeda: celah di antara dua batang ikon, piksel game.
+const HUD_JEDA_BATANG_CELAH_PX: int = 4
+## Layar jeda: lebar minimum tombol "Lanjut", piksel game (tingginya `HUD_TOMBOL_TINGGI_PX`).
+const JEDA_TOMBOL_LEBAR_PX: int = 96
 ## Objek berkala di sisi seberang: berapa ubin di belakang sepeda yang masih disiapkan.
 const JALAN_UJI_DAUR_MUNDUR_UBIN: int = 12
 ## Objek berkala di sisi seberang: berapa ubin di depan sepeda yang sudah disiapkan.

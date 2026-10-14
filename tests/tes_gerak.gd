@@ -44,6 +44,7 @@ func jalankan() -> void:
 	_test_pose_dari_langkah()
 	_test_pedal_rate()
 	_test_jeda_sim()
+	_test_pose_langkah_tepat()
 	_test_busur_rem()
 
 
@@ -578,29 +579,71 @@ func _test_pedal_rate() -> void:
 # --- AC-8: jeda (bagian murni) ---
 
 func _test_jeda_sim() -> void:
-	_judul.call("JedaSim dan BikeMotion.jeda (AC-8, D-6)")
-	for what: int in [Node.NOTIFICATION_APPLICATION_PAUSED, Node.NOTIFICATION_APPLICATION_FOCUS_OUT]:
-		check(JedaSim.notifikasi_jeda(what) and JedaSim.jeda_sesudah(false, what) and not JedaSim.baru_lanjut_sesudah(false, true, what), "notifikasi %d menjeda dan mematikan baru_lanjut" % what)
-	for what: int in [Node.NOTIFICATION_APPLICATION_RESUMED, Node.NOTIFICATION_APPLICATION_FOCUS_IN]:
-		check(JedaSim.notifikasi_lanjut(what) and not JedaSim.jeda_sesudah(true, what) and JedaSim.baru_lanjut_sesudah(true, false, what), "notifikasi %d melanjutkan dan menyalakan baru_lanjut (dari jeda)" % what)
-		check(not JedaSim.baru_lanjut_sesudah(false, false, what), "notifikasi %d tanpa jeda sebelumnya tidak menyalakan baru_lanjut" % what)
-	check(JedaSim.jeda_sesudah(true, Node.NOTIFICATION_READY) and not JedaSim.jeda_sesudah(false, Node.NOTIFICATION_READY), "notifikasi lain tidak mengubah status jeda")
+	_judul.call("JedaSim: tanpa lanjut otomatis, tombol Lanjut, back (AC-7, D-6 run fase1b-umpan-balik)")
+	var per: Dictionary = {"TIDAK_ADA": JedaSim.Peristiwa.TIDAK_ADA, "JEDA": JedaSim.Peristiwa.JEDA, "LANJUT": JedaSim.Peristiwa.LANJUT, "BACK": JedaSim.Peristiwa.BACK}
+	# Notifikasi -> peristiwa. RESUMED dan FOCUS_IN tidak melanjutkan (keputusan pemilik 2026-10-14).
+	var notifikasi: Dictionary = {
+		Node.NOTIFICATION_APPLICATION_PAUSED: "JEDA",
+		Node.NOTIFICATION_APPLICATION_FOCUS_OUT: "JEDA",
+		Node.NOTIFICATION_WM_GO_BACK_REQUEST: "BACK",
+		Node.NOTIFICATION_APPLICATION_RESUMED: "TIDAK_ADA",
+		Node.NOTIFICATION_APPLICATION_FOCUS_IN: "TIDAK_ADA",
+		Node.NOTIFICATION_READY: "TIDAK_ADA",
+		Node.NOTIFICATION_WM_CLOSE_REQUEST: "TIDAK_ADA",
+	}
+	for what: int in notifikasi:
+		var harap: String = notifikasi[what]
+		check(JedaSim.peristiwa_dari_notifikasi(what) == per[harap], "notifikasi %d = peristiwa %s" % [what, harap])
+	# Tabel: tiap notifikasi x status (berjalan, jeda) -> status jeda sesudahnya dan baru_lanjut.
+	# Kolom: notifikasi, jeda sebelum, jeda sesudah, baru_lanjut sesudah (dengan baru_lanjut sebelum = false).
+	var tabel: Array = [
+		[Node.NOTIFICATION_APPLICATION_PAUSED, false, true, false],
+		[Node.NOTIFICATION_APPLICATION_PAUSED, true, true, false],
+		[Node.NOTIFICATION_APPLICATION_FOCUS_OUT, false, true, false],
+		[Node.NOTIFICATION_APPLICATION_FOCUS_OUT, true, true, false],
+		[Node.NOTIFICATION_APPLICATION_RESUMED, false, false, false],
+		[Node.NOTIFICATION_APPLICATION_RESUMED, true, true, false],
+		[Node.NOTIFICATION_APPLICATION_FOCUS_IN, false, false, false],
+		[Node.NOTIFICATION_APPLICATION_FOCUS_IN, true, true, false],
+		[Node.NOTIFICATION_WM_GO_BACK_REQUEST, false, true, false],
+		[Node.NOTIFICATION_WM_GO_BACK_REQUEST, true, false, true],
+		[Node.NOTIFICATION_READY, false, false, false],
+		[Node.NOTIFICATION_READY, true, true, false],
+	]
+	for baris: Array in tabel:
+		var what: int = baris[0]
+		var p: JedaSim.Peristiwa = JedaSim.peristiwa_dari_notifikasi(what)
+		var sebelum: bool = baris[1]
+		check(JedaSim.jeda_sesudah(sebelum, p) == baris[2] and JedaSim.baru_lanjut_sesudah(sebelum, false, p) == baris[3], "notifikasi %d dari %s: jeda %s, baru_lanjut %s" % [what, "jeda" if sebelum else "berjalan", baris[2], baris[3]])
+	# Peristiwa tombol: jeda selalu menjeda, Lanjut selalu melanjutkan, back membalik.
+	check(JedaSim.jeda_sesudah(false, per["JEDA"]) and JedaSim.jeda_sesudah(true, per["JEDA"]), "tombol jeda: jeda (juga bila sudah jeda)")
+	check(not JedaSim.jeda_sesudah(true, per["LANJUT"]) and JedaSim.baru_lanjut_sesudah(true, false, per["LANJUT"]), "tombol Lanjut dari jeda: berjalan, baru_lanjut menyala")
+	check(not JedaSim.jeda_sesudah(false, per["LANJUT"]) and not JedaSim.baru_lanjut_sesudah(false, false, per["LANJUT"]), "tombol Lanjut saat berjalan: tetap berjalan tanpa baru_lanjut")
+	check(JedaSim.jeda_sesudah(false, per["BACK"]) and not JedaSim.jeda_sesudah(true, per["BACK"]), "back: menjeda saat berjalan, melanjutkan saat jeda")
+	check(not JedaSim.baru_lanjut_sesudah(false, true, per["JEDA"]) and not JedaSim.baru_lanjut_sesudah(false, true, per["BACK"]), "menjeda mematikan baru_lanjut yang masih menyala")
+	check(JedaSim.baru_lanjut_sesudah(false, true, per["TIDAK_ADA"]) and JedaSim.jeda_sesudah(true, per["TIDAK_ADA"]) and not JedaSim.jeda_sesudah(false, per["TIDAK_ADA"]), "peristiwa kosong tidak mengubah apa pun")
 	check(JedaSim.dt_efektif(true, false, 0.016) == 0.0 and JedaSim.dt_efektif(true, false, 5.0) == 0.0, "selama jeda dt efektif 0 (juga dt besar)")
 	check(JedaSim.dt_efektif(false, true, 0.1) == 0.0, "langkah pertama sesudah lanjut dt efektif 0 (bukan LANGKAH_WAKTU_MAKS_DETIK)")
 	check(JedaSim.dt_efektif(false, false, 0.016) == 0.016 and JedaSim.dt_efektif(false, false, 5.0) == 5.0, "tanpa jeda dt apa adanya (jepit tetap tugas _process)")
 	check(JedaSim.dt_efektif(false, false, NAN) == 0.0 and JedaSim.dt_efektif(false, false, -1.0) == 0.0 and JedaSim.dt_efektif(false, false, INF) == 0.0, "dt NaN, negatif, tak hingga = 0")
-	# Urutan Android: FOCUS_OUT, PAUSED, RESUMED, FOCUS_IN.
+	# Urutan Android ke home lalu kembali: FOCUS_OUT, PAUSED, RESUMED, FOCUS_IN -> tetap jeda; lalu Lanjut -> dt 0, lalu normal.
 	var jeda: bool = false
 	var baru: bool = false
-	var dt_tercatat: Array[float] = []
 	for what: int in [Node.NOTIFICATION_APPLICATION_FOCUS_OUT, Node.NOTIFICATION_APPLICATION_PAUSED, Node.NOTIFICATION_APPLICATION_RESUMED, Node.NOTIFICATION_APPLICATION_FOCUS_IN]:
-		baru = JedaSim.baru_lanjut_sesudah(jeda, baru, what)
-		jeda = JedaSim.jeda_sesudah(jeda, what)
-	for i: int in range(2):
-		dt_tercatat.append(JedaSim.dt_efektif(jeda, baru, 0.016))
-		if not jeda:
-			baru = false
-	check(not jeda and dt_tercatat == [0.0, 0.016], "urutan FOCUS_OUT, PAUSED, RESUMED, FOCUS_IN: lanjut, langkah pertama 0, berikutnya normal, dapat %s" % [dt_tercatat])
+		var p: JedaSim.Peristiwa = JedaSim.peristiwa_dari_notifikasi(what)
+		baru = JedaSim.baru_lanjut_sesudah(jeda, baru, p)
+		jeda = JedaSim.jeda_sesudah(jeda, p)
+	check(jeda and not baru and JedaSim.dt_efektif(jeda, baru, 0.016) == 0.0, "urutan FOCUS_OUT, PAUSED, RESUMED, FOCUS_IN: tetap jeda (tidak ada lanjut otomatis), dt 0")
+	for p: JedaSim.Peristiwa in [per["LANJUT"], per["BACK"]]:
+		var j: bool = true
+		var b: bool = JedaSim.baru_lanjut_sesudah(j, false, p)
+		j = JedaSim.jeda_sesudah(j, p)
+		var dt_tercatat: Array[float] = []
+		for i: int in range(2):
+			dt_tercatat.append(JedaSim.dt_efektif(j, b, 0.016))
+			if not j:
+				b = false
+		check(not j and dt_tercatat == [0.0, 0.016], "lanjut lewat %s: langkah pertama 0, berikutnya normal, dapat %s" % ["Lanjut" if p == per["LANJUT"] else "back", dt_tercatat])
 	# BikeMotion.jeda: lama tahan 0, rem padam, lainnya tetap; masukan tidak berubah.
 	var k: BikeMotion.Keadaan = _keadaan(2.0, 40.0, 0.3)
 	k.tahan_rem_detik = 0.4
@@ -612,6 +655,27 @@ func _test_jeda_sim() -> void:
 	var tengah: BikeMotion.Hasil = _jalankan(_keadaan(), Vector2(0, -1), 12)
 	var lanjut: BikeMotion.Hasil = _jalankan(BikeMotion.jeda(tengah.keadaan), Vector2(0, -1), 6)
 	check(not lanjut.keadaan.rem_aktif, "jeda di tengah tahan rem (0,2 detik), lanjut 0,1 detik: rem tidak langsung aktif")
+
+
+# --- QA-002 run fase1a-gerak: pose dipilih dari kecepatan SESUDAH langkah ---
+
+func _test_pose_langkah_tepat() -> void:
+	_judul.call("QA-002: langkah tepat pergantian meluncur -> melambat (D-7 run fase1a-gerak)")
+	var stick: Vector2 = Vector2(0, -0.5)
+	var tujuan: float = BikeMotion.kecepatan_tujuan_ud(stick.y)
+	var tol: float = Config.POSE_MELUNCUR_TOLERANSI_UD
+	check(is_equal_approx(tujuan, 2.25), "stick bawah 0,5: tujuan 2,25 u/d, dapat %s" % tujuan)
+	# Langkah dari tujuan + 0,06 (di atas toleransi) turun 2,0 x 1/60 = 0,0333 ke tujuan + 0,0267 (di bawah toleransi): pose langkah
+	# ini sudah melambat, karena pose dipilih dari kecepatan sesudah langkah, bukan sebelumnya.
+	var h: BikeMotion.Hasil = BikeMotion.langkah(_keadaan(tujuan + 0.06), stick, DT)
+	check(h.keadaan.kecepatan_ud - tujuan < tol and h.keadaan.kecepatan_ud > tujuan, "kecepatan sesudah langkah %s di antara tujuan dan tujuan + toleransi" % h.keadaan.kecepatan_ud)
+	check(h.pose == LoperAnim.Pose.KAYUH and h.tingkat_sprite == -1, "langkah yang membawa kecepatan ke dalam toleransi langsung melambat (kayuh tingkat -1), bukan meluncur, dapat pose %d tingkat %d" % [h.pose, h.tingkat_sprite])
+	# Langkah sebelumnya (dari tujuan + 0,1 ke tujuan + 0,0667) masih meluncur.
+	var h0: BikeMotion.Hasil = BikeMotion.langkah(_keadaan(tujuan + 0.1), stick, DT)
+	check(h0.pose == LoperAnim.Pose.MELUNCUR, "langkah yang berakhir di atas toleransi masih meluncur, dapat %d" % h0.pose)
+	# Kebalikannya: dari kayuh santai 3,0 stick turun ke bawah 0,5: langkah pertama sudah meluncur (kecepatan sesudah 2,967 > 2,30).
+	var h1: BikeMotion.Hasil = BikeMotion.langkah(_keadaan(3.0), stick, DT)
+	check(h1.pose == LoperAnim.Pose.MELUNCUR, "kayuh -> meluncur di langkah pertama stick ke bawah, dapat %d" % h1.pose)
 
 
 # --- Busur rem di cincin stick (DESIGN_SPEC 3.7) ---

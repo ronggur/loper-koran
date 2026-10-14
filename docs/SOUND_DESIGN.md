@@ -1,6 +1,6 @@
 # Sound Design Guide — Loper Koran
 
-Dokumen pendamping [`GDD.md`](./GDD.md) (bagian 15) dan [`ART_DIRECTION.md`](./ART_DIRECTION.md). Formatnya mengikuti `SOUND_DESIGN.md` Brainy Dungeon. Seluruh dokumen ini **draf usulan**: belum ada suara yang dibuat, dan apakah game memakai musik masih terbuka (ROADMAP 5).
+Dokumen pendamping [`GDD.md`](./GDD.md) (bagian 15) dan [`ART_DIRECTION.md`](./ART_DIRECTION.md). Formatnya mengikuti `SOUND_DESIGN.md` Brainy Dungeon. Seluruh dokumen ini **draf usulan**: yang sudah ada hanya tiga bunyi placeholder sepeda dari rumus (bagian 3.2, run fase1b-umpan-balik 2026-10-14), dan apakah game memakai musik masih terbuka (ROADMAP 5).
 
 ---
 
@@ -47,6 +47,18 @@ Hadiah inti tiap antaran. Bunyinya membedakan permukaan, supaya pemain tahu hasi
 - **Angin** di bus terpisah, keras-pelannya naik saat ngebut.
 - **Meluncur**: kayuhan berhenti, diganti bunyi freewheel "tik-tik-tik" pelan. Ini juga tanda stamina sedang pulih.
 - **Stamina hampir habis**: napas terengah pendek sekali saat stamina di bawah 30, tidak diulang terus.
+
+**Placeholder Fase 1 (sudah ada, usulan, run fase1b-umpan-balik 2026-10-14; dinilai di HP).** Tiga WAV dibuat dari rumus oleh `tools/audio_art/sintesis_sepeda.py` (hanya pustaka standar, deterministik, tanpa rekaman atau unduhan; `assets/audio/LICENSES.md`), diputar autoload `Audio` di bus `Sepeda` dengan keputusan dari `scripts/systems/bunyi_sepeda.gd` (logika murni, dites headless):
+
+| Berkas | Bunyi | Kapan |
+|---|---|---|
+| `assets/audio/sfx/bike/sfx_bike_pedal_loop.wav` | Ketukan rantai 8 per detik + hentakan pedal tiap 0,25 detik, loop 1,0 detik | Pose kayuh dan melambat, kecepatan > 0. `pitch_scale` dari kecepatan **sebenarnya**: 1,0 di santai 3,0 u/d, 1,15 di cepat 4,5, 1,3 di ngebut 6,0, linear di antaranya, dijepit (melambat tetap 1,0) |
+| `assets/audio/sfx/bike/sfx_bike_freewheel_loop.wav` | "Tik-tik-tik" 10 per detik, pelan, loop 1,0 detik | Pose meluncur (kayuhan berhenti) |
+| `assets/audio/sfx/bike/sfx_bike_brake_01.wav` | Decit 2400 Hz bergetar dengan gesekan di awal, 0,45 detik | Sekali saat rem baru aktif (tepi naik, kecepatan > 0); tidak diulang selama rem ditahan. Selama rem dan sesudah berhenti dengan rem: diam |
+
+- Tempo ketukan ikut pitch: 8 / 9,2 / 10,4 per detik di santai / cepat / ngebut, sedangkan animasi kayuh 8 / 10 / 12 fps. Selisihnya dinilai di HP; menyamakan tempo penuh butuh loop terpisah per kecepatan.
+- Pasangan visual: animasi kayuh dan bar kecepatan (kayuhan), kaki diam `meluncur` (freewheel), sprite `rem`, debu rem, dan cincin stick `WARN` (decit).
+- Belum dibuat (fase lain): angin, napas stamina rendah, variasi acak nada, bel.
 
 ### 3.3 Bel sepeda
 
@@ -162,6 +174,8 @@ Master
 
 Slider terpisah untuk suasana dan efek suara di pengaturan (DESIGN_SPEC 4).
 
+**Yang sudah ada (run fase1b-umpan-balik 2026-10-14, usulan):** `default_bus_layout.tres` di root repo memuat `Master` → `SFX` → `Sepeda` saja (semua 0 dB, tanpa efek). `Ambience`, `Musik`, dan `UI` ditambahkan saat bunyinya ada; musik belum diputuskan. Bus `Sepeda` belum diredam saat jeda: autoload `Audio` menghentikan pemutarnya langsung (lihat "Perilaku di Android").
+
 ### Level dan pencampuran
 
 - Normalisasi semua aset supaya volume relatifnya konsisten.
@@ -172,6 +186,7 @@ Slider terpisah untuk suasana dan efek suara di pengaturan (DESIGN_SPEC 4).
 ### Perilaku di Android
 
 - Berhenti saat app masuk background, lanjut wajar saat kembali.
+  - **Bunyi sepeda (sudah ada):** background, kehilangan fokus, tombol jeda, dan back Android membuka layar jeda (BALANCING 2, keputusan pemilik 2026-10-14); autoload `Audio` menghentikan ketiga pemutar seketika lewat sinyal `JalanUji.jeda_berubah`, termasuk decit rem yang sedang berbunyi, dan juga saat `NOTIFICATION_APPLICATION_PAUSED`/`FOCUS_OUT` sampai sendiri. `Audio` `PROCESS_MODE_ALWAYS`, jadi pemutar tidak di-pause lalu dilanjutkan otomatis oleh `SceneTree.paused` (yang akan memutar sisa decit lama). Sesudah "Lanjut" bunyi kembali dari keadaan sekarang pada langkah berikutnya; rem harus ditahan ulang, jadi tidak ada decit tertunda.
 - Tangani headphone dicabut.
 - Hormati mode senyap perangkat.
 
@@ -220,7 +235,7 @@ assets/audio/
 
 ## 8. Urutan Produksi
 
-1. **Fase 1–2:** kayuhan dengan pitch, freewheel, rem, swipe, empat bunyi mendarat. Placeholder boleh.
+1. **Fase 1–2:** kayuhan dengan pitch, freewheel, rem, swipe, empat bunyi mendarat. Placeholder boleh. (Kayuhan, freewheel, dan rem placeholder sudah ada sejak run fase1b-umpan-balik, bagian 3.2.)
 2. **Fase 3–4:** anjing, mobil, tabrakan, tip, suara misi kucing, UI dasar, ambience perumahan.
 3. **Fase 6–7:** kerusakan sepeda, bengkel, hasil harian, bel, keputusan musik.
 4. **Fase 8:** ambience dan suara khas distrik berikutnya.

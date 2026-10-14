@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/entities/umpan_balik_sepeda.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/entities/pancaran_piksel.gd" id="2_pancaran"]
+
+[node name="UmpanBalikSepeda" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Garis" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("2_pancaran")
+
+[node name="Debu" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("2_pancaran")
