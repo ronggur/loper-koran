@@ -31,6 +31,15 @@ static func durasi(fps: float, jumlah_frame: int) -> float:
 	return float(jumlah_frame) / fps
 
 
+## Waktu sejak lempar dimulai sampai frame lepas pertama kali tampil, detik (`frame_lepas` / `fps`, sama dengan syarat `lepas` di
+## `langkah`: frame lepas paling kecil 1). Ini jeda lepas `ThrowSolver` (D-4 run fase2a-lemparan):
+## 2 / 12 = sekitar 0,17 detik. `fps` atau `jumlah_frame` tidak sah = 0.
+static func waktu_lepas(fps: float, jumlah_frame: int, frame_lepas: int) -> float:
+	if not _sah(fps, jumlah_frame):
+		return 0.0
+	return float(maxi(frame_lepas, 1)) / fps
+
+
 ## Indeks frame yang tampil pada `waktu` detik sejak mulai, dijepit ke frame pertama dan terakhir.
 ## Waktu negatif atau bukan bilangan hingga dianggap 0.
 static func frame_di(waktu: float, fps: float, jumlah_frame: int) -> int:

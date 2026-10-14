@@ -71,14 +71,14 @@ Stick analog dipetakan halus: sumbu atas memetakan santai → ngebut, sumbu bawa
 | Respon dorongan | 0,35 detik | `DORONGAN_RESPON_DETIK`; konstanta waktu penghalusan eksponensial, bebas framerate |
 | Tinggi tombol strip atas dan tombol "Lanjut" | 42 px game (44 dp di A54 450 dpi ×3 = 41,7) | `HUD_TOMBOL_TINGGI_PX`; paket pemilik 2026-10-14 (dulu 36 = 38 dp); muat di strip atas: 4 + 42 = 46 < 48. Usulan, belum diuji di HP |
 | Tombol jeda | area sentuh 42×42 px game, gambar 24×24 di (26, 8) | `HUD_JEDA_*`; area sentuh x 17–59, y 4–46 di strip atas, tidak dicerminkan saat kidal (DESIGN_SPEC 3.1); usulan |
-| Ambang swipe lempar | 12 px game, inklusif | `LEMPAR_SWIPE_AMBANG_PX`; usulan (run sprite-lempar-melambat), diukur dari panjang swipe awal ke akhir; belum diuji di HP, jangan dikunci sebelum uji |
+| Ambang swipe lempar | 6% lebar viewport game, inklusif (38,4 px di 640, 46,8 di 780, 48 di 800) | `LEMPAR_SWIPE_MIN_PECAHAN`, diukur dari komponen mendatar \|dx\| (bagian 4). Menggantikan 12 px panjang total (`LEMPAR_SWIPE_AMBANG_PX`, run sprite-lempar-melambat) sejak run fase2a-lemparan; usulan, belum diuji di HP, jangan dikunci sebelum uji |
 | Frame koran lepas | indeks 2 | `LEMPAR_FRAME_LEPAS`; fakta sprite (`release_frame` di `loper_agen_lempar.json`), bukan angka tuning; dijaga tes terhadap JSON |
 | Toleransi waktu frame | 0,000001 detik | `LEMPAR_TOLERANSI_DETIK`; hanya meredam derau float di batas frame, tidak mengubah rasa |
 
 **Animasi melambat dan lempar** (usulan, run sprite-lempar-melambat; `scripts/systems/loper_anim.gd`, `lempar_waktu.gd`, `scripts/entities/loper_sprite.gd`; belum ada proyektil, skor, atau sasaran, itu Fase 2). fps tidak ada di `config.gd`: dibaca dari `loper_agen_frames.tres` (kayuh 8/10/12, melambat 4, lempar 12).
-- **Sisi dari arah swipe** (GDD 5.2): ke kiri layar = sisi `seberang`, ke kanan layar = sisi `dekat`; opsi kidal hanya menukar zona, bukan arti sisi. Tidak melempar bila swipe lebih pendek dari 12 px, bila gerak tegak sama besar atau lebih besar dari gerak datar (tepat 45° dianggap ambigu), atau bila titiknya tidak sah.
+- **Sisi dari arah swipe** (GDD 5.2, `ThrowSolver.sisi_dari_swipe` sejak run fase2a-lemparan): ke kiri layar = sisi `seberang`, ke kanan layar = sisi `dekat`; opsi kidal hanya menukar zona, bukan arti sisi. Tidak melempar bila komponen mendatar swipe \|dx\| di bawah 6% lebar viewport game (bagian 4), bila gerak tegak sama besar atau lebih besar dari gerak datar (tepat 45° dianggap ambigu), atau bila titiknya tidak sah.
 - **Animasi** `lempar_<sisi>_<kecepatan>_<arah>` dengan kecepatan = tingkat sprite saat swipe dilepas (melambat memakai santai, tidak ada lempar melambat) dan arah = arah sprite saat itu (arah 90° belum ada gambarnya, jadi memakai serong di sisi yang sama). Sekali putar, 4 frame, 12 fps, sekitar 0,33 detik; koran lepas di frame 2 (sekitar 0,17 detik).
-- Swipe berikutnya diabaikan selama animasi lempar berjalan (usulan sederhana). Setelah selesai sprite kembali ke animasi kayuh sesuai tingkat dan arah saat itu.
+- Sejak run fase2a-lemparan (D-9) animasi lempar **tidak** menolak swipe sendiri: yang menolak hanya jeda antar lemparan 0,35 detik dan sisa koran (bagian 4). Lempar baru yang datang saat animasi lama masih berjalan menutup lempar lama dulu (`koran_lepas` bila belum, lalu `lempar_selesai`) lalu mulai dari frame 0. Setelah selesai sprite kembali ke animasi kayuh sesuai tingkat dan arah saat itu.
 
 **Dorongan kecepatan** (`scripts/systems/dorongan_kecepatan.gd`, GDD 15): geseran sepeda di bingkai layar dihitung dari kecepatan SEBENARNYA, bukan dari stick. Nol di 3,0 u/d (santai), naik linear ke 36 px di 6,0 u/d (ngebut), turun linear ke −20 px di 1,5 u/d (melambat), dijepit di luar rentang itu; arah sejajar jalan (kemiringan persis 2:1). Hanya kamera yang bergeser (sepeda tampil di letak dasar + geseran); posisi dunia, posisi sprite, dan HUD tidak berubah. Geseran total ngebut ke melambat = 56 px game datar (sekitar 168 px layar di ×3). Konsekuensi yang sengaja disetel di HP: sepeda yang maju di layar memperpendek jalan yang terlihat di depan saat waktu bereaksi paling sempit, jadi nilainya sengaja kecil.
 
@@ -133,16 +133,27 @@ Dari penuh, ngebut terus bertahan sekitar 8 detik, dan cepat terus sekitar 25 de
 
 | Angka | Usulan | Catatan |
 |---|---|---|
-| Swipe minimum | 6% lebar layar | Lebih pendek dari ini diabaikan |
-| Swipe maksimum dihitung | 35% lebar layar | |
-| Jarak lempar ke samping | 1,5 ubin (swipe pendek) sampai 5 ubin (swipe panjang) | Linear terhadap panjang swipe |
-| Lama terbang | 0,45–0,75 detik | Naik dengan jarak |
-| Tinggi puncak | 1,0–1,6 ubin | Bayangan koran di tanah wajib tampil |
-| Warisan kecepatan sepeda | 100% ke arah maju | Ngebut membuat koran mendarat lebih jauh ke depan (GDD 5.1) |
-| Jeda antar lemparan | 0,35 detik | |
-| Jumlah koran di awal rute | pelanggan + 20% | 25 pelanggan → 30 koran |
+| Swipe minimum | 6% lebar viewport game | Komponen mendatar \|dx\|; lebih pendek dari ini diabaikan (inklusif di 6%). `LEMPAR_SWIPE_MIN_PECAHAN` |
+| Swipe maksimum dihitung | 35% lebar viewport game | Lebih panjang dijepit. `LEMPAR_SWIPE_MAKS_PECAHAN` |
+| Jarak lempar ke samping | 1,5 ubin (swipe pendek) sampai 5 ubin (swipe panjang) | Linear terhadap panjang swipe, dari titik lepas. `LEMPAR_JARAK_*_UBIN` |
+| Lama terbang | 0,45–0,75 detik | Naik dengan jarak. `LEMPAR_TERBANG_*_DETIK` |
+| Tinggi puncak | 1,0–1,6 ubin | Bayangan koran di tanah wajib tampil. `LEMPAR_PUNCAK_*_UBIN`; lengkung mulai dari tinggi tangan 0,7 ubin (`LEMPAR_TINGGI_TANGAN_UBIN`) |
+| Warisan kecepatan sepeda | 100% ke arah maju | Ngebut membuat koran mendarat lebih jauh ke depan (GDD 5.1). `LEMPAR_WARISAN_MAJU`; tanpa warisan lateral |
+| Jeda antar lemparan | 0,35 detik | Inklusif, dari lemparan diterima. `LEMPAR_JEDA_DETIK` |
+| Jumlah koran di awal rute | pelanggan + 20% | 25 pelanggan → 30 koran. Jalan uji: `KORAN_AWAL` 30 |
 
 Garis bidik menunjukkan titik mendarat **sudah termasuk** warisan kecepatan, supaya pemain belajar melempar lebih awal saat ngebut lewat apa yang dilihat, bukan coba-coba.
+
+**Rumus `ThrowSolver`** (`scripts/systems/throw_solver.gd`, run fase2a-lemparan 2026-10-14; semua usulan, dinilai di HP). Satu-satunya sumber lintasan: koran terbang, garis bidik, elips pendaratan, dan bayangan memanggil fungsi yang sama, jadi prediksi = hasil.
+
+- **Panjang swipe** = komponen mendatar \|dx\| (piksel game) terhadap **lebar viewport game saat itu** (640, 780, atau 800). min = 6%, maks = 35% (`LEMPAR_SWIPE_MIN_PECAHAN`, `LEMPAR_SWIPE_MAKS_PECAHAN`). \|dx\| < min = tidak melempar (tanpa garis bidik, koran tidak terpakai); tepat min melempar (inklusif, toleransi `LEMPAR_SWIPE_TOLERANSI_PX` 0,001 px untuk derau presisi tunggal posisi sentuh). Swipe dominan tegak tetap tidak melempar.
+- **Kekuatan** u = jepit((\|dx\| − min) / (maks − min), 0, 1). Jarak ke samping = lerp(1,5, 5,0, u) ubin dari titik lepas ke arah sisi; lama terbang = lerp(0,45, 0,75, u) detik; tinggi puncak = lerp(1,0, 1,6, u) ubin (`LEMPAR_JARAK_*`, `LEMPAR_TERBANG_*`, `LEMPAR_PUNCAK_*`).
+- **Warisan maju** 100% (`LEMPAR_WARISAN_MAJU` 1,0): geser maju selama terbang = kecepatan maju sebenarnya × lama terbang. Contoh swipe pendek (u 0): santai 3,0 u/d = 1,35 ubin ke depan, ngebut 6,0 u/d = 2,7 ubin. Tidak ada warisan lateral selama terbang.
+- **Jeda lepas** (D-4): lintasan ditetapkan sekali saat jari dilepas lalu dibekukan di dunia. Koran lepas dari tangan di frame lepas animasi (frame 2 dari 4 di 12 fps = 2/12 ≈ 0,17 detik, `LemparWaktu.waktu_lepas`; fps dari `.tres`, bukan angka baru), jadi titik lepas = posisi sepeda saat jari dilepas + kecepatan sepeda (maju dan lateral) × jeda lepas, lateral dijepit ke tepi jalan resmi (±1 ubin). Garis bidik memakai panggilan yang sama, jadi jeda ini sudah ada di prediksi; sepeda yang mempercepat, mengerem, atau pindah sisi sesudah jari dilepas tidak mengubah titik mendarat.
+- **Lengkung**: tinggi parabola dari tinggi tangan `LEMPAR_TINGGI_TANGAN_UBIN` 0,7 ubin (sekitar 22 px, setinggi setang) ke 0 dengan maksimum tepat tinggi puncak; posisi tanah linear dari titik lepas ke titik mendarat. Tinggi diproyeksikan hanya di `Iso` (1 ubin tinggi = 32 px ke atas), posisi gambar dibulatkan ke piksel.
+- **Jeda antar lemparan** 0,35 detik (`LEMPAR_JEDA_DETIK`) dihitung dari lemparan diterima (jari dilepas) sampai lemparan berikutnya boleh diterima, inklusif (toleransi `LEMPAR_TOLERANSI_DETIK`): 0,349 ditolak, 0,35 diterima; swipe yang ditolak tidak mengurangi koran (`SisaKoran`).
+- **Koran awal** jalan uji 30 (`KORAN_AWAL`, 25 pelanggan + 20%); tiap lemparan yang diterima mengurangi tepat 1; habis = swipe tidak melempar. Jalan uji tidak punya akhir rute, jadi sebagai **alat uji** (bukan aturan game) sisa koran kembali penuh sesudah habis dan sepeda menempuh 16 ubin (`JALAN_UJI_ISI_ULANG_UBIN`).
+- **Di scene jalan uji** (bagian 1b): satu fungsi `JalanUji.lintasan_swipe` (posisi sepeda, kecepatan maju sebenarnya, kecepatan lateral efektif langkah terakhir, jeda lepas animasi) dipakai garis bidik tiap langkah (sesudah sepeda digerakkan). Saat jari dilepas, lemparan memakai **lintasan garis bidik yang terakhir tampil** untuk swipe itu (objek yang sama, dibekukan pada langkah terakhir), bukan menghitung ulang dari posisi lepas: jari yang masih bergerak saat diangkat (flick) tidak menggeser titik mendarat dari elips yang terlihat (yang terlihat = yang terjadi; QA-001 iterasi 2). Posisi lepas tetap harus melempar sendiri: jari yang ditarik kembali di bawah 6% atau berbelok dominan tegak saat diangkat membatalkan lemparan walau garis bidik masih tampil (tidak ada koran, jadi tidak ada hasil yang berbeda dari prediksi). Tanpa garis bidik yang tampil untuk swipe itu (swipe turun dan naik di antara dua langkah, atau langkah terakhir menolak swipe karena pendek atau tegak), lemparan dihitung dari posisi lepas dengan fungsi yang sama dan keadaan sepeda langkah terakhir; tidak ada prediksi tampil yang bisa berbeda. Garis bidik basi milik swipe yang dibatalkan tidak pernah dipakai swipe lain (`TouchRouter.nomor_swipe`). Koran (`KoranLempar`) tampil di udara mulai jeda lepas, mendarat dan dinilai di titik prediksi, lalu penandanya tampil 0,8 detik; waktunya ikut `dt` efektif, jadi jeda game membekukannya. Animasi lempar tidak lagi menolak swipe sendiri (D-9): yang menentukan hanya jeda 0,35 dan sisa koran. Angka tampilan (bukan angka lintasan) di `config.gd`: putaran koran 12 fps (4 langkah), bayangan 10 → 6 px (susut 2 px per ubin tinggi, alpha 0,85; dulu 8 → 4 px alpha 0,5, dinaikkan iterasi 2 QA-007 karena nyaris tak terlihat di aspal: kontras di aspal graybox sekitar 2,1:1 → 3,2:1, dites ≥ 3:1 di aspal, trotoar, rumput), penanda 7 px di atas titik mendarat, 96 sampel garis bidik, garis zona alpha 0,7, panel koran HUD (DESIGN_SPEC 3.5). Iterasi 2 (QA-004): titik garis bidik dan elips yang tertutup rumah dari sudut kamera digambar redup alpha 0,5 (`GARIS_BIDIK_TERTUTUP_ALPHA`), elipsnya putus-putus (DESIGN_SPEC 3.7); ukuran kotak rumah graybox 3 × 2 × 1,5 ubin (`JALAN_UJI_RUMAH_PANJANG/DALAM/TINGGI_UBIN`) adalah fakta aset `tools/env_art/graybox.py`, dijaga tes terhadap ukuran PNG, bukan angka setel.
 
 ---
 
@@ -153,8 +164,22 @@ Garis bidik menunjukkan titik mendarat **sudah termasuk** warisan kecepatan, sup
 | Kotak surat | ✅ | 100% | |
 | Teras | ✅ | 100% | Pelanggan pemberi tip memberi tip |
 | Halaman / rumput | ✅ | 50% | Pelanggan cerewet kesal (GDD 8) |
-| Jendela | belum diputuskan | | Bonus atau penalti (ROADMAP 5) |
+| Jendela | sakelar, bawaan penalti ringan | | **Masih terbuka** (ROADMAP 5) sampai skor Fase 3. `JENDELA_KENA_BONUS` false (bawaan, keputusan pemilik 2026-10-14) = penalti ringan: antaran tidak sah seperti meleset, tanpa potong koin atau hukuman lain (prinsip 2); true = bonus: antaran sah, ditandai bonus |
 | Rumah bukan pelanggan, jalan, sisi salah | ❌ meleset | 0 | Memutus combo |
+
+**Zona sasaran placeholder jalan uji** (`scripts/systems/zona_sasaran.gd`, run fase2a-lemparan 2026-10-14; semua usulan, bukan data rute). Zona = persegi di bidang tanah, ubin: `[lateral_min, maju_min, lebar_lateral, panjang_maju]` (`Config.JALAN_UJI_SEBERANG_*_UBIN`, `JALAN_UJI_DEKAT_*_UBIN`), lateral dari garis tengah jalan (negatif = `seberang`), maju relatif terhadap awal kavling (kelipatan 4 ubin, `JALAN_UJI_RUMAH_PERIODE_UBIN`). Tepi min **inklusif**, tepi maks **eksklusif** di kedua sumbu, jadi dua zona bersebelahan tidak pernah sama-sama memuat satu titik.
+
+| Zona | Seberang (lateral, maju, ukuran) | Dekat | Catatan |
+|---|---|---|---|
+| Kotak surat | −1,875, 0,875, 0,5 × 0,5 | 1,375, 0,875, 0,5 × 0,5 | Di trotoar; seberang mengelilingi kotak surat graybox (0,25 ubin) |
+| Halaman | −3,0, −0,5, 1,0 × 3,0 | 2,0, −0,5, 1,0 × 3,0 | Rumput sepanjang rumah. Rumah graybox seberang mundur dari −2,0 ke **−3,0** (`JALAN_UJI_RUMAH_X_UBIN`) supaya ada satu ubin halaman di depan fasad |
+| Teras | −3,0, 0,0, 0,5 × 1,25 | 2,5, 0,25, 0,5 × 1,5 | Seberang di kaki fasad bagian pintu |
+| Jendela | −3,0, 1,5, 0,25 × 0,75 | (tidak ada) | Strip tanah di kaki fasad (model placeholder 2D) |
+
+- **Prioritas** bila tumpang tindih: kotak surat > jendela > teras > halaman (teras dan jendela ada di dalam halaman). Zona yang menang dulu, baru status pelanggan: zona rumah bukan pelanggan = `BUKAN_PELANGGAN`. Zona hanya berlaku untuk lemparan ke sisinya; di luar semua zona = meleset.
+- **Bukan pelanggan**: rumah seberang bernomor n dengan n mod 4 = 2 (`JALAN_UJI_BUKAN_PELANGGAN_*`), minimal satu tiap putaran daur 9 slot. Kavling sisi dekat datar tanpa fasad dan tanpa jendela, selalu pelanggan, **hanya supaya lempar ke sisi dekat bisa diuji**; tidak memutuskan cara menampilkan rumah di sisi dekat (ROADMAP 5, Fase 3).
+- **Status antaran**: kotak surat dan teras sah penuh, halaman sah setengah, bukan pelanggan dan meleset tidak sah, jendela menurut sakelar. Tiap pendaratan dinilai sendiri (status per rumah di luar scope Fase 2). Semua zona terjangkau dari posisi lateral di dalam jalan pada santai, cepat, dan ngebut dengan swipe min sampai maks (dites).
+- **Penanda** di titik mendarat selama 0,8 detik (`PENANDA_LAMA_DETIK`, DESIGN_SPEC 3.6), bentuk tidak hanya warna: sah penuh = centang (`OK`), bonus jendela = bintang (beda dari sah biasa), halaman = setengah, tidak sah = silang kecil (`FAIL`, bukan panel merah besar).
 
 | Angka | Usulan |
 |---|---|
@@ -235,6 +260,11 @@ Belum diisi. Diputuskan di Fase 6 bersama layar bengkel (GDD 12.5). Arah yang su
 ---
 
 ## 10. Catatan perubahan
+
+- **2026-10-14** — Run fase2a-lemparan iterasi 2 (perbaikan temuan QA; usulan, belum diuji di HP): lemparan memakai lintasan garis bidik yang terakhir tampil, bukan posisi lepas jari (QA-001, bagian 4). Bayangan koran 8 → 4 px alpha 0,5 menjadi 10 → 6 px alpha 0,85 (QA-007, bagian 4; keterbacaan di HP tetap diuji pemilik). Elips dan titik garis bidik yang tertutup rumah dari sudut kamera digambar putus-putus/redup (QA-004, angka tampilan `GARIS_BIDIK_TERTUTUP_ALPHA` 0,5 dan ukuran kotak rumah graybox di bagian 4). Kalimat lama bagian 2 "swipe diabaikan selama animasi lempar" diselaraskan dengan D-9 (QA-002). Angka lintasan tidak berubah. Alasan: AC-4 prediksi = hasil juga untuk flick; dokumen tidak boleh berbeda aturan.
+- **2026-10-14** — Run fase2a-lemparan bagian 1b (scene; usulan, belum diuji di HP): lemparan tersambung ke jalan uji (garis bidik di ruang dunia, koran terbang dengan bayangan, penanda kena/meleset, zona placeholder tampil, HUD sisa koran, jeda game membekukan koran). Angka lintasan BALANCING 4-5 tidak berubah; angka tampilan baru di bagian 4 (putaran koran, bayangan, penanda, sampel garis bidik, panel koran). `LoperSprite` tidak lagi menolak lempar selama animasi (D-9). Alasan: kontrak SPEC run 2A.
+
+- **2026-10-14** — Run fase2a-lemparan (bagian 1a, logika murni; semua usulan, belum diuji di HP): `ThrowSolver` (bagian 4) dengan angka BALANCING 4 yang sudah ada (swipe 6–35%, jarak 1,5–5,0, terbang 0,45–0,75, puncak 1,0–1,6, warisan maju 100%, jeda 0,35, koran 30) masuk `config.gd`. Ambang swipe 12 px panjang total (run sprite-lempar-melambat) **diganti** \|dx\| ≥ 6% lebar viewport game (38,4 / 46,8 / 48 px; D-2 SPEC). Angka baru: tinggi tangan 0,7 ubin, toleransi swipe 0,001 px, penanda 0,8 detik (DESIGN_SPEC 3.6), isi ulang jalan uji 16 ubin (alat uji). Zona sasaran placeholder dan sakelar jendela bawaan penalti ringan (bagian 5, keputusan pemilik 2026-10-14, masih terbuka); rumah graybox seberang mundur ke lateral −3,0 untuk memberi halaman. Alasan: kontrak SPEC run 2A; dinilai pemilik di HP sesudah run.
 
 - **2026-10-14** — Run fase1b-umpan-balik (paket usulan pemilik, belum diuji di HP): jeda tanpa lanjut otomatis (tombol jeda, layar jeda, back Android); tinggi tombol strip atas dan "Lanjut" 36 → 42 px game (≥ 44 dp di A54), tombol jeda baru dengan area sentuh 42×42; sepeda turun dari 60% ke 75% tinggi layar (`KAMERA_SEPEDA_Y_PECAHAN` 0,75, tidak menabrak panel kecepatan di 640/780/800 kanan dan kidal); dorongan maju 28 → 36 px (mundur 20 dan respon 0,35 tetap); teks HUD terkecil (`HudLabel`) 6 → 8 px di `assets/ui/theme.tres` (DESIGN_SPEC 1.2). Radius stick tetap 35. Angka baru umpan balik kecepatan (debu roda, debu rem, garis kecepatan, kurangi efek, batas partikel) dan bunyi sepeda (pitch kayuhan 1,0 / 1,15 / 1,3 dari SOUND_DESIGN 3.2, volume tiga bunyi) di bagian 2. Alasan: paket usulan pemilik dari pengamatan A54, belum diuji di HP.
 

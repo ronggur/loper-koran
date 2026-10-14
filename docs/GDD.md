@@ -473,7 +473,7 @@ Angka koin mengacu pada penghasilan loper koran sungguhan di Indonesia: komisi s
 Ringkasan; aturan lengkapnya ada di `ART_DIRECTION.md` dan `SOUND_DESIGN.md`.
 
 - **Gaya:** pixel art retro dengan palet terbatas, dimodernkan lewat lighting dinamis (cahaya utama dari kiri atas), bayangan lembut berwarna yang mengikuti distrik dan waktu, partikel, depth of field ringan, bloom, dan color grading per distrik. Referensi rasa: Eastward dan Octopath Traveler, tanpa pindah dari isometrik 2:1.
-- **Ukuran:** ubin isometrik belah ketupat 2:1, usulan 64×32 px. Karakter pemain dan sepeda sekitar 47 px tinggi. Di layar landscape 2400×1080, skala ×3 memberi kanvas sekitar 800×360 px.
+- **Ukuran:** ubin isometrik belah ketupat 2:1, 64×32 px (dikunci 2026-10-14, ROADMAP 4b). Karakter pemain dan sepeda sekitar 47 px tinggi. Di layar landscape 2400×1080, skala ×3 memberi kanvas sekitar 800×360 px.
 - **Umpan balik kecepatan:** garis kecepatan, debu pixel di roda, getaran kamera, dan nada suara kayuhan yang naik saat ngebut. Bel sepeda jadi efek suara sekaligus alat mengusir pejalan kaki, dan memberi nama pada game (bagian 5.4). **Dorongan kecepatan (2026-10-09, permintaan Ronggur):** saat ngebut sepeda maju sedikit di bingkai layar, saat melambat tertarik mundur sedikit, supaya ngebut terasa bukan hanya dari gerak latar (kecepatan sebenarnya tidak berubah). Geser dibuat kecil dan dibatasi karena sepeda yang maju di layar memperpendek jalan yang terlihat di depan, tepat saat waktu bereaksi paling sempit (prinsip 3); kompensasinya (menurunkan posisi dasar sepeda di layar) dipasang di Fase 1 sebagai usulan (paket pemilik 2026-10-14): sepeda di 75% tinggi layar dan geser maju 36 px, sehingga jalan yang terlihat saat ngebut sekitar 2,5 detik di layar 19,5:9 dan 20:9 (dulu sekitar 2,10 detik), tetapi di 16:9 tepi kanan yang membatasi dan tetap sekitar 2,0 detik (`BALANCING.md` 2). Besar geser masih usulan dan disetel lewat uji HP. Kamera tidak bisa "melebar" dengan zoom karena skala piksel bulat, jadi catatan lama "kamera melebar ke depan" diganti oleh dorongan ini.
 - **Orientasi landscape:** dipegang dengan dua tangan, jadi dua jempol terasa natural. Ruang ke samping luas dan pandangan ke depan lebih lega karena jalan isometrik berjalan diagonal. Portrait ditinggalkan karena jalan diagonal memendekkan pandangan dan membuang sisi layar.
 - **Isometrik 2:1, jalan ke kanan atas (diputuskan):** sepeda di sepertiga kiri layar, kamera melihat sisi kanan sepeda (rantai dan gir terlihat), fasad sisi seberang menghadap kanan bawah dengan pintu dan jendela kontras. Detail dan konsekuensinya: ART_DIRECTION 2.2.
@@ -512,7 +512,7 @@ Beberapa keputusan masih terbuka dan paling baik diputuskan lewat prototype kasa
 - Kontrol landscape: apakah ambang rem di ujung bawah stick nyaman tanpa berhenti tak sengaja, dan apakah swipe pendek cukup teliti di layar kecil.
 - Bel: apakah tombol di pojok kanan bawah mudah dijangkau tanpa terpencet saat swipe, dan apakah bel dimajukan ke prototype awal karena sekarang menjadi ciri judul game (saat ini dijadwalkan Fase 6–7, `SOUND_DESIGN.md` 8).
 - Struktur sesi: rute harian berurutan, atau run roguelite dengan rute acak.
-- Ukuran ubin isometrik (skala tampilan pixel sudah dikunci ×3, 2026-10-09).
+- ~~Ukuran ubin isometrik~~: 64×32 px, dikunci 2026-10-14 (skala tampilan pixel ×3 dikunci 2026-10-09).
 
 **Urutan prototype**
 

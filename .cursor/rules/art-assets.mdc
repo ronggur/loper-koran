@@ -6,11 +6,11 @@ alwaysApply: false
 
 # Aset Visual & Audio
 
-Rujukan: `docs/ART_DIRECTION.md` (art bible, **sumber utama aturan gaya**), `tools/loper_art/README.md`, `docs/SOUND_DESIGN.md`. Palet induk dan ukuran ubin masih **usulan** sampai aset gelombang 1 selesai; jangan menganggapnya final.
+Rujukan: `docs/ART_DIRECTION.md` (art bible, **sumber utama aturan gaya**), `tools/loper_art/README.md`, `docs/SOUND_DESIGN.md`. Palet induk masih **usulan** sampai aset gelombang 1 selesai; jangan menganggapnya final. Ukuran ubin 64×32 dikunci 2026-10-14 (ROADMAP 4b).
 
 ## Gaya
 
-- Pixel art isometrik 2:1, belah ketupat 64×32 (usulan), cahaya utama dari kiri atas, garis luar 1 px `#0E0A1C`, tiga nada per material, palet terbatas, bayangan tanah kecil. Brainy Dungeon hanya acuan gaya: **jangan menyalin atau memakai aset dari sana**.
+- Pixel art isometrik 2:1, belah ketupat 64×32 (dikunci 2026-10-14), cahaya utama dari kiri atas, garis luar 1 px `#0E0A1C`, tiga nada per material, palet terbatas, bayangan tanah kecil. Brainy Dungeon hanya acuan gaya: **jangan menyalin atau memakai aset dari sana**.
 - Arah dunia mengikuti keputusan kamera: jalan naik ke kanan atas, fasad sisi seberang menghadap kanan bawah, sisi dekat menampilkan belakang rumah.
 - Sprite pemain **Kemeja Agen** sudah dikunci (5 arah × 3 kecepatan × 4 frame kayuh, sel 46×58, titik pijak 23,46). Jangan mengubah desain, proporsi, atau titik pijaknya tanpa persetujuan user. Perubahan pose atau varian lewat renderer, bukan menggambar ulang manual.
 - Gambar skala besar (full body, potret, adegan) mengikuti gaya di ART_DIRECTION 3.5. Gambar resmi saat ini hasil `konversi2.py`.

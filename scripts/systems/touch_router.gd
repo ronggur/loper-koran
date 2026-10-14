@@ -22,6 +22,9 @@ const TIDAK_ADA: int = -1
 var lebar_viewport: int = Config.LAYAR_LEBAR_DASAR_PX
 ## Jumlah swipe yang selesai sejak instance dibuat (tiap swipe dicatat tepat sekali).
 var jumlah_swipe_selesai: int = 0
+## Nomor swipe terakhir yang diklaim (naik 1 tiap jari mengklaim slot swipe, tidak berubah saat jari dilepas atau batal). Selama
+## `swipe_selesai` dipancarkan, nilainya = nomor swipe yang baru selesai, jadi pemakai bisa mengenali data yang dihitung untuk swipe itu.
+var nomor_swipe: int = 0
 
 var _kidal: bool = false
 var _index_stick: int = TIDAK_ADA
@@ -60,6 +63,7 @@ func tekan(index: int, posisi: Vector2, waktu_detik: float) -> void:
 		TouchZones.Zona.SWIPE:
 			if _index_swipe == TIDAK_ADA:
 				_index_swipe = index
+				nomor_swipe += 1
 				_awal_swipe = posisi
 				_posisi_swipe = posisi
 				_waktu_awal_swipe = waktu_detik

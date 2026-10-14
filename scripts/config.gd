@@ -19,7 +19,7 @@ const LAYAR_TINGGI_DASAR_PX: int = 360
 ## Skala piksel target di HP 1080p (sprite pemain didesain untuk x3).
 const LAYAR_SKALA_PIKSEL: int = 3
 
-## --- Ubin (usulan, dikunci setelah graybox Fase 1, ART_DIRECTION 11) ---
+## --- Ubin (dikunci 2026-10-14 setelah graybox Fase 1, ROADMAP 4b) ---
 
 ## Lebar belah ketupat satu ubin, piksel game.
 const UBIN_LEBAR_PX: int = 64
@@ -96,13 +96,75 @@ const PEDAL_RATE_MAKS: float = 1.5
 
 ## --- Lempar koran dan melambat (animasi pemain, usulan, run sprite-lempar-melambat) ---
 ## fps animasi (kayuh 8/10/12, melambat 4, lempar 12) dibaca dari `loper_agen_frames.tres`, bukan dari sini.
+## Ambang swipe 12 px (run sprite-lempar-melambat) diganti `LEMPAR_SWIPE_MIN_PECAHAN` di bawah (run fase2a-lemparan, D-2).
 
-## Panjang swipe terpendek yang masih melempar, piksel game, inklusif (swipe pendek harus tetap terbaca, rule `ui-scenes`). Dinilai lewat uji HP.
-const LEMPAR_SWIPE_AMBANG_PX: float = 12.0
 ## Indeks frame saat koran lepas dari tangan (`release_frame` di loper_agen_lempar.json, README lempar).
 const LEMPAR_FRAME_LEPAS: int = 2
 ## Toleransi derau float saat menentukan frame animasi dari waktu, detik (mencegah frame bergeser satu langkah di batas).
 const LEMPAR_TOLERANSI_DETIK: float = 0.000001
+
+## --- Lemparan koran (BALANCING 4, GDD 5.1-5.2; usulan run fase2a-lemparan, dinilai lewat uji HP, jangan dikunci) ---
+## `ThrowSolver` satu-satunya pemakai angka lintasan. Panjang swipe = komponen MENDATAR |dx| (piksel game) terhadap lebar viewport
+## game saat itu; u = jepit((|dx| - min) / (maks - min), 0, 1). Jarak ke samping, lama terbang, dan tinggi puncak linear dari u.
+## Koran mewarisi kecepatan maju sepeda; tidak ada warisan lateral selama terbang. Tinggi dalam ubin (1 ubin = 32 px tegak, `Iso`).
+
+## Swipe terpendek yang masih melempar, pecahan lebar viewport game, inklusif (6%). Di bawahnya tidak melempar: tanpa garis bidik, koran tidak terpakai.
+const LEMPAR_SWIPE_MIN_PECAHAN: float = 0.06
+## Swipe terpanjang yang masih dihitung, pecahan lebar viewport game (35%). Lebih panjang dijepit ke lemparan terjauh.
+const LEMPAR_SWIPE_MAKS_PECAHAN: float = 0.35
+## Toleransi saat membandingkan |dx| dengan swipe minimum, piksel game (posisi sentuh berpresisi tunggal: 46,8 tersimpan 46,7999992).
+const LEMPAR_SWIPE_TOLERANSI_PX: float = 0.001
+## Jarak mendarat ke samping dari titik lepas pada swipe minimum (u = 0), ubin.
+const LEMPAR_JARAK_MIN_UBIN: float = 1.5
+## Jarak mendarat ke samping dari titik lepas pada swipe maksimum (u = 1), ubin.
+const LEMPAR_JARAK_MAKS_UBIN: float = 5.0
+## Lama terbang pada swipe minimum, detik.
+const LEMPAR_TERBANG_MIN_DETIK: float = 0.45
+## Lama terbang pada swipe maksimum, detik.
+const LEMPAR_TERBANG_MAKS_DETIK: float = 0.75
+## Tinggi puncak lengkung pada swipe minimum, ubin di atas tanah.
+const LEMPAR_PUNCAK_MIN_UBIN: float = 1.0
+## Tinggi puncak lengkung pada swipe maksimum, ubin di atas tanah.
+const LEMPAR_PUNCAK_MAKS_UBIN: float = 1.6
+## Bagian kecepatan maju sepeda yang diwarisi koran selama terbang (1,0 = 100%, GDD 5.1): ngebut = mendarat lebih jauh ke depan.
+const LEMPAR_WARISAN_MAJU: float = 1.0
+## Tinggi tangan saat koran lepas, ubin di atas tanah (0,7 = sekitar 22 px, setinggi setang pada sel 46x58). Lengkung mulai di sini.
+const LEMPAR_TINGGI_TANGAN_UBIN: float = 0.7
+## Jeda antar lemparan, detik: dari lemparan diterima (jari dilepas) sampai lemparan berikutnya boleh diterima, inklusif (toleransi `LEMPAR_TOLERANSI_DETIK`).
+const LEMPAR_JEDA_DETIK: float = 0.35
+## Koran di awal jalan uji (25 pelanggan + 20%, BALANCING 4). Tiap lemparan yang diterima mengurangi tepat 1.
+const KORAN_AWAL: int = 30
+## Lama penanda kena/meleset di titik mendarat, detik (DESIGN_SPEC 3.6).
+const PENANDA_LAMA_DETIK: float = 0.8
+## Sakelar jendela kena koran (BALANCING 5, ROADMAP 5, KEPUTUSAN TERBUKA sampai skor Fase 3): false = penalti ringan (bawaan pemilik
+## 2026-10-14: antaran tidak sah seperti meleset, tanpa potong koin), true = bonus (antaran sah, ditandai bonus).
+const JENDELA_KENA_BONUS: bool = false
+
+## --- Koran terbang, garis bidik, penanda, dan zona (placeholder dari kode, usulan run fase2a-lemparan bagian 1b) ---
+## Digambar per piksel game (persegi bulat) supaya tajam di skala bulat; warna hanya dari `Palette` (DESIGN_SPEC 3.6, 3.7,
+## ART_DIRECTION 6.2). Bukan angka lintasan: lintasan tetap hanya dari `ThrowSolver`.
+
+## Koran gulung berputar 4 langkah (4 frame pola) selama terbang, frame per detik (sama dengan animasi lempar 12 fps).
+const KORAN_PUTAR_FPS: float = 12.0
+## Bayangan koran: lebar elips saat koran di tanah, piksel game (tinggi elips setengahnya). 10 (dulu 8; QA-007 iterasi 2: lebih lebar dari
+## koran 8 px supaya terbaca di ×3).
+const KORAN_BAYANGAN_LEBAR_MAKS_PX: int = 10
+## Bayangan koran: lebar elips terkecil (koran paling tinggi), piksel game. 6 (dulu 4; QA-007 iterasi 2).
+const KORAN_BAYANGAN_LEBAR_MIN_PX: int = 6
+## Bayangan koran mengecil sekian piksel game per ubin tinggi koran.
+const KORAN_BAYANGAN_SUSUT_PX_PER_UBIN: float = 2.0
+## Alpha bayangan koran (warna `OUTLINE`). 0,85 (dulu 0,5; QA-007 iterasi 2): kontras bayangan di atas aspal graybox naik dari sekitar
+## 2,1:1 ke sekitar 3,2:1 (dites >= 3:1 di aspal, trotoar, dan rumput); masih sedikit tembus supaya terbaca sebagai bayangan.
+const KORAN_BAYANGAN_ALPHA: float = 0.85
+## Penanda kena/meleset digambar sekian piksel game di atas titik mendarat (kaki penanda), di atas koran yang tergeletak (tinggi 6).
+const PENANDA_ATAS_PX: int = 7
+## Jumlah sampel `posisi_pada` sepanjang lintasan untuk menaruh titik garis bidik (titik dipilih dari sampel ini tiap `SWIPE_TITIK_JARAK_PX`).
+const GARIS_BIDIK_SAMPEL: int = 96
+## Alpha titik garis bidik dan elips pendaratan yang tertutup rumah dari sudut kamera (di dalam atau di belakang kotak rumah; elips juga
+## berganti bentuk putus-putus, QA-004 iterasi 2).
+const GARIS_BIDIK_TERTUTUP_ALPHA: float = 0.5
+## Alpha garis tepi halaman dan isi zona placeholder di jalan uji.
+const ZONA_GARIS_ALPHA: float = 0.7
 
 ## --- Umpan balik kecepatan (GDD 15; usulan run fase1b-umpan-balik, dinilai di HP) ---
 ## Dihitung dari kecepatan SEBENARNYA (`UmpanBalikKecepatan`). Partikel digambar sendiri (`PancaranPiksel`), kotak 1-2 px game.
@@ -234,10 +296,19 @@ const DORONGAN_MUNDUR_PX: float = 20.0
 const DORONGAN_RESPON_DETIK: float = 0.35
 ## Jarak antar rumah graybox di sisi seberang, ubin (3 ubin rumah + 1 ubin celah).
 const JALAN_UJI_RUMAH_PERIODE_UBIN: int = 4
-## Letak titik pijak rumah graybox melintang jalan, ubin dari garis tengah jalan (negatif = sisi seberang).
-const JALAN_UJI_RUMAH_X_UBIN: float = -2.0
+## Letak titik pijak rumah graybox (kaki fasad) melintang jalan, ubin dari garis tengah jalan (negatif = sisi seberang). -3,0 (dulu -2,0;
+## run fase2a-lemparan): satu ubin rumput di antara trotoar dan fasad menjadi halaman dan teras sasaran (BALANCING 5).
+const JALAN_UJI_RUMAH_X_UBIN: float = -3.0
 ## Geseran titik pijak rumah graybox sepanjang jalan, ubin.
 const JALAN_UJI_RUMAH_MAJU_UBIN: float = -0.5
+## Kotak rumah graybox: panjang sepanjang jalan dari titik pijak, dalam ke arah seberang dari kaki fasad, dan tinggi, ubin. Fakta aset
+## `tools/env_art/graybox.py` (3 x 2 ubin, 48 px), dijaga tes terhadap ukuran `house_graybox_kotak.png`; dipakai aturan elips "tertutup
+## rumah" garis bidik (QA-004 run fase2a-lemparan iterasi 2).
+const JALAN_UJI_RUMAH_PANJANG_UBIN: float = 3.0
+## Lihat `JALAN_UJI_RUMAH_PANJANG_UBIN`.
+const JALAN_UJI_RUMAH_DALAM_UBIN: float = 2.0
+## Lihat `JALAN_UJI_RUMAH_PANJANG_UBIN`.
+const JALAN_UJI_RUMAH_TINGGI_UBIN: float = 1.5
 ## Letak kotak surat graybox melintang jalan, ubin dari garis tengah jalan.
 const JALAN_UJI_KOTAK_SURAT_X_UBIN: float = -1.5
 ## Geseran kotak surat graybox sepanjang jalan, ubin.
@@ -265,6 +336,16 @@ const HUD_PANEL_PAD_X_PX: int = 7
 const HUD_BAR_TINGGI_PX: int = 7
 ## Bar stamina berganti warna dari `ACCENT` ke `FAIL` di bawah nilai ini (DESIGN_SPEC 3.5, usulan).
 const HUD_STAMINA_AMBANG_RENDAH: float = 30.0
+## Panel sisa koran: jarak dari tepi layar sisi stick, piksel game (DESIGN_SPEC 3.5: x 400). Celah ke panel kecepatan = sisa sesudah panel kecepatan.
+const HUD_PANEL_KORAN_GESER_PX: int = 400
+## Panel sisa koran: jumlah ikon koran paling banyak (DESIGN_SPEC 3.5).
+const HUD_KORAN_IKON_MAKS: int = 8
+## Panel sisa koran: sisi ikon koran, piksel game (DESIGN_SPEC 3.5).
+const HUD_KORAN_IKON_PX: int = 12
+## Panel sisa koran: jarak antar ikon, piksel game.
+const HUD_KORAN_IKON_JARAK_PX: int = 1
+## Panel sisa koran: alpha ikon koran yang sudah terpakai (DESIGN_SPEC 3.5: redup 28%).
+const HUD_KORAN_REDUP_ALPHA: float = 0.28
 ## Tinggi tombol di strip atas dan tombol layar jeda, piksel game. Di A54 (450 dpi, skala x3) 44 dp sekitar 41,7 px game, jadi 42 (paket pemilik 2026-10-14); muat di strip atas: margin 4 + 42 = 46 < 48.
 const HUD_TOMBOL_TINGGI_PX: int = 42
 ## Lebar minimum tombol di strip atas, piksel game.
@@ -291,3 +372,32 @@ const JEDA_TOMBOL_LEBAR_PX: int = 96
 const JALAN_UJI_DAUR_MUNDUR_UBIN: int = 12
 ## Objek berkala di sisi seberang: berapa ubin di depan sepeda yang sudah disiapkan.
 const JALAN_UJI_DAUR_MAJU_UBIN: int = 16
+
+## --- Zona sasaran jalan uji (BALANCING 5, D-6 run fase2a-lemparan; placeholder usulan, bukan data rute) ---
+## Tiap zona = [lateral_min, maju_min, lebar_lateral, panjang_maju], ubin, persegi di bidang tanah. Lateral dari garis tengah jalan
+## (negatif = seberang, positif = dekat); maju relatif terhadap awal kavling `indeks x JALAN_UJI_RUMAH_PERIODE_UBIN` (sama dengan
+## `JALAN_UJI_KOTAK_SURAT_MAJU_UBIN`). Tepi min inklusif, tepi maks eksklusif (`ZonaSasaran`). Prioritas bila tumpang tindih:
+## kotak surat > jendela > teras > halaman. Sisi dekat datar tanpa fasad dan tanpa jendela, hanya supaya lempar ke sisi dekat bisa
+## diuji (tidak memutuskan cara menampilkan rumah di sisi dekat, ROADMAP 5).
+
+## Seberang: kotak surat, 0,5 x 0,5 di sekitar kotak surat graybox (pijak -1,5, 1,0, kotak 0,25 ubin) di trotoar.
+const JALAN_UJI_SEBERANG_KOTAK_SURAT_UBIN: Array[float] = [-1.875, 0.875, 0.5, 0.5]
+## Seberang: halaman, rumput di antara trotoar (-2,0) dan fasad (-3,0) sepanjang rumah (maju -0,5 sampai 2,5).
+const JALAN_UJI_SEBERANG_HALAMAN_UBIN: Array[float] = [-3.0, -0.5, 1.0, 3.0]
+## Seberang: teras, di kaki fasad bagian pintu.
+const JALAN_UJI_SEBERANG_TERAS_UBIN: Array[float] = [-3.0, 0.0, 0.5, 1.25]
+## Seberang: jendela, strip tanah 0,25 ubin di kaki fasad (model placeholder 2D).
+const JALAN_UJI_SEBERANG_JENDELA_UBIN: Array[float] = [-3.0, 1.5, 0.25, 0.75]
+## Dekat: kotak surat di trotoar dekat (datar, tanpa graybox).
+const JALAN_UJI_DEKAT_KOTAK_SURAT_UBIN: Array[float] = [1.375, 0.875, 0.5, 0.5]
+## Dekat: halaman, rumput sesudah trotoar dekat.
+const JALAN_UJI_DEKAT_HALAMAN_UBIN: Array[float] = [2.0, -0.5, 1.0, 3.0]
+## Dekat: teras, sisi jauh halaman.
+const JALAN_UJI_DEKAT_TERAS_UBIN: Array[float] = [2.5, 0.25, 0.5, 1.5]
+## Rumah seberang bernomor n bukan pelanggan bila n mod `SETIAP` = `SISA` (minimal satu per putaran daur 9 slot).
+const JALAN_UJI_BUKAN_PELANGGAN_SETIAP: int = 4
+## Lihat `JALAN_UJI_BUKAN_PELANGGAN_SETIAP`.
+const JALAN_UJI_BUKAN_PELANGGAN_SISA: int = 2
+## Isi ulang koran khusus jalan uji (alat uji, bukan aturan game; jalan uji tidak punya akhir rute): sesudah koran habis dan sepeda
+## menempuh sekian ubin, sisa koran kembali penuh.
+const JALAN_UJI_ISI_ULANG_UBIN: float = 16.0

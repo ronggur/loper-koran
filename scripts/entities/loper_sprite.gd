@@ -15,14 +15,21 @@ extends AnimatedSprite2D
 ##
 ## Lempar (`lempar`): animasi `lempar_<sisi>_<kecepatan>_<arah>` dimainkan SEKALI dari frame 0 lalu sprite kembali ke animasi kayuh
 ## sesuai `speed_level` dan `steer` pada saat itu (bukan saat mulai), dengan indeks frame dan progres dilanjutkan seperti pergantian
-## animasi biasa. Selama melempar `speed_level` dan `steer` tetap tersimpan tetapi tidak mengganti gambar, dan `lempar` berikutnya
-## diabaikan. Waktu lempar dimajukan node sendiri lewat `maju(dt)` (dipanggil `_process`, `dt` dijepit ke
-## `Config.LANGKAH_WAKTU_MAKS_DETIK`), bukan oleh pemutar bawaan, supaya tes bisa memajukannya dengan `dt` tetap.
+## animasi biasa. Selama melempar `speed_level` dan `steer` tetap tersimpan tetapi tidak mengganti gambar. Waktu lempar dimajukan node
+## sendiri lewat `maju(dt)` (dipanggil `_process`, `dt` dijepit ke `Config.LANGKAH_WAKTU_MAKS_DETIK`), bukan oleh pemutar bawaan, supaya
+## tes bisa memajukannya dengan `dt` tetap.
+## Sejak run fase2a-lemparan (D-9) node ini TIDAK lagi menolak lempar sendiri: yang memutuskan lemparan diterima adalah jeda antar lempar
+## 0,35 detik dan sisa koran (`SisaKoran`, di `JalanUji`). Jeda 0,35 lebih panjang dari animasi (4 frame di 12 fps = 0,333), jadi
+## biasanya animasi lama sudah selesai; bila belum (waktu sprite tertinggal), `lempar` menutup lempar lama lebih dulu: `koran_lepas`
+## yang belum terjadi dipancarkan, lalu `lempar_selesai`, baru lempar baru dimulai dari frame 0. Jadi tiap lempar yang dimulai tetap
+## memancarkan `koran_lepas` dan `lempar_selesai` tepat sekali, kecuali lempar yang ditutup `batalkan_lempar` (jeda game, D-11: hanya
+## animasinya yang ditutup; koran yang sudah diterima tetap terbang lewat `KoranLempar`).
 
-## Koran lepas dari tangan: dipancarkan tepat sekali per lempar, saat frame `Config.LEMPAR_FRAME_LEPAS` (indeks 2) tampil.
-## Proyektil koran (Fase 2) disambungkan ke sinyal ini.
+## Koran lepas dari tangan: dipancarkan tepat sekali per lempar, saat frame `Config.LEMPAR_FRAME_LEPAS` (indeks 2) tampil (atau saat lempar
+## yang belum sampai frame lepas disela lempar berikutnya). Koran terbang tidak bergantung pada sinyal ini (`KoranLempar` memakai jeda
+## lepas yang sama, `LemparWaktu.waktu_lepas`), supaya jeda game di antara jari dilepas dan frame lepas tidak menghilangkan koran (D-11).
 signal koran_lepas(sisi: LoperAnim.Sisi)
-## Animasi lempar habis dan sprite sudah kembali ke animasi kayuh: dipancarkan tepat sekali per lempar.
+## Animasi lempar berakhir: habis dan sprite sudah kembali ke animasi kayuh, atau disela lempar berikutnya. Tepat sekali per lempar.
 signal lempar_selesai
 
 @export_range(-1, 2) var speed_level: int = 0:
@@ -45,6 +52,7 @@ signal lempar_selesai
 var _sedang_melempar: bool = false
 var _sisi_lempar: LoperAnim.Sisi = LoperAnim.Sisi.TIDAK_ADA
 var _waktu_lempar: float = 0.0
+var _sudah_lepas: bool = false
 
 
 func _init() -> void:
@@ -66,19 +74,27 @@ func sedang_melempar() -> bool:
 	return _sedang_melempar
 
 
-## Mulai animasi lempar ke `sisi`. Mengembalikan true bila dimulai. Tidak melakukan apa pun (false) bila sedang melempar
-## (swipe berikutnya diabaikan), `sisi` adalah `TIDAK_ADA`, atau `sprite_frames` kosong. Animasi dipilih dari `pose`, `speed_level`,
-## dan `steer` saat ini (`LoperAnim.nama_lempar`; dari meluncur dan rem memakai santai, `LoperAnim.tingkat_lempar`).
+## Mulai animasi lempar ke `sisi`. Mengembalikan true bila dimulai. Tidak melakukan apa pun (false) bila `sisi` adalah `TIDAK_ADA` atau
+## `sprite_frames` kosong. Animasi dipilih dari `pose`, `speed_level`, dan `steer` saat ini (`LoperAnim.nama_lempar`; dari meluncur dan
+## rem memakai santai, `LoperAnim.tingkat_lempar`). Bila masih melempar, lempar lama ditutup dulu dengan sinyalnya (D-9, lihat atas).
 func lempar(sisi: LoperAnim.Sisi) -> bool:
-	if _sedang_melempar or sprite_frames == null:
+	if sprite_frames == null:
 		return false
-	var nama: StringName = LoperAnim.nama_lempar(sisi, LoperAnim.tingkat_lempar(pose, speed_level), steer)
+	var nama: StringName = _nama_lempar(sisi)
 	if nama == &"":
 		return false
 	if not sprite_frames.has_animation(nama):
 		push_warning("LoperSprite: animasi lempar '%s' tidak ada di SpriteFrames" % nama)
 		return false
+	if _sedang_melempar:
+		var sisi_lama: LoperAnim.Sisi = _sisi_lempar
+		var lepas_tertunda: bool = not _sudah_lepas
+		_akhiri_lempar()
+		if lepas_tertunda:
+			koran_lepas.emit(sisi_lama)
+		lempar_selesai.emit()
 	_sedang_melempar = true
+	_sudah_lepas = false
 	_sisi_lempar = sisi
 	_waktu_lempar = 0.0
 	animation = nama
@@ -100,6 +116,7 @@ func maju(dt: float) -> void:
 	_waktu_lempar = langkah.waktu
 	set_frame_and_progress(langkah.frame, langkah.progres)
 	if langkah.lepas:
+		_sudah_lepas = true
 		koran_lepas.emit(_sisi_lempar)
 	if langkah.selesai and _sedang_melempar:
 		_akhiri_lempar()
@@ -113,8 +130,22 @@ func batalkan_lempar() -> void:
 		_akhiri_lempar()
 
 
+## Jeda dari jari dilepas sampai koran lepas dari tangan bila lempar ke `sisi` dimulai sekarang, detik (`LemparWaktu.waktu_lepas` dari fps
+## dan jumlah frame animasi lempar yang akan dipakai; D-4). 0 bila sisi kosong atau animasi tidak ada.
+func jeda_lepas(sisi: LoperAnim.Sisi) -> float:
+	var nama: StringName = _nama_lempar(sisi)
+	if sprite_frames == null or nama == &"" or not sprite_frames.has_animation(nama):
+		return 0.0
+	return LemparWaktu.waktu_lepas(sprite_frames.get_animation_speed(nama), sprite_frames.get_frame_count(nama), Config.LEMPAR_FRAME_LEPAS)
+
+
+func _nama_lempar(sisi: LoperAnim.Sisi) -> StringName:
+	return LoperAnim.nama_lempar(sisi, LoperAnim.tingkat_lempar(pose, speed_level), steer)
+
+
 func _akhiri_lempar() -> void:
 	_sedang_melempar = false
+	_sudah_lepas = false
 	_sisi_lempar = LoperAnim.Sisi.TIDAK_ADA
 	_waktu_lempar = 0.0
 	set_process(false)

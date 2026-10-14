@@ -56,11 +56,11 @@ assets/LICENSES.md     Lisensi aset pihak ketiga (ada)
 assets/data/           Segmen rute, misi, headline (DATA_SCHEMA.md), menyusul
 scripts/config.gd      SEMUA angka tuning (BALANCING.md) (ada)
 scripts/autoload/      audio.gd (autoload Audio, bunyi sepeda) (ada); SaveManager, DayManager menyusul
-scripts/systems/       Logika murni: config_parser, loper_anim, iso, touch_zones, stick_map, touch_router, bike_motion (gerak, rem, stamina, lateral), jeda_sim, dorongan_kecepatan, jalan_daur, piksel_lingkaran, lempar_waktu, umpan_balik_kecepatan, bunyi_sepeda (ada); lemparan, skor, misi, reputasi, kerusakan menyusul
-scripts/entities/      loper_sprite, sepeda_uji, jalan_uji, tanah_daur, objek_daur, pancaran_piksel, umpan_balik_sepeda (ada)
+scripts/systems/       Logika murni: config_parser, loper_anim, iso, touch_zones, stick_map, touch_router, bike_motion (gerak, rem, stamina, lateral), jeda_sim, dorongan_kecepatan, jalan_daur, piksel_lingkaran, lempar_waktu, umpan_balik_kecepatan, bunyi_sepeda, throw_solver, zona_sasaran, sisa_koran, koran_lempar, pola_piksel (ada); skor, misi, reputasi, kerusakan menyusul
+scripts/entities/      loper_sprite, sepeda_uji, jalan_uji, tanah_daur, objek_daur, zona_gambar, koran_gambar, pancaran_piksel, umpan_balik_sepeda (ada)
 scripts/dev/           cek_render.gd (probe render Compatibility) (ada)
-scripts/ui/            palette, kontrol_touch, hud_dev, bar_kecepatan, gaya_hud, tombol_jeda, tombol_sentuh, layar_jeda (ada); HUD final dan layar menyusul
-tests/                 run_tests.gd, tes_input_murni.gd, tes_input_scene.gd, tes_sprite.gd, tes_gerak.gd, tes_gerak_scene.gd, tes_jeda_scene.gd, tes_tata_letak.gd, tes_umpan_balik.gd, tes_bunyi.gd, tes_cek_render.gd, tes_export.gd, probe_layar.gd, probe_*_jendela.gd (ada)
+scripts/ui/            palette, kontrol_touch, hud_dev, bar_kecepatan, deret_koran, gambar_piksel, garis_bidik, gaya_hud, tombol_jeda, tombol_sentuh, layar_jeda (ada); HUD final dan layar menyusul
+tests/                 run_tests.gd, tes_input_murni.gd, tes_input_scene.gd, tes_sprite.gd, tes_gerak.gd, tes_gerak_scene.gd, tes_jeda_scene.gd, tes_tata_letak.gd, tes_umpan_balik.gd, tes_bunyi.gd, tes_cek_render.gd, tes_lempar.gd, tes_koran_scene.gd, tes_export.gd, probe_layar.gd, probe_*_jendela.gd (ada)
 tools/loper_art/       Renderer sprite pemain (Python), lihat ART_DIRECTION bagian 4; bangun_frames.py membangun SpriteFrames gabungan 48 animasi (stdlib)
 tools/env_art/         Renderer aset lingkungan, termasuk graybox.py (ada)
 tools/audio_art/       sintesis_sepeda.py: bunyi placeholder sepeda dari rumus (stdlib) (ada)
@@ -75,7 +75,7 @@ Path seperti `scripts/config.gd` atau `tools/loper_art/produce.py` di dokumen la
 
 - **Platform**: mobile Android, layar **landscape** dipegang dua tangan (GDD 5).
 - **Engine**: **Godot 4** dengan GDScript (GDD 16).
-- **Teknis Fase 0** (2026-10-09): Godot **4.7.2**, skala piksel **×3**, base 640×360 dengan stretch `canvas_items` + integer scale + `expand`, package Android **`com.rmh.kring`** (alasan di `ROADMAP.md` 4b).
+- **Teknis Fase 0** (2026-10-09): Godot **4.7.2**, skala piksel **×3**, base 640×360 dengan stretch `canvas_items` + integer scale + `expand`, package Android **`com.rmh.kring`** (alasan di `ROADMAP.md` 4b). Ukuran ubin **64×32 px** (2026-10-14).
 - **Kamera**: **isometrik 2:1**, jalan naik ke **kanan atas**, sepeda di sepertiga kiri layar, cahaya dari kiri atas (ART_DIRECTION 2.2).
 - **Dua sisi jalan**: kiri pelempar = **sisi seberang** (fasad rumah, kiri atas layar), kanan pelempar = **sisi dekat** (kanan bawah). Kiri dan kanan selalu mengikuti arah pelempar, bukan arah layar (GDD 4.2).
 - **Kontrol**: stick melayang di kiri bawah (atas kayuh keras, netral santai, bawah melambat, tarik penuh dan tahan = rem, kiri/kanan = ke sisi seberang/dekat), swipe di kanan untuk melempar. Tanpa tombol rem terpisah. Mode bantu dan opsi kidal (GDD 5).

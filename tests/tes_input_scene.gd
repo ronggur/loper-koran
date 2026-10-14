@@ -402,11 +402,21 @@ func _selesaikan_lempar(sprite: LoperSprite, jumlah: int = 0) -> void:
 
 
 ## Swipe sintetis: jari `index` turun di `dari`, bergeser ke `ke`, diangkat. Lempar (bila ada) dimulai di sini; `_process` sprite dimatikan sesudahnya.
-func _swipe(akar: JalanUji, index: int, dari: Vector2, ke: Vector2) -> void:
+## Sejak run fase2a-lemparan (D-9) lemparan berikutnya baru diterima 0,35 detik waktu SCENE sesudah lemparan sebelumnya, sedangkan tes
+## animasi di berkas ini memajukan waktu sprite terpisah (`_selesaikan_lempar`). Karena itu jeda antar lempar dilewati dulu
+## (`lewati_jeda`, bawaan) tanpa menggerakkan sepeda; tes jeda sendiri memakai `lewati_jeda = false`.
+func _swipe(akar: JalanUji, index: int, dari: Vector2, ke: Vector2, lewati_jeda: bool = true) -> void:
+	if lewati_jeda:
+		_lewati_jeda(akar)
 	_sentuh(index, dari, true)
 	_geser(index, ke)
 	_sentuh(index, ke, false)
 	_sprite(akar).set_process(false)
+
+
+## Memajukan HANYA jam jeda antar lempar `SisaKoran` sebesar `LEMPAR_JEDA_DETIK` (sepeda, koran terbang, dan sprite tidak bergerak).
+func _lewati_jeda(akar: JalanUji) -> void:
+	akar.koran = SisaKoran.langkah(akar.koran, Config.LEMPAR_JEDA_DETIK)
 
 
 ## Mencatat sinyal sprite: entri [jenis, sisi, animasi saat sinyal].
@@ -561,18 +571,19 @@ func _test_lempar_serong_dan_tepi() -> void:
 	check(not sepeda.sedang_melempar(), "swipe vertikal ke bawah tidak melempar")
 	_swipe(akar, 1, Vector2(450, 200), Vector2(480, 240))
 	check(not sepeda.sedang_melempar(), "swipe miring dengan gerak tegak lebih besar (30 datar, 40 tegak) tidak melempar")
-	_swipe(akar, 1, Vector2(450, 200), Vector2(450 + 11, 200))
-	check(not sepeda.sedang_melempar(), "swipe 11 px (di bawah ambang 12) tidak melempar")
-	_swipe(akar, 1, Vector2(450, 200), Vector2(450 - 11, 200))
-	check(not sepeda.sedang_melempar(), "swipe 11 px ke kiri tidak melempar")
+	# Ambang run fase2a-lemparan (D-2): |dx| >= 6% lebar viewport (780 -> 46,8 px), menggantikan 12 px.
+	_swipe(akar, 1, Vector2(450, 200), Vector2(450 + 46, 200))
+	check(not sepeda.sedang_melempar(), "swipe 46 px (di bawah ambang 46,8 = 6% dari 780) tidak melempar")
+	_swipe(akar, 1, Vector2(450, 200), Vector2(450 - 46, 200))
+	check(not sepeda.sedang_melempar(), "swipe 46 px ke kiri tidak melempar")
 	_swipe(akar, 1, Vector2(450, 200), Vector2(450, 200))
 	check(not sepeda.sedang_melempar(), "ketukan tanpa geser (swipe nol) tidak melempar")
 	check(router.jumlah_swipe_selesai >= 8 and catatan.size() == sebelum, "swipe tak sah tetap tercatat router (jumlah %d) tetapi tidak ada sinyal sprite" % router.jumlah_swipe_selesai)
-	_swipe(akar, 1, Vector2(450, 200), Vector2(450 + 12, 200))
-	check(sepeda.sedang_melempar() and sepeda.nama_animasi() == &"lempar_kanan_santai_normal", "swipe tepat 12 px ke kanan (di ambang, inklusif) melempar sisi dekat, dapat %s" % sepeda.nama_animasi())
+	_swipe(akar, 1, Vector2(450, 200), Vector2(450 + 46.8, 200))
+	check(sepeda.sedang_melempar() and sepeda.nama_animasi() == &"lempar_kanan_santai_normal", "swipe tepat 46,8 px ke kanan (di ambang 6%%, inklusif) melempar sisi dekat, dapat %s" % sepeda.nama_animasi())
 	_selesaikan_lempar(sprite)
-	_swipe(akar, 1, Vector2(450, 200), Vector2(450 - 12, 200))
-	check(sepeda.sedang_melempar() and sepeda.nama_animasi() == &"lempar_kiri_santai_normal", "swipe tepat 12 px ke kiri melempar sisi seberang, dapat %s" % sepeda.nama_animasi())
+	_swipe(akar, 1, Vector2(450, 200), Vector2(450 - 46.8, 200))
+	check(sepeda.sedang_melempar() and sepeda.nama_animasi() == &"lempar_kiri_santai_normal", "swipe tepat 46,8 px ke kiri melempar sisi seberang, dapat %s" % sepeda.nama_animasi())
 	_selesaikan_lempar(sprite)
 	# Swipe yang dimulai di luar zona swipe (strip HUD atas, zona stick) tidak diklaim dan tidak melempar.
 	sebelum = catatan.size()
@@ -580,11 +591,12 @@ func _test_lempar_serong_dan_tepi() -> void:
 	_swipe(akar, 2, Vector2(400, 20), Vector2(500, 20))
 	_swipe(akar, 2, Vector2(150, 220), Vector2(60, 220))
 	check(not sepeda.sedang_melempar() and router.jumlah_swipe_selesai == jumlah_router and catatan.size() == sebelum, "swipe yang dimulai di strip atas atau zona stick tidak diklaim sebagai swipe dan tidak melempar")
-	# Swipe kedua saat masih melempar diabaikan; sesudah selesai swipe baru melempar lagi.
+	# Swipe kedua di dalam jeda antar lempar 0,35 detik (D-9 run fase2a-lemparan; dulu: "saat masih melempar") diabaikan; sesudah jeda
+	# lewat swipe baru melempar lagi.
 	sebelum = catatan.size()
 	_swipe(akar, 1, Vector2(440, 200), Vector2(500, 200))
-	_swipe(akar, 1, Vector2(500, 220), Vector2(440, 220))
-	check(sepeda.nama_animasi() == &"lempar_kanan_santai_normal", "swipe kedua (ke kiri) saat masih melempar diabaikan: tetap lempar_kanan_santai_normal, dapat %s" % sepeda.nama_animasi())
+	_swipe(akar, 1, Vector2(500, 220), Vector2(440, 220), false)
+	check(sepeda.nama_animasi() == &"lempar_kanan_santai_normal", "swipe kedua (ke kiri) di dalam jeda 0,35 detik diabaikan: tetap lempar_kanan_santai_normal, dapat %s" % sepeda.nama_animasi())
 	_selesaikan_lempar(sprite)
 	var baru: Array = catatan.slice(sebelum)
 	check(baru.size() == 2 and baru[0][1] == int(LoperAnim.Sisi.DEKAT) and baru[1][0] == "selesai", "hanya lemparan pertama menghasilkan sinyal (koran_lepas sisi dekat, lempar_selesai)")

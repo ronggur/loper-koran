@@ -38,7 +38,7 @@ Yang membedakan pixel art profesional dari yang amatir hampir seluruhnya soal ko
 
 > **KEPUTUSAN (2026-10-05): isometrik 2:1 terkunci, jalan naik ke kanan atas.** Dibandingkan dengan arah kiri atas di papan "Banding arah jalan"; arah kiri atas ditinggalkan.
 
-- **Proyeksi 2:1**: satu langkah dunia di sumbu x menggeser layar (+1, +½) piksel, di sumbu y (−1, +½), dan tinggi z (0, −1). Ubin belah ketupat **64×32 px (usulan)** = persegi dunia 32×32 unit.
+- **Proyeksi 2:1**: satu langkah dunia di sumbu x menggeser layar (+1, +½) piksel, di sumbu y (−1, +½), dan tinggi z (0, −1). Ubin belah ketupat **64×32 px (dikunci 2026-10-14)** = persegi dunia 32×32 unit.
 - **Arah jalan** naik ke kanan atas. Sepeda di **sepertiga kiri layar**, jadi pandangan ke depan jatuh di area yang bebas dari jempol.
 - **Kamera melihat sisi kanan sepeda** (rantai dan gir) dan punggung pengendara.
 - **Sisi seberang** (kiri pelempar) ada di kiri atas jalan: fasad, pintu, dan kotak surat terlihat. **Sisi dekat** (kanan pelempar) ada di kanan bawah jalan: rumah hanya terlihat belakangnya. Cara menampilkan rumah di sisi dekat masih terbuka (bagian 11).
@@ -309,6 +309,8 @@ Kolom **M2** = dibutuhkan untuk satu hari penuh di perumahan (prototype 3–4). 
 | Koran mendarat / terlipat | ✅ | ✅ | Di teras, rumput, kotak surat |
 | Paket | ⬜ | ✅ | Misi P2 |
 
+**Placeholder dari kode (usulan, run fase2a-lemparan 2026-10-14):** belum ada sheet koran di repo, jadi koran, bayangannya, penanda kena/meleset, elips garis bidik, ikon koran HUD, dan zona sasaran jalan uji digambar dari pola piksel di `scripts/systems/pola_piksel.gd` (baris teks berisi peran warna, bukan hex) oleh `scripts/entities/koran_gambar.gd`, `zona_gambar.gd`, dan `scripts/ui/garis_bidik.gd`, `deret_koran.gd`. Semua per piksel game (persegi bilangan bulat, tajam di ×3, lolos `tools/cek_blok_piksel.py 3`) dan hanya warna `Palette` (`OUTLINE`, `TEXT`, `TEXT_2`, `OK`, `FAIL`, `ACCENT`, `UI_PANEL_RAISED`, `RADAR_BUKAN`). Koran gulung 8×6, 4 langkah putar (mendatar, serong naik, tegak, serong turun) di 12 fps, di atas objek dunia; bayangan elips `OUTLINE` alpha 85% di lapisan tanah, 10 px di tanah mengecil 2 px per ubin tinggi sampai 6 px (dulu alpha 50%, 8 sampai 4 px; dinaikkan run fase2a-lemparan iterasi 2 karena nyaris tak terlihat di aspal, kontras di aspal graybox sekitar 3,2:1; usulan, dinilai di HP); koran yang mendarat tergeletak (frame mendatar) selama penandanya tampil. Zona jalan uji di bawah objek dunia: halaman bergaris tepi `TEXT` 70%, teras isi `UI_PANEL_RAISED`, strip jendela `TEXT_2` di kaki fasad, kotak surat datar sisi dekat `ACCENT`, rumah bukan pelanggan dengan garis dan teras `RADAR_BUKAN` plus tanda lingkaran bergaris miring di halaman. Sisi dekat hanya kavling datar (cara menampilkan rumah sisi dekat tetap terbuka, bagian 11). Sheet koran dari renderer menggantikannya nanti.
+
 ### 6.3 Ubin dan jalan (perumahan)
 
 | Aset | M2 | M3 |
@@ -524,7 +526,7 @@ Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dib
 
 ## 11. Keputusan yang Perlu Diambil
 
-- **Ukuran ubin (64×32)**: dikunci setelah graybox Fase 1. Skala piksel sudah dikunci ×3 (2026-10-09).
+- ~~**Ukuran ubin (64×32)**~~: dikunci 2026-10-14 setelah graybox Fase 1 (ROADMAP 4b). Skala piksel sudah dikunci ×3 (2026-10-09).
 - **Stretch mode dan resolusi dasar** (bagian 7): sudah dipilih 2026-10-09, diverifikasi di desktop pada run 0A (hasil di ROADMAP 4b); uji di HP menunggu.
 - **Palet induk** (bagian 2.4): dikunci setelah aset gelombang 1.
 - **Warna bayangan per waktu dan distrik** (bagian 2.5): dikunci bersama palet induk, setelah shader-nya dicek di Fase 0 (shader jalan di Compatibility, dicek 2026-10-14 di vivo V2108; bagian 7).
@@ -536,6 +538,7 @@ Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dib
 
 ## Changelog Keputusan
 
+- **2026-10-14** — **Ukuran ubin 64×32 px dikunci** (bagian 2.2, ROADMAP 4b), keputusan pemilik setelah graybox dan uji HP Fase 1. Persegi dunia tetap 32×32 unit; aset dunia gelombang 1 dibuat dengan ukuran ini.
 - **2026-10-13** — **Meluncur dan rem dipasang di jalan uji** (bagian 3.4), tetap usulan sampai dinilai di HP. `loper_agen_frames.tres` kini 48 animasi (15 kayuh, 5 melambat, 18 lempar, 5 meluncur, 5 rem), dibangun `tools/loper_art/bangun_frames.py` dari lima JSON sumber; PNG tidak diubah. Alas dan tapak roda tiap frame sama dengan santai frame 2, jadi sprite tidak melompat saat berganti kayuh, meluncur, dan rem (dites). Pemilihan pose mengikuti fisika (keputusan pemilik 2026-10-13, BALANCING 2).
 - **2026-10-09** — **Melambat dan lempar koran dipasang di jalan uji** (bagian 3.2, 3.4), tetap usulan sampai dinilai di HP. `loper_agen_frames.tres` kini gabungan 38 animasi (15 kayuh, 5 melambat, 18 lempar) yang dibangun `tools/loper_art/bangun_frames.py` dari tiga JSON sumber; sel, titik pijak, dan offset sama dengan sheet kayuh. Hanya animasi pemain: proyektil, skor, dan arah lempar 90° tetap Fase 2 dan aset berikutnya.
 - **2026-10-09** — **Judul game "Kring Kring!" dan bel sebagai ciri khas** (GDD 5.4). Aset bel ditambahkan sebagai usulan: tombol bel HUD tiga keadaan, efek garis getar dan teks "KRING!" / "KRING KRING!" di atas setang, dan ikon "!" untuk warga atau hewan yang menepi (`design/bel/`, `tools/ui_art/bel.py`). Logo "Kring Kring!" masuk daftar aset. Animasi pemain tidak berubah: bel di sprite rute hanya 1–2 piksel, jadi efeknya cukup lewat VFX.

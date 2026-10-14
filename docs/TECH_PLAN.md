@@ -862,8 +862,8 @@ Perkiraan total: **sekitar 480 aset game** (ART_DIRECTION 10) **ditambah sekitar
 | ~~Nama package Android~~ | ✅ 2026-10-09 | `com.rmh.kring` |
 | ~~Versi Godot dan stretch mode~~ | ✅ 2026-10-09 | Godot 4.7.2; `canvas_items` + integer scale + `expand` |
 | ~~HP uji (merek dan kelas)~~ | ✅ 2026-10-09 | Samsung A54 (SM-A546E), Android 16, 2340×1080, terhubung lewat `adb` |
-| Ubin 64×32 (skala piksel ×3 sudah dikunci 2026-10-09) | Akhir Fase 1 | 64×32 |
-| Jendela: bonus atau penalti | Fase 2 | Netral dulu |
+| ~~Ubin 64×32~~ | ✅ 2026-10-14 | 64×32 |
+| Jendela: bonus atau penalti | Fase 2 | Sakelar di `config.gd`, bawaan prototype penalti ringan (pemilik 2026-10-14); keputusan akhir di Fase 3 (skor) |
 | Tampilan rumah sisi dekat | Akhir Fase 3 (paling lambat sebelum Fase 8) | Uji tiga pendekatan di graybox |
 | Nama koran dan nama agen Pak Darto | Fase 4 | — |
 | Misi lintas hari | Fase 4 | Tidak (satu hari satu misi) |

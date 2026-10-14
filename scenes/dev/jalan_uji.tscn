@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scripts/entities/jalan_uji.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/entities/tanah_daur.gd" id="2_tanah"]
@@ -12,6 +12,9 @@
 [ext_resource type="PackedScene" path="res://scenes/entities/sepeda_uji.tscn" id="10_sepeda"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud_dev.tscn" id="11_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/layar_jeda.tscn" id="12_jeda"]
+[ext_resource type="Script" path="res://scripts/entities/zona_gambar.gd" id="13_zona"]
+[ext_resource type="Script" path="res://scripts/entities/koran_gambar.gd" id="14_koran"]
+[ext_resource type="Script" path="res://scripts/ui/garis_bidik.gd" id="15_bidik"]
 
 [node name="JalanUji" type="Node2D"]
 script = ExtResource("1_script")
@@ -27,6 +30,15 @@ tekstur_aspal = ExtResource("5_aspal")
 tekstur_trotoar = ExtResource("6_trotoar")
 tekstur_rumput = ExtResource("7_rumput")
 
+[node name="Zona" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("13_zona")
+
+[node name="KoranTanah" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("14_koran")
+lapisan = 0
+
 [node name="Objek" type="Node2D" parent="."]
 unique_name_in_owner = true
 y_sort_enabled = true
@@ -37,6 +49,15 @@ adegan_kotak_surat = ExtResource("9_kotak_surat")
 
 [node name="Sepeda" parent="Objek" instance=ExtResource("10_sepeda")]
 unique_name_in_owner = true
+
+[node name="KoranUdara" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("14_koran")
+lapisan = 1
+
+[node name="GarisBidik" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("15_bidik")
 
 [node name="Hud" parent="." instance=ExtResource("11_hud")]
 unique_name_in_owner = true

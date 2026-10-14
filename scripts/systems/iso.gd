@@ -37,3 +37,23 @@ static func layar_ke_dunia(layar: Vector2) -> Vector2:
 ## Gerak halus tetap disimpan sebagai float di logika, hanya posisi gambar yang dibulatkan.
 static func posisi_gambar(dunia: Vector2) -> Vector2:
 	return dunia_ke_layar(dunia).round()
+
+
+## Geseran layar akibat tinggi di atas tanah (sumbu z), piksel game, float (ART_DIRECTION 2.2, D-3 run fase2a-lemparan).
+## Tinggi dalam ubin; tiap unit dunia tinggi menggeser layar (0, -1) px, jadi 1 ubin = `Config.UBIN_UNIT_DUNIA` (32) px ke atas.
+## Tinggi bukan bilangan hingga dianggap 0 (tanpa geseran).
+static func tinggi_ke_layar(tinggi_ubin: float) -> Vector2:
+	if not is_finite(tinggi_ubin):
+		return Vector2.ZERO
+	return Vector2(0.0, -tinggi_ubin * float(Config.UBIN_UNIT_DUNIA))
+
+
+## Posisi dunia (ubin) di ketinggian `tinggi_ubin` ke posisi layar (piksel game, float): titik tanah lalu digeser ke atas.
+static func dunia_tinggi_ke_layar(dunia: Vector2, tinggi_ubin: float) -> Vector2:
+	return dunia_ke_layar(dunia) + tinggi_ke_layar(tinggi_ubin)
+
+
+## Posisi gambar benda di udara (koran terbang): `dunia_tinggi_ke_layar` dibulatkan ke piksel (pixel-perfect, rule `gdscript`).
+## Bayangannya digambar di `posisi_gambar(dunia)` (tinggi 0).
+static func posisi_gambar_tinggi(dunia: Vector2, tinggi_ubin: float) -> Vector2:
+	return dunia_tinggi_ke_layar(dunia, tinggi_ubin).round()

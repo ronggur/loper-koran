@@ -4,7 +4,8 @@ extends RefCounted
 ## di scene `jalan_uji.tscn` (AC-3): santai tanpa garis, ngebut dengan garis, debu ikut kecepatan, debu rem, batas jumlah, berhenti
 ## saat jeda, tanpa `GPUParticles2D`, warna dari `Palette`. Scene dijalankan dengan `perbarui(DT)` dan `PancaranPiksel.maju(DT)`.
 ## Run fase1c-perapian (QA-006, D-5): debu roda di ruang dunia (tertinggal di jalan saat maju dan pindah sisi), garis kecepatan tetap
-## di ruang lokal sepeda, debu digambar di belakang sprite pemain.
+## di ruang lokal sepeda, debu digambar di belakang sprite pemain. Run fase2a-lemparan (P-1, P-2; QA-001, QA-002 run fase1c-perapian):
+## titik gambar debu (`PancaranPiksel.titik_gambar`) dan gambar ulang saat induk bergeser tanpa `maju`.
 
 const BERKAS_JALAN_UJI: String = "res://scenes/dev/jalan_uji.tscn"
 const DT: float = 1.0 / 60.0
@@ -36,6 +37,7 @@ func jalankan() -> void:
 	await _test_scene()
 	await _test_scene_jeda()
 	await _test_debu_ruang_dunia()
+	await _test_titik_gambar_debu()
 
 
 func _test_config() -> void:
@@ -377,4 +379,57 @@ func _test_debu_ruang_dunia() -> void:
 	check(tertinggal >= 0.45, "pindah sisi sambil ngebut: jejak debu tertinggal di sisi lama (%.2f ubin dari roda sekarang ke arah sisi lama)" % tertinggal)
 	check(debu.jumlah_aktif() <= Config.UMPAN_DEBU_BATAS, "(d) jumlah debu tetap <= batas %d" % Config.UMPAN_DEBU_BATAS)
 	_sentuh(0, TITIK_STICK, false)
+	_bersihkan(akar)
+
+
+## Titik gambar partikel `p` cocok dengan posisi globalnya: transform global x titik gambar = posisi global dibulatkan, untuk semua partikel.
+func _titik_gambar_cocok(p: PancaranPiksel) -> bool:
+	var global: PackedVector2Array = p.posisi_global_partikel()
+	var ke_global: Transform2D = p.get_global_transform()
+	for i: int in range(global.size()):
+		if not (ke_global * p.titik_gambar(i)).is_equal_approx(global[i].round()):
+			return false
+		if p.titik_gambar(i) != p.titik_gambar(i).round():
+			return false
+	return global.size() > 0
+
+
+func _test_titik_gambar_debu() -> void:
+	_judul.call("Titik gambar debu ruang dunia dan gambar ulang saat induk bergeser tanpa maju (P-1, P-2; QA-001, QA-002 run 1C)")
+	var akar: JalanUji = await _siapkan()
+	var sepeda: SepedaUji = _anak(akar, "Sepeda") as SepedaUji
+	var umpan: UmpanBalikSepeda = sepeda.umpan_balik()
+	var debu: PancaranPiksel = umpan.debu()
+	var garis: PancaranPiksel = umpan.garis()
+	_sentuh(0, TITIK_STICK, true)
+	_geser(0, TITIK_STICK - Vector2(0, Config.STICK_RADIUS_PX))
+	_maju(akar, 90)
+	_sentuh(0, TITIK_STICK, false)
+	var transform_debu: Transform2D = debu.get_global_transform()
+	check(debu.jumlah_aktif() >= 4 and transform_debu.origin.length() > 100.0, "kontrol: debu hidup (%d) dan sepeda jauh dari titik asal (%s), jadi transform global bukan identitas" % [debu.jumlah_aktif(), transform_debu.origin])
+	# P-1: titik yang digambar = posisi global dibulatkan, dibawa ke ruang lokal (bukan posisi global dipakai sebagai lokal).
+	check(_titik_gambar_cocok(debu), "(P-1) debu ruang dunia: transform global x titik_gambar(i) = posisi global dibulatkan, untuk semua partikel")
+	check(_titik_gambar_cocok(garis) or garis.jumlah_aktif() == 0, "garis kecepatan (ruang lokal): titik_gambar = posisi lokal dibulatkan, ikut induk")
+	check(debu.titik_gambar(-1) == Vector2.ZERO and debu.titik_gambar(debu.jumlah_aktif()) == Vector2.ZERO, "indeks di luar rentang = nol")
+	# P-2: induk digeser tanpa `maju` (proses debu mati): debu digambar ulang dan titik gambarnya mengikuti.
+	var gambar: Array[int] = [0]
+	var hitung: Callable = func() -> void: gambar[0] += 1
+	debu.draw.connect(hitung)
+	await _tree.process_frame
+	await _tree.process_frame
+	gambar[0] = 0
+	var titik_lama: Vector2 = debu.titik_gambar(0)
+	var global_lama: Vector2 = debu.posisi_global_partikel()[0]
+	sepeda.position += Vector2(32, 16)
+	await _tree.process_frame
+	await _tree.process_frame
+	check(debu.posisi_global_partikel()[0] == global_lama, "kontrol: induk bergeser, posisi global debu tidak berubah (tanpa maju)")
+	check(gambar[0] >= 1, "(P-2) induk bergeser tanpa maju: debu digambar ulang (%d kali)" % gambar[0])
+	check(debu.titik_gambar(0) == titik_lama - Vector2(32, 16) and _titik_gambar_cocok(debu), "(P-2) titik gambar mengikuti induk: bergeser -(32, 16) di ruang lokal, tetap di tempat yang sama di jalan")
+	# Tanpa geseran induk tidak ada gambar ulang dari jalur ini (proses debu mati).
+	gambar[0] = 0
+	await _tree.process_frame
+	await _tree.process_frame
+	check(gambar[0] == 0, "kontrol: tanpa geseran dan tanpa maju, debu tidak digambar ulang (%d)" % gambar[0])
+	debu.draw.disconnect(hitung)
 	_bersihkan(akar)

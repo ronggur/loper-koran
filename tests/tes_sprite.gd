@@ -50,6 +50,7 @@ func jalankan() -> void:
 	_test_loper_sprite_tingkat()
 	_test_loper_sprite_pose()
 	_test_loper_sprite_lempar()
+	_test_loper_sprite_lempar_menyela()
 	_test_loper_sprite_lempar_semua_kombinasi()
 	_test_loper_sprite_lempar_tepi()
 	_test_loper_sprite_di_tree()
@@ -276,34 +277,36 @@ func _test_nama_lempar() -> void:
 
 
 func _test_sisi_dari_swipe() -> void:
-	_judul.call("Sisi lempar dari swipe (AC-3, D-2)")
-	var ambang: float = Config.LEMPAR_SWIPE_AMBANG_PX
-	check(ambang == 12.0, "ambang swipe lempar usulan 12 px game")
+	# Run fase2a-lemparan (D-2): fungsi pindah dari `LoperAnim` ke `ThrowSolver`; ambang 12 px (panjang total) diganti |dx| >= 6% lebar
+	# viewport game (inklusif). Aturan arah (kiri layar = seberang), tegak dominan, 45 derajat, dan nilai tidak sah tetap.
+	_judul.call("Sisi lempar dari swipe (AC-3 run sprite-lempar-melambat; ambang D-2 run fase2a-lemparan)")
+	var lebar: float = 780.0
+	var ambang: float = ThrowSolver.swipe_min_px(lebar)
+	check(is_equal_approx(ambang, 46.8), "ambang swipe lempar di lebar 780 = 6%% = 46,8 px game, dapat %s" % ambang)
 	var awal: Vector2 = Vector2(450.0, 200.0)
 	# Kiri layar = seberang, kanan layar = dekat (GDD 5.2), di berbagai panjang.
-	for panjang: float in [12.0, 20.0, 60.0, 200.0]:
-		check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(-panjang, 0.0)) == LoperAnim.Sisi.SEBERANG, "swipe %s px ke kiri layar = SEBERANG" % panjang)
-		check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(panjang, 0.0)) == LoperAnim.Sisi.DEKAT, "swipe %s px ke kanan layar = DEKAT" % panjang)
+	for panjang: float in [47.0, 60.0, 200.0, 400.0]:
+		check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(-panjang, 0.0), lebar) == LoperAnim.Sisi.SEBERANG, "swipe %s px ke kiri layar = SEBERANG" % panjang)
+		check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(panjang, 0.0), lebar) == LoperAnim.Sisi.DEKAT, "swipe %s px ke kanan layar = DEKAT" % panjang)
 	# Miring tapi masih dominan datar (tegak lebih kecil): sisi mengikuti tanda gerak datar, naik atau turun.
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(-40.0, -30.0)) == LoperAnim.Sisi.SEBERANG and LoperAnim.sisi_dari_swipe(awal, awal + Vector2(-40.0, 30.0)) == LoperAnim.Sisi.SEBERANG, "kiri-atas dan kiri-bawah (datar dominan) = SEBERANG")
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(40.0, -30.0)) == LoperAnim.Sisi.DEKAT and LoperAnim.sisi_dari_swipe(awal, awal + Vector2(40.0, 30.0)) == LoperAnim.Sisi.DEKAT, "kanan-atas dan kanan-bawah (datar dominan) = DEKAT")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(-80.0, -60.0), lebar) == LoperAnim.Sisi.SEBERANG and ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(-80.0, 60.0), lebar) == LoperAnim.Sisi.SEBERANG, "kiri-atas dan kiri-bawah (datar dominan) = SEBERANG")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(80.0, -60.0), lebar) == LoperAnim.Sisi.DEKAT and ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(80.0, 60.0), lebar) == LoperAnim.Sisi.DEKAT, "kanan-atas dan kanan-bawah (datar dominan) = DEKAT")
 	# Vertikal dominan tidak melempar.
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(0.0, -60.0)) == LoperAnim.Sisi.TIDAK_ADA and LoperAnim.sisi_dari_swipe(awal, awal + Vector2(0.0, 60.0)) == LoperAnim.Sisi.TIDAK_ADA, "swipe lurus ke atas atau ke bawah tidak melempar")
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(-30.0, -40.0)) == LoperAnim.Sisi.TIDAK_ADA and LoperAnim.sisi_dari_swipe(awal, awal + Vector2(30.0, 40.0)) == LoperAnim.Sisi.TIDAK_ADA, "swipe miring dengan gerak tegak lebih besar (kiri-atas 30/40, kanan-bawah 30/40) tidak melempar")
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(-50.0, -50.0)) == LoperAnim.Sisi.TIDAK_ADA and LoperAnim.sisi_dari_swipe(awal, awal + Vector2(50.0, 50.0)) == LoperAnim.Sisi.TIDAK_ADA, "tepat 45 derajat (datar = tegak) ambigu: tidak melempar")
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(51.0, 50.0)) == LoperAnim.Sisi.DEKAT and LoperAnim.sisi_dari_swipe(awal, awal + Vector2(-51.0, 50.0)) == LoperAnim.Sisi.SEBERANG, "sedikit di atas 45 derajat ke arah datar (51/50) melempar")
-	# Ambang panjang: 11,99 tidak, tepat 12 ya (inklusif), diukur dari panjang swipe, bukan hanya komponen datar.
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(11.99, 0.0)) == LoperAnim.Sisi.TIDAK_ADA and LoperAnim.sisi_dari_swipe(awal, awal + Vector2(-11.99, 0.0)) == LoperAnim.Sisi.TIDAK_ADA, "swipe 11,99 px (di bawah ambang) tidak melempar, kedua arah")
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(12.0, 0.0)) == LoperAnim.Sisi.DEKAT and LoperAnim.sisi_dari_swipe(awal, awal + Vector2(-12.0, 0.0)) == LoperAnim.Sisi.SEBERANG, "swipe tepat 12 px (di ambang, inklusif) melempar, kedua arah")
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(11.0, 5.0)) == LoperAnim.Sisi.DEKAT, "swipe 11 datar + 5 tegak (panjang 12,08, datar dominan) melempar karena panjangnya melewati ambang")
-	check(LoperAnim.sisi_dari_swipe(awal, awal + Vector2(8.5, 8.4)) == LoperAnim.Sisi.TIDAK_ADA, "swipe 8,5 + 8,4 (panjang 11,95) tidak melempar")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(0.0, -60.0), lebar) == LoperAnim.Sisi.TIDAK_ADA and ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(0.0, 60.0), lebar) == LoperAnim.Sisi.TIDAK_ADA, "swipe lurus ke atas atau ke bawah tidak melempar")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(-60.0, -80.0), lebar) == LoperAnim.Sisi.TIDAK_ADA and ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(60.0, 80.0), lebar) == LoperAnim.Sisi.TIDAK_ADA, "swipe miring dengan gerak tegak lebih besar (60/80) tidak melempar walau |dx| di atas ambang")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(-50.0, -50.0), lebar) == LoperAnim.Sisi.TIDAK_ADA and ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(50.0, 50.0), lebar) == LoperAnim.Sisi.TIDAK_ADA, "tepat 45 derajat (datar = tegak) ambigu: tidak melempar")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(51.0, 50.0), lebar) == LoperAnim.Sisi.DEKAT and ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(-51.0, 50.0), lebar) == LoperAnim.Sisi.SEBERANG, "sedikit di atas 45 derajat ke arah datar (51/50) melempar")
+	# Ambang: |dx| saja (komponen mendatar), bukan panjang total.
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(46.7, 0.0), lebar) == LoperAnim.Sisi.TIDAK_ADA and ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(-46.7, 0.0), lebar) == LoperAnim.Sisi.TIDAK_ADA, "swipe 46,7 px (di bawah 46,8) tidak melempar, kedua arah")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(ambang, 0.0), lebar) == LoperAnim.Sisi.DEKAT and ThrowSolver.sisi_dari_swipe(awal, awal - Vector2(ambang, 0.0), lebar) == LoperAnim.Sisi.SEBERANG, "swipe tepat di ambang (presisi tunggal Vector2) melempar, kedua arah (inklusif)")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(46.0, 20.0), lebar) == LoperAnim.Sisi.TIDAK_ADA, "46 datar + 20 tegak (panjang total 50,2 di atas ambang) tidak melempar: yang dihitung |dx| saja")
 	# Tidak bergantung pada posisi awal.
-	check(LoperAnim.sisi_dari_swipe(Vector2(0.0, 0.0), Vector2(-20.0, 3.0)) == LoperAnim.Sisi.SEBERANG and LoperAnim.sisi_dari_swipe(Vector2(779.0, 359.0), Vector2(759.0, 357.0)) == LoperAnim.Sisi.SEBERANG, "hasil hanya bergantung pada selisih, bukan letak titik awal")
+	check(ThrowSolver.sisi_dari_swipe(Vector2(0.0, 0.0), Vector2(-60.0, 3.0), lebar) == LoperAnim.Sisi.SEBERANG and ThrowSolver.sisi_dari_swipe(Vector2(779.0, 359.0), Vector2(719.0, 357.0), lebar) == LoperAnim.Sisi.SEBERANG, "hasil hanya bergantung pada selisih, bukan letak titik awal")
 	# Vektor nol dan nilai tidak sah.
-	check(LoperAnim.sisi_dari_swipe(awal, awal) == LoperAnim.Sisi.TIDAK_ADA, "vektor nol (tap tanpa geser) tidak melempar")
-	check(LoperAnim.sisi_dari_swipe(Vector2(NAN, 0.0), awal) == LoperAnim.Sisi.TIDAK_ADA and LoperAnim.sisi_dari_swipe(awal, Vector2(NAN, NAN)) == LoperAnim.Sisi.TIDAK_ADA, "NaN pada titik awal atau akhir tidak melempar")
-	check(LoperAnim.sisi_dari_swipe(awal, Vector2(INF, 200.0)) == LoperAnim.Sisi.TIDAK_ADA and LoperAnim.sisi_dari_swipe(Vector2(-INF, 0.0), awal) == LoperAnim.Sisi.TIDAK_ADA, "tak hingga pada titik awal atau akhir tidak melempar")
-	check(LoperAnim.sisi_dari_swipe(Vector2.ZERO, Vector2(1.0e30, 0.0)) == LoperAnim.Sisi.DEKAT, "swipe sangat panjang tetap hingga dan melempar ke dekat")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal, lebar) == LoperAnim.Sisi.TIDAK_ADA, "vektor nol (tap tanpa geser) tidak melempar")
+	check(ThrowSolver.sisi_dari_swipe(Vector2(NAN, 0.0), awal, lebar) == LoperAnim.Sisi.TIDAK_ADA and ThrowSolver.sisi_dari_swipe(awal, Vector2(NAN, NAN), lebar) == LoperAnim.Sisi.TIDAK_ADA, "NaN pada titik awal atau akhir tidak melempar")
+	check(ThrowSolver.sisi_dari_swipe(awal, Vector2(INF, 200.0), lebar) == LoperAnim.Sisi.TIDAK_ADA and ThrowSolver.sisi_dari_swipe(Vector2(-INF, 0.0), awal, lebar) == LoperAnim.Sisi.TIDAK_ADA, "tak hingga pada titik awal atau akhir tidak melempar")
+	check(ThrowSolver.sisi_dari_swipe(Vector2.ZERO, Vector2(1.0e30, 0.0), lebar) == LoperAnim.Sisi.DEKAT, "swipe sangat panjang tetap hingga dan melempar ke dekat")
 
 
 # --- LemparWaktu: garis waktu animasi lempar (murni) ---
@@ -545,12 +548,12 @@ func _test_loper_sprite_lempar() -> void:
 		if pemain.animation != &"lempar_kanan_cepat_serong_kanan":
 			nama_dalam = false
 		if langkah == 3:
-			# Perubahan tingkat dan arah di tengah lempar disimpan, tidak mengganti gambar (D-4). Lempar kedua diabaikan (D-3).
+			# Perubahan tingkat dan arah di tengah lempar disimpan, tidak mengganti gambar (D-4). Sejak run fase2a-lemparan (D-9) lempar
+			# kedua tidak lagi ditolak sprite (penolakan pindah ke jeda antar lempar `SisaKoran`); perilaku menyela dites di
+			# `_test_loper_sprite_lempar_menyela`.
 			pemain.speed_level = 2
 			pemain.steer = -1
 			check(pemain.animation == &"lempar_kanan_cepat_serong_kanan" and pemain.speed_level == 2 and pemain.steer == -1, "speed_level dan steer berubah di tengah lempar: tersimpan, gambar lempar tidak berganti")
-			check(not pemain.lempar(LoperAnim.Sisi.SEBERANG), "lempar(SEBERANG) saat sedang melempar diabaikan (false)")
-			check(pemain.animation == &"lempar_kanan_cepat_serong_kanan" and pemain.frame == 0, "lempar yang diabaikan tidak mengulang atau mengganti animasi")
 		if langkah == 9:
 			check(_hitung(catatan, "lepas") == 0, "sampai langkah 9 (frame 1) koran belum lepas")
 		if langkah == 10:
@@ -573,6 +576,51 @@ func _test_loper_sprite_lempar() -> void:
 	for i: int in range(20):
 		pemain.maju(DT)
 	check(catatan.size() == 4 and catatan[2][1] == int(LoperAnim.Sisi.SEBERANG) and catatan[3][0] == "selesai", "lempar kedua juga memancarkan koran_lepas (SEBERANG) dan lempar_selesai tepat sekali")
+	pemain.free()
+
+
+## D-9 run fase2a-lemparan: sprite tidak lagi menolak lempar sendiri. Lempar baru saat lempar lama masih berjalan menutup lempar lama
+## dulu (koran_lepas yang belum terjadi dipancarkan sekali, lalu lempar_selesai), lalu mulai dari frame 0: tiap lempar tetap memancarkan
+## koran_lepas dan lempar_selesai tepat sekali, animasi tidak rusak. `jeda_lepas` = waktu frame lepas animasi yang akan dipakai.
+func _test_loper_sprite_lempar_menyela() -> void:
+	_judul.call("LoperSprite: lempar menyela lempar yang berjalan (D-9 run fase2a-lemparan)")
+	var pemain: LoperSprite = _pemain_baru()
+	var catatan: Array = _catat(pemain)
+	check(is_equal_approx(pemain.jeda_lepas(LoperAnim.Sisi.DEKAT), 2.0 / 12.0) and is_equal_approx(pemain.jeda_lepas(LoperAnim.Sisi.SEBERANG), 2.0 / 12.0), "jeda lepas = frame lepas 2 di 12 fps (LemparWaktu.waktu_lepas), dapat %s" % pemain.jeda_lepas(LoperAnim.Sisi.DEKAT))
+	check(pemain.jeda_lepas(LoperAnim.Sisi.TIDAK_ADA) == 0.0, "jeda lepas sisi kosong = 0")
+	# (a) Menyela SEBELUM frame lepas: koran_lepas lama dipancarkan saat disela.
+	check(pemain.lempar(LoperAnim.Sisi.DEKAT), "lempar pertama (dekat) dimulai")
+	for i: int in range(3):
+		pemain.maju(DT)
+	check(_hitung(catatan, "lepas") == 0, "3 langkah: belum lepas")
+	check(pemain.lempar(LoperAnim.Sisi.SEBERANG), "lempar kedua (seberang) saat lempar pertama berjalan: dimulai (true), tidak ditolak sprite")
+	check(catatan.size() == 2 and catatan[0][0] == "lepas" and catatan[0][1] == int(LoperAnim.Sisi.DEKAT) and catatan[1][0] == "selesai", "lempar pertama ditutup dengan koran_lepas (dekat) lalu lempar_selesai, masing-masing sekali, dapat %s" % [catatan])
+	check(pemain.sedang_melempar() and pemain.animation == &"lempar_kiri_santai_normal" and pemain.frame == 0 and not pemain.is_playing(), "lempar kedua mulai dari frame 0 (lempar_kiri_santai_normal), tidak diputar pemutar bawaan")
+	for i: int in range(20):
+		pemain.maju(DT)
+	check(catatan.size() == 4 and catatan[2][0] == "lepas" and catatan[2][1] == int(LoperAnim.Sisi.SEBERANG) and catatan[2][2] == 2 and catatan[3][0] == "selesai", "lempar kedua: koran_lepas (seberang) di frame 2 lalu lempar_selesai, masing-masing sekali")
+	check(not pemain.sedang_melempar() and pemain.animation == &"santai_normal" and pemain.is_playing(), "sesudah lempar kedua kembali ke santai_normal yang berputar")
+	# (b) Menyela SESUDAH frame lepas: koran_lepas lama TIDAK dipancarkan dua kali.
+	catatan.clear()
+	pemain.lempar(LoperAnim.Sisi.DEKAT)
+	for i: int in range(12):
+		pemain.maju(DT)
+	check(_hitung(catatan, "lepas") == 1 and pemain.sedang_melempar(), "12 langkah: koran sudah lepas sekali, masih melempar")
+	check(pemain.lempar(LoperAnim.Sisi.DEKAT), "lempar baru sesudah frame lepas dimulai")
+	check(_hitung(catatan, "lepas") == 1 and _hitung(catatan, "selesai") == 1, "koran_lepas lama tidak diulang; lempar_selesai lama sekali")
+	for i: int in range(20):
+		pemain.maju(DT)
+	check(_hitung(catatan, "lepas") == 2 and _hitung(catatan, "selesai") == 2, "dua lempar = 2 koran_lepas dan 2 lempar_selesai")
+	# (c) batalkan_lempar tetap tanpa sinyal (jeda game, D-11), dan lempar sesudahnya normal.
+	catatan.clear()
+	pemain.lempar(LoperAnim.Sisi.SEBERANG)
+	pemain.maju(DT)
+	pemain.batalkan_lempar()
+	check(catatan.is_empty() and not pemain.sedang_melempar(), "batalkan_lempar menutup tanpa sinyal")
+	pemain.lempar(LoperAnim.Sisi.SEBERANG)
+	for i: int in range(20):
+		pemain.maju(DT)
+	check(_hitung(catatan, "lepas") == 1 and _hitung(catatan, "selesai") == 1, "lempar sesudah batal memancarkan sinyalnya sekali (penanda lepas direset saat batal)")
 	pemain.free()
 
 

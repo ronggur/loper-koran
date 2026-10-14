@@ -284,7 +284,8 @@ func _test_probe_tidak_ikut() -> void:
 	check(_pola_probe_skrip("tanpa daftar").is_empty(), "contoh buruk: skrip tanpa POLA_PROBE menghasilkan daftar kosong")
 	# Berkas game tidak boleh memakai berkas probe: mengecualikannya dari APK akan merusak game.
 	var pemakai: Array[String] = _pemakai_probe()
-	check(pemakai.is_empty(), "tidak ada scene, skrip, atau resource game yang memuat berkas probe (res://...): %s" % [pemakai])
+	check(pemakai.is_empty(), "tidak ada scene, skrip, atau resource game yang memuat berkas probe (res://... atau uid://...): %s" % [pemakai])
+	_test_pemakai_uid()
 
 
 ## Isi daftar `POLA_PROBE = [...]` di teks skrip Python (string bertanda petik tunggal), atau kosong bila tidak ada.
@@ -308,18 +309,108 @@ func _sama_tanpa_urutan(a: Array[String], b: Array[String]) -> bool:
 	return x == y
 
 
-## Berkas `.gd`, `.tscn`, `.tres`, `.gdshader` di folder game (selain berkas probe sendiri) yang memuat `res://<pola probe>`.
+## Berkas `.gd`, `.tscn`, `.tres`, `.gdshader` di folder game (selain berkas probe sendiri) yang memuat `res://<pola probe>` atau
+## `uid://` milik berkas probe (QA-005 run fase1c-perapian, P-3 run fase2a-lemparan: Godot boleh menulis rujukan hanya lewat uid).
 func _pemakai_probe() -> Array[String]:
-	var hasil: Array[String] = []
+	var teks: Dictionary = {}
 	for folder: String in FOLDER_GAME:
 		for berkas: String in _daftar_berkas(folder):
-			if FILTER_PROBE.has(berkas.trim_prefix("res://")):
+			teks[berkas] = FileAccess.get_file_as_string(berkas)
+	return _pemakai_dari(teks, _uid_probe())
+
+
+## Pemakai probe dari isi berkas (`{jalur: teks}`) dan uid tiap pola probe (`{pola: Array[String]}`); berkas probe sendiri dilewati.
+func _pemakai_dari(teks_per_berkas: Dictionary, uid_per_pola: Dictionary) -> Array[String]:
+	var hasil: Array[String] = []
+	for berkas: String in teks_per_berkas:
+		if FILTER_PROBE.has(berkas.trim_prefix("res://")):
+			continue
+		var teks: String = teks_per_berkas[berkas]
+		for pola: String in FILTER_PROBE:
+			if teks.contains("res://" + pola):
+				hasil.append("%s -> %s" % [berkas, pola])
 				continue
-			var teks: String = FileAccess.get_file_as_string(berkas)
-			for pola: String in FILTER_PROBE:
-				if teks.contains("res://" + pola):
-					hasil.append("%s -> %s" % [berkas, pola])
+			var daftar_uid: Array = uid_per_pola.get(pola, [])
+			for uid: String in daftar_uid:
+				if _memuat_uid(teks, uid):
+					hasil.append("%s -> %s (%s)" % [berkas, pola, uid])
+					break
 	return hasil
+
+
+## True bila `teks` memuat `uid` sebagai satu rujukan utuh (bukan awalan uid lain yang lebih panjang).
+func _memuat_uid(teks: String, uid: String) -> bool:
+	var re: RegEx = RegEx.create_from_string(uid.replace(":", "\\:").replace("/", "\\/") + "(?![A-Za-z0-9_])")
+	return re.search(teks) != null
+
+
+## uid tiap berkas probe: `<berkas>.uid` (skrip, shader), `uid="..."` di `<berkas>.import`, `uid="..."` di header `[gd_scene ...]` /
+## `[gd_resource ...]`, dan uid yang dikenal `ResourceLoader`. Berkas tanpa uid (mis. scene tanpa uid di header) = daftar kosong:
+## berkas itu hanya bisa dirujuk lewat `res://`.
+func _uid_probe() -> Dictionary:
+	var hasil: Dictionary = {}
+	for pola: String in FILTER_PROBE:
+		var jalur: String = "res://" + pola
+		var daftar: Array[String] = _uid_dari_teks(_baca_jika_ada(jalur + ".uid"), _baca_jika_ada(jalur + ".import"), _baca_jika_ada(jalur))
+		var id: int = ResourceLoader.get_resource_uid(jalur)
+		if id != ResourceUID.INVALID_ID:
+			var teks_id: String = ResourceUID.id_to_text(id)
+			if not daftar.has(teks_id):
+				daftar.append(teks_id)
+		hasil[pola] = daftar
+	return hasil
+
+
+## uid dari isi berkas `.uid`, `.import`, dan berkas sumber (header scene/resource), tanpa duplikat.
+func _uid_dari_teks(teks_uid: String, teks_import: String, teks_sumber: String) -> Array[String]:
+	var hasil: Array[String] = []
+	var baris_uid: String = teks_uid.strip_edges()
+	if baris_uid.begins_with("uid://"):
+		hasil.append(baris_uid)
+	var re_import: RegEx = RegEx.create_from_string("(?m)^uid=\"(uid://[A-Za-z0-9_]+)\"")
+	var re_header: RegEx = RegEx.create_from_string("^\\[gd_(?:scene|resource)[^\\]]*\\buid=\"(uid://[A-Za-z0-9_]+)\"")
+	for cocok: RegExMatch in [re_import.search(teks_import), re_header.search(teks_sumber)]:
+		if cocok != null and not hasil.has(cocok.get_string(1)):
+			hasil.append(cocok.get_string(1))
+	return hasil
+
+
+func _teks(isi: Array) -> Array[String]:
+	var hasil: Array[String] = []
+	hasil.assign(isi)
+	return hasil
+
+
+func _baca_jika_ada(jalur: String) -> String:
+	return FileAccess.get_file_as_string(jalur) if FileAccess.file_exists(jalur) else ""
+
+
+## P-3 (QA-005 run fase1c-perapian): penjaga menangkap rujukan `uid://` ke berkas probe walau tanpa `res://`, dengan contoh buruk.
+func _test_pemakai_uid() -> void:
+	var uid: Dictionary = _uid_probe()
+	var semua: Array[String] = []
+	for pola: String in uid:
+		var daftar: Array = uid[pola]
+		for u: String in daftar:
+			semua.append(u)
+	check(semua.size() >= 2 and (uid["scripts/dev/cek_render.gd"] as Array).has(FileAccess.get_file_as_string("res://scripts/dev/cek_render.gd.uid").strip_edges()), "uid berkas probe terbaca (skrip dan shader lewat .uid): %s" % [uid])
+	check(_uid_dari_teks("uid://abc12\n", "", "") == _teks(["uid://abc12"]), "uid dari berkas .uid")
+	check(_uid_dari_teks("", "[remap]\n\nimporter=\"texture\"\ntype=\"CompressedTexture2D\"\nuid=\"uid://imp34\"\n", "") == _teks(["uid://imp34"]), "uid dari berkas .import")
+	check(_uid_dari_teks("", "", "[gd_scene load_steps=2 format=3 uid=\"uid://sce56\"]\n") == _teks(["uid://sce56"]), "uid dari header [gd_scene ... uid=...]")
+	check(_uid_dari_teks("", "", "[gd_scene load_steps=2 format=3]\n[ext_resource uid=\"uid://lain\" path=\"res://x.gd\"]\n").is_empty(), "scene tanpa uid di header: uid ext_resource di bawahnya bukan uid scene itu")
+	var uid_skrip: String = (uid["scripts/dev/cek_render.gd"] as Array)[0]
+	var uid_shader: String = (uid["assets/shaders/warna_bayangan.gdshader"] as Array)[0]
+	var buruk: Dictionary = {
+		"res://scenes/dev/jalan_uji.tscn": "[gd_scene format=3]\n\n[ext_resource type=\"Script\" uid=\"%s\" id=\"1_cek\"]\n" % uid_skrip,
+		"res://scripts/ui/hud_dev.gd": "const BAYANGAN := preload(\"%s\")\n" % uid_shader,
+	}
+	var tangkap: Array[String] = _pemakai_dari(buruk, uid)
+	check(tangkap.size() == 2, "contoh buruk: ext_resource dan preload yang hanya memakai uid:// probe (tanpa res://) tertangkap: %s" % [tangkap])
+	var baik: Dictionary = {
+		"res://scenes/dev/jalan_uji.tscn": "[ext_resource type=\"Script\" uid=\"%sx\" path=\"res://scripts/entities/jalan_uji.gd\" id=\"1\"]\n" % uid_skrip,
+		"res://scripts/dev/cek_render.gd": "# berkas probe sendiri boleh memuat %s\n" % uid_skrip,
+	}
+	check(_pemakai_dari(baik, uid).is_empty(), "contoh baik: uid lain yang berawalan sama dan berkas probe sendiri tidak dianggap pemakai")
 
 
 func _daftar_berkas(folder: String) -> Array[String]:
