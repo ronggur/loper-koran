@@ -6,15 +6,34 @@ Scope: Run 2A Fase 2, inti lemparan koran (`ThrowSolver`, garis bidik = hasil, k
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
 |---|---|---|---|---|---|
+| 1 | 1a (logika murni + P-1..P-3) dan 1b (scene, garis bidik, koran terbang, penanda, zona, HUD koran, probe, dokumen); HEAD `9408318` | ✅ import 0 ERROR/WARNING, 5776 lolos 0 gagal, `--ketat` lolos, `--quit-after 2` bersih, PCK tanpa tests/docs/probe, klon bersih `git status` kosong | **FAIL** (1 Major OPEN) | 7 (Major 1, Minor 4 termasuk 1 NEEDS-MANUAL, Nit 2) | 0 |
 
 ## Temuan
 Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MANUAL | BLOCKED
 
 | ID | Iter | Sev | Lokasi | Temuan & reproduksi/bukti | Status | Fix (file/commit) | Tes regresi |
 |---|---|---|---|---|---|---|---|
+| QA-001 | 1 | Major | scripts/entities/jalan_uji.gd:144-148 (`_saat_swipe_selesai` memakai `akhir` dari event lepas), scripts/systems/touch_router.gd:81-92 | **AC-4/D-4 dilanggar saat jari masih bergerak ketika diangkat (flick).** Garis bidik yang tampil dihitung di `perbarui` dari `router.posisi_swipe()` frame terakhir, tetapi lemparan dihitung ulang di `_saat_swipe_selesai` dari posisi event LEPAS. Bila ada `InputEventScreenDrag` (atau posisi lepas berbeda) sesudah `perbarui` terakhir dan sebelum jari diangkat, \|dx\| lemparan berbeda dari garis bidik yang tampil, jadi koran TIDAK mendarat di elips terakhir. Keadaan sepeda sama; yang berbeda hanya masukan swipe. Tes AC-4 (`tes_koran_scene.gd` `_test_prediksi_sama_hasil`) selalu melepas di titik yang sama dengan drag terakhir sehingga kasus ini tidak pernah diuji. **Repro (dijalankan QA, skrip SceneTree sementara di klon, tidak di-commit):** viewport 780, sentuh jari 1 di (720, 200), geser ke (600, 200), `perbarui(1/60)` → garis bidik tampil, mendarat (-2.6326, -2.5605); lalu geser ke (570, 200) dan angkat di (570, 200) tanpa `perbarui` → lemparan mendarat (-3.0968, -2.6799), **selisih 0,479 ubin** (> 1e-4). Flick 30 px game per frame (90 px fisik / 16 ms) wajar di HP. Saran: lemparan memakai lintasan garis bidik yang terakhir tampil bila swipe ditahan cukup lama untuk menampilkannya (atau masukan swipe yang dibekukan saat `perbarui` terakhir), lalu tes scene: drag sesudah frame terakhir + lepas = titik mendarat tetap titik akhir garis bidik yang tampil. Bila Dev berpendapat posisi lepas lebih tepat, itu mengubah kontrak AC-4 dan harus diputuskan pemilik, bukan diam-diam. | OPEN | | |
+| QA-002 | 1 | Minor | docs/BALANCING.md:81 | Kalimat lama "Swipe berikutnya diabaikan selama animasi lempar berjalan (usulan sederhana)" masih ada di BALANCING 2, bertentangan dengan D-9 dan dengan BALANCING 4 baru ("Animasi lempar tidak lagi menolak swipe sendiri ... hanya jeda 0,35 dan sisa koran") dan kode `LoperSprite.lempar` (menyela lempar lama). Dua bagian dokumen yang sama berbeda aturan (rule `docs`: jangan biarkan dokumen berbeda). Repro: `grep -n "Swipe berikutnya diabaikan" docs/BALANCING.md`. | OPEN | | |
+| QA-003 | 1 | Minor | scripts/entities/koran_gambar.gd:69,55; scripts/entities/zona_gambar.gd:50; scripts/entities/jalan_uji.gd:180; scripts/ui/deret_koran.gd:29 | Kabel gambar node tidak dijaga tes headless; lima mutan QA HIDUP (5776 lolos, 0 gagal): Q16 penanda selalu `CENTANG` (meleset/bukan pelanggan/jendela tampil centang hijau; hanya warna yang beda), Q18 bayangan digambar di posisi udara bukan di tanah, Q23 rumah bukan pelanggan tidak pernah ditandai (semua kavling memakai pola pelanggan), Q24 `ZonaGambar.perbarui(0.0)` (zona tidak ikut jalan, bergeser dari rumah), Q27 ikon HUD terpakai tidak pernah redup. Fungsi murni pemetaannya dites (`ZonaSasaran.penanda`, `SisaKoran.ikon_hud`, `KoranLempar.lebar_bayangan_px`), tetapi node bisa mengabaikannya tanpa ketahuan. Saat ini perilakunya benar (dilihat di tangkapan QA), jadi Minor. Saran: ekspos data gambar yang murah dicek (mis. `KoranGambar.pola_penanda_tampil(koran)`, `ZonaGambar.kavling_bukan_pelanggan()`, `DeretKoran.alpha_ikon(i)`, `ZonaGambar` mengikuti `_pertama` dari jarak) dan cek di `tes_koran_scene.gd` `_test_hud_dan_zona`. | OPEN | | |
+| QA-004 | 1 | Minor | scripts/ui/garis_bidik.gd:74-84 (digambar di atas objek dunia) | Saat titik mendarat ada di belakang fasad (di dalam tapak rumah graybox seberang, mis. lempar panjang ke seberang), elips pendaratan dan ujung garis bidik digambar DI ATAS atap/dinding rumah, sehingga terbaca seperti sasaran di atap. Koran lalu mendarat "di dalam" rumah dan dinilai MELESET tanpa isyarat. Bukti: tangkapan QA `shots/iter1-qa/2340x1080_koran_bidik_panjang_seberang_ngebut.png` (elips di atap rumah), `2340x1080_koran_kidal_bidik_seberang.png` dan `1920x1080_koran_kidal_bidik_seberang.png` (elips di dinding samping). Tabrakan koran dengan objek di luar scope, tetapi keterbacaan prediksi (D-5) perlu dinilai: minimal dicatat di NEEDS-MANUAL; usulan perbaikan murah: elips/ujung garis yang jatuh di tapak rumah digambar redup atau sebagai cincin biasa (tetap cincin, sudah tidak sah). | OPEN | | |
+| QA-005 | 1 | Nit | docs/loop/20261014-fase2a-lemparan/LOG.md (Catatan Dev 1b, Tangkapan layar) | Klaim Dev "`bidik_pendek_seberang_santai` (elips biasa)" salah: keluaran probe QA dan tangkapan menunjukkan `elips sah true` (swipe min dari lateral 0 di santai mendarat tepat di kotak surat seberang, -1,5 lateral). Elips biasa tetap ada di `bidik_panjang_dekat_santai` dan `bidik_panjang_seberang_ngebut`, jadi AC-12 tetap terpenuhi. Catatan desain: swipe terpendek dari tengah jalan otomatis mengenai kotak surat (bahan uji HP). | Dicatat | | |
+| QA-006 | 1 | Nit | scripts/ui/gambar_piksel.gd:22-27 | `GambarPiksel.pola` mem-parse pola teks (`PolaPiksel.rentang_huruf`, 4 huruf) dan membuat Array baru tiap `_draw`; garis bidik dan koran digambar ulang tiap frame selama swipe/terbang. Kecil (pola ≤ 12×12), tetapi mudah di-cache per pola (rule `gdscript`: hindari alokasi per frame). | Dicatat | | |
+| QA-007 | 1 | Minor | scripts/config.gd:156 (`KORAN_BAYANGAN_ALPHA` 0,5, `OUTLINE`), koran 8×6, penanda 7-9 px | Keterbacaan di ×3: bayangan koran `OUTLINE` alpha 0,5 di atas aspal abu tua nyaris tak terlihat (tangkapan `2340x1080_koran_puncak_kotak_surat.png`, diperbesar QA), padahal BALANCING 4 "bayangan koran di tanah wajib tampil"; koran gulung di puncak (bingkai tegak 3-4 px lebar) dan penanda 7-9 px kecil dibanding layar penuh. Tidak bisa dinilai di desktop. | NEEDS-MANUAL | | |
 
 ## NEEDS-MANUAL (uji di HP)
-- [ ] (diisi QA dari SPEC bagian NEEDS-MANUAL dan temuan)
+- [ ] Ketelitian swipe pendek: swipe sekitar 6% lebar layar terbaca sebagai lempar dekat, tidak tertukar dengan sentuhan tak sengaja, ketukan, atau swipe tegak; swipe panjang 35% nyaman dijangkau jempol kanan.
+- [ ] Mengenai kotak surat dengan sengaja di santai, cepat, dan ngebut; garis bidik membantu melempar lebih awal saat ngebut. Catat apakah swipe terpendek dari tengah jalan terlalu mudah mengenai kotak surat seberang (QA-005).
+- [ ] Garis bidik dan elips terlihat di bawah jempol, tidak tertutup jari; elips sah (terisi) terbaca tanpa mengandalkan warna. Saat ngebut ke seberang lengkung tampak hampir lurus tegak di layar (proyeksi), nilai apakah masih terbaca sebagai lengkung.
+- [ ] Flick cepat (jari masih bergerak saat diangkat): koran mendarat di elips terakhir yang terlihat? (QA-001, setelah perbaikan Dev)
+- [ ] Elips atau ujung garis bidik yang jatuh di belakang fasad rumah tampak di atas atap/dinding: membingungkan atau tidak? (QA-004)
+- [ ] Lengkung koran dan bayangan terbaca di ×3, terutama bayangan di atas aspal gelap; penanda centang, setengah, dan silang kecil terbaca; meleset tidak terasa menghukum (QA-007).
+- [ ] Lempar ke sisi dekat terasa wajar walau zonanya placeholder datar.
+- [ ] HUD sisa koran terbaca, tidak tertutup jempol kanan; swipe yang mulai di atas panel tetap melempar; habis (HABIS, ikon redup) lalu terisi ulang sesudah sekitar 16 ubin; kidal memindahkan panel. Tafsiran 8 ikon = delapan koran terakhir (ikon baru redup di bawah 8): cukup informatif?
+- [ ] Jeda 0,35 detik tidak terasa menelan swipe yang disengaja.
+- [ ] Home/notifikasi saat koran terbang dan tepat sesudah jari dilepas: layar jeda, koran diam, sesudah Lanjut mendarat tanpa lompatan, koran berkurang satu saja.
+- [ ] Jendela penalti ringan (strip tanah di kaki fasad, silang kecil): terasa adil? Bahan keputusan ROADMAP 5. Strip jendela di tanah terbaca sebagai "jendela"?
+- [ ] Teras placeholder (`UI_PANEL_RAISED`, gelap) mudah dikira bayangan rumah: terbaca sebagai sasaran?
 
 ## Keputusan & catatan
 - Keputusan pemilik 2026-10-14: jendela kena koran lewat sakelar `Config`, bawaan penalti ringan (antaran tidak sah, tanpa potong koin); keputusan akhir tetap terbuka (ROADMAP 5). Ukuran ubin 64×32 dikunci (ROADMAP 4b), dicatat orchestrator di `9405c45`.
@@ -229,3 +248,85 @@ Pemetaan ke sisa daftar AC-10 dari 1a: garis bidik kecepatan frame sebelumnya (S
 - Penanda kena/meleset dan koran berukuran kecil di ×3 (koran 8×6, penanda 7-9 px); keterbacaannya NEEDS-MANUAL (SETUP_ANDROID 8.3).
 - Tidak ada BLOCKED.
 - Klon bersih `0e61e33` (commit LOG): `godot --headless --import` 0 `ERROR`/`WARNING`, 5776 lolos 0 gagal, `--ketat` lolos, `--quit-after 2` 0 `ERROR`/`WARNING`, `git status --porcelain` kosong.
+
+## Catatan QA iterasi 1
+
+Diverifikasi sendiri oleh QA (tidak memakai klaim Dev). HEAD `9408318`, Godot 4.7.2.stable.official.ed1daf0bf (`/opt/homebrew/bin/godot`).
+
+### Gerbang (klon bersih: `git clone` repo lokal ke scratchpad, checkout `feat/fase2a-lemparan`)
+
+| Gerbang | Hasil |
+|---|---|
+| `godot --headless --import` | exit 0, 0 `ERROR`/`SCRIPT ERROR`/`WARNING`; `git status --porcelain` sesudahnya kosong |
+| `run_tests.gd 2>&1 > build/tests.log` | **5776 lolos, 0 gagal**, 0 baris `SCRIPT ERROR`/`ERROR`/`GAGAL`/`WARNING` |
+| `python3 tools/cek_keluaran_tes.py --ketat build/tests.log` | `pemeriksa: lolos (5776 lolos, 0 gagal, 0 peringatan)`, exit 0 |
+| `tools/tests_cek/uji_pemeriksa.py` / `uji_bangun_frames.py` / `uji_sintesis_sepeda.py` | 16 kasus 0 menyimpang / 41 lolos 0 gagal / 32 lolos 0 gagal |
+| `godot --headless --path . --quit-after 2` | exit 0, keluaran hanya baris versi |
+| `--export-pack "Android" build/kring-uji.pck` | exit 0, tanpa `ERROR`/`WARNING`; 280 jalur terbaca dari PCK (`strings`), 0 jalur `tests/`, `docs/`, atau `probe`; `throw_solver`, `zona_sasaran`, `sisa_koran`, `koran_lempar`, `garis_bidik`, `koran_gambar`, `zona_gambar`, `deret_koran` ada |
+| `git status --porcelain` akhir klon | kosong |
+| Kebersihan diff `main...HEAD` | tidak ada keystore/APK/PCK/`.godot/`/`build/`/`builds/`/secret; 15 commit, semua `<tipe>: <ringkasan>` bahasa Indonesia; `main` tidak berubah (`b66034a` = merge-base); tidak ada push. `ROADMAP.md`/`GDD`/`TECH_PLAN` hanya disentuh commit orchestrator `9405c45`; `DEV_PHASES.md` tidak disentuh. `.uid` untuk semua skrip baru ada |
+
+### Kepatuhan SPEC (ringkas)
+
+- AC-2, AC-3: `tes_lempar.gd` (`_test_swipe_lebar`, `_test_rumus`, `_test_masukan_aneh_dan_murni`, `_test_titik_lepas`, `_test_iso_tinggi`, `_test_lengkung`) — dibaca dan dibuktikan mutan Q01-Q05, Q29.
+- AC-4: satu panggilan `JalanUji.lintasan_swipe` → `ThrowSolver.dari_swipe` untuk garis bidik (sesudah `SepedaUji.gerak`) dan lemparan; lintasan dibekukan di `KoranLempar.Koran`; titik garis bidik = sampel `posisi_pada` (Q19 mati); penjaga teks rumus `_test_penjaga_rumus`. **Celah: QA-001** (posisi lepas jari ≠ posisi swipe garis bidik yang tampil).
+- AC-5 (D-6, D-7): klasifikasi, tepi min inklusif/maks eksklusif (Q07, Q08 mati), prioritas, kavling tetangga (Q09), bukan pelanggan (Q10), sakelar jendela lewat parameter dan bawaan `JENDELA_KENA_BONUS: bool = false` dengan komentar "KEPUTUSAN TERBUKA" di `config.gd` dan "Masih terbuka" di BALANCING 5 (tidak diputuskan diam-diam). Sisi dekat: komentar `config.gd`, `zona_gambar.gd`, BALANCING 5 menyatakan hanya placeholder dan tidak memutuskan ROADMAP 5. Keterjangkauan dites (`_test_keterjangkauan`).
+- AC-6 (D-8, D-9): `SisaKoran` + tes murni dan scene; jeda 0,35 inklusif (`LEMPAR_JEDA_DETIK` 0.35 = BALANCING 4), isi ulang hanya bila habis (Q11, Q32 mati), dua lempar cepat dan `koran_lepas` sekali (Q15 mati).
+- AC-7 (D-11): koran memakai `dt` efektif (Q13 mati), garis bidik disembunyikan saat jeda (Q20 mati), lemparan di antara jari dilepas dan frame lepas tetap terbang (`_test_jeda_sebelum_lepas`), TOMBOL/PAUSED/FOCUS_OUT.
+- AC-8: `_test_input_dan_kidal` (dua jari, kidal, panel HUD di zona swipe, tegak, batal). HUD tidak bisa menangkap sentuhan karena `KontrolTouch` membaca di `_input` (sebelum GUI) dan semua node panel `mouse_filter = 2`.
+- AC-9: HUD koran di `HBoxContainer` (anchor + Container), warna hanya `Palette` (0 hex/`Color(` literal baru di skrip/scene), kunci `HUD_KORAN`, `HUD_KORAN_ANGKA`, `HUD_KORAN_HABIS` di `ui.csv` + `ui.id.translation`; tata letak 640/780/800 di `tes_tata_letak.gd`. Kabel gambar penanda/ikon: QA-003.
+- AC-11: tab, static typing, `##` Indonesia; `kiri`/`kanan` hanya untuk sumbu layar (komentar swipe, `kiri_atas`), tidak untuk sisi jalan; angka baru semua di `config.gd` satu baris literal; Q12 (angka literal 640.0 di jalan_uji) dibunuh penjaga angka ajaib.
+- AC-13: P-1/P-2/P-3 ada; mutan QA Q25 (urutan pembulatan di `titik_gambar`) hidup tetapi setara selama transform global induk bilangan bulat (posisi sepeda dibulatkan), jadi tidak dihitung temuan.
+- AC-14: BALANCING 4, 5, 10, DESIGN_SPEC 3.5/3.6/3.7 (tafsiran usulan), ART_DIRECTION 6.2, SETUP_ANDROID 8.3, AGENTS.md, `00-project-core.mdc`, README ada. Sisa kalimat lama: QA-002.
+- Tes lama yang dihapus: hanya dua cek `tes_sprite.gd` "lempar saat sedang melempar diabaikan" (sah karena D-9, diganti `_test_loper_sprite_lempar_menyela`); cek `sisi_dari_swipe` lama dipindah ke `ThrowSolver` dengan angka baru (6 cek bentuk lama masih ada: selisih saja, vektor nol, NaN, INF, sangat panjang, tegak); cek 12 px diganti 46/46,8 px. Tidak ada tes di-skip.
+
+### Mutan QA (milik QA sendiri, di klon bersih, satu mutan per run penuh, berkas dipulihkan; `git status` klon kosong sesudahnya)
+
+32 mutan: **25 mati, 7 hidup** (2 setara, 5 = QA-003). 0 mutan menyebabkan import gagal.
+
+| Mutan | Hasil | Contoh cek yang membunuh |
+|---|---|---|
+| Q01 lateral titik lepas berlawanan arah (`ARAH_SEBERANG.x`) | mati, 3 gagal | "titik lepas = posisi + (maju, lateral) x jeda lepas" |
+| Q02 tanah bergerak tak linear (`lerp(..., s*s)`) | mati, 3 | "u 0.0: tengah waktu = tengah jalur tanah" |
+| Q03 u dibagi `maks` saja | mati, 140 | "tengah min-maks = u 0,5" |
+| Q04 titik mendarat dari posisi sepeda, bukan titik lepas | mati, 1 | "geser lateral selama terbang tetap tepat jarak samping" |
+| Q05 tanda tinggi z terbalik di `Iso` | mati, 2 | "1 ubin = 32 px ke atas" |
+| Q06 penilaian mendarat selalu sakelar bonus | mati, 3 | "SEBERANG JENDELA: mendarat ... penanda SILANG" |
+| Q07 / Q08 tepi min lateral / maju eksklusif | mati, 1 / 2 | "tepi min lateral dan maju (pojok min) inklusif" |
+| Q09 zona sekitar tanpa kavling tetangga | mati, 2 | "titik halaman kavling 5 yang menjorok ke kavling 4 tetap HALAMAN" |
+| Q10 `%` bukan `posmod` (nomor negatif) | mati, 2 | "nomor bukan pelanggan berulang, juga untuk nomor negatif" |
+| Q11 isi ulang `>` bukan `>=` | mati, 1 | "16 ubin sesudah habis: penuh lagi" |
+| Q12 lebar viewport tetap 640 di `lintasan_swipe` | mati, 7 | "swipe 46 px (di bawah ambang 46,8 = 6% dari 780) tidak melempar" + penjaga angka ajaib |
+| Q13 langkah pertama sesudah lanjut memakai `dt` mentah untuk koran | mati, 3 | "TOMBOL: langkah pertama sesudah lanjut ber-dt 0" |
+| Q14 `lateral_ud` dari stick, bukan lateral efektif | mati, 1 | "di tepi jalan (terhalang) kecepatan lateral efektif 0" |
+| Q15 lempar disela tanpa `koran_lepas` tertunda | mati, 4 | "lempar pertama yang disela: koran_lepas (seberang) dan lempar_selesai sekali" |
+| **Q16 node penanda selalu CENTANG** | **HIDUP** | (QA-003) |
+| Q17 warna penanda selalu `OK` | mati, 3 | "SEBERANG MELESET: warna penanda FAIL" |
+| **Q18 bayangan di posisi udara** | **HIDUP** | (QA-003) |
+| Q19 titik garis bidik `floor` bukan `round` | mati, 4 | "30 titik garis bidik = proyeksi ThrowSolver.posisi_pada" |
+| Q20 garis bidik tidak disembunyikan saat jeda | mati, 1 | "jeda: garis bidik hilang" |
+| Q21 `_jeda or` dihapus di `_saat_swipe_selesai` | hidup, **setara**: jeda membatalkan semua jari lewat `batal_semua` (tanpa `swipe_selesai`) dan input berhenti saat pohon dijeda | — |
+| Q22 koran tidak berputar | mati, 1 | "frame putar 12 fps, 4 langkah berulang" |
+| **Q23 rumah bukan pelanggan tidak ditandai di gambar** | **HIDUP** | (QA-003) |
+| **Q24 `ZonaGambar.perbarui(0.0)`** | **HIDUP** | (QA-003) |
+| Q25 `titik_gambar` membulatkan sesudah transform saja | hidup, setara selama transform induk bulat | — |
+| Q26 label HABIS tidak pernah tampil | mati, 1 | "habis: ... penanda HABIS tampil" |
+| **Q27 ikon HUD tidak pernah redup** | **HIDUP** | (QA-003) |
+| Q28 `ikon_hud` semua terang bila sisa > 0 | mati, 2 | "sisa 4: angka 4, 4 dari 8 ikon terang" |
+| Q29 tepat 45 derajat melempar | mati, 1 | "tepat 45 derajat ... ambigu: tidak melempar" |
+| Q30 sinyal `koran_mendarat` tidak dipancarkan | mati, 41 (+4 SCRIPT ERROR) | "TOMBOL: sesudah lanjut koran mendarat di titik prediksi" |
+| Q31 `KoranLempar.posisi` sesudah mendarat lewat `posisi_sejak_jari` | mati, 1 | "skenario A dt 1/240: titik mendarat koran = titik akhir garis bidik" (presisi) |
+| Q32 HUD koran tidak diperbarui di `perbarui` (isi ulang) | mati, 1 | "16,001 ubin sesudah habis: terisi ulang 30, HUD kembali" |
+
+Repro tambahan QA-001: skrip SceneTree sementara (`tests/qa_repro_lepas.gd` di klon kedua, tidak di-commit) — keluaran `garis bidik tampil: mendarat (-2.632626, -2.56053), lemparan: mendarat (-3.096817, -2.679893), selisih 0.47929203510284 ubin`.
+
+### Validasi visual (dijalankan QA sendiri, non-headless, jendela asli)
+
+- `godot --path . --resolution 2340x1080 --position 0,0 --script res://tests/probe_koran_jendela.gd -- docs/loop/20261014-fase2a-lemparan/shots/iter1-qa` dan `--resolution 1920x1080`: exit 0, 0 `ERROR`/`WARNING`; satu baris `PERINGATAN: layar jeda terbuka (jendela kehilangan fokus)` (probe melanjutkan sendiri). Tujuh sasaran dikenai di tiap lebar, hasil = diharapkan, titik = prediksi. 36 tangkapan di `shots/iter1-qa/`.
+- `python3 tools/cek_blok_piksel.py 3 --kecualikan <kotak teks HUD dari probe>`: 36 dari 36 tangkapan 0 blok tidak seragam.
+- Dilihat sendiri (Read, sebagian diperbesar 3×): garis bidik titik putih melengkung dan berakhir di elips (santai seberang dan kidal jelas melengkung; panjang ke seberang saat ngebut hampir lurus tegak karena arah tanah tegak di layar); elips sah = elips hijau **terisi** bergaris luar, elips biasa = cincin putih; koran 8×6 di puncak di atas kotak surat, bayangan di aspal sangat samar (QA-007); penanda centang (kotak surat, teras, kotak surat dekat), belah ketupat setengah (halaman), silang merah kecil (meleset, jendela penalti, bukan pelanggan) — bentuk berbeda, tidak hanya warna; tanda lingkaran bergaris miring dan teras abu di rumah bukan pelanggan; HUD KORAN 30/29/26/24, HABIS merah + angka 0 + ikon redup, terisi ulang 30; kidal: panel koran dan kecepatan dicerminkan, swipe kiri layar = seberang; elips di atas atap/dinding saat mendarat di belakang fasad (QA-004).
+- Tidak bisa diuji di sini: rasa swipe, keterbacaan di layar HP ×3 sungguhan, 60 fps, background/notifikasi Android asli, viewport 800 di jendela asli (2400×1080 tidak muat monitor; 800 hanya lewat tes tata letak headless). QA tidak menyentuh HP.
+
+### Ringkasan untuk orchestrator
+
+**FAIL** — Blocker 0, Major 1 (QA-001 OPEN), Minor 4 (QA-002, QA-003, QA-004 OPEN; QA-007 NEEDS-MANUAL), Nit 2 (QA-005, QA-006 dicatat). Gerbang objektif semua hijau.
