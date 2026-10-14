@@ -377,6 +377,47 @@ IZIN HP: boleh memasang APK ke Samsung A54 (RRCWA05E2NN) setelah QA PASS; hanya
 RUN_ID: 20261010-fase1b-umpan-balik
 ```
 
+### Run 1C — perapian Run 1B dan penyetelan dari uji HP
+
+Disiapkan 2026-10-14 setelah PR #21 (Run 1B) di-merge. Isinya temuan Minor yang ditunda di `docs/loop/20261014-fase1b-umpan-balik/LOG.md`, ditambah penyetelan dari uji 3-5 orang (`SETUP_ANDROID.md` 8.2) bila hasilnya sudah ada. Kalau uji 8.2 belum dilakukan, run ini tetap bisa jalan; angka yang menunggu uji tidak diubah.
+
+```text
+Kamu adalah ORCHESTRATOR loop Dev↔QA untuk repo Loper Koran. Ikuti docs/LOOP-DEV-QA.md
+secara ketat. Mulai dari main terbaru yang sudah memuat PR #21 (Run 1B); kalau belum,
+berhenti dan minta saya merge dulu.
+
+SCOPE: Run 1C — Fase 1, perapian temuan Run 1B dan penyetelan dari uji HP. Sumber temuan:
+  docs/loop/20261014-fase1b-umpan-balik/LOG.md (baca tabel Temuan dan Catatan QA).
+  - QA-001: tes untuk empat cabang pertahanan yang belum dijaga (cincin rem padam saat jeda,
+    `Audio` berhenti pada PAUSED/FOCUS_OUT lewat jalurnya sendiri, `TombolSentuh` melupakan
+    jari saat jeda/tersembunyi, sentuhan `canceled` tidak memicu tombol), dengan mutan nyata.
+  - QA-002: gambar tombol jeda tidak tertahan "ditekan" sesudah lanjut bila jeda datang dari
+    jalur lain saat jari masih di tombol; tes regresi.
+  - QA-003: probe jendela `tests/probe_umpan_balik_jendela.gd` (dan probe lain yang memutar
+    audio) keluar tanpa `ERROR`/`WARNING` (hentikan audio sebelum quit, seperti runner tes).
+  - QA-004: berkas probe render (`scenes/dev/cek_render.tscn`, `scripts/dev/cek_render.gd`,
+    shadernya) tidak ikut APK normal: `exclude_filter` preset, dilepas sementara oleh
+    `tools/ekspor_cek_render.py`; `tes_export.gd` menjaga keduanya; build probe tetap jalan.
+  - QA-006: debu roda dipancarkan di ruang dunia (tertinggal di jalan saat pindah sisi),
+    tetap placeholder, warna dari Palette, tes scene diperbarui.
+  - Penyetelan dari uji HP (bagian di bawah): hanya angka yang diminta di catatan uji, lewat
+    Config + BALANCING (+ DESIGN_SPEC bila token UI). Termasuk keputusan QA-005 Run 1B (jarak
+    1 px sepeda ke panel saat mundur penuh, sprite masuk zona stick di 16:9) dan QA-005
+    Run 1A (melambat paling pelan 1,65 lawan 1,5 u/d) bila sudah ada keputusannya. Tanpa
+    catatan uji: angka-angka itu tidak diubah.
+  Fase 1 baru dicentang selesai bila uji 3-5 orang (SETUP_ANDROID 8.2) sudah dilakukan dan
+  kriteria "Selesai kalau" Fase 1 terpenuhi; jangan dicentang sebelum itu.
+HASIL UJI HP 8.2 (ISI: tempel lembar catatan penguji; tulis "belum ada" bila belum diuji):
+  ISI: jumlah penguji ..., ambang rem ..., posisi sepeda/dorongan ..., tombol jeda/kidal ...,
+  teks HUD ..., debu/garis ..., bunyi ..., melambat paling pelan ..., busur rem ...
+DESIGN: docs/design/DESIGN_SPEC.md (token bagian 1, HUD 3.1 dan 3.5, kontrol 3.7).
+IZIN HP: boleh memasang APK ke vivo V2108 (adb 12d8c9da) setelah QA PASS; A54 (RRCWA05E2NN)
+  hanya bila tersambung. Hanya orchestrator yang menyentuh HP; cek layar menyala dan tidak
+  sedang dipakai; tidak ada pm clear/uninstall/logcat -c; log Godot di vivo lihat
+  SETUP_ANDROID 6.1 (setprop log.tag.godot sementara).
+RUN_ID: 20261014-fase1c-perapian
+```
+
 ## 7. Batasan yang perlu diketahui
 
 - QA berbasis agent tidak menggantikan uji di HP nyata untuk rasa kontrol, performa, dan tampilan rasio layar. Fase gameplay selalu ditutup dengan uji manual (`DEV_PHASES.md`).
