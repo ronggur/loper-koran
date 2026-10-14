@@ -78,7 +78,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 
 **Tujuan:** lemparan yang mewarisi kecepatan terasa memuaskan dan bisa dikuasai.
 
-- [x] Swipe di zona kanan menentukan arah lemparan seperti terlihat di layar (arah bebas, keputusan pemilik 2026-10-15, GDD 5.2; sisi untuk animasi diturunkan dari arah); panjang swipe menentukan kekuatan dan jarak (BALANCING 4) (run 2A, PR #24, 2026-10-14: `ThrowSolver`, 6–35% lebar viewport; run fase2-arah-bebas 2026-10-15: arah dari `Iso`, panjang \|v\| penuh, tanpa sudut ditolak; ambang usulan, ketelitian dinilai di uji HP)
+- [x] Swipe di zona kanan menentukan arah lemparan seperti terlihat di layar (arah bebas, keputusan pemilik 2026-10-15, GDD 5.2; sisi untuk animasi diturunkan dari arah); panjang swipe menentukan kekuatan dan jarak (BALANCING 4) (run 2A, PR #24, 2026-10-14: `ThrowSolver`, 6–35% lebar viewport; run fase2-arah-bebas, PR #25, 2026-10-15: arah dari `Iso`, panjang \|v\| penuh, tanpa sudut ditolak; ambang usulan, ketelitian dinilai di uji HP)
 - [x] Garis bidik putus-putus selama jari ditahan, lempar saat dilepas (run 2A, PR #24, 2026-10-14: garis bidik dan lemparan satu lintasan, dites termasuk flick; rasa dinilai di uji HP)
 - [x] Koran mewarisi kecepatan sepeda, lengkung lemparan terlihat (tinggi + bayangan di tanah) (run 2A, PR #24, 2026-10-14; rasa dinilai di uji HP)
 - [x] Zona sasaran placeholder: kotak surat, teras, halaman, jendela (nilai di BALANCING 5) (run 2A, PR #24, 2026-10-14; jendela lewat sakelar `Config`, bawaan penalti ringan, keputusan akhir ROADMAP 5; sisi dekat datar placeholder)
