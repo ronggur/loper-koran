@@ -37,7 +37,7 @@ func _initialize() -> void:
 	var paket: PackedScene = load(str(ProjectSettings.get_setting("application/run/main_scene"))) as PackedScene
 	if paket == null:
 		push_error("scene utama tidak bisa dimuat")
-		quit(1)
+		await ProbeKeluar.keluar(self, 1)
 		return
 	_akar = paket.instantiate() as JalanUji
 	root.add_child(_akar)
@@ -88,7 +88,7 @@ func _initialize() -> void:
 	await _pergantian("rem_ke_kayuh")
 	await _maju(0.5)
 	await _foto("kayuh_lagi")
-	quit()
+	await ProbeKeluar.keluar(self)
 
 
 func _tunggu(jumlah: int) -> void:

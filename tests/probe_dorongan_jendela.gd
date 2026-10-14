@@ -26,7 +26,7 @@ func _initialize() -> void:
 	var paket: PackedScene = load(str(ProjectSettings.get_setting("application/run/main_scene"))) as PackedScene
 	if paket == null:
 		push_error("scene utama tidak bisa dimuat")
-		quit(1)
+		await ProbeKeluar.keluar(self, 1)
 		return
 	var akar: Node = paket.instantiate()
 	root.add_child(akar)
@@ -57,7 +57,7 @@ func _initialize() -> void:
 	_sentuh(0, Vector2(100, 295), false)
 	await create_timer(DETIK_MANTAP).timeout
 	await _foto("lepas", sepeda)
-	quit()
+	await ProbeKeluar.keluar(self)
 
 
 func _tunggu(jumlah: int) -> void:

@@ -33,7 +33,7 @@ func _initialize() -> void:
 	var paket: PackedScene = load(str(ProjectSettings.get_setting("application/run/main_scene"))) as PackedScene
 	if paket == null:
 		push_error("scene utama tidak bisa dimuat")
-		quit(1)
+		await ProbeKeluar.keluar(self, 1)
 		return
 	_akar = paket.instantiate() as JalanUji
 	root.add_child(_akar)
@@ -85,7 +85,7 @@ func _initialize() -> void:
 	await _maju(3.0)
 	await _foto("kidal_ngebut")
 	_sentuh(1, titik_kidal, false)
-	quit()
+	await ProbeKeluar.keluar(self)
 
 
 func _cetak_kecualikan(nama: String, kotak: Array) -> void:

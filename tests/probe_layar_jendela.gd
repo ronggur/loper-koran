@@ -19,7 +19,7 @@ func _initialize() -> void:
 	var paket: PackedScene = load(utama) as PackedScene
 	if paket == null:
 		push_error("scene utama '%s' tidak bisa dimuat" % utama)
-		quit(1)
+		await ProbeKeluar.keluar(self, 1)
 		return
 	root.add_child(paket.instantiate())
 	for i: int in range(JUMLAH_FRAME_TUNGGU):
@@ -42,4 +42,4 @@ func _initialize() -> void:
 		var gambar: Image = root.get_texture().get_image()
 		var galat: int = gambar.save_png(argumen[0])
 		print("tangkapan layar %dx%d ke %s (kode %d)" % [gambar.get_width(), gambar.get_height(), argumen[0], galat])
-	quit()
+	await ProbeKeluar.keluar(self)

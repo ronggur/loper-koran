@@ -42,7 +42,7 @@ func _initialize() -> void:
 	var paket: PackedScene = load(str(ProjectSettings.get_setting("application/run/main_scene"))) as PackedScene
 	if paket == null:
 		push_error("scene utama tidak bisa dimuat")
-		quit(1)
+		await ProbeKeluar.keluar(self, 1)
 		return
 	_akar = paket.instantiate()
 	root.add_child(_akar)
@@ -61,7 +61,7 @@ func _initialize() -> void:
 	await _urutan_melambat()
 	await _urutan_lempar("santai", false)
 	await _urutan_lempar("ngebut", true)
-	quit()
+	await ProbeKeluar.keluar(self)
 
 
 ## Melambat: stick bawah penuh (lurus), bawah-dekat dan bawah-seberang (serong, sebelum lateral membentur tepi jalan), lalu 90 derajat
