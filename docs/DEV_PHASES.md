@@ -18,7 +18,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 | Fase | Nama | Milestone | Status | Selesai |
 |---|---|---|---|---|
 | 0 | Fondasi teknis | M0 | ✅ run 0A (PR #12), 0B+0C (PR #14), uji HP di A54 lolos | 2026-10-13 |
-| 1 | Gerak sepeda & kecepatan (prototype 1) | M1 | 🟡 run 1A selesai (PR #20), run 1B lolos QA (PR #21); bukti render A54 dan uji HP 3-5 orang menunggu | |
+| 1 | Gerak sepeda & kecepatan (prototype 1) | M1 | ✅ run 1A (PR #20), 1B (PR #21), 1C (PR #23) lolos QA; uji HP oleh pemilik lolos | 2026-10-14 |
 | 2 | Lemparan koran (prototype 2) | M1 | ⬜ | |
 | 3 | Satu rute perumahan (prototype 3) | M2 | ⬜ | |
 | 4 | Halaman depan koran & misi kucing (prototype 4) | M2 | ⬜ | |
@@ -27,7 +27,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 | 7 | Vertical slice perumahan & audio dasar | M3 | ⬜ | |
 | 8 | Distrik berikutnya, iklan, rilis | M4 | ⬜ | |
 
-**Fase aktif: Fase 1**, dikerjakan lewat loop Dev↔QA dalam dua run (`LOOP-DEV-QA.md` Bagian 6: Run 1A logika gerak, Run 1B umpan balik dan penyetelan). Run 1A (logika gerak inti) lolos QA 2026-10-14 di iterasi 1 (PR #20). Run 1B (umpan balik, audio placeholder, layar jeda, penyetelan, probe render) lolos QA 2026-10-14 di iterasi 1 (PR #21); APK terpasang di vivo V2108 (Android 12, 2400×1080) 2026-10-14. Yang tersisa: bukti probe render di A54 dan uji 3-5 orang (`SETUP_ANDROID.md` 8.2). Fase 0 selesai 2026-10-13: run 0A dan 0B+0C lolos QA 2026-10-09, dan uji HP di A54 (checklist `SETUP_ANDROID.md` bagian 8) dinyatakan lolos oleh pemilik 2026-10-13. Cek light 2D/glow/partikel/shader di Compatibility dipindah ke Fase 1 (Run 1B) karena butuh scene uji yang belum ada.
+**Fase aktif: Fase 2** (lemparan koran). Fase 1 selesai 2026-10-14: run 1A, 1B, dan 1C (perapian temuan Run 1B, PR #23) lolos QA, dan uji di HP dinyatakan oke oleh pemilik 2026-10-14. Uji HP dilakukan pemilik sendiri, bukan 3-5 orang (keputusan pemilik 2026-10-14: uji HP cukup oleh pemilik sendiri, tanpa 3-5 penguji lain; tidak ada penguji lain). Riwayat Fase 1: dikerjakan lewat loop Dev↔QA (`LOOP-DEV-QA.md` Bagian 6). Run 1A (logika gerak inti) lolos QA 2026-10-14 di iterasi 1 (PR #20). Run 1B (umpan balik, audio placeholder, layar jeda, penyetelan, probe render) lolos QA 2026-10-14 di iterasi 1 (PR #21); APK terpasang di vivo V2108 (Android 12, 2400×1080) 2026-10-14. Yang tersisa: bukti probe render di A54 dan uji 3-5 orang (`SETUP_ANDROID.md` 8.2). Fase 0 selesai 2026-10-13: run 0A dan 0B+0C lolos QA 2026-10-09, dan uji HP di A54 (checklist `SETUP_ANDROID.md` bagian 8) dinyatakan lolos oleh pemilik 2026-10-13. Cek light 2D/glow/partikel/shader di Compatibility dipindah ke Fase 1 (Run 1B) karena butuh scene uji yang belum ada.
 
 ---
 
@@ -58,8 +58,8 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 **Tujuan:** mengayuh, mengatur kecepatan, dan berpindah sisi terasa enak sebelum ada lemparan.
 
 - [ ] Sistem koordinat dunia ↔ layar isometrik 2:1, jalan lurus naik ke kanan atas, ubin placeholder (ART_DIRECTION 2.2)
-- [ ] Kamera: sepeda di sepertiga kiri layar; saat ngebut sepeda bergeser maju sedikit di bingkai dan saat melambat mundur sedikit (dorongan kecepatan, permintaan Ronggur 2026-10-09; versi awalnya dikerjakan di PR #14, disetel di HP). Coba juga menurunkan posisi sepeda di layar: di A54 rumput kanan bawah kosong dan tinggi layar yang membatasi jalan ke depan (sekitar 2 detik saat ngebut), jadi sepeda lebih rendah memberi sekitar 30% lebih jauh tanpa mengubah skala ×3 (usulan dari uji A54, 2026-10-09; skala ×4 ditolak sementara karena viewport turun ke 585×270)
-- [ ] Uji ukuran kontrol dan HUD di A54: radius stick 35 px game, tombol kidal 38 dp (di bawah 44 dp rule `ui-scenes`), teks HUD 6 px. Perbesar kontrol dan HUD tanpa mengubah skala dunia bila perlu
+- [x] Kamera: sepeda di sepertiga kiri layar; saat ngebut sepeda bergeser maju sedikit di bingkai dan saat melambat mundur sedikit (dorongan kecepatan, permintaan Ronggur 2026-10-09; versi awalnya dikerjakan di PR #14, disetel di HP). Coba juga menurunkan posisi sepeda di layar: di A54 rumput kanan bawah kosong dan tinggi layar yang membatasi jalan ke depan (sekitar 2 detik saat ngebut), jadi sepeda lebih rendah memberi sekitar 30% lebih jauh tanpa mengubah skala ×3 (usulan dari uji A54, 2026-10-09; skala ×4 ditolak sementara karena viewport turun ke 585×270). Run 1B: sepeda 75% tinggi layar, dorongan maju 36 / mundur 20 px; lolos uji HP pemilik 2026-10-14
+- [x] Uji ukuran kontrol dan HUD di A54: radius stick 35 px game, tombol kidal 38 dp (di bawah 44 dp rule `ui-scenes`), teks HUD 6 px. Perbesar kontrol dan HUD tanpa mengubah skala dunia bila perlu (run 1B: tombol 42 px game ≈ 44 dp, teks HUD 8 px, stick 35 tetap; lolos uji HP pemilik 2026-10-14)
 - [x] Gerak maju terus dengan tiga tingkat kecepatan dari stick (santai/cepat/ngebut) dan transisi halus (BALANCING 2) (run 1A, PR #20, 2026-10-14; rasa dinilai di uji HP)
 - [x] Melambat dan meluncur (stick bawah), rem saat ditarik penuh dan ditahan dengan ambang di ujung bawah (run 1A, PR #20, 2026-10-14; rasa dinilai di uji HP); ambang rem tetap usulan, ROADMAP 5
 - [x] Pindah posisi lateral ke sisi seberang dan sisi dekat; batas tepi jalan (analog bebas, keputusan pemilik 2026-10-13; batas tepi aspal ±1 ubin; run 1A, PR #20)
@@ -68,9 +68,9 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 - [x] Umpan balik kecepatan dasar: debu roda, garis kecepatan (placeholder) (run 1B, PR #21, 2026-10-14; keterbacaan dinilai di uji HP); bunyi kayuhan, freewheel, dan rem placeholder lewat autoload `Audio`; tombol dan layar jeda
 - [x] HUD sementara: bar kecepatan dan stamina (run 1A, PR #20)
 - [x] Cek apakah light 2D, glow, partikel, dan shader warna bayangan yang dibutuhkan jalan di renderer Compatibility di HP target (ART_DIRECTION 2.3, 7); dipindah dari Fase 0 pada 2026-10-13, dikerjakan di Run 1B bersama partikel debu roda (2026-10-14: semua lolos di vivo V2108 / Adreno 618, 60,6 fps, HP uji dipilih pemilik; glow tipis; A54 belum dicek, bukti `docs/loop/20261014-fase1b-umpan-balik/render_vivo/`)
-- [ ] Uji di HP: ambang rem, rasa stick, keterbacaan sprite di skala ×3
+- [x] Uji di HP: ambang rem, rasa stick, keterbacaan sprite di skala ×3 (oleh pemilik, 2026-10-14; angka yang ada dipakai apa adanya)
 
-**Selesai kalau:** 3–5 orang mencoba di HP dan bisa mengatur kecepatan, mengerem, dan pindah sisi tanpa penjelasan panjang; ambang rem tidak membuat sepeda berhenti tak sengaja.
+**Selesai kalau:** pemilik mencoba di HP (keputusan pemilik 2026-10-14: uji HP cukup oleh pemilik sendiri, tanpa 3-5 penguji lain; semula 3–5 orang) dan bisa mengatur kecepatan, mengerem, dan pindah sisi tanpa penjelasan panjang; ambang rem tidak membuat sepeda berhenti tak sengaja.
 
 ---
 

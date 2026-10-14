@@ -267,7 +267,7 @@ Setiap fase berisi: tujuan, kaitan cerita, sistem dan kode, aset, konten, uji, d
 | Ikon jeda dan bar HUD sementara | 3 | Kotak polos |
 | Audio placeholder: kayuhan loop, freewheel, rem | 3 file | Pitch kayuhan 1,0 / 1,15 / 1,3 (SOUND_DESIGN 3.2) |
 
-**Uji.** 3–5 orang di HP: ambang rem (≥90% ditahan 0,25 detik), rasa stick, keterbacaan sprite di ×3. Keputusan skala piksel (×3 atau ×4) dan ubin 64×32 dikunci di akhir fase.
+**Uji.** Pemilik di HP (keputusan pemilik 2026-10-14, semula 3–5 orang): ambang rem (≥90% ditahan 0,25 detik), rasa stick, keterbacaan sprite di ×3. Keputusan skala piksel (×3 atau ×4) dan ubin 64×32 dikunci di akhir fase.
 
 **Selesai kalau.** Sama dengan `DEV_PHASES.md` Fase 1.
 
@@ -851,7 +851,7 @@ Perkiraan total: **sekitar 480 aset game** (ART_DIRECTION 10) **ditambah sekitar
 | **Shader warna bayangan di renderer Compatibility** | Bayangan berwarna tidak jalan di HP murah | Uji di Fase 0 dan Fase 7, sebelum aset distrik dibuat |
 | **Gang berkelok vs segmen lurus** | Perkampungan terasa sama dengan perumahan, atau kamera bermasalah | Spike graybox di awal Fase 8 |
 | **Plugin iklan dan target API 36** | Iklan sebagai satu-satunya pemasukan tidak bisa dipasang | Cek plugin di Fase 0 pada versi Godot terpilih, bukan di Fase 14 |
-| **Kontrol di HP asli** | Seluruh game bergantung pada stick dan swipe | Uji Fase 1 dan 2 dengan 3–5 orang |
+| **Kontrol di HP asli** | Seluruh game bergantung pada stick dan swipe | Uji Fase 1 dan 2 di HP oleh pemilik (keputusan 2026-10-14, semula 3–5 orang) |
 | **Volume penulisan** (sekitar 200 teks cerita, 120 headline, 18 misi) | Konten tertinggal dari kode | Jadwalkan penulisan per fase bab, bukan di akhir; cek panjang otomatis lewat tes |
 | **Target usia belum diputuskan** | Memengaruhi iklan, humor, dan tema (PHK, keuangan keluarga) | Putuskan sebelum naskah Prolog final |
 

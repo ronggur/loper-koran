@@ -311,9 +311,11 @@ Semua angka usulan (`scripts/config.gd`, BALANCING 2-3). Catat angka yang ingin 
 - [ ] **Kembali dari background** (home, notifikasi ditarik, panggilan): tidak ada lompatan posisi, kecepatan, atau stamina; rem yang sedang ditahan tidak tersisa (harus ditahan ulang 0,25 detik); stick dan lempar dilepas bersih.
 - [ ] Dua jempol: swipe tetap melempar saat rem dan meluncur (lempar memakai gambar santai), stick tidak putus.
 
-### 8.2 Uji 3-5 orang Fase 1 (run 1A + 1B, menutup Fase 1)
+### 8.2 Uji Fase 1 di HP (run 1A + 1B, menutup Fase 1)
 
-Menggabungkan 8.1 (gerak inti, run `20261013-fase1a-gerak`) dan run `20261014-fase1b-umpan-balik` (umpan balik, audio, jeda, penyetelan). **Fase 1 baru selesai** (`DEV_PHASES.md`) kalau 3-5 orang mencoba di HP dan **bisa mengatur kecepatan, mengerem, dan pindah sisi tanpa penjelasan panjang**, dan **ambang rem tidak membuat sepeda berhenti tak sengaja**. Semua angka usulan; catat angka yang ingin diubah, jangan diubah di sesi uji.
+> **Keputusan pemilik 2026-10-14:** uji HP cukup dilakukan pemilik sendiri (tidak ada penguji lain), bukan 3-5 orang. Pemilik menyatakan uji Fase 1 oke pada 2026-10-14. Langkah dan lembar di bawah tetap dipakai sebagai daftar periksa; kode P1 sampai P5 cukup P1.
+
+Menggabungkan 8.1 (gerak inti, run `20261013-fase1a-gerak`) dan run `20261014-fase1b-umpan-balik` (umpan balik, audio, jeda, penyetelan). **Fase 1 baru selesai** (`DEV_PHASES.md`) kalau pemilik mencoba di HP dan **bisa mengatur kecepatan, mengerem, dan pindah sisi tanpa penjelasan panjang**, dan **ambang rem tidak membuat sepeda berhenti tak sengaja**. Semua angka usulan; catat angka yang ingin diubah, jangan diubah di sesi uji.
 
 **Persiapan (pemilik).** APK normal terbaru (`builds/kring-kring-debug.apk`, bagian 4) terpasang di A54; volume media sekitar setengah, uji suara di speaker HP (bukan headphone). Tiap penguji dicatat dengan kode (P1 sampai P5), **tanpa nama atau data pribadi**. Penjelasan ke penguji cukup satu kalimat: "Jempol kiri mengayuh dan mengarahkan, jempol kanan melempar." Amati dulu tanpa membantu; catat kapan penguji harus diberi tahu.
 

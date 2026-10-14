@@ -21,13 +21,14 @@ Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MAN
 
 ## NEEDS-MANUAL (uji di HP)
 - [ ] (orchestrator) APK debug normal di vivo V2108: terpasang, jalan, isi APK tanpa berkas probe render.
-- [ ] (QA-002) Tahan jempol di tombol jeda, tekan home, kembali, ketuk "Lanjut": ikon jeda tampil normal.
-- [ ] (QA-006) Jejak debu tertinggal di jalan saat pindah sisi, terbaca dan tidak mengganggu.
-- [ ] (QA-001 Q04) Swipe gesture navigasi sistem di atas tombol jeda tidak memicu jeda/lanjut.
-- [ ] Checklist uji 3-5 orang Fase 1 (`SETUP_ANDROID.md` 8.2), termasuk QA-005 Run 1A dan Run 1B.
+- [x] (QA-002) Tahan jempol di tombol jeda, tekan home, kembali, ketuk "Lanjut": ikon jeda tampil normal.
+- [x] (QA-006) Jejak debu tertinggal di jalan saat pindah sisi, terbaca dan tidak mengganggu.
+- [x] (QA-001 Q04) Swipe gesture navigasi sistem di atas tombol jeda tidak memicu jeda/lanjut.
+- [x] Checklist uji Fase 1 (`SETUP_ANDROID.md` 8.2), termasuk QA-005 Run 1A dan Run 1B: diuji pemilik sendiri, dinyatakan oke 2026-10-14 (keputusan pemilik: tanpa 3-5 penguji lain); angka tetap.
 
 ## Keputusan & catatan
 - Keputusan pemilik 2026-10-14 (lihat SPEC): hasil uji HP 8.2 belum ada (kolom perintah masih template), jadi tidak ada angka penyetelan yang diubah; QA-005 Run 1A/1B tetap NEEDS-MANUAL. QA-004 dikerjakan (masuk scope).
+- Pemilik 2026-10-14 (sesudah PR #23 dibuka): uji di HP oke; uji HP cukup oleh pemilik sendiri, tidak ada 3-5 penguji. Fase 1 ditutup di `DEV_PHASES.md`; QA-005 Run 1A/1B diterima apa adanya.
 - Orchestrator 2026-10-14: QA PASS iterasi 1 → status PASSED tanpa iterasi 2 (LOOP-DEV-QA Bagian 1 langkah 2c). Minor QA-001 diubah ke DEFERRED dengan catatan; Nit QA-002..005 dicatat. Orchestrator mengulang `run_tests` di HEAD `94df34e`: 4668 lolos, 0 gagal, `--ketat` lolos.
 - Lingkungan (orchestrator, 2026-10-14): Godot 4.7.2 `/opt/homebrew/bin/godot`; `adb` hanya vivo V2108 (12d8c9da), A54 tidak tersambung. `main` = `origin/main` = 7acbef7 (PR #21). PR #22 (docs perintah Run 1C) masih terbuka dan tidak dibutuhkan run ini.
 
