@@ -21,6 +21,9 @@ const IKON_KORAN: Array[String] = ["............", "............", ".oooooooooo.
 const ELIPS_BIASA: Array[String] = ["..wwwwww..", ".w......w.", "w........w", ".w......w.", "..wwwwww.."]
 ## Elips pendaratan saat mengarah ke sasaran sah: elips TERISI `w` (OK) bergaris luar, bentuk berbeda dari elips biasa (D-5).
 const ELIPS_SAH: Array[String] = ["..oooooo..", ".owwwwwwo.", "owwwwwwwwo", ".owwwwwwo.", "..oooooo.."]
+## Elips pendaratan yang tertutup rumah dari sudut kamera (QA-004): cincin putus-putus `w` (TEXT, digambar redup), bentuk berbeda dari
+## elips biasa dan elips sah, supaya tidak terbaca sebagai sasaran di atap atau dinding.
+const ELIPS_TERTUTUP: Array[String] = ["..ww..ww..", ".w......w.", "..........", ".w......w.", "..ww..ww.."]
 ## Penanda sah penuh: centang (D-10).
 const PENANDA_CENTANG: Array[String] = ["......ooo", ".....owwo", "oo..owwo.", "owwowwo..", ".owwwo...", "..owo....", "...o....."]
 ## Penanda sah setengah (halaman): belah ketupat yang hanya terisi separuh.

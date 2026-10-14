@@ -182,6 +182,40 @@ static func klasifikasi_jalan_uji(titik_dunia: Vector2, sisi_lempar: LoperAnim.S
 	return klasifikasi(titik_dunia, sisi_lempar, zona_jalan_uji_sekitar(ke_jalan(titik_dunia).y))
 
 
+## Tapak kotak rumah graybox seberang kavling `indeks` di bidang tanah, koordinat jalan (QA-004): lateral dari kaki fasad
+## (`JALAN_UJI_RUMAH_X_UBIN`) ke arah seberang sedalam `JALAN_UJI_RUMAH_DALAM_UBIN`, maju dari titik pijak rumah (`JalanDaur.maju_objek_ubin`,
+## sama dengan `ObjekDaur`) sepanjang `JALAN_UJI_RUMAH_PANJANG_UBIN`.
+static func tapak_rumah_jalan_uji(indeks: int) -> Rect2:
+	var maju: float = JalanDaur.maju_objek_ubin(indeks, Config.JALAN_UJI_RUMAH_PERIODE_UBIN, Config.JALAN_UJI_RUMAH_MAJU_UBIN)
+	var dalam: float = Config.JALAN_UJI_RUMAH_DALAM_UBIN
+	return Rect2(Config.JALAN_UJI_RUMAH_X_UBIN - dalam, maju, dalam, Config.JALAN_UJI_RUMAH_PANJANG_UBIN)
+
+
+## True bila titik di dunia setinggi `tinggi_ubin` tertutup kotak setinggi `tinggi_kotak_ubin` di atas `tapak` (koordinat jalan) dilihat dari
+## kamera iso 2:1 (QA-004). Titik (x, y, z) dan (x + d, y + d, z + d) jatuh di titik layar yang sama (`Iso`), dan d > 0 lebih dekat ke
+## kamera; jadi titik tertutup bila ada d >= 0 dengan (x + d, y + d) di dalam tapak dan z + d <= tinggi kotak (d = 0: di dalam kotak). Di
+## koordinat jalan: lateral + d dan maju - d. Titik tepat di tepi tidak tertutup (irisan selang d harus terbuka), jadi zona di kaki fasad
+## (lateral >= kaki fasad) tidak pernah tertutup. Masukan tidak hingga = false.
+static func tertutup_kotak(titik_dunia: Vector2, tinggi_ubin: float, tapak: Rect2, tinggi_kotak_ubin: float) -> bool:
+	if not titik_dunia.is_finite() or not is_finite(tinggi_ubin) or not is_finite(tinggi_kotak_ubin):
+		return false
+	var p: Vector2 = ke_jalan(titik_dunia)
+	var bawah: float = maxf(0.0, maxf(tapak.position.x - p.x, p.y - tapak.end.y))
+	var atas: float = minf(tinggi_kotak_ubin - maxf(tinggi_ubin, 0.0), minf(tapak.end.x - p.x, p.y - tapak.position.y))
+	return bawah < atas
+
+
+## True bila titik di dunia setinggi `tinggi_ubin` tertutup salah satu rumah graybox seberang jalan uji (kavling di sekitarnya).
+static func tertutup_rumah_jalan_uji(titik_dunia: Vector2, tinggi_ubin: float) -> bool:
+	if not titik_dunia.is_finite():
+		return false
+	var tengah: int = floori(ke_jalan(titik_dunia).y / float(Config.JALAN_UJI_RUMAH_PERIODE_UBIN))
+	for indeks: int in range(tengah - 1, tengah + 2):
+		if tertutup_kotak(titik_dunia, tinggi_ubin, tapak_rumah_jalan_uji(indeks), Config.JALAN_UJI_RUMAH_TINGGI_UBIN):
+			return true
+	return false
+
+
 ## Persegi dari data `[lateral_min, maju_min, lebar_lateral, panjang_maju]`, maju digeser `geser_maju`.
 static func _persegi(data: Array[float], geser_maju: float) -> Rect2:
 	var ukuran: Array[float] = data.slice(2)

@@ -61,6 +61,7 @@ func jalankan() -> void:
 	await _test_elips_dan_jendela()
 	await _test_hud_dan_zona()
 	_test_perintah_gambar_koran()
+	await _test_elips_tertutup()
 	await _test_gambar_koran_terbang()
 
 
@@ -211,6 +212,11 @@ func _sama(a: ThrowSolver.Lintasan, b: ThrowSolver.Lintasan) -> bool:
 ## Menahan jari 1 di panjang yang membuat garis bidik mengarah ke `sasaran` (dicari dari keadaan saat ini, sepeda maju tiap langkah).
 ## True bila garis bidik yang tampil sesudah langkah terakhir mengarah ke sasaran (jari masih ditahan).
 func _bidik_ke(akar: JalanUji, sisi: LoperAnim.Sisi, sasaran: ZonaSasaran.Hasil) -> bool:
+	return _bidik_sampai(akar, sisi, func(l: ThrowSolver.Lintasan) -> bool: return KoranLempar.hasil_mendarat(l) == sasaran)
+
+
+## Seperti `_bidik_ke`, untuk syarat lintasan apa pun (`syarat(lintasan) -> bool`).
+func _bidik_sampai(akar: JalanUji, sisi: LoperAnim.Sisi, syarat: Callable) -> bool:
 	var garis: GarisBidik = akar.garis_bidik()
 	var router: TouchRouter = _router(akar)
 	for i: int in range(360):
@@ -218,7 +224,7 @@ func _bidik_ke(akar: JalanUji, sisi: LoperAnim.Sisi, sasaran: ZonaSasaran.Hasil)
 		var coba: float = ceilf(ThrowSolver.swipe_min_px(LEBAR))
 		while coba <= ThrowSolver.swipe_maks_px(LEBAR):
 			var l: ThrowSolver.Lintasan = akar.lintasan_swipe(_awal(sisi), _akhir(sisi, coba))
-			if l != null and KoranLempar.hasil_mendarat(l) == sasaran:
+			if l != null and syarat.call(l):
 				dx = coba
 				break
 			coba += 1.0
@@ -230,7 +236,7 @@ func _bidik_ke(akar: JalanUji, sisi: LoperAnim.Sisi, sasaran: ZonaSasaran.Hasil)
 			_geser(1, _awal(sisi))
 			_sentuh(1, _awal(sisi), false)
 		_langkah(akar, 1)
-		if garis.tampil() and KoranLempar.hasil_mendarat(garis.lintasan()) == sasaran:
+		if garis.tampil() and syarat.call(garis.lintasan()):
 			return true
 	return false
 
@@ -837,6 +843,11 @@ func _test_elips_dan_jendela() -> void:
 			continue
 		check(garis.elips_sah() == k[2], "%s: elips %s" % [nama, "sah (OK, terisi)" if k[2] else "biasa (cincin TEXT)"])
 		var l: ThrowSolver.Lintasan = garis.lintasan()
+		var elips_harapan: Array = GambarPiksel.perintah_pola(PolaPiksel.ELIPS_SAH, garis.pojok_elips(), Palette.OK)
+		if not k[2]:
+			var tertutup: bool = ZonaSasaran.tertutup_rumah_jalan_uji(l.titik_mendarat, 0.0)
+			elips_harapan = GambarPiksel.perintah_pola(PolaPiksel.ELIPS_TERTUTUP if tertutup else PolaPiksel.ELIPS_BIASA, garis.pojok_elips(), Palette.TEXT, Config.GARIS_BIDIK_TERTUTUP_ALPHA if tertutup else 1.0)
+		check(garis.perintah_elips() == elips_harapan, "%s: node garis bidik menggambar elips %s" % [nama, "sah" if k[2] else "biasa atau tertutup sesuai titik mendarat"])
 		_sentuh(1, _router(akar).posisi_swipe(), false)
 		var mendarat: KoranLempar.Koran = _sampai_mendarat(akar, catatan)
 		check(mendarat != null and mendarat.hasil == sasaran and mendarat.penanda == k[3] and ZonaSasaran.sah(mendarat.antaran) == k[2], "%s: mendarat dengan hasil sama dengan prediksi elips, penanda %s" % [nama, ZonaSasaran.Penanda.keys()[k[3]]])
@@ -929,6 +940,40 @@ func _test_hud_dan_zona() -> void:
 	for indeks: int in kavling:
 		total += zona.perintah_kavling_tampil(indeks).size()
 	check(zona.perintah_tampil().size() == total and total > 0, "node zona menggambar semua kavling yang tampil (%d perintah)" % total)
+	_bersihkan(akar)
+
+
+## QA-004 (iterasi 2): garis bidik yang berakhir di dalam atau di balik rumah graybox (dari sudut kamera): elips cincin putus-putus redup
+## (bentuk berbeda dari elips biasa dan sah), titik ujung garis redup, titik awal di tangan tetap terang; koran mendarat MELESET.
+func _test_elips_tertutup() -> void:
+	_judul.call("Elips dan ujung garis bidik yang tertutup rumah: putus-putus redup (QA-004, D-5)")
+	var akar: JalanUji = await _siapkan()
+	var garis: GarisBidik = akar.garis_bidik()
+	var catatan: Dictionary = _catat(akar)
+	# Titik mendarat tertutup DAN titik garis bidik terakhir (beberapa piksel sebelum mendarat, sedikit di atas tanah) juga tertutup.
+	var syarat: Callable = func(l: ThrowSolver.Lintasan) -> bool:
+		var waktu: PackedFloat32Array = KoranLempar.waktu_titik_bidik(l, float(Config.SWIPE_TITIK_JARAK_PX), Config.GARIS_BIDIK_SAMPEL)
+		return ZonaSasaran.tertutup_rumah_jalan_uji(l.titik_mendarat, 0.0) and KoranLempar.tertutup_pada(l, waktu[waktu.size() - 1])
+	var ketemu: bool = _bidik_sampai(akar, LoperAnim.Sisi.SEBERANG, syarat)
+	check(ketemu, "garis bidik ke seberang bisa diarahkan ke titik di dalam/di balik rumah")
+	if not ketemu:
+		_bersihkan(akar)
+		return
+	var l: ThrowSolver.Lintasan = garis.lintasan()
+	check(garis.bentuk_elips() == KoranLempar.Elips.TERTUTUP and not garis.elips_sah(), "elips tertutup rumah: bentuk TERTUTUP, bukan sah")
+	check(garis.perintah_elips() == GambarPiksel.perintah_pola(PolaPiksel.ELIPS_TERTUTUP, garis.pojok_elips(), Palette.TEXT, Config.GARIS_BIDIK_TERTUTUP_ALPHA), "node garis bidik menggambar cincin putus-putus TEXT redup (alpha %s)" % Config.GARIS_BIDIK_TERTUTUP_ALPHA)
+	var akhir: int = garis.titik_gambar().size() - 1
+	check(akhir > 0 and garis.titik_tertutup(akhir) and garis.warna_titik(akhir) == Color(Palette.TEXT, Config.GARIS_BIDIK_TERTUTUP_ALPHA), "titik ujung garis bidik di balik rumah: redup")
+	check(not garis.titik_tertutup(0) and garis.warna_titik(0) == Palette.TEXT, "titik awal garis bidik (di tangan): terang")
+	var cocok: bool = true
+	var waktu: PackedFloat32Array = KoranLempar.waktu_titik_bidik(l, float(Config.SWIPE_TITIK_JARAK_PX), Config.GARIS_BIDIK_SAMPEL)
+	for i: int in range(waktu.size()):
+		if garis.titik_tertutup(i) != KoranLempar.tertutup_pada(l, waktu[i]):
+			cocok = false
+	check(cocok, "tiap titik garis bidik redup tepat bila sampel posisi_pada-nya tertutup rumah")
+	_sentuh(1, _router(akar).posisi_swipe(), false)
+	var mendarat: KoranLempar.Koran = _sampai_mendarat(akar, catatan)
+	check(mendarat != null and mendarat.hasil == ZonaSasaran.Hasil.MELESET and mendarat.penanda == ZonaSasaran.Penanda.SILANG, "koran mendarat di dalam/di balik rumah: MELESET, penanda silang")
 	_bersihkan(akar)
 
 

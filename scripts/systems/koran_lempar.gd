@@ -11,6 +11,10 @@ extends RefCounted
 ## elips garis bidik (`prediksi_antaran`), lalu penanda tampil `Config.PENANDA_LAMA_DETIK`.
 
 
+## Bentuk elips pendaratan garis bidik (D-5; QA-004 iterasi 2): cincin biasa, terisi (sasaran sah), atau putus-putus redup (tertutup rumah).
+enum Elips { BIASA, SAH, TERTUTUP }
+
+
 ## Satu koran yang dilempar. Dibuat `baru`, diganti objek baru oleh `langkah`.
 class Koran extends RefCounted:
 	## Lintasan beku (dari saat jari dilepas).
@@ -56,6 +60,27 @@ static func hasil_mendarat(lintasan: ThrowSolver.Lintasan) -> ZonaSasaran.Hasil:
 ## penilaian saat koran mendarat (`langkah`).
 static func prediksi_antaran(lintasan: ThrowSolver.Lintasan, jendela_bonus: bool) -> ZonaSasaran.Antaran:
 	return ZonaSasaran.status_antaran(hasil_mendarat(lintasan), jendela_bonus)
+
+
+## Bentuk elips pendaratan untuk lintasan ini (D-5, QA-004): `SAH` bila `prediksi_antaran` sah; `TERTUTUP` bila titik mendarat tertutup
+## rumah graybox dari sudut kamera (di dalam atau di belakang kotaknya; koran meleset di sana, jadi elips tidak boleh terbaca sebagai
+## sasaran di atap atau dinding); selain itu `BIASA`.
+static func bentuk_elips(lintasan: ThrowSolver.Lintasan, jendela_bonus: bool) -> Elips:
+	if lintasan == null:
+		return Elips.BIASA
+	if ZonaSasaran.sah(prediksi_antaran(lintasan, jendela_bonus)):
+		return Elips.SAH
+	if ZonaSasaran.tertutup_rumah_jalan_uji(lintasan.titik_mendarat, 0.0):
+		return Elips.TERTUTUP
+	return Elips.BIASA
+
+
+## True bila koran lintasan ini pada `t` detik sejak lepas tertutup rumah graybox dari sudut kamera (titik garis bidik redup, QA-004).
+static func tertutup_pada(lintasan: ThrowSolver.Lintasan, t: float) -> bool:
+	if lintasan == null:
+		return false
+	var p: Vector3 = ThrowSolver.posisi_pada(lintasan, t)
+	return ZonaSasaran.tertutup_rumah_jalan_uji(Vector2(p.x, p.y), p.z)
 
 
 ## Satu langkah selama `dt` detik (NaN, tak hingga, negatif = 0, jadi jeda game membeku). Koran yang melewati lama total (jeda lepas +

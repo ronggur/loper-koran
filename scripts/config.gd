@@ -158,6 +158,9 @@ const KORAN_BAYANGAN_ALPHA: float = 0.5
 const PENANDA_ATAS_PX: int = 7
 ## Jumlah sampel `posisi_pada` sepanjang lintasan untuk menaruh titik garis bidik (titik dipilih dari sampel ini tiap `SWIPE_TITIK_JARAK_PX`).
 const GARIS_BIDIK_SAMPEL: int = 96
+## Alpha titik garis bidik dan elips pendaratan yang tertutup rumah dari sudut kamera (di dalam atau di belakang kotak rumah; elips juga
+## berganti bentuk putus-putus, QA-004 iterasi 2).
+const GARIS_BIDIK_TERTUTUP_ALPHA: float = 0.5
 ## Alpha garis tepi halaman dan isi zona placeholder di jalan uji.
 const ZONA_GARIS_ALPHA: float = 0.7
 
@@ -296,6 +299,14 @@ const JALAN_UJI_RUMAH_PERIODE_UBIN: int = 4
 const JALAN_UJI_RUMAH_X_UBIN: float = -3.0
 ## Geseran titik pijak rumah graybox sepanjang jalan, ubin.
 const JALAN_UJI_RUMAH_MAJU_UBIN: float = -0.5
+## Kotak rumah graybox: panjang sepanjang jalan dari titik pijak, dalam ke arah seberang dari kaki fasad, dan tinggi, ubin. Fakta aset
+## `tools/env_art/graybox.py` (3 x 2 ubin, 48 px), dijaga tes terhadap ukuran `house_graybox_kotak.png`; dipakai aturan elips "tertutup
+## rumah" garis bidik (QA-004 run fase2a-lemparan iterasi 2).
+const JALAN_UJI_RUMAH_PANJANG_UBIN: float = 3.0
+## Lihat `JALAN_UJI_RUMAH_PANJANG_UBIN`.
+const JALAN_UJI_RUMAH_DALAM_UBIN: float = 2.0
+## Lihat `JALAN_UJI_RUMAH_PANJANG_UBIN`.
+const JALAN_UJI_RUMAH_TINGGI_UBIN: float = 1.5
 ## Letak kotak surat graybox melintang jalan, ubin dari garis tengah jalan.
 const JALAN_UJI_KOTAK_SURAT_X_UBIN: float = -1.5
 ## Geseran kotak surat graybox sepanjang jalan, ubin.

@@ -61,6 +61,7 @@ func jalankan() -> void:
 	_test_koran_lempar()
 	_test_titik_bidik()
 	_test_pola_piksel()
+	_test_tertutup_rumah()
 
 
 # --- Pembantu ---
@@ -758,7 +759,7 @@ func _test_titik_bidik() -> void:
 
 func _test_pola_piksel() -> void:
 	_judul.call("PolaPiksel: pola koran, elips, penanda, ikon; rasterisasi zona dan elips (D-5, D-10, DESIGN_SPEC 3.5-3.7)")
-	var semua: Dictionary = {"ikon": PolaPiksel.IKON_KORAN, "elips biasa": PolaPiksel.ELIPS_BIASA, "elips sah": PolaPiksel.ELIPS_SAH, "centang": PolaPiksel.PENANDA_CENTANG, "setengah": PolaPiksel.PENANDA_SETENGAH, "bintang": PolaPiksel.PENANDA_BINTANG, "silang": PolaPiksel.PENANDA_SILANG, "bukan pelanggan": PolaPiksel.TANDA_BUKAN_PELANGGAN}
+	var semua: Dictionary = {"ikon": PolaPiksel.IKON_KORAN, "elips biasa": PolaPiksel.ELIPS_BIASA, "elips sah": PolaPiksel.ELIPS_SAH, "elips tertutup": PolaPiksel.ELIPS_TERTUTUP, "centang": PolaPiksel.PENANDA_CENTANG, "setengah": PolaPiksel.PENANDA_SETENGAH, "bintang": PolaPiksel.PENANDA_BINTANG, "silang": PolaPiksel.PENANDA_SILANG, "bukan pelanggan": PolaPiksel.TANDA_BUKAN_PELANGGAN}
 	for f: int in range(PolaPiksel.KORAN_PUTAR.size()):
 		semua["koran %d" % f] = PolaPiksel.pola_koran(f)
 	for nama: String in semua:
@@ -782,6 +783,7 @@ func _test_pola_piksel() -> void:
 	check(PolaPiksel.pola_koran(5) == PolaPiksel.pola_koran(1) and PolaPiksel.pola_koran(-1) == PolaPiksel.pola_koran(3), "frame di luar jangkauan memutar (posmod)")
 	check(PolaPiksel.ukuran(PolaPiksel.ELIPS_BIASA) == Vector2i(10, 5) and PolaPiksel.ukuran(PolaPiksel.ELIPS_SAH) == Vector2i(10, 5), "elips pendaratan 10x5 (DESIGN_SPEC 3.7)")
 	check(_bentuk(PolaPiksel.ELIPS_BIASA) != _bentuk(PolaPiksel.ELIPS_SAH) and _jumlah_isi(PolaPiksel.ELIPS_SAH) > _jumlah_isi(PolaPiksel.ELIPS_BIASA) + 10, "elips sah TERISI (bentuk berbeda dari cincin biasa, bukan hanya warna)")
+	check(PolaPiksel.ukuran(PolaPiksel.ELIPS_TERTUTUP) == Vector2i(10, 5) and _semua_beda([_bentuk(PolaPiksel.ELIPS_BIASA), _bentuk(PolaPiksel.ELIPS_SAH), _bentuk(PolaPiksel.ELIPS_TERTUTUP)]) and _jumlah_isi(PolaPiksel.ELIPS_TERTUTUP) < _jumlah_isi(PolaPiksel.ELIPS_BIASA), "elips tertutup rumah 10x5, cincin putus-putus: bentuk berbeda dari elips biasa dan sah (QA-004)")
 	check(PolaPiksel.ukuran(PolaPiksel.IKON_KORAN) == Vector2i(12, 12), "ikon koran HUD 12x12 (DESIGN_SPEC 3.5)")
 	var penanda: Array = []
 	for p: ZonaSasaran.Penanda in [ZonaSasaran.Penanda.SILANG, ZonaSasaran.Penanda.CENTANG, ZonaSasaran.Penanda.SETENGAH, ZonaSasaran.Penanda.BINTANG]:
@@ -823,6 +825,77 @@ func _test_pola_piksel() -> void:
 		check(bagian and luas_tepi > 0 and luas_tepi < luas, "zona %s: tepi (%d px) bagian dari isi dan lebih kecil" % [persegi, luas_tepi])
 	check(PolaPiksel.rentang_poligon(PackedVector2Array([Vector2.ZERO, Vector2.ONE])).is_empty(), "poligon kurang dari 3 sudut kosong")
 	check(PolaPiksel.rentang_huruf([".ww.o", "wwwww"], "w") == [Vector3i(0, 1, 3), Vector3i(1, 0, 5)], "rentang huruf: deret huruf berurutan per baris")
+
+
+## QA-004 (iterasi 2): titik yang tertutup kotak rumah dari sudut kamera iso 2:1 (di dalam atau di belakang kotaknya), elips "tertutup".
+func _test_tertutup_rumah() -> void:
+	_judul.call("Titik tertutup rumah graybox dari sudut kamera dan bentuk elips (QA-004, D-5)")
+	# Tapak uji: lateral -5..-3 (kaki fasad -3), maju 0..3, tinggi 1,5 ubin.
+	var tapak: Rect2 = Rect2(-5.0, 0.0, 2.0, 3.0)
+	var kasus: Array = [
+		[-4.0, 1.5, 0.0, true, "di dalam tapak di tanah"],
+		[-4.0, 1.5, 1.0, true, "di dalam kotak setinggi 1 ubin"],
+		[-4.0, 1.5, 1.6, false, "di atas atap (lebih tinggi dari kotak)"],
+		[-2.5, 1.5, 0.0, false, "di depan fasad (halaman)"],
+		[-3.0, 1.5, 0.0, false, "tepat di kaki fasad (tepi tidak tertutup)"],
+		[-5.5, 1.0, 0.0, true, "di belakang rumah, masih di balik kotak (d 0,5..1)"],
+		[-5.5, 1.0, 1.2, false, "di belakang rumah tetapi lebih tinggi dari garis atap dari kamera"],
+		[-7.0, 1.0, 0.0, false, "jauh di belakang rumah (lebih dari tinggi kotak): terlihat"],
+		[-5.5, -0.2, 0.0, false, "di belakang dan sebelum rumah: terlihat"],
+		[-5.5, 3.6, 0.0, true, "di belakang dan sesudah tapak, masih di balik kotak (d 0,6..1,5)"],
+		[-4.0, 3.2, 0.0, true, "sesudah tapak (sisi rumah yang membelakangi kamera): tertutup"],
+		[-4.0, -0.2, 0.0, false, "sebelum tapak (sisi samping rumah yang menghadap kamera): terlihat"],
+	]
+	for k: Array in kasus:
+		check(ZonaSasaran.tertutup_kotak(_titik(k[0], k[1]), k[2], tapak, 1.5) == k[3], "%s (lateral %s, maju %s, tinggi %s): tertutup %s" % [k[4], k[0], k[1], k[2], k[3]])
+	check(not ZonaSasaran.tertutup_kotak(Vector2(NAN, 0.0), 0.0, tapak, 1.5) and not ZonaSasaran.tertutup_kotak(_titik(-4.0, 1.5), INF, tapak, 1.5) and not ZonaSasaran.tertutup_rumah_jalan_uji(Vector2(INF, 0.0), 0.0), "masukan tidak hingga: tidak tertutup")
+	# Proyeksi: titik yang dinyatakan tertutup memang jatuh di titik layar yang sama dengan titik kotak di depannya.
+	var p: Vector2 = _titik(-5.5, 1.0)
+	var d: float = 0.75
+	check(Iso.dunia_tinggi_ke_layar(p, 0.0).is_equal_approx(Iso.dunia_tinggi_ke_layar(p + Vector2(d, d), d)), "dasar aturan: (x, y, z) dan (x + d, y + d, z + d) jatuh di titik layar sama (Iso)")
+	# Rumah jalan uji: tapak sama dengan letak graybox ObjekDaur dan ukuran aset.
+	check(ZonaSasaran.tapak_rumah_jalan_uji(0) == Rect2(-5.0, -0.5, 2.0, 3.0) and ZonaSasaran.tapak_rumah_jalan_uji(2) == Rect2(-5.0, 7.5, 2.0, 3.0), "tapak rumah jalan uji: lateral -5..-3, maju -0,5..2,5 + 4 per kavling")
+	var png: PackedByteArray = FileAccess.get_file_as_bytes("res://assets/sprites/_placeholder/house_graybox_kotak.png")
+	var lebar: int = (png[16] << 24) | (png[17] << 16) | (png[18] << 8) | png[19]
+	var tinggi: int = (png[20] << 24) | (png[21] << 16) | (png[22] << 8) | png[23]
+	var ubin: float = float(Config.JALAN_UJI_RUMAH_PANJANG_UBIN + Config.JALAN_UJI_RUMAH_DALAM_UBIN)
+	check(lebar == roundi(ubin * 32.0) + 1 and tinggi == roundi(ubin * 16.0 + Config.JALAN_UJI_RUMAH_TINGGI_UBIN * Config.UBIN_UNIT_DUNIA) + 1, "ukuran kotak rumah di Config (3 x 2 x 1,5 ubin) = ukuran house_graybox_kotak.png %dx%d" % [lebar, tinggi])
+	# Zona sasaran di kaki fasad tidak pernah tertutup (tetap terbaca); titik di dalam rumah tertutup.
+	var zona_terbuka: bool = true
+	for indeks: int in range(-2, 4):
+		for zona: ZonaSasaran.Zona in ZonaSasaran.zona_jalan_uji(indeks):
+			var r: Rect2 = zona.persegi
+			for t: Vector2 in [r.position, r.get_center(), r.end - Vector2(0.001, 0.001), Vector2(r.position.x, r.end.y - 0.001)]:
+				if ZonaSasaran.tertutup_rumah_jalan_uji(_titik(t.x, t.y), 0.0):
+					zona_terbuka = false
+	check(zona_terbuka, "semua zona sasaran jalan uji (kotak surat, halaman, teras, jendela, sisi dekat) tidak tertutup rumah")
+	check(ZonaSasaran.tertutup_rumah_jalan_uji(_titik(-4.0, 9.0), 0.0) and ZonaSasaran.tertutup_rumah_jalan_uji(_titik(-4.0, 11.0), 0.0) and not ZonaSasaran.tertutup_rumah_jalan_uji(_titik(-3.2, 7.2), 0.0) and ZonaSasaran.tertutup_rumah_jalan_uji(_titik(-4.0, 3.7), 0.0), "jalan uji: di dalam rumah kavling 2 dan kavling 1 (maju 3,7, dekat batas kavling) dan di celah di baliknya tertutup; celah dekat kaki fasad (lateral -3,2, maju 7,2) terlihat")
+	# Bentuk elips lintasan.
+	var masuk_rumah: ThrowSolver.Lintasan = ThrowSolver.hitung(ThrowSolver.swipe_maks_px(780.0), 780.0, LoperAnim.Sisi.SEBERANG, _titik(0.0, 7.0), 0.0, 0.0, 0.0)
+	var ke_teras: ThrowSolver.Lintasan = null
+	var ke_jalan: ThrowSolver.Lintasan = ThrowSolver.hitung(ThrowSolver.swipe_min_px(780.0), 780.0, LoperAnim.Sisi.DEKAT, _titik(-1.0, 3.5), 0.0, 0.0, 0.0)
+	for i: int in range(200):
+		var l: ThrowSolver.Lintasan = ThrowSolver.hitung(ThrowSolver.swipe_min_px(780.0) + float(i), 780.0, LoperAnim.Sisi.SEBERANG, _titik(0.0, 4.0), 0.0, 0.0, 0.0)
+		if l != null and KoranLempar.hasil_mendarat(l) == ZonaSasaran.Hasil.TERAS:
+			ke_teras = l
+			break
+	check(ZonaSasaran.tertutup_rumah_jalan_uji(masuk_rumah.titik_mendarat, 0.0) and KoranLempar.bentuk_elips(masuk_rumah, false) == KoranLempar.Elips.TERTUTUP and KoranLempar.hasil_mendarat(masuk_rumah) == ZonaSasaran.Hasil.MELESET, "lempar maks ke seberang dari tengah jalan mendarat di dalam rumah: meleset, elips TERTUTUP %s" % masuk_rumah.titik_mendarat)
+	check(ke_teras != null and KoranLempar.bentuk_elips(ke_teras, false) == KoranLempar.Elips.SAH, "elips ke teras: SAH (sah menang atas aturan tertutup)")
+	check(KoranLempar.bentuk_elips(ke_jalan, false) == KoranLempar.Elips.BIASA and KoranLempar.hasil_mendarat(ke_jalan) == ZonaSasaran.Hasil.MELESET, "meleset di tanah terbuka (jalan): elips BIASA")
+	check(KoranLempar.bentuk_elips(null, false) == KoranLempar.Elips.BIASA and not KoranLempar.tertutup_pada(null, 0.0), "lintasan null: elips BIASA, tidak tertutup")
+	var ada_titik_tertutup: bool = false
+	var titik_awal_terbuka: bool = not KoranLempar.tertutup_pada(masuk_rumah, 0.0)
+	for t: float in KoranLempar.waktu_titik_bidik(masuk_rumah, 4.0, Config.GARIS_BIDIK_SAMPEL):
+		if KoranLempar.tertutup_pada(masuk_rumah, t):
+			ada_titik_tertutup = true
+	check(ada_titik_tertutup and titik_awal_terbuka and KoranLempar.tertutup_pada(masuk_rumah, masuk_rumah.lama_terbang), "titik garis bidik: awal di tangan terlihat, ujung di dalam rumah tertutup")
+	var ada_tinggi_terlihat: bool = false
+	for i: int in range(97):
+		var t: float = masuk_rumah.lama_terbang * float(i) / 96.0
+		var q: Vector3 = ThrowSolver.posisi_pada(masuk_rumah, t)
+		if ZonaSasaran.tertutup_rumah_jalan_uji(Vector2(q.x, q.y), 0.0) and not KoranLempar.tertutup_pada(masuk_rumah, t):
+			ada_tinggi_terlihat = true
+	check(ada_tinggi_terlihat, "titik garis bidik yang tinggi (di atas garis atap dari kamera) tetap terlihat walau titik tanahnya tertutup: tinggi koran ikut dihitung")
 
 
 ## Himpunan piksel tidak kosong pola (bentuk, tanpa warna).

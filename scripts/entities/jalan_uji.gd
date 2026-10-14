@@ -224,7 +224,7 @@ func _perbarui_lemparan(langkah_dt: float) -> void:
 	if not _jeda and router.swipe_aktif() and SisaKoran.boleh_lempar(koran):
 		var lintasan: ThrowSolver.Lintasan = lintasan_swipe(router.awal_swipe(), router.posisi_swipe())
 		if lintasan != null:
-			_garis_bidik.tampilkan(lintasan, ZonaSasaran.sah(KoranLempar.prediksi_antaran(lintasan, Config.JENDELA_KENA_BONUS)))
+			_garis_bidik.tampilkan(lintasan, KoranLempar.bentuk_elips(lintasan, Config.JENDELA_KENA_BONUS))
 			_bidik_nomor = router.nomor_swipe
 			return
 	_garis_bidik.sembunyikan()
