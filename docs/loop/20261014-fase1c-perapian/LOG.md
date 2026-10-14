@@ -6,13 +6,18 @@ Scope: Run 1C Fase 1, perapian temuan Run 1B (QA-001 tes cabang pertahanan, QA-0
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
 |---|---|---|---|---|---|
-| 1 | D-1..D-5 (QA-001, QA-002, QA-003, QA-004, QA-006), 7 commit; tanpa angka penyetelan baru | ✅ import 0 ERROR/WARNING; `run_tests` 4668 lolos 0 gagal, `--ketat` lolos; uji_pemeriksa/bangun_frames/sintesis lolos; `--quit-after 2` bersih; 6 probe jendela keluar bersih; klon bersih per commit (lihat Catatan Dev) | menunggu QA | | |
+| 1 | D-1..D-5 (QA-001, QA-002, QA-003, QA-004, QA-006), 7 commit; tanpa angka penyetelan baru | ✅ import 0 ERROR/WARNING; `run_tests` 4668 lolos 0 gagal, `--ketat` lolos; uji_pemeriksa/bangun_frames/sintesis lolos; `--quit-after 2` bersih; 6 probe jendela keluar bersih; klon bersih per commit (lihat Catatan Dev) | **PASS** (QA, gerbang diulang sendiri di klon bersih: ✅) | 5 (0 Blocker, 0 Major, 1 Minor, 4 Nit) | 5 temuan Run 1B (QA-001, QA-002, QA-003, QA-004, QA-006) terbukti tertutup; mutan QA 20/22 mati, 2 hidup (lihat Catatan QA) |
 
 ## Temuan
 Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MANUAL | BLOCKED
 
 | ID | Iter | Sev | Lokasi | Temuan & reproduksi/bukti | Status | Fix (file/commit) | Tes regresi |
 |---|---|---|---|---|---|---|---|
+| QA-001 | 1 | Minor | `scripts/entities/pancaran_piksel.gd` `_draw` (baris `ke_lokal`); `tests/tes_umpan_balik.gd` `_test_debu_ruang_dunia` | Jalur gambar debu ruang dunia tanpa penjaga otomatis. Tes AC-6 hanya memeriksa posisi tersimpan (`posisi_global_partikel`), bukan posisi yang digambar. Repro: mutan M10 `get_global_transform().affine_inverse() if ruang_dunia else Transform2D.IDENTITY` → `Transform2D.IDENTITY` (debu digambar di koordinat global sebagai koordinat lokal, jadi bergeser sejauh posisi sepeda dan keluar layar): `run_tests` **4668 lolos, 0 gagal** (mutan hidup). Perilaku sekarang benar (tangkapan QA `shots/iter1-qa/` dan tangkapan Dev). Rule `testing` tidak mewajibkan tes visual, jadi Minor. Usulan: pindahkan perhitungan titik gambar ke fungsi kecil (mis. `titik_gambar(i) -> Vector2`) yang dipakai `_draw` dan dites (titik gambar + transform global = posisi global dibulatkan; mutan M10 harus mati). | OPEN (boleh DEFERRED) | | |
+| QA-002 | 1 | Nit | `scripts/entities/pancaran_piksel.gd` `_notification` + setter `ruang_dunia` (`set_notify_transform`) | Gambar ulang pada `NOTIFICATION_TRANSFORM_CHANGED` tidak dijaga tes dan saat ini setara: `maju` sudah `queue_redraw()` tiap frame, dan selama jeda sepeda tidak bergeser (`SepedaUji.jeda` → `gerak(0, 0)`). Mutan M14 (cabang dihapus) hidup, 4668 lolos. Pertahanan wajar untuk induk yang bergeser tanpa `maju`; dicatat saja. | Dicatat | | |
+| QA-003 | 1 | Nit | `scripts/ui/tombol_sentuh.gd` `_lepas_tekan` | Perbaikan QA-002 Run 1B bergantung pada reaksi internal `BaseButton` atas `NOTIFICATION_SCROLL_BEGIN` (mekanisme yang sama dipakai `ScrollContainer`, bukan API yang didokumentasikan untuk melepas tekan). Tidak ada API publik `BaseButton` untuk membatalkan tekan non-toggle, dan ketergantungan ini terjaga tes: mutan M01 (pelepasan dihapus) mati dengan 11 gagal, jadi bila versi Godot lain mengubah perilakunya tes langsung merah. Diterima; uji di HP tetap NEEDS-MANUAL (QA-002 di daftar). | Dicatat | | |
+| QA-004 | 1 | Nit | `scripts/entities/umpan_balik_sepeda.gd` (debu anak `SepedaUji` di `Objek` y-sort) | Debu ruang dunia tetap digambar di slot y-sort sepeda, jadi objek y-sort dengan y di antara sepeda dan jejak debu (lebih dekat kamera dari sepeda tetapi lebih jauh dari debu) digambar di atas debu walau debu seharusnya di depannya. Placeholder; tidak terlihat di tangkapan (debu di jalan, objek di trotoar). Dev sudah mencatatnya. Dicatat untuk VFX final (`vfx_debu_roda.png`). | Dicatat | | |
+| QA-005 | 1 | Nit | `tests/tes_export.gd` `_pemakai_probe` | Penjaga "tidak ada berkas game yang memakai probe" hanya mencari rujukan `res://<pola>`, bukan rujukan `uid://` saja. Risiko kecil (Godot 4.7 menulis `uid` dan `path` di `ext_resource`), dan ekspor normal QA sendiri tidak memuat nama probe. Dicatat. | Dicatat | | |
 
 ## NEEDS-MANUAL (uji di HP)
 - [ ] (orchestrator) APK debug normal di vivo V2108: terpasang, jalan, isi APK tanpa berkas probe render.
@@ -163,3 +168,114 @@ Klon bersih per commit (`git clone` lokal ke scratchpad di luar repo, `checkout`
 - Kebocoran `probe_dorongan_jendela.gd` yang muncul sekali tidak bisa diulang dengan sengaja; perbaikan `8e583d2` berdasar penalaran (lihat D-3).
 - `SCROLL_BEGIN` sebagai cara melepas status tekan `BaseButton` hanya dibuktikan di Godot 4.7.2 desktop (headless dan tes); bukan API yang didokumentasikan untuk itu.
 - Keluar dari game desktop dengan menutup jendela saat bunyi berjalan (catatan QA-003 Run 1B) tidak diuji; jalur itu `WM_CLOSE_REQUEST` → `Audio` berhenti sendiri (kini dites Q02), tanpa masa tunggu.
+
+## Catatan QA iterasi 1
+
+Agent 2 (QA), 2026-10-14, macOS Apple M4, `godot` 4.7.2.stable.official.ed1daf0bf. Diaudit: `fix/fase1c-perapian` di `aa75f90` (basis `main` = `origin/main` = `7acbef7`). Semua perintah di bawah saya jalankan sendiri; klaim "Catatan Dev" tidak dipakai sebagai bukti. Gerbang, mutan, dan ekspor dijalankan di klon lokal bersih di scratchpad (di luar repo); probe jendela di klon kedua. HP/`adb` tidak disentuh, tidak ada unduhan, tidak ada push. Repo kerja hanya berubah di LOG ini dan `shots/iter1-qa/`.
+
+**Verdict: PASS.** Semua gerbang hijau, AC-1 sampai AC-10 terbukti, tidak ada Blocker/Major. 5 temuan baru: 1 Minor (QA-001, OPEN, boleh DEFERRED), 4 Nit (dicatat). NEEDS-MANUAL tetap terbuka (daftar di atas), jadi Fase 1 belum boleh dicentang.
+
+### Gerbang (AC-1), klon bersih `aa75f90`
+
+```
+godot --headless --import                                  exit 0, 0 baris ERROR/WARNING; git status --porcelain sesudahnya kosong
+godot --headless --script res://tests/run_tests.gd         exit 0, "4668 lolos, 0 gagal"
+python3 tools/cek_keluaran_tes.py --ketat <log>            pemeriksa: lolos (4668 lolos, 0 gagal, 0 peringatan), exit 0
+python3 tools/tests_cek/uji_pemeriksa.py                   uji pemeriksa: 16 kasus, 0 menyimpang
+python3 tools/tests_cek/uji_bangun_frames.py               41 lolos, 0 gagal
+python3 tools/tests_cek/uji_sintesis_sepeda.py             32 lolos, 0 gagal
+godot --headless --path . --quit-after 2                   exit 0, 0 ERROR/WARNING
+git diff main...HEAD --name-only | grep keystore/apk/aab/.godot/build/builds/jks/p12/credentials/override.cfg   kosong
+git rev-parse main origin/main                             keduanya 7acbef7 (tidak ada commit di main)
+```
+
+Per commit (AC-10, klon bersih: `checkout`, `git clean -fdx`, `rm -rf .godot`, import, `run_tests` + `--ketat`, `--quit-after 2`, porcelain sesudah import dan di akhir), semuanya 0 ERROR/WARNING dan porcelain kosong:
+
+| Commit | `run_tests` | `--ketat` |
+|---|---|---|
+| `86e6ef6` docs: SPEC dan LOG | 4576 lolos, 0 gagal | lolos |
+| `a960e28` fix: QA-002 | 4593 lolos, 0 gagal | lolos |
+| `f052948` test: Q01, Q02 | 4627 lolos, 0 gagal | lolos |
+| `abbf9c2` fix: QA-004 | 4642 lolos, 0 gagal | lolos |
+| `61b3915` fix: QA-003 | 4653 lolos, 0 gagal | lolos |
+| `512751e` fix: QA-006 | 4668 lolos, 0 gagal | lolos |
+| `8e583d2` fix: ProbeKeluar jeda | 4668 lolos, 0 gagal | lolos |
+| `aa75f90` docs: LOG Dev | 4668 lolos, 0 gagal | lolos |
+
+Format commit `<tipe>: <ringkasan>` bahasa Indonesia di semua 8 commit. `tests/probe_keluar.gd.uid` ter-commit; `docs/` ber-`.gdignore` (PNG tanpa `.import`, benar).
+
+### AC per AC
+
+- **AC-1:** lolos (di atas).
+- **AC-2 (QA-001 Run 1B, D-1):** tes Q01 (`tes_jeda_scene.gd` `_test_rem_padam_saat_jeda`, 4 pemicu), Q02 (`tes_bunyi.gd` `_test_notifikasi_sendiri`, instans `Audio` sendiri, tiap notifikasi tersendiri), Q03/Q04 (`_test_tombol_sentuh_terpisah`, `TombolSentuh` sendirian). Mutan QA M04, M05, M07, M08, M09 mati (tabel di bawah). Catatan Q01: busur rem memang tidak tergambar selama jeda karena stick dilepas; tes memeriksa keadaan yang benar-benar dipengaruhi cabang itu (stick disentuh ulang sesudah lanjut sebelum langkah pertama). Diterima.
+- **AC-3 (QA-002 Run 1B, D-2):** `_test_tekan_tidak_tertinggal` mengikuti skenario reproduksi Run 1B (jari 0 di pusat tombol jeda, FOCUS_OUT, naik `canceled`, FOCUS_IN, `minta_lanjut`) dan memeriksa `is_pressed()` false (dipakai `TombolJeda._draw`), ketukan sesudahnya menjeda tepat sekali, jari yang tertahan melewati jeda dan lanjut lalu naik tidak menjeda lagi. Mutan "pelepasan status tekan dihapus" (M01) mati, 11 gagal. Tes lama `pressed.emit()` dan ketukan sentuh tetap hijau. Telaah: klik mouse editor tetap satu `pressed` (lepas tekan terjadi di dalam `_pressed` sesudah sinyal); tombol "Lanjut" (`WHEN_PAUSED`) menerima `PAUSED` saat lanjut dan dilepas juga, tanpa pemicu ganda (penjaga frame `_picu`). Ketergantungan pada `SCROLL_BEGIN`: QA-003 (Nit).
+- **AC-4 (QA-003 Run 1B, D-3):** enam probe yang memuat scene utama dijalankan di jendela asli 2340x1080 `--position 0,0`, keluaran ke scratchpad:
+  ```
+  probe_umpan_balik_jendela  exit 0, 0 baris ERROR/WARNING/leaked/still in use
+  probe_dorongan_jendela     exit 0, 0
+  probe_input_jendela        exit 0, 0
+  probe_gerak_jendela        exit 0, 0
+  probe_lempar_jendela       exit 0, 0
+  probe_layar_jendela        exit 0, 0
+  pembanding main 7acbef7:   probe_umpan_balik_jendela exit 0 dengan
+                             "WARNING: 2 ObjectDB instances were leaked at exit" dan "ERROR: 1 resources still in use at exit" (QA-003 Run 1B terulang)
+  ```
+  `probe_gerak` dan `probe_umpan_balik` mencetak `PERINGATAN: layar jeda terbuka (jendela kehilangan fokus)` milik probe (bukan `WARNING:` Godot). Jalur gagal: keenam probe memanggil `await ProbeKeluar.keluar(self, 1)` (cek kode), dijaga `_test_probe_keluar_bersih` (mutan M20, M21 mati). `ProbeKeluar` memakai `create_timer(TUNGGU_DETIK, true)` (jalan walau pohon dijeda).
+- **AC-5 (QA-004 Run 1B, D-4):**
+  ```
+  godot --headless --path . --export-pack "Android" build/normal.pck   exit 0, 0 ERROR/WARNING, 446.388 byte
+    grep -a -c: cek_render 0, warna_bayangan 0, tests/ 0, scripts/dev 0, docs/ 0, jalan_uji 8; main_scene di project.binary = res://scenes/dev/jalan_uji.tscn
+  python3 tools/ekspor_cek_render.py --pck build/probe.pck            exit 0; "project.godot pulih byte demi byte: ya", "export_presets.cfg pulih byte demi byte: ya",
+    464.032 byte, scene utama = res://scenes/dev/cek_render.tscn, "berkas probe di hasil ekspor: semua ada"; grep: cek_render 10, warna_bayangan 4
+    md5 project.godot dan export_presets.cfg sebelum = sesudah; git status --porcelain kosong
+  godot --headless --path . --export-debug "Android" builds/normal.apk  exit 0, 0 ERROR/WARNING, 28.614.948 byte; unzip -l: 0 entri cek_render/warna_bayangan/assets/tests/
+    assets/project.binary menunjuk res://scenes/dev/jalan_uji.tscn
+  Pemulihan saat gagal: --godot /tidak/ada/godot -> "GAGAL: Godot tidak bisa dijalankan", kedua berkas pulih; --godot /usr/bin/false -> "GAGAL: ekspor exit 1", kedua berkas pulih;
+    godot palsu (sleep 20) + SIGINT ke skrip saat berkas sudah diubah (porcelain " M project.godot / M export_presets.cfg") -> KeyboardInterrupt, exit 130, md5 kedua berkas = awal, porcelain kosong.
+  ```
+  (SIGTERM/SIGKILL tidak memulihkan; di luar SPEC.) `tes_export.gd` menjaga pola di preset dan kecocokannya dengan `POLA_PROBE`: mutan M17, M18, M19 mati. `docs/SETUP_ANDROID.md` 3 dan 6.1 diperbarui.
+- **AC-6 (QA-006 Run 1B, D-5):** `_test_debu_ruang_dunia` memeriksa (a) pindah sisi dan (b) maju tanpa waktu berlalu tidak menggeser posisi global debu, garis tetap ikut sepeda, (c) debu baru di roda belakang posisi sekarang, (d) batas, (e) urutan gambar (anak `SepedaUji` sebelum `LoperAgen`, tanpa `top_level`, z 0); 0 di bawah ambang, debu rem, dan jeda dari tes lama yang tetap hijau. Mutan M11 (kembali ke ruang lokal), M12, M13, M15, M16 mati. Dorongan kamera: hanya `Camera2D.position` (`JalanUji.perbarui`), dan `get_global_transform()` tidak memuat transform kanvas, jadi debu diam di jalan saat dorongan (telaah kode + tangkapan `ngebut` dengan dorongan 36 px). Kidal hanya menukar zona `KontrolTouch` (tangkapan `kidal_ngebut` benar). Celah: jalur `_draw` tidak dijaga (QA-001, mutan M10 hidup).
+- **AC-7 (visual):** saya melihat tangkapan Dev (`shots/*.png`, potongan sekitar sepeda) dan mengambil tangkapan sendiri dengan `probe_umpan_balik_jendela.gd` di 2340x1080 (tiga disalin ke `shots/iter1-qa/`: `ngebut`, `pindah_sisi`, `rem`). Yang terlihat: `ngebut` jejak titik krem 1-2 px di belakang roda ke kiri bawah sejajar jalan, di belakang sprite, garis kecepatan di sekitar pengendara; `pindah_sisi` (lateral 0,75) jejak melengkung dari jalur lama (lebih ke sisi seberang dari garis lurus roda sekarang); `rem` debu rem lebih rapat; `kidal_ngebut` sama dengan `ngebut`. Jejak terbaca tetapi tipis (keterbacaan di HP NEEDS-MANUAL). `tools/cek_blok_piksel.py 3` dengan kotak teks yang dicetak probe: 7/7 tangkapan Dev dan 7/7 tangkapan QA **0 blok tidak seragam**; kontrol negatif `pindah_sisi` tanpa pengecualian 662 blok tidak seragam (pemeriksa bekerja).
+- **AC-8 (aturan kode):** tab, static typing di semua `var`/`func` baru, `##` bahasa Indonesia; `scripts/config.gd` dan `BALANCING.md` tidak berubah (tidak ada angka penyetelan berubah, sesuai keputusan pemilik); tidak ada `Color(`/hex baru; tidak ada `kiri`/`kanan` untuk sisi jalan; logika murni tidak dipindah dari `systems/`; `_draw` hanya `Transform2D` nilai (tanpa alokasi baru), `posisi_global_partikel` mengalokasi tetapi hanya dipakai tes/probe.
+- **AC-9 (dokumen):** `SETUP_ANDROID.md` 3, 6.1, 8.2; `ART_DIRECTION.md` 2 (debu ruang dunia); `AGENTS.md` dan `00-project-core.mdc` (perintah ekspor, `probe_keluar.gd`). `DEV_PHASES.md`/`ROADMAP.md` tidak diedit. `BALANCING.md` tidak perlu (angka tidak berubah).
+- **AC-10 (git):** lolos (tabel per commit di atas), tidak ada push dari QA.
+
+### Tabel mutan QA (klon bersih, satu mutan per putaran `run_tests`, berkas dipulihkan dengan `git checkout` sesudahnya)
+
+| Mutan | Berkas | Hasil | Tes yang gagal (contoh) |
+|---|---|---|---|
+| M01 hapus `notification(NOTIFICATION_SCROLL_BEGIN)` (AC-3) | `tombol_sentuh.gd` | mati, 11 gagal | "jari turun di tombol, lalu NOTIFICATION_PAUSED, lalu naik ...: tidak memicu" |
+| M02 lepas tekan hanya pada `PAUSED` | `tombol_sentuh.gd` | mati, 6 gagal | "... NOTIFICATION_UNPAUSED ...", "... DISEMBUNYIKAN_LALU_DITAMPILKAN ..." |
+| M03 tanpa `UNPAUSED` | `tombol_sentuh.gd` | mati, 6 gagal | "... NOTIFICATION_UNPAUSED ...", "... POHON_DIJEDA_LALU_LANJUT ..." |
+| M04 (Q03) `_lepas_tekan` tidak melupakan jari | `tombol_sentuh.gd` | mati, 8 gagal | "... NOTIFICATION_PAUSED ...: tidak memicu (jari dilupakan), dapat 2" |
+| M05 (Q04) naik `canceled` di dalam tetap memicu | `tombol_sentuh.gd` | mati, 3 gagal | "jari kedua turun di tombol lalu naik canceled ...: tidak memicu" |
+| M06 tanpa `VISIBILITY_CHANGED` | `tombol_sentuh.gd` | mati, 4 gagal | "... DISEMBUNYIKAN_LALU_DITAMPILKAN ..." |
+| M07 (Q01) hapus `_kontrol.atur_rem(false)` | `jalan_uji.gd` | mati, 4 gagal | "TOMBOL_EMIT/FOCUS_OUT/PAUSED/BACK: sesudah lanjut stick disentuh ulang: busur rem tetap padam" |
+| M08 (Q02) tanpa `APPLICATION_PAUSED` | `audio.gd` | mati, 1 gagal | "APPLICATION_PAUSED: semua pemutar sepeda berhenti lewat Audio._notification sendiri" |
+| M09 (Q02) tanpa `APPLICATION_FOCUS_OUT` | `audio.gd` | mati, 1 gagal | "APPLICATION_FOCUS_OUT: ..." |
+| M10 `_draw` tanpa transform terbalik (gambar global sebagai lokal) | `pancaran_piksel.gd` | **hidup**, 4668 lolos | (QA-001) |
+| M11 (AC-6) debu kembali ke ruang lokal | `umpan_balik_sepeda.gd` | mati, 5 gagal | "(a) pindah sisi ...", "(b) maju ...", "ngebut: debu tertinggal di jalan ..." |
+| M12 `_pancar` menyimpan posisi lokal | `pancaran_piksel.gd` | mati, 2 gagal | "(c) debu baru muncul di roda belakang ... (jarak 459.81 px)" |
+| M13 garis kecepatan ikut ruang dunia | `umpan_balik_sepeda.gd` | mati, 2 gagal | "garis kecepatan tetap di ruang lokal: ikut bergeser bersama sepeda" |
+| M14 tanpa gambar ulang `TRANSFORM_CHANGED` | `pancaran_piksel.gd` | **hidup**, 4668 lolos | (QA-002, setara dalam alur sekarang) |
+| M15 `z_index = 1` pada node umpan balik | `umpan_balik_sepeda.gd` | mati, 1 gagal | "debu tanpa top_level dan tanpa z di atas pemain" |
+| M16 node `UmpanBalik` dipindah sesudah `LoperAgen` | `sepeda_uji.tscn` | mati, 1 gagal | "UmpanBalik anak SepedaUji sebelum LoperAgen" |
+| M17 shader probe dihapus dari `exclude_filter` | `export_presets.cfg` | mati, 4 gagal | "exclude_filter harus memuat assets/shaders/warna_bayangan.gdshader" |
+| M18 skrip probe dihapus dari `exclude_filter` | `export_presets.cfg` | mati, 4 gagal | "exclude_filter harus memuat scripts/dev/cek_render.gd" |
+| M19 `POLA_PROBE` skrip memuat pola tambahan | `ekspor_cek_render.py` | mati, 1 gagal | "POLA_PROBE di tools/ekspor_cek_render.py = pola probe di exclude_filter preset" |
+| M20 `ProbeKeluar` tanpa `tree.paused = true` | `probe_keluar.gd` | mati, 1 gagal | "ProbeKeluar menjeda pohon, menghentikan bunyi, menunggu, lalu keluar" |
+| M21 `probe_layar_jendela` `quit()` langsung | `probe_layar_jendela.gd` | mati, 1 gagal | "res://tests/probe_layar_jendela.gd: semua jalur keluar lewat await ProbeKeluar.keluar" |
+| M22 kecepatan gerak debu sendiri x3 | `pancaran_piksel.gd` | mati, tetapi oleh penjaga angka literal (`3.0`), bukan perilaku | tidak dihitung |
+
+Mutan SPEC (AC-2: Q01-Q04 dan Q02 per notifikasi; AC-3: pelepasan dihapus; AC-5: pola dihapus dari preset; AC-6: kembali ke ruang lokal) semuanya mati. Hidup: M10 (QA-001), M14 (setara, QA-002).
+
+### Regresi
+
+`main` (`7acbef7`, klon bersih) 4576 lolos → `aa75f90` 4668 lolos (+92), 0 gagal. `git diff main...HEAD -- tests` tidak menghapus satu pun `check(`: baris yang hilang hanya `quit()`/`quit(1)` di enam probe (diganti `ProbeKeluar.keluar`), satu `print` probe yang diperluas (lateral), teks asal contoh buruk "filter pengecualian kosong" (baris preset berubah), dan loop angkat jari yang dipindah ke `_angkat_semua_jari()`. Tidak ada tes di-skip.
+
+### Tidak bisa saya verifikasi
+
+- Semua butir NEEDS-MANUAL di atas (HP): ikon jeda sesudah home + "Lanjut" dengan `canceled` dari OS sungguhan, swipe gesture sistem di atas tombol jeda, keterbacaan jejak debu dan 60 fps di HP, APK di vivo V2108.
+- Kebocoran `probe_dorongan_jendela.gd` yang menurut Dev muncul sekali sebelum `8e583d2`: tidak bisa saya ulangi: satu putaran `probe_dorongan_jendela` di `main` bersih keluar tanpa ERROR/WARNING (kebocoran itu bergantung fokus jendela); perbaikan jeda pohon saya nilai lewat kode dan mutan M20.
+- Tes Godot memakai event sentuh sintetis dan driver audio Dummy (headless); perilaku `BaseButton` atas `SCROLL_BEGIN` hanya terbukti di 4.7.2 desktop.
+- Penghentian skrip ekspor dengan SIGTERM/SIGKILL (tidak dipulihkan; hanya Ctrl+C/SIGINT yang diuji dan dipulihkan).
