@@ -40,6 +40,7 @@ Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MAN
 - [ ] (QA iterasi 2) Aturan batal saat jari diangkat (109d3a5): swipe datar yang ujungnya melengkung (jempol naik atau turun saat diangkat) atau sedikit kembali sebelum diangkat tidak dibatalkan tanpa sengaja; catat berapa kali swipe yang terasa disengaja tidak melempar. Aturan ini usulan (BALANCING 4, DESIGN_SPEC 3.7) dan menunggu persetujuan pemilik di review PR.
 
 ## Keputusan & catatan
+- Orchestrator 2026-10-14 sesudah PR #24 dibuka: APK debug normal (28,7 MB, tanpa probe, `tests/`, `docs/`) dipasang ke vivo V2108 (`12d8c9da`) dengan `adb install -r` atas permintaan pemilik (layar menyala, di launcher; tanpa `pm clear`/uninstall). A54 tidak dipasangi: saat dicek DroidCam OBS sedang terbuka. Uji HP (NEEDS-MANUAL di atas, `SETUP_ANDROID.md` 8) oleh pemilik.
 - Orchestrator 2026-10-14: QA PASS iterasi 2 → status PASSED. QA-008 (Minor) DEFERRED ke Run 2B, QA-009 (Nit) dicatat. Orchestrator mengulang `run_tests` di HEAD `f6b0b87`: 5899 lolos, 0 gagal, `--ketat` lolos.
 - Keputusan pemilik 2026-10-14: jendela kena koran lewat sakelar `Config`, bawaan penalti ringan (antaran tidak sah, tanpa potong koin); keputusan akhir tetap terbuka (ROADMAP 5). Ukuran ubin 64×32 dikunci (ROADMAP 4b), dicatat orchestrator di `9405c45`.
 - Uji HP oleh pemilik sendiri (bukan 3–5 orang). Izin pasang APK: vivo V2108 (`12d8c9da`) setelah QA PASS; A54 bila tersambung.
