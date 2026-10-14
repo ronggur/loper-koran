@@ -78,7 +78,7 @@ Inti Paperboy tetap dipertahankan: sepeda terus berjalan sementara pemain mengan
 
 Pelanggan ada di kiri dan kanan jalan, dan posisi jalur menentukan seberapa mudah melempar ke tiap sisi.
 
-- Swipe ke kiri atau kanan menentukan sisi lemparan.
+- Arah swipe di layar menentukan arah lemparan (arah bebas, bagian 5.2), dan sisi lemparan diturunkan dari arah itu. Garis pemisah sisi searah jalan di layar, jadi swipe ke kiri atau ke atas jatuh di sisi seberang, dan swipe ke kanan atau ke bawah di sisi dekat.
 - Posisi jalur jadi strategi: di tengah bisa menjangkau dua sisi tapi lemparan lebih jauh, sedangkan merapat ke satu sisi membuat lemparan ke sana lebih dekat tapi sisi seberang sulit dijangkau.
 - Dua sisi bisa berbeda isi, misalnya kiri pelanggan dan kanan bukan pelanggan, atau kiri rumah dan kanan toko. Rintangan juga datang dari dua arah.
 - Antaran bergantian kiri-kanan secara berurutan bisa memberi bonus combo zigzag.
@@ -114,7 +114,7 @@ Tiga tingkat kecepatan yang terlihat di sprite pemain: **santai** (stick netral)
 
 - **Jempol kiri** memegang stick analog melayang di zona kiri bawah. Stick muncul di tempat jempol menyentuh. Kiri-kanan memindah sisi (kiri sisi seberang, kanan sisi dekat, mengikuti arah pelempar, bukan arah layar). Atas untuk kayuh keras, netral kayuh santai, bawah untuk melambat dan meluncur. Diagonal bekerja bersamaan, misalnya atas-kiri untuk ngebut sambil belok.
 - **Rem tanpa tombol terpisah:** stick ditarik penuh ke bawah dan ditahan, sepeda berhenti perlahan. Jempol tidak perlu pindah, jadi kemudi tetap terjaga. Ambang rem dibuat di ujung bawah supaya sepeda tidak berhenti tanpa sengaja saat belok.
-- **Jempol kanan** melempar dengan swipe kiri atau kanan di mana saja di sisi kanan layar: kiri ke sisi seberang, kanan ke sisi dekat. Swipe panjang melempar kencang dan jauh, swipe pendek pelan dan dekat. Garis bidik putus-putus muncul selama jari ditahan, koran terlempar saat jari dilepas.
+- **Jempol kanan** melempar dengan swipe di mana saja di sisi kanan layar. **Arah bebas (keputusan pemilik 2026-10-15):** koran terbang ke arah swipe seperti yang terlihat di layar, misalnya swipe ke atas mengarah ke rumah seberang di depan, swipe ke kanan ke sisi dekat. Swipe panjang melempar kencang dan jauh, swipe pendek pelan dan dekat. Garis bidik putus-putus muncul selama jari ditahan, koran terlempar saat jari dilepas. Sebelumnya hanya swipe kiri (seberang) atau kanan (dekat); itu diganti karena di sudut isometrik rumah seberang di depan terlihat di atas sepeda, jadi swipe ke arahnya ditolak (uji HP pemilik di vivo V2108, 2026-10-14).
 - **Bel (usulan, 2026-10-09):** tombol bel bulat di pojok kanan bawah, di dalam zona swipe. Sentuhan yang dimulai di tombol dibaca sebagai bel, bukan swipe (bagian 5.4).
 - Alternatif yang tidak dipilih: 3 tingkat gigi lewat swipe naik-turun. Lebih sederhana, tapi kurang halus dibanding stick analog.
 

@@ -9,19 +9,21 @@ extends Node2D
 ## hanya menggeser kamera (`DoronganKecepatan`); posisi dunia dan posisi sprite sepeda serta HUD tidak berubah. Gerak
 ## halus tetap float di `SepedaUji`; hanya posisi gambar yang dibulatkan. Stamina dan rem tampil di HUD dan cincin stick.
 ##
-## Lemparan koran (run fase2a-lemparan bagian 1b): SATU fungsi `lintasan_swipe` (`ThrowSolver.dari_swipe` dari posisi sepeda, kecepatan
-## maju sebenarnya, kecepatan lateral efektif langkah terakhir, dan jeda lepas animasi) dipakai garis bidik tiap langkah (sesudah sepeda
-## digerakkan). Saat jari dilepas, lemparan memakai OBJEK lintasan garis bidik yang sedang tampil untuk swipe itu (dibekukan pada langkah
-## terakhir), bukan menghitung ulang dari posisi lepas: jari yang masih bergerak saat diangkat (flick) sesudah langkah terakhir tidak
-## mengubah lemparan, jadi koran mendarat tepat di elips terakhir yang terlihat (D-4, QA-001 iterasi 2). Posisi lepas tetap harus
-## melempar sendiri (|dx| >= 6%, dominan datar): jari yang ditarik kembali atau berbelok tegak saat diangkat membatalkan lemparan walau
-## garis bidik masih tampil (tidak ada koran, jadi tidak ada hasil yang berbeda dari prediksi). Bila tidak ada garis bidik yang tampil
-## untuk swipe itu (swipe turun dan naik di antara dua langkah, atau langkah terakhir menolak swipe karena masih pendek atau tegak),
-## lemparan dihitung dari posisi lepas dengan `lintasan_swipe` yang sama dan keadaan sepeda yang sama (keadaan langkah terakhir): tidak
-## ada prediksi tampil yang bisa berbeda. Lemparan diterima bila `SisaKoran` mengizinkan (koran ada, jeda antar lempar 0,35 detik
-## lewat; D-8, D-9): koran berkurang tepat 1, animasi lempar dimulai, dan `KoranLempar` membekukan lintasannya. Koran terbang, mendarat, dinilai zona (`ZonaSasaran`), dan penandanya tampil
-## sesuai waktu langkah (`dt` efektif), digambar `KoranGambar` (bayangan di tanah, koran dan penanda di atas objek). Garis bidik
-## (`GarisBidik`, D-5) hanya tampil selama swipe ditahan, |dx| cukup, dan lempar diizinkan. Isi ulang koran khusus jalan uji
+## Lemparan koran (run fase2a-lemparan bagian 1b, arah bebas run fase2-arah-bebas): SATU fungsi `lintasan_swipe` (`ThrowSolver.dari_swipe`
+## dari posisi sepeda, kecepatan maju sebenarnya, kecepatan lateral efektif langkah terakhir, dan jeda lepas animasi) dipakai garis bidik
+## tiap langkah (sesudah sepeda digerakkan). Koran terbang ke arah swipe seperti terlihat di layar (arah tanah dari `Iso`), panjang |v|
+## menentukan kekuatan, dan tidak ada sudut yang ditolak. Saat jari dilepas (D-5 run fase2-arah-bebas), lemparan memakai OBJEK lintasan
+## garis bidik yang sedang tampil untuk swipe itu (dibekukan pada langkah terakhir), bukan menghitung ulang dari posisi lepas: jari yang
+## masih bergerak atau berbelok ke arah mana pun saat diangkat (flick) tidak membatalkan lemparan dan tidak mengubah titik mendarat, jadi
+## koran mendarat tepat di elips terakhir yang terlihat (QA-001 Run 2A). Lemparan batal HANYA bila panjang swipe di posisi lepas |v_lepas|
+## di bawah min (jari ditarik kembali ke dekat titik awal): tidak ada koran, jadi tidak ada hasil yang berbeda dari prediksi. Bila tidak
+## ada garis bidik yang tampil untuk swipe itu (swipe turun dan naik di antara dua langkah, atau langkah terakhir menolak swipe karena
+## masih pendek), lemparan dihitung dari posisi lepas dengan `lintasan_swipe` yang sama dan keadaan sepeda yang sama (keadaan langkah
+## terakhir): tidak ada prediksi tampil yang bisa berbeda. Lemparan diterima bila `SisaKoran` mengizinkan (koran ada, jeda antar lempar
+## 0,35 detik lewat; D-8, D-9): koran berkurang tepat 1, animasi lempar dimulai ke sisi lintasan (`ThrowSolver.sisi_dari_arah`), dan
+## `KoranLempar` membekukan lintasannya. Koran terbang, mendarat, dinilai zona dari titik mendarat saja (`ZonaSasaran`), dan penandanya
+## tampil sesuai waktu langkah (`dt` efektif), digambar `KoranGambar` (bayangan di tanah, koran dan penanda di atas objek). Garis bidik
+## (`GarisBidik`, D-5 Run 2A) hanya tampil selama swipe ditahan, |v| cukup, dan lempar diizinkan. Isi ulang koran khusus jalan uji
 ## (`SisaKoran.isi_ulang_jalan_uji`, alat uji). Zona placeholder digambar `ZonaGambar` di bawah objek dunia.
 ##
 ## Jeda (D-6 run fase1b-umpan-balik, `JedaSim`): tombol jeda di HUD, app di-background atau kehilangan fokus (PAUSED, FOCUS_OUT), dan
@@ -147,18 +149,20 @@ func lintasan_swipe(awal: Vector2, akhir: Vector2) -> ThrowSolver.Lintasan:
 	return ThrowSolver.dari_swipe(awal, akhir, lebar, _sepeda.posisi_dunia(), _sepeda.kecepatan_ud, _sepeda.lateral_ud, _sepeda.jeda_lepas(sisi))
 
 
-## Satu swipe selesai (jari dilepas): lempar bila diizinkan (D-8, D-9) dan posisi lepas melempar (|dx| cukup, dominan datar; D-2).
-## Lintasan = garis bidik yang sedang tampil untuk swipe ini (`lintasan_bidik_tampil`, D-4); tanpa garis bidik tampil, dihitung dari
-## posisi lepas. Ditolak = koran tidak berkurang dan jeda tidak mulai ulang. Garis bidik selalu hilang saat jari dilepas.
+## Satu swipe selesai (jari dilepas): lempar bila diizinkan (D-8, D-9) dan panjang swipe di posisi lepas |v_lepas| >= min (D-5 run
+## fase2-arah-bebas; arah posisi lepas tidak menentukan apa pun). Lintasan = garis bidik yang sedang tampil untuk swipe ini
+## (`lintasan_bidik_tampil`); tanpa garis bidik tampil, dihitung dari posisi lepas. Ditolak = koran tidak berkurang dan jeda tidak mulai
+## ulang. Garis bidik selalu hilang saat jari dilepas.
 func _saat_swipe_selesai(awal: Vector2, akhir: Vector2, _durasi_detik: float) -> void:
 	var bidik: ThrowSolver.Lintasan = lintasan_bidik_tampil(_kontrol.router.nomor_swipe)
 	_garis_bidik.sembunyikan()
 	if _jeda or not SisaKoran.boleh_lempar(koran):
 		return
-	var dari_lepas: ThrowSolver.Lintasan = lintasan_swipe(awal, akhir)
-	if dari_lepas == null:
+	if not ThrowSolver.cukup_panjang(ThrowSolver.panjang_swipe(awal, akhir), get_viewport_rect().size.x):
 		return
-	var lintasan: ThrowSolver.Lintasan = bidik if bidik != null else dari_lepas
+	var lintasan: ThrowSolver.Lintasan = bidik if bidik != null else lintasan_swipe(awal, akhir)
+	if lintasan == null:
+		return
 	var hasil: SisaKoran.Hasil = SisaKoran.terima(koran, _sepeda.jarak_ubin)
 	koran = hasil.keadaan
 	if not hasil.diterima:

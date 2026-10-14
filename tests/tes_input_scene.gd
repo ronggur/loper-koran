@@ -315,11 +315,12 @@ func _test_input_terpadu() -> void:
 	check(sepeda.kecepatan_ud == 6.0 and router.posisi_swipe() == Vector2(520, 160), "menggeser stick ke atas penuh saat swipe ditahan: sepeda ngebut, swipe tidak terganggu")
 	_sentuh(1, Vector2(520, 160), false)
 	check(router.jumlah_swipe_selesai == 1 and not router.swipe_aktif() and router.stick_aktif(), "mengangkat jari swipe: swipe tercatat sekali dan stick tetap aktif")
-	# Sejak run sprite-lempar-melambat swipe horizontal (70 px ke kanan, 40 px ke atas: datar dominan) melempar ke sisi dekat. Tes lama
-	# mengamati animasi kayuh sesudahnya, jadi lempar diperiksa lalu diselesaikan dengan waktu terkontrol (bukan menunggu waktu nyata).
+	# Sejak run sprite-lempar-melambat swipe ini melempar. Arah bebas (run fase2-arah-bebas): (70 kanan, 40 atas) di layar lebih curam dari
+	# sumbu jalan (64, -32), jadi arah tanahnya hampir lurus maju dan sedikit ke seberang (x tanah -0,16): sisi SEBERANG (Run 2A: dekat,
+	# dari tanda dx). Tes lama mengamati animasi kayuh sesudahnya, jadi lempar diperiksa lalu diselesaikan dengan waktu terkontrol.
 	var pemain_lempar: LoperSprite = _sprite(akar)
 	pemain_lempar.set_process(false)
-	check(sepeda.sedang_melempar() and sepeda.nama_animasi() == &"lempar_kanan_ngebut_normal", "swipe ke kanan saat ngebut lurus melempar ke sisi dekat: lempar_kanan_ngebut_normal, dapat %s" % sepeda.nama_animasi())
+	check(sepeda.sedang_melempar() and sepeda.nama_animasi() == &"lempar_kiri_ngebut_normal", "swipe (70 kanan, 40 atas) saat ngebut lurus melempar ke seberang (arah tanah maju sedikit ke seberang): lempar_kiri_ngebut_normal, dapat %s" % sepeda.nama_animasi())
 	_langkah(akar, 20)
 	check(sepeda.kecepatan_ud == 6.0 and router.stick_aktif() and sepeda.sedang_melempar(), "setelah swipe diangkat sepeda tetap ngebut dan lempar masih berjalan (waktu sprite tidak ikut langkah scene)")
 	_selesaikan_lempar(pemain_lempar)
@@ -563,21 +564,29 @@ func _test_lempar_serong_dan_tepi() -> void:
 	_selesaikan_lempar(sprite)
 	_langkah(akar, 3)
 	check(sepeda.nama_animasi() == &"santai_normal", "sepeda lurus kembali: santai_normal (arah dipulihkan gerak), dapat %s" % sepeda.nama_animasi())
-	# Swipe yang tidak melempar.
-	var sebelum: int = catatan.size()
+	# Arah bebas (run fase2-arah-bebas): swipe tegak dan miring tegak kini melempar (Run 2A: ditolak). Sisi dari arah tanah: ke atas =
+	# seberang, ke bawah = dekat, (30 kanan, 40 bawah) = dekat.
 	_swipe(akar, 1, Vector2(450, 250), Vector2(450, 190))
-	check(not sepeda.sedang_melempar() and sepeda.nama_animasi() == &"santai_normal", "swipe vertikal ke atas tidak melempar")
+	check(sepeda.sedang_melempar() and sepeda.nama_animasi() == &"lempar_kiri_santai_normal", "swipe vertikal ke atas melempar ke seberang: lempar_kiri_santai_normal, dapat %s" % sepeda.nama_animasi())
+	_selesaikan_lempar(sprite)
 	_swipe(akar, 1, Vector2(450, 190), Vector2(450, 250))
-	check(not sepeda.sedang_melempar(), "swipe vertikal ke bawah tidak melempar")
+	check(sepeda.sedang_melempar() and sepeda.nama_animasi() == &"lempar_kanan_santai_normal", "swipe vertikal ke bawah melempar ke dekat: lempar_kanan_santai_normal, dapat %s" % sepeda.nama_animasi())
+	_selesaikan_lempar(sprite)
 	_swipe(akar, 1, Vector2(450, 200), Vector2(480, 240))
-	check(not sepeda.sedang_melempar(), "swipe miring dengan gerak tegak lebih besar (30 datar, 40 tegak) tidak melempar")
-	# Ambang run fase2a-lemparan (D-2): |dx| >= 6% lebar viewport (780 -> 46,8 px), menggantikan 12 px.
+	check(sepeda.sedang_melempar() and sepeda.nama_animasi() == &"lempar_kanan_santai_normal", "swipe miring tegak (30 datar, 40 tegak, |v| 50) melempar ke dekat, dapat %s" % sepeda.nama_animasi())
+	_selesaikan_lempar(sprite)
+	_langkah(akar, 3)
+	# Swipe yang tidak melempar. Ambang run fase2a-lemparan (D-2): panjang >= 6% lebar viewport (780 -> 46,8 px), menggantikan 12 px; sejak
+	# run fase2-arah-bebas panjangnya |v| penuh.
+	var sebelum: int = catatan.size()
 	_swipe(akar, 1, Vector2(450, 200), Vector2(450 + 46, 200))
 	check(not sepeda.sedang_melempar(), "swipe 46 px (di bawah ambang 46,8 = 6% dari 780) tidak melempar")
 	_swipe(akar, 1, Vector2(450, 200), Vector2(450 - 46, 200))
 	check(not sepeda.sedang_melempar(), "swipe 46 px ke kiri tidak melempar")
 	_swipe(akar, 1, Vector2(450, 200), Vector2(450, 200))
 	check(not sepeda.sedang_melempar(), "ketukan tanpa geser (swipe nol) tidak melempar")
+	_swipe(akar, 1, Vector2(450, 200), Vector2(450, 200 - 46))
+	check(not sepeda.sedang_melempar(), "swipe 46 px ke atas (|v| di bawah ambang) tidak melempar")
 	check(router.jumlah_swipe_selesai >= 8 and catatan.size() == sebelum, "swipe tak sah tetap tercatat router (jumlah %d) tetapi tidak ada sinyal sprite" % router.jumlah_swipe_selesai)
 	_swipe(akar, 1, Vector2(450, 200), Vector2(450 + 46.8, 200))
 	check(sepeda.sedang_melempar() and sepeda.nama_animasi() == &"lempar_kanan_santai_normal", "swipe tepat 46,8 px ke kanan (di ambang 6%%, inklusif) melempar sisi dekat, dapat %s" % sepeda.nama_animasi())

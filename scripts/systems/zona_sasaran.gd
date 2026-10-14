@@ -1,13 +1,15 @@
 class_name ZonaSasaran
 extends RefCounted
 ## Zona sasaran koran, status antaran, dan bentuk penanda, logika murni (BALANCING 5, DESIGN_SPEC 3.6; D-6, D-7, D-10 run
-## fase2a-lemparan). Semua usulan placeholder untuk jalan uji; skor, combo, dan koin belum ada (Fase 3).
+## fase2a-lemparan, D-4 run fase2-arah-bebas). Semua usulan placeholder untuk jalan uji; skor, combo, dan koin belum ada (Fase 3).
 ##
 ## Zona = persegi di bidang tanah dalam koordinat JALAN: x = lateral (ubin dari garis tengah, negatif = `seberang`), y = maju (ubin
 ## sepanjang jalan; dunia y = -maju, `Iso`). Tepi min inklusif, tepi maks eksklusif, di kedua sumbu: dua zona yang bersebelahan tidak
-## pernah sama-sama memuat satu titik. Zona hanya berlaku untuk lemparan ke sisinya sendiri (lempar ke sisi salah = `MELESET`).
-## Bila beberapa zona memuat titik mendarat, prioritas jenis: kotak surat > jendela > teras > halaman (`PRIORITAS`); jenis sama =
-## yang pertama di daftar. Sesudah itu: zona rumah bukan pelanggan = `BUKAN_PELANGGAN`. Tidak ada zona = `MELESET`.
+## pernah sama-sama memuat satu titik. Penilaian dari TITIK MENDARAT saja (D-4 run fase2-arah-bebas): zona yang memuat titik itu menilai
+## koran apa pun arah atau sisi lemparannya, jadi fungsi di sini tidak menerima sisi lempar (penyaring sisi Run 2A dihapus). `Zona.sisi`
+## hanya untuk gambar. Zona seberang dan zona dekat jalan uji tidak bertumpuk (dites). Bila beberapa zona memuat titik mendarat,
+## prioritas jenis: kotak surat > jendela > teras > halaman (`PRIORITAS`); jenis sama = yang pertama di daftar. Sesudah itu: zona rumah
+## bukan pelanggan = `BUKAN_PELANGGAN`. Tidak ada zona = `MELESET`.
 ##
 ## Status antaran (BALANCING 5): kotak surat dan teras sah penuh, halaman sah setengah, bukan pelanggan dan meleset tidak sah, jendela
 ## menurut sakelar (`Config.JENDELA_KENA_BONUS`, KEPUTUSAN TERBUKA ROADMAP 5; bawaan penalti ringan = tidak sah tanpa hukuman lain),
@@ -31,7 +33,7 @@ const PRIORITAS: Array[Jenis] = [Jenis.KOTAK_SURAT, Jenis.JENDELA, Jenis.TERAS, 
 class Zona extends RefCounted:
 	## Persegi di bidang tanah, koordinat jalan (x = lateral, y = maju), ubin. Tepi min inklusif, maks eksklusif.
 	var persegi: Rect2 = Rect2()
-	## Sisi jalan zona ini (`SEBERANG` atau `DEKAT`).
+	## Sisi jalan zona ini (`SEBERANG` atau `DEKAT`), untuk gambar dan data; tidak dipakai penilaian (D-4 run fase2-arah-bebas).
 	var sisi: LoperAnim.Sisi = LoperAnim.Sisi.TIDAK_ADA
 	## Jenis zona.
 	var jenis: Jenis = Jenis.HALAMAN
@@ -67,12 +69,12 @@ static func memuat(zona: Zona, titik_dunia: Vector2) -> bool:
 	return p.x >= awal.x and p.x < akhir.x and p.y >= awal.y and p.y < akhir.y
 
 
-## Zona yang menang untuk titik mendarat dan sisi lempar (lihat aturan di atas), atau null bila tidak ada.
-static func zona_kena(titik_dunia: Vector2, sisi_lempar: LoperAnim.Sisi, daftar: Array[Zona]) -> Zona:
+## Zona yang menang untuk titik mendarat (lihat aturan di atas, tanpa sisi lempar), atau null bila tidak ada.
+static func zona_kena(titik_dunia: Vector2, daftar: Array[Zona]) -> Zona:
 	var terbaik: Zona = null
 	var peringkat_terbaik: int = PRIORITAS.size()
 	for zona: Zona in daftar:
-		if zona == null or zona.sisi != sisi_lempar or not memuat(zona, titik_dunia):
+		if zona == null or not memuat(zona, titik_dunia):
 			continue
 		var peringkat: int = PRIORITAS.find(zona.jenis)
 		if peringkat < 0:
@@ -83,9 +85,9 @@ static func zona_kena(titik_dunia: Vector2, sisi_lempar: LoperAnim.Sisi, daftar:
 	return terbaik
 
 
-## Hasil klasifikasi titik mendarat (dunia, ubin) untuk lemparan ke `sisi_lempar` terhadap `daftar` zona.
-static func klasifikasi(titik_dunia: Vector2, sisi_lempar: LoperAnim.Sisi, daftar: Array[Zona]) -> Hasil:
-	return hasil_zona(zona_kena(titik_dunia, sisi_lempar, daftar))
+## Hasil klasifikasi titik mendarat (dunia, ubin) terhadap `daftar` zona; tidak bergantung arah atau sisi lemparan.
+static func klasifikasi(titik_dunia: Vector2, daftar: Array[Zona]) -> Hasil:
+	return hasil_zona(zona_kena(titik_dunia, daftar))
 
 
 ## Hasil untuk zona yang kena (null = `MELESET`, rumah bukan pelanggan = `BUKAN_PELANGGAN`).
@@ -177,9 +179,9 @@ static func zona_jalan_uji_sekitar(maju_ubin: float) -> Array[Zona]:
 	return hasil
 
 
-## Klasifikasi titik mendarat di jalan uji (zona kavling sekitar titik itu).
-static func klasifikasi_jalan_uji(titik_dunia: Vector2, sisi_lempar: LoperAnim.Sisi) -> Hasil:
-	return klasifikasi(titik_dunia, sisi_lempar, zona_jalan_uji_sekitar(ke_jalan(titik_dunia).y))
+## Klasifikasi titik mendarat di jalan uji (zona kavling sekitar titik itu), dari titik saja.
+static func klasifikasi_jalan_uji(titik_dunia: Vector2) -> Hasil:
+	return klasifikasi(titik_dunia, zona_jalan_uji_sekitar(ke_jalan(titik_dunia).y))
 
 
 ## Tapak kotak rumah graybox seberang kavling `indeks` di bidang tanah, koordinat jalan (QA-004): lateral dari kaki fasad

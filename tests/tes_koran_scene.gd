@@ -12,7 +12,10 @@ extends RefCounted
 ## - AC-7: jeda game membekukan koran terbang, jeda antar lempar, dan penanda; lanjut tanpa lompatan; jeda di antara jari dilepas dan
 ##   frame lepas tidak menghilangkan atau menggandakan lemparan; swipe yang ditahan saat jeda tidak melempar.
 ## - AC-8: arah swipe ke sisi, garis bidik tampil saat ditahan dan hilang saat dilepas/batal, dua jari, kidal, sentuhan di panel HUD koran
-##   tetap swipe, swipe tegak/pendek tidak melempar; elips sah berubah bentuk; jendela penalti tidak sah (sakelar bawaan).
+##   tetap swipe, swipe pendek tidak melempar; elips sah berubah bentuk; jendela penalti tidak sah (sakelar bawaan).
+## - Run fase2-arah-bebas: AC-6 regresi laporan pemilik (swipe 45-135 derajat ke kotak surat seberang di depan, tiga kecepatan, lewat
+##   event sentuh), AC-7 prediksi = hasil untuk swipe ke atas, kanan, kiri, bawah, dan aturan lepas jari D-5 (arah saat diangkat tidak
+##   membatalkan; batal hanya bila |v_lepas| di bawah min), AC-4 kidal tidak mengubah sisi swipe tegak.
 ## - HUD koran: angka, ikon terang/redup, penanda habis; zona placeholder digambar (bukan pelanggan bertanda bentuk).
 
 const BERKAS_JALAN_UJI: String = "res://scenes/dev/jalan_uji.tscn"
@@ -49,6 +52,8 @@ func jalankan() -> void:
 	for dt: float in [1.0 / 30.0, 1.0 / 240.0]:
 		await _test_flick(dt)
 	await _test_flick_arah_lain()
+	await _test_prediksi_empat_arah()
+	await _test_regresi_pemilik()
 	await _test_swipe_tanpa_garis_bidik()
 	await _test_sisa_koran_dan_jeda()
 	await _test_dua_lempar_cepat()
@@ -144,16 +149,26 @@ func _akhir(sisi: LoperAnim.Sisi, dx: float) -> Vector2:
 	return _awal(sisi) + Vector2(-dx if sisi == LoperAnim.Sisi.SEBERANG else dx, 0)
 
 
-## |dx| untuk kekuatan u di viewport 780.
+## Panjang swipe |v| untuk kekuatan u di viewport 780.
 func _dx(u: float) -> float:
 	return ThrowSolver.swipe_min_px(LEBAR) + u * (ThrowSolver.swipe_maks_px(LEBAR) - ThrowSolver.swipe_min_px(LEBAR))
 
 
-## Swipe penuh (turun, geser, angkat) jari 1 ke `sisi` sepanjang `dx`.
+## Swipe penuh (turun, geser, angkat) jari 1 mendatar ke `sisi` sepanjang `dx` (kiri layar = seberang, kanan layar = dekat).
 func _swipe(sisi: LoperAnim.Sisi, dx: float, index: int = 1) -> void:
 	_sentuh(index, _awal(sisi), true)
 	_geser(index, _akhir(sisi, dx))
 	_sentuh(index, _akhir(sisi, dx), false)
+
+
+## Titik akhir swipe dari `awal` ke sudut layar `derajat` (0 = kanan, 90 = atas) sepanjang `panjang` piksel game.
+func _akhir_sudut(awal: Vector2, derajat: float, panjang: float) -> Vector2:
+	return awal + Vector2(cos(deg_to_rad(derajat)), -sin(deg_to_rad(derajat))) * panjang
+
+
+## Sudut layar swipe dari `awal` ke `akhir`, derajat 0 sampai 360 (0 = kanan, 90 = atas).
+func _sudut(awal: Vector2, akhir: Vector2) -> float:
+	return fposmod(rad_to_deg(atan2(-(akhir.y - awal.y), akhir.x - awal.x)), 360.0)
 
 
 ## Pola penanda yang DIHARAPKAN per bentuk (ditulis eksplisit, bukan lewat `PolaPiksel.pola_penanda`, supaya kabel gambar ikut dijaga).
@@ -206,7 +221,7 @@ func _dekat_v(a: Vector2, b: Vector2, tol: float = TOL_PREDIKSI) -> bool:
 
 
 func _sama(a: ThrowSolver.Lintasan, b: ThrowSolver.Lintasan) -> bool:
-	return a != null and b != null and a.sisi == b.sisi and a.titik_lepas == b.titik_lepas and a.titik_mendarat == b.titik_mendarat and a.lama_terbang == b.lama_terbang and a.tinggi_puncak == b.tinggi_puncak and a.jeda_lepas == b.jeda_lepas
+	return a != null and b != null and a.sisi == b.sisi and a.arah == b.arah and a.titik_lepas == b.titik_lepas and a.titik_mendarat == b.titik_mendarat and a.lama_terbang == b.lama_terbang and a.tinggi_puncak == b.tinggi_puncak and a.jeda_lepas == b.jeda_lepas
 
 
 ## Menahan jari 1 di panjang yang membuat garis bidik mengarah ke `sasaran` (dicari dari keadaan saat ini, sepeda maju tiap langkah).
@@ -451,25 +466,28 @@ func _test_flick(dt: float) -> void:
 	_bersihkan(akar)
 
 
-## QA-001: jari yang diangkat sesudah langkah terakhir di posisi yang sendirian TIDAK melempar (ditarik kembali di bawah 6%, atau
-## berbelok dominan tegak) membatalkan lemparan walau garis bidik masih tampil: tidak ada koran, jadi tidak ada hasil yang berbeda dari
-## prediksi. Pola yang sama pada langkah biasa (garis bidik hilang lebih dulu) juga tidak melempar.
+## D-5 run fase2-arah-bebas (menggantikan aturan QA-001 Run 2A "berbelok tegak saat diangkat = batal"): jari yang diangkat sesudah langkah
+## terakhir di posisi lain TIDAK batal karena arahnya. Berbelok tegak, berbalik ke sisi sebaliknya, atau turun tetap melempar OBJEK lintasan
+## garis bidik yang tampil dan mendarat di titik akhirnya. Batal HANYA bila |v_lepas| di bawah min (jari ditarik kembali ke dekat titik
+## awal), walau garis bidik masih tampil: tidak ada koran, jadi tidak ada hasil yang berbeda dari prediksi. Pola tarik kembali pada
+## langkah biasa (garis bidik hilang lebih dulu) juga tidak melempar.
 func _test_flick_arah_lain() -> void:
-	_judul.call("Jari ditarik kembali atau tegak saat diangkat: batal walau garis bidik tampil (QA-001, D-4)")
+	_judul.call("Lepas jari: arah saat diangkat tidak membatalkan, batal hanya bila |v_lepas| di bawah min (D-5, AC-7)")
 	var akar: JalanUji = await _siapkan()
 	var garis: GarisBidik = akar.garis_bidik()
 	var catatan: Dictionary = _catat(akar)
 	var dilempar: Array = catatan["lempar"]
 	var sisi: LoperAnim.Sisi = LoperAnim.Sisi.DEKAT
-	var kasus: Array = [
-		["di bawah 6%", _akhir(sisi, ThrowSolver.swipe_min_px(LEBAR) - 2.0)],
-		["dominan tegak", _awal(sisi) + Vector2(_dx(0.4), -_dx(0.8))],
+	var pendek: float = ThrowSolver.swipe_min_px(LEBAR) - 2.0
+	var batal: Array = [
+		["di bawah 6%", _akhir(sisi, pendek)],
 		["kembali ke titik awal", _awal(sisi)],
+		["di bawah 6% ke arah lain (atas)", _awal(sisi) + Vector2(0.0, -pendek)],
 	]
-	for k: Array in kasus:
+	for k: Array in batal:
 		akar.perbarui(Config.LEMPAR_JEDA_DETIK)
 		var lepas: Vector2 = k[1]
-		check(akar.lintasan_swipe(_awal(sisi), lepas) == null, "%s: kontrol: posisi lepas sendirian tidak melempar" % k[0])
+		check(akar.lintasan_swipe(_awal(sisi), lepas) == null and ThrowSolver.panjang_swipe(_awal(sisi), lepas) < ThrowSolver.swipe_min_px(LEBAR), "%s: kontrol: |v_lepas| di bawah min" % k[0])
 		_sentuh(1, _awal(sisi), true)
 		_geser(1, _akhir(sisi, _dx(0.4)))
 		akar.perbarui(DT)
@@ -478,15 +496,162 @@ func _test_flick_arah_lain() -> void:
 		_geser(1, lepas)
 		_sentuh(1, lepas, false)
 		check(dilempar.is_empty() and akar.koran.sisa == sisa and not garis.tampil(), "%s: jari diangkat tanpa langkah di antaranya: batal, koran tetap %d, garis bidik hilang" % [k[0], sisa])
+	var tetap: Array = [
+		["berbelok tegak ke atas", _awal(sisi) + Vector2(_dx(0.4), -_dx(0.8))],
+		["berbalik ke kiri layar (arah seberang)", _awal(sisi) + Vector2(-_dx(0.6), 0.0)],
+		["turun ke bawah", _awal(sisi) + Vector2(0.0, _dx(0.5))],
+	]
+	for k: Array in tetap:
+		akar.perbarui(Config.LEMPAR_JEDA_DETIK)
+		var lepas: Vector2 = k[1]
+		_sentuh(1, _awal(sisi), true)
+		_geser(1, _akhir(sisi, _dx(0.4)))
+		akar.perbarui(DT)
+		var tampil: ThrowSolver.Lintasan = garis.lintasan()
+		var titik_akhir: Vector3 = garis.titik_akhir()
+		var dari_lepas: ThrowSolver.Lintasan = akar.lintasan_swipe(_awal(sisi), lepas)
+		check(garis.tampil() and tampil != null and dari_lepas != null and dari_lepas.titik_mendarat.distance_to(tampil.titik_mendarat) > 0.1, "%s: kontrol: garis bidik tampil, lintasan dari posisi lepas berbeda > 0,1 ubin" % k[0])
+		if tampil == null:
+			continue
+		var jumlah: int = dilempar.size()
+		_geser(1, lepas)
+		_sentuh(1, lepas, false)
+		check(dilempar.size() == jumlah + 1 and dilempar[jumlah] == tampil, "%s: tetap melempar, lintasan = objek garis bidik yang tampil (bukan dari posisi lepas)" % k[0])
+		var mendarat: KoranLempar.Koran = _sampai_mendarat(akar, catatan)
+		check(mendarat != null and _dekat_v(Vector2(KoranLempar.posisi(mendarat).x, KoranLempar.posisi(mendarat).y), Vector2(titik_akhir.x, titik_akhir.y)), "%s: koran mendarat di titik akhir garis bidik terakhir yang tampil" % k[0])
+	var sebelum: int = dilempar.size()
 	akar.perbarui(Config.LEMPAR_JEDA_DETIK)
 	_sentuh(1, _awal(sisi), true)
 	_geser(1, _akhir(sisi, _dx(0.4)))
 	akar.perbarui(DT)
-	_geser(1, _akhir(sisi, ThrowSolver.swipe_min_px(LEBAR) - 2.0))
+	_geser(1, _akhir(sisi, pendek))
 	akar.perbarui(DT)
 	check(not garis.tampil(), "jari ditarik kembali di bawah 6% pada langkah biasa: garis bidik hilang")
-	_sentuh(1, _akhir(sisi, ThrowSolver.swipe_min_px(LEBAR) - 2.0), false)
-	check(dilempar.is_empty(), "jari diangkat sesudah garis bidik hilang: tidak melempar")
+	_sentuh(1, _akhir(sisi, pendek), false)
+	check(dilempar.size() == sebelum, "jari diangkat sesudah garis bidik hilang: tidak melempar")
+	_bersihkan(akar)
+
+
+## AC-7 run fase2-arah-bebas: prediksi = hasil untuk swipe ke atas, kanan, kiri, dan bawah. Jari ditahan (garis bidik tampil), dilepas di
+## titik yang sama, lalu sepeda mengerem dan pindah sisi selama jeda lepas dan terbang; koran mendarat tepat di elips terakhir (<= 1e-4).
+func _test_prediksi_empat_arah() -> void:
+	_judul.call("Prediksi = hasil untuk swipe ke atas, kanan, kiri, bawah (AC-7, D-1)")
+	var akar: JalanUji = await _siapkan()
+	var sepeda: SepedaUji = _sepeda(akar)
+	var garis: GarisBidik = akar.garis_bidik()
+	var catatan: Dictionary = _catat(akar)
+	var dilempar: Array = catatan["lempar"]
+	var r: float = Config.STICK_RADIUS_PX
+	var awal: Vector2 = Vector2(500.0, 200.0)
+	# [nama, sudut layar, sisi harapan]
+	var kasus: Array = [["atas", 90.0, LoperAnim.Sisi.SEBERANG], ["kanan", 0.0, LoperAnim.Sisi.DEKAT], ["kiri", 180.0, LoperAnim.Sisi.SEBERANG], ["bawah", 270.0, LoperAnim.Sisi.DEKAT]]
+	_sentuh(0, TITIK_STICK, true)
+	for k: Array in kasus:
+		_geser(0, TITIK_STICK - Vector2(0, r))
+		_langkah(akar, 90)
+		var akhir: Vector2 = _akhir_sudut(awal, k[1], _dx(0.6))
+		_sentuh(1, awal, true)
+		_geser(1, akhir)
+		_langkah(akar, 5)
+		var tampil: ThrowSolver.Lintasan = garis.lintasan()
+		var titik_akhir: Vector3 = garis.titik_akhir()
+		check(garis.tampil() and tampil != null and tampil.sisi == k[2], "%s: garis bidik tampil ke sisi %s" % [k[0], LoperAnim.Sisi.keys()[k[2]]])
+		if tampil == null:
+			_sentuh(1, akhir, false)
+			continue
+		var layar: Vector2 = Iso.dunia_ke_layar(tampil.arah)
+		check(absf(layar.normalized().cross((akhir - awal).normalized())) < 0.0001 and layar.dot(akhir - awal) > 0.0, "%s: garis tanah lemparan sejajar jari di layar" % k[0])
+		var jumlah: int = dilempar.size()
+		_sentuh(1, akhir, false)
+		check(dilempar.size() == jumlah + 1 and dilempar[jumlah] == tampil, "%s: lemparan = lintasan garis bidik yang tampil" % k[0])
+		var v_lepas: float = sepeda.kecepatan_ud
+		_geser(0, TITIK_STICK + Vector2(r * 0.7, r * 0.7))
+		var mendarat: KoranLempar.Koran = _sampai_mendarat(akar, catatan)
+		check(mendarat != null and _dekat_v(Vector2(KoranLempar.posisi(mendarat).x, KoranLempar.posisi(mendarat).y), Vector2(titik_akhir.x, titik_akhir.y)) and KoranLempar.posisi(mendarat).z == 0.0, "%s: koran mendarat tepat di titik akhir garis bidik (<= 1e-4 ubin)" % k[0])
+		check(mendarat != null and mendarat.hasil == KoranLempar.hasil_mendarat(tampil), "%s: hasil sasaran = prediksi elips" % k[0])
+		check(sepeda.kecepatan_ud < v_lepas - 0.5, "%s: kontrol: sepeda melambat selama terbang (%s -> %s u/d)" % [k[0], v_lepas, sepeda.kecepatan_ud])
+		_langkah(akar, roundi(Config.PENANDA_LAMA_DETIK / DT) + 2)
+	_sentuh(0, TITIK_STICK, false)
+	_bersihkan(akar)
+
+
+## Syarat AC-6: lintasan mendarat di kotak surat SEBERANG rumah pelanggan yang zonanya di depan sepeda, antaran sah.
+func _kena_kotak_seberang_depan(akar: JalanUji, l: ThrowSolver.Lintasan) -> bool:
+	if l == null or KoranLempar.hasil_mendarat(l) != ZonaSasaran.Hasil.KOTAK_SURAT:
+		return false
+	var zona: ZonaSasaran.Zona = ZonaSasaran.zona_kena(l.titik_mendarat, ZonaSasaran.zona_jalan_uji_sekitar(ZonaSasaran.ke_jalan(l.titik_mendarat).y))
+	return zona != null and zona.sisi == LoperAnim.Sisi.SEBERANG and zona.pelanggan and zona.persegi.position.y > _sepeda(akar).jarak_ubin and ZonaSasaran.sah(KoranLempar.prediksi_antaran(l, Config.JENDELA_KENA_BONUS))
+
+
+## Swipe ke atas yang ditolak aturan Run 2A: |dy| > |dx| tegas dan dy ke atas (y layar ke bawah). Run 2A menolak |dy| >= |dx|.
+func _ditolak_run_2a(awal: Vector2, akhir: Vector2) -> bool:
+	var geser: Vector2 = akhir - awal
+	return geser.y < 0.0 and absf(geser.y) > absf(geser.x)
+
+
+## AC-6 run fase2-arah-bebas, regresi laporan pemilik (vivo V2108): di santai, cepat, dan ngebut (kecepatan sebenarnya dari stick) jari
+## ditahan bersudut 46 sampai 134 derajat sampai garis bidik yang TAMPIL mengarah ke kotak surat seberang pelanggan di depan sepeda;
+## dilepas lewat event sentuh, koran mendarat di sana dan dinilai `ZonaSasaran` sebagai antaran sah. Swipe yang dipakai wajib |dy| > |dx|
+## tegas (ditolak Run 2A, yang menolak |dy| >= |dx|); 45 derajat tepat tidak dipakai karena derau float bisa membuatnya |dx| > |dy| (QA-001).
+func _test_regresi_pemilik() -> void:
+	_judul.call("Regresi laporan pemilik di scene: swipe ke atas ke kotak surat seberang di depan, santai/cepat/ngebut (AC-6)")
+	var akar: JalanUji = await _siapkan()
+	var sepeda: SepedaUji = _sepeda(akar)
+	var garis: GarisBidik = akar.garis_bidik()
+	var router: TouchRouter = _router(akar)
+	var catatan: Dictionary = _catat(akar)
+	var r: float = Config.STICK_RADIUS_PX
+	var awal: Vector2 = Vector2(520.0, 330.0)
+	var tingkat: Array = [["santai", 0.0, Config.KECEPATAN_SANTAI_UD], ["cepat", r * (Config.ZONA_MATI_STICK + (1.0 - Config.ZONA_MATI_STICK) * 0.5), Config.KECEPATAN_CEPAT_UD], ["ngebut", r, Config.KECEPATAN_NGEBUT_UD]]
+	for t: Array in tingkat:
+		var tarikan: float = t[1]
+		if tarikan > 0.0:
+			if not router.stick_aktif():
+				_sentuh(0, TITIK_STICK, true)
+			_geser(0, TITIK_STICK - Vector2(0, tarikan))
+		_langkah(akar, 180)
+		check(is_equal_approx(sepeda.kecepatan_ud, t[2]), "%s: kontrol: kecepatan sebenarnya %s u/d (dapat %s)" % [t[0], t[2], sepeda.kecepatan_ud])
+		var ketemu: bool = false
+		var akhir: Vector2 = awal
+		for i: int in range(120):
+			var pilihan: Vector2 = Vector2.INF
+			var derajat: float = 46.0
+			while derajat <= 134.0 and pilihan == Vector2.INF:
+				var panjang: float = ceilf(ThrowSolver.swipe_min_px(LEBAR))
+				while panjang <= ThrowSolver.swipe_maks_px(LEBAR):
+					var coba: Vector2 = _akhir_sudut(awal, derajat, panjang)
+					if _ditolak_run_2a(awal, coba) and _kena_kotak_seberang_depan(akar, akar.lintasan_swipe(awal, coba)):
+						pilihan = coba
+						break
+					panjang += 3.0
+				derajat += 3.0
+			if pilihan != Vector2.INF and SisaKoran.boleh_lempar(akar.koran):
+				if not router.swipe_aktif():
+					_sentuh(1, awal, true)
+				_geser(1, pilihan)
+				akhir = pilihan
+			elif router.swipe_aktif():
+				_geser(1, awal)
+				_sentuh(1, awal, false)
+			_langkah(akar, 1)
+			if garis.tampil() and _kena_kotak_seberang_depan(akar, garis.lintasan()):
+				ketemu = true
+				break
+		var sudut: float = _sudut(awal, akhir)
+		var geser: Vector2 = akhir - awal
+		check(ketemu and _ditolak_run_2a(awal, akhir) and sudut >= 46.0 - 0.001 and sudut <= 134.0 + 0.001, "%s: garis bidik tampil ke kotak surat seberang pelanggan di depan dengan swipe %.1f derajat, |dx| %.4f < |dy| %.4f (ditolak Run 2A)" % [t[0], sudut, absf(geser.x), absf(geser.y)])
+		if not ketemu:
+			continue
+		var tampil: ThrowSolver.Lintasan = garis.lintasan()
+		var jumlah: int = (catatan["lempar"] as Array).size()
+		_sentuh(1, akhir, false)
+		check((catatan["lempar"] as Array).size() == jumlah + 1 and (catatan["lempar"] as Array)[jumlah] == tampil, "%s: jari diangkat: melempar lintasan garis bidik itu" % t[0])
+		var mendarat: KoranLempar.Koran = _sampai_mendarat(akar, catatan)
+		check(mendarat != null and mendarat.hasil == ZonaSasaran.Hasil.KOTAK_SURAT and mendarat.antaran == ZonaSasaran.Antaran.SAH_PENUH and mendarat.penanda == ZonaSasaran.Penanda.CENTANG, "%s: koran mendarat di kotak surat seberang, antaran sah penuh, penanda centang" % t[0])
+		check(mendarat != null and _dekat_v(Vector2(KoranLempar.posisi(mendarat).x, KoranLempar.posisi(mendarat).y), tampil.titik_mendarat), "%s: titik mendarat = titik akhir garis bidik" % t[0])
+		_langkah(akar, roundi(Config.PENANDA_LAMA_DETIK / DT) + 2)
+	if router.stick_aktif():
+		_sentuh(0, TITIK_STICK, false)
 	_bersihkan(akar)
 
 
@@ -556,13 +721,17 @@ func _test_sisa_koran_dan_jeda() -> void:
 	akar.perbarui(0.001)
 	_swipe(LoperAnim.Sisi.DEKAT, _dx(0.5))
 	check(akar.koran.sisa == 28 and (catatan["lempar"] as Array).size() == 2, "0,35 detik (inklusif): diterima, koran 28")
-	# Swipe tidak sah (tegak, pendek) tidak mengurangi.
+	# Swipe di bawah 6% (datar atau tegak) tidak mengurangi; swipe tegak cukup panjang kini melempar (arah bebas) dan mengurangi tepat 1.
 	akar.perbarui(Config.LEMPAR_JEDA_DETIK)
+	_swipe(LoperAnim.Sisi.SEBERANG, ThrowSolver.swipe_min_px(LEBAR) - 1.0)
+	_sentuh(1, Vector2(450, 250), true)
+	_geser(1, Vector2(450, 250 - ThrowSolver.swipe_min_px(LEBAR) + 1.0))
+	_sentuh(1, Vector2(450, 250 - ThrowSolver.swipe_min_px(LEBAR) + 1.0), false)
+	check(akar.koran.sisa == 28 and (catatan["lempar"] as Array).size() == 2, "swipe di bawah 6% (datar dan tegak) tidak melempar dan tidak mengurangi koran")
 	_sentuh(1, Vector2(450, 250), true)
 	_geser(1, Vector2(450, 150))
 	_sentuh(1, Vector2(450, 150), false)
-	_swipe(LoperAnim.Sisi.SEBERANG, ThrowSolver.swipe_min_px(LEBAR) - 1.0)
-	check(akar.koran.sisa == 28 and (catatan["lempar"] as Array).size() == 2, "swipe tegak dan swipe di bawah 6% tidak melempar dan tidak mengurangi koran")
+	check(akar.koran.sisa == 27 and (catatan["lempar"] as Array).size() == 3, "swipe tegak 100 px melempar (arah bebas, tidak ditolak lagi): koran 27")
 	_bersihkan(akar)
 
 
@@ -763,7 +932,7 @@ func _test_input_dan_kidal() -> void:
 	check(garis.tampil() and garis.lintasan().sisi == LoperAnim.Sisi.DEKAT, "swipe ditahan cukup panjang: garis bidik ke sisi dekat")
 	_geser(1, _awal(LoperAnim.Sisi.DEKAT) + Vector2(10, -_dx(0.5)))
 	akar.perbarui(DT)
-	check(not garis.tampil(), "swipe ditahan dominan tegak: garis bidik hilang")
+	check(garis.tampil() and garis.lintasan().sisi == LoperAnim.Sisi.SEBERANG, "swipe ditahan berbelok ke atas: garis bidik tetap tampil, kini ke seberang (arah bebas)")
 	_sentuh(1, _awal(LoperAnim.Sisi.DEKAT) + Vector2(10, -_dx(0.5)), false, true)
 	akar.perbarui(DT)
 	check(not garis.tampil() and dilempar.size() == 2, "sentuhan dibatalkan sistem: tanpa garis bidik, tanpa lemparan")
@@ -804,6 +973,12 @@ func _test_input_dan_kidal() -> void:
 	_geser(1, awal_kidal + Vector2(_dx(0.4), 0))
 	_sentuh(1, awal_kidal + Vector2(_dx(0.4), 0), false)
 	check(dilempar.size() == 6 and (dilempar[4] as ThrowSolver.Lintasan).sisi == LoperAnim.Sisi.SEBERANG and (dilempar[5] as ThrowSolver.Lintasan).sisi == LoperAnim.Sisi.DEKAT, "kidal: kiri layar tetap seberang, kanan layar tetap dekat")
+	# AC-4: swipe tegak yang sama memberi sisi dan arah tanah yang sama dengan atau tanpa kidal (kidal hanya menukar zona).
+	akar.perbarui(Config.LEMPAR_JEDA_DETIK)
+	_sentuh(1, awal_kidal, true)
+	_geser(1, awal_kidal + Vector2(0, -_dx(0.4)))
+	_sentuh(1, awal_kidal + Vector2(0, -_dx(0.4)), false)
+	check(dilempar.size() == 7 and (dilempar[6] as ThrowSolver.Lintasan).sisi == LoperAnim.Sisi.SEBERANG and (dilempar[6] as ThrowSolver.Lintasan).arah.is_equal_approx(ThrowSolver.arah_tanah(Vector2(0, -1))), "kidal: swipe ke atas = seberang dan maju, sama dengan tanpa kidal")
 	var panel_kidal: Rect2 = hud.rect_panel_koran()
 	check(TouchZones.rect_swipe(int(LEBAR), true).encloses(panel_kidal), "kidal: panel HUD koran %s pindah ke dalam zona swipe kidal" % panel_kidal)
 	akar.perbarui(Config.LEMPAR_JEDA_DETIK)
@@ -811,7 +986,7 @@ func _test_input_dan_kidal() -> void:
 	_sentuh(1, mulai, true)
 	_geser(1, mulai + Vector2(_dx(0.3), 0))
 	_sentuh(1, mulai + Vector2(_dx(0.3), 0), false)
-	check(dilempar.size() == 7 and (dilempar[6] as ThrowSolver.Lintasan).sisi == LoperAnim.Sisi.DEKAT, "kidal: swipe yang mulai di panel HUD koran tetap swipe (ke dekat)")
+	check(dilempar.size() == 8 and (dilempar[7] as ThrowSolver.Lintasan).sisi == LoperAnim.Sisi.DEKAT, "kidal: swipe yang mulai di panel HUD koran tetap swipe (ke dekat)")
 	(_anak(hud, "TombolKidal") as Button).button_pressed = false
 	await _tree.process_frame
 	_bersihkan(akar)
@@ -993,7 +1168,7 @@ func _test_perintah_gambar_koran() -> void:
 			sama_parse = false
 	check(is_same(a, b) and a.is_read_only() and (a[0] as Array).is_read_only(), "simpanan rentang pola: isi pola sama = objek yang sama (tidak di-parse ulang), hanya-baca")
 	check(sama_parse and not is_same(a, c), "simpanan rentang pola: hasil = parse PolaPiksel.rentang_huruf per huruf, pola berbeda tidak tertukar")
-	var l: ThrowSolver.Lintasan = ThrowSolver.hitung(120.0, LEBAR, LoperAnim.Sisi.SEBERANG, Vector2(0.0, -10.0), 3.0, 0.0, 1.0 / 6.0)
+	var l: ThrowSolver.Lintasan = ThrowSolver.hitung(120.0, LEBAR, Iso.ARAH_SEBERANG, Vector2(0.0, -10.0), 3.0, 0.0, 1.0 / 6.0)
 	var koran: KoranLempar.Koran = KoranLempar.baru(l)
 	check(KoranGambar.perintah_koran(KoranGambar.Lapisan.TANAH, koran).is_empty() and KoranGambar.perintah_koran(KoranGambar.Lapisan.UDARA, koran).is_empty(), "sebelum jeda lepas: koran belum digambar (masih di tangan sprite)")
 	var kasus: Array = [

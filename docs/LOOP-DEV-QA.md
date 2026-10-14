@@ -377,6 +377,70 @@ IZIN HP: boleh memasang APK ke Samsung A54 (RRCWA05E2NN) setelah QA PASS; hanya
 RUN_ID: 20261010-fase1b-umpan-balik
 ```
 
+## 6c. Fase 2: perintah mulai Run 2B (tempel di sesi baru)
+
+Disimpan 2026-10-15, sesudah run 2A (PR #24) dan run arah bebas (`20261015-fase2-arah-bebas`, PR #25). Tempel blok ini **utuh sebagai pesan pertama sesi baru** (`/clear` atau sesi baru; Bagian 0c). Sebelum menempel, isi baris `ISI:`, hapus baris izin HP kalau HP tidak boleh disentuh, dan ganti tanggal di `RUN_ID` kalau run dimulai di hari lain.
+
+Prasyarat: PR #25 (`feat/lempar-arah-bebas`) sudah di-merge ke `main`. Kalau belum, orchestrator berhenti dan minta merge dulu.
+
+### Run 2B — mode bantu, bunyi lempar dan mendarat, penutup Fase 2
+
+```text
+Kamu adalah ORCHESTRATOR loop Dev↔QA untuk repo Loper Koran. Ikuti docs/LOOP-DEV-QA.md
+secara ketat (Bagian 1 prosedur orchestrator, Bagian 0c satu sesi satu run). Mulai dari
+main terbaru yang sudah memuat PR #25 (arah lempar bebas); kalau belum, berhenti dan minta
+saya merge dulu.
+
+SCOPE: Run 2B — Fase 2, butir yang tersisa (DEV_PHASES Fase 2, TECH_PLAN Fase 2, GDD 5.3,
+  SOUND_DESIGN 3.1 dan 4.2, BALANCING 4-5), lalu menyiapkan penutup Fase 2 dan M1.
+  - Mode bantu (GDD 5.3, rule ui-scenes: wajib ada dan sepenuhnya bisa dimainkan):
+    tap di sisi layar melempar otomatis ke kotak surat terdekat di sisi itu; kecepatan
+    otomatis. Logika pemilihan sasaran murni di scripts/systems/ dan memakai ThrowSolver
+    yang sama (garis bidik dan hasil satu lintasan, warisan kecepatan tetap). Sakelar mode
+    bantu di HUD dev (seperti tombol kidal) karena layar pengaturan belum ada. Kidal tetap
+    berlaku. Rumah bukan pelanggan tampil abu-abu hanya di mode bantu bila radar sudah ada
+    (radar baru Fase 3, jadi cukup dicatat).
+  - Bunyi lempar dan mendarat placeholder (SOUND_DESIGN 3.1, 4.2): "wus" saat koran
+    dilempar; mendarat di kotak surat, teras, rumput/halaman, dan meleset, tiga variasi per
+    permukaan. Dibuat lewat skrip sintesis di tools/audio_art/ (stdlib, deterministik,
+    seperti sintesis_sepeda.py) atau tanyakan saya; JANGAN mengunduh aset dari internet.
+    Lewat autoload Audio; berhenti saat jeda dan background. Nada naik combo ditunda ke
+    Fase 3 (skor dan combo belum ada); catat saja.
+  - QA-008 run 2A (DEFERRED): oracle tes GambarPiksel.perintah_pola harus independen
+    (warna dan alpha harapan ditulis eksplisit, bukan memanggil perintah_pola); empat mutan
+    QA N16, N20, N21, N22 harus mati.
+  - QA-005 run arah bebas (DEFERRED): mock docs/design/source/kontrol.html (dan render
+    kontrol.png, kontrol-board.png bila dirender ulang lewat alat yang ada) serta tabel
+    DESIGN_SPEC 6 masih menulis "swipe kiri = seberang, kanan = dekat"; perbarui ke arah
+    bebas. Juga QA-006 (Nit): GDD 4.2 "jatuh di sisi seberang" → "mengarah ke".
+  - Perbarui checklist uji HP (docs/SETUP_ANDROID.md bagian 8) untuk penutup Fase 2: kotak
+    surat bisa dikenai dengan sengaja di santai, cepat, dan ngebut; ketelitian swipe
+    pendek; mode bantu; bunyi lempar dan mendarat; dua pertanyaan kontrol GDD 17.
+  - Tes headless untuk semua logika murni dengan mutan nyata (pemilihan sasaran mode bantu,
+    tidak ada sasaran di jangkauan, tap di sisi tanpa rumah, sisa koran habis, jeda antar
+    lempar, jeda game, kidal, pemetaan permukaan ke bunyi, bunyi berhenti saat jeda).
+  Keputusan terbuka yang mungkin menghambat (tanyakan SEKALI, satu rekomendasi per
+  keputusan): kecepatan otomatis di mode bantu (tingkat mana, dan apakah stick masih bisa
+  pindah sisi dan mengerem); "sisi layar" = separuh layar kiri/kanan atau zona swipe saja;
+  jangkauan "kotak surat terdekat" (hanya di depan? batas jarak?); apakah lemparan mode
+  bantu selalu kena atau bisa meleset; apakah jeda antar lempar 0,35 detik dan jeda lepas
+  0,17 detik perlu disetel ulang dari uji HP (pemilik sempat menyebut lemparan "gak
+  responsif" sebelum arah bebas).
+  Fase 2 dan M1 baru selesai setelah uji HP pemilik (butir NEEDS-MANUAL); jangan dicentang
+  sebelum itu.
+HASIL UJI HP SEBELUMNYA (ISI: tempel catatan saya dari vivo/A54; kosongkan bila tidak ada):
+  Run arah bebas di vivo V2108 (2026-10-15): "this is much better". ISI: kotak surat di tiga
+  kecepatan ...; swipe pendek ...; swipe kiri murni ke belakang ...; garis bidik saat
+  melaju ...; rasa responsif ...
+DESIGN: docs/design/DESIGN_SPEC.md (token bagian 1, HUD 3.5, umpan balik 3.6, kontrol 3.7);
+  belum ada mockup mode bantu — Dev boleh mendesain hanya untuk layar dev/jalan uji.
+IZIN HP: boleh memasang APK ke vivo V2108 (adb 12d8c9da) setelah QA PASS; A54
+  (RRCWA05E2NN) hanya bila tersambung. Hanya orchestrator yang menyentuh HP; cek layar
+  menyala dan tidak sedang dipakai; tidak ada pm clear/uninstall/logcat -c; log Godot di
+  vivo lihat SETUP_ANDROID 6.1.
+RUN_ID: 20261015-fase2b-bantu-audio
+```
+
 ## 7. Batasan yang perlu diketahui
 
 - QA berbasis agent tidak menggantikan uji di HP nyata untuk rasa kontrol, performa, dan tampilan rasio layar. Fase gameplay selalu ditutup dengan uji manual (`DEV_PHASES.md`).

@@ -19,8 +19,9 @@ extends RefCounted
 ## memakai `seberang` / `dekat`; kata itu hanya boleh muncul di blok `const NAMA_ARAH` dan
 ## `const NAMA_SISI_LEMPAR` (penjaga di `tests/run_tests.gd`). Ambang dan sudut dibaca dari `Config`.
 
-## Sisi lempar. `TIDAK_ADA` = tidak ada lemparan (swipe tidak sah). Swipe ke kiri layar = `SEBERANG`, ke kanan layar = `DEKAT` (GDD 5.2).
-## Sisi dari swipe dihitung `ThrowSolver.sisi_dari_swipe` (sejak run fase2a-lemparan, ambang 6% lebar viewport menggantikan 12 px).
+## Sisi lempar. `TIDAK_ADA` = tidak ada lemparan (swipe tidak sah). Sejak run fase2-arah-bebas arah lemparan bebas (GDD 5.2): sisi
+## diambil dari komponen melintang arah tanah swipe (`ThrowSolver.sisi_dari_arah` / `sisi_dari_swipe`; ke seberang = `SEBERANG`,
+## ke dekat atau tepat searah jalan = `DEKAT`) dan hanya memilih animasi lempar; penilaian zona dari titik mendarat saja.
 enum Sisi { TIDAK_ADA, SEBERANG, DEKAT }
 ## Pose sprite. `KAYUH` memakai tingkat (`<tingkat>_<arah>` atau `melambat_<arah>` untuk tingkat -1); `MELUNCUR` dan `REM`
 ## memakai `meluncur_<arah>` dan `rem_<arah>` tanpa tingkat (kaki tidak mengayuh).
