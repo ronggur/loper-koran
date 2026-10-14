@@ -140,3 +140,91 @@ Belum dikerjakan (1b):
 - Dokumen AC-14 sisanya: DESIGN_SPEC 3.5/3.7, ART_DIRECTION (koran placeholder dari kode), SETUP_ANDROID 8 (uji Run 2A), perintah probe baru di AGENTS.md dan `00-project-core.mdc`.
 
 Tidak ada BLOCKED.
+
+## Catatan Dev iterasi 1b
+
+Bagian 1b dari 2 (Dev, bagian terakhir sebelum QA): kabel scene lemparan, garis bidik di ruang dunia, koran terbang + bayangan + penanda, zona placeholder tampil, HUD sisa koran, tes scene AC-4/6/7/8, tata letak AC-9, mutan scene AC-10, probe jendela AC-12, dokumen AC-14 sisanya. Logika murni 1a dipakai apa adanya (tidak ada rumus 1a yang diubah; `SisaKoran` hanya ditambah `ikon_hud`). Tidak push.
+
+### Commit
+
+| Commit | Ringkasan | File |
+|---|---|---|
+| `00ab6fd` | feat: KoranLempar dan PolaPiksel murni untuk koran terbang, garis bidik, dan penanda | `scripts/systems/koran_lempar.gd`, `pola_piksel.gd` (+`.uid`, baru), `sisa_koran.gd` (`ikon_hud`), `scripts/config.gd` (angka tampilan `KORAN_*`, `PENANDA_ATAS_PX`, `GARIS_BIDIK_SAMPEL`, `ZONA_GARIS_ALPHA`, `HUD_PANEL_KORAN_GESER_PX`, `HUD_KORAN_*`), `docs/BALANCING.md` 4 dan 10, `tests/tes_lempar.gd` (`_test_koran_lempar`, `_test_titik_bidik`, `_test_pola_piksel`) |
+| `0e9b9f1` | feat: lemparan koran di jalan uji: garis bidik, koran terbang, penanda, zona, HUD koran | `scripts/entities/jalan_uji.gd`, `sepeda_uji.gd` (`lateral_ud`, `jeda_lepas`), `loper_sprite.gd` (D-9, `jeda_lepas`), `koran_gambar.gd`, `zona_gambar.gd` (+`.uid`, baru), `scripts/ui/garis_bidik.gd`, `deret_koran.gd`, `gambar_piksel.gd` (+`.uid`, baru), `hud_dev.gd`, `kontrol_touch.gd` (garis putus lama dihapus), `scenes/dev/jalan_uji.tscn`, `scenes/ui/hud_dev.tscn`, `translations/ui.csv` + `ui.id.translation`, `tests/tes_koran_scene.gd` (+`.uid`, baru), `run_tests.gd`, `tes_input_scene.gd`, `tes_sprite.gd`, `tes_tata_letak.gd` |
+| `a0ac448` | test: titik lepas memakai lateral efektif dan tes jeda koran tahan mutan | `tests/tes_koran_scene.gd` |
+| `ccd7aa6` | test: probe jendela lemparan koran dan tangkapan layar 640/780 (AC-12) | `tests/probe_koran_jendela.gd` (+`.uid`), `docs/loop/20261014-fase2a-lemparan/shots/` (36 PNG) |
+| `ac9c327` | docs: tafsiran HUD koran, penanda, garis bidik, koran placeholder, dan uji HP Run 2A | `docs/design/DESIGN_SPEC.md` 3.5-3.7, `docs/ART_DIRECTION.md` 6.2, `docs/SETUP_ANDROID.md` 8.3, `AGENTS.md`, `.cursor/rules/00-project-core.mdc`, `docs/README.md` |
+| (commit terakhir, lihat `git log`) | docs: catatan Dev iterasi 1b run 2A | LOG ini |
+
+Klon bersih per commit kode (`git clone` + checkout): `00ab6fd` import 0 `ERROR`/`WARNING`, 5459 lolos 0 gagal, `--ketat` lolos, `--quit-after 2` bersih, `git status --porcelain` kosong; `0e9b9f1` sama, 5768 lolos. HEAD: lihat Gerbang.
+
+### Keputusan di dalam ruang D-x (bisa ditolak di review)
+
+- **D-4 (scene).** Satu fungsi `JalanUji.lintasan_swipe(awal, akhir)` = `ThrowSolver.sisi_dari_swipe` lalu `ThrowSolver.dari_swipe(..., posisi_dunia, kecepatan_ud, SepedaUji.lateral_ud, SepedaUji.jeda_lepas(sisi))`. Garis bidik dihitung di `perbarui` **sesudah** `SepedaUji.gerak` (keadaan frame ini); jari dilepas datang di `_input` sebelum `_process` berikutnya, jadi lemparan memakai keadaan yang sama persis dengan garis bidik yang tampil. `SepedaUji.lateral_ud` = `BikeMotion.Hasil.lateral_ud` langkah terakhir (0 di tepi jalan atau pada langkah `dt` 0). Jeda lepas dari `LoperSprite.jeda_lepas(sisi)` = `LemparWaktu.waktu_lepas` animasi yang akan dimainkan (2/12 detik).
+- **D-4/D-11 (koran tidak terikat sinyal sprite).** Koran (`KoranLempar.Koran`) dibuat saat lemparan diterima dan maju dengan `dt` efektif `JalanUji`; tampil di udara saat `waktu_terbang + LEMPAR_TOLERANSI_DETIK >= 0` (sama dengan syarat frame lepas `LemparWaktu`), **bukan** saat sinyal `koran_lepas`. Alasan: D-11 meminta lemparan yang jedanya datang sebelum frame lepas tetap terbang sesudah lanjut, padahal `batalkan_lempar` menutup animasi tanpa sinyal. Di game kedua jam memakai `delta` yang sama, jadi koran muncul di tangan pada frame lepas.
+- **D-9 (sprite).** `LoperSprite.lempar` tidak lagi menolak selama animasi. Yang menolak hanya `SisaKoran.boleh_lempar` di `JalanUji._saat_swipe_selesai` (koran ada dan jeda 0,35 lewat; ditolak = koran tidak berkurang, jeda tidak mulai ulang). Bila jam sprite tertinggal dan lempar baru datang saat animasi lama masih jalan, lempar lama ditutup dulu: `koran_lepas` dipancarkan bila belum, lalu `lempar_selesai`, baru lempar baru dari frame 0 (tiap lempar tetap tepat sekali kedua sinyal). `batalkan_lempar` tetap tanpa sinyal (jeda game). Dokumentasi `lempar_selesai` diperluas: "habis, atau disela lempar berikutnya".
+- **D-5.** `GarisBidik` (`scripts/ui/`, Node2D anak akar dunia, digambar di atas objek): titik 2×2 `TEXT` di waktu `KoranLempar.waktu_titik_bidik` (titik pertama t = 0, lalu tiap kali jarak layar sepanjang lengkung dari titik sebelumnya ≥ 4 px, dari 96 + 1 sampel merata `posisi_pada`; tiap titik = proyeksi `Iso` sampel `posisi_pada`, dibulatkan). Elips 10×5 berpusat di titik mendarat: cincin `TEXT` biasa, elips **terisi** `OK` bergaris `OUTLINE` bila `KoranLempar.prediksi_antaran` sah (bentuk berubah). Tampil hanya bila swipe aktif, lintasan tidak null (|dx| ≥ min, dominan datar), `SisaKoran.boleh_lempar`, dan tidak jeda; disembunyikan saat jari dilepas (langsung di `_saat_swipe_selesai`), batal, atau jeda. Garis putus lama `KontrolTouch` dihapus.
+- **D-10.** Pola piksel dari kode (`PolaPiksel`, huruf peran warna, tanpa hex): koran 8×6 empat langkah putar (mendatar, serong naik, tegak, serong turun) di `KORAN_PUTAR_FPS` 12 berulang sepanjang terbang (tafsiran "berputar 4 langkah" = 4 frame berulang, ART_DIRECTION 6.2); bayangan elips `OUTLINE` alpha 0,5 di lapisan tanah, lebar `roundi(8 − 2 × tinggi)` dijepit 4..8 px; koran tergeletak (frame 0) di lapisan tanah selama penanda; penanda di lapisan udara 7 px di atas titik mendarat: centang 9×7, setengah (belah ketupat terisi separuh) 7×7, bintang 9×9, silang 7×7; warna `OK` bila antaran sah, `FAIL` bila tidak (`KoranGambar.warna_penanda`). Penanda tidak naik/memudar (penyederhanaan placeholder; DESIGN_SPEC 3.6 panel koin baru di Fase 3). Semua digambar sebagai persegi piksel game bilangan bulat (`GambarPiksel`) supaya tajam di `canvas_items` ×3.
+- **D-6 (tampilan zona).** `ZonaGambar` di antara ubin tanah dan objek dunia, kavling sama dengan slot rumah `ObjekDaur`; belah ketupat dirasterisasi per baris piksel (`PolaPiksel.rentang_poligon`, tepi 1 px `rentang_tepi`). Halaman garis `TEXT` 70%, teras `UI_PANEL_RAISED` + `OUTLINE`, jendela strip `TEXT_2` + `OUTLINE`, kotak surat sisi dekat datar `ACCENT` + `OUTLINE` (sisi seberang memakai graybox yang ada). Rumah bukan pelanggan: garis halaman dan teras `RADAR_BUKAN` + tanda lingkaran bergaris miring (cakram `RADAR_BUKAN` bergaris `OUTLINE`) datar di antara tengah halaman dan tepi depannya (versi pertama 14 px di atas tengah halaman tertutup dinding rumah, terlihat di tangkapan, lalu dipindah). Kavling sisi dekat selalu pelanggan.
+- **D-8 (HUD).** Panel koran satu `HBoxContainer` (`BarisBawah`) dengan panel kecepatan, celah = 400 − 210 − 170 = 20 px dari `Config`; kidal = `BarisBawah` menempel kanan dan panel koran dipindah ke depan (`move_child`). Tafsiran 8 ikon: delapan koran terakhir (`SisaKoran.ikon_hud`: jumlah ikon = min(penuh, 8), terang = min(sisa, jumlah)); habis = label `HUD_KORAN_HABIS` + semua ikon redup 28%. Kunci baru `HUD_KORAN` (KORAN), `HUD_KORAN_ANGKA` ({n}), `HUD_KORAN_HABIS` (HABIS). Panel di dalam zona swipe dan `MOUSE_FILTER_IGNORE`.
+- **Isi ulang di scene.** `SisaKoran.isi_ulang_jalan_uji` dipanggil tiap `perbarui` sesudah `SisaKoran.langkah(dt efektif)`.
+- **Angka tampilan baru** (bukan angka lintasan; BALANCING 4 dan DESIGN_SPEC/ART_DIRECTION): `KORAN_PUTAR_FPS` 12, `KORAN_BAYANGAN_LEBAR_MAKS_PX` 8, `_MIN_PX` 4, `_SUSUT_PX_PER_UBIN` 2, `_ALPHA` 0,5, `PENANDA_ATAS_PX` 7, `GARIS_BIDIK_SAMPEL` 96, `ZONA_GARIS_ALPHA` 0,7, `HUD_PANEL_KORAN_GESER_PX` 400, `HUD_KORAN_IKON_MAKS` 8, `_IKON_PX` 12, `_IKON_JARAK_PX` 1, `_REDUP_ALPHA` 0,28.
+
+### Tes lama yang diubah (dan kenapa)
+
+- `tests/tes_sprite.gd` `_test_loper_sprite_lempar`: dua cek "lempar(SEBERANG) saat sedang melempar diabaikan (false)" dan "lempar yang diabaikan tidak mengulang animasi" **dihapus** karena D-9 (sprite tidak lagi menolak sendiri); diganti tes baru `_test_loper_sprite_lempar_menyela` (menyela sebelum dan sesudah frame lepas, sinyal tepat sekali, `batalkan_lempar` tanpa sinyal, `jeda_lepas`).
+- `tests/tes_input_scene.gd`: pembantu `_swipe` sekarang melewati jeda antar lempar 0,35 detik dulu (`_lewati_jeda`: hanya `SisaKoran.langkah(akar.koran, 0,35)`, sepeda dan sprite tidak bergerak), karena tes animasi lama memajukan waktu sprite terpisah dari waktu scene. Cek "swipe kedua saat masih melempar diabaikan" kini memakai `lewati_jeda = false` dan labelnya "di dalam jeda 0,35 detik diabaikan (D-9)". Isi cek lain tidak berubah.
+- `tests/tes_tata_letak.gd`: ditambah cek panel koran (posisi x 400 / cermin kidal, bawah 8, tidak menumpuk zona stick, panel kecepatan, tombol jeda/kidal, di dalam zona swipe, tidak memotong sprite); cek lama tidak diubah.
+
+### Mutan nyata (AC-10; kode dikembalikan sesudah tiap mutan)
+
+Skrip penggantian teks di luar repo (scratchpad), `run_tests` penuh per mutan, tes = HEAD `a0ac448` (S04, S05, S12, S13 dijalankan ulang di HEAD ini dengan stderr ikut dibaca; mutan lain dijalankan pada kode `0e9b9f1` + tes lateral). Baseline: 5776 lolos, 0 gagal, `--ketat` lolos. **20 mutan scene/1b, 20 mati, 0 hidup**, 0 `SCRIPT ERROR` (jumlah cek total sebagian mutan lebih kecil dari baseline karena tes berhenti dengan rapi lewat cek bernama + `return`, bukan error).
+
+| Mutan | Hasil | Tes yang membunuh (contoh label) |
+|---|---|---|
+| S01 garis bidik dihitung sebelum sepeda digerakkan (kecepatan frame sebelumnya) | mati, 16 gagal | "skenario A dt 1/30: lintasan lemparan = lintasan garis bidik frame jari dilepas ..."; "skenario A dt 1/30: titik mendarat koran (-5.0, -4.662608, 0.0) = titik akhir garis bidik frame jari dilepas (-5.0, -4.442608, 0.0)" |
+| S02 garis bidik memakai rumus/argumen sendiri (tanpa lateral dan jeda lepas) | mati, 20 gagal | sama dengan S01 (titik akhir -4.023 lawan mendarat -4.673) |
+| S03 lintasan dihitung ulang saat frame lepas dari keadaan baru | mati, 28 gagal | "skenario A dt 1/30: tiap frame posisi koran = ThrowSolver.posisi_sejak_jari(lintasan beku)"; "... titik mendarat koran (-4.418901, -5.813201) = titik akhir garis bidik (-5.0, -4.663201)" |
+| S04 jeda game tidak membekukan koran (`_perbarui_lemparan(dt)` mentah) | mati, 4 gagal | "TOMBOL: koran yang terbang tetap ada selama jeda (0)"; "PAUSED: ..." |
+| S05 jeda game menghapus koran yang belum lepas/terbang | mati, 4 gagal | "TOMBOL: koran yang terbang tetap ada selama jeda (0)"; "lemparan tetap tercatat: koran 29, satu koran menunggu lepas" |
+| S06 koran berkurang dua kali per lemparan (scene) | mati, 19 gagal | "skenario A dt 1/30: satu lemparan diterima, koran -1" |
+| S07 LoperSprite tetap menolak lempar selama animasi (perilaku lama) | mati, 10 gagal | "lempar kedua (seberang) saat lempar pertama berjalan: dimulai (true), tidak ditolak sprite"; "lemparan saat animasi sebelumnya masih berjalan ..." |
+| S08 garis bidik tampil walau jeda antar lempar/habis | mati, 2 gagal | "dalam jeda antar lempar (0,349): garis bidik tidak tampil walau swipe ditahan"; "habis: garis bidik tidak tampil walau swipe ditahan" |
+| S09 HUD koran tidak dicerminkan saat kidal | mati, 6 gagal | "lebar 640 kidal: panel kecepatan pindah ke sisi stick kanan ..." (tes lama) dan cek panel koran tata letak |
+| S10 sakelar jendela diabaikan di elips (selalu bonus) | mati, 1 gagal | "SEBERANG JENDELA: elips biasa (cincin TEXT)" |
+| S11 garis bidik tidak hilang saat jari dilepas | mati, 4 gagal | "skenario A dt 1/30: garis bidik hilang saat jari dilepas" |
+| S12 koran langsung di udara tanpa jeda lepas | mati, 6 gagal | "sebelum jeda lepas: belum di udara, di titik lepas setinggi tangan"; "skenario A dt 1/30: koran tampil di udara pada langkah yang melewati jeda lepas" |
+| S13 hasil dinilai di titik lepas, bukan titik mendarat | mati, 9 gagal | "1008 lintasan x 2 sakelar: hasil, antaran, dan penanda saat mendarat = prediksi elips ..."; "kontrol: sampel memuat pendaratan sah (0) dan jendela (0)" |
+| S14 isi ulang jalan uji tidak dipanggil di scene | mati, 2 gagal | "16,001 ubin sesudah habis: terisi ulang 30, HUD kembali, penanda habis hilang" |
+| S15 kecepatan lateral efektif tidak disimpan (0) | mati, 2 gagal | "stick penuh ke sisi dekat: kecepatan lateral efektif 0.0 u/d"; "titik lepas = posisi + (maju, lateral) x jeda lepas" (tes ditambah di `a0ac448` karena mutan ini lolos dari tes prediksi = hasil: garis bidik dan lemparan sama-sama memakai 0) |
+| S16 penanda tidak pernah selesai | mati, 5 gagal | "selesai tepat sesudah 0,8 detik penanda"; "TOMBOL: sesudah lanjut penanda habis dan koran dibuang" |
+| S17 titik garis bidik bukan sampel (garis lurus lepas-mendarat) | mati, 16 gagal | "u 0.0, 0.0 u/d: layar_pada = proyeksi Iso posisi_pada" |
+| S18 elips sah tidak berubah bentuk | mati, 1 gagal | "elips sah TERISI (bentuk berbeda dari cincin biasa, bukan hanya warna)" |
+| S19 bayangan tidak mengecil saat tinggi naik | mati, 2 gagal | "bayangan: 8 px di tanah, 4 px paling kecil ..."; "bayangan tidak membesar saat tinggi naik" |
+| S20 swipe yang ditolak jeda tetap memakai koran (scene) | mati, 1+ gagal | "swipe dilepas di 0,349 detik: ditolak, koran tetap 29" |
+
+Pemetaan ke sisa daftar AC-10 dari 1a: garis bidik kecepatan frame sebelumnya (S01), garis bidik rumus sendiri (S02; penjaga teks `_test_penjaga_rumus` 1a tetap lolos dengan skrip baru), lintasan dihitung ulang saat frame lepas (S03), jeda game tidak membekukan koran (S04, ditambah S05). Kontrol di tes AC-4 membuktikan skenario membedakan mutan ini: keadaan sepeda berubah di frame terakhir bidik, lintasan yang dihitung ulang saat lepas berbeda > 0,001 ubin, dan kecepatan berubah selama terbang.
+
+### Gerbang (HEAD sebelum commit LOG = `ac9c327`; commit LOG hanya dokumen)
+
+- `godot --headless --import`: 0 `ERROR`/`SCRIPT ERROR`/`WARNING` (klon bersih).
+- `run_tests.gd | tee build/tests.log`: **5776 lolos, 0 gagal**; `python3 tools/cek_keluaran_tes.py --ketat build/tests.log`: lolos, 0 peringatan. Sesudah 1a: 5295.
+- `uji_pemeriksa.py`: 16 kasus, 0 menyimpang; `uji_bangun_frames.py`: 41 lolos; `uji_sintesis_sepeda.py`: 32 lolos.
+- `godot --headless --path . --quit-after 2`: 0 `ERROR`/`WARNING`.
+- `godot --headless --path . --export-pack "Android" build/kring-uji.pck`: exit 0, 0 `ERROR`/`WARNING`; 304 jalur terbaca di paket, tidak ada `tests/`, `docs/`, atau `probe`; `koran_lempar` dan `garis_bidik` ada.
+- Klon bersih HEAD: import, tes, `--ketat`, `--quit-after 2` bersih dan `git status --porcelain` kosong (lihat baris terakhir catatan ini).
+- Probe jendela asli (`godot --path . --resolution 2340x1080 --position 0,0 --script res://tests/probe_koran_jendela.gd -- docs/loop/20261014-fase2a-lemparan/shots`, juga `1920x1080`): exit 0, tanpa `ERROR`/`WARNING`; satu baris `PERINGATAN: layar jeda terbuka (jendela kehilangan fokus)` di awal (jendela probe belum fokus; probe melanjutkan lewat `minta_lanjut`, sama dengan probe lama). Tujuh sasaran dikenai di tiap lebar dan hasil = prediksi (kotak surat, teras, halaman, jendela penalti, bukan pelanggan, meleset, kotak surat sisi dekat ngebut). `python3 tools/cek_blok_piksel.py 3 --kecualikan <kotak teks HUD dicetak probe>`: 36 tangkapan, 0 blok tidak seragam. Tangkapan dilihat sendiri (lihat D-6 untuk perbaikan tanda bukan pelanggan).
+
+### Tangkapan layar (`docs/loop/20261014-fase2a-lemparan/shots/`, awalan `2340x1080_koran_` dan `1920x1080_koran_`)
+
+- Garis bidik: `bidik_pendek_seberang_santai` (elips biasa), `bidik_kotak_surat` (elips sah, santai), `bidik_panjang_dekat_santai`, `bidik_pendek_dekat_ngebut`, `bidik_panjang_seberang_ngebut`, `bidik_dekat_kotak_surat_ngebut` (elips sah, ngebut).
+- Koran di puncak lengkung dengan bayangan: `puncak_kotak_surat`, `puncak_dekat_kotak_surat_ngebut`.
+- Penanda: `kena_kotak_surat`, `kena_teras` (centang), `kena_halaman` (setengah), `kena_jendela_penalti`, `kena_bukan_pelanggan`, `kena_meleset` (silang), `kena_dekat_kotak_surat_ngebut`.
+- HUD koran: sebagian di semua tangkapan sesudah lemparan pertama (angka turun, 8 ikon terang), `hud_habis` (HABIS, 0, ikon redup, tanpa garis bidik walau swipe ditahan), `hud_isi_ulang` (30 lagi).
+- Kidal: `kidal_bidik_seberang` (panel koran dan kecepatan dicerminkan, swipe kiri layar = seberang).
+
+### Catatan untuk QA
+
+- Viewport 800 (20:9) tidak ada di probe (jendela 2400×1080 tidak muat di monitor); 800 dicakup tes tata letak headless.
+- Penanda kena/meleset dan koran berukuran kecil di ×3 (koran 8×6, penanda 7-9 px); keterbacaannya NEEDS-MANUAL (SETUP_ANDROID 8.3).
+- Tidak ada BLOCKED.
