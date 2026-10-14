@@ -609,6 +609,9 @@ func _test_jeda_antar_lempar() -> void:
 	var terima: SisaKoran.Hasil = SisaKoran.terima(k35, 0.0)
 	check(SisaKoran.boleh_lempar(k35) and terima.diterima and terima.keadaan.sisa == 28, "0,349 + 0,001 = 0,35 detik: diterima (inklusif)")
 	check(SisaKoran.boleh_lempar(SisaKoran.langkah(k, 0.35)), "langsung 0,35 detik: diterima")
+	# Tepi toleransi: 0,35 - toleransi masih diterima (>=, inklusif), dua kali toleransi di bawahnya ditolak.
+	var tepi: float = Config.LEMPAR_JEDA_DETIK - Config.LEMPAR_TOLERANSI_DETIK
+	check(SisaKoran.jeda_lewat(tepi) and not SisaKoran.jeda_lewat(tepi - Config.LEMPAR_TOLERANSI_DETIK), "tepi inklusif: %s diterima (perbandingan >=), %s ditolak" % [tepi, tepi - Config.LEMPAR_TOLERANSI_DETIK])
 	# Derau float: jumlah langkah kecil yang seharusnya 0,35.
 	for kasus: Array in [[60, 21], [240, 84], [30, 10]]:
 		var dt: float = 1.0 / float(kasus[0])
