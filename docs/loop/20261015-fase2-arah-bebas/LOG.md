@@ -7,16 +7,17 @@ Scope: arah lempar koran bebas (perbaikan uji HP Run 2A)  ·  Branch: feat/lempa
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
 |---|---|---|---|---|---|
 | 1 | SPEC penuh: `ThrowSolver` arah bebas (D-1 sampai D-3), zona dari titik mendarat (D-4), lepas jari D-5 di `jalan_uji.gd`, tes AC-2 sampai AC-8 murni dan scene, probe jendela + 64 tangkapan (AC-10), dokumen AC-9, 11 mutan mati (AC-11). Commit `e3ce0f1`, `ead49dc`, `c26050b`, `9e0f8cd` | ✅ import bersih, 6052 lolos 0 gagal, `--ketat` lolos, `uji_pemeriksa` 16/16, `--quit-after 2` bersih, pack tanpa tests/docs/probe; QA ulang di HEAD `e6c6c8b`: ✅ sama (6052 lolos, 0 gagal) | FAIL (1 Major) | 4 (1 Major, 2 Minor, 1 Nit) | 0 |
+| 2 | QA-001 sampai QA-004 FIXED: tes scene AC-6 mensyaratkan \|dy\| > \|dx\| tegas (46°–134°), mutan Run 2A di `JalanUji.lintasan_swipe` kini mematikan ketiga cek AC-6 scene (14 GAGAL); GDD 4.2, README lempar, dan doc comment `ZonaSasaran` diperbaiki. Commit `1f59a1f`, `b60cd14`, `3e40ee6`, `ed70bb5` | ✅ import bersih, 6052 lolos 0 gagal, `--ketat` lolos, `uji_pemeriksa` 16/16, `--quit-after 2` bersih (HEAD `ed70bb5`) | | | |
 
 ## Temuan
 Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MANUAL | BLOCKED
 
 | ID | Iter | Sev | Lokasi | Temuan & reproduksi/bukti | Status | Fix (file/commit) | Tes regresi |
 |---|---|---|---|---|---|---|---|
-| QA-001 | 1 | Major | tests/tes_koran_scene.gd:609-634 (`_test_regresi_pemilik` scene) | Tes scene AC-6 tidak membuktikan regresi laporan pemilik: pencarian mulai tepat 45° dan syaratnya `sudut >= 45 - 0,001`, tanpa syarat \|dy\| > \|dx\| (tes murni punya syarat itu). Di HEAD, ngebut sudah memakai swipe 45,000° (\|dx\| = \|dy\| = 164,7559), yaitu batas, bukan rentang yang ditolak Run 2A. Repro: pasang aturan Run 2A di jalur scene saja (`JalanUji.lintasan_swipe` return null bila \|dy\| >= \|dx\|) lalu jalankan `run_tests`: 11 GAGAL di tes lain, tetapi ketiga cek AC-6 scene (santai, cepat, ngebut) tetap LOLOS dengan swipe 44,999998° (\|dx\| 190,211731 > \|dy\| 190,211716 karena derau float, jadi aturan Run 2A menerimanya). Skrip repro QA: mutan + `print` sementara di baris `var sudut` (tidak di-commit). Harapan: tes scene mensyaratkan swipe yang benar-benar ditolak Run 2A (\|dy\| > \|dx\| tegas, mis. sudut 46°–134°) di ketiga kecepatan, dan mati terhadap mutan di atas. | OPEN | | |
-| QA-002 | 1 | Minor | docs/GDD.md:81 (GDD 4.2) | "Swipe ke kiri atau kanan menentukan sisi lemparan." masih aturan dua arah lama dan bertentangan dengan GDD 5.2 (arah bebas). SPEC: GDD boleh diubah bila salah fakta dan dicatat di LOG; catatan Dev menyebut "tidak ditemukan salah fakta". Usul: ubah jadi arah swipe di layar (sisi diturunkan dari arah), catat di LOG. | OPEN | | |
-| QA-003 | 1 | Minor | docs/design/character/loper_agen/lempar/README.md:19 | Masih menulis "Swipe horizontal…", "Swipe vertikal atau lebih pendek dari 12 px … tidak melempar". Sejak run ini swipe vertikal melempar dan ambangnya 6% \|v\| (AC-8: teks yang menyebut aturan lama diperbarui). Repro: `git grep -n "Swipe vertikal" docs/design`. | OPEN | | |
-| QA-004 | 1 | Nit | scripts/systems/zona_sasaran.gd:10 | Baris doc comment 213 karakter tidak dibungkus (baris lain berkas ini dibungkus sekitar 135). | OPEN | | |
+| QA-001 | 1 | Major | tests/tes_koran_scene.gd:609-634 (`_test_regresi_pemilik` scene) | Tes scene AC-6 tidak membuktikan regresi laporan pemilik: pencarian mulai tepat 45° dan syaratnya `sudut >= 45 - 0,001`, tanpa syarat \|dy\| > \|dx\| (tes murni punya syarat itu). Di HEAD, ngebut sudah memakai swipe 45,000° (\|dx\| = \|dy\| = 164,7559), yaitu batas, bukan rentang yang ditolak Run 2A. Repro: pasang aturan Run 2A di jalur scene saja (`JalanUji.lintasan_swipe` return null bila \|dy\| >= \|dx\|) lalu jalankan `run_tests`: 11 GAGAL di tes lain, tetapi ketiga cek AC-6 scene (santai, cepat, ngebut) tetap LOLOS dengan swipe 44,999998° (\|dx\| 190,211731 > \|dy\| 190,211716 karena derau float, jadi aturan Run 2A menerimanya). Skrip repro QA: mutan + `print` sementara di baris `var sudut` (tidak di-commit). Harapan: tes scene mensyaratkan swipe yang benar-benar ditolak Run 2A (\|dy\| > \|dx\| tegas, mis. sudut 46°–134°) di ketiga kecepatan, dan mati terhadap mutan di atas. | FIXED | `_test_regresi_pemilik` scene: pencarian sudut 46° sampai 134° (bukan 45° sampai 135°); kandidat dan asersi akhir wajib `_ditolak_run_2a` (pembantu baru: dy ke atas dan \|dy\| > \|dx\| tegas); label mencetak sudut, \|dx\|, \|dy\|. Swipe yang kini dipakai: santai 70° (\|dx\| 36,60, \|dy\| 100,55), cepat 55° (88,90 / 126,97), ngebut 46° (153,52 / 158,97). `tests/tes_koran_scene.gd`, commit `1f59a1f` | Mutan QA-001 (aturan Run 2A di `JalanUji.lintasan_swipe` saja: return null bila \|dy\| >= \|dx\|): 14 GAGAL (11 lama + **ketiga cek AC-6 scene santai, cepat, ngebut GAGAL**). Kode dikembalikan, `git diff` bersih. Lihat "Mutan iterasi 2" |
+| QA-002 | 1 | Minor | docs/GDD.md:81 (GDD 4.2) | "Swipe ke kiri atau kanan menentukan sisi lemparan." masih aturan dua arah lama dan bertentangan dengan GDD 5.2 (arah bebas). SPEC: GDD boleh diubah bila salah fakta dan dicatat di LOG; catatan Dev menyebut "tidak ditemukan salah fakta". Usul: ubah jadi arah swipe di layar (sisi diturunkan dari arah), catat di LOG. | FIXED | Kalimat GDD 4.2 diganti: arah swipe di layar menentukan arah lemparan (arah bebas, GDD 5.2), sisi diturunkan dari arah, garis pemisah searah jalan di layar (kiri/atas = seberang, kanan/bawah = dekat). Isi keputusan GDD 5.2 dan ROADMAP 4b tidak diubah. `docs/GDD.md`, commit `b60cd14` | Dokumen, tanpa tes otomatis. Cek: `git grep -n "Swipe ke kiri atau kanan" docs/GDD.md` kosong |
+| QA-003 | 1 | Minor | docs/design/character/loper_agen/lempar/README.md:19 | Masih menulis "Swipe horizontal…", "Swipe vertikal atau lebih pendek dari 12 px … tidak melempar". Sejak run ini swipe vertikal melempar dan ambangnya 6% \|v\| (AC-8: teks yang menyebut aturan lama diperbarui). Repro: `git grep -n "Swipe vertikal" docs/design`. | FIXED | Butir "Dipakai di game" ditulis ulang: swipe ke arah mana pun melempar (arah bebas sejak 2026-10-15, GDD 5.2), sisi dari arah swipe di layar (kiri/atas = seberang `kiri`, kanan/bawah = dekat `kanan`), swipe dengan panjang penuh \|v\| < 6% lebar viewport tidak melempar (usulan). PNG tidak disentuh; README bukan keluaran alat. `docs/design/character/loper_agen/lempar/README.md`, commit `3e40ee6` | Dokumen, tanpa tes otomatis. Cek: `git grep -n "Swipe vertikal\|Swipe horizontal\|12 px" docs/design/character` kosong |
+| QA-004 | 1 | Nit | scripts/systems/zona_sasaran.gd:10 | Baris doc comment 213 karakter tidak dibungkus (baris lain berkas ini dibungkus sekitar 135). | FIXED | Baris 10 dibungkus jadi tiga baris (terpanjang di berkas kini 142, sama dengan baris lain yang sudah ada). Tanpa perubahan kode. `scripts/systems/zona_sasaran.gd`, commit `ed70bb5` | Gaya, tanpa tes. Gerbang tetap 6052 lolos |
 
 ## NEEDS-MANUAL (uji di HP)
 - [ ] Arah bebas terasa wajar: swipe ke arah rumah yang terlihat mengenai rumah itu (vivo V2108, juga A54 bila tersambung).
@@ -179,3 +180,32 @@ Mutan dijalankan lewat skrip di luar repo: kode diubah sementara, `run_tests.gd`
 | Q20 | cek nomor swipe garis bidik dihapus (garis bidik basi) | mati, 1 GAGAL |
 | Q21 | garis bidik dari posisi jari + (0, -5) px | mati, 3 GAGAL |
 | Q22 | aturan Run 2A (tolak \|dy\| >= \|dx\|) hanya di `JalanUji.lintasan_swipe` | mati secara total (11 GAGAL di tes input/flick/kidal), tetapi **ketiga cek AC-6 scene hidup**, lihat QA-001 |
+
+### Catatan Dev iterasi 2 (2026-10-15)
+
+Hanya temuan OPEN yang dikerjakan (QA-001 sampai QA-004); tidak ada perubahan kode game.
+
+- **QA-001:** penyebabnya benar seperti ditulis QA. Pencarian mulai tepat 45°, dan `_akhir_sudut(awal, 45, p)` memberi \|dx\| sedikit lebih besar dari \|dy\| (derau float), jadi aturan Run 2A menerimanya. Perbaikan:
+  - rentang 46° sampai 134°;
+  - setiap kandidat dan swipe akhir wajib lolos `_ditolak_run_2a(awal, akhir)` (dy ke atas, \|dy\| > \|dx\| tegas), sama dengan syarat tes murni tetapi tegas;
+  - asersi akhir eksplisit pada swipe yang dipakai, dengan \|dx\| dan \|dy\| di label.
+
+  Swipe yang dipakai di HEAD dicetak lewat `print` sementara (tidak di-commit): santai 70,0°, cepat 55,0°, ngebut 46,0° (\|dx\| 153,52 < \|dy\| 158,97). Jumlah `check` tidak berubah (6052).
+- **QA-002:** setuju salah fakta; catatan iterasi 1 ("tidak ditemukan salah fakta") hanya memeriksa GDD 5.2 dan ROADMAP 4b, tidak GDD 4.2. Hanya kalimat GDD 4.2 yang diubah.
+- **QA-003:** README bukan keluaran `tools/loper_art/` (diperiksa: `lempar.py` hanya merujuknya), jadi diedit langsung. PNG tidak disentuh.
+- **QA-004:** murni pembungkusan baris.
+
+### Mutan iterasi 2
+
+Kode diubah sementara, `run_tests.gd` dijalankan, lalu berkas dikembalikan dari salinan di scratchpad. `git diff` bersih sesudahnya.
+
+| ID | Mutan | Hasil |
+|---|---|---|
+| M12 | Mutan QA-001/Q22: `JalanUji.lintasan_swipe` return null bila \|dy\| >= \|dx\| (aturan Run 2A, hanya di jalur scene) | mati, 14 GAGAL: 11 sama dengan Q22 + `santai`, `cepat`, `ngebut`: "garis bidik tampil ke kotak surat seberang pelanggan di depan dengan swipe ... (ditolak Run 2A)" |
+
+### Hasil gerbang iterasi 2 (Dev, HEAD `ed70bb5`)
+- `godot --headless --import`: exit 0, 0 baris ERROR/WARNING; `git status` bersih sesudahnya.
+- `run_tests.gd` lalu `cek_keluaran_tes.py --ketat build/tests.log`: `pemeriksa: lolos (6052 lolos, 0 gagal, 0 peringatan)`.
+- `python3 tools/tests_cek/uji_pemeriksa.py`: 16 kasus, 0 menyimpang.
+- `godot --headless --path . --quit-after 2`: exit 0, 0 ERROR/WARNING.
+- `git status` dan `git diff` bersih (tanpa sisa mutan).
