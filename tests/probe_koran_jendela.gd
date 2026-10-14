@@ -187,7 +187,7 @@ func _lempar_ke(sisi: LoperAnim.Sisi, sasaran: ZonaSasaran.Hasil, nama: String, 
 		_gagal += 1
 		return
 	await _tunggu(2)
-	print("%s: |dx| %.1f px, garis bidik tampil %s, elips sah %s, titik akhir %s, sisa koran %d" % [nama, dx, garis.tampil(), garis.elips_sah(), garis.titik_akhir(), _akar.koran.sisa])
+	print("%s: |dx| %.1f px, garis bidik tampil %s, elips sah %s (bentuk %s), titik akhir %s, sisa koran %d" % [nama, dx, garis.tampil(), garis.elips_sah(), KoranLempar.Elips.keys()[garis.bentuk_elips()], garis.titik_akhir(), _akar.koran.sisa])
 	if foto_bidik:
 		await _foto("bidik_%s" % nama)
 	var sisa_sebelum: int = _akar.koran.sisa
@@ -270,7 +270,7 @@ func _geser(index: int, posisi_viewport: Vector2) -> void:
 
 func _foto(keadaan: String) -> void:
 	await _tunggu(3)
-	print("%s: kecepatan %.2f u/d, lateral %.2f, jarak %.2f ubin, sisa koran %d (HUD '%s', ikon %s, habis %s), koran tampil %d, garis bidik %s (elips sah %s)" % [keadaan, _sepeda.kecepatan_ud, _sepeda.lateral_ubin, _sepeda.jarak_ubin, _akar.koran.sisa, _hud.teks_koran(), _hud.ikon_koran(), _hud.penanda_habis_tampil(), _akar.koran_terbang().size(), _akar.garis_bidik().tampil(), _akar.garis_bidik().elips_sah()])
+	print("%s: kecepatan %.2f u/d, lateral %.2f, jarak %.2f ubin, sisa koran %d (HUD '%s', ikon %s, habis %s), koran tampil %d, garis bidik %s (elips sah %s, bentuk %s)" % [keadaan, _sepeda.kecepatan_ud, _sepeda.lateral_ubin, _sepeda.jarak_ubin, _akar.koran.sisa, _hud.teks_koran(), _hud.ikon_koran(), _hud.penanda_habis_tampil(), _akar.koran_terbang().size(), _akar.garis_bidik().tampil(), _akar.garis_bidik().elips_sah(), KoranLempar.Elips.keys()[_akar.garis_bidik().bentuk_elips()]])
 	if _folder.is_empty():
 		return
 	var gambar: Image = root.get_texture().get_image()
