@@ -7,8 +7,9 @@ extends RefCounted
 ## yang maju (`langkah`, dt dari `JedaSim.dt_efektif`, jadi jeda game membekukannya tanpa kode tambahan). Posisi selalu dari
 ## `ThrowSolver.posisi_sejak_jari`, tidak ada rumus lintasan di sini. Koran tampil di udara mulai jeda lepas (frame lepas animasi,
 ## `LemparWaktu.waktu_lepas`), tidak bergantung pada sinyal `koran_lepas` sprite: lemparan yang animasinya ditutup jeda game tetap
-## terbang sesudah lanjut (D-11). Saat mendarat, titik mendarat dinilai `ZonaSasaran` (zona jalan uji) dengan fungsi yang sama dengan
-## elips garis bidik (`prediksi_antaran`), lalu penanda tampil `Config.PENANDA_LAMA_DETIK`.
+## terbang sesudah lanjut (D-11). Saat mendarat, titik mendarat dinilai `ZonaSasaran` (zona jalan uji, dari titik saja, tanpa sisi
+## lempar; D-4 run fase2-arah-bebas) dengan fungsi yang sama dengan elips garis bidik (`prediksi_antaran`), lalu penanda tampil
+## `Config.PENANDA_LAMA_DETIK`.
 
 
 ## Bentuk elips pendaratan garis bidik (D-5; QA-004 iterasi 2): cincin biasa, terisi (sasaran sah), atau putus-putus redup (tertutup rumah).
@@ -49,11 +50,12 @@ static func baru(lintasan: ThrowSolver.Lintasan) -> Koran:
 	return koran
 
 
-## Hasil sasaran di titik mendarat lintasan (zona jalan uji di sekitar titik itu, sisi lempar). null = `MELESET`.
+## Hasil sasaran di titik mendarat lintasan (zona jalan uji di sekitar titik itu), dari titik mendarat SAJA: arah dan sisi lemparan
+## tidak ikut menilai (D-4 run fase2-arah-bebas). null = `MELESET`.
 static func hasil_mendarat(lintasan: ThrowSolver.Lintasan) -> ZonaSasaran.Hasil:
 	if lintasan == null:
 		return ZonaSasaran.Hasil.MELESET
-	return ZonaSasaran.klasifikasi_jalan_uji(lintasan.titik_mendarat, lintasan.sisi)
+	return ZonaSasaran.klasifikasi_jalan_uji(lintasan.titik_mendarat)
 
 
 ## Status antaran yang AKAN didapat lintasan ini (elips garis bidik, D-5) dengan sakelar jendela `jendela_bonus`. Sama persis dengan

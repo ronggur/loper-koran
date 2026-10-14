@@ -104,19 +104,20 @@ const LEMPAR_FRAME_LEPAS: int = 2
 const LEMPAR_TOLERANSI_DETIK: float = 0.000001
 
 ## --- Lemparan koran (BALANCING 4, GDD 5.1-5.2; usulan run fase2a-lemparan, dinilai lewat uji HP, jangan dikunci) ---
-## `ThrowSolver` satu-satunya pemakai angka lintasan. Panjang swipe = komponen MENDATAR |dx| (piksel game) terhadap lebar viewport
-## game saat itu; u = jepit((|dx| - min) / (maks - min), 0, 1). Jarak ke samping, lama terbang, dan tinggi puncak linear dari u.
+## `ThrowSolver` satu-satunya pemakai angka lintasan. Arah bebas (run fase2-arah-bebas): arah tanah = arah swipe di layar lewat `Iso`,
+## panjang swipe = |v| penuh (piksel game) terhadap lebar viewport game saat itu; u = jepit((|v| - min) / (maks - min), 0, 1). Jarak
+## tanah searah arah itu, lama terbang, dan tinggi puncak linear dari u.
 ## Koran mewarisi kecepatan maju sepeda; tidak ada warisan lateral selama terbang. Tinggi dalam ubin (1 ubin = 32 px tegak, `Iso`).
 
 ## Swipe terpendek yang masih melempar, pecahan lebar viewport game, inklusif (6%). Di bawahnya tidak melempar: tanpa garis bidik, koran tidak terpakai.
 const LEMPAR_SWIPE_MIN_PECAHAN: float = 0.06
 ## Swipe terpanjang yang masih dihitung, pecahan lebar viewport game (35%). Lebih panjang dijepit ke lemparan terjauh.
 const LEMPAR_SWIPE_MAKS_PECAHAN: float = 0.35
-## Toleransi saat membandingkan |dx| dengan swipe minimum, piksel game (posisi sentuh berpresisi tunggal: 46,8 tersimpan 46,7999992).
+## Toleransi saat membandingkan |v| dengan swipe minimum, piksel game (posisi sentuh berpresisi tunggal: 46,8 tersimpan 46,7999992).
 const LEMPAR_SWIPE_TOLERANSI_PX: float = 0.001
-## Jarak mendarat ke samping dari titik lepas pada swipe minimum (u = 0), ubin.
+## Jarak tanah dari titik lepas searah arah swipe pada swipe minimum (u = 0), ubin.
 const LEMPAR_JARAK_MIN_UBIN: float = 1.5
-## Jarak mendarat ke samping dari titik lepas pada swipe maksimum (u = 1), ubin.
+## Jarak tanah dari titik lepas searah arah swipe pada swipe maksimum (u = 1), ubin.
 const LEMPAR_JARAK_MAKS_UBIN: float = 5.0
 ## Lama terbang pada swipe minimum, detik.
 const LEMPAR_TERBANG_MIN_DETIK: float = 0.45

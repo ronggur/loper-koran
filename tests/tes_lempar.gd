@@ -1,6 +1,7 @@
 class_name TesLempar
 extends RefCounted
-## Tes logika murni run fase2a-lemparan bagian 1a: `ThrowSolver` (AC-2 rumus D-2, AC-3 lengkung D-3, AC-4 prediksi = hasil D-4,
+## Tes logika murni run fase2a-lemparan bagian 1a dan run fase2-arah-bebas (arah bebas: AC-2 arah, AC-3 tanpa sudut ditolak, AC-4 sisi,
+## AC-5 zona dari titik mendarat, AC-6 regresi laporan pemilik, AC-8 penjaga aturan lama): `ThrowSolver` (AC-2 rumus D-2, AC-3 lengkung D-3, AC-4 prediksi = hasil D-4,
 ## bagian murni), tinggi z di `Iso`, `LemparWaktu.waktu_lepas`, `ZonaSasaran` (AC-5 zona, prioritas, sakelar jendela D-7,
 ## keterjangkauan, penanda D-10), dan `SisaKoran` (AC-6 sisa koran, jeda 0,35, isi ulang jalan uji; D-8, D-9, D-11 bagian murni).
 ##
@@ -15,6 +16,10 @@ const KECEPATAN: Array[float] = [0.0, 3.0, 4.5, 6.0]
 const TOL: float = 0.00001
 ## Toleransi AC-4 (prediksi = hasil), ubin.
 const TOL_PREDIKSI: float = 0.0001
+## Sudut swipe uji arah bebas (derajat di layar: 0 = kanan, 90 = atas), termasuk sudut yang ditolak Run 2A (45 sampai 135, AC-2).
+const SUDUT_UJI: Array[float] = [0.0, 30.0, 45.0, 60.0, 78.0, 90.0, 100.0, 115.0, 135.0, 150.0, 180.0, 200.0, 225.0, 250.0, 270.0, 290.0, 315.0, 340.0]
+## Berkas yang tidak boleh lagi memuat aturan lama "dominan datar" atau |dx| (AC-8).
+const BERKAS_JALUR_LEMPAR: Array[String] = ["res://scripts/systems/throw_solver.gd", "res://scripts/systems/zona_sasaran.gd", "res://scripts/systems/koran_lempar.gd", "res://scripts/systems/loper_anim.gd", "res://scripts/entities/jalan_uji.gd", "res://scripts/config.gd"]
 ## Toleransi tinggi puncak dari sampel rapat (AC-3), ubin.
 const TOL_PUNCAK: float = 0.001
 ## fps dan jumlah frame animasi lempar (`loper_agen_frames.tres`, diperiksa di `_test_waktu_lepas`).
@@ -43,6 +48,10 @@ func jalankan() -> void:
 	_test_config_lempar()
 	_test_swipe_lebar()
 	_test_rumus()
+	_test_arah_bebas()
+	_test_tanpa_sudut_ditolak()
+	_test_sisi_arah()
+	_test_penjaga_aturan_lama()
 	_test_masukan_aneh_dan_murni()
 	_test_titik_lepas()
 	_test_iso_tinggi()
@@ -55,6 +64,8 @@ func jalankan() -> void:
 	_test_antaran_dan_penanda()
 	_test_zona_jalan_uji()
 	_test_keterjangkauan()
+	_test_zona_dari_titik()
+	_test_regresi_pemilik()
 	_test_sisa_koran()
 	_test_jeda_antar_lempar()
 	_test_isi_ulang()
@@ -80,12 +91,17 @@ func _panjang(u: float, lebar: float) -> float:
 	return ThrowSolver.swipe_min_px(lebar) + u * (ThrowSolver.swipe_maks_px(lebar) - ThrowSolver.swipe_min_px(lebar))
 
 
+## Vektor satuan swipe di layar untuk sudut `derajat` (0 = kanan, 90 = atas; y layar ke bawah).
+func _arah_layar(derajat: float) -> Vector2:
+	return Vector2(cos(deg_to_rad(derajat)), -sin(deg_to_rad(derajat)))
+
+
 func _jeda_lepas() -> float:
 	return LemparWaktu.waktu_lepas(FPS_LEMPAR, FRAME_LEMPAR, Config.LEMPAR_FRAME_LEPAS)
 
 
 func _sama(a: ThrowSolver.Lintasan, b: ThrowSolver.Lintasan) -> bool:
-	return a.sisi == b.sisi and a.kekuatan == b.kekuatan and a.titik_lepas == b.titik_lepas and a.titik_mendarat == b.titik_mendarat and a.lama_terbang == b.lama_terbang and a.tinggi_puncak == b.tinggi_puncak and a.lengkung_a == b.lengkung_a and a.lengkung_b == b.lengkung_b and a.jeda_lepas == b.jeda_lepas
+	return a.sisi == b.sisi and a.arah == b.arah and a.kekuatan == b.kekuatan and a.titik_lepas == b.titik_lepas and a.titik_mendarat == b.titik_mendarat and a.lama_terbang == b.lama_terbang and a.tinggi_puncak == b.tinggi_puncak and a.lengkung_a == b.lengkung_a and a.lengkung_b == b.lengkung_b and a.jeda_lepas == b.jeda_lepas
 
 
 # --- Config ---
@@ -108,7 +124,7 @@ func _test_config_lempar() -> void:
 # --- Swipe terhadap lebar viewport (D-2) ---
 
 func _test_swipe_lebar() -> void:
-	_judul.call("Panjang swipe = |dx| terhadap lebar viewport: min 6%, maks 35%, inklusif di min (AC-2, D-2)")
+	_judul.call("Panjang swipe |v| terhadap lebar viewport: min 6%, maks 35%, inklusif di min (D-2 Run 2A dan run fase2-arah-bebas)")
 	for lebar: float in LEBAR:
 		var bawah: float = ThrowSolver.swipe_min_px(lebar)
 		var atas: float = ThrowSolver.swipe_maks_px(lebar)
@@ -117,9 +133,9 @@ func _test_swipe_lebar() -> void:
 		check(ThrowSolver.kekuatan(bawah - 0.01, lebar) == -1.0 and not ThrowSolver.cukup_panjang(bawah - 0.01, lebar), "lebar %s: 0,01 px di bawah min tidak melempar" % lebar)
 		check(_dekat(ThrowSolver.kekuatan((bawah + atas) / 2, lebar), 0.5), "lebar %s: tengah min-maks = u 0,5" % lebar)
 		check(ThrowSolver.kekuatan(atas, lebar) == 1.0 and ThrowSolver.kekuatan(atas * 3, lebar) == 1.0, "lebar %s: tepat maks dan 3x maks = u 1 (dijepit)" % lebar)
-		# Presisi tunggal: |dx| dari Vector2 tepat di min tetap melempar.
-		var dari_vektor: float = absf((Vector2(400.0, 200.0) + Vector2(bawah, 0.0)).x - 400.0)
-		check(ThrowSolver.cukup_panjang(dari_vektor, lebar), "lebar %s: |dx| dari Vector2 (presisi tunggal, %s) di min tetap melempar" % [lebar, dari_vektor])
+		# Presisi tunggal: |v| dari Vector2 tepat di min tetap melempar.
+		var dari_vektor: float = ThrowSolver.panjang_swipe(Vector2(400.0, 200.0), Vector2(400.0, 200.0) + Vector2(bawah, 0.0))
+		check(ThrowSolver.cukup_panjang(dari_vektor, lebar), "lebar %s: |v| dari Vector2 (presisi tunggal, %s) di min tetap melempar" % [lebar, dari_vektor])
 	# Swipe yang sama berbeda kekuatan di lebar berbeda (min/maks ikut lebar).
 	check(ThrowSolver.cukup_panjang(40.0, 640.0) and not ThrowSolver.cukup_panjang(40.0, 780.0), "40 px melempar di 640 (min 38,4) tetapi tidak di 780 (min 46,8)")
 	check(ThrowSolver.kekuatan(224.0, 640.0) == 1.0 and ThrowSolver.kekuatan(224.0, 800.0) < 1.0, "224 px = maks di 640 (35%), belum maks di 800 (280)")
@@ -132,7 +148,7 @@ func _test_swipe_lebar() -> void:
 # --- Rumus D-2 di empat kecepatan, kedua sisi ---
 
 func _test_rumus() -> void:
-	_judul.call("ThrowSolver: jarak, lama terbang, puncak, warisan maju, tanpa warisan lateral (AC-2, D-2)")
+	_judul.call("ThrowSolver: jarak, lama terbang, puncak, warisan maju, tanpa warisan lateral, arah melintang murni (D-2)")
 	# [u, jarak, lama, puncak]
 	var titik: Array = [[0.0, 1.5, 0.45, 1.0], [0.5, 3.25, 0.6, 1.3], [1.0, 5.0, 0.75, 1.6]]
 	var posisi: Vector2 = Vector2(0.25, -37.5)
@@ -143,60 +159,63 @@ func _test_rumus() -> void:
 				var tag: String = "lebar %s, %s u/d, %s" % [lebar, v, "seberang" if tanda < 0.0 else "dekat"]
 				for t: Array in titik:
 					var u: float = t[0]
-					var l: ThrowSolver.Lintasan = ThrowSolver.hitung(_panjang(u, lebar), lebar, sisi, posisi, v, 0.0, 0.0)
+					var l: ThrowSolver.Lintasan = ThrowSolver.hitung(_panjang(u, lebar), lebar, ThrowSolver.arah_sisi(sisi), posisi, v, 0.0, 0.0)
 					if l == null:
 						check(false, "%s u %s: lintasan ada" % [tag, u])
 						continue
-					var ok_angka: bool = _dekat(l.kekuatan, u) and _dekat(l.jarak_samping, t[1]) and _dekat(l.lama_terbang, t[2]) and _dekat(l.tinggi_puncak, t[3])
-					check(ok_angka, "%s u %s: jarak %s, lama %s, puncak %s (dapat %s, %s, %s)" % [tag, u, t[1], t[2], t[3], l.jarak_samping, l.lama_terbang, l.tinggi_puncak])
+					var ok_angka: bool = _dekat(l.kekuatan, u) and _dekat(l.jarak, t[1]) and _dekat(l.lama_terbang, t[2]) and _dekat(l.tinggi_puncak, t[3]) and l.sisi == sisi
+					check(ok_angka, "%s u %s: jarak %s, lama %s, puncak %s, sisi dari arah (dapat %s, %s, %s)" % [tag, u, t[1], t[2], t[3], l.jarak, l.lama_terbang, l.tinggi_puncak])
 					var lateral: float = l.titik_mendarat.x - l.titik_lepas.x
 					var maju: float = -(l.titik_mendarat.y - l.titik_lepas.y)
 					check(_dekat(lateral, tanda * t[1]), "%s u %s: geser lateral %s ubin ke arah sisi (tanda benar), dapat %s" % [tag, u, tanda * t[1], lateral])
 					check(_dekat(maju, v * t[2]) and _dekat(l.geser_maju, v * t[2]), "%s u %s: geser maju = kecepatan x lama terbang = %s, dapat %s" % [tag, u, v * t[2], maju])
 				# Di atas maks dijepit = tepat maks.
-				var lebih: ThrowSolver.Lintasan = ThrowSolver.hitung(ThrowSolver.swipe_maks_px(lebar) * 1.5, lebar, sisi, posisi, v, 0.0, 0.0)
-				check(lebih != null and _dekat(lebih.jarak_samping, 5.0) and _dekat(lebih.lama_terbang, 0.75) and _dekat(lebih.tinggi_puncak, 1.6), "%s: swipe 1,5x maks dijepit ke 5,0 / 0,75 / 1,6" % tag)
+				var lebih: ThrowSolver.Lintasan = ThrowSolver.hitung(ThrowSolver.swipe_maks_px(lebar) * 1.5, lebar, ThrowSolver.arah_sisi(sisi), posisi, v, 0.0, 0.0)
+				check(lebih != null and _dekat(lebih.jarak, 5.0) and _dekat(lebih.lama_terbang, 0.75) and _dekat(lebih.tinggi_puncak, 1.6), "%s: swipe 1,5x maks dijepit ke 5,0 / 0,75 / 1,6" % tag)
 				# Di bawah min: tidak ada lintasan.
-				check(ThrowSolver.hitung(ThrowSolver.swipe_min_px(lebar) - 0.5, lebar, sisi, posisi, v, 0.0, 0.0) == null, "%s: swipe di bawah min = tidak ada lintasan" % tag)
+				check(ThrowSolver.hitung(ThrowSolver.swipe_min_px(lebar) - 0.5, lebar, ThrowSolver.arah_sisi(sisi), posisi, v, 0.0, 0.0) == null, "%s: swipe di bawah min = tidak ada lintasan" % tag)
 	# Tanpa warisan lateral selama terbang: kecepatan lateral hanya menggeser titik lepas (jeda lepas), bukan selama terbang.
-	var tanpa: ThrowSolver.Lintasan = ThrowSolver.hitung(_panjang(0.5, 780.0), 780.0, LoperAnim.Sisi.DEKAT, Vector2(0.0, 0.0), 4.5, 0.0, 0.0)
-	var dengan: ThrowSolver.Lintasan = ThrowSolver.hitung(_panjang(0.5, 780.0), 780.0, LoperAnim.Sisi.DEKAT, Vector2(0.0, 0.0), 4.5, 3.0, 0.0)
+	var tanpa: ThrowSolver.Lintasan = ThrowSolver.hitung(_panjang(0.5, 780.0), 780.0, Iso.ARAH_DEKAT, Vector2(0.0, 0.0), 4.5, 0.0, 0.0)
+	var dengan: ThrowSolver.Lintasan = ThrowSolver.hitung(_panjang(0.5, 780.0), 780.0, Iso.ARAH_DEKAT, Vector2(0.0, 0.0), 4.5, 3.0, 0.0)
 	check(tanpa.titik_mendarat == dengan.titik_mendarat, "jeda lepas 0: kecepatan lateral 3 u/d tidak mengubah titik mendarat (tanpa warisan lateral), %s lawan %s" % [tanpa.titik_mendarat, dengan.titik_mendarat])
 	var jeda: float = _jeda_lepas()
-	var dengan_jeda: ThrowSolver.Lintasan = ThrowSolver.hitung(_panjang(0.5, 780.0), 780.0, LoperAnim.Sisi.SEBERANG, Vector2(0.0, 0.0), 4.5, -3.0, jeda)
-	check(_dekat(dengan_jeda.titik_mendarat.x - dengan_jeda.titik_lepas.x, -3.25), "dengan jeda lepas: geser lateral selama terbang tetap tepat jarak samping (-3,25), dapat %s" % (dengan_jeda.titik_mendarat.x - dengan_jeda.titik_lepas.x))
-	# Sisi hanya seberang / dekat.
-	check(ThrowSolver.hitung(100.0, 780.0, LoperAnim.Sisi.TIDAK_ADA, Vector2.ZERO, 3.0, 0.0, 0.0) == null and ThrowSolver.hitung(100.0, 780.0, 7 as LoperAnim.Sisi, Vector2.ZERO, 3.0, 0.0, 0.0) == null, "sisi TIDAK_ADA atau di luar enum: tidak ada lintasan")
+	var dengan_jeda: ThrowSolver.Lintasan = ThrowSolver.hitung(_panjang(0.5, 780.0), 780.0, Iso.ARAH_SEBERANG, Vector2(0.0, 0.0), 4.5, -3.0, jeda)
+	check(_dekat(dengan_jeda.titik_mendarat.x - dengan_jeda.titik_lepas.x, -3.25), "dengan jeda lepas: geser lateral selama terbang tetap tepat jarak tanah (-3,25), dapat %s" % (dengan_jeda.titik_mendarat.x - dengan_jeda.titik_lepas.x))
+	# Arah harus ada (pengganti tes sisi TIDAK_ADA Run 2A): arah nol, NaN, atau tak hingga = tidak ada lintasan.
+	for arah_salah: Vector2 in [Vector2.ZERO, Vector2(NAN, 0.0), Vector2(INF, 1.0), Vector2(0.0, -INF)]:
+		check(ThrowSolver.hitung(100.0, 780.0, arah_salah, Vector2.ZERO, 3.0, 0.0, 0.0) == null, "arah %s: tidak ada lintasan" % arah_salah)
+	var panjang_arah: ThrowSolver.Lintasan = ThrowSolver.hitung(100.0, 780.0, Vector2(-3.0, -4.0), Vector2.ZERO, 3.0, 0.0, 0.0)
+	check(panjang_arah != null and _dekat_v(panjang_arah.arah, Vector2(-0.6, -0.8)) and panjang_arah.sisi == LoperAnim.Sisi.SEBERANG, "arah tidak satuan dinormalkan (-3, -4) -> (-0,6, -0,8), sisi dari arah = seberang")
 	check(ThrowSolver.arah_sisi(LoperAnim.Sisi.SEBERANG) == Iso.ARAH_SEBERANG and ThrowSolver.arah_sisi(LoperAnim.Sisi.DEKAT) == Iso.ARAH_DEKAT and ThrowSolver.arah_sisi(LoperAnim.Sisi.TIDAK_ADA) == Vector2.ZERO, "arah sisi dari Iso.ARAH_SEBERANG / ARAH_DEKAT")
-	# dari_swipe = sisi_dari_swipe + hitung(|dx|).
+	# dari_swipe = hitung(|v|, arah_tanah(v)) (pengganti sisi_dari_swipe + hitung(|dx|) Run 2A).
 	var awal: Vector2 = Vector2(600.0, 200.0)
 	var akhir: Vector2 = Vector2(480.0, 230.0)
 	var a: ThrowSolver.Lintasan = ThrowSolver.dari_swipe(awal, akhir, 780.0, posisi, 3.0, 0.5, jeda)
-	var b: ThrowSolver.Lintasan = ThrowSolver.hitung(120.0, 780.0, LoperAnim.Sisi.SEBERANG, posisi, 3.0, 0.5, jeda)
-	check(a != null and b != null and _sama(a, b), "dari_swipe (kiri layar, |dx| 120) = hitung(120, seberang)")
-	check(ThrowSolver.dari_swipe(awal, Vector2(600.0, 100.0), 780.0, posisi, 3.0, 0.0, jeda) == null and ThrowSolver.dari_swipe(awal, awal + Vector2(40.0, 0.0), 780.0, posisi, 3.0, 0.0, jeda) == null, "dari_swipe: tegak dominan atau |dx| di bawah min = null")
+	var b: ThrowSolver.Lintasan = ThrowSolver.hitung(ThrowSolver.panjang_swipe(awal, akhir), 780.0, ThrowSolver.arah_tanah(akhir - awal), posisi, 3.0, 0.5, jeda)
+	check(a != null and b != null and _sama(a, b) and _dekat(ThrowSolver.panjang_swipe(awal, akhir), sqrt(120.0 * 120.0 + 30.0 * 30.0)), "dari_swipe (120 kiri, 30 bawah) = hitung(|v| 123,7, arah_tanah(v))")
+	check(ThrowSolver.dari_swipe(awal, Vector2(600.0, 100.0), 780.0, posisi, 3.0, 0.0, jeda) != null and ThrowSolver.dari_swipe(awal, awal + Vector2(40.0, 0.0), 780.0, posisi, 3.0, 0.0, jeda) == null, "dari_swipe: swipe tegak 100 px melempar (tidak ada sudut ditolak), |v| 40 di bawah min = null")
 
 
 func _test_masukan_aneh_dan_murni() -> void:
 	_judul.call("ThrowSolver: masukan NaN, tak hingga, negatif aman; murni (AC-2)")
 	var p: float = _panjang(0.5, 780.0)
-	var nol: ThrowSolver.Lintasan = ThrowSolver.hitung(p, 780.0, LoperAnim.Sisi.DEKAT, Vector2.ZERO, 0.0, 0.0, 0.0)
+	var nol: ThrowSolver.Lintasan = ThrowSolver.hitung(p, 780.0, Iso.ARAH_DEKAT, Vector2.ZERO, 0.0, 0.0, 0.0)
 	for v: float in [NAN, INF, -INF, -3.0]:
-		var l: ThrowSolver.Lintasan = ThrowSolver.hitung(p, 780.0, LoperAnim.Sisi.DEKAT, Vector2.ZERO, v, 0.0, 0.0)
+		var l: ThrowSolver.Lintasan = ThrowSolver.hitung(p, 780.0, Iso.ARAH_DEKAT, Vector2.ZERO, v, 0.0, 0.0)
 		check(l != null and l.geser_maju == 0.0 and l.titik_mendarat == nol.titik_mendarat, "kecepatan maju %s dianggap 0 (tanpa geser maju)" % v)
 	for vl: float in [NAN, INF, -INF]:
-		var l: ThrowSolver.Lintasan = ThrowSolver.hitung(p, 780.0, LoperAnim.Sisi.DEKAT, Vector2.ZERO, 0.0, vl, 0.5)
+		var l: ThrowSolver.Lintasan = ThrowSolver.hitung(p, 780.0, Iso.ARAH_DEKAT, Vector2.ZERO, 0.0, vl, 0.5)
 		check(l != null and l.titik_lepas == Vector2.ZERO, "kecepatan lateral %s dianggap 0" % vl)
 	for j: float in [NAN, INF, -0.5]:
-		var l: ThrowSolver.Lintasan = ThrowSolver.hitung(p, 780.0, LoperAnim.Sisi.DEKAT, Vector2.ZERO, 6.0, 3.0, j)
+		var l: ThrowSolver.Lintasan = ThrowSolver.hitung(p, 780.0, Iso.ARAH_DEKAT, Vector2.ZERO, 6.0, 3.0, j)
 		check(l != null and l.jeda_lepas == 0.0 and l.titik_lepas == Vector2.ZERO, "jeda lepas %s dianggap 0" % j)
 	for pos: Vector2 in [Vector2(NAN, 0.0), Vector2(0.0, INF)]:
-		check(ThrowSolver.hitung(p, 780.0, LoperAnim.Sisi.DEKAT, pos, 3.0, 0.0, 0.0) == null, "posisi sepeda tidak hingga (%s): tidak ada lintasan" % pos)
+		check(ThrowSolver.hitung(p, 780.0, Iso.ARAH_DEKAT, pos, 3.0, 0.0, 0.0) == null, "posisi sepeda tidak hingga (%s): tidak ada lintasan" % pos)
 	# Murni: masukan sama = hasil sama; masukan Vector2 tidak berubah.
 	var posisi: Vector2 = Vector2(-0.5, -12.25)
 	var salinan: Vector2 = posisi
-	var x: ThrowSolver.Lintasan = ThrowSolver.hitung(p, 780.0, LoperAnim.Sisi.SEBERANG, posisi, 4.5, -1.0, 0.1667)
-	var y: ThrowSolver.Lintasan = ThrowSolver.hitung(p, 780.0, LoperAnim.Sisi.SEBERANG, posisi, 4.5, -1.0, 0.1667)
+	var x: ThrowSolver.Lintasan = ThrowSolver.hitung(p, 780.0, Iso.ARAH_SEBERANG, posisi, 4.5, -1.0, 0.1667)
+	var y: ThrowSolver.Lintasan = ThrowSolver.hitung(p, 780.0, Iso.ARAH_SEBERANG, posisi, 4.5, -1.0, 0.1667)
 	check(x != y and _sama(x, y) and posisi == salinan, "fungsi murni: dua panggilan sama menghasilkan dua objek bernilai sama, masukan tidak berubah")
 	check(ThrowSolver.posisi_pada(null, 0.2) == Vector3.ZERO and ThrowSolver.tinggi_pada(null, 0.2) == 0.0 and not ThrowSolver.sudah_mendarat(null, 9.0), "lintasan null aman")
 
@@ -213,7 +232,7 @@ func _test_titik_lepas() -> void:
 	var batas: float = BikeMotion.batas_lateral_ubin()
 	check(tepi_dekat.x == batas and tepi_seberang.x == -batas, "lateral dijepit ke tepi jalan resmi +-%s, dapat %s dan %s" % [batas, tepi_dekat.x, tepi_seberang.x])
 	check(_dekat(tepi_dekat.y, -0.5) and _dekat(tepi_seberang.y, -0.5), "maju tetap dihitung walau lateral dijepit (3 x 1/6 = 0,5)")
-	var l: ThrowSolver.Lintasan = ThrowSolver.hitung(_panjang(0.0, 640.0), 640.0, LoperAnim.Sisi.DEKAT, Vector2(0.2, -10.0), 6.0, 3.0, jeda)
+	var l: ThrowSolver.Lintasan = ThrowSolver.hitung(_panjang(0.0, 640.0), 640.0, Iso.ARAH_DEKAT, Vector2(0.2, -10.0), 6.0, 3.0, jeda)
 	check(l.titik_lepas == lepas and l.jeda_lepas == jeda, "hitung memakai titik_lepas yang sama")
 	check(_dekat(ThrowSolver.lama_total(l), jeda + 0.45) and _dekat(ThrowSolver.waktu_terbang(l, jeda + 0.1), 0.1), "lama total = jeda lepas + lama terbang; waktu terbang = detik sejak jari - jeda lepas")
 	check(not ThrowSolver.sudah_mendarat(l, jeda + 0.449) and ThrowSolver.sudah_mendarat(l, jeda + 0.45) and ThrowSolver.sudah_mendarat(l, 5.0), "sudah mendarat inklusif di jeda + lama terbang")
@@ -239,7 +258,7 @@ func _test_iso_tinggi() -> void:
 func _test_lengkung() -> void:
 	_judul.call("Lengkung: t 0 di tangan, t lama terbang di titik mendarat, puncak = tinggi puncak, t dijepit (AC-3, D-3)")
 	for u: float in [0.0, 0.5, 1.0]:
-		var l: ThrowSolver.Lintasan = ThrowSolver.hitung(_panjang(u, 780.0), 780.0, LoperAnim.Sisi.SEBERANG, Vector2(0.3, -5.0), 4.5, 0.0, 0.0)
+		var l: ThrowSolver.Lintasan = ThrowSolver.hitung(_panjang(u, 780.0), 780.0, Iso.ARAH_SEBERANG, Vector2(0.3, -5.0), 4.5, 0.0, 0.0)
 		var tag: String = "u %s" % u
 		var awal: Vector3 = ThrowSolver.posisi_pada(l, 0.0)
 		var akhir: Vector3 = ThrowSolver.posisi_pada(l, l.lama_terbang)
@@ -336,8 +355,232 @@ func _test_prediksi_hasil() -> void:
 				koran = ThrowSolver.posisi_sejak_jari(lempar, detik)
 			check(_dekat_v(Vector2(koran.x, koran.y), Vector2(ujung_bidik.x, ujung_bidik.y), TOL_PREDIKSI) and koran.z == 0.0, "%s: koran mendarat di ujung garis bidik %s (dapat %s, toleransi 1e-4)" % [tag, Vector2(ujung_bidik.x, ujung_bidik.y), Vector2(koran.x, koran.y)])
 			# Kontrol: sepeda benar-benar berubah gerak, jadi lintasan yang dihitung ulang di frame lepas dari keadaan baru akan meleset.
-			var ulang: ThrowSolver.Lintasan = ThrowSolver.hitung(150.0, 780.0, bidik.sisi, Vector2(keadaan_lepas.lateral_ubin, -jarak_lepas), keadaan_lepas.kecepatan_ud, 0.0, 0.0)
+			var ulang: ThrowSolver.Lintasan = ThrowSolver.hitung(150.0, 780.0, bidik.arah, Vector2(keadaan_lepas.lateral_ubin, -jarak_lepas), keadaan_lepas.kecepatan_ud, 0.0, 0.0)
 			check(ulang.titik_mendarat.distance_to(bidik.titik_mendarat) > 0.05, "%s (kontrol): lintasan yang dihitung ulang saat frame lepas dari keadaan baru meleset %.3f ubin dari prediksi" % [tag, ulang.titik_mendarat.distance_to(bidik.titik_mendarat)])
+
+
+# --- Arah bebas (run fase2-arah-bebas, D-1 sampai D-3) ---
+
+## AC-2: untuk tiap sudut di `SUDUT_UJI` (termasuk 45, 78, 90, 115, 135, 180, 225, 270, 315) dan panjang di antara min dan maks: melempar,
+## (titik mendarat - titik lepas - geser maju warisan) = jarak x arah tanah, dan arah tanah di layar searah dengan v.
+func _test_arah_bebas() -> void:
+	_judul.call("Arah bebas: arah tanah = Iso.layar_ke_dunia(v) dinormalkan, searah jari di layar, jarak penuh searah itu (AC-2, D-1)")
+	var jeda: float = _jeda_lepas()
+	var posisi: Vector2 = Vector2(0.25, -7.5)
+	for lebar: float in LEBAR:
+		for v_maju: float in KECEPATAN:
+			var semua_lempar: bool = true
+			var semua_jarak: bool = true
+			var semua_searah: bool = true
+			var semua_arah: bool = true
+			var gagal: Array[String] = []
+			for derajat: float in SUDUT_UJI:
+				for u: float in [0.25, 0.75]:
+					var v: Vector2 = _arah_layar(derajat) * _panjang(u, lebar)
+					var awal: Vector2 = Vector2(400.0, 200.0)
+					var l: ThrowSolver.Lintasan = ThrowSolver.dari_swipe(awal, awal + v, lebar, posisi, v_maju, 0.0, jeda)
+					if l == null:
+						semua_lempar = false
+						gagal.append("%s derajat u %s: tidak melempar" % [derajat, u])
+						continue
+					var sisa: Vector2 = l.titik_mendarat - l.titik_lepas - Iso.ARAH_MAJU * l.geser_maju
+					if not _dekat_v(sisa, l.arah * l.jarak) or not _dekat(l.jarak, ThrowSolver.jarak_ubin(u), 0.0001) or not _dekat(l.geser_maju, v_maju * l.lama_terbang):
+						semua_jarak = false
+						gagal.append("%s derajat: sisa %s lawan %s" % [derajat, sisa, l.arah * l.jarak])
+					var layar: Vector2 = Iso.dunia_ke_layar(l.arah)
+					var silang: float = (layar.x * v.y - layar.y * v.x) / (layar.length() * v.length())
+					if absf(silang) > 0.00001 or layar.dot(v) <= 0.0:
+						semua_searah = false
+						gagal.append("%s derajat: silang %s, titik %s" % [derajat, silang, layar.dot(v)])
+					# akhir - awal disimpan Vector2 presisi tunggal, jadi v yang dipakai bisa berbeda derau float dari `v` di sini.
+					if not _dekat_v(l.arah, ThrowSolver.arah_tanah(v)) or not _dekat(l.arah.length(), 1.0) or l.sisi != ThrowSolver.sisi_dari_arah(l.arah):
+						semua_arah = false
+						gagal.append("%s derajat: arah %s" % [derajat, l.arah])
+			var tag: String = "lebar %s, %s u/d, %d sudut x 2 panjang" % [lebar, v_maju, SUDUT_UJI.size()]
+			check(semua_lempar, "%s: semua swipe melempar (tidak ada sudut ditolak) %s" % [tag, gagal])
+			check(semua_jarak, "%s: titik mendarat - titik lepas - geser maju = jarak tanah x arah tanah %s" % [tag, gagal])
+			check(semua_searah, "%s: Iso.dunia_ke_layar(arah tanah) searah v (silang ~ 0, titik > 0) %s" % [tag, gagal])
+			check(semua_arah, "%s: Lintasan.arah = arah_tanah(v) satuan, sisi = sisi_dari_arah(arah) %s" % [tag, gagal])
+	# Contoh terhitung tangan: swipe ke kiri murni = seberang SEDIKIT KE BELAKANG di tanah, ke kanan murni = dekat ke depan, ke atas murni =
+	# seberang ke depan, ke bawah = dekat ke belakang (Iso: 1 ubin x = (+32, +16) px, 1 ubin y = (-32, +16) px).
+	var akar2: float = sqrt(0.5)
+	check(_dekat_v(ThrowSolver.arah_tanah(Vector2(-100.0, 0.0)), Vector2(-akar2, akar2)), "kiri murni: arah tanah (-0,707, +0,707) = seberang dan mundur")
+	check(_dekat_v(ThrowSolver.arah_tanah(Vector2(100.0, 0.0)), Vector2(akar2, -akar2)), "kanan murni: arah tanah (+0,707, -0,707) = dekat dan maju")
+	check(_dekat_v(ThrowSolver.arah_tanah(Vector2(0.0, -100.0)), Vector2(-akar2, -akar2)), "atas murni: arah tanah (-0,707, -0,707) = seberang dan maju")
+	check(_dekat_v(ThrowSolver.arah_tanah(Vector2(0.0, 100.0)), Vector2(akar2, akar2)), "bawah murni: arah tanah (+0,707, +0,707) = dekat dan mundur")
+	check(_dekat_v(ThrowSolver.arah_tanah(Iso.dunia_ke_layar(Iso.ARAH_SEBERANG)), Iso.ARAH_SEBERANG) and _dekat_v(ThrowSolver.arah_tanah(Iso.dunia_ke_layar(Iso.ARAH_MAJU) * 3.0), Iso.ARAH_MAJU), "kebalikan Iso: swipe searah layar arah seberang / maju memberi arah itu lagi")
+	check(ThrowSolver.arah_tanah(Vector2.ZERO) == Vector2.ZERO and ThrowSolver.arah_tanah(Vector2(NAN, 1.0)) == Vector2.ZERO and ThrowSolver.arah_tanah(Vector2(INF, 0.0)) == Vector2.ZERO, "vektor nol, NaN, tak hingga: tanpa arah")
+	check(_dekat_v(ThrowSolver.arah_tanah(Vector2(1.0e30, 0.0)), Vector2(akar2, -akar2)), "vektor sangat panjang tetap dinormalkan (tanpa luapan)")
+
+
+## AC-3: tiap sudut melempar tepat di min, tidak melempar 0,01 px di bawahnya, dijepit u = 1 di atas maks; kekuatan untuk panjang sama
+## sama di semua arah (pengganti tes "tegak dominan tidak melempar" Run 2A).
+func _test_tanpa_sudut_ditolak() -> void:
+	_judul.call("Tanpa sudut ditolak: ambang min inklusif dan maks dijepit sama di semua arah (AC-3, D-2)")
+	var awal: Vector2 = Vector2(450.0, 210.0)
+	for lebar: float in LEBAR:
+		var bawah: float = ThrowSolver.swipe_min_px(lebar)
+		var atas: float = ThrowSolver.swipe_maks_px(lebar)
+		var tengah: float = _panjang(0.4, lebar)
+		var gagal: Array[String] = []
+		for derajat: float in SUDUT_UJI:
+			var arah: Vector2 = _arah_layar(derajat)
+			var tepat: ThrowSolver.Lintasan = ThrowSolver.dari_swipe(awal, awal + arah * bawah, lebar, Vector2.ZERO, 3.0, 0.0, 0.0)
+			if tepat == null or tepat.kekuatan > 0.00001 or ThrowSolver.sisi_dari_swipe(awal, awal + arah * bawah, lebar) == LoperAnim.Sisi.TIDAK_ADA:
+				gagal.append("%s derajat: tepat min tidak melempar" % derajat)
+			var kurang: Vector2 = awal + arah * (bawah - 0.01)
+			if ThrowSolver.dari_swipe(awal, kurang, lebar, Vector2.ZERO, 3.0, 0.0, 0.0) != null or ThrowSolver.sisi_dari_swipe(awal, kurang, lebar) != LoperAnim.Sisi.TIDAK_ADA:
+				gagal.append("%s derajat: min - 0,01 melempar" % derajat)
+			var lebih: ThrowSolver.Lintasan = ThrowSolver.dari_swipe(awal, awal + arah * atas * 1.5, lebar, Vector2.ZERO, 3.0, 0.0, 0.0)
+			if lebih == null or lebih.kekuatan != 1.0 or not _dekat(lebih.jarak, Config.LEMPAR_JARAK_MAKS_UBIN):
+				gagal.append("%s derajat: 1,5 x maks tidak dijepit ke u 1" % derajat)
+			var sedang: ThrowSolver.Lintasan = ThrowSolver.dari_swipe(awal, awal + arah * tengah, lebar, Vector2.ZERO, 3.0, 0.0, 0.0)
+			if sedang == null or not _dekat(sedang.kekuatan, 0.4, 0.00001) or not _dekat(sedang.lama_terbang, ThrowSolver.lama_terbang_detik(0.4)) or not _dekat(sedang.tinggi_puncak, ThrowSolver.tinggi_puncak_ubin(0.4)):
+				gagal.append("%s derajat: panjang u 0,4 memberi kekuatan berbeda" % derajat)
+		check(gagal.is_empty(), "lebar %s, %d sudut: tepat min melempar (u 0), min - 0,01 tidak, 1,5 x maks = u 1, panjang sama = kekuatan sama %s" % [lebar, SUDUT_UJI.size(), gagal])
+	# Panjang = |v| penuh, bukan |dx|: 46 datar + 20 tegak (|v| 50,2) melempar di 780 (min 46,8), padahal |dx| 46 di bawah min.
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(46.0, 20.0), 780.0) != LoperAnim.Sisi.TIDAK_ADA and _dekat(ThrowSolver.panjang_swipe(awal, awal + Vector2(46.0, 20.0)), sqrt(46.0 * 46.0 + 400.0)), "46 datar + 20 tegak (|v| 50,2) melempar: yang dihitung |v|, bukan |dx|")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal, 780.0) == LoperAnim.Sisi.TIDAK_ADA and ThrowSolver.dari_swipe(awal, awal, 780.0, Vector2.ZERO, 3.0, 0.0, 0.0) == null, "ketukan tanpa geser (|v| 0) tidak melempar")
+	check(is_nan(ThrowSolver.panjang_swipe(Vector2(NAN, 0.0), awal)) and is_nan(ThrowSolver.panjang_swipe(awal, Vector2(0.0, INF))) and ThrowSolver.dari_swipe(Vector2(NAN, 0.0), awal, 780.0, Vector2.ZERO, 3.0, 0.0, 0.0) == null, "titik NaN atau tak hingga: panjang NaN, tidak melempar")
+	check(ThrowSolver.sisi_dari_swipe(Vector2.ZERO, Vector2(1.0e30, 0.0), 780.0) == LoperAnim.Sisi.DEKAT and ThrowSolver.dari_swipe(Vector2.ZERO, Vector2(1.0e30, 0.0), 780.0, Vector2.ZERO, 3.0, 0.0, 0.0).kekuatan == 1.0, "swipe sangat panjang (1e30 px) tetap hingga, melempar dengan u 1")
+
+
+## AC-4 / D-3: sisi dari komponen melintang arah tanah: x < 0 seberang, x > 0 dekat, x = 0 tepat dekat; kidal tidak ada di rumus.
+func _test_sisi_arah() -> void:
+	_judul.call("Sisi dari arah tanah: x < 0 seberang, x > 0 dekat, x = 0 tepat dekat (AC-4, D-3)")
+	var awal: Vector2 = Vector2(450.0, 210.0)
+	# Swipe (64, -32) searah sumbu jalan maju di layar: x tanah = (dy / 16 + dx / 32) / 2 = 0 TEPAT.
+	var maju: Vector2 = Vector2(64.0, -32.0)
+	check(ThrowSolver.arah_tanah(maju).x == 0.0 and ThrowSolver.arah_tanah(-maju).x == 0.0, "kontrol: swipe (64, -32) dan (-64, 32) memberi x tanah tepat 0")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + maju, 780.0) == LoperAnim.Sisi.DEKAT and ThrowSolver.sisi_dari_swipe(awal, awal - maju, 780.0) == LoperAnim.Sisi.DEKAT, "x = 0 tepat (searah jalan maju atau mundur): DEKAT")
+	check(ThrowSolver.dari_swipe(awal, awal + maju, 780.0, Vector2.ZERO, 3.0, 0.0, 0.0).sisi == LoperAnim.Sisi.DEKAT, "x = 0 tepat: Lintasan.sisi DEKAT")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(64.0, -32.01), 780.0) == LoperAnim.Sisi.SEBERANG and ThrowSolver.arah_tanah(Vector2(64.0, -32.01)).x < 0.0, "x sedikit negatif (64, -32,01): SEBERANG")
+	check(ThrowSolver.sisi_dari_swipe(awal, awal + Vector2(64.0, -31.99), 780.0) == LoperAnim.Sisi.DEKAT and ThrowSolver.arah_tanah(Vector2(64.0, -31.99)).x > 0.0, "x sedikit positif (64, -31,99): DEKAT")
+	check(ThrowSolver.sisi_dari_arah(Vector2(0.0, -1.0)) == LoperAnim.Sisi.DEKAT and ThrowSolver.sisi_dari_arah(Vector2(-0.0, 1.0)) == LoperAnim.Sisi.DEKAT, "sisi_dari_arah: x = 0 dan x = -0 = DEKAT")
+	check(ThrowSolver.sisi_dari_arah(Vector2(-0.000001, 1.0)) == LoperAnim.Sisi.SEBERANG and ThrowSolver.sisi_dari_arah(Vector2(0.000001, -1.0)) == LoperAnim.Sisi.DEKAT, "sisi_dari_arah: x -1e-6 = SEBERANG, x +1e-6 = DEKAT")
+	check(ThrowSolver.sisi_dari_arah(Vector2.ZERO) == LoperAnim.Sisi.TIDAK_ADA and ThrowSolver.sisi_dari_arah(Vector2(NAN, 1.0)) == LoperAnim.Sisi.TIDAK_ADA and ThrowSolver.sisi_dari_arah(Vector2(-INF, 0.0)) == LoperAnim.Sisi.TIDAK_ADA, "arah nol, NaN, tak hingga: TIDAK_ADA")
+	# Arah layar sehari-hari: kiri, atas, kiri atas = seberang; kanan, bawah, kanan bawah = dekat.
+	for kasus: Array in [[180.0, LoperAnim.Sisi.SEBERANG], [90.0, LoperAnim.Sisi.SEBERANG], [135.0, LoperAnim.Sisi.SEBERANG], [78.0, LoperAnim.Sisi.SEBERANG], [0.0, LoperAnim.Sisi.DEKAT], [270.0, LoperAnim.Sisi.DEKAT], [315.0, LoperAnim.Sisi.DEKAT], [12.0, LoperAnim.Sisi.DEKAT]]:
+		var v: Vector2 = _arah_layar(kasus[0]) * 100.0
+		check(ThrowSolver.sisi_dari_swipe(awal, awal + v, 780.0) == kasus[1], "swipe %s derajat: %s" % [kasus[0], LoperAnim.Sisi.keys()[kasus[1]]])
+	# Kidal hanya menukar zona di `TouchZones`: rumus arah dan sisi tidak menerima opsi kidal (tes scene memeriksa kidal lewat sentuhan).
+	var argumen: Dictionary = {}
+	for m: Dictionary in (load(BERKAS_SOLVER) as Script).get_script_method_list():
+		argumen[m["name"]] = (m["args"] as Array).size()
+	check(argumen.get("sisi_dari_swipe", -1) == 3 and argumen.get("arah_tanah", -1) == 1 and argumen.get("dari_swipe", -1) == 7, "sisi_dari_swipe (awal, akhir, lebar), arah_tanah (v), dari_swipe tanpa parameter kidal")
+
+
+## AC-8: tidak ada lagi aturan "dominan datar" atau |dx| di jalur lemparan (teks berkas).
+func _test_penjaga_aturan_lama() -> void:
+	_judul.call("Penjaga: aturan lama dominan datar dan |dx| sudah tidak ada di jalur lemparan (AC-8)")
+	for berkas: String in BERKAS_JALUR_LEMPAR:
+		var teks: String = FileAccess.get_file_as_string(berkas)
+		check(not teks.is_empty() and not teks.contains("dominan") and not teks.contains("|dx|") and not teks.contains("absf(geser.x)"), "%s: tanpa 'dominan', '|dx|', atau perbandingan |dx| lawan |dy|" % berkas.get_file())
+
+
+# --- Zona dari titik mendarat (run fase2-arah-bebas, D-4) ---
+
+## Lintasan buatan dengan titik mendarat `titik` dan sisi `sisi` (hanya untuk menguji bahwa penilaian tidak membaca sisi).
+func _lintasan_titik(titik: Vector2, sisi: LoperAnim.Sisi) -> ThrowSolver.Lintasan:
+	var l: ThrowSolver.Lintasan = ThrowSolver.Lintasan.new()
+	l.titik_mendarat = titik
+	l.sisi = sisi
+	l.arah = ThrowSolver.arah_sisi(sisi)
+	return l
+
+
+func _test_zona_dari_titik() -> void:
+	_judul.call("Zona menilai dari titik mendarat saja, tidak bergantung sisi lemparan; zona seberang dan dekat tidak bertumpuk (AC-5, D-4)")
+	var sama: bool = true
+	var hitung_hasil: Dictionary = {}
+	var contoh_beda: String = ""
+	for i: int in range(33):
+		for j: int in range(65):
+			var p: Vector2 = _titik(-4.0 + float(i) * 0.25, -1.0 + float(j) * 0.25)
+			var harapan: ZonaSasaran.Hasil = ZonaSasaran.klasifikasi_jalan_uji(p)
+			hitung_hasil[harapan] = int(hitung_hasil.get(harapan, 0)) + 1
+			for sisi: LoperAnim.Sisi in [LoperAnim.Sisi.SEBERANG, LoperAnim.Sisi.DEKAT, LoperAnim.Sisi.TIDAK_ADA]:
+				var l: ThrowSolver.Lintasan = _lintasan_titik(p, sisi)
+				for bonus: bool in [false, true]:
+					if KoranLempar.hasil_mendarat(l) != harapan or KoranLempar.prediksi_antaran(l, bonus) != ZonaSasaran.status_antaran(harapan, bonus):
+						sama = false
+						contoh_beda = "%s sisi %s" % [ZonaSasaran.ke_jalan(p), sisi]
+	check(sama, "2145 titik x 3 sisi x 2 sakelar: hasil dan antaran sama untuk sisi apa pun = klasifikasi titik saja %s" % contoh_beda)
+	check(hitung_hasil.has(ZonaSasaran.Hasil.KOTAK_SURAT) and hitung_hasil.has(ZonaSasaran.Hasil.TERAS) and hitung_hasil.has(ZonaSasaran.Hasil.HALAMAN) and hitung_hasil.has(ZonaSasaran.Hasil.BUKAN_PELANGGAN) and hitung_hasil.has(ZonaSasaran.Hasil.MELESET), "kontrol: kisi titik memuat kotak surat, teras, halaman, bukan pelanggan, meleset (%s)" % [hitung_hasil])
+	# Contoh eksplisit: lemparan bersisi DEKAT yang mendarat di kotak surat seberang tetap kena (Run 2A: meleset), dan sebaliknya.
+	var seberang: Vector2 = _titik(-1.625, 1.125)
+	var dekat: Vector2 = _titik(1.625, 1.125)
+	check(KoranLempar.hasil_mendarat(_lintasan_titik(seberang, LoperAnim.Sisi.DEKAT)) == ZonaSasaran.Hasil.KOTAK_SURAT and KoranLempar.prediksi_antaran(_lintasan_titik(seberang, LoperAnim.Sisi.DEKAT), false) == ZonaSasaran.Antaran.SAH_PENUH, "kotak surat seberang dengan sisi lempar DEKAT: KOTAK_SURAT, sah penuh")
+	check(KoranLempar.hasil_mendarat(_lintasan_titik(dekat, LoperAnim.Sisi.SEBERANG)) == ZonaSasaran.Hasil.KOTAK_SURAT, "kotak surat dekat dengan sisi lempar SEBERANG: KOTAK_SURAT")
+	# Penilaian tidak menerima sisi lempar (penyaring Run 2A dihapus).
+	var argumen: Dictionary = {}
+	for m: Dictionary in (load("res://scripts/systems/zona_sasaran.gd") as Script).get_script_method_list():
+		argumen[m["name"]] = (m["args"] as Array).size()
+	check(argumen.get("zona_kena", -1) == 2 and argumen.get("klasifikasi", -1) == 2 and argumen.get("klasifikasi_jalan_uji", -1) == 1, "zona_kena (titik, daftar), klasifikasi (titik, daftar), klasifikasi_jalan_uji (titik): tanpa sisi lempar")
+	# Zona seberang dan zona dekat jalan uji tidak bertumpuk (semua pasangan kavling di sekitar), dan tidak ada titik di keduanya.
+	var bertumpuk: Array[String] = []
+	for a: int in range(-3, 7):
+		for b: int in range(-3, 7):
+			for za: ZonaSasaran.Zona in ZonaSasaran.zona_jalan_uji(a):
+				if za.sisi != LoperAnim.Sisi.SEBERANG:
+					continue
+				for zb: ZonaSasaran.Zona in ZonaSasaran.zona_jalan_uji(b):
+					if zb.sisi == LoperAnim.Sisi.DEKAT and za.persegi.intersects(zb.persegi, true):
+						bertumpuk.append("%s/%s" % [za.persegi, zb.persegi])
+	check(bertumpuk.is_empty(), "zona seberang dan zona dekat kavling -3..6 tidak bertumpuk (termasuk tepi) %s" % [bertumpuk])
+	var di_dua_sisi: int = 0
+	for i: int in range(81):
+		for j: int in range(81):
+			var p: Vector2 = _titik(-4.0 + float(i) * 0.1, -2.0 + float(j) * 0.2)
+			var ada_seberang: bool = false
+			var ada_dekat: bool = false
+			for z: ZonaSasaran.Zona in ZonaSasaran.zona_jalan_uji_sekitar(ZonaSasaran.ke_jalan(p).y):
+				if ZonaSasaran.memuat(z, p):
+					ada_seberang = ada_seberang or z.sisi == LoperAnim.Sisi.SEBERANG
+					ada_dekat = ada_dekat or z.sisi == LoperAnim.Sisi.DEKAT
+			if ada_seberang and ada_dekat:
+				di_dua_sisi += 1
+	check(di_dua_sisi == 0, "6561 titik: tidak ada titik yang dimuat zona seberang dan zona dekat sekaligus")
+
+
+## AC-6, regresi laporan pemilik (vivo V2108, 2026-10-14: "suka gagal, terutama ke arah kiri"): di santai, cepat, dan ngebut ada swipe
+## bersudut layar 45 sampai 135 derajat (rentang yang ditolak Run 2A) yang mendarat di kotak surat SEBERANG pelanggan di depan sepeda,
+## dinilai antaran sah. Swipe 78 derajat (kotak surat seberang 2 ubin di depan, tabel SPEC) kini melempar.
+func _test_regresi_pemilik() -> void:
+	_judul.call("Regresi laporan pemilik: swipe ke atas mengenai kotak surat seberang di depan, tiga kecepatan (AC-6)")
+	var lebar: float = 780.0
+	var jeda: float = _jeda_lepas()
+	var awal: Vector2 = Vector2(500.0, 320.0)
+	for v: float in [Config.KECEPATAN_SANTAI_UD, Config.KECEPATAN_CEPAT_UD, Config.KECEPATAN_NGEBUT_UD]:
+		var ketemu: String = ""
+		for langkah_maju: int in range(16):
+			var maju_sepeda: float = float(langkah_maju) * 0.25
+			var posisi: Vector2 = Vector2(0.0, -maju_sepeda)
+			for derajat: int in range(45, 136):
+				var arah: Vector2 = _arah_layar(float(derajat))
+				var panjang: float = ceilf(ThrowSolver.swipe_min_px(lebar))
+				while panjang <= ThrowSolver.swipe_maks_px(lebar):
+					var akhir: Vector2 = awal + arah * panjang
+					var l: ThrowSolver.Lintasan = ThrowSolver.dari_swipe(awal, akhir, lebar, posisi, v, 0.0, jeda)
+					panjang += 1.0
+					if l == null or KoranLempar.hasil_mendarat(l) != ZonaSasaran.Hasil.KOTAK_SURAT:
+						continue
+					var zona: ZonaSasaran.Zona = ZonaSasaran.zona_kena(l.titik_mendarat, ZonaSasaran.zona_jalan_uji_sekitar(ZonaSasaran.ke_jalan(l.titik_mendarat).y))
+					var geser: Vector2 = akhir - awal
+					if zona.sisi == LoperAnim.Sisi.SEBERANG and zona.pelanggan and zona.persegi.position.y > maju_sepeda and ZonaSasaran.sah(KoranLempar.prediksi_antaran(l, Config.JENDELA_KENA_BONUS)) and absf(geser.y) >= absf(geser.x):
+						ketemu = "sudut %d, |v| %.0f px, sepeda di maju %.2f, kotak surat rumah %d di maju %.3f, sisi lempar %s" % [derajat, panjang - 1.0, maju_sepeda, zona.rumah, zona.persegi.position.y, LoperAnim.Sisi.keys()[l.sisi]]
+						break
+				if not ketemu.is_empty():
+					break
+			if not ketemu.is_empty():
+				break
+		check(not ketemu.is_empty(), "%s u/d: ada swipe 45-135 derajat (ditolak Run 2A) yang mengenai kotak surat seberang pelanggan di depan sepeda, sah (%s)" % [v, ketemu if not ketemu.is_empty() else "TIDAK ADA"])
+	# Swipe 78 derajat: |dy| > |dx| (ditolak Run 2A), kini melempar ke seberang dan maju di semua panjang min..maks.
+	var arah78: Vector2 = _arah_layar(78.0)
+	for u: float in [0.0, 0.5, 1.0]:
+		var akhir78: Vector2 = awal + arah78 * _panjang(u, lebar)
+		var l78: ThrowSolver.Lintasan = ThrowSolver.dari_swipe(awal, akhir78, lebar, Vector2.ZERO, Config.KECEPATAN_SANTAI_UD, 0.0, jeda)
+		check(absf((akhir78 - awal).y) > absf((akhir78 - awal).x) and l78 != null and l78.sisi == LoperAnim.Sisi.SEBERANG and l78.arah.y < 0.0, "swipe 78 derajat u %s (|dy| > |dx|, ditolak Run 2A): melempar ke seberang dan maju" % u)
 
 
 ## Berkas `.gd` di `scripts/` selain `config.gd` dan `throw_solver.gd` yang memakai konstanta lintasan, dari teks (penjaga AC-4).
@@ -392,7 +635,7 @@ func _titik(x: float, maju: float) -> Vector2:
 
 
 func _test_zona_klasifikasi() -> void:
-	_judul.call("Zona sasaran: tiap jenis, tepi inklusif/eksklusif, meleset, bukan pelanggan, sisi salah (AC-5, D-6)")
+	_judul.call("Zona sasaran: tiap jenis, tepi inklusif/eksklusif, meleset, bukan pelanggan (AC-5 Run 2A, D-6)")
 	var S: LoperAnim.Sisi = LoperAnim.Sisi.SEBERANG
 	var D: LoperAnim.Sisi = LoperAnim.Sisi.DEKAT
 	var daftar: Array[ZonaSasaran.Zona] = [
@@ -403,16 +646,15 @@ func _test_zona_klasifikasi() -> void:
 		_zona(-3.0, 7.0, 1.0, 1.0, ZonaSasaran.Jenis.TERAS, S, false),
 		_zona(2.0, 0.0, 1.0, 1.0, ZonaSasaran.Jenis.HALAMAN, D),
 	]
-	check(ZonaSasaran.klasifikasi(_titik(-1.75, 0.25), S, daftar) == ZonaSasaran.Hasil.KOTAK_SURAT, "titik di kotak surat = KOTAK_SURAT")
-	check(ZonaSasaran.klasifikasi(_titik(-2.5, 1.5), S, daftar) == ZonaSasaran.Hasil.TERAS, "titik di teras = TERAS")
-	check(ZonaSasaran.klasifikasi(_titik(-2.5, 3.5), S, daftar) == ZonaSasaran.Hasil.HALAMAN, "titik di halaman = HALAMAN")
-	check(ZonaSasaran.klasifikasi(_titik(-2.9, 5.5), S, daftar) == ZonaSasaran.Hasil.JENDELA, "titik di strip jendela = JENDELA")
-	check(ZonaSasaran.klasifikasi(_titik(-2.5, 7.5), S, daftar) == ZonaSasaran.Hasil.BUKAN_PELANGGAN, "teras rumah bukan pelanggan = BUKAN_PELANGGAN")
-	check(ZonaSasaran.klasifikasi(_titik(2.5, 0.5), D, daftar) == ZonaSasaran.Hasil.HALAMAN, "halaman sisi dekat = HALAMAN untuk lemparan ke dekat")
-	check(ZonaSasaran.klasifikasi(_titik(-2.5, 2.5), S, daftar) == ZonaSasaran.Hasil.MELESET and ZonaSasaran.klasifikasi(_titik(0.0, 0.0), S, daftar) == ZonaSasaran.Hasil.MELESET, "titik di luar semua zona (celah, jalan) = MELESET")
-	check(ZonaSasaran.klasifikasi(_titik(-1.75, 0.25), D, daftar) == ZonaSasaran.Hasil.MELESET and ZonaSasaran.klasifikasi(_titik(2.5, 0.5), S, daftar) == ZonaSasaran.Hasil.MELESET, "sisi salah (zona seberang untuk lemparan ke dekat, dan sebaliknya) = MELESET")
-	check(ZonaSasaran.klasifikasi(Vector2(NAN, 0.0), S, daftar) == ZonaSasaran.Hasil.MELESET and ZonaSasaran.klasifikasi(Vector2(-1.75, INF), S, daftar) == ZonaSasaran.Hasil.MELESET, "titik tidak hingga = MELESET")
-	check(ZonaSasaran.klasifikasi(_titik(-1.75, 0.25), S, [] as Array[ZonaSasaran.Zona]) == ZonaSasaran.Hasil.MELESET, "tanpa zona = MELESET")
+	check(ZonaSasaran.klasifikasi(_titik(-1.75, 0.25), daftar) == ZonaSasaran.Hasil.KOTAK_SURAT, "titik di kotak surat = KOTAK_SURAT")
+	check(ZonaSasaran.klasifikasi(_titik(-2.5, 1.5), daftar) == ZonaSasaran.Hasil.TERAS, "titik di teras = TERAS")
+	check(ZonaSasaran.klasifikasi(_titik(-2.5, 3.5), daftar) == ZonaSasaran.Hasil.HALAMAN, "titik di halaman = HALAMAN")
+	check(ZonaSasaran.klasifikasi(_titik(-2.9, 5.5), daftar) == ZonaSasaran.Hasil.JENDELA, "titik di strip jendela = JENDELA")
+	check(ZonaSasaran.klasifikasi(_titik(-2.5, 7.5), daftar) == ZonaSasaran.Hasil.BUKAN_PELANGGAN, "teras rumah bukan pelanggan = BUKAN_PELANGGAN")
+	check(ZonaSasaran.klasifikasi(_titik(2.5, 0.5), daftar) == ZonaSasaran.Hasil.HALAMAN, "halaman sisi dekat = HALAMAN")
+	check(ZonaSasaran.klasifikasi(_titik(-2.5, 2.5), daftar) == ZonaSasaran.Hasil.MELESET and ZonaSasaran.klasifikasi(_titik(0.0, 0.0), daftar) == ZonaSasaran.Hasil.MELESET, "titik di luar semua zona (celah, jalan) = MELESET")
+	check(ZonaSasaran.klasifikasi(Vector2(NAN, 0.0), daftar) == ZonaSasaran.Hasil.MELESET and ZonaSasaran.klasifikasi(Vector2(-1.75, INF), daftar) == ZonaSasaran.Hasil.MELESET, "titik tidak hingga = MELESET")
+	check(ZonaSasaran.klasifikasi(_titik(-1.75, 0.25), [] as Array[ZonaSasaran.Zona]) == ZonaSasaran.Hasil.MELESET, "tanpa zona = MELESET")
 	# Tepi: min inklusif, maks eksklusif, di kedua sumbu (lateral dan maju).
 	var kotak: ZonaSasaran.Zona = daftar[0]
 	check(ZonaSasaran.memuat(kotak, _titik(-2.0, 0.0)), "tepi min lateral dan maju (pojok min) inklusif")
@@ -425,7 +667,7 @@ func _test_zona_klasifikasi() -> void:
 	var b: ZonaSasaran.Zona = _zona(-3.0, 1.0, 1.0, 1.0, ZonaSasaran.Jenis.HALAMAN)
 	check(not ZonaSasaran.memuat(a, _titik(-2.5, 1.0)) and ZonaSasaran.memuat(b, _titik(-2.5, 1.0)), "tepi bersama dua zona bersebelahan hanya dimuat zona sesudahnya")
 	# Hasil murni dan zona yang menang.
-	check(ZonaSasaran.zona_kena(_titik(-1.75, 0.25), S, daftar) == kotak and ZonaSasaran.zona_kena(_titik(0.0, 0.0), S, daftar) == null, "zona_kena mengembalikan zona yang menang atau null")
+	check(ZonaSasaran.zona_kena(_titik(-1.75, 0.25), daftar) == kotak and ZonaSasaran.zona_kena(_titik(0.0, 0.0), daftar) == null, "zona_kena mengembalikan zona yang menang atau null")
 	check(ZonaSasaran.ke_jalan(Vector2(-1.0, -4.0)) == Vector2(-1.0, 4.0), "koordinat jalan: maju = -y dunia")
 
 
@@ -441,20 +683,20 @@ func _test_zona_prioritas() -> void:
 	for u: Array in urutan:
 		var daftar: Array[ZonaSasaran.Zona] = []
 		daftar.assign(u)
-		check(ZonaSasaran.klasifikasi(p, S, daftar) == ZonaSasaran.Hasil.KOTAK_SURAT, "empat zona tumpang tindih (urutan %s) = KOTAK_SURAT" % [u.map(func(z: ZonaSasaran.Zona) -> int: return int(z.jenis))])
+		check(ZonaSasaran.klasifikasi(p, daftar) == ZonaSasaran.Hasil.KOTAK_SURAT, "empat zona tumpang tindih (urutan %s) = KOTAK_SURAT" % [u.map(func(z: ZonaSasaran.Zona) -> int: return int(z.jenis))])
 	var tiga: Array[ZonaSasaran.Zona] = [h, t, j]
-	check(ZonaSasaran.klasifikasi(p, S, tiga) == ZonaSasaran.Hasil.JENDELA, "tanpa kotak surat: JENDELA menang atas teras dan halaman")
+	check(ZonaSasaran.klasifikasi(p, tiga) == ZonaSasaran.Hasil.JENDELA, "tanpa kotak surat: JENDELA menang atas teras dan halaman")
 	var dua: Array[ZonaSasaran.Zona] = [h, t]
 	var dua_balik: Array[ZonaSasaran.Zona] = [t, h]
-	check(ZonaSasaran.klasifikasi(p, S, dua) == ZonaSasaran.Hasil.TERAS and ZonaSasaran.klasifikasi(p, S, dua_balik) == ZonaSasaran.Hasil.TERAS, "teras menang atas halaman, kedua urutan")
+	check(ZonaSasaran.klasifikasi(p, dua) == ZonaSasaran.Hasil.TERAS and ZonaSasaran.klasifikasi(p, dua_balik) == ZonaSasaran.Hasil.TERAS, "teras menang atas halaman, kedua urutan")
 	var jt: Array[ZonaSasaran.Zona] = [t, j]
-	check(ZonaSasaran.klasifikasi(p, S, jt) == ZonaSasaran.Hasil.JENDELA, "jendela menang atas teras")
+	check(ZonaSasaran.klasifikasi(p, jt) == ZonaSasaran.Hasil.JENDELA, "jendela menang atas teras")
 	var kj: Array[ZonaSasaran.Zona] = [j, k]
-	check(ZonaSasaran.klasifikasi(p, S, kj) == ZonaSasaran.Hasil.KOTAK_SURAT, "kotak surat menang atas jendela")
+	check(ZonaSasaran.klasifikasi(p, kj) == ZonaSasaran.Hasil.KOTAK_SURAT, "kotak surat menang atas jendela")
 	# Prioritas dulu, baru status pelanggan: kotak surat rumah bukan pelanggan di atas halaman pelanggan = bukan pelanggan.
 	var kb: ZonaSasaran.Zona = _zona(-3.0, 0.0, 2.0, 2.0, ZonaSasaran.Jenis.KOTAK_SURAT, S, false)
 	var campur: Array[ZonaSasaran.Zona] = [h, kb]
-	check(ZonaSasaran.klasifikasi(p, S, campur) == ZonaSasaran.Hasil.BUKAN_PELANGGAN, "zona prioritas tertinggi milik rumah bukan pelanggan = BUKAN_PELANGGAN")
+	check(ZonaSasaran.klasifikasi(p, campur) == ZonaSasaran.Hasil.BUKAN_PELANGGAN, "zona prioritas tertinggi milik rumah bukan pelanggan = BUKAN_PELANGGAN")
 	var prioritas: Array[ZonaSasaran.Jenis] = [ZonaSasaran.Jenis.KOTAK_SURAT, ZonaSasaran.Jenis.JENDELA, ZonaSasaran.Jenis.TERAS, ZonaSasaran.Jenis.HALAMAN]
 	check(ZonaSasaran.PRIORITAS == prioritas, "urutan prioritas tertulis: kotak surat, jendela, teras, halaman")
 
@@ -541,11 +783,11 @@ func _test_zona_jalan_uji() -> void:
 	check(nomor.keys() == [4, 5, 6], "zona sekitar maju 20,1 = kavling 4, 5, 6, dapat %s" % [nomor.keys()])
 	check(ZonaSasaran.zona_jalan_uji_sekitar(NAN).is_empty(), "maju tidak hingga = tanpa zona")
 	var halaman_awal: Vector2 = _titik(-2.5, 4.0 * 5.0 - 0.25)
-	check(ZonaSasaran.klasifikasi_jalan_uji(halaman_awal, LoperAnim.Sisi.SEBERANG) == ZonaSasaran.Hasil.HALAMAN, "titik halaman kavling 5 yang menjorok ke kavling 4 tetap HALAMAN")
+	check(ZonaSasaran.klasifikasi_jalan_uji(halaman_awal) == ZonaSasaran.Hasil.HALAMAN, "titik halaman kavling 5 yang menjorok ke kavling 4 tetap HALAMAN")
 
 
-## Keterjangkauan (AC-5): tiap zona di jalan uji bisa dikenai dari suatu posisi lateral di dalam jalan pada santai, cepat, dan ngebut
-## dengan swipe di rentang min-maks. Titik mendarat dicari lewat ThrowSolver sungguhan; posisi maju sepeda digeser supaya titik itu jatuh
+## Keterjangkauan (AC-5 Run 2A): tiap zona di jalan uji bisa dikenai dari suatu posisi lateral di dalam jalan pada santai, cepat, dan
+## ngebut dengan swipe di rentang min-maks, bahkan hanya dengan arah melintang murni (`arah_sisi`, satu arah dari banyak arah bebas). Titik mendarat dicari lewat ThrowSolver sungguhan; posisi maju sepeda digeser supaya titik itu jatuh
 ## di tengah zona sepanjang jalan (jalan uji tanpa ujung: sepeda bisa di mana saja sepanjang jalan).
 func _test_keterjangkauan() -> void:
 	_judul.call("Keterjangkauan: tiap zona jalan uji terkena dari lateral di dalam jalan, tiga kecepatan, swipe min-maks (AC-5)")
@@ -561,16 +803,16 @@ func _test_keterjangkauan() -> void:
 					var lateral: float = lerpf(-batas, batas, float(i) / 32.0)
 					for j: int in range(65):
 						var u: float = float(j) / 64.0
-						var coba: ThrowSolver.Lintasan = ThrowSolver.hitung(_panjang(u, lebar), lebar, zona.sisi, Vector2(lateral, 0.0), v, 0.0, jeda)
+						var coba: ThrowSolver.Lintasan = ThrowSolver.hitung(_panjang(u, lebar), lebar, ThrowSolver.arah_sisi(zona.sisi), Vector2(lateral, 0.0), v, 0.0, jeda)
 						var jalan: Vector2 = ZonaSasaran.ke_jalan(coba.titik_mendarat)
 						if jalan.x < zona.persegi.position.x or jalan.x >= zona.persegi.end.x:
 							continue
 						# Geser sepeda sepanjang jalan supaya titik mendarat di tengah zona (maju).
 						var geser: float = zona.persegi.get_center().y - jalan.y
-						var l: ThrowSolver.Lintasan = ThrowSolver.hitung(_panjang(u, lebar), lebar, zona.sisi, Vector2(lateral, -geser), v, 0.0, jeda)
-						if ZonaSasaran.zona_kena(l.titik_mendarat, zona.sisi, ZonaSasaran.zona_jalan_uji_sekitar(ZonaSasaran.ke_jalan(l.titik_mendarat).y)) == null:
+						var l: ThrowSolver.Lintasan = ThrowSolver.hitung(_panjang(u, lebar), lebar, ThrowSolver.arah_sisi(zona.sisi), Vector2(lateral, -geser), v, 0.0, jeda)
+						if ZonaSasaran.zona_kena(l.titik_mendarat, ZonaSasaran.zona_jalan_uji_sekitar(ZonaSasaran.ke_jalan(l.titik_mendarat).y)) == null:
 							continue
-						if ZonaSasaran.klasifikasi_jalan_uji(l.titik_mendarat, zona.sisi) == diharapkan:
+						if ZonaSasaran.klasifikasi_jalan_uji(l.titik_mendarat) == diharapkan:
 							kena = "lateral %.3f, u %.3f" % [lateral, u]
 							break
 					if not kena.is_empty():
@@ -658,7 +900,7 @@ func _test_isi_ulang() -> void:
 # --- Bagian 1b: KoranLempar (D-4, D-5, D-10, D-11 bagian murni) dan PolaPiksel ---
 
 func _lintasan_uji(u: float, sisi: LoperAnim.Sisi, v: float, maju: float = 10.0) -> ThrowSolver.Lintasan:
-	return ThrowSolver.hitung(_panjang(u, 780.0), 780.0, sisi, Vector2(0.2, -maju), v, 0.0, _jeda_lepas())
+	return ThrowSolver.hitung(_panjang(u, 780.0), 780.0, ThrowSolver.arah_sisi(sisi), Vector2(0.2, -maju), v, 0.0, _jeda_lepas())
 
 
 func _test_koran_lempar() -> void:
@@ -706,7 +948,7 @@ func _test_koran_lempar() -> void:
 				var lin: ThrowSolver.Lintasan = _lintasan_uji(u, sisi, 3.0, float(maju_ubin) / 2.0)
 				for bonus: bool in [false, true]:
 					var akhir: KoranLempar.Koran = KoranLempar.langkah(KoranLempar.baru(lin), ThrowSolver.lama_total(lin), bonus)
-					if akhir.antaran != KoranLempar.prediksi_antaran(lin, bonus) or akhir.hasil != ZonaSasaran.klasifikasi_jalan_uji(lin.titik_mendarat, sisi) or akhir.penanda != ZonaSasaran.penanda(akhir.antaran):
+					if akhir.antaran != KoranLempar.prediksi_antaran(lin, bonus) or akhir.hasil != ZonaSasaran.klasifikasi_jalan_uji(lin.titik_mendarat) or akhir.penanda != ZonaSasaran.penanda(akhir.antaran):
 						cocok = false
 					if ZonaSasaran.sah(akhir.antaran):
 						jumlah_sah += 1
@@ -873,11 +1115,11 @@ func _test_tertutup_rumah() -> void:
 	check(zona_terbuka, "semua zona sasaran jalan uji (kotak surat, halaman, teras, jendela, sisi dekat) tidak tertutup rumah")
 	check(ZonaSasaran.tertutup_rumah_jalan_uji(_titik(-4.0, 9.0), 0.0) and ZonaSasaran.tertutup_rumah_jalan_uji(_titik(-4.0, 11.0), 0.0) and not ZonaSasaran.tertutup_rumah_jalan_uji(_titik(-3.2, 7.2), 0.0) and ZonaSasaran.tertutup_rumah_jalan_uji(_titik(-4.0, 3.7), 0.0), "jalan uji: di dalam rumah kavling 2 dan kavling 1 (maju 3,7, dekat batas kavling) dan di celah di baliknya tertutup; celah dekat kaki fasad (lateral -3,2, maju 7,2) terlihat")
 	# Bentuk elips lintasan.
-	var masuk_rumah: ThrowSolver.Lintasan = ThrowSolver.hitung(ThrowSolver.swipe_maks_px(780.0), 780.0, LoperAnim.Sisi.SEBERANG, _titik(0.0, 7.0), 0.0, 0.0, 0.0)
+	var masuk_rumah: ThrowSolver.Lintasan = ThrowSolver.hitung(ThrowSolver.swipe_maks_px(780.0), 780.0, Iso.ARAH_SEBERANG, _titik(0.0, 7.0), 0.0, 0.0, 0.0)
 	var ke_teras: ThrowSolver.Lintasan = null
-	var ke_jalan: ThrowSolver.Lintasan = ThrowSolver.hitung(ThrowSolver.swipe_min_px(780.0), 780.0, LoperAnim.Sisi.DEKAT, _titik(-1.0, 3.5), 0.0, 0.0, 0.0)
+	var ke_jalan: ThrowSolver.Lintasan = ThrowSolver.hitung(ThrowSolver.swipe_min_px(780.0), 780.0, Iso.ARAH_DEKAT, _titik(-1.0, 3.5), 0.0, 0.0, 0.0)
 	for i: int in range(200):
-		var l: ThrowSolver.Lintasan = ThrowSolver.hitung(ThrowSolver.swipe_min_px(780.0) + float(i), 780.0, LoperAnim.Sisi.SEBERANG, _titik(0.0, 4.0), 0.0, 0.0, 0.0)
+		var l: ThrowSolver.Lintasan = ThrowSolver.hitung(ThrowSolver.swipe_min_px(780.0) + float(i), 780.0, Iso.ARAH_SEBERANG, _titik(0.0, 4.0), 0.0, 0.0, 0.0)
 		if l != null and KoranLempar.hasil_mendarat(l) == ZonaSasaran.Hasil.TERAS:
 			ke_teras = l
 			break

@@ -1,33 +1,41 @@
 class_name ThrowSolver
 extends RefCounted
-## Lintasan koran dari swipe, logika murni (BALANCING 4, GDD 5.1-5.2, TECH_PLAN Fase 2; D-1 sampai D-4 run fase2a-lemparan).
+## Lintasan koran dari swipe, logika murni (BALANCING 4, GDD 5.1-5.2, TECH_PLAN Fase 2; D-1 sampai D-4 run fase2a-lemparan, arah bebas
+## D-1 sampai D-3 run fase2-arah-bebas).
 ##
 ## SATU-SATUNYA sumber lintasan: koran yang terbang, garis bidik, elips pendaratan, dan bayangan semuanya memanggil fungsi di sini
 ## (`dari_swipe` / `hitung` lalu `posisi_pada`), supaya prediksi dan hasil tidak pernah berbeda. Tanpa node, `Time`, atau RNG;
 ## masukan tidak diubah, masukan sama = hasil sama. Satuan: posisi dunia dan tinggi dalam ubin (`Iso`: x melintang jalan, positif =
 ## sisi `dekat`; y = -maju), kecepatan u/d, waktu detik, panjang swipe piksel game.
 ##
-## Rumus (usulan, angka di `Config.LEMPAR_*`):
-## - Panjang swipe = komponen MENDATAR |dx|; sisi dari tanda dx (kiri layar = `SEBERANG`, kanan layar = `DEKAT`, kidal tidak mengubah
-##   arti); swipe dominan tegak (|dx| <= |dy|) tidak melempar. min = 6%, maks = 35% lebar viewport game saat itu.
-##   |dx| < min (toleransi `LEMPAR_SWIPE_TOLERANSI_PX`) = tidak melempar; tepat min melempar (inklusif).
-## - u = jepit((|dx| - min) / (maks - min), 0, 1). Jarak ke samping lerp(1,5, 5,0, u) ubin dari titik lepas ke arah sisi
-##   (`Iso.ARAH_SEBERANG` / `Iso.ARAH_DEKAT`), lama terbang lerp(0,45, 0,75, u) detik, tinggi puncak lerp(1,0, 1,6, u) ubin.
-## - Warisan maju: geser maju selama terbang = kecepatan maju x `LEMPAR_WARISAN_MAJU` (100%) x lama terbang (`Iso.ARAH_MAJU`).
-##   Tidak ada warisan lateral selama terbang.
-## - Jeda lepas (D-4, rekomendasi SPEC): lintasan dihitung SEKALI saat jari dilepas lalu dibekukan di ruang dunia. Koran baru lepas
+## Rumus (usulan, angka di `Config.LEMPAR_*`; arah bebas = keputusan pemilik 2026-10-15, rinciannya usulan yang dinilai lewat uji HP):
+## - Arah (D-1): v = titik akhir - titik awal swipe (piksel game). Arah tanah = `Iso.layar_ke_dunia(v)` dinormalkan (`arah_tanah`;
+##   proyeksi linear, jadi berlaku untuk vektor). Akibatnya `Iso.dunia_ke_layar(arah tanah)` searah dengan v: garis tanah lemparan di
+##   layar sejajar jari. Tidak ada arah yang ditolak, termasuk ke bawah dan ke belakang; swipe ke kiri murni = seberang sedikit ke belakang.
+## - Panjang (D-2): |v| penuh (`panjang_swipe`), bukan komponen datarnya. min = 6%, maks = 35% lebar viewport game saat itu.
+##   |v| < min (toleransi `LEMPAR_SWIPE_TOLERANSI_PX`) = tidak melempar; tepat min melempar (inklusif).
+## - u = jepit((|v| - min) / (maks - min), 0, 1). Jarak tanah lerp(1,5, 5,0, u) ubin dari titik lepas searah arah tanah, lama terbang
+##   lerp(0,45, 0,75, u) detik, tinggi puncak lerp(1,0, 1,6, u) ubin. Kekuatan untuk panjang yang sama sama di semua arah.
+## - Sisi (D-3; animasi lempar dan `Lintasan.sisi`) dari komponen melintang arah tanah (`sisi_dari_arah`): x < 0 = `SEBERANG`, x > 0 =
+##   `DEKAT`, x = 0 tepat (swipe searah sumbu jalan di layar) = `DEKAT`. Kidal tidak mengubah arti arah (kidal hanya menukar zona).
+##   Penilaian zona TIDAK memakai sisi (dari titik mendarat saja, `ZonaSasaran`).
+## - Warisan maju: geser maju selama terbang = kecepatan maju x `LEMPAR_WARISAN_MAJU` (100%) x lama terbang (`Iso.ARAH_MAJU`), ditambahkan
+##   pada jarak tanah. Tidak ada warisan lateral selama terbang.
+## - Jeda lepas (D-4 run fase2a-lemparan): lintasan dihitung SEKALI saat jari dilepas lalu dibekukan di ruang dunia. Koran baru lepas
 ##   dari tangan `jeda_lepas` detik kemudian (frame lepas animasi, `LemparWaktu.waktu_lepas`, sekitar 0,17 detik), jadi titik lepas =
 ##   posisi sepeda saat jari dilepas + kecepatan sepeda (maju dan lateral) x jeda lepas, lateral dijepit ke tepi jalan resmi
 ##   (`BikeMotion.batas_lateral_ubin`). Garis bidik memakai panggilan yang sama, jadi jeda ini sudah terhitung di prediksi. Sepeda
 ##   yang mempercepat, mengerem, atau pindah sisi sesudah jari dilepas tidak mengubah lintasan: koran mendarat tepat di prediksi.
-## - Lengkung (D-3): tinggi parabola dari `LEMPAR_TINGGI_TANGAN_UBIN` (t = 0) ke 0 (t = lama terbang) dengan maksimum tepat tinggi
-##   puncak. Posisi tanah bergerak linear dari titik lepas ke titik mendarat. Proyeksi ke layar hanya di `Iso`.
+## - Lengkung (D-3 run fase2a-lemparan): tinggi parabola dari `LEMPAR_TINGGI_TANGAN_UBIN` (t = 0) ke 0 (t = lama terbang) dengan
+##   maksimum tepat tinggi puncak. Posisi tanah bergerak linear dari titik lepas ke titik mendarat. Proyeksi ke layar hanya di `Iso`.
 
 
 ## Satu lintasan koran yang sudah dibekukan. Dibuat `hitung`; pemanggil hanya membacanya.
 class Lintasan extends RefCounted:
-	## Sisi lempar (`SEBERANG` atau `DEKAT`).
+	## Sisi lempar (`SEBERANG` atau `DEKAT`) dari arah tanah (`sisi_dari_arah`); untuk animasi, bukan penilaian zona.
 	var sisi: LoperAnim.Sisi = LoperAnim.Sisi.TIDAK_ADA
+	## Arah tanah lemparan, vektor satuan di dunia (D-1).
+	var arah: Vector2 = Vector2.ZERO
 	## Kekuatan swipe u, 0 sampai 1.
 	var kekuatan: float = 0.0
 	## Kecepatan maju sepeda saat jari dilepas (sesudah dibersihkan), u/d.
@@ -38,8 +46,8 @@ class Lintasan extends RefCounted:
 	var titik_lepas: Vector2 = Vector2.ZERO
 	## Titik koran mendarat, dunia, ubin.
 	var titik_mendarat: Vector2 = Vector2.ZERO
-	## Jarak ke samping dari titik lepas, ubin.
-	var jarak_samping: float = 0.0
+	## Jarak tanah dari titik lepas searah `arah` (tanpa geser maju warisan), ubin.
+	var jarak: float = 0.0
 	## Geser maju selama terbang (warisan kecepatan maju), ubin.
 	var geser_maju: float = 0.0
 	## Lama terbang dari lepas sampai mendarat, detik.
@@ -68,15 +76,15 @@ static func swipe_maks_px(lebar_viewport_px: float) -> float:
 	return lebar_viewport_px * Config.LEMPAR_SWIPE_MAKS_PECAHAN
 
 
-## True bila panjang swipe mendatar `panjang_px` cukup untuk melempar (>= min, inklusif dengan toleransi). NaN, tak hingga, negatif,
-## atau lebar tidak sah = false.
+## True bila panjang swipe `panjang_px` (|v|, piksel game) cukup untuk melempar (>= min, inklusif dengan toleransi). NaN, tak hingga,
+## negatif, atau lebar tidak sah = false.
 static func cukup_panjang(panjang_px: float, lebar_viewport_px: float) -> bool:
 	if not is_finite(panjang_px) or panjang_px < 0.0 or not _lebar_sah(lebar_viewport_px):
 		return false
 	return panjang_px + Config.LEMPAR_SWIPE_TOLERANSI_PX >= swipe_min_px(lebar_viewport_px)
 
 
-## Kekuatan swipe u (0 sampai 1) dari panjang mendatar; -1 bila tidak melempar (`cukup_panjang` false).
+## Kekuatan swipe u (0 sampai 1) dari panjang swipe |v|; -1 bila tidak melempar (`cukup_panjang` false). Tidak bergantung arah.
 static func kekuatan(panjang_px: float, lebar_viewport_px: float) -> float:
 	if not cukup_panjang(panjang_px, lebar_viewport_px):
 		return -1
@@ -85,22 +93,44 @@ static func kekuatan(panjang_px: float, lebar_viewport_px: float) -> float:
 	return clampf((panjang_px - bawah) / (atas - bawah), 0.0, 1.0)
 
 
-## Sisi lempar dari satu swipe (titik awal dan akhir, piksel game) di viewport selebar `lebar_viewport_px` (GDD 5.2, D-2).
-## Kiri layar = `SEBERANG`, kanan layar = `DEKAT`, tidak bergantung opsi kidal (kidal hanya menukar zona). `TIDAK_ADA` bila: titik
-## tidak hingga atau NaN; gerak tegak sama besar atau lebih besar dari gerak datar (tepat 45 derajat ambigu); atau |dx| di bawah min.
-static func sisi_dari_swipe(awal: Vector2, akhir: Vector2, lebar_viewport_px: float) -> LoperAnim.Sisi:
+## Panjang swipe |v| = |akhir - awal| (piksel game, D-2), dihitung dengan float 64-bit (swipe sangat panjang tidak meluap jadi tak
+## hingga). Titik tidak hingga atau NaN = NaN (tidak melempar).
+static func panjang_swipe(awal: Vector2, akhir: Vector2) -> float:
 	if not awal.is_finite() or not akhir.is_finite():
-		return LoperAnim.Sisi.TIDAK_ADA
-	var geser: Vector2 = akhir - awal
-	if absf(geser.x) <= absf(geser.y):
-		return LoperAnim.Sisi.TIDAK_ADA
-	if not cukup_panjang(absf(geser.x), lebar_viewport_px):
-		return LoperAnim.Sisi.TIDAK_ADA
-	return LoperAnim.Sisi.SEBERANG if geser.x < 0.0 else LoperAnim.Sisi.DEKAT
+		return NAN
+	var geser_x: float = float(akhir.x) - float(awal.x)
+	var geser_y: float = float(akhir.y) - float(awal.y)
+	return sqrt(geser_x * geser_x + geser_y * geser_y)
 
 
-## Jarak ke samping untuk kekuatan u (dijepit 0..1; NaN = 0), ubin.
-static func jarak_samping_ubin(u: float) -> float:
+## Arah tanah (dunia, vektor satuan) dari vektor swipe di layar `v` (piksel game): `Iso.layar_ke_dunia(v)` dinormalkan (D-1).
+## `Iso.dunia_ke_layar(hasil)` searah dengan `v`. Vektor nol, tidak hingga, atau NaN = `Vector2.ZERO` (tidak ada arah).
+static func arah_tanah(v: Vector2) -> Vector2:
+	if not v.is_finite():
+		return Vector2.ZERO
+	return _satuan(Iso.layar_ke_dunia(v))
+
+
+## Sisi lempar dari arah tanah (D-3): komponen melintang x < 0 = `SEBERANG`, x > 0 = `DEKAT`, x = 0 TEPAT (swipe searah sumbu jalan di
+## layar, maju atau mundur) = `DEKAT`. Arah nol, tidak hingga, atau NaN = `TIDAK_ADA`. Hanya untuk animasi lempar; zona menilai dari
+## titik mendarat saja.
+static func sisi_dari_arah(arah: Vector2) -> LoperAnim.Sisi:
+	if not arah.is_finite() or arah == Vector2.ZERO:
+		return LoperAnim.Sisi.TIDAK_ADA
+	return LoperAnim.Sisi.SEBERANG if arah.x < 0.0 else LoperAnim.Sisi.DEKAT
+
+
+## Sisi lempar dari satu swipe (titik awal dan akhir, piksel game) di viewport selebar `lebar_viewport_px` (GDD 5.2, D-1 sampai D-3):
+## `sisi_dari_arah(arah_tanah(v))`, tidak bergantung opsi kidal (kidal hanya menukar zona). Tidak ada sudut yang ditolak. `TIDAK_ADA`
+## hanya bila titik tidak hingga atau NaN, atau |v| di bawah min (termasuk ketukan tanpa geser).
+static func sisi_dari_swipe(awal: Vector2, akhir: Vector2, lebar_viewport_px: float) -> LoperAnim.Sisi:
+	if not cukup_panjang(panjang_swipe(awal, akhir), lebar_viewport_px):
+		return LoperAnim.Sisi.TIDAK_ADA
+	return sisi_dari_arah(arah_tanah(akhir - awal))
+
+
+## Jarak tanah untuk kekuatan u (dijepit 0..1; NaN = 0), ubin.
+static func jarak_ubin(u: float) -> float:
 	return lerpf(Config.LEMPAR_JARAK_MIN_UBIN, Config.LEMPAR_JARAK_MAKS_UBIN, _u_bersih(u))
 
 
@@ -114,7 +144,8 @@ static func tinggi_puncak_ubin(u: float) -> float:
 	return lerpf(Config.LEMPAR_PUNCAK_MIN_UBIN, Config.LEMPAR_PUNCAK_MAKS_UBIN, _u_bersih(u))
 
 
-## Arah melintang ke sisi lempar (`Iso.ARAH_SEBERANG` / `Iso.ARAH_DEKAT`); `TIDAK_ADA` = nol.
+## Arah tanah melintang murni ke sisi (`Iso.ARAH_SEBERANG` / `Iso.ARAH_DEKAT`); `TIDAK_ADA` = nol. Untuk tes dan probe (lemparan
+## tegak lurus jalan, sama dengan swipe yang searah `Iso.dunia_ke_layar` arah itu).
 static func arah_sisi(sisi: LoperAnim.Sisi) -> Vector2:
 	match sisi:
 		LoperAnim.Sisi.SEBERANG:
@@ -134,12 +165,14 @@ static func titik_lepas(posisi_sepeda: Vector2, kecepatan_maju_ud: float, kecepa
 	return Vector2(clampf(lateral, -batas, batas), posisi_sepeda.y + maju.y)
 
 
-## Lintasan dari keadaan saat jari dilepas (D-1). `panjang_swipe_px` = |dx| piksel game, `lebar_viewport_px` = lebar viewport game
-## saat itu, `posisi_sepeda` dunia (ubin), `kecepatan_maju_ud` kecepatan maju SEBENARNYA (NaN, tak hingga, negatif = 0),
-## `kecepatan_lateral_ud` kecepatan lateral efektif (NaN, tak hingga = 0), `jeda_lepas_detik` (NaN, tak hingga, negatif = 0).
-## null bila tidak melempar: sisi bukan `SEBERANG`/`DEKAT`, posisi tidak hingga, atau swipe di bawah min.
-static func hitung(panjang_swipe_px: float, lebar_viewport_px: float, sisi: LoperAnim.Sisi, posisi_sepeda: Vector2, kecepatan_maju_ud: float, kecepatan_lateral_ud: float, jeda_lepas_detik: float) -> Lintasan:
-	if sisi != LoperAnim.Sisi.SEBERANG and sisi != LoperAnim.Sisi.DEKAT:
+## Lintasan dari keadaan saat jari dilepas. `panjang_swipe_px` = |v| piksel game, `lebar_viewport_px` = lebar viewport game saat itu,
+## `arah` = arah tanah (dunia; dinormalkan di sini, panjangnya tidak dipakai), `posisi_sepeda` dunia (ubin), `kecepatan_maju_ud`
+## kecepatan maju SEBENARNYA (NaN, tak hingga, negatif = 0), `kecepatan_lateral_ud` kecepatan lateral efektif (NaN, tak hingga = 0),
+## `jeda_lepas_detik` (NaN, tak hingga, negatif = 0). Titik mendarat = titik lepas + arah x jarak tanah + `Iso.ARAH_MAJU` x geser maju.
+## null bila tidak melempar: arah nol atau tidak hingga, posisi tidak hingga, atau swipe di bawah min.
+static func hitung(panjang_swipe_px: float, lebar_viewport_px: float, arah: Vector2, posisi_sepeda: Vector2, kecepatan_maju_ud: float, kecepatan_lateral_ud: float, jeda_lepas_detik: float) -> Lintasan:
+	var satuan: Vector2 = _satuan(arah) if arah.is_finite() else Vector2.ZERO
+	if satuan == Vector2.ZERO:
 		return null
 	if not posisi_sepeda.is_finite():
 		return null
@@ -147,15 +180,16 @@ static func hitung(panjang_swipe_px: float, lebar_viewport_px: float, sisi: Lope
 	if u < 0.0:
 		return null
 	var hasil: Lintasan = Lintasan.new()
-	hasil.sisi = sisi
+	hasil.arah = satuan
+	hasil.sisi = sisi_dari_arah(satuan)
 	hasil.kekuatan = u
 	hasil.kecepatan_maju_ud = _tak_negatif(kecepatan_maju_ud)
 	hasil.jeda_lepas = _tak_negatif(jeda_lepas_detik)
 	hasil.titik_lepas = titik_lepas(posisi_sepeda, kecepatan_maju_ud, kecepatan_lateral_ud, jeda_lepas_detik)
-	hasil.jarak_samping = jarak_samping_ubin(u)
+	hasil.jarak = jarak_ubin(u)
 	hasil.lama_terbang = lama_terbang_detik(u)
 	hasil.geser_maju = hasil.kecepatan_maju_ud * Config.LEMPAR_WARISAN_MAJU * hasil.lama_terbang
-	hasil.titik_mendarat = hasil.titik_lepas + arah_sisi(sisi) * hasil.jarak_samping + Iso.ARAH_MAJU * hasil.geser_maju
+	hasil.titik_mendarat = hasil.titik_lepas + satuan * hasil.jarak + Iso.ARAH_MAJU * hasil.geser_maju
 	hasil.tinggi_tangan = maxf(Config.LEMPAR_TINGGI_TANGAN_UBIN, 0.0)
 	hasil.tinggi_puncak = maxf(tinggi_puncak_ubin(u), hasil.tinggi_tangan)
 	# Parabola h(s) = h0 + b s - a s^2 dengan h(1) = 0 (b = a - h0) dan maksimum H: (a - h0)^2 = 4 a (H - h0), akar yang menaruh
@@ -167,13 +201,14 @@ static func hitung(panjang_swipe_px: float, lebar_viewport_px: float, sisi: Lope
 	return hasil
 
 
-## Lintasan langsung dari swipe (titik awal dan akhir, piksel game): `sisi_dari_swipe` lalu `hitung` dengan |dx|. Panggilan yang
-## sama dipakai garis bidik tiap frame dan lemparan saat jari dilepas (D-4). null bila swipe tidak melempar.
+## Lintasan langsung dari swipe (titik awal dan akhir, piksel game): `hitung` dengan |v| (`panjang_swipe`) dan `arah_tanah(v)`.
+## Panggilan yang sama dipakai garis bidik tiap frame dan lemparan saat jari dilepas (D-4). null bila swipe tidak melempar (titik tidak
+## hingga atau |v| di bawah min; tidak ada arah yang ditolak).
 static func dari_swipe(awal: Vector2, akhir: Vector2, lebar_viewport_px: float, posisi_sepeda: Vector2, kecepatan_maju_ud: float, kecepatan_lateral_ud: float, jeda_lepas_detik: float) -> Lintasan:
-	var sisi: LoperAnim.Sisi = sisi_dari_swipe(awal, akhir, lebar_viewport_px)
-	if sisi == LoperAnim.Sisi.TIDAK_ADA:
+	var panjang: float = panjang_swipe(awal, akhir)
+	if not cukup_panjang(panjang, lebar_viewport_px):
 		return null
-	return hitung(absf(akhir.x - awal.x), lebar_viewport_px, sisi, posisi_sepeda, kecepatan_maju_ud, kecepatan_lateral_ud, jeda_lepas_detik)
+	return hitung(panjang, lebar_viewport_px, arah_tanah(akhir - awal), posisi_sepeda, kecepatan_maju_ud, kecepatan_lateral_ud, jeda_lepas_detik)
 
 
 ## Tinggi koran di udara pada `t` detik sejak lepas, ubin (t dijepit 0..lama terbang; NaN = 0).
@@ -242,3 +277,13 @@ static func _tak_negatif(nilai: float) -> float:
 
 static func _hingga(nilai: float) -> float:
 	return nilai if is_finite(nilai) else 0.0
+
+
+## Vektor satuan dari `v` dengan panjang dihitung float 64-bit (komponen besar tidak meluap). Nol, tidak hingga, NaN = nol.
+static func _satuan(v: Vector2) -> Vector2:
+	var x: float = v.x
+	var y: float = v.y
+	var panjang: float = sqrt(x * x + y * y)
+	if not is_finite(panjang) or panjang <= 0.0:
+		return Vector2.ZERO
+	return Vector2(x / panjang, y / panjang)
