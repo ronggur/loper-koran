@@ -47,7 +47,7 @@ godot --headless --path . --script res://tests/probe_layar.gd   # skala bulat da
 godot --path .                                         # jalankan scene utama sementara (jalan_uji.tscn): stick di layar sentuh, panah atau WASD di editor
 godot --path . --resolution 2340x1080 --position 0,0 --script res://tests/probe_umpan_balik_jendela.gd -- docs/loop/<RUN_ID>/shots   # tangkapan layar debu, garis, rem, jeda, kidal
 godot --headless --path . scenes/dev/cek_render.tscn   # probe render Compatibility (light 2D, glow, partikel, shader); jendela asli: tambah --resolution 2340x1080 dan -- --tangkap=<png>
-python3 tools/ekspor_cek_render.py --apk builds/kring-cek-render-debug.apk   # APK probe render terpisah (scene utama diganti hanya selama ekspor); --pck <berkas> tanpa Java
+python3 tools/ekspor_cek_render.py --apk builds/kring-cek-render-debug.apk   # APK probe render terpisah (scene utama diganti dan pengecualian probe di preset dilepas hanya selama ekspor; APK normal tanpa probe); --pck <berkas> tanpa Java
 mkdir -p builds                                        # folder APK hasil ekspor, tidak di-commit
 godot --headless --path . --export-pack "Android" build/kring-uji.pck   # paket game dengan filter preset (tanpa Java); periksa tidak ada tests/ atau docs/
 godot --headless --path . --export-debug "Android" builds/kring-kring-debug.apk   # APK debug; butuh export templates 4.7.2 dan Java SDK Path di Editor Settings
@@ -79,7 +79,7 @@ docs/design/         Token desain, mock HUD, sprite produksi pemain (character/l
 tools/loper_art/     Renderer sprite pemain (Python) + bangun_frames.py (SpriteFrames gabungan, stdlib), lihat tools/loper_art/README.md
 tools/env_art/       Renderer aset lingkungan (usulan) + graybox.py (ubin graybox)
 tools/audio_art/     sintesis_sepeda.py: bunyi placeholder sepeda dari rumus (stdlib, deterministik), lihat tools/audio_art/README.md
-tools/               cek_keluaran_tes.py (pemeriksa keluaran tes), tests_cek/ (contoh log baik dan buruk, uji_bangun_frames.py, uji_sintesis_sepeda.py), cek_blok_piksel.py (ketajaman tangkapan layar), ekspor_cek_render.py (build probe render terpisah)
+tools/               cek_keluaran_tes.py (pemeriksa keluaran tes), tests_cek/ (contoh log baik dan buruk, uji_bangun_frames.py, uji_sintesis_sepeda.py), cek_blok_piksel.py (ketajaman tangkapan layar), ekspor_cek_render.py (build probe render terpisah; probe dikecualikan dari build normal oleh exclude_filter preset)
 .github/workflows/   tes.yml (CI: uji alat Python, import, tes, pemeriksa keluaran)
 .cursor/rules/       Aturan agent (sumber tunggal)
 ```
