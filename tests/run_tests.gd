@@ -978,7 +978,7 @@ func _test_probe_keluar_bersih() -> void:
 		check(langsung.is_empty() and teks.contains("await ProbeKeluar.keluar(self"), "%s: semua jalur keluar lewat await ProbeKeluar.keluar (tanpa quit langsung): %s" % [berkas, "; ".join(langsung)])
 	check(probe_scene >= 6, "pemindai menemukan probe jendela yang memuat scene utama (%d)" % probe_scene)
 	var pembantu: String = FileAccess.get_file_as_string("res://tests/probe_keluar.gd")
-	check(pembantu.contains("hentikan_sepeda") and pembantu.contains("create_timer(TUNGGU_DETIK") and pembantu.contains("tree.quit(kode)"), "ProbeKeluar menghentikan bunyi, menunggu, lalu keluar")
+	check(pembantu.contains("tree.paused = true") and pembantu.contains("hentikan_sepeda") and pembantu.contains("create_timer(TUNGGU_DETIK") and pembantu.contains("tree.quit(kode)"), "ProbeKeluar menjeda pohon, menghentikan bunyi, menunggu, lalu keluar")
 	check(not _quit_langsung("	if gagal:
 		quit(1)
 		return
