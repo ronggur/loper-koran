@@ -5,10 +5,19 @@ extends Node2D
 ## Bukan `GPUParticles2D` (lebih aman di renderer Compatibility dan HP kelas bawah) dan bukan `CPUParticles2D`: posisi partikel
 ## CPUParticles2D tidak dibulatkan ke piksel game, jadi dengan stretch `canvas_items` x3 kotaknya jatuh di antara blok piksel.
 ## Di sini tiap partikel adalah kotak 1-2 px game (atau garis bertangga 2:1 sepanjang `panjang_px`) di posisi yang dibulatkan,
-## warnanya dari `Palette` (diisi pemilik node). Partikel bergerak lurus searah `arah` (sejajar jalan) dalam ruang lokal node,
-## umurnya `umur_detik`, jumlah hidup paling banyak `batas` (larik dipesan sekali di `siapkan`, tanpa alokasi per frame). Laju
-## pancar (`laju`, per detik) diisi tiap langkah oleh pemilik dari `UmpanBalikKecepatan`. Acak memakai `RandomNumberGenerator`
-## bernih tetap (deterministik). Waktu dimajukan `maju(dt)` dari `_process`, jadi `SceneTree.paused` menghentikan pancaran dan gerak.
+## warnanya dari `Palette` (diisi pemilik node). Partikel bergerak lurus searah `arah` (sejajar jalan), umurnya `umur_detik`,
+## jumlah hidup paling banyak `batas` (larik dipesan sekali di `siapkan`, tanpa alokasi per frame). Laju pancar (`laju`, per detik)
+## diisi tiap langkah oleh pemilik dari `UmpanBalikKecepatan`. Acak memakai `RandomNumberGenerator` bernih tetap (deterministik).
+## Waktu dimajukan `maju(dt)` dari `_process`, jadi `SceneTree.paused` menghentikan pancaran dan gerak.
+##
+## Dua ruang (QA-006 run fase1b-umpan-balik, D-5 run fase1c-perapian):
+## - `ruang_dunia` false (bawaan, garis kecepatan): posisi partikel di ruang lokal node, jadi partikel ikut bergeser bersama induk.
+## - `ruang_dunia` true (debu roda): saat dipancarkan, titik muncul (`asal` lokal) diubah ke posisi global (kanvas, sama dengan
+##   ruang dunia jalan; kamera tidak termasuk) dan disimpan di sana. Sesudahnya partikel diam di jalan: bergerak hanya karena
+##   `arah` x `kecepatan_px` miliknya, tidak ikut sepeda maju, pindah sisi, atau dorongan kamera. `_draw` menggambar posisi itu
+##   kembali ke ruang lokal node dengan transform global terbalik, jadi node tetap di tempatnya di pohon (urutan gambar tidak
+##   berubah: tetap di belakang sprite pemain). Bukan `top_level`, karena `top_level` juga memindah urutan gambar ke atas.
+##   Induk hanya boleh bergeser (tanpa putar atau skala), seperti `SepedaUji`.
 
 ## Laju pancar, partikel per detik. 0 = tidak memancar (partikel yang masih hidup tetap habis umurnya).
 var laju: float = 0.0
@@ -16,9 +25,9 @@ var laju: float = 0.0
 var umur_detik: float = 0.0
 ## Kecepatan partikel searah `arah`, piksel game per detik.
 var kecepatan_px: float = 0.0
-## Arah gerak (satuan), ruang lokal.
+## Arah gerak (satuan). Induk hanya bergeser, jadi arah sama di ruang lokal dan ruang dunia.
 var arah: Vector2 = Vector2.ZERO
-## Titik muncul, ruang lokal.
+## Titik muncul, ruang lokal (juga saat `ruang_dunia`: diubah ke posisi global saat partikel dipancarkan).
 var asal: Vector2 = Vector2.ZERO
 ## Sebaran titik muncul tegak lurus `arah`, plus-minus piksel game.
 var sebaran_px: float = 0.0
@@ -28,6 +37,12 @@ var ukuran_maks_px: int = 1
 var panjang_px: int = 0
 ## Warna partikel (dari `Palette`, boleh dengan alpha).
 var warna: Color = Color(Palette.TEXT, 0.0)
+## True: partikel yang sudah dipancarkan diam di ruang dunia (tidak ikut induk bergeser); lihat penjelasan di atas.
+var ruang_dunia: bool = false:
+	set(nilai):
+		ruang_dunia = nilai
+		set_notify_transform(nilai)
+		kosongkan()
 
 var _batas: int = 0
 var _jumlah: int = 0
@@ -50,6 +65,12 @@ func siapkan(batas: int, benih: int) -> void:
 
 func _process(delta: float) -> void:
 	maju(minf(delta, Config.LANGKAH_WAKTU_MAKS_DETIK))
+
+
+func _notification(what: int) -> void:
+	# Ruang dunia: induk bergeser = letak gambar partikel di ruang lokal berubah walau partikel diam.
+	if what == NOTIFICATION_TRANSFORM_CHANGED and ruang_dunia:
+		queue_redraw()
 
 
 ## Memajukan partikel `dt` detik: menua dan bergerak, yang habis umurnya dibuang, lalu memancar sesuai `laju` sampai `batas`.
@@ -100,24 +121,37 @@ func memancar() -> bool:
 	return laju > 0.0
 
 
-## Salinan posisi partikel hidup (untuk tes; bukan untuk dipakai tiap frame).
+## Salinan posisi partikel hidup dalam ruang simpannya (lokal, atau global bila `ruang_dunia`; untuk tes, bukan tiap frame).
 func posisi_partikel() -> PackedVector2Array:
 	return _posisi.slice(0, _jumlah)
+
+
+## Salinan posisi global (kanvas) partikel hidup, apa pun ruang simpannya (untuk tes dan probe; bukan untuk dipakai tiap frame).
+func posisi_global_partikel() -> PackedVector2Array:
+	var hasil: PackedVector2Array = _posisi.slice(0, _jumlah)
+	if not ruang_dunia:
+		var ke_global: Transform2D = get_global_transform()
+		for i: int in range(hasil.size()):
+			hasil[i] = ke_global * hasil[i]
+	return hasil
 
 
 func _pancar() -> void:
 	if _jumlah >= _batas:
 		return
 	var tegak: Vector2 = Vector2(-arah.y, arah.x)
-	_posisi[_jumlah] = asal + tegak * _rng.randf_range(-sebaran_px, sebaran_px)
+	var muncul: Vector2 = asal + tegak * _rng.randf_range(-sebaran_px, sebaran_px)
+	_posisi[_jumlah] = get_global_transform() * muncul if ruang_dunia else muncul
 	_umur[_jumlah] = 0.0
 	_ukuran[_jumlah] = _rng.randi_range(1, maxi(ukuran_maks_px, 1))
 	_jumlah += 1
 
 
 func _draw() -> void:
+	# Ruang dunia: posisi global dibulatkan ke piksel game dulu, lalu dibawa ke ruang lokal (induk di piksel bulat, jadi tetap bulat).
+	var ke_lokal: Transform2D = get_global_transform().affine_inverse() if ruang_dunia else Transform2D.IDENTITY
 	for i: int in range(_jumlah):
-		var p: Vector2 = _posisi[i].round()
+		var p: Vector2 = (ke_lokal * _posisi[i].round()).round()
 		if panjang_px <= 0:
 			draw_rect(Rect2(p, Vector2.ONE * float(_ukuran[i])), warna)
 			continue

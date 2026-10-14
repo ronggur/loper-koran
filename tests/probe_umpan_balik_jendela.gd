@@ -2,8 +2,9 @@ extends SceneTree
 ## Probe umpan balik dan penyetelan run fase1b-umpan-balik di jendela asli, non-headless (AC-9): memuat scene utama, menggerakkan
 ## stick lewat event sentuh sintetis (piksel jendela), memajukan simulasi dan partikel dengan langkah tetap `perbarui(1/60)` dan
 ## `PancaranPiksel.maju(1/60)` (bukan waktu dinding), lalu menyimpan tangkapan layar: santai (debu tipis, tanpa garis), ngebut
-## (garis + debu, dorongan maju penuh), rem (debu rem), dorongan mundur penuh (rem berhenti), layar jeda, dan kidal. Mencetak jumlah
-## partikel, letak sepeda, persegi tombol dan panel, dan kotak teks HUD untuk `tools/cek_blok_piksel.py --kecualikan`.
+## (garis + debu, dorongan maju penuh), pindah sisi sambil ngebut (run fase1c-perapian, D-5: jejak debu tertinggal di sisi lama karena
+## debu di ruang dunia), rem (debu rem), dorongan mundur penuh (rem berhenti), layar jeda, dan kidal. Mencetak jumlah partikel, letak
+## sepeda, persegi tombol dan panel, dan kotak teks HUD untuk `tools/cek_blok_piksel.py --kecualikan`.
 ## Tidak interaktif: keluar sendiri.
 ##
 ## Pakai (jendela harus muat di layar monitor; 2340x1080 = viewport 780, 1920x1080 = 640):
@@ -60,6 +61,12 @@ func _initialize() -> void:
 	_geser(0, TITIK_STICK - Vector2(0, Config.STICK_RADIUS_PX))
 	await _maju(3.0)
 	await _foto("ngebut")
+	# Pindah sisi sambil ngebut: stick ke samping 0,25 detik (lateral 3 u/d), lalu kembali ke atas penuh sebelum rem.
+	_geser(0, TITIK_STICK + Vector2(Config.STICK_RADIUS_PX, 0))
+	await _maju(0.25)
+	await _foto("pindah_sisi")
+	_geser(0, TITIK_STICK - Vector2(0, Config.STICK_RADIUS_PX))
+	await _maju(1.5)
 	# Bawah penuh: meluncur 0,25 detik lalu rem; foto saat rem masih bergerak (debu rem).
 	_geser(0, TITIK_STICK + Vector2(0, Config.STICK_RADIUS_PX))
 	await _maju(0.45)
@@ -132,7 +139,7 @@ func _geser(index: int, posisi_viewport: Vector2) -> void:
 func _foto(keadaan: String) -> void:
 	await _tunggu(3)
 	var layar: Vector2 = _sepeda.get_global_transform_with_canvas().origin
-	print("%s: kecepatan %.2f u/d, rem %s, debu %d (laju %.1f/d), garis %d (laju %.1f/d), sepeda di layar %s, dorongan %s, jeda %s" % [keadaan, _sepeda.kecepatan_ud, _sepeda.rem_aktif(), _debu.jumlah_aktif(), _debu.laju, _garis.jumlah_aktif(), _garis.laju, layar, _akar.geser_dorongan(), _akar.sedang_jeda()])
+	print("%s: kecepatan %.2f u/d, lateral %.2f ubin, rem %s, debu %d (laju %.1f/d), garis %d (laju %.1f/d), sepeda di layar %s, dorongan %s, jeda %s" % [keadaan, _sepeda.kecepatan_ud, _sepeda.lateral_ubin, _sepeda.rem_aktif(), _debu.jumlah_aktif(), _debu.laju, _garis.jumlah_aktif(), _garis.laju, layar, _akar.geser_dorongan(), _akar.sedang_jeda()])
 	if _folder.is_empty():
 		return
 	var gambar: Image = root.get_texture().get_image()
