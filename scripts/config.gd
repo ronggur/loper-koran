@@ -134,6 +134,11 @@ const LEMPAR_TINGGI_TANGAN_UBIN: float = 0.7
 const LEMPAR_JEDA_DETIK: float = 0.35
 ## Koran di awal jalan uji (25 pelanggan + 20%, BALANCING 4). Tiap lemparan yang diterima mengurangi tepat 1.
 const KORAN_AWAL: int = 30
+## Lama penanda kena/meleset di titik mendarat, detik (DESIGN_SPEC 3.6).
+const PENANDA_LAMA_DETIK: float = 0.8
+## Sakelar jendela kena koran (BALANCING 5, ROADMAP 5, KEPUTUSAN TERBUKA sampai skor Fase 3): false = penalti ringan (bawaan pemilik
+## 2026-10-14: antaran tidak sah seperti meleset, tanpa potong koin), true = bonus (antaran sah, ditandai bonus).
+const JENDELA_KENA_BONUS: bool = false
 
 ## --- Umpan balik kecepatan (GDD 15; usulan run fase1b-umpan-balik, dinilai di HP) ---
 ## Dihitung dari kecepatan SEBENARNYA (`UmpanBalikKecepatan`). Partikel digambar sendiri (`PancaranPiksel`), kotak 1-2 px game.
@@ -265,8 +270,9 @@ const DORONGAN_MUNDUR_PX: float = 20.0
 const DORONGAN_RESPON_DETIK: float = 0.35
 ## Jarak antar rumah graybox di sisi seberang, ubin (3 ubin rumah + 1 ubin celah).
 const JALAN_UJI_RUMAH_PERIODE_UBIN: int = 4
-## Letak titik pijak rumah graybox melintang jalan, ubin dari garis tengah jalan (negatif = sisi seberang).
-const JALAN_UJI_RUMAH_X_UBIN: float = -2.0
+## Letak titik pijak rumah graybox (kaki fasad) melintang jalan, ubin dari garis tengah jalan (negatif = sisi seberang). -3,0 (dulu -2,0;
+## run fase2a-lemparan): satu ubin rumput di antara trotoar dan fasad menjadi halaman dan teras sasaran (BALANCING 5).
+const JALAN_UJI_RUMAH_X_UBIN: float = -3.0
 ## Geseran titik pijak rumah graybox sepanjang jalan, ubin.
 const JALAN_UJI_RUMAH_MAJU_UBIN: float = -0.5
 ## Letak kotak surat graybox melintang jalan, ubin dari garis tengah jalan.
@@ -323,3 +329,31 @@ const JALAN_UJI_DAUR_MUNDUR_UBIN: int = 12
 ## Objek berkala di sisi seberang: berapa ubin di depan sepeda yang sudah disiapkan.
 const JALAN_UJI_DAUR_MAJU_UBIN: int = 16
 
+## --- Zona sasaran jalan uji (BALANCING 5, D-6 run fase2a-lemparan; placeholder usulan, bukan data rute) ---
+## Tiap zona = [lateral_min, maju_min, lebar_lateral, panjang_maju], ubin, persegi di bidang tanah. Lateral dari garis tengah jalan
+## (negatif = seberang, positif = dekat); maju relatif terhadap awal kavling `indeks x JALAN_UJI_RUMAH_PERIODE_UBIN` (sama dengan
+## `JALAN_UJI_KOTAK_SURAT_MAJU_UBIN`). Tepi min inklusif, tepi maks eksklusif (`ZonaSasaran`). Prioritas bila tumpang tindih:
+## kotak surat > jendela > teras > halaman. Sisi dekat datar tanpa fasad dan tanpa jendela, hanya supaya lempar ke sisi dekat bisa
+## diuji (tidak memutuskan cara menampilkan rumah di sisi dekat, ROADMAP 5).
+
+## Seberang: kotak surat, 0,5 x 0,5 di sekitar kotak surat graybox (pijak -1,5, 1,0, kotak 0,25 ubin) di trotoar.
+const JALAN_UJI_SEBERANG_KOTAK_SURAT_UBIN: Array[float] = [-1.875, 0.875, 0.5, 0.5]
+## Seberang: halaman, rumput di antara trotoar (-2,0) dan fasad (-3,0) sepanjang rumah (maju -0,5 sampai 2,5).
+const JALAN_UJI_SEBERANG_HALAMAN_UBIN: Array[float] = [-3.0, -0.5, 1.0, 3.0]
+## Seberang: teras, di kaki fasad bagian pintu.
+const JALAN_UJI_SEBERANG_TERAS_UBIN: Array[float] = [-3.0, 0.0, 0.5, 1.25]
+## Seberang: jendela, strip tanah 0,25 ubin di kaki fasad (model placeholder 2D).
+const JALAN_UJI_SEBERANG_JENDELA_UBIN: Array[float] = [-3.0, 1.5, 0.25, 0.75]
+## Dekat: kotak surat di trotoar dekat (datar, tanpa graybox).
+const JALAN_UJI_DEKAT_KOTAK_SURAT_UBIN: Array[float] = [1.375, 0.875, 0.5, 0.5]
+## Dekat: halaman, rumput sesudah trotoar dekat.
+const JALAN_UJI_DEKAT_HALAMAN_UBIN: Array[float] = [2.0, -0.5, 1.0, 3.0]
+## Dekat: teras, sisi jauh halaman.
+const JALAN_UJI_DEKAT_TERAS_UBIN: Array[float] = [2.5, 0.25, 0.5, 1.5]
+## Rumah seberang bernomor n bukan pelanggan bila n mod `SETIAP` = `SISA` (minimal satu per putaran daur 9 slot).
+const JALAN_UJI_BUKAN_PELANGGAN_SETIAP: int = 4
+## Lihat `JALAN_UJI_BUKAN_PELANGGAN_SETIAP`.
+const JALAN_UJI_BUKAN_PELANGGAN_SISA: int = 2
+## Isi ulang koran khusus jalan uji (alat uji, bukan aturan game; jalan uji tidak punya akhir rute): sesudah koran habis dan sepeda
+## menempuh sekian ubin, sisa koran kembali penuh.
+const JALAN_UJI_ISI_ULANG_UBIN: float = 16.0

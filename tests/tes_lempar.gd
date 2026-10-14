@@ -1,7 +1,8 @@
 class_name TesLempar
 extends RefCounted
 ## Tes logika murni run fase2a-lemparan bagian 1a: `ThrowSolver` (AC-2 rumus D-2, AC-3 lengkung D-3, AC-4 prediksi = hasil D-4,
-## bagian murni), tinggi z di `Iso`, dan `LemparWaktu.waktu_lepas`.
+## bagian murni), tinggi z di `Iso`, `LemparWaktu.waktu_lepas`, `ZonaSasaran` (AC-5 zona, prioritas, sakelar jendela D-7,
+## keterjangkauan, penanda D-10), dan `SisaKoran` (AC-6 sisa koran, jeda 0,35, isi ulang jalan uji; D-8, D-9, D-11 bagian murni).
 ##
 ## Dipanggil dari `tests/run_tests.gd` (`TesLempar.new(check, judul).jalankan()`), memakai `check` milik runner. Tanpa node: waktu
 ## selalu parameter (rule `testing`).
@@ -49,6 +50,14 @@ func jalankan() -> void:
 	_test_waktu_lepas()
 	_test_prediksi_hasil()
 	_test_penjaga_rumus()
+	_test_zona_klasifikasi()
+	_test_zona_prioritas()
+	_test_antaran_dan_penanda()
+	_test_zona_jalan_uji()
+	_test_keterjangkauan()
+	_test_sisa_koran()
+	_test_jeda_antar_lempar()
+	_test_isi_ulang()
 
 
 # --- Pembantu ---
@@ -84,6 +93,8 @@ func _test_config_lempar() -> void:
 	check(Config.LEMPAR_PUNCAK_MIN_UBIN == 1.0 and Config.LEMPAR_PUNCAK_MAKS_UBIN == 1.6, "tinggi puncak 1,0 sampai 1,6 ubin")
 	check(Config.LEMPAR_WARISAN_MAJU == 1.0, "warisan kecepatan maju 100%")
 	check(Config.LEMPAR_JEDA_DETIK == 0.35 and Config.KORAN_AWAL == 30, "jeda antar lempar 0,35 detik, koran awal 30 (25 pelanggan + 20%)")
+	check(Config.PENANDA_LAMA_DETIK == 0.8 and Config.JALAN_UJI_ISI_ULANG_UBIN == 16.0, "penanda 0,8 detik (DESIGN_SPEC 3.6), isi ulang jalan uji sesudah 16 ubin")
+	check(Config.JENDELA_KENA_BONUS == false, "sakelar jendela bawaan = penalti ringan (keputusan pemilik 2026-10-14, masih terbuka)")
 	check(Config.LEMPAR_TINGGI_TANGAN_UBIN > 0.0 and Config.LEMPAR_TINGGI_TANGAN_UBIN < Config.LEMPAR_PUNCAK_MIN_UBIN, "tinggi tangan di atas tanah dan di bawah puncak terendah (lengkung naik dulu)")
 	check(Config.LEMPAR_SWIPE_TOLERANSI_PX > 0.0 and Config.LEMPAR_SWIPE_TOLERANSI_PX < 0.01, "toleransi swipe hanya meredam derau presisi tunggal (< 0,01 px)")
 	check(not (load(BERKAS_CONFIG) as Script).get_script_constant_map().has("LEMPAR_SWIPE_AMBANG_PX"), "ambang lama 12 px (LEMPAR_SWIPE_AMBANG_PX) sudah tidak ada (diganti 6% lebar viewport, D-2)")
@@ -362,3 +373,275 @@ func _test_penjaga_rumus() -> void:
 	check(_pemakai_rumus(buruk).size() == 1, "contoh buruk: garis bidik dengan rumus jarak sendiri tertangkap")
 	var buruk_swipe: Dictionary = {"res://scripts/entities/jalan_uji.gd": "if dx >= Config.LEMPAR_SWIPE_MIN_PECAHAN * lebar:"}
 	check(_pemakai_rumus(buruk_swipe).size() == 1, "contoh buruk: ambang swipe dihitung di luar ThrowSolver tertangkap")
+
+
+# --- Zona sasaran (AC-5, D-6) ---
+
+func _zona(x: float, maju: float, lebar: float, panjang: float, jenis: ZonaSasaran.Jenis, sisi: LoperAnim.Sisi = LoperAnim.Sisi.SEBERANG, pelanggan: bool = true) -> ZonaSasaran.Zona:
+	return ZonaSasaran.buat(Rect2(x, maju, lebar, panjang), sisi, jenis, pelanggan)
+
+
+## Titik dunia dari koordinat jalan (lateral, maju).
+func _titik(x: float, maju: float) -> Vector2:
+	return Vector2(x, -maju)
+
+
+func _test_zona_klasifikasi() -> void:
+	_judul.call("Zona sasaran: tiap jenis, tepi inklusif/eksklusif, meleset, bukan pelanggan, sisi salah (AC-5, D-6)")
+	var S: LoperAnim.Sisi = LoperAnim.Sisi.SEBERANG
+	var D: LoperAnim.Sisi = LoperAnim.Sisi.DEKAT
+	var daftar: Array[ZonaSasaran.Zona] = [
+		_zona(-2.0, 0.0, 0.5, 0.5, ZonaSasaran.Jenis.KOTAK_SURAT),
+		_zona(-3.0, 1.0, 1.0, 1.0, ZonaSasaran.Jenis.TERAS),
+		_zona(-3.0, 3.0, 1.0, 1.0, ZonaSasaran.Jenis.HALAMAN),
+		_zona(-3.0, 5.0, 0.25, 1.0, ZonaSasaran.Jenis.JENDELA),
+		_zona(-3.0, 7.0, 1.0, 1.0, ZonaSasaran.Jenis.TERAS, S, false),
+		_zona(2.0, 0.0, 1.0, 1.0, ZonaSasaran.Jenis.HALAMAN, D),
+	]
+	check(ZonaSasaran.klasifikasi(_titik(-1.75, 0.25), S, daftar) == ZonaSasaran.Hasil.KOTAK_SURAT, "titik di kotak surat = KOTAK_SURAT")
+	check(ZonaSasaran.klasifikasi(_titik(-2.5, 1.5), S, daftar) == ZonaSasaran.Hasil.TERAS, "titik di teras = TERAS")
+	check(ZonaSasaran.klasifikasi(_titik(-2.5, 3.5), S, daftar) == ZonaSasaran.Hasil.HALAMAN, "titik di halaman = HALAMAN")
+	check(ZonaSasaran.klasifikasi(_titik(-2.9, 5.5), S, daftar) == ZonaSasaran.Hasil.JENDELA, "titik di strip jendela = JENDELA")
+	check(ZonaSasaran.klasifikasi(_titik(-2.5, 7.5), S, daftar) == ZonaSasaran.Hasil.BUKAN_PELANGGAN, "teras rumah bukan pelanggan = BUKAN_PELANGGAN")
+	check(ZonaSasaran.klasifikasi(_titik(2.5, 0.5), D, daftar) == ZonaSasaran.Hasil.HALAMAN, "halaman sisi dekat = HALAMAN untuk lemparan ke dekat")
+	check(ZonaSasaran.klasifikasi(_titik(-2.5, 2.5), S, daftar) == ZonaSasaran.Hasil.MELESET and ZonaSasaran.klasifikasi(_titik(0.0, 0.0), S, daftar) == ZonaSasaran.Hasil.MELESET, "titik di luar semua zona (celah, jalan) = MELESET")
+	check(ZonaSasaran.klasifikasi(_titik(-1.75, 0.25), D, daftar) == ZonaSasaran.Hasil.MELESET and ZonaSasaran.klasifikasi(_titik(2.5, 0.5), S, daftar) == ZonaSasaran.Hasil.MELESET, "sisi salah (zona seberang untuk lemparan ke dekat, dan sebaliknya) = MELESET")
+	check(ZonaSasaran.klasifikasi(Vector2(NAN, 0.0), S, daftar) == ZonaSasaran.Hasil.MELESET and ZonaSasaran.klasifikasi(Vector2(-1.75, INF), S, daftar) == ZonaSasaran.Hasil.MELESET, "titik tidak hingga = MELESET")
+	check(ZonaSasaran.klasifikasi(_titik(-1.75, 0.25), S, [] as Array[ZonaSasaran.Zona]) == ZonaSasaran.Hasil.MELESET, "tanpa zona = MELESET")
+	# Tepi: min inklusif, maks eksklusif, di kedua sumbu (lateral dan maju).
+	var kotak: ZonaSasaran.Zona = daftar[0]
+	check(ZonaSasaran.memuat(kotak, _titik(-2.0, 0.0)), "tepi min lateral dan maju (pojok min) inklusif")
+	check(not ZonaSasaran.memuat(kotak, _titik(-1.5, 0.25)), "tepi maks lateral (-1,5) eksklusif")
+	check(not ZonaSasaran.memuat(kotak, _titik(-1.75, 0.5)), "tepi maks maju (0,5) eksklusif")
+	check(ZonaSasaran.memuat(kotak, _titik(-1.5001, 0.4999)), "tepat di dalam tepi maks = di dalam")
+	check(not ZonaSasaran.memuat(kotak, _titik(-2.0001, 0.25)) and not ZonaSasaran.memuat(kotak, _titik(-1.75, -0.0001)), "tepat di luar tepi min = di luar")
+	# Dua zona bersebelahan: tepi bersama hanya milik yang di atas (maks eksklusif), tidak pernah dua-duanya.
+	var a: ZonaSasaran.Zona = _zona(-3.0, 0.0, 1.0, 1.0, ZonaSasaran.Jenis.HALAMAN)
+	var b: ZonaSasaran.Zona = _zona(-3.0, 1.0, 1.0, 1.0, ZonaSasaran.Jenis.HALAMAN)
+	check(not ZonaSasaran.memuat(a, _titik(-2.5, 1.0)) and ZonaSasaran.memuat(b, _titik(-2.5, 1.0)), "tepi bersama dua zona bersebelahan hanya dimuat zona sesudahnya")
+	# Hasil murni dan zona yang menang.
+	check(ZonaSasaran.zona_kena(_titik(-1.75, 0.25), S, daftar) == kotak and ZonaSasaran.zona_kena(_titik(0.0, 0.0), S, daftar) == null, "zona_kena mengembalikan zona yang menang atau null")
+	check(ZonaSasaran.ke_jalan(Vector2(-1.0, -4.0)) == Vector2(-1.0, 4.0), "koordinat jalan: maju = -y dunia")
+
+
+func _test_zona_prioritas() -> void:
+	_judul.call("Zona tumpang tindih: kotak surat > jendela > teras > halaman, tidak bergantung urutan daftar (AC-5, D-6)")
+	var S: LoperAnim.Sisi = LoperAnim.Sisi.SEBERANG
+	var k: ZonaSasaran.Zona = _zona(-3.0, 0.0, 2.0, 2.0, ZonaSasaran.Jenis.KOTAK_SURAT)
+	var j: ZonaSasaran.Zona = _zona(-3.0, 0.0, 2.0, 2.0, ZonaSasaran.Jenis.JENDELA)
+	var t: ZonaSasaran.Zona = _zona(-3.0, 0.0, 2.0, 2.0, ZonaSasaran.Jenis.TERAS)
+	var h: ZonaSasaran.Zona = _zona(-3.0, 0.0, 2.0, 2.0, ZonaSasaran.Jenis.HALAMAN)
+	var p: Vector2 = _titik(-2.0, 1.0)
+	var urutan: Array = [[h, t, j, k], [k, j, t, h], [t, k, h, j], [j, h, k, t]]
+	for u: Array in urutan:
+		var daftar: Array[ZonaSasaran.Zona] = []
+		daftar.assign(u)
+		check(ZonaSasaran.klasifikasi(p, S, daftar) == ZonaSasaran.Hasil.KOTAK_SURAT, "empat zona tumpang tindih (urutan %s) = KOTAK_SURAT" % [u.map(func(z: ZonaSasaran.Zona) -> int: return int(z.jenis))])
+	var tiga: Array[ZonaSasaran.Zona] = [h, t, j]
+	check(ZonaSasaran.klasifikasi(p, S, tiga) == ZonaSasaran.Hasil.JENDELA, "tanpa kotak surat: JENDELA menang atas teras dan halaman")
+	var dua: Array[ZonaSasaran.Zona] = [h, t]
+	var dua_balik: Array[ZonaSasaran.Zona] = [t, h]
+	check(ZonaSasaran.klasifikasi(p, S, dua) == ZonaSasaran.Hasil.TERAS and ZonaSasaran.klasifikasi(p, S, dua_balik) == ZonaSasaran.Hasil.TERAS, "teras menang atas halaman, kedua urutan")
+	var jt: Array[ZonaSasaran.Zona] = [t, j]
+	check(ZonaSasaran.klasifikasi(p, S, jt) == ZonaSasaran.Hasil.JENDELA, "jendela menang atas teras")
+	var kj: Array[ZonaSasaran.Zona] = [j, k]
+	check(ZonaSasaran.klasifikasi(p, S, kj) == ZonaSasaran.Hasil.KOTAK_SURAT, "kotak surat menang atas jendela")
+	# Prioritas dulu, baru status pelanggan: kotak surat rumah bukan pelanggan di atas halaman pelanggan = bukan pelanggan.
+	var kb: ZonaSasaran.Zona = _zona(-3.0, 0.0, 2.0, 2.0, ZonaSasaran.Jenis.KOTAK_SURAT, S, false)
+	var campur: Array[ZonaSasaran.Zona] = [h, kb]
+	check(ZonaSasaran.klasifikasi(p, S, campur) == ZonaSasaran.Hasil.BUKAN_PELANGGAN, "zona prioritas tertinggi milik rumah bukan pelanggan = BUKAN_PELANGGAN")
+	var prioritas: Array[ZonaSasaran.Jenis] = [ZonaSasaran.Jenis.KOTAK_SURAT, ZonaSasaran.Jenis.JENDELA, ZonaSasaran.Jenis.TERAS, ZonaSasaran.Jenis.HALAMAN]
+	check(ZonaSasaran.PRIORITAS == prioritas, "urutan prioritas tertulis: kotak surat, jendela, teras, halaman")
+
+
+func _test_antaran_dan_penanda() -> void:
+	_judul.call("Status antaran, sakelar jendela dua nilai, bentuk penanda (AC-5, AC-9, D-6, D-7, D-10)")
+	var H: Dictionary = {
+		"kotak surat": ZonaSasaran.Hasil.KOTAK_SURAT, "teras": ZonaSasaran.Hasil.TERAS, "halaman": ZonaSasaran.Hasil.HALAMAN,
+		"jendela": ZonaSasaran.Hasil.JENDELA, "bukan pelanggan": ZonaSasaran.Hasil.BUKAN_PELANGGAN, "meleset": ZonaSasaran.Hasil.MELESET,
+	}
+	# [hasil, antaran penalti, antaran bonus, penanda penalti, penanda bonus]
+	var tabel: Array = [
+		["kotak surat", ZonaSasaran.Antaran.SAH_PENUH, ZonaSasaran.Antaran.SAH_PENUH, ZonaSasaran.Penanda.CENTANG, ZonaSasaran.Penanda.CENTANG],
+		["teras", ZonaSasaran.Antaran.SAH_PENUH, ZonaSasaran.Antaran.SAH_PENUH, ZonaSasaran.Penanda.CENTANG, ZonaSasaran.Penanda.CENTANG],
+		["halaman", ZonaSasaran.Antaran.SAH_SETENGAH, ZonaSasaran.Antaran.SAH_SETENGAH, ZonaSasaran.Penanda.SETENGAH, ZonaSasaran.Penanda.SETENGAH],
+		["jendela", ZonaSasaran.Antaran.TIDAK_SAH, ZonaSasaran.Antaran.SAH_BONUS, ZonaSasaran.Penanda.SILANG, ZonaSasaran.Penanda.BINTANG],
+		["bukan pelanggan", ZonaSasaran.Antaran.TIDAK_SAH, ZonaSasaran.Antaran.TIDAK_SAH, ZonaSasaran.Penanda.SILANG, ZonaSasaran.Penanda.SILANG],
+		["meleset", ZonaSasaran.Antaran.TIDAK_SAH, ZonaSasaran.Antaran.TIDAK_SAH, ZonaSasaran.Penanda.SILANG, ZonaSasaran.Penanda.SILANG],
+	]
+	for baris: Array in tabel:
+		var hasil: ZonaSasaran.Hasil = H[baris[0]]
+		check(ZonaSasaran.status_antaran(hasil, false) == baris[1] and ZonaSasaran.status_antaran(hasil, true) == baris[2], "%s: antaran penalti %s, bonus %s" % [baris[0], baris[1], baris[2]])
+		check(ZonaSasaran.penanda_hasil(hasil, false) == baris[3] and ZonaSasaran.penanda_hasil(hasil, true) == baris[4], "%s: penanda penalti %s, bonus %s" % [baris[0], baris[3], baris[4]])
+		check(ZonaSasaran.sah(ZonaSasaran.status_antaran(hasil, false)) == (baris[3] != ZonaSasaran.Penanda.SILANG), "%s: sah (elips OK) tepat bila penandanya bukan silang" % baris[0])
+	check(ZonaSasaran.status_antaran(ZonaSasaran.Hasil.JENDELA, Config.JENDELA_KENA_BONUS) == ZonaSasaran.Antaran.TIDAK_SAH, "bawaan Config: jendela = penalti ringan (tidak sah)")
+	# Bentuk: tiap antaran sah berbeda dari tidak sah, bonus berbeda dari sah biasa, halaman berbeda dari keduanya.
+	var bentuk: Array = [ZonaSasaran.Antaran.TIDAK_SAH, ZonaSasaran.Antaran.SAH_PENUH, ZonaSasaran.Antaran.SAH_SETENGAH, ZonaSasaran.Antaran.SAH_BONUS].map(func(a: ZonaSasaran.Antaran) -> int: return int(ZonaSasaran.penanda(a)))
+	var unik: Dictionary = {}
+	for b: int in bentuk:
+		unik[b] = true
+	check(unik.size() == 4, "empat status antaran = empat bentuk penanda berbeda (tidak hanya warna), dapat %s" % [bentuk])
+	check(ZonaSasaran.penanda(-3 as ZonaSasaran.Antaran) == ZonaSasaran.Penanda.SILANG and ZonaSasaran.status_antaran(99 as ZonaSasaran.Hasil, true) == ZonaSasaran.Antaran.TIDAK_SAH, "nilai di luar enum = tidak sah, silang")
+
+
+# --- Data jalan uji ---
+
+func _test_zona_jalan_uji() -> void:
+	_judul.call("Zona jalan uji dari Config.JALAN_UJI_* (placeholder, D-6)")
+	var data: Dictionary = {
+		"SEBERANG_KOTAK_SURAT": Config.JALAN_UJI_SEBERANG_KOTAK_SURAT_UBIN, "SEBERANG_HALAMAN": Config.JALAN_UJI_SEBERANG_HALAMAN_UBIN,
+		"SEBERANG_TERAS": Config.JALAN_UJI_SEBERANG_TERAS_UBIN, "SEBERANG_JENDELA": Config.JALAN_UJI_SEBERANG_JENDELA_UBIN,
+		"DEKAT_KOTAK_SURAT": Config.JALAN_UJI_DEKAT_KOTAK_SURAT_UBIN, "DEKAT_HALAMAN": Config.JALAN_UJI_DEKAT_HALAMAN_UBIN,
+		"DEKAT_TERAS": Config.JALAN_UJI_DEKAT_TERAS_UBIN,
+	}
+	var tepi_aspal: float = Config.JALAN_LEBAR_UBIN / 2
+	for nama: String in data:
+		var d: Array[float] = data[nama]
+		check(d.size() == 4 and d[2] > 0.0 and d[3] > 0.0, "%s: 4 angka, ukuran positif" % nama)
+		var seberang: bool = nama.begins_with("SEBERANG")
+		check((d[0] + d[2] <= -tepi_aspal) if seberang else (d[0] >= tepi_aspal), "%s: seluruhnya di sisinya dan di luar aspal (lateral %s sampai %s)" % [nama, d[0], d[0] + d[2]])
+	# Teras dan jendela seberang di kaki fasad rumah graybox.
+	check(Config.JALAN_UJI_SEBERANG_TERAS_UBIN[0] == Config.JALAN_UJI_RUMAH_X_UBIN and Config.JALAN_UJI_SEBERANG_JENDELA_UBIN[0] == Config.JALAN_UJI_RUMAH_X_UBIN, "teras dan jendela seberang mulai di kaki fasad (x rumah %s)" % Config.JALAN_UJI_RUMAH_X_UBIN)
+	var zona: Array[ZonaSasaran.Zona] = ZonaSasaran.zona_jalan_uji(5)
+	var jenis_seberang: Array = []
+	var jenis_dekat: Array = []
+	for z: ZonaSasaran.Zona in zona:
+		if z.sisi == LoperAnim.Sisi.SEBERANG:
+			jenis_seberang.append(z.jenis)
+		elif z.sisi == LoperAnim.Sisi.DEKAT:
+			jenis_dekat.append(z.jenis)
+		check(z.rumah == 5, "zona kavling 5 bernomor rumah 5")
+	check(jenis_seberang.size() == 4 and jenis_seberang.has(ZonaSasaran.Jenis.JENDELA), "seberang: kotak surat, halaman, teras, jendela")
+	check(jenis_dekat.size() == 3 and not jenis_dekat.has(ZonaSasaran.Jenis.JENDELA), "dekat: kotak surat, halaman, teras, tanpa jendela (tanpa fasad)")
+	check(is_equal_approx(zona[0].persegi.position.y, Config.JALAN_UJI_SEBERANG_KOTAK_SURAT_UBIN[1] + 5.0 * Config.JALAN_UJI_RUMAH_PERIODE_UBIN), "kavling 5 digeser maju 5 x periode")
+	# Bukan pelanggan: minimal satu per putaran daur, tidak semua.
+	var slot: int = JalanDaur.jumlah_slot(Config.JALAN_UJI_DAUR_MUNDUR_UBIN, Config.JALAN_UJI_DAUR_MAJU_UBIN, Config.JALAN_UJI_RUMAH_PERIODE_UBIN)
+	var semua_ada: bool = true
+	for mulai: int in range(-20, 20):
+		var bukan: int = 0
+		for i: int in range(mulai, mulai + slot):
+			if not ZonaSasaran.pelanggan_jalan_uji(i):
+				bukan += 1
+		if bukan < 1 or bukan >= slot:
+			semua_ada = false
+	check(semua_ada, "tiap %d rumah berurutan (satu putaran daur) ada minimal satu bukan pelanggan dan tidak semua" % slot)
+	check(not ZonaSasaran.pelanggan_jalan_uji(Config.JALAN_UJI_BUKAN_PELANGGAN_SISA) and ZonaSasaran.pelanggan_jalan_uji(Config.JALAN_UJI_BUKAN_PELANGGAN_SISA + 1) and not ZonaSasaran.pelanggan_jalan_uji(Config.JALAN_UJI_BUKAN_PELANGGAN_SISA - Config.JALAN_UJI_BUKAN_PELANGGAN_SETIAP), "nomor bukan pelanggan berulang, juga untuk nomor negatif")
+	for z: ZonaSasaran.Zona in ZonaSasaran.zona_jalan_uji(Config.JALAN_UJI_BUKAN_PELANGGAN_SISA):
+		check(z.pelanggan == (z.sisi == LoperAnim.Sisi.DEKAT), "rumah bukan pelanggan: semua zona seberang bukan pelanggan, kavling dekat tetap pelanggan")
+	# Sekitar: kavling tetangga ikut (halaman menjorok ke kavling sebelumnya).
+	var sekitar: Array[ZonaSasaran.Zona] = ZonaSasaran.zona_jalan_uji_sekitar(20.1)
+	var nomor: Dictionary = {}
+	for z: ZonaSasaran.Zona in sekitar:
+		nomor[z.rumah] = true
+	check(nomor.keys() == [4, 5, 6], "zona sekitar maju 20,1 = kavling 4, 5, 6, dapat %s" % [nomor.keys()])
+	check(ZonaSasaran.zona_jalan_uji_sekitar(NAN).is_empty(), "maju tidak hingga = tanpa zona")
+	var halaman_awal: Vector2 = _titik(-2.5, 4.0 * 5.0 - 0.25)
+	check(ZonaSasaran.klasifikasi_jalan_uji(halaman_awal, LoperAnim.Sisi.SEBERANG) == ZonaSasaran.Hasil.HALAMAN, "titik halaman kavling 5 yang menjorok ke kavling 4 tetap HALAMAN")
+
+
+## Keterjangkauan (AC-5): tiap zona di jalan uji bisa dikenai dari suatu posisi lateral di dalam jalan pada santai, cepat, dan ngebut
+## dengan swipe di rentang min-maks. Titik mendarat dicari lewat ThrowSolver sungguhan; posisi maju sepeda digeser supaya titik itu jatuh
+## di tengah zona sepanjang jalan (jalan uji tanpa ujung: sepeda bisa di mana saja sepanjang jalan).
+func _test_keterjangkauan() -> void:
+	_judul.call("Keterjangkauan: tiap zona jalan uji terkena dari lateral di dalam jalan, tiga kecepatan, swipe min-maks (AC-5)")
+	var lebar: float = 780.0
+	var jeda: float = _jeda_lepas()
+	var batas: float = BikeMotion.batas_lateral_ubin()
+	for indeks: int in [0, Config.JALAN_UJI_BUKAN_PELANGGAN_SISA]:
+		for zona: ZonaSasaran.Zona in ZonaSasaran.zona_jalan_uji(indeks):
+			var diharapkan: ZonaSasaran.Hasil = ZonaSasaran.hasil_zona(zona)
+			for v: float in [Config.KECEPATAN_SANTAI_UD, Config.KECEPATAN_CEPAT_UD, Config.KECEPATAN_NGEBUT_UD]:
+				var kena: String = ""
+				for i: int in range(33):
+					var lateral: float = lerpf(-batas, batas, float(i) / 32.0)
+					for j: int in range(65):
+						var u: float = float(j) / 64.0
+						var coba: ThrowSolver.Lintasan = ThrowSolver.hitung(_panjang(u, lebar), lebar, zona.sisi, Vector2(lateral, 0.0), v, 0.0, jeda)
+						var jalan: Vector2 = ZonaSasaran.ke_jalan(coba.titik_mendarat)
+						if jalan.x < zona.persegi.position.x or jalan.x >= zona.persegi.end.x:
+							continue
+						# Geser sepeda sepanjang jalan supaya titik mendarat di tengah zona (maju).
+						var geser: float = zona.persegi.get_center().y - jalan.y
+						var l: ThrowSolver.Lintasan = ThrowSolver.hitung(_panjang(u, lebar), lebar, zona.sisi, Vector2(lateral, -geser), v, 0.0, jeda)
+						if ZonaSasaran.zona_kena(l.titik_mendarat, zona.sisi, ZonaSasaran.zona_jalan_uji_sekitar(ZonaSasaran.ke_jalan(l.titik_mendarat).y)) == null:
+							continue
+						if ZonaSasaran.klasifikasi_jalan_uji(l.titik_mendarat, zona.sisi) == diharapkan:
+							kena = "lateral %.3f, u %.3f" % [lateral, u]
+							break
+					if not kena.is_empty():
+						break
+				check(not kena.is_empty(), "kavling %d %s %s di %s u/d: terjangkau (%s)" % [indeks, "seberang" if zona.sisi == LoperAnim.Sisi.SEBERANG else "dekat", ZonaSasaran.Jenis.keys()[zona.jenis], v, kena if not kena.is_empty() else "TIDAK"])
+
+
+# --- Sisa koran dan jeda antar lempar (AC-6, D-8, D-9, D-11) ---
+
+func _test_sisa_koran() -> void:
+	_judul.call("Sisa koran: mulai 30, tiap lempar -1 tepat sekali, habis = tidak melempar (AC-6, D-8)")
+	var k: SisaKoran.Keadaan = SisaKoran.awal(Config.KORAN_AWAL)
+	check(k.sisa == 30 and k.penuh == 30 and SisaKoran.boleh_lempar(k) and not SisaKoran.habis(k), "awal: 30 koran, boleh melempar")
+	var semua_tepat: bool = true
+	for i: int in range(30):
+		var h: SisaKoran.Hasil = SisaKoran.terima(k, float(i))
+		if not h.diterima or h.keadaan.sisa != 29 - i:
+			semua_tepat = false
+		k = SisaKoran.langkah(h.keadaan, Config.LEMPAR_JEDA_DETIK)
+	check(semua_tepat and k.sisa == 0 and SisaKoran.habis(k), "30 lemparan diterima, tiap lemparan -1 tepat sekali, sisa 0")
+	check(not SisaKoran.boleh_lempar(k), "habis: tidak boleh melempar (tidak ada garis bidik)")
+	var lagi: SisaKoran.Hasil = SisaKoran.terima(k, 30.0)
+	check(not lagi.diterima and lagi.keadaan.sisa == 0, "habis: swipe tidak melempar, sisa tetap 0 (tidak negatif)")
+	check(k.habis_di_ubin == 29.0, "jarak saat habis dicatat (29 ubin)")
+	# Murni: masukan tidak berubah.
+	var awal: SisaKoran.Keadaan = SisaKoran.awal(5)
+	var h1: SisaKoran.Hasil = SisaKoran.terima(awal, 0.0)
+	check(awal.sisa == 5 and awal.sejak_lempar_detik == INF and h1.keadaan != awal and h1.keadaan.sisa == 4, "terima tidak mengubah keadaan masukan")
+	check(SisaKoran.awal(-3).sisa == 0 and SisaKoran.awal(-3).penuh == 0, "jumlah awal negatif = 0")
+
+
+func _test_jeda_antar_lempar() -> void:
+	_judul.call("Jeda antar lempar 0,35 detik: 0,349 ditolak, 0,35 diterima, swipe selama jeda tidak mengurangi koran (AC-6, D-9, D-11)")
+	var k: SisaKoran.Keadaan = SisaKoran.terima(SisaKoran.awal(30), 0.0).keadaan
+	check(k.sisa == 29 and k.sejak_lempar_detik == 0.0, "lemparan pertama diterima, jeda mulai dari 0 (jari dilepas)")
+	var k349: SisaKoran.Keadaan = SisaKoran.langkah(k, 0.349)
+	var tolak: SisaKoran.Hasil = SisaKoran.terima(k349, 0.0)
+	check(not SisaKoran.boleh_lempar(k349) and not tolak.diterima and tolak.keadaan.sisa == 29, "0,349 detik: ditolak, koran tidak berkurang")
+	check(tolak.keadaan.sejak_lempar_detik == k349.sejak_lempar_detik, "swipe yang ditolak tidak memulai ulang jeda")
+	var k35: SisaKoran.Keadaan = SisaKoran.langkah(k349, 0.001)
+	var terima: SisaKoran.Hasil = SisaKoran.terima(k35, 0.0)
+	check(SisaKoran.boleh_lempar(k35) and terima.diterima and terima.keadaan.sisa == 28, "0,349 + 0,001 = 0,35 detik: diterima (inklusif)")
+	check(SisaKoran.boleh_lempar(SisaKoran.langkah(k, 0.35)), "langsung 0,35 detik: diterima")
+	# Derau float: jumlah langkah kecil yang seharusnya 0,35.
+	for kasus: Array in [[60, 21], [240, 84], [30, 10]]:
+		var dt: float = 1.0 / float(kasus[0])
+		var langkah: int = kasus[1]
+		var x: SisaKoran.Keadaan = k
+		for i: int in range(langkah - 1):
+			x = SisaKoran.langkah(x, dt)
+		var sebelum: bool = SisaKoran.boleh_lempar(x)
+		x = SisaKoran.langkah(x, dt)
+		var batas_30: bool = kasus[0] == 30
+		# 1/30: 10 langkah = 0,333 (masih jeda), 11 langkah = 0,367.
+		if batas_30:
+			check(not SisaKoran.boleh_lempar(x) and SisaKoran.boleh_lempar(SisaKoran.langkah(x, dt)), "dt 1/30: 10 langkah (0,333) masih jeda, 11 langkah boleh")
+		else:
+			check(not sebelum and SisaKoran.boleh_lempar(x), "dt 1/%d: %d langkah (jumlah float 0,35) boleh, satu langkah sebelumnya belum" % [kasus[0], langkah])
+	# Jeda game (D-11): dt 0 (JedaSim) membekukan jeda antar lempar; dt tidak sah tidak memajukan.
+	var beku: SisaKoran.Keadaan = SisaKoran.langkah(k, 0.2)
+	for dt_salah: float in [0.0, -1.0, NAN, INF]:
+		check(SisaKoran.langkah(beku, dt_salah).sejak_lempar_detik == beku.sejak_lempar_detik, "dt %s tidak memajukan jeda antar lempar (jeda game membeku)" % dt_salah)
+	check(SisaKoran.jeda_lewat(INF) and SisaKoran.jeda_lewat(NAN), "belum pernah melempar (INF) atau NaN tidak mengunci lemparan")
+
+
+func _test_isi_ulang() -> void:
+	_judul.call("Isi ulang khusus jalan uji: hanya bila habis, sesudah 16 ubin (alat uji, D-8)")
+	var k: SisaKoran.Keadaan = SisaKoran.awal(2)
+	k = SisaKoran.terima(k, 3.0).keadaan
+	k = SisaKoran.terima(SisaKoran.langkah(k, 0.35), 10.0).keadaan
+	check(SisaKoran.habis(k) and k.habis_di_ubin == 10.0, "habis di 10 ubin")
+	check(SisaKoran.isi_ulang_jalan_uji(k, 25.99).sisa == 0, "baru 15,99 ubin sesudah habis: belum diisi ulang")
+	var penuh: SisaKoran.Keadaan = SisaKoran.isi_ulang_jalan_uji(k, 26.0)
+	check(penuh.sisa == 2 and is_nan(penuh.habis_di_ubin) and SisaKoran.boleh_lempar(SisaKoran.langkah(penuh, Config.LEMPAR_JEDA_DETIK)), "16 ubin sesudah habis: penuh lagi (2), catatan habis dihapus")
+	check(k.sisa == 0, "isi ulang tidak mengubah keadaan masukan")
+	var sisa: SisaKoran.Keadaan = SisaKoran.terima(SisaKoran.awal(30), 0.0).keadaan
+	check(SisaKoran.isi_ulang_jalan_uji(sisa, 500.0).sisa == 29, "belum habis: tidak diisi ulang walau sudah jauh (isi ulang hanya bila habis)")
+	check(SisaKoran.isi_ulang_jalan_uji(k, NAN).sisa == 0 and SisaKoran.isi_ulang_jalan_uji(k, INF).sisa == 0, "jarak tidak hingga: tidak diisi ulang")
+	check(SisaKoran.isi_ulang_jalan_uji(penuh, 100.0).sisa == 2, "sesudah diisi ulang tidak terisi lagi (sudah penuh)")

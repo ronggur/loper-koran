@@ -151,6 +151,8 @@ Garis bidik menunjukkan titik mendarat **sudah termasuk** warisan kecepatan, sup
 - **Warisan maju** 100% (`LEMPAR_WARISAN_MAJU` 1,0): geser maju selama terbang = kecepatan maju sebenarnya × lama terbang. Contoh swipe pendek (u 0): santai 3,0 u/d = 1,35 ubin ke depan, ngebut 6,0 u/d = 2,7 ubin. Tidak ada warisan lateral selama terbang.
 - **Jeda lepas** (D-4): lintasan dihitung sekali saat jari dilepas lalu dibekukan di dunia. Koran lepas dari tangan di frame lepas animasi (frame 2 dari 4 di 12 fps = 2/12 ≈ 0,17 detik, `LemparWaktu.waktu_lepas`; fps dari `.tres`, bukan angka baru), jadi titik lepas = posisi sepeda saat jari dilepas + kecepatan sepeda (maju dan lateral) × jeda lepas, lateral dijepit ke tepi jalan resmi (±1 ubin). Garis bidik memakai panggilan yang sama, jadi jeda ini sudah ada di prediksi; sepeda yang mempercepat, mengerem, atau pindah sisi sesudah jari dilepas tidak mengubah titik mendarat.
 - **Lengkung**: tinggi parabola dari tinggi tangan `LEMPAR_TINGGI_TANGAN_UBIN` 0,7 ubin (sekitar 22 px, setinggi setang) ke 0 dengan maksimum tepat tinggi puncak; posisi tanah linear dari titik lepas ke titik mendarat. Tinggi diproyeksikan hanya di `Iso` (1 ubin tinggi = 32 px ke atas), posisi gambar dibulatkan ke piksel.
+- **Jeda antar lemparan** 0,35 detik (`LEMPAR_JEDA_DETIK`) dihitung dari lemparan diterima (jari dilepas) sampai lemparan berikutnya boleh diterima, inklusif (toleransi `LEMPAR_TOLERANSI_DETIK`): 0,349 ditolak, 0,35 diterima; swipe yang ditolak tidak mengurangi koran (`SisaKoran`).
+- **Koran awal** jalan uji 30 (`KORAN_AWAL`, 25 pelanggan + 20%); tiap lemparan yang diterima mengurangi tepat 1; habis = swipe tidak melempar. Jalan uji tidak punya akhir rute, jadi sebagai **alat uji** (bukan aturan game) sisa koran kembali penuh sesudah habis dan sepeda menempuh 16 ubin (`JALAN_UJI_ISI_ULANG_UBIN`).
 
 ---
 
@@ -161,9 +163,22 @@ Garis bidik menunjukkan titik mendarat **sudah termasuk** warisan kecepatan, sup
 | Kotak surat | ✅ | 100% | |
 | Teras | ✅ | 100% | Pelanggan pemberi tip memberi tip |
 | Halaman / rumput | ✅ | 50% | Pelanggan cerewet kesal (GDD 8) |
-| Jendela | belum diputuskan | | Bonus atau penalti (ROADMAP 5) |
+| Jendela | sakelar, bawaan penalti ringan | | **Masih terbuka** (ROADMAP 5) sampai skor Fase 3. `JENDELA_KENA_BONUS` false (bawaan, keputusan pemilik 2026-10-14) = penalti ringan: antaran tidak sah seperti meleset, tanpa potong koin atau hukuman lain (prinsip 2); true = bonus: antaran sah, ditandai bonus |
 | Rumah bukan pelanggan, jalan, sisi salah | ❌ meleset | 0 | Memutus combo |
 
+**Zona sasaran placeholder jalan uji** (`scripts/systems/zona_sasaran.gd`, run fase2a-lemparan 2026-10-14; semua usulan, bukan data rute). Zona = persegi di bidang tanah, ubin: `[lateral_min, maju_min, lebar_lateral, panjang_maju]` (`Config.JALAN_UJI_SEBERANG_*_UBIN`, `JALAN_UJI_DEKAT_*_UBIN`), lateral dari garis tengah jalan (negatif = `seberang`), maju relatif terhadap awal kavling (kelipatan 4 ubin, `JALAN_UJI_RUMAH_PERIODE_UBIN`). Tepi min **inklusif**, tepi maks **eksklusif** di kedua sumbu, jadi dua zona bersebelahan tidak pernah sama-sama memuat satu titik.
+
+| Zona | Seberang (lateral, maju, ukuran) | Dekat | Catatan |
+|---|---|---|---|
+| Kotak surat | −1,875, 0,875, 0,5 × 0,5 | 1,375, 0,875, 0,5 × 0,5 | Di trotoar; seberang mengelilingi kotak surat graybox (0,25 ubin) |
+| Halaman | −3,0, −0,5, 1,0 × 3,0 | 2,0, −0,5, 1,0 × 3,0 | Rumput sepanjang rumah. Rumah graybox seberang mundur dari −2,0 ke **−3,0** (`JALAN_UJI_RUMAH_X_UBIN`) supaya ada satu ubin halaman di depan fasad |
+| Teras | −3,0, 0,0, 0,5 × 1,25 | 2,5, 0,25, 0,5 × 1,5 | Seberang di kaki fasad bagian pintu |
+| Jendela | −3,0, 1,5, 0,25 × 0,75 | (tidak ada) | Strip tanah di kaki fasad (model placeholder 2D) |
+
+- **Prioritas** bila tumpang tindih: kotak surat > jendela > teras > halaman (teras dan jendela ada di dalam halaman). Zona yang menang dulu, baru status pelanggan: zona rumah bukan pelanggan = `BUKAN_PELANGGAN`. Zona hanya berlaku untuk lemparan ke sisinya; di luar semua zona = meleset.
+- **Bukan pelanggan**: rumah seberang bernomor n dengan n mod 4 = 2 (`JALAN_UJI_BUKAN_PELANGGAN_*`), minimal satu tiap putaran daur 9 slot. Kavling sisi dekat datar tanpa fasad dan tanpa jendela, selalu pelanggan, **hanya supaya lempar ke sisi dekat bisa diuji**; tidak memutuskan cara menampilkan rumah di sisi dekat (ROADMAP 5, Fase 3).
+- **Status antaran**: kotak surat dan teras sah penuh, halaman sah setengah, bukan pelanggan dan meleset tidak sah, jendela menurut sakelar. Tiap pendaratan dinilai sendiri (status per rumah di luar scope Fase 2). Semua zona terjangkau dari posisi lateral di dalam jalan pada santai, cepat, dan ngebut dengan swipe min sampai maks (dites).
+- **Penanda** di titik mendarat selama 0,8 detik (`PENANDA_LAMA_DETIK`, DESIGN_SPEC 3.6), bentuk tidak hanya warna: sah penuh = centang (`OK`), bonus jendela = bintang (beda dari sah biasa), halaman = setengah, tidak sah = silang kecil (`FAIL`, bukan panel merah besar).
 
 | Angka | Usulan |
 |---|---|
@@ -244,6 +259,8 @@ Belum diisi. Diputuskan di Fase 6 bersama layar bengkel (GDD 12.5). Arah yang su
 ---
 
 ## 10. Catatan perubahan
+
+- **2026-10-14** — Run fase2a-lemparan (bagian 1a, logika murni; semua usulan, belum diuji di HP): `ThrowSolver` (bagian 4) dengan angka BALANCING 4 yang sudah ada (swipe 6–35%, jarak 1,5–5,0, terbang 0,45–0,75, puncak 1,0–1,6, warisan maju 100%, jeda 0,35, koran 30) masuk `config.gd`. Ambang swipe 12 px panjang total (run sprite-lempar-melambat) **diganti** \|dx\| ≥ 6% lebar viewport game (38,4 / 46,8 / 48 px; D-2 SPEC). Angka baru: tinggi tangan 0,7 ubin, toleransi swipe 0,001 px, penanda 0,8 detik (DESIGN_SPEC 3.6), isi ulang jalan uji 16 ubin (alat uji). Zona sasaran placeholder dan sakelar jendela bawaan penalti ringan (bagian 5, keputusan pemilik 2026-10-14, masih terbuka); rumah graybox seberang mundur ke lateral −3,0 untuk memberi halaman. Alasan: kontrak SPEC run 2A; dinilai pemilik di HP sesudah run.
 
 - **2026-10-14** — Run fase1b-umpan-balik (paket usulan pemilik, belum diuji di HP): jeda tanpa lanjut otomatis (tombol jeda, layar jeda, back Android); tinggi tombol strip atas dan "Lanjut" 36 → 42 px game (≥ 44 dp di A54), tombol jeda baru dengan area sentuh 42×42; sepeda turun dari 60% ke 75% tinggi layar (`KAMERA_SEPEDA_Y_PECAHAN` 0,75, tidak menabrak panel kecepatan di 640/780/800 kanan dan kidal); dorongan maju 28 → 36 px (mundur 20 dan respon 0,35 tetap); teks HUD terkecil (`HudLabel`) 6 → 8 px di `assets/ui/theme.tres` (DESIGN_SPEC 1.2). Radius stick tetap 35. Angka baru umpan balik kecepatan (debu roda, debu rem, garis kecepatan, kurangi efek, batas partikel) dan bunyi sepeda (pitch kayuhan 1,0 / 1,15 / 1,3 dari SOUND_DESIGN 3.2, volume tiga bunyi) di bagian 2. Alasan: paket usulan pemilik dari pengamatan A54, belum diuji di HP.
 
