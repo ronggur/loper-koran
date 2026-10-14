@@ -19,7 +19,7 @@ const LAYAR_TINGGI_DASAR_PX: int = 360
 ## Skala piksel target di HP 1080p (sprite pemain didesain untuk x3).
 const LAYAR_SKALA_PIKSEL: int = 3
 
-## --- Ubin (usulan, dikunci setelah graybox Fase 1, ART_DIRECTION 11) ---
+## --- Ubin (dikunci 2026-10-14 setelah graybox Fase 1, ROADMAP 4b) ---
 
 ## Lebar belah ketupat satu ubin, piksel game.
 const UBIN_LEBAR_PX: int = 64
