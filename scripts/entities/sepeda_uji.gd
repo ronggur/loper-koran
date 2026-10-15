@@ -70,6 +70,16 @@ func jeda() -> void:
 	gerak(Vector2.ZERO, 0.0)
 
 
+## Mengembalikan sepeda ke keadaan awal rute ("Main lagi", run fase3a-rute): jarak 0, lateral 0, kecepatan santai, stamina penuh, rem
+## padam, lempar ditutup. Sprite dipasang ulang dari keadaan baru tanpa memajukan waktu.
+func atur_ulang() -> void:
+	keadaan = BikeMotion.Keadaan.new()
+	jarak_ubin = 0.0
+	lateral_ud = 0.0
+	batalkan_lempar()
+	gerak(Vector2.ZERO, 0.0)
+
+
 ## Pose sprite pemain dari langkah terakhir (`LoperAnim.Pose`: kayuh/melambat, meluncur, rem); dipakai bunyi sepeda (`Audio`).
 func pose() -> LoperAnim.Pose:
 	return _sprite.pose
