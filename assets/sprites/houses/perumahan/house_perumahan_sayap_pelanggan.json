@@ -1,0 +1,12 @@
+{
+ "sprite": "house_perumahan_sayap_pelanggan.png",
+ "size": [
+  270,
+  204
+ ],
+ "ground_anchor": [
+  105,
+  119
+ ],
+ "note": "Usulan, tools/env_art/fase3.py. Rumah sisi seberang, fasad menghadap jalan (kanan bawah). Titik pijak = tengah tapak. Termasuk teras, semak, pot, kotak surat (pelanggan), antena."
+}
