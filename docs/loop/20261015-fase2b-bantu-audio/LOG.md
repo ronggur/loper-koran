@@ -1,7 +1,7 @@
 # Loop Log — 20261015-fase2b-bantu-audio
 Scope: Run 2B Fase 2 — mode bantu, bunyi lempar dan mendarat, QA-008/QA-005/QA-006, checklist uji HP penutup Fase 2  ·  Branch: `feat/mode-bantu-bunyi-lempar`  ·  Mulai: 2026-10-15  ·  Godot: 4.7.2
 
-## Status: IN_PROGRESS   (iterasi saat ini: 1/2)
+## Status: IN_PROGRESS   (iterasi saat ini: 2/2)
 
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
@@ -212,3 +212,4 @@ Ringkas: 34 mutan, 27 mati, 1 setara (Q19), 6 hidup bermakna (Q1, Q9-Q13, Q29). 
 **Tahap 6: regresi** — `git diff main...HEAD -- tests/` tidak menghapus atau melewati tes lama; `tes_koran_scene.gd` hanya mengganti oracle (QA-008) dan menambah; jumlah tes 6082 (main) → 6445. Tes lama bunyi sepeda, tata letak, dan export tetap hijau.
 
 **Verdict iterasi 1: FAIL** — gerbang hijau, tetapi QA-001 (Major) OPEN. Minor QA-002, QA-003 dan Nit QA-004 boleh dikerjakan bersama atau DEFERRED dengan catatan.
+- Orchestrator 2026-10-15: QA iterasi 1 FAIL (Major 1: QA-001; Minor 2: QA-002, QA-003; Nit 1: QA-004; tidak ada Blocker di tabel, angka "1 Blocker" di laporan QA salah tulis). Lanjut iterasi 2: Dev memperbaiki QA-001 sampai QA-004.
