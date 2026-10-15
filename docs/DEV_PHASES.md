@@ -101,6 +101,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 - [ ] Dua rintangan perumahan dengan pola perilakunya: anjing penjaga dan mobil keluar garasi (GDD 9.3)
 - [ ] Tabrakan: menghambat, tidak menghentikan rute (aturan pasti di BALANCING 6)
 - [ ] Skor: nilai sasaran, combo, pengali kecepatan (BALANCING 5)
+- [ ] Bunyi mendarat naik setengah nada tiap antaran beruntun sampai 5 tingkat, kembali ke nada dasar saat combo putus, dan denting tip sesudah bunyi mendarat (SOUND_DESIGN 3.1; ditunda dari Fase 2 run fase2b-bantu-audio karena skor dan combo belum ada; bunyi mendarat placeholder empat permukaan sudah ada, `BunyiLempar` + autoload `Audio`)
 - [ ] Radar di tepi kiri dan kanan (DESIGN_SPEC 3.4)
 - [ ] Mode bantu: rumah bukan pelanggan tampil abu-abu (`RADAR_BUKAN`) begitu radar ada (GDD 5.3; ditunda dari Fase 2 run fase2b-bantu-audio, D-8). Pemilihan sasaran bantu (`BantuLempar.pilih`) dipindah dari zona jalan uji ke data rute
 - [ ] HUD rute: progres pelanggan, koin, sisa koran, kecepatan, stamina (DESIGN_SPEC 3)

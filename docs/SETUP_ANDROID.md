@@ -385,3 +385,39 @@ Penguji: pemilik sendiri. APK normal terbaru (bagian 4) di vivo V2108 (`12d8c9da
 - [ ] **Swipe ke atas cukup panjang** untuk lemparan jauh: zona swipe setinggi 304 px game, lemparan terjauh butuh 35% lebar (224 sampai 280 px).
 - [ ] **Flick dan tarik kembali:** jari yang masih bergerak atau berbelok saat diangkat tetap melempar ke elips terakhir; jari yang ditarik kembali ke dekat titik awal membatalkan tanpa memakai koran.
 - [ ] **Masih terasa tidak responsif?** Catat apakah jeda antar lempar 0,35 detik atau jeda lepas sekitar 0,17 detik masih terasa menelan swipe (bahan Run 2B, jangan diubah di sesi uji).
+
+### 8.5 Uji penutup Fase 2 dan M1 (run `20261015-fase2b-bantu-audio`, belum diuji)
+
+Penguji: pemilik sendiri (keputusan 2026-10-14, rule `testing`). APK normal terbaru (bagian 4) di vivo V2108 (`12d8c9da`), atau A54 bila tersambung; volume media sekitar setengah, suara dinilai di speaker HP (bukan headphone). Semua angka usulan (`scripts/config.gd`, BALANCING 2, 4, 4b, 5): catat angka yang ingin diubah beserta alasannya, jangan diubah di sesi uji. Bukti desktop: tangkapan `docs/loop/20261015-fase2b-bantu-audio/shots/` (`tests/probe_bantu_jendela.gd`).
+
+**Fase 2 dan M1 baru selesai** (`DEV_PHASES.md`, ROADMAP 4) kalau kotak surat bisa dikenai **dengan sengaja** di ketiga kecepatan, mode bantu bisa dimainkan, dan dua pertanyaan kontrol GDD 17 terjawab. Isi kolom hasil di tiap butir lalu ringkasannya di lembar di bawah; pemilik yang memutuskan centang.
+
+1. [ ] **Kotak surat dengan sengaja, tiga kecepatan (mode bantu mati).** Langkah: di tiap kecepatan lempar 10 koran ke kotak surat (seberang dan dekat boleh campur): santai = stick netral, cepat = stick ke atas sekitar separuh, ngebut = stick penuh ke atas (sprite berdiri). Hitung berapa yang memberi penanda centang di kotak surat. Diharapkan: sebagian besar kena di santai dan cepat, dan ngebut masih bisa dikenai dengan sengaja memakai garis bidik (lempar lebih awal). Hasil: santai ___/10, cepat ___/10, ngebut ___/10. Catatan: ___
+2. [ ] **Swipe pendek di layar kecil (GDD 17).** Langkah: lempar dengan swipe sependek mungkin (sekitar 6% lebar layar, kira-kira 1,5 cm) ke kotak surat terdekat, 10 kali. Diharapkan: swipe pendek terbaca sebagai lemparan dekat, ketukan tidak melempar (mode bantu mati), dan elips mendarat di tempat yang dimaksud. Hasil: terbaca ___/10, ketukan tak sengaja melempar ya / tidak. Cukup teliti? ya / tidak. Catatan: ___
+3. [ ] **Empat arah swipe.** Langkah: swipe ke atas, kiri, kanan, dan bawah, masing-masing beberapa kali. Diharapkan: ke atas = rumah seberang di depan, ke kiri = seberang sedikit ke belakang, ke kanan = sisi dekat ke depan, ke bawah = sisi dekat ke belakang; garis tanah sejajar jari. Hasil: atas ___, kiri ___, kanan ___, bawah ___ (wajar / membingungkan). Catatan: ___
+4. [ ] **Garis bidik saat melaju.** Langkah: tahan swipe sambil ngebut dan sambil melambat. Diharapkan: elips bergeser maju searah jalan saat ngebut dan koran mendarat tepat di elips terakhir sebelum jari dilepas. Hasil: sesuai / tidak. Catatan: ___
+5. [ ] **Rasa responsif (K-4).** Langkah: lempar beruntun secepat mungkin, lalu satu-satu dengan cermat. Diharapkan: jeda antar lempar 0,35 detik tidak menelan swipe yang disengaja, dan jeda lepas sekitar 0,17 detik (koran keluar di frame 2 animasi) tidak terasa terlambat. Hasil: 0,35 terasa pas / terlalu lama / terlalu cepat; 0,17 terasa pas / terlambat. Angka yang diinginkan: ___
+6. [ ] **Mode bantu: tap di atas dan di bawah garis jalan.** Langkah: ketuk tombol "Bantu: mati" di tengah strip atas sampai tertulis "Bantu: nyala". Ketuk zona lempar (kanan) di atas garis jalan yang melewati sepeda, lalu di bawahnya. Diharapkan: di atas = koran otomatis ke kotak surat pelanggan seberang terdekat di depan, di bawah = ke kotak surat dekat; tanpa garis bidik; selalu kena (centang di kotak surat); jeda 0,35 dan sisa koran sama dengan swipe; swipe manual tetap jalan. Hasil: sisi terasa jelas ya / tidak, garis jalan masuk akal ya / tidak. Catatan: ___
+7. [ ] **Mode bantu: tanpa sasaran.** Langkah: ketuk sisi yang tidak punya kotak surat pelanggan terjangkau di depan (mis. sesaat sesudah melewati kotak surat, atau di depan rumah bukan pelanggan bertanda lingkaran bergaris). Diharapkan: tidak ada koran terpakai, cincin kecil pucat (krem bergaris gelap) muncul di titik ketukan sekitar 0,6 detik lalu hilang. Hasil: tanda terbaca ya / tidak, terasa adil ya / tidak. Catatan: ___
+8. [ ] **Mode bantu + kidal.** Langkah: nyalakan "Kidal" dan "Bantu", lalu ketuk zona lempar kiri di atas dan di bawah garis jalan. Diharapkan: sama dengan butir 6 di zona kiri; stick pindah ke kanan. Hasil: ___
+9. [ ] **Mode bantu satu jempol.** Langkah: dengan mode bantu nyala, mainkan satu menit hanya dengan mengetuk (tanpa menyentuh stick). Diharapkan: sepeda melaju santai sendiri (3,0 u/d, stamina tidak turun) dan kotak surat bisa diantar hanya dengan ketukan; stick tetap bisa dipakai untuk pindah sisi, melambat, rem, dan ngebut. Tombol Bantu mudah dijangkau tapi tidak terpencet tak sengaja. Hasil: bisa dimainkan satu jempol ya / tidak, tombol tertekan tak sengaja ___ kali. Catatan: ___
+10. [ ] **Bunyi lempar dan mendarat.** Langkah: lempar ke kotak surat, teras, halaman (rumput), dan jalan (meleset), beberapa kali tiap permukaan, sambil mendengar tanpa melihat layar sesekali. Diharapkan: "wus" pendek tiap koran benar-benar terlempar (tidak ada saat lemparan ditolak: koran habis, jeda antar lempar, ketukan tanpa sasaran); "tunk" logam di kotak surat, "plak" kertas di teras, "puk" lembut di rumput, "plek" datar lebih pelan saat meleset; tiga variasi bergiliran tidak terasa monoton; terdengar di atas kayuhan. Hasil: empat permukaan bisa dibedakan tanpa melihat ya / tidak (yang tertukar: ___), volume wus pelan / pas / keras, mendarat pelan / pas / keras. Catatan: ___
+11. [ ] **Bunyi berhenti saat jeda dan background.** Langkah: tekan tombol jeda tepat sesudah melempar (saat "wus" atau bunyi mendarat berbunyi); lalu tekan home saat koran di udara dan buka lagi. Diharapkan: bunyi berhenti seketika, layar jeda muncul, tidak ada bunyi lama yang menyusul sesudah "Lanjut"; koran yang beku mendarat sesudah lanjut dengan satu bunyi baru. Hasil: ya / tidak. Catatan: ___
+12. [ ] **Dua pertanyaan kontrol GDD 17.** (a) Ambang rem di ujung bawah stick nyaman tanpa berhenti tak sengaja: sudah lolos uji HP pemilik 2026-10-14; cukup konfirmasi masih benar sesudah lemparan dan mode bantu ada. Hasil: masih nyaman ya / tidak. (b) Swipe pendek cukup teliti di layar kecil: jawaban dari butir 2. Hasil: ya / tidak.
+
+**Lembar hasil (salin ke PR uji atau `docs/loop/`):**
+
+```
+Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build (commit): ____
+1. Kotak surat sengaja: santai __/10  cepat __/10  ngebut __/10
+2. Swipe pendek: terbaca __/10  cukup teliti: ya / tidak
+3. Empat arah: atas __  kiri __  kanan __  bawah __
+4. Garis bidik saat melaju: sesuai / tidak
+5. Responsif: jeda 0,35 pas / lama / cepat   jeda lepas 0,17 pas / terlambat   angka diinginkan: ____
+6-9. Mode bantu: sisi jelas ya / tidak   tanpa sasaran terbaca ya / tidak   kidal ya / tidak   satu jempol ya / tidak   tombol tak sengaja __ kali
+10. Bunyi: empat permukaan dibedakan ya / tidak (tertukar: ____)   volume wus ____   mendarat ____
+11. Bunyi berhenti saat jeda/background: ya / tidak
+12. GDD 17: rem masih nyaman ya / tidak   swipe pendek teliti ya / tidak
+Angka yang ingin diubah dan alasannya: ____
+Keputusan pemilik: Fase 2 selesai ya / belum   M1 selesai ya / belum
+```

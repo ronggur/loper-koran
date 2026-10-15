@@ -84,7 +84,7 @@ Coba sendiri lewat CLI sebelum meminta user mengerjakan sesuatu: `godot --headle
 
 ## Perintah
 
-Project Godot 4.7.2 ada sejak Fase 0 (run 0A; run 0B menambah input touch, terjemahan `translations/ui.csv`, dan scene utama sementara `scenes/dev/jalan_uji.tscn`; run 0C menambah preset export Android `export_presets.cfg` dan `docs/SETUP_ANDROID.md`; run 1B menambah autoload `Audio` di `scripts/autoload/`, bunyi di `assets/audio/` dari `tools/audio_art/`, dan probe render `scenes/dev/cek_render.tscn`). Dari root repo:
+Project Godot 4.7.2 ada sejak Fase 0 (run 0A; run 0B menambah input touch, terjemahan `translations/ui.csv`, dan scene utama sementara `scenes/dev/jalan_uji.tscn`; run 0C menambah preset export Android `export_presets.cfg` dan `docs/SETUP_ANDROID.md`; run 1B menambah autoload `Audio` di `scripts/autoload/`, bunyi di `assets/audio/` dari `tools/audio_art/`, dan probe render `scenes/dev/cek_render.tscn`; run 2B menambah mode bantu dan bunyi lempar/mendarat `assets/audio/sfx/throw/`). Dari root repo:
 
 ```bash
 godot --headless --import                              # sekali setelah clone, dan kalau class_name atau aset baru belum dikenali
@@ -92,6 +92,7 @@ mkdir -p build                                         # folder log, tidak di-co
 godot --headless --script res://tests/run_tests.gd 2>&1 | tee build/tests.log   # tes logika inti (exit code 1 kalau gagal)
 python3 tools/cek_keluaran_tes.py build/tests.log      # pemeriksa keluaran, wajib: exit code Godot saja tidak cukup (rule testing)
 python3 tools/tests_cek/uji_sintesis_sepeda.py         # bukti WAV di assets/audio/ = hasil skrip sintesis (juga uji_pemeriksa.py, uji_bangun_frames.py)
+python3 tools/tests_cek/uji_sintesis_lempar.py         # bukti 13 WAV lempar dan mendarat di assets/audio/sfx/throw/ = hasil skrip sintesis
 godot --headless --path . --quit-after 2               # buka project dua frame, harus tanpa ERROR dan WARNING
 godot --path .                                         # jalankan scene utama sementara (jalan_uji.tscn): stick di layar sentuh, panah atau WASD di editor
 godot --headless --path . scenes/dev/cek_render.tscn   # probe render Compatibility; jendela asli + -- --tangkap=<png> untuk hasil piksel
@@ -103,9 +104,10 @@ python3 tools/loper_art/produce.py --out build/loper_art   # render ulang sprite
 python3 tools/loper_art/bangun_frames.py                   # bangun ulang loper_agen_frames.tres gabungan (48 animasi) dan salin PNG/JSON sprite ke assets/ (hanya stdlib)
 python3 tools/env_art/graybox.py                       # render ulang ubin dan kotak graybox (hanya stdlib)
 python3 tools/audio_art/sintesis_sepeda.py             # buat ulang tiga WAV placeholder sepeda (hanya stdlib), lalu godot --headless --import
+python3 tools/audio_art/sintesis_lempar.py             # buat ulang 13 WAV placeholder lempar dan mendarat (hanya stdlib), lalu godot --headless --import
 ```
 
-Kalau `godot` tidak ada di PATH (macOS): pakai `/Applications/Godot.app/Contents/MacOS/Godot`. Kalau Godot tidak terpasang sama sekali, katakan terus terang bahwa tes dan playtest belum dijalankan. Jangan mengklaim lolos. Export Android: prasyarat mesin, alasan tiap opsi preset, pemeriksaan isi APK, pasang ke HP, dan checklist uji ada di `docs/SETUP_ANDROID.md`. `JAVA_HOME` saja tidak cukup, `export/android/java_sdk_path` di Editor Settings harus terisi; jangan mengubah Editor Settings tanpa izin pemilik. Memasang APK ke HP hanya setelah izin pemilik (HP dipakai bersama project lain). Perintah lain (validator data, dst.) ditambahkan ke sini saat alatnya dibuat. Ukuran jendela uji layar: `tests/probe_layar.gd` (headless mengabaikan `--resolution`, lihat komentar di skripnya). Tangkapan layar skenario: `tests/probe_*_jendela.gd` (termasuk `probe_umpan_balik_jendela.gd` dan `probe_koran_jendela.gd` untuk garis bidik, koran terbang, penanda, dan HUD koran: `godot --path . --resolution 2340x1080 --position 0,0 --script res://tests/probe_koran_jendela.gd -- docs/loop/<RUN_ID>/shots`); semuanya keluar lewat `ProbeKeluar.keluar` (`tests/probe_keluar.gd`) supaya keluaran bebas `ERROR`/`WARNING`. Probe render di HP: `docs/SETUP_ANDROID.md` 6.1. Driver audio `Dummy` (headless) tidak memutar stream kecuali tes menyalakan `putar_di_driver_dummy` (lihat `scripts/autoload/audio.gd`).
+Kalau `godot` tidak ada di PATH (macOS): pakai `/Applications/Godot.app/Contents/MacOS/Godot`. Kalau Godot tidak terpasang sama sekali, katakan terus terang bahwa tes dan playtest belum dijalankan. Jangan mengklaim lolos. Export Android: prasyarat mesin, alasan tiap opsi preset, pemeriksaan isi APK, pasang ke HP, dan checklist uji ada di `docs/SETUP_ANDROID.md`. `JAVA_HOME` saja tidak cukup, `export/android/java_sdk_path` di Editor Settings harus terisi; jangan mengubah Editor Settings tanpa izin pemilik. Memasang APK ke HP hanya setelah izin pemilik (HP dipakai bersama project lain). Perintah lain (validator data, dst.) ditambahkan ke sini saat alatnya dibuat. Ukuran jendela uji layar: `tests/probe_layar.gd` (headless mengabaikan `--resolution`, lihat komentar di skripnya). Tangkapan layar skenario: `tests/probe_*_jendela.gd` (termasuk `probe_umpan_balik_jendela.gd`, `probe_bantu_jendela.gd` untuk mode bantu, dan `probe_koran_jendela.gd` untuk garis bidik, koran terbang, penanda, dan HUD koran: `godot --path . --resolution 2340x1080 --position 0,0 --script res://tests/probe_koran_jendela.gd -- docs/loop/<RUN_ID>/shots`); semuanya keluar lewat `ProbeKeluar.keluar` (`tests/probe_keluar.gd`) supaya keluaran bebas `ERROR`/`WARNING`. Probe render di HP: `docs/SETUP_ANDROID.md` 6.1. Driver audio `Dummy` (headless) tidak memutar stream kecuali tes menyalakan `putar_di_driver_dummy` (lihat `scripts/autoload/audio.gd`).
 
 ## Definition of Done
 
