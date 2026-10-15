@@ -375,6 +375,17 @@ func _test_sasaran_tepi() -> void:
 	var nol: ZonaSasaran.Zona = ZonaSasaran.buat(Rect2(-1.5, 3.0, 0.0, 0.0), LoperAnim.Sisi.SEBERANG, ZonaSasaran.Jenis.KOTAK_SURAT, true, 40)
 	var daftar_nol: Array[ZonaSasaran.Zona] = [nol]
 	check(BantuLempar.pilih(LoperAnim.Sisi.SEBERANG, pos, 3.0, 0.0, JEDA_LEPAS, LEBAR_SASARAN, daftar_nol) == null, "cek ulang: zona berukuran nol tidak memuat titik mendarat = null")
+	# Batas "di depan" D-4 inklusif (QA-004): pusat tepat di maju sepeda (0,5) = kandidat; sedikit di belakang bukan.
+	var sejajar: ZonaSasaran.Zona = ZonaSasaran.buat(Rect2(-2.25, 0.25, 0.5, 0.5), LoperAnim.Sisi.SEBERANG, ZonaSasaran.Jenis.KOTAK_SURAT, true, 50)
+	var belakang: ZonaSasaran.Zona = ZonaSasaran.buat(Rect2(-2.25, 0.2499, 0.5, 0.5), LoperAnim.Sisi.SEBERANG, ZonaSasaran.Jenis.KOTAK_SURAT, true, 51)
+	check(sejajar.persegi.get_center() == Vector2(-2.0, 0.5) and BantuLempar.kandidat(sejajar, LoperAnim.Sisi.SEBERANG, pos), "di depan inklusif: pusat tepat di maju sepeda 0,5 = kandidat")
+	check(not BantuLempar.kandidat(belakang, LoperAnim.Sisi.SEBERANG, pos), "di depan: pusat 0,4999 (di belakang maju sepeda 0,5) bukan kandidat")
+	# Sepeda berhenti (titik lepas = posisi, tanpa geser maju): pusat sejajar 2 ubin ke seberang terjangkau (u = 0,5 / 3,5) dan dipilih.
+	var daftar_sejajar: Array[ZonaSasaran.Zona] = [sejajar]
+	p = BantuLempar.pilih(LoperAnim.Sisi.SEBERANG, pos, 0.0, 0.0, JEDA_LEPAS, LEBAR_SASARAN, daftar_sejajar)
+	check(p != null and p.zona == sejajar and absf(p.kekuatan - 0.5 / 3.5) < 0.0001 and _dekat_v(p.lintasan.titik_mendarat, Vector2(-2.0, -0.5)), "di depan inklusif: sepeda berhenti, kotak surat sejajar dipilih dengan u 0,1429 dan mendarat di pusatnya (dapat %s)" % _nama(p))
+	var daftar_belakang: Array[ZonaSasaran.Zona] = [belakang]
+	check(BantuLempar.pilih(LoperAnim.Sisi.SEBERANG, pos, 0.0, 0.0, JEDA_LEPAS, LEBAR_SASARAN, daftar_belakang) == null, "di depan: kotak surat yang pusatnya sedikit di belakang tidak dipilih walau terjangkau = null")
 	# Pencarian u langsung: oracle literal.
 	var lepas: Vector2 = ThrowSolver.titik_lepas(Vector2(0.0, -0.5), 3.0, 0.0, JEDA_LEPAS)
 	check(_dekat_v(lepas, Vector2(0.0, -1.0)), "kontrol: titik lepas santai dari maju 0,5 = maju 1,0")
