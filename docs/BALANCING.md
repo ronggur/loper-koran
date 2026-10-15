@@ -104,6 +104,13 @@ Selama jeda partikel berhenti (tidak memancar, tidak bergerak) karena `SceneTree
 | Pitch loop kayuhan | 1,0 di santai 3,0 u/d, 1,15 di cepat 4,5, 1,3 di ngebut 6,0; linear per potong di antaranya, dijepit 1,0..1,3 (melambat tetap 1,0) | `AUDIO_KAYUH_PITCH_*` (SOUND_DESIGN 3.2); titik kecepatan dari `KECEPATAN_*_UD` |
 | Volume kayuhan, freewheel, rem | −6, −10, −3 dB | `AUDIO_*_VOLUME_DB`; ketiga WAV dinormalkan ke puncak yang sama (−1 dBFS), jadi keras-pelan relatif hanya di sini. Kayuhan di bawah suara sasaran (SOUND_DESIGN 6), freewheel pelan |
 
+**Bunyi lempar dan mendarat** (`scripts/systems/bunyi_lempar.gd` + autoload `Audio`, bus `SFX`, SOUND_DESIGN 3.1 dan 4.2, run fase2b-bantu-audio 2026-10-15; usulan, dinilai di HP). Satu "wus" per lemparan yang diterima (swipe dan tap mode bantu), satu bunyi mendarat per koran dengan permukaan dari hasil sasaran (bagian 5): kotak surat, teras, halaman = rumput, meleset dan bukan pelanggan = meleset, jendela = teras bila bonus (sah) atau meleset bila penalti. Tiga variasi per permukaan bergiliran 01, 02, 03, 01 (tanpa acak). Jeda dan background menghentikannya seketika.
+
+| Angka | Usulan | Catatan |
+|---|---|---|
+| Volume "wus" | −4 dB | `AUDIO_WUS_VOLUME_DB`; sedikit di atas kayuhan (−6), di bawah bunyi mendarat |
+| Volume bunyi mendarat | −1 dB (keempat permukaan) | `AUDIO_MENDARAT_VOLUME_DB`; di atas kayuhan supaya hasil lemparan selalu terdengar (SOUND_DESIGN 6). Meleset sudah sekitar 5 dB lebih pelan di berkasnya (puncak 0,5 lawan 0,89), jadi tidak perlu angka volume terpisah |
+
 **Jalan terlihat di depan saat ngebut** (run fase1b-umpan-balik, dihitung dari garis tengah jalan: titik pijak sepeda + dorongan maju penuh sampai tepi layar, 1 ubin maju = 32 px datar, 6,0 u/d): 780 (A54) dari sekitar 2,10 detik (0,6 dan 28 px) menjadi sekitar **2,52 detik**; 800 dari 2,10 menjadi sekitar 2,59 detik. Di **640 (16:9)** jalan keluar layar lewat tepi kanan, bukan tepi atas, jadi menurunkan sepeda tidak menolong dan dorongan 36 sedikit memperpendek: dari sekitar 2,08 menjadi sekitar 2,03 detik (tanpa dorongan 2,22 detik di keduanya). Dinilai di HP (NEEDS-MANUAL).
 
 ---
@@ -282,6 +289,8 @@ Belum diisi. Diputuskan di Fase 6 bersama layar bengkel (GDD 12.5). Arah yang su
 ---
 
 ## 10. Catatan perubahan
+
+- **2026-10-15** — Run fase2b-bantu-audio bagian B (usulan, belum diuji di HP): bunyi lempar dan mendarat placeholder (bagian 2). Angka baru: volume "wus" −4 dB dan bunyi mendarat −1 dB. Alasan: SOUND_DESIGN 3.1 dan 6 (mendarat terdengar di atas kayuhan, meleset lebih pelan), dinilai di speaker HP.
 
 - **2026-10-15** — Run fase2b-bantu-audio bagian A (keputusan pemilik K-1 sampai K-4, rinciannya usulan, belum diuji di HP): mode bantu (bagian 4b): tap di zona swipe melempar otomatis ke kotak surat pelanggan terdekat di depan pada sisi tap, lintasan dari `ThrowSolver.hitung`, selalu kena; tanpa sasaran tidak melempar dan memberi tanda. Angka lintasan, jeda 0,35, dan jeda lepas tidak berubah. Angka baru: lama tanda 0,6 detik, toleransi pencarian u, jumlah langkah bisection, jarak tombol strip atas 8 px. Alasan: mode bantu wajib ada dan sepenuhnya bisa dimainkan (GDD 5.3, rule `ui-scenes`).
 

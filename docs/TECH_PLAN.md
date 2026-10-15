@@ -93,7 +93,7 @@ Mengikuti struktur di `README.md`. Bagian ini hanya menambahkan yang dibutuhkan 
 | `DialogPlayer` | Memutar adegan dari `scenes/*.json` | 6B |
 | `MilestoneTracker` | Progres milestone tiga tingkat | 6A (dasar), 13 (penuh) |
 | `AdService` | Pembungkus plugin iklan hadiah | 14 |
-| `Audio` | Bus, pitch kayuhan, variasi acak. Ada sejak run fase1b-umpan-balik (`scripts/autoload/audio.gd`): bunyi sepeda placeholder (kayuhan dengan pitch, freewheel, decit rem) dari keputusan murni `BunyiSepeda`, berhenti saat jeda; tidak merujuk autoload lain, data dari pemanggil (`JalanUji`). Variasi acak belum (fase lain) | 1 |
+| `Audio` | Bus, pitch kayuhan, variasi acak. Ada sejak run fase1b-umpan-balik (`scripts/autoload/audio.gd`): bunyi sepeda placeholder (kayuhan dengan pitch, freewheel, decit rem) dari keputusan murni `BunyiSepeda`, berhenti saat jeda; tidak merujuk autoload lain, data dari pemanggil (`JalanUji`). Sejak run fase2b-bantu-audio juga "wus" dan bunyi mendarat empat permukaan di bus `SFX` (pemetaan dan giliran variasi dari keputusan murni `BunyiLempar`, `scripts/systems/bunyi_lempar.gd`). Variasi acak belum (fase lain) | 1 |
 
 Aturan: **logika murni ada di `scripts/systems/` tanpa node**, supaya bisa dites headless (`tests/run_tests.gd`). Node hanya menampilkan.
 
@@ -295,7 +295,7 @@ Setiap fase berisi: tujuan, kaitan cerita, sistem dan kode, aset, konten, uji, d
 | Koran gulung berputar | 1 sheet, 4 frame, sekitar 8×6 px | |
 | Bayangan koran di tanah | dari kode | Mengikuti tinggi lengkung |
 | Penanda garis bidik dan elips pendaratan | dari kode | DESIGN_SPEC 3.7 |
-| Audio: lempar, mendarat (kotak surat, teras, rumput, meleset) | 1 + 4 (×3 variasi) | SOUND_DESIGN 3.1 |
+| Audio: lempar, mendarat (kotak surat, teras, rumput, meleset) | 1 + 4 (×3 variasi) | SOUND_DESIGN 3.1. Placeholder ada (run fase2b-bantu-audio): `tools/audio_art/sintesis_lempar.py` → `assets/audio/sfx/throw/`, diputar `Audio` lewat `BunyiLempar` |
 
 **Uji.** Ketelitian swipe pendek di layar kecil; mengenai kotak surat di ketiga kecepatan.
 

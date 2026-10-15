@@ -254,6 +254,15 @@ const AUDIO_FREEWHEEL_VOLUME_DB: float = -10.0
 ## Volume decit rem sekali putar, dB.
 const AUDIO_REM_VOLUME_DB: float = -3.0
 
+## --- Audio lempar dan mendarat placeholder (SOUND_DESIGN 3.1, 4.2; usulan run fase2b-bantu-audio, dinilai di HP) ---
+## Bunyi dibuat `tools/audio_art/sintesis_lempar.py`: puncak "wus" dan tiga permukaan sama dengan bunyi sepeda (-1 dBFS), meleset
+## sekitar 5 dB lebih pelan di berkasnya sendiri. Diputar autoload `Audio` di bus `SFX`; pemetaan hasil ke permukaan di `BunyiLempar`.
+
+## Volume "wus" saat lemparan diterima, dB (di bawah bunyi mendarat, sedikit di atas kayuhan).
+const AUDIO_WUS_VOLUME_DB: float = -4.0
+## Volume bunyi mendarat keempat permukaan, dB. Di atas kayuhan (-6 dB) supaya hasil lemparan selalu terdengar (SOUND_DESIGN 6).
+const AUDIO_MENDARAT_VOLUME_DB: float = -1.0
+
 ## --- Kontrol sentuh (DESIGN_SPEC 3.7, GDD 5.2; usulan, dinilai lewat uji HP) ---
 ## Zona diukur dari tepi layar sisi stick (kiri bila tangan kanan, bawaan; opsi kidal mencerminkannya).
 

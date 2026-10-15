@@ -48,8 +48,11 @@ extends Node2D
 ## lempar = tidak ada tanda (HUD koran sudah memberi tanda HABIS). Swipe manual tetap melempar seperti biasa di mode bantu. Kecepatan
 ## otomatis (K-1) = perilaku stick netral (santai 3,0 u/d, tidak menguras stamina); stick tetap aktif penuh.
 ##
-## Titik kait bunyi (bagian B run fase2b-bantu-audio): `koran_dilempar` dipancarkan tepat sekali per lemparan yang DITERIMA, swipe maupun
-## tap (lemparan ditolak tidak memancarkannya); `koran_mendarat` tepat sekali per koran pada langkah ia mendarat; `jeda_berubah` saat jeda.
+## Bunyi lempar dan mendarat (D-10 sampai D-12 run fase2b-bantu-audio): `koran_dilempar` dipancarkan tepat sekali per lemparan yang
+## DITERIMA, swipe maupun tap (lemparan ditolak tidak memancarkannya), dan disambungkan ke `Audio.putar_lempar` ("wus"; pasangan visualnya
+## garis bidik hilang dan koran muncul). `koran_mendarat` tepat sekali per koran pada langkah ia mendarat, disambungkan ke
+## `Audio.putar_mendarat` dengan hasil koran itu dan sakelar jendela yang sama dengan penilaiannya (pasangan visualnya penanda di titik
+## mendarat). `jeda_berubah` menghentikan bunyi lempar/mendarat yang sedang berbunyi lewat `Audio.atur_jeda`.
 ##
 ## Bunyi sepeda (D-3, D-5): tiap langkah keadaan sebenarnya (pose, kecepatan, rem, jeda) diberikan ke autoload `Audio` (`/root/Audio`,
 ## dicari lewat jalur node, bukan nama global, supaya scene tetap jalan tanpa autoload); `jeda_berubah` disambungkan ke
@@ -109,6 +112,8 @@ func _ready() -> void:
 	_audio = get_node_or_null(^"/root/Audio") as SKRIP_AUDIO
 	if _audio != null:
 		jeda_berubah.connect(_audio.atur_jeda)
+		koran_dilempar.connect(_bunyi_lempar)
+		koran_mendarat.connect(_bunyi_mendarat)
 	perbarui(0.0)
 
 
@@ -122,6 +127,17 @@ func _exit_tree() -> void:
 		get_tree().paused = false
 	if _audio != null:
 		_audio.hentikan_sepeda()
+		_audio.hentikan_lempar()
+
+
+## Lemparan diterima: satu "wus" lewat `Audio` (D-11).
+func _bunyi_lempar(_lintasan: ThrowSolver.Lintasan) -> void:
+	_audio.putar_lempar()
+
+
+## Koran mendarat: satu bunyi permukaan lewat `Audio`, dengan sakelar jendela yang sama dengan penilaian koran (D-10, D-11).
+func _bunyi_mendarat(koran_mendarat_ini: KoranLempar.Koran) -> void:
+	_audio.putar_mendarat(koran_mendarat_ini.hasil, Config.JENDELA_KENA_BONUS)
 
 
 ## Tombol jeda di HUD: membuka layar jeda (tidak berpengaruh bila sudah jeda).
