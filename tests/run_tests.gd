@@ -84,6 +84,8 @@ func _initialize() -> void:
 	lempar.jalankan()
 	var bantu: TesBantu = TesBantu.new(check, _judul)
 	bantu.jalankan()
+	var rute: TesRute = TesRute.new(check, _judul)
+	rute.jalankan()
 	var sprite: TesSprite = TesSprite.new(check, _judul, self)
 	sprite.jalankan()
 	var ekspor: TesExport = TesExport.new(check, _judul)
