@@ -143,6 +143,8 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 - [ ] VFX dasar: debu roda, garis kecepatan, koran kena sasaran, tip
 - [ ] Ikon HUD
 
+**Usulan dirender 2026-10-15 (belum dipasang, belum menggantikan placeholder):** rintangan anjing dan mobil garasi, rumah pelanggan dan bukan pelanggan di dua sisi, antena TV (`tools/env_art/fase3.py`), ikon HUD dan penanda radar (`tools/ui_art/hud_ikon.py`). Rincian di ART_DIRECTION 6.4–6.6 dan 6.8. Tugas di atas dicentang setelah asetnya dipasang di rute dan dinilai di HP.
+
 **Selesai kalau:** rute perumahan bisa dimainkan tanpa placeholder.
 
 ---
