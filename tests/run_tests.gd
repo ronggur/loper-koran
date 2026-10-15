@@ -16,7 +16,8 @@ const BERKAS_FRAMES: String = "res://assets/sprites/loper/loper_agen_frames.tres
 const BERKAS_JSON: String = "res://assets/sprites/loper/loper_agen.json"
 const BERKAS_CONFIG: String = "res://scripts/config.gd"
 const BERKAS_SCENE_PEMAIN: String = "res://scenes/entities/loper_agen.tscn"
-const BERKAS_SCENE_UTAMA: String = "res://scenes/dev/jalan_uji.tscn"
+const BERKAS_SCENE_UTAMA: String = "res://scenes/rute/rute.tscn"
+const BERKAS_SCENE_JALAN_UJI: String = "res://scenes/dev/jalan_uji.tscn"
 const BERKAS_SCENE_GRAYBOX: String = "res://scenes/dev/graybox.tscn"
 const BERKAS_TERJEMAHAN_CSV: String = "res://translations/ui.csv"
 const BERKAS_TERJEMAHAN: String = "res://translations/ui.id.translation"
@@ -102,6 +103,8 @@ func _initialize() -> void:
 	await scene_koran.jalankan()
 	var scene_bantu: TesBantuScene = TesBantuScene.new(check, _judul, self)
 	await scene_bantu.jalankan()
+	var scene_rute: TesRuteScene = TesRuteScene.new(check, _judul, self)
+	await scene_rute.jalankan()
 	var tata_letak: TesTataLetak = TesTataLetak.new(check, _judul, self)
 	await tata_letak.jalankan()
 	var bunyi: TesBunyi = TesBunyi.new(check, _judul, self)
@@ -501,8 +504,8 @@ func _test_pengaturan_proyek() -> void:
 	check(bool(ProjectSettings.get_setting("rendering/2d/snap/snap_2d_transforms_to_pixel")), "snap_2d_transforms_to_pixel aktif")
 	check(int(ProjectSettings.get_setting("rendering/textures/canvas_textures/default_texture_filter")) == Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST, "filter tekstur bawaan 2D = Nearest")
 	var utama: String = str(ProjectSettings.get_setting("application/run/main_scene"))
-	check(utama == BERKAS_SCENE_UTAMA, "scene utama sementara = %s (run 0B: jalan uji yang bisa digerakkan menggantikan graybox statis), dapat '%s'" % [BERKAS_SCENE_UTAMA, utama])
-	check(ResourceLoader.exists(BERKAS_SCENE_UTAMA) and ResourceLoader.exists(BERKAS_SCENE_GRAYBOX), "scene utama dan graybox lama (untuk probe layar) ada dan bisa dimuat")
+	check(utama == BERKAS_SCENE_UTAMA, "scene utama = %s (run fase3a-rute: rute dari segmen menggantikan jalan uji tanpa ujung sebagai scene utama), dapat '%s'" % [BERKAS_SCENE_UTAMA, utama])
+	check(ResourceLoader.exists(BERKAS_SCENE_UTAMA) and ResourceLoader.exists(BERKAS_SCENE_JALAN_UJI) and ResourceLoader.exists(BERKAS_SCENE_GRAYBOX), "scene utama, jalan uji (scene dev), dan graybox lama (untuk probe layar) ada dan bisa dimuat")
 
 	var bawaan: Dictionary = ProjectSettings.get_setting("importer_defaults/texture", {})
 	check(bawaan.get("compress/mode", -1) == 0, "default impor tekstur: Lossless (compress/mode 0)")
@@ -805,9 +808,9 @@ func _test_terjemahan() -> void:
 	check(baris.size() >= 3, "CSV memuat kunci HUD sementara (%d baris)" % baris.size())
 	var kunci_sah: Array[String] = []
 	var rapi: bool = true
-	# Awalan layar atau fitur (rule `content-data`): HUD_ (run 0B), JEDA_ (layar jeda, run fase1b-umpan-balik).
-	var re_kunci: RegEx = RegEx.create_from_string("^(?:HUD|JEDA)_[A-Z0-9]+(?:_[A-Z0-9]+)*$")
-	check(re_kunci.search("JEDA_LANJUT") != null and re_kunci.search("LANJUT") == null and re_kunci.search("MENU_X") == null and re_kunci.search("jeda_lanjut") == null, "pemeriksa kunci menerima awalan HUD_/JEDA_ dan menolak tanpa awalan, awalan lain, huruf kecil")
+	# Awalan layar atau fitur (rule `content-data`): HUD_ (run 0B), JEDA_ (layar jeda, run fase1b-umpan-balik), RUTE_ (scene rute, run fase3a-rute).
+	var re_kunci: RegEx = RegEx.create_from_string("^(?:HUD|JEDA|RUTE)_[A-Z0-9]+(?:_[A-Z0-9]+)*$")
+	check(re_kunci.search("JEDA_LANJUT") != null and re_kunci.search("RUTE_SELESAI") != null and re_kunci.search("LANJUT") == null and re_kunci.search("MENU_X") == null and re_kunci.search("jeda_lanjut") == null, "pemeriksa kunci menerima awalan HUD_/JEDA_/RUTE_ dan menolak tanpa awalan, awalan lain, huruf kecil")
 	var re_pengganti: RegEx = RegEx.create_from_string("\\{([^}]*)\\}")
 	for entri: PackedStringArray in baris:
 		if entri.size() != 2:
@@ -816,7 +819,7 @@ func _test_terjemahan() -> void:
 			continue
 		var kunci: String = entri[0]
 		var nilai: String = entri[1]
-		check(re_kunci.search(kunci) != null, "kunci %s UPPER_SNAKE_CASE berawalan HUD_ atau JEDA_" % kunci)
+		check(re_kunci.search(kunci) != null, "kunci %s UPPER_SNAKE_CASE berawalan HUD_, JEDA_, atau RUTE_" % kunci)
 		check(not kunci_sah.has(kunci), "kunci %s tidak duplikat" % kunci)
 		check(not nilai.strip_edges().is_empty(), "kunci %s punya nilai (tidak kosong)" % kunci)
 		for cocok: RegExMatch in re_pengganti.search_all(nilai):

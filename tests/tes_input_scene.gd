@@ -108,7 +108,8 @@ func _test_scene_jalan_uji() -> void:
 	if kamera == null or objek == null or tanah == null or sepeda == null or hud == null or kontrol == null:
 		_bersihkan(akar)
 		return
-	check(ProjectSettings.get_setting("application/run/main_scene") == BERKAS_JALAN_UJI, "jalan_uji.tscn adalah run/main_scene")
+	# Run fase3a-rute: scene utama pindah ke rute.tscn (dijaga `run_tests.gd`); jalan_uji.tscn tetap scene dev yang dipakai tes-tes ini.
+	check(ProjectSettings.get_setting("application/run/main_scene") == "res://scenes/rute/rute.tscn" and ResourceLoader.exists(BERKAS_JALAN_UJI), "run/main_scene = rute.tscn dan jalan_uji.tscn tetap ada sebagai scene dev")
 	check(kamera.zoom == Vector2.ONE, "kamera tanpa zoom (zoom = 1, skala hanya bulat dari stretch)")
 	check(kamera.is_current() and not kamera.position_smoothing_enabled, "kamera aktif, tanpa smoothing (posisi dibulatkan di logika)")
 	check(objek.y_sort_enabled and sepeda.get_parent() == objek, "Objek adalah induk Y-sort dan sepeda anak langsungnya (Y-sort memakai titik pijak)")
