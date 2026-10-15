@@ -22,6 +22,18 @@ Spesifikasi visual untuk mengimplementasikan HUD dan layar game di Godot. Pasang
 - **Angka gameplay** (koin, jumlah pelanggan, hadiah). Ambil dari `scripts/config.gd` (`BALANCING.md`). Lihat bagian 6.
 - **Teks contoh** ("Cari kucing Mimi", "dari berita hal. 2"). Teks mengikuti `CONTENT_GUIDE.md`.
 
+**Merender ulang papan kontrol** (run fase2b-bantu-audio 2026-10-15, QA-005: `source/kontrol.html` diperbarui ke arah lempar bebas dan mode bantu). PNG dibuat dari HTML dengan Chrome headless dan dipotong dengan Pillow, tanpa diedit tangan. Render lama dibuat tanpa web font (font cadangan sans), jadi render ulang juga memblokir jaringan supaya Lexend/Lilita tidak termuat dan tampilannya setara (render HTML lama dengan perintah ini berbeda di sekitar 1% piksel area gambar dari `kontrol.png` lama (11.702 dari 1.153.600 piksel dengan selisih kanal > 16), hanya antialias teks):
+
+```bash
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --disable-gpu --hide-scrollbars \
+  --force-device-scale-factor=1 --host-resolver-rules="MAP * ~NOTFOUND" --window-size=1728,1560 \
+  --virtual-time-budget=8000 --user-data-dir=build/chrome --screenshot=build/kontrol-board.png \
+  "file://$PWD/docs/design/source/kontrol.html"
+python3 -c "from PIL import Image; p=Image.open('build/kontrol-board.png').convert('RGB'); p.save('docs/design/screens/kontrol-board.png', optimize=True); p.crop((64, 279, 1664, 1000)).save('docs/design/screens/kontrol.png', optimize=True)"
+```
+
+`kontrol.png` (1600×721) adalah potongan papan 1728×1560 di (64, 279), sama dengan berkas lama; potongan itu bergeser bila tinggi judul papan berubah. `hud-rute.html` belum dirender ulang.
+
 ---
 
 ## 1. Token
@@ -138,7 +150,7 @@ Kotak berkurang saat aus atau kena kejadian di rute (GDD 12). Tanda "!" berarti 
 
 GDD 4.3. Strip tipis di tepi kiri dan kanan, di separuh atas layar supaya tidak tertutup jempol.
 
-- **Strip kiri = sisi seberang, strip kanan = sisi dekat**, sama dengan arah stick dan swipe.
+- **Strip kiri = sisi seberang, strip kanan = sisi dekat**, sama dengan arah stick; lemparan bebas ke kiri atau ke atas juga mengarah ke seberang (GDD 5.2).
 - Ukuran: lebar 12 (garis luar 1 px, isi 8 px `RADAR_BG`), dari y 10 sampai y 182. Kiri di x 4, kanan 4 px dari tepi kanan.
 - **Atas strip = jauh di depan, bawah = dekat sepeda.** Penanda bergerak turun saat rumah mendekat.
 - Penanda: 8×6 px dengan garis luar. Pelanggan biasa kotak kuning, tip kotak hijau dengan titik terang di tengah, misi bentuk belah ketupat oranye. Rumah bukan pelanggan (abu-abu) hanya tampil di mode bantu.

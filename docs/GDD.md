@@ -78,7 +78,7 @@ Inti Paperboy tetap dipertahankan: sepeda terus berjalan sementara pemain mengan
 
 Pelanggan ada di kiri dan kanan jalan, dan posisi jalur menentukan seberapa mudah melempar ke tiap sisi.
 
-- Arah swipe di layar menentukan arah lemparan (arah bebas, bagian 5.2), dan sisi lemparan diturunkan dari arah itu. Garis pemisah sisi searah jalan di layar, jadi swipe ke kiri atau ke atas jatuh di sisi seberang, dan swipe ke kanan atau ke bawah di sisi dekat.
+- Arah swipe di layar menentukan arah lemparan (arah bebas, bagian 5.2), dan sisi lemparan diturunkan dari arah itu. Garis pemisah sisi searah jalan di layar, jadi swipe ke kiri atau ke atas mengarah ke sisi seberang, dan swipe ke kanan atau ke bawah mengarah ke sisi dekat. Titik mendaratnya tetap bergantung pada posisi lateral sepeda, panjang swipe, dan warisan kecepatan maju.
 - Posisi jalur jadi strategi: di tengah bisa menjangkau dua sisi tapi lemparan lebih jauh, sedangkan merapat ke satu sisi membuat lemparan ke sana lebih dekat tapi sisi seberang sulit dijangkau.
 - Dua sisi bisa berbeda isi, misalnya kiri pelanggan dan kanan bukan pelanggan, atau kiri rumah dan kanan toko. Rintangan juga datang dari dua arah.
 - Antaran bergantian kiri-kanan secara berurutan bisa memberi bonus combo zigzag.
