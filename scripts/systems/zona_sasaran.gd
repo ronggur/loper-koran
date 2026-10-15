@@ -179,6 +179,21 @@ static func zona_jalan_uji_sekitar(maju_ubin: float) -> Array[Zona]:
 	return hasil
 
 
+## Zona semua kavling jalan uji yang bisa memuat titik dengan jarak maju dari `maju_awal_ubin` sampai `maju_akhir_ubin` (satu kavling
+## cadangan di tiap ujung, seperti `zona_jalan_uji_sekitar`). Dipakai mode bantu untuk sasaran sejauh jangkauan lemparan
+## (`BantuLempar.jangkauan_maju_ubin`). Masukan tidak hingga = kosong.
+static func zona_jalan_uji_rentang(maju_awal_ubin: float, maju_akhir_ubin: float) -> Array[Zona]:
+	var hasil: Array[Zona] = []
+	if not is_finite(maju_awal_ubin) or not is_finite(maju_akhir_ubin):
+		return hasil
+	var periode: float = float(Config.JALAN_UJI_RUMAH_PERIODE_UBIN)
+	var awal: int = floori(minf(maju_awal_ubin, maju_akhir_ubin) / periode)
+	var akhir: int = floori(maxf(maju_awal_ubin, maju_akhir_ubin) / periode)
+	for indeks: int in range(awal - 1, akhir + 2):
+		hasil.append_array(zona_jalan_uji(indeks))
+	return hasil
+
+
 ## Klasifikasi titik mendarat di jalan uji (zona kavling sekitar titik itu), dari titik saja.
 static func klasifikasi_jalan_uji(titik_dunia: Vector2) -> Hasil:
 	return klasifikasi(titik_dunia, zona_jalan_uji_sekitar(ke_jalan(titik_dunia).y))

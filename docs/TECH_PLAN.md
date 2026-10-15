@@ -93,7 +93,7 @@ Mengikuti struktur di `README.md`. Bagian ini hanya menambahkan yang dibutuhkan 
 | `DialogPlayer` | Memutar adegan dari `scenes/*.json` | 6B |
 | `MilestoneTracker` | Progres milestone tiga tingkat | 6A (dasar), 13 (penuh) |
 | `AdService` | Pembungkus plugin iklan hadiah | 14 |
-| `Audio` | Bus, pitch kayuhan, variasi acak. Ada sejak run fase1b-umpan-balik (`scripts/autoload/audio.gd`): bunyi sepeda placeholder (kayuhan dengan pitch, freewheel, decit rem) dari keputusan murni `BunyiSepeda`, berhenti saat jeda; tidak merujuk autoload lain, data dari pemanggil (`JalanUji`). Variasi acak belum (fase lain) | 1 |
+| `Audio` | Bus, pitch kayuhan, variasi acak. Ada sejak run fase1b-umpan-balik (`scripts/autoload/audio.gd`): bunyi sepeda placeholder (kayuhan dengan pitch, freewheel, decit rem) dari keputusan murni `BunyiSepeda`, berhenti saat jeda; tidak merujuk autoload lain, data dari pemanggil (`JalanUji`). Sejak run fase2b-bantu-audio juga "wus" dan bunyi mendarat empat permukaan di bus `SFX` (pemetaan dan giliran variasi dari keputusan murni `BunyiLempar`, `scripts/systems/bunyi_lempar.gd`). Variasi acak belum (fase lain) | 1 |
 
 Aturan: **logika murni ada di `scripts/systems/` tanpa node**, supaya bisa dites headless (`tests/run_tests.gd`). Node hanya menampilkan.
 
@@ -283,7 +283,7 @@ Setiap fase berisi: tujuan, kaitan cerita, sistem dan kode, aset, konten, uji, d
 
 - `ThrowSolver` (`scripts/systems/throw_solver.gd`): dari vektor swipe di layar (arah tanah = `Iso.layar_ke_dunia(v)` dinormalkan, panjang = \|v\| penuh; arah bebas, keputusan pemilik 2026-10-15, GDD 5.2) dan kecepatan sepeda menghitung titik mendarat, lama terbang, dan puncak lengkung (BALANCING 4). Sisi lempar diturunkan dari arah tanah dan hanya memilih animasi; zona sasaran menilai dari titik mendarat saja. **Garis bidik memakai fungsi yang sama dengan lemparan sebenarnya**, supaya prediksi dan hasil tidak pernah berbeda.
 - Zona sasaran: kotak surat, teras, halaman, jendela, bukan pelanggan (BALANCING 5). Bentuk zona ditulis di data rumah.
-- Mode bantu: tap di sisi layar melempar ke kotak surat terdekat di sisi itu, kecepatan otomatis.
+- Mode bantu (run fase2b-bantu-audio, usulan): tap di zona swipe (`TouchRouter.tap_selesai`) melempar ke kotak surat pelanggan terdekat di depan pada sisi tap; sisi dari garis jalan yang melewati sepeda di layar. Logika murni `BantuLempar` (`scripts/systems/bantu_lempar.gd`: `sisi_tap`, `pilih`, `jangkauan_maju_ubin`), lintasan tetap dari `ThrowSolver.hitung`; scene `JalanUji` (gerbang dan langkah sama dengan swipe), sakelar di `HudDev`. Kecepatan otomatis = stick netral (santai). Aturan di GDD 5.3 dan BALANCING 4b.
 - Sisa koran dan jeda 0,35 detik.
 - Jendela: bonus atau penalti masih ❓ (ROADMAP 5); sediakan sakelar di `config.gd`.
 
@@ -295,7 +295,7 @@ Setiap fase berisi: tujuan, kaitan cerita, sistem dan kode, aset, konten, uji, d
 | Koran gulung berputar | 1 sheet, 4 frame, sekitar 8×6 px | |
 | Bayangan koran di tanah | dari kode | Mengikuti tinggi lengkung |
 | Penanda garis bidik dan elips pendaratan | dari kode | DESIGN_SPEC 3.7 |
-| Audio: lempar, mendarat (kotak surat, teras, rumput, meleset) | 1 + 4 (×3 variasi) | SOUND_DESIGN 3.1 |
+| Audio: lempar, mendarat (kotak surat, teras, rumput, meleset) | 1 + 4 (×3 variasi) | SOUND_DESIGN 3.1. Placeholder ada (run fase2b-bantu-audio): `tools/audio_art/sintesis_lempar.py` → `assets/audio/sfx/throw/`, diputar `Audio` lewat `BunyiLempar` |
 
 **Uji.** Ketelitian swipe pendek di layar kecil; mengenai kotak surat di ketiga kecepatan.
 

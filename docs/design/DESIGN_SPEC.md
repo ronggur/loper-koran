@@ -22,6 +22,18 @@ Spesifikasi visual untuk mengimplementasikan HUD dan layar game di Godot. Pasang
 - **Angka gameplay** (koin, jumlah pelanggan, hadiah). Ambil dari `scripts/config.gd` (`BALANCING.md`). Lihat bagian 6.
 - **Teks contoh** ("Cari kucing Mimi", "dari berita hal. 2"). Teks mengikuti `CONTENT_GUIDE.md`.
 
+**Merender ulang papan kontrol** (run fase2b-bantu-audio 2026-10-15, QA-005: `source/kontrol.html` diperbarui ke arah lempar bebas dan mode bantu). PNG dibuat dari HTML dengan Chrome headless dan dipotong dengan Pillow, tanpa diedit tangan. Render lama dibuat tanpa web font (font cadangan sans), jadi render ulang juga memblokir jaringan supaya Lexend/Lilita tidak termuat dan tampilannya setara (render HTML lama dengan perintah ini berbeda di sekitar 1% piksel area gambar dari `kontrol.png` lama (11.702 dari 1.153.600 piksel dengan selisih kanal > 16), hanya antialias teks):
+
+```bash
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --disable-gpu --hide-scrollbars \
+  --force-device-scale-factor=1 --host-resolver-rules="MAP * ~NOTFOUND" --window-size=1728,1560 \
+  --virtual-time-budget=8000 --user-data-dir=build/chrome --screenshot=build/kontrol-board.png \
+  "file://$PWD/docs/design/source/kontrol.html"
+python3 -c "from PIL import Image; p=Image.open('build/kontrol-board.png').convert('RGB'); p.save('docs/design/screens/kontrol-board.png', optimize=True); p.crop((64, 279, 1664, 1000)).save('docs/design/screens/kontrol.png', optimize=True)"
+```
+
+`kontrol.png` (1600×721) adalah potongan papan 1728×1560 di (64, 279), sama dengan berkas lama; potongan itu bergeser bila tinggi judul papan berubah. `hud-rute.html` belum dirender ulang.
+
 ---
 
 ## 1. Token
@@ -138,7 +150,7 @@ Kotak berkurang saat aus atau kena kejadian di rute (GDD 12). Tanda "!" berarti 
 
 GDD 4.3. Strip tipis di tepi kiri dan kanan, di separuh atas layar supaya tidak tertutup jempol.
 
-- **Strip kiri = sisi seberang, strip kanan = sisi dekat**, sama dengan arah stick dan swipe.
+- **Strip kiri = sisi seberang, strip kanan = sisi dekat**, sama dengan arah stick; lemparan bebas ke kiri atau ke atas juga mengarah ke seberang (GDD 5.2).
 - Ukuran: lebar 12 (garis luar 1 px, isi 8 px `RADAR_BG`), dari y 10 sampai y 182. Kiri di x 4, kanan 4 px dari tepi kanan.
 - **Atas strip = jauh di depan, bawah = dekat sepeda.** Penanda bergerak turun saat rumah mendekat.
 - Penanda: 8×6 px dengan garis luar. Pelanggan biasa kotak kuning, tip kotak hijau dengan titik terang di tengah, misi bentuk belah ketupat oranye. Rumah bukan pelanggan (abu-abu) hanya tampil di mode bantu.
@@ -174,7 +186,12 @@ GDD 5.2.
 | Zona swipe | x 210 sampai tepi kanan −20, y 48–352 | Swipe di mana saja, kecuali sentuhan yang dimulai di zona tap bel (bagian 3.8). Garis bidik muncul selama jari ditahan |
 | Garis bidik | titik 2 px tiap 4 px, `TEXT` | Berakhir di elips pendaratan 10×5 px yang sudah memperhitungkan kecepatan sepeda (BALANCING 4). Elips berubah `OK` kalau mengarah ke sasaran sah |
 
-Opsi kidal menukar zona kiri dan kanan beserta panel bawah dan tombol bel. Mode bantu menyembunyikan stick dan memakai tap di sisi layar (GDD 5.3).
+Opsi kidal menukar zona kiri dan kanan beserta panel bawah dan tombol bel. Mode bantu memakai tap di zona swipe untuk lempar otomatis; stick tetap tampil dan aktif (GDD 5.3, usulan 2026-10-15: kecepatan otomatis = santai tanpa sentuhan stick).
+
+**Mode bantu di HUD sementara (usulan, run fase2b-bantu-audio 2026-10-15; `scripts/ui/hud_dev.gd`, `scripts/ui/kontrol_touch.gd`; GDD 5.3, BALANCING 4b):**
+- **Tombol mode bantu** (sakelar, sampai layar pengaturan ada): di strip atas, satu baris dengan tombol kidal di tengah (`BarisTombol`, kidal lalu bantu, jarak 8 px `HUD_TOMBOL_JARAK_PX`), ukuran minimum sama dengan tombol kidal 96×42 px game, y 4–46, jadi di luar zona stick dan swipe (tangan kanan maupun kidal) di 640, 780, dan 800 dan tidak menumpuk dengan tombol jeda, tombol kidal, atau panel bawah. Tidak dicerminkan saat kidal. Gaya sama dengan tombol kidal (ditekan = `UI_PANEL_RAISED` bergaris `ACCENT`), dan statusnya juga terbaca dari teks: `HUD_BANTU_MATI` "Bantu: mati" / `HUD_BANTU_NYALA` "Bantu: nyala" (bukan hanya warna). Bawaan mati, tidak disimpan (belum ada save). Mudah dijangkau tapi tidak terpencet tak sengaja dinilai di HP.
+- **Lemparan bantu** tidak menampilkan garis bidik (tap seketika); koran, bayangan, elips pendaratan, dan penanda kena tampil seperti lemparan swipe.
+- **Tanda "tidak ada sasaran"** saat tap mode bantu tidak menemukan kotak surat terjangkau: cincin kecil 9×9 px game (`PolaPiksel.TANDA_TANPA_SASARAN`) isi `TEXT_2` bergaris luar `OUTLINE` di dalam dan di luar, berpusat di titik tap, selama 0,6 detik (`BANTU_TANDA_LAMA_DETIK`, membeku saat jeda). Bentuknya berbeda dari silang meleset (3.6) dan dari elips pendaratan; bukan teks dan bukan warna saja. Tap yang ditolak karena koran habis atau jeda antar lempar tidak memberi tanda (HUD koran sudah menampilkan HABIS).
 
 **Tafsiran garis bidik (usulan, run fase2a-lemparan 2026-10-14; `scripts/ui/garis_bidik.gd`):** garis bidik digambar di **ruang dunia** (ikut kamera, di atas rumah dan sepeda), bukan dari titik awal swipe ke jari: titik 2×2 `TEXT` tiap 4 px sepanjang lengkung koran yang sebenarnya, mulai dari titik lepas setinggi tangan (sudah termasuk gerak sepeda selama jeda lepas, jadi saat ngebut garis mulai sedikit di depan pengendara) sampai elips pendaratan di tanah. Titiknya sampel lintasan `ThrowSolver` yang sama dengan lemparan, diperbarui tiap frame dari kecepatan sebenarnya. Elips biasa = cincin 10×5 `TEXT`; elips ke sasaran sah = elips **terisi** `OK` bergaris luar `OUTLINE` (berubah bentuk, bukan hanya warna). Titik mendarat yang **tertutup rumah** dari sudut kamera (di dalam kotak rumah atau di baliknya; koran pasti meleset di sana) = cincin **putus-putus** `TEXT` redup alpha 0,5, dan titik garis bidik yang tertutup rumah ikut redup, supaya ujung garis di belakang fasad tidak terbaca sebagai sasaran di atap atau dinding (garis bidik tetap digambar di atas objek; redup = "di balik rumah"; QA-004 run fase2a-lemparan iterasi 2, usulan). Aturannya murni (`ZonaSasaran.tertutup_kotak`): titik (x, y, z) tertutup bila ada d ≥ 0 dengan (x + d, y + d) di tapak kotak dan z + d ≤ tinggi kotak, karena keduanya jatuh di titik layar yang sama dan yang kedua lebih dekat ke kamera. **Arah bebas (usulan rinci, keputusan pemilik 2026-10-15, run fase2-arah-bebas):** koran terbang ke arah swipe seperti terlihat di layar, jadi garis tanah lemparan (dari titik lepas ke elips, tanpa tinggi) sejajar arah jari: swipe ke atas = garis ke rumah seberang di depan, ke kanan = ke sisi dekat, ke kiri murni = ke seberang sedikit ke belakang, ke bawah = ke sisi dekat di belakang. Saat sepeda melaju, elips bergeser maju searah jalan karena koran mewarisi kecepatan maju, dan lengkungnya naik setinggi puncak, jadi garis yang terlihat tidak lurus sejajar jari; yang sejajar adalah arah tanahnya (dites; tangkapan `docs/loop/20261015-fase2-arah-bebas/shots/*sejajar_berhenti*` saat sepeda berhenti). Tidak ada sudut swipe yang ditolak. Garis bidik hanya tampil selama jari ditahan, panjang swipe \|v\| ≥ 6% lebar viewport (ke arah mana pun), koran masih ada, dan jeda antar lempar 0,35 detik sudah lewat; hilang saat jari dilepas, dibatalkan, atau jeda. Saat jari dilepas, koran memakai lintasan garis bidik yang terakhir tampil: jari yang masih bergerak atau berbelok ke arah mana pun saat diangkat tidak membatalkan lemparan dan tidak menggeser titik mendarat dari elips yang terlihat; hanya jari yang ditarik kembali ke dekat titik awal (\|v\| di bawah 6%) yang membatalkan (QA-001 run fase2a-lemparan, D-5 run fase2-arah-bebas). Elips sah mengikuti zona yang memuat titik mendarat, apa pun sisi lemparannya. Garis putus lama dari titik awal swipe ke jari dihapus. Kekuatan titik di bawah jempol dinilai di HP.
 

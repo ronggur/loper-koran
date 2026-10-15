@@ -15,6 +15,9 @@ extends Node2D
 ## (`atur_rem`, diisi `JalanUji` dari `BikeMotion`) busur bawah cincin digambar `WARN` (seperempat lingkaran bawah, bentuk
 ## yang berbeda dari cincin biasa), hilang saat rem padam.
 ## Semuanya dirasterisasi per piksel game (`PikselLingkaran`) supaya tepinya tajam di skala bulat.
+## Tanda "tidak ada sasaran" mode bantu (D-6 run fase2b-bantu-audio): cincin kecil `PolaPiksel.TANDA_TANPA_SASARAN` (`TEXT_2` bergaris
+## `OUTLINE`) berpusat di titik tap selama `Config.BANTU_TANDA_LAMA_DETIK`; dinyalakan `JalanUji` (`tampilkan_tanda`) dan dimajukan dengan
+## `dt` efektif (`langkah_tanda`, membeku saat jeda). Perintah gambarnya (`perintah_tanda`) dites headless.
 
 ## Pelacak jari. Instance `RefCounted` murni.
 var router: TouchRouter = TouchRouter.new()
@@ -28,6 +31,8 @@ var _tekstur_busur_rem: ImageTexture
 var _rem_aktif: bool = false
 var _setengah_cincin: Vector2 = Vector2.ZERO
 var _setengah_knob: Vector2 = Vector2.ZERO
+var _tanda_posisi: Vector2 = Vector2.ZERO
+var _tanda_sisa_detik: float = 0.0
 
 
 func _ready() -> void:
@@ -79,6 +84,42 @@ func _draw() -> void:
 		# Busur rem digambar di atas knob: saat rem knob selalu di bawah cincin dan akan menutupi bagian tengah busur.
 		if _rem_aktif:
 			draw_texture(_tekstur_busur_rem, asal - _setengah_cincin)
+	GambarPiksel.gambar(self, perintah_tanda())
+
+
+## Menampilkan tanda "tidak ada sasaran" berpusat di `posisi` (koordinat viewport game) selama `Config.BANTU_TANDA_LAMA_DETIK` (D-6).
+func tampilkan_tanda(posisi: Vector2) -> void:
+	_tanda_posisi = posisi
+	_tanda_sisa_detik = Config.BANTU_TANDA_LAMA_DETIK
+	queue_redraw()
+
+
+## Memajukan waktu tanda `dt` detik (`dt` efektif; 0 saat jeda = membeku). Menggambar ulang saat tanda hilang.
+func langkah_tanda(dt: float) -> void:
+	var tampil_sebelum: bool = tanda_tampil()
+	_tanda_sisa_detik = BantuLempar.sisa_tanda(_tanda_sisa_detik, dt)
+	if tampil_sebelum and not tanda_tampil():
+		queue_redraw()
+
+
+## True selama tanda "tidak ada sasaran" tampil.
+func tanda_tampil() -> bool:
+	return BantuLempar.tanda_tampil(_tanda_sisa_detik)
+
+
+## Titik tap tempat tanda terakhir dinyalakan, koordinat viewport game.
+func posisi_tanda() -> Vector2:
+	return _tanda_posisi
+
+
+## Perintah gambar (`GambarPiksel`) tanda "tidak ada sasaran": pola berpusat di titik tap (pojok = titik - setengah ukuran, dibulatkan),
+## `w` = `TEXT_2`. Kosong bila tanda tidak tampil.
+func perintah_tanda() -> Array:
+	if not tanda_tampil():
+		return []
+	var ukuran: Vector2i = PolaPiksel.ukuran(PolaPiksel.TANDA_TANPA_SASARAN)
+	var pojok: Vector2 = _tanda_posisi.round() - Vector2(floori(float(ukuran.x) / 2), floori(float(ukuran.y) / 2))
+	return GambarPiksel.perintah_pola(PolaPiksel.TANDA_TANPA_SASARAN, pojok, Palette.TEXT_2)
 
 
 ## Vektor stick yang dipakai gerak: sentuhan bila stick aktif, kalau tidak keyboard (hanya di editor).

@@ -53,6 +53,9 @@ jobs:
       - name: Uji sintesis bunyi sepeda (WAV di repo = hasil skrip, deterministik, loop tanpa klik)
         run: python3 tools/tests_cek/uji_sintesis_sepeda.py
 
+      - name: Uji sintesis bunyi lempar dan mendarat (13 WAV di repo = hasil skrip, deterministik, tanpa klik)
+        run: python3 tools/tests_cek/uji_sintesis_lempar.py
+
       - name: Import project (tanpa error, tanpa berkas yang belum di-commit)
         run: |
           set -uo pipefail

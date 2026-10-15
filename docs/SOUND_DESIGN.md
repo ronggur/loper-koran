@@ -1,6 +1,6 @@
 # Sound Design Guide — Loper Koran
 
-Dokumen pendamping [`GDD.md`](./GDD.md) (bagian 15) dan [`ART_DIRECTION.md`](./ART_DIRECTION.md). Formatnya mengikuti `SOUND_DESIGN.md` Brainy Dungeon. Seluruh dokumen ini **draf usulan**: yang sudah ada hanya tiga bunyi placeholder sepeda dari rumus (bagian 3.2, run fase1b-umpan-balik 2026-10-14), dan apakah game memakai musik masih terbuka (ROADMAP 5).
+Dokumen pendamping [`GDD.md`](./GDD.md) (bagian 15) dan [`ART_DIRECTION.md`](./ART_DIRECTION.md). Formatnya mengikuti `SOUND_DESIGN.md` Brainy Dungeon. Seluruh dokumen ini **draf usulan**: yang sudah ada hanya bunyi placeholder dari rumus, yaitu tiga bunyi sepeda (bagian 3.2, run fase1b-umpan-balik 2026-10-14) serta "wus" lemparan dan bunyi mendarat empat permukaan (bagian 3.1, run fase2b-bantu-audio 2026-10-15). Apakah game memakai musik masih terbuka (ROADMAP 5).
 
 ---
 
@@ -40,6 +40,22 @@ Hadiah inti tiap antaran. Bunyinya membedakan permukaan, supaya pemain tahu hasi
 - Tiga variasi per permukaan.
 - **Nada naik mengikuti combo**: antaran ke-1 di nada dasar, lalu naik setengah nada tiap antaran beruntun sampai 5 tingkat, lalu bertahan. Combo putus mengembalikan nada ke dasar tanpa bunyi tambahan.
 - Tip pelanggan menambah denting koin kecil setelah bunyi mendarat.
+
+**Placeholder Fase 2 (sudah ada, usulan, run fase2b-bantu-audio 2026-10-15; dinilai di HP).** 13 WAV dibuat dari rumus oleh `tools/audio_art/sintesis_lempar.py` (hanya pustaka standar, deterministik, tanpa rekaman atau unduhan; `assets/audio/LICENSES.md`), diputar autoload `Audio` di bus `SFX` dengan pemetaan dari `scripts/systems/bunyi_lempar.gd` (logika murni, dites headless):
+
+| Berkas (`assets/audio/sfx/throw/`) | Bunyi | Kapan |
+|---|---|---|
+| `sfx_throw_whoosh_01.wav` | "Wus" 0,20 detik, desis pita sempit yang naik lalu turun | Sekali saat lemparan **diterima** (jari swipe dilepas atau tap mode bantu diterima, koran berkurang 1). Lemparan yang ditolak (pendek, jeda antar lempar, koran habis, jeda game, tanpa sasaran) tidak berbunyi |
+| `sfx_land_mailbox_0{1,2,3}.wav` | "Tunk" logam bernada naik, 0,17 / 0,20 / 0,23 detik | Koran mendarat dengan hasil kotak surat |
+| `sfx_land_porch_0{1,2,3}.wav` | "Plak" kertas renyah, 0,16 / 0,19 / 0,22 detik | Hasil teras, dan jendela bila sakelar jendela = bonus (sah) |
+| `sfx_land_grass_0{1,2,3}.wav` | "Puk" lembut redup, 0,15 / 0,17 / 0,19 detik | Hasil halaman (rumput) |
+| `sfx_land_miss_0{1,2,3}.wav` | "Plek" datar, 0,14 / 0,15 / 0,16 detik, sekitar 5 dB lebih pelan di berkasnya | Hasil meleset (jalan, di luar zona), bukan pelanggan (rumah salah), dan jendela bila penalti (bawaan, `Config.JENDELA_KENA_BONUS` false) |
+
+- Bunyi mendarat berbunyi **tepat sekali** di langkah koran mendarat (`JalanUji.koran_mendarat`), dengan hasil dan sakelar jendela yang sama dengan penanda kena/meleset, jadi bunyi dan penanda selalu sejalan.
+- Variasi dipilih **bergiliran** per permukaan (01, 02, 03, 01, ...), tanpa acak; pencacahnya di `Audio`, satu per permukaan. Satu pemutar per berkas, jadi bunyi permukaan lain tidak terpotong.
+- Volume: "wus" −4 dB, mendarat −1 dB (`Config.AUDIO_WUS_VOLUME_DB`, `AUDIO_MENDARAT_VOLUME_DB`; BALANCING 2), di atas kayuhan −6 dB.
+- Pasangan visual: garis bidik hilang dan koran muncul ("wus"); penanda centang/setengah/bintang/silang di titik mendarat (bunyi mendarat, DESIGN_SPEC 3.6).
+- **Ditunda ke Fase 3:** nada naik mengikuti combo (skor dan combo belum ada), denting tip. Bunyi jendela pecah (bagian 4.2) belum ada. Acak nada ±5% (bagian 2 butir 3) belum dipakai; giliran tiga variasi dulu, dinilai di HP.
 
 ### 3.2 Kayuhan dan kecepatan
 
@@ -85,8 +101,8 @@ Kolom **M2** menandai yang dibutuhkan untuk satu hari penuh di perumahan (ROADMA
 
 | Suara | M2 | Pasangan visual |
 |---|---|---|
-| Swipe / koran dilempar ("wus") | ✅ | Koran berputar, garis bidik hilang |
-| Mendarat: kotak surat, teras, rumput, meleset | ✅ | Bintang kecil, umpan balik melayang (DESIGN_SPEC 3.6) |
+| Swipe / koran dilempar ("wus") — placeholder ada (bagian 3.1) | ✅ | Koran berputar, garis bidik hilang |
+| Mendarat: kotak surat, teras, rumput, meleset — placeholder ada, 3 variasi bergiliran (bagian 3.1); jendela memakai teras (bonus) atau meleset (penalti) | ✅ | Bintang kecil, umpan balik melayang (DESIGN_SPEC 3.6) |
 | Tip / koin | ✅ | Koin muncul |
 | Pelanggan kesal (gumam pendek) | ⬜ | Pelanggan di teras bereaksi |
 | Jendela pecah (kalau dipakai, GDD 4.1) | ⬜ | Kaca retak |
@@ -174,7 +190,7 @@ Master
 
 Slider terpisah untuk suasana dan efek suara di pengaturan (DESIGN_SPEC 4).
 
-**Yang sudah ada (run fase1b-umpan-balik 2026-10-14, usulan):** `default_bus_layout.tres` di root repo memuat `Master` → `SFX` → `Sepeda` saja (semua 0 dB, tanpa efek). `Ambience`, `Musik`, dan `UI` ditambahkan saat bunyinya ada; musik belum diputuskan. Bus `Sepeda` belum diredam saat jeda: autoload `Audio` menghentikan pemutarnya langsung (lihat "Perilaku di Android").
+**Yang sudah ada (run fase1b-umpan-balik 2026-10-14, usulan):** `default_bus_layout.tres` di root repo memuat `Master` → `SFX` → `Sepeda` saja (semua 0 dB, tanpa efek). `Ambience`, `Musik`, dan `UI` ditambahkan saat bunyinya ada; musik belum diputuskan. Bus `Sepeda` belum diredam saat jeda: autoload `Audio` menghentikan pemutarnya langsung (lihat "Perilaku di Android"). Bunyi lempar dan mendarat (run fase2b-bantu-audio 2026-10-15) diputar langsung di bus `SFX`, bukan `Sepeda`; tidak ada bus baru.
 
 ### Level dan pencampuran
 
@@ -187,6 +203,7 @@ Slider terpisah untuk suasana dan efek suara di pengaturan (DESIGN_SPEC 4).
 
 - Berhenti saat app masuk background, lanjut wajar saat kembali.
   - **Bunyi sepeda (sudah ada):** background, kehilangan fokus, tombol jeda, dan back Android membuka layar jeda (BALANCING 2, keputusan pemilik 2026-10-14); autoload `Audio` menghentikan ketiga pemutar seketika lewat sinyal `JalanUji.jeda_berubah`, termasuk decit rem yang sedang berbunyi, dan juga saat `NOTIFICATION_APPLICATION_PAUSED`/`FOCUS_OUT` sampai sendiri. `Audio` `PROCESS_MODE_ALWAYS`, jadi pemutar tidak di-pause lalu dilanjutkan otomatis oleh `SceneTree.paused` (yang akan memutar sisa decit lama). Sesudah "Lanjut" bunyi kembali dari keadaan sekarang pada langkah berikutnya; rem harus ditahan ulang, jadi tidak ada decit tertunda.
+  - **Bunyi lempar dan mendarat (sudah ada, run fase2b-bantu-audio):** jalur yang sama. Jeda (tombol jeda, back, `FOCUS_OUT`, `APPLICATION_PAUSED`) menghentikan "wus" dan bunyi mendarat yang sedang berbunyi seketika; selama jeda tidak ada bunyi baru (koran beku, lemparan ditolak); sesudah "Lanjut" bunyi lama tidak diputar ulang.
 - Tangani headphone dicabut.
 - Hormati mode senyap perangkat.
 
@@ -235,7 +252,7 @@ assets/audio/
 
 ## 8. Urutan Produksi
 
-1. **Fase 1–2:** kayuhan dengan pitch, freewheel, rem, swipe, empat bunyi mendarat. Placeholder boleh. (Kayuhan, freewheel, dan rem placeholder sudah ada sejak run fase1b-umpan-balik, bagian 3.2.)
+1. **Fase 1–2:** kayuhan dengan pitch, freewheel, rem, swipe, empat bunyi mendarat. Placeholder boleh. (Kayuhan, freewheel, dan rem placeholder sudah ada sejak run fase1b-umpan-balik, bagian 3.2; "wus" dan empat bunyi mendarat sejak run fase2b-bantu-audio, bagian 3.1.)
 2. **Fase 3–4:** anjing, mobil, tabrakan, tip, suara misi kucing, UI dasar, ambience perumahan.
 3. **Fase 6–7:** kerusakan sepeda, bengkel, hasil harian, bel, keputusan musik.
 4. **Fase 8:** ambience dan suara khas distrik berikutnya.

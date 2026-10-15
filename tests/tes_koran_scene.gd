@@ -183,13 +183,81 @@ func _pola_penanda_harapan(penanda: ZonaSasaran.Penanda) -> Array[String]:
 	return PolaPiksel.PENANDA_SILANG
 
 
-## Perintah gambar deret ikon HUD yang diharapkan: `jumlah` ikon, `terang` pertama alpha 1, sisanya `HUD_KORAN_REDUP_ALPHA`.
-func _deret_harapan(jumlah: int, terang: int) -> Array:
-	var hasil: Array = []
+# --- Oracle gambar independen (QA-008 run fase2a-lemparan, AC-13 run fase2b-bantu-audio) ---
+# Harapan gambar TIDAK memakai `GambarPiksel.perintah_pola`/`warna_huruf` (yang dipakai node): warna tiap huruf peran ditulis eksplisit di
+# tes (`_warna_peran`), pola dibaca per karakter langsung dari baris teksnya (bukan `PolaPiksel.rentang_huruf`), dan perbandingannya per
+# piksel layar (peta piksel -> warna), cara yang berbeda dari rentang per huruf di kode. Perintah node diuraikan ke peta yang sama.
+
+## Alpha ikon koran HUD yang sudah terpakai, ditulis eksplisit (DESIGN_SPEC 3.5: redup 28%); `Config` dicek sama dengan angka ini.
+const ALPHA_REDUP_HARAPAN: float = 0.28
+## Alpha elips garis bidik yang tertutup rumah, ditulis eksplisit (QA-004); `Config` dicek sama dengan angka ini.
+const ALPHA_TERTUTUP_HARAPAN: float = 0.5
+
+
+## Warna per huruf peran yang DIHARAPKAN (ditulis eksplisit, PolaPiksel: `o` OUTLINE, `t` TEXT, `s` TEXT_2, `w` warna utama), semua
+## dengan alpha `alpha` (warna utama: alpha utamanya dikali `alpha`).
+func _warna_peran(utama: Color, alpha: float = 1.0) -> Dictionary:
+	return {
+		"o": Color(Palette.OUTLINE.r, Palette.OUTLINE.g, Palette.OUTLINE.b, alpha),
+		"t": Color(Palette.TEXT.r, Palette.TEXT.g, Palette.TEXT.b, alpha),
+		"s": Color(Palette.TEXT_2.r, Palette.TEXT_2.g, Palette.TEXT_2.b, alpha),
+		"w": Color(utama.r, utama.g, utama.b, utama.a * alpha),
+	}
+
+
+## Peta piksel yang DIHARAPKAN untuk pola `pola` berpojok `kiri_atas` (dibulatkan): tiap karakter yang ada di `warna` jadi satu piksel.
+func _peta_pola(pola: Array[String], kiri_atas: Vector2, warna: Dictionary) -> Dictionary:
+	var peta: Dictionary = {}
+	_tambah_pola(peta, pola, kiri_atas, warna)
+	return peta
+
+
+## Menambahkan piksel pola (lihat `_peta_pola`) ke `peta`.
+func _tambah_pola(peta: Dictionary, pola: Array[String], kiri_atas: Vector2, warna: Dictionary) -> void:
+	var asal: Vector2i = Vector2i(kiri_atas.round())
+	for y: int in range(pola.size()):
+		for x: int in range(pola[y].length()):
+			var huruf: String = pola[y][x]
+			if warna.has(huruf):
+				peta[asal + Vector2i(x, y)] = warna[huruf]
+
+
+## Peta piksel dari perintah gambar node (`[rentang, asal, warna]`; rentang = baris, kolom awal, kolom akhir eksklusif), urut gambar.
+func _peta_perintah(perintah: Array) -> Dictionary:
+	var peta: Dictionary = {}
+	for p: Array in perintah:
+		var daftar: Array = p[0]
+		var asal: Vector2i = Vector2i((p[1] as Vector2).round())
+		var warna: Color = p[2]
+		for r: Vector3i in daftar:
+			for x: int in range(r.y, r.z):
+				peta[asal + Vector2i(x, r.x)] = warna
+	return peta
+
+
+## True bila dua peta piksel memuat piksel yang sama dengan warna yang sama (toleransi float `is_equal_approx`).
+func _peta_sama(a: Dictionary, b: Dictionary) -> bool:
+	if a.size() != b.size():
+		return false
+	for kunci: Vector2i in a:
+		if not b.has(kunci) or not (a[kunci] as Color).is_equal_approx(b[kunci]):
+			return false
+	return true
+
+
+## True bila perintah gambar node menggambar persis pola `pola` di `kiri_atas` dengan warna peran `warna` (oracle independen).
+func _gambar_pola(perintah: Array, pola: Array[String], kiri_atas: Vector2, warna: Dictionary) -> bool:
+	return _peta_sama(_peta_perintah(perintah), _peta_pola(pola, kiri_atas, warna))
+
+
+## Peta piksel deret ikon HUD yang diharapkan: `jumlah` ikon `IKON_KORAN` berjarak 13 px (12 + 1, DESIGN_SPEC 3.5), `terang` pertama alpha
+## 1, sisanya alpha 0,28 (ditulis eksplisit).
+func _deret_harapan(jumlah: int, terang: int) -> Dictionary:
+	var peta: Dictionary = {}
 	for i: int in range(jumlah):
-		var alpha: float = 1.0 if i < terang else Config.HUD_KORAN_REDUP_ALPHA
-		hasil.append_array(GambarPiksel.perintah_pola(PolaPiksel.IKON_KORAN, Vector2(i * (Config.HUD_KORAN_IKON_PX + Config.HUD_KORAN_IKON_JARAK_PX), 0), Palette.TEXT, alpha))
-	return hasil
+		var alpha: float = 1.0 if i < terang else ALPHA_REDUP_HARAPAN
+		_tambah_pola(peta, PolaPiksel.IKON_KORAN, Vector2(i * 13, 0), _warna_peran(Palette.TEXT, alpha))
+	return peta
 
 
 ## Mencatat sinyal `koran_dilempar` (lintasan) dan `koran_mendarat` (koran) akar.
@@ -781,11 +849,16 @@ func _test_habis_dan_isi_ulang() -> void:
 		if i == 25:
 			check(hud.teks_koran() == "4" and hud.ikon_koran() == Vector2i(8, 4), "sisa 4: angka 4, 4 dari 8 ikon terang (sisanya redup)")
 			var deret: DeretKoran = _anak(hud, "DeretKoran") as DeretKoran
-			check(deret.perintah_tampil() == _deret_harapan(8, 4) and deret.alpha_ikon(3) == 1.0 and deret.alpha_ikon(4) == Config.HUD_KORAN_REDUP_ALPHA, "sisa 4: gambar deret = 4 ikon alpha 1 lalu 4 ikon redup alpha 0,28 (QA-003)")
+			check(_peta_sama(_peta_perintah(deret.perintah_tampil()), _deret_harapan(8, 4)) and deret.alpha_ikon(3) == 1.0 and deret.alpha_ikon(4) == Config.HUD_KORAN_REDUP_ALPHA, "sisa 4: gambar deret = 4 ikon alpha 1 lalu 4 ikon redup alpha 0,28 (QA-003, oracle independen QA-008)")
+			# Titik uji eksplisit (QA-008): baris 3 ikon = "otsttsttstto"; ikon ke-3 terang, ikon ke-4 redup 28%.
+			var peta: Dictionary = _peta_perintah(deret.perintah_tampil())
+			var terang_ok: bool = (peta.get(Vector2i(3 * 13, 3), Color()) as Color).is_equal_approx(Color(Palette.OUTLINE, 1.0)) and (peta.get(Vector2i(3 * 13 + 1, 3), Color()) as Color).is_equal_approx(Palette.TEXT) and (peta.get(Vector2i(3 * 13 + 2, 3), Color()) as Color).is_equal_approx(Palette.TEXT_2)
+			var redup_ok: bool = (peta.get(Vector2i(4 * 13, 3), Color()) as Color).is_equal_approx(Color(Palette.OUTLINE, 0.28)) and (peta.get(Vector2i(4 * 13 + 1, 3), Color()) as Color).is_equal_approx(Color(Palette.TEXT, 0.28)) and (peta.get(Vector2i(4 * 13 + 2, 3), Color()) as Color).is_equal_approx(Color(Palette.TEXT_2, 0.28))
+			check(terang_ok and redup_ok and is_equal_approx(Config.HUD_KORAN_REDUP_ALPHA, ALPHA_REDUP_HARAPAN), "sisa 4: ikon ke-3 garis luar OUTLINE, kertas TEXT, nada TEXT_2 alpha 1; ikon ke-4 ketiganya alpha 0,28 (QA-008)")
 	check((catatan["lempar"] as Array).size() == 30 and akar.koran.sisa == 0, "30 lemparan diterima, sisa 0")
 	akar.perbarui(Config.LEMPAR_JEDA_DETIK)
 	check(hud.teks_koran() == "0" and hud.ikon_koran() == Vector2i(8, 0) and hud.penanda_habis_tampil(), "habis: angka 0, semua ikon redup, penanda HABIS tampil (bukan hanya warna)")
-	check((_anak(hud, "DeretKoran") as DeretKoran).perintah_tampil() == _deret_harapan(8, 0), "habis: gambar deret = 8 ikon redup alpha 0,28 (QA-003)")
+	check(_peta_sama(_peta_perintah((_anak(hud, "DeretKoran") as DeretKoran).perintah_tampil()), _deret_harapan(8, 0)), "habis: gambar deret = 8 ikon redup alpha 0,28 (QA-003, oracle independen QA-008)")
 	_sentuh(1, _awal(LoperAnim.Sisi.DEKAT), true)
 	_geser(1, _akhir(LoperAnim.Sisi.DEKAT, _dx(0.4)))
 	akar.perbarui(DT)
@@ -1020,11 +1093,11 @@ func _test_elips_dan_jendela() -> void:
 			continue
 		check(garis.elips_sah() == k[2], "%s: elips %s" % [nama, "sah (OK, terisi)" if k[2] else "biasa (cincin TEXT)"])
 		var l: ThrowSolver.Lintasan = garis.lintasan()
-		var elips_harapan: Array = GambarPiksel.perintah_pola(PolaPiksel.ELIPS_SAH, garis.pojok_elips(), Palette.OK)
+		var elips_harapan: Dictionary = _peta_pola(PolaPiksel.ELIPS_SAH, garis.pojok_elips(), _warna_peran(Palette.OK))
 		if not k[2]:
 			var tertutup: bool = ZonaSasaran.tertutup_rumah_jalan_uji(l.titik_mendarat, 0.0)
-			elips_harapan = GambarPiksel.perintah_pola(PolaPiksel.ELIPS_TERTUTUP if tertutup else PolaPiksel.ELIPS_BIASA, garis.pojok_elips(), Palette.TEXT, Config.GARIS_BIDIK_TERTUTUP_ALPHA if tertutup else 1.0)
-		check(garis.perintah_elips() == elips_harapan, "%s: node garis bidik menggambar elips %s" % [nama, "sah" if k[2] else "biasa atau tertutup sesuai titik mendarat"])
+			elips_harapan = _peta_pola(PolaPiksel.ELIPS_TERTUTUP if tertutup else PolaPiksel.ELIPS_BIASA, garis.pojok_elips(), _warna_peran(Palette.TEXT, ALPHA_TERTUTUP_HARAPAN if tertutup else 1.0))
+		check(_peta_sama(_peta_perintah(garis.perintah_elips()), elips_harapan), "%s: node garis bidik menggambar elips %s (oracle independen QA-008)" % [nama, "sah: isi OK bergaris luar OUTLINE" if k[2] else "biasa atau tertutup sesuai titik mendarat"])
 		_sentuh(1, _router(akar).posisi_swipe(), false)
 		var mendarat: KoranLempar.Koran = _sampai_mendarat(akar, catatan)
 		check(mendarat != null and mendarat.hasil == sasaran and mendarat.penanda == k[3] and ZonaSasaran.sah(mendarat.antaran) == k[2], "%s: mendarat dengan hasil sama dengan prediksi elips, penanda %s" % [nama, ZonaSasaran.Penanda.keys()[k[3]]])
@@ -1036,8 +1109,8 @@ func _test_elips_dan_jendela() -> void:
 			var pola: Array[String] = _pola_penanda_harapan(k[3])
 			var ukuran: Vector2i = PolaPiksel.ukuran(pola)
 			var pojok: Vector2 = Iso.posisi_gambar(l.titik_mendarat) - Vector2(floori(float(ukuran.x) / 2), ukuran.y + Config.PENANDA_ATAS_PX)
-			check(udara.perintah_tampil() == GambarPiksel.perintah_pola(pola, pojok, Palette.OK if k[2] else Palette.FAIL), "%s: node UDARA menggambar penanda %s warna %s di atas titik mendarat (QA-003)" % [nama, ZonaSasaran.Penanda.keys()[k[3]], "OK" if k[2] else "FAIL"])
-			check(tanah.perintah_tampil() == GambarPiksel.perintah_pola(PolaPiksel.pola_koran(0), Iso.posisi_gambar(l.titik_mendarat) - Vector2(4, 6), Palette.TEXT), "%s: node TANAH menggambar koran tergeletak di titik mendarat" % nama)
+			check(_gambar_pola(udara.perintah_tampil(), pola, pojok, _warna_peran(Palette.OK if k[2] else Palette.FAIL)), "%s: node UDARA menggambar penanda %s: isi w %s, garis luar o OUTLINE, di atas titik mendarat (QA-003, QA-008)" % [nama, ZonaSasaran.Penanda.keys()[k[3]], "OK" if k[2] else "FAIL"])
+			check(_gambar_pola(tanah.perintah_tampil(), PolaPiksel.pola_koran(0), Iso.posisi_gambar(l.titik_mendarat) - Vector2(4, 6), _warna_peran(Palette.TEXT)), "%s: node TANAH menggambar koran tergeletak di titik mendarat (QA-008)" % nama)
 		_langkah(akar, roundi(Config.PENANDA_LAMA_DETIK / DT) + 2)
 	check(akar.koran_terbang().is_empty(), "semua penanda habis sesudah 0,8 detik")
 	_bersihkan(akar)
@@ -1138,7 +1211,10 @@ func _test_elips_tertutup() -> void:
 		return
 	var l: ThrowSolver.Lintasan = garis.lintasan()
 	check(garis.bentuk_elips() == KoranLempar.Elips.TERTUTUP and not garis.elips_sah(), "elips tertutup rumah: bentuk TERTUTUP, bukan sah")
-	check(garis.perintah_elips() == GambarPiksel.perintah_pola(PolaPiksel.ELIPS_TERTUTUP, garis.pojok_elips(), Palette.TEXT, Config.GARIS_BIDIK_TERTUTUP_ALPHA), "node garis bidik menggambar cincin putus-putus TEXT redup (alpha %s)" % Config.GARIS_BIDIK_TERTUTUP_ALPHA)
+	check(_gambar_pola(garis.perintah_elips(), PolaPiksel.ELIPS_TERTUTUP, garis.pojok_elips(), _warna_peran(Palette.TEXT, ALPHA_TERTUTUP_HARAPAN)) and is_equal_approx(Config.GARIS_BIDIK_TERTUTUP_ALPHA, ALPHA_TERTUTUP_HARAPAN), "node garis bidik menggambar cincin putus-putus TEXT redup (alpha 0,5; oracle independen QA-008)")
+	var peta_elips: Dictionary = _peta_perintah(garis.perintah_elips())
+	var pojok_elips: Vector2i = Vector2i(garis.pojok_elips().round())
+	check((peta_elips.get(pojok_elips + Vector2i(2, 0), Color()) as Color).is_equal_approx(Color(Palette.TEXT, 0.5)), "titik uji: piksel w pertama elips tertutup = TEXT alpha 0,5 (QA-008)")
 	var akhir: int = garis.titik_gambar().size() - 1
 	check(akhir > 0 and garis.titik_tertutup(akhir) and garis.warna_titik(akhir) == Color(Palette.TEXT, Config.GARIS_BIDIK_TERTUTUP_ALPHA), "titik ujung garis bidik di balik rumah: redup")
 	check(not garis.titik_tertutup(0) and garis.warna_titik(0) == Palette.TEXT, "titik awal garis bidik (di tangan): terang")
@@ -1185,7 +1261,26 @@ func _test_perintah_gambar_koran() -> void:
 		mendarat.penanda = k[1]
 		var pola: Array[String] = _pola_penanda_harapan(k[1])
 		var pojok: Vector2 = Iso.posisi_gambar(l.titik_mendarat) - Vector2(floori(float(PolaPiksel.ukuran(pola).x) / 2), PolaPiksel.ukuran(pola).y + Config.PENANDA_ATAS_PX)
-		check(KoranGambar.perintah_koran(KoranGambar.Lapisan.UDARA, mendarat) == GambarPiksel.perintah_pola(pola, pojok, k[2]), "%s: lapisan UDARA = penanda %s" % [ZonaSasaran.Antaran.keys()[k[0]], ZonaSasaran.Penanda.keys()[k[1]]])
+		var perintah_penanda: Array = KoranGambar.perintah_koran(KoranGambar.Lapisan.UDARA, mendarat)
+		check(_gambar_pola(perintah_penanda, pola, pojok, _warna_peran(k[2])), "%s: lapisan UDARA = penanda %s, isi w %s, garis luar OUTLINE (oracle independen QA-008)" % [ZonaSasaran.Antaran.keys()[k[0]], ZonaSasaran.Penanda.keys()[k[1]], "OK" if k[2] == Palette.OK else "FAIL"])
+		# Titik uji eksplisit (QA-008): piksel `w` dan `o` pertama pola penanda.
+		var peta_penanda: Dictionary = _peta_perintah(perintah_penanda)
+		var ada_w: bool = false
+		var ada_o: bool = false
+		var w_benar: bool = true
+		var o_benar: bool = true
+		for y: int in range(pola.size()):
+			for x: int in range(pola[y].length()):
+				var titik: Vector2i = Vector2i(pojok.round()) + Vector2i(x, y)
+				if pola[y][x] == "w":
+					ada_w = true
+					if not peta_penanda.has(titik) or not (peta_penanda[titik] as Color).is_equal_approx(k[2]):
+						w_benar = false
+				elif pola[y][x] == "o":
+					ada_o = true
+					if not peta_penanda.has(titik) or not (peta_penanda[titik] as Color).is_equal_approx(Palette.OUTLINE):
+						o_benar = false
+		check(ada_w and ada_o and w_benar and o_benar, "%s: tiap piksel w penanda = %s dan tiap piksel o = OUTLINE (QA-008)" % [ZonaSasaran.Antaran.keys()[k[0]], "OK" if k[2] == Palette.OK else "FAIL"])
 		mendarat.detik = ThrowSolver.lama_total(l) + Config.PENANDA_LAMA_DETIK + 0.01
 		check(KoranGambar.perintah_koran(KoranGambar.Lapisan.UDARA, mendarat).is_empty(), "%s: penanda habis = tidak digambar" % ZonaSasaran.Antaran.keys()[k[0]])
 
@@ -1215,10 +1310,10 @@ func _test_gambar_koran_terbang() -> void:
 		var lebar: int = KoranLempar.lebar_bayangan_px(p.z)
 		var tinggi: int = maxi(floori(float(lebar) / 2), 1)
 		var asal_tanah: Vector2 = Iso.posisi_gambar(Vector2(p.x, p.y)) - Vector2(floori(float(lebar) / 2), floori(float(tinggi) / 2))
-		if tanah.perintah_tampil() != GambarPiksel.perintah_rentang(PolaPiksel.rentang_elips(lebar, tinggi), asal_tanah, Color(Palette.OUTLINE, Config.KORAN_BAYANGAN_ALPHA)):
+		if tanah.perintah_tampil() != [[PolaPiksel.rentang_elips(lebar, tinggi), asal_tanah, Color(Palette.OUTLINE, Config.KORAN_BAYANGAN_ALPHA)]]:
 			bayangan_benar = false
 		var pola: Array[String] = PolaPiksel.pola_koran(KoranLempar.frame_putar(koran, 4))
-		if udara.perintah_tampil() != GambarPiksel.perintah_pola(pola, Iso.posisi_gambar_tinggi(Vector2(p.x, p.y), p.z) - Vector2(4, 6), Palette.TEXT):
+		if not _gambar_pola(udara.perintah_tampil(), pola, Iso.posisi_gambar_tinggi(Vector2(p.x, p.y), p.z) - Vector2(4, 6), _warna_peran(Palette.TEXT)):
 			koran_benar = false
 	check(jumlah_udara > 10 and tinggi_maks > 1.0, "kontrol: koran terbang %d langkah, tinggi sampai %.2f ubin (posisi udara jauh dari tanah)" % [jumlah_udara, tinggi_maks])
 	check(bayangan_benar, "tiap langkah terbang: node TANAH menggambar bayangan elips OUTLINE di titik TANAH koran, lebar dari tinggi")

@@ -441,6 +441,146 @@ IZIN HP: boleh memasang APK ke vivo V2108 (adb 12d8c9da) setelah QA PASS; A54
 RUN_ID: 20261015-fase2b-bantu-audio
 ```
 
+## 6d. Fase 3: perintah mulai run (tempel di sesi baru)
+
+Disimpan 2026-10-15, sesudah run 2B (`20261015-fase2b-bantu-audio`, PR #26). Fase 3 terlalu besar untuk satu run (Bagian 0), jadi dipecah tiga run berurutan, satu PR per run:
+
+| Run | Isi | Prasyarat |
+|---|---|---|
+| 3A | Format segmen dan pemuatnya, `RouteBuilder` berseed, rumah dan pelanggan dari data, zona sasaran dan mode bantu dari data rute, objek penutup semi-transparan | PR #26 di-merge; uji HP Fase 2 (SETUP_ANDROID 8.5) sudah dilakukan atau hasilnya ditempel |
+| 3B | Rintangan anjing dan mobil garasi, tabrakan, skor + combo + pengali kecepatan, nada naik combo dan denting tip | PR 3A di-merge |
+| 3C | Radar, HUD rute, tenggat, layar hasil, rumah abu-abu di mode bantu, spike rumah sisi dekat, uji 20 rute | PR 3B di-merge |
+
+Tempel satu blok **utuh sebagai pesan pertama sesi baru** (`/clear` atau sesi baru; Bagian 0c). Isi baris `ISI:` sebelum menempel, hapus baris izin HP kalau HP tidak boleh disentuh, dan ganti tanggal di `RUN_ID` kalau run dimulai di hari lain.
+
+Catatan untuk semua run Fase 3:
+- **Aset.** Ada branch kerja lain `art/aset-fase3-perumahan` (dibuat 2026-10-15 di mesin pemilik, belum di-push saat bagian ini ditulis). Kalau PR-nya sudah di-merge, pakai asetnya. Kalau belum, tetap graybox lewat `tools/env_art/graybox.py`. Jangan menunggu aset (Fase 5 boleh paralel) dan jangan menggambar PNG sendiri.
+- **Fase 2 harus tertutup dulu.** Kalau uji HP Fase 2 belum dilakukan, orchestrator menanyakan sekali apakah tetap mulai (Fase 3 boleh berjalan, tapi `DEV_PHASES` Fase 2 dan M1 tetap belum dicentang).
+- **Bel.** Pertanyaan pemilik 2026-10-15 "fungsi bel ada di fase berapa?": dokumen menjadwalkan bel di Fase 6–7 (SOUND_DESIGN 8, GDD 17), dan orchestrator merekomendasikan memajukannya ke Fase 3 karena fungsinya mengusir pejalan kaki dan rintangan baru masuk Fase 3. Belum diputuskan. Run 3B menanyakannya sekali.
+
+### Run 3A — rute dari segmen dan rumah dari data
+
+```text
+Kamu adalah ORCHESTRATOR loop Dev↔QA untuk repo Loper Koran. Ikuti docs/LOOP-DEV-QA.md
+secara ketat (Bagian 1 prosedur orchestrator, Bagian 0c satu sesi satu run, Bagian 6d
+catatan Fase 3). Mulai dari main terbaru yang sudah memuat PR #26 (mode bantu dan bunyi
+lempar); kalau belum, berhenti dan minta saya merge dulu.
+
+SCOPE: Run 3A — Fase 3, fondasi rute (DEV_PHASES Fase 3, TECH_PLAN Fase 3, DATA_SCHEMA 3,
+  ROUTE_DESIGN 1-3 dan 7, GDD 9.1, BALANCING 5-6). Rintangan, tabrakan, skor, radar, HUD
+  rute, tenggat, dan layar hasil ada di Run 3B dan 3C; jangan dikerjakan di sini.
+  - Format segmen rute JSON di assets/data/routes/perumahan/ dan pemuatnya (DATA_SCHEMA 3,
+    rule content-data): field wajib, id permanen, jarak dalam ubin, sisi hanya
+    seberang/dekat. Kunci formatnya di DATA_SCHEMA 3 dengan contoh dari berkas nyata.
+  - 8-10 segmen perumahan buatan tangan; satu rute memakai 6-8 segmen (ROUTE_DESIGN 1-3):
+    jalur utama selalu bersih, distrik pertama hanya pelanggan di sisi seberang (GDD 9.1),
+    rute awal sekitar 25 pelanggan (BALANCING 7, GDD 14.1). Tempat rintangan boleh sudah
+    ditandai di data, tapi perilakunya Run 3B.
+  - `RouteBuilder` murni di scripts/systems/: urutan segmen acak dari seed (RNG berseed,
+    tanpa randi global). Seed sama = rute sama, seed beda = rute beda; jumlah pelanggan
+    dan koran awal (pelanggan + 20%, BALANCING 4) dihitung dari rute.
+  - Rute sungguhan menggantikan jalan uji tanpa ujung sebagai scene main (atau scene rute
+    baru; putuskan dengan satu rekomendasi tertulis di SPEC): rumah pelanggan dan bukan
+    pelanggan dari data, zona sasaran dari data rumah (pengganti zona placeholder
+    `ZonaSasaran.zona_jalan_uji*`), akhir rute yang jelas (cukup berhenti dan tanda
+    "selesai" sementara; layar hasil Run 3C). Jalan uji boleh tetap ada sebagai scene dev.
+  - Mode bantu (`BantuLempar.pilih`) dan penilaian lemparan memakai zona dari data rute;
+    semua tes mode bantu, lemparan, dan bunyi tetap hijau atau diperbarui dengan alasan.
+  - Objek yang menutupi pemain jadi semi-transparan: aturan satu tempat di renderer,
+    bukan per objek (GDD 2.3, TECH_PLAN Fase 3).
+  - Validasi data di tes headless (rule content-data): field wajib, id unik, rujukan,
+    aturan adil yang bisa diperiksa mesin (jalur utama bersih, pelanggan hanya seberang),
+    dan 20 rute acak berseed dibangun tanpa galat (ROUTE_DESIGN 7).
+  - Tes headless dengan mutan nyata dan oracle independen (pelajaran QA-008 dan QA-001
+    run 2B: harapan ditulis eksplisit, bukan memanggil fungsi yang dites).
+  Keputusan terbuka yang mungkin menghambat (tanyakan SEKALI, satu rekomendasi per
+  keputusan): segmen JSON atau scene Godot yang diekspor (DATA_SCHEMA 5); panjang segmen
+  dan rute (ROUTE_DESIGN 8); cara memetakan pelanggan tetap ke rute yang diacak
+  (DATA_SCHEMA 5); scene rute baru atau jalan uji diubah; apa yang terjadi di akhir rute
+  sebelum layar hasil ada. Struktur sesi dan game over (ROADMAP 5, M2) JANGAN diputuskan;
+  cukup pastikan desain 3A tidak menguncinya.
+HASIL UJI HP FASE 2 (ISI: tempel catatan dari SETUP_ANDROID 8.5 di vivo/A54; kosongkan
+  bila belum): ISI: kotak surat santai/cepat/ngebut .../10; swipe pendek ...; responsif
+  0,35/0,17 ...; mode bantu ...; bunyi ...; ambang rem ...
+ASET: ISI: PR art/aset-fase3-perumahan sudah di-merge? (ya → pakai; belum → graybox).
+DESIGN: docs/design/DESIGN_SPEC.md (token bagian 1, umpan balik 3.6); belum ada mockup
+  layar rute penuh — Dev boleh mendesain hanya untuk layar dev/rute sementara.
+IZIN HP: boleh memasang APK ke vivo V2108 (adb 12d8c9da) setelah QA PASS; A54
+  (RRCWA05E2NN) hanya bila tersambung. Hanya orchestrator yang menyentuh HP; cek layar
+  menyala dan tidak sedang dipakai; tidak ada pm clear/uninstall/logcat -c; log Godot di
+  vivo lihat SETUP_ANDROID 6.1.
+RUN_ID: 20261016-fase3a-rute
+```
+
+### Run 3B — rintangan, tabrakan, skor
+
+```text
+Kamu adalah ORCHESTRATOR loop Dev↔QA untuk repo Loper Koran. Ikuti docs/LOOP-DEV-QA.md
+secara ketat (Bagian 1, Bagian 0c, Bagian 6d). Mulai dari main terbaru yang sudah memuat
+PR Run 3A; kalau belum, berhenti dan minta saya merge dulu.
+
+SCOPE: Run 3B — Fase 3, rintangan dan skor (DEV_PHASES Fase 3, TECH_PLAN Fase 3, GDD 7 dan
+  9.3, ROUTE_DESIGN 4-5, BALANCING 5-6, SOUND_DESIGN 3.1 dan 4.3).
+  - Anjing penjaga: mesin keadaan murni diam → waspada (menggeram, berdiri) → mengejar
+    sesuai kecepatan pemain → berhenti di batas halaman (GDD 9.3).
+  - Mobil keluar garasi: lampu mundur dulu, tanda minimal 1,5 detik pada kecepatan ngebut
+    (ROUTE_DESIGN 4), lalu bergerak.
+  - Tabrakan menghambat, tidak menghentikan rute (BALANCING 6, prinsip 2); tiap tabrakan
+    bisa dijelaskan pemain.
+  - Skor: nilai sasaran, combo, pengali kecepatan (BALANCING 5); skor dan koin dipisah
+    (usulan BALANCING 5) — jangan memutuskan hubungannya diam-diam.
+  - Bunyi: nada mendarat naik setengah nada tiap antaran beruntun sampai 5 tingkat, kembali
+    ke dasar saat combo putus, denting tip (SOUND_DESIGN 3.1; ditunda dari run 2B); anjing
+    menggeram/menggonggong, mobil bip dan mesin, tabrakan (placeholder lewat sintesis
+    stdlib di tools/audio_art/, JANGAN mengunduh aset). Setiap bunyi punya pasangan visual.
+  - Invarian prinsip desain dites: tabrakan tidak menghentikan rute; ngebut punya harga dan
+    santai punya harga; tanda bahaya datang sebelum bahaya.
+  - Tes headless dengan mutan nyata dan oracle independen.
+  Keputusan terbuka yang mungkin menghambat (tanyakan SEKALI, satu rekomendasi per
+  keputusan): bel dimajukan ke Fase 3 atau tetap Fase 6-7 (rekomendasi orchestrator
+  2026-10-15: Fase 3, lihat Bagian 6d); jendela bonus atau penalti (ROADMAP 5, sekarang
+  sakelar bawaan penalti); hubungan skor dan koin; aturan pasti tabrakan (BALANCING 6).
+HASIL UJI HP RUN 3A (ISI: tempel catatan; kosongkan bila tidak ada): ISI: ...
+DESIGN: docs/design/DESIGN_SPEC.md (token bagian 1, umpan balik 3.6).
+IZIN HP: sama dengan Run 3A.
+RUN_ID: 20261017-fase3b-rintangan-skor
+```
+
+### Run 3C — radar, HUD rute, tenggat, layar hasil, penutup Fase 3
+
+```text
+Kamu adalah ORCHESTRATOR loop Dev↔QA untuk repo Loper Koran. Ikuti docs/LOOP-DEV-QA.md
+secara ketat (Bagian 1, Bagian 0c, Bagian 6d). Mulai dari main terbaru yang sudah memuat
+PR Run 3B; kalau belum, berhenti dan minta saya merge dulu.
+
+SCOPE: Run 3C — Fase 3, sisa butir dan penutup M2 bagian rute (DEV_PHASES Fase 3, TECH_PLAN
+  Fase 3, DESIGN_SPEC 3 dan 3.4, GDD 4.3 dan 5.3, BALANCING 6).
+  - Radar di tepi kiri (seberang) dan kanan (dekat) (GDD 4.3, DESIGN_SPEC 3.4); mode bantu:
+    rumah bukan pelanggan tampil abu-abu `RADAR_BUKAN` (GDD 5.3, ditunda dari run 2B D-8).
+  - HUD rute final ukuran DESIGN_SPEC 3: progres pelanggan, koin, sisa koran, kecepatan,
+    stamina; menghormati zona aman di 16:9, 19,5:9, 20:9.
+  - Tenggat rute (BALANCING 6) tanpa game over: struktur sesi dan game over masih terbuka
+    (ROADMAP 5), jadi tenggat lewat hanya ditandai, tidak menghukum berlapis (prinsip 2).
+  - Layar hasil sederhana: terkirim, meleset, koin, tip; dibuka dengan yang berhasil
+    (rule ui-scenes), semua teks lewat translations/ui.csv.
+  - Spike rumah sisi dekat (TECH_PLAN Fase 3): bandingkan tiga pendekatan di graybox,
+    tangkapan layar di docs/loop/<RUN_ID>/shots/, lalu tanyakan saya untuk memutuskan
+    (atau tetapkan tanggal keputusan) — jangan memutuskan sendiri.
+  - Perbarui checklist uji HP (docs/SETUP_ANDROID.md bagian 8) untuk penutup Fase 3:
+    20 rute dibangun, 3 dimainkan (ROUTE_DESIGN 7), rute tidak terasa dihafal setelah tiga
+    kali, tiap tabrakan bisa dijelaskan, radar terbaca saat ngebut.
+  - Tes headless dengan mutan nyata dan oracle independen; smoke test layar hasil.
+  Keputusan terbuka yang mungkin menghambat (tanyakan SEKALI, satu rekomendasi per
+  keputusan): angka tenggat; apa yang terjadi saat tenggat lewat (tanpa memutuskan game
+  over); jangkauan radar bawaan; pendekatan rumah sisi dekat (setelah spike).
+  Fase 3 baru selesai setelah uji HP pemilik; jangan dicentang sebelum itu.
+HASIL UJI HP RUN 3B (ISI: tempel catatan; kosongkan bila tidak ada): ISI: ...
+DESIGN: docs/design/DESIGN_SPEC.md (HUD 3, radar 3.4, umpan balik 3.6),
+  docs/design/screens/hud-rute.png.
+IZIN HP: sama dengan Run 3A.
+RUN_ID: 20261018-fase3c-hud-hasil
+```
+
 ## 7. Batasan yang perlu diketahui
 
 - QA berbasis agent tidak menggantikan uji di HP nyata untuk rasa kontrol, performa, dan tampilan rasio layar. Fase gameplay selalu ditutup dengan uji manual (`DEV_PHASES.md`).
