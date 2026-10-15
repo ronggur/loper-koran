@@ -17,11 +17,17 @@ extends CanvasLayer
 ## Tombol jeda (`TombolJeda`, DESIGN_SPEC 3.1, run fase1b-umpan-balik): kiri atas, area sentuh `Config.HUD_JEDA_SENTUH_PX` persegi di
 ## strip atas dengan gambar 24×24 di x `HUD_JEDA_GAMBAR_X_PX`, y `HUD_JEDA_GAMBAR_Y_PX`; tidak dicerminkan saat kidal (strip atas
 ## bebas dari kontrol). Menekannya memancarkan `jeda_diminta` (layar jeda ada di `JalanUji`).
+## Tombol mode bantu (D-7 run fase2b-bantu-audio, GDD 5.3): sakelar di strip atas di samping tombol kidal (satu baris `BarisTombol` di
+## tengah, jarak `HUD_TOMBOL_JARAK_PX`), ukuran sama dengan tombol kidal, tidak dicerminkan saat kidal. Bawaan mati dan tidak disimpan
+## (belum ada save). Status tampil lewat teks (`HUD_BANTU_MATI` / `HUD_BANTU_NYALA`) selain gaya ditekan, jadi tidak hanya warna.
+## Menekannya memancarkan `bantu_diubah`.
 
 ## Tombol kidal diubah: True = zona ditukar untuk tangan kiri.
 signal kidal_diubah(nilai: bool)
 ## Tombol jeda ditekan.
 signal jeda_diminta
+## Tombol mode bantu diubah: True = mode bantu menyala.
+signal bantu_diubah(nilai: bool)
 
 var _angka_terakhir: String = ""
 var _koran_terakhir: Vector2i = Vector2i(-1, -1)
@@ -42,6 +48,8 @@ var _koran_terakhir: Vector2i = Vector2i(-1, -1)
 @onready var _label_lelah: Label = %LabelLelah
 @onready var _bar_stamina: BarKecepatan = %BarStamina
 @onready var _tombol_kidal: Button = %TombolKidal
+@onready var _tombol_bantu: Button = %TombolBantu
+@onready var _baris_tombol: HBoxContainer = %BarisTombol
 @onready var _strip_jeda: MarginContainer = %StripJeda
 @onready var _tombol_jeda: TombolJeda = %TombolJeda
 
@@ -49,6 +57,8 @@ var _koran_terakhir: Vector2i = Vector2i(-1, -1)
 func _ready() -> void:
 	_strip_atas.add_theme_constant_override(&"margin_top", Config.HUD_TOMBOL_MARGIN_ATAS_PX)
 	_tombol_kidal.custom_minimum_size = Vector2(Config.HUD_TOMBOL_LEBAR_PX, Config.HUD_TOMBOL_TINGGI_PX)
+	_tombol_bantu.custom_minimum_size = Vector2(Config.HUD_TOMBOL_LEBAR_PX, Config.HUD_TOMBOL_TINGGI_PX)
+	_baris_tombol.add_theme_constant_override(&"separation", Config.HUD_TOMBOL_JARAK_PX)
 	_panel_kecepatan.custom_minimum_size = Vector2(Config.HUD_PANEL_KECEPATAN_LEBAR_PX, 0)
 	var celah: int = Config.HUD_PANEL_KORAN_GESER_PX - Config.HUD_PANEL_KECEPATAN_GESER_PX - Config.HUD_PANEL_KECEPATAN_LEBAR_PX
 	_baris_bawah.add_theme_constant_override(&"separation", celah)
@@ -60,8 +70,10 @@ func _ready() -> void:
 	_tombol_jeda.geser_gambar = Vector2(Config.HUD_JEDA_GAMBAR_X_PX - tepi_jeda, Config.HUD_JEDA_GAMBAR_Y_PX - Config.HUD_TOMBOL_MARGIN_ATAS_PX)
 	_terapkan_gaya()
 	_tombol_kidal.toggled.connect(_saat_tombol_kidal)
+	_tombol_bantu.toggled.connect(_saat_tombol_bantu)
 	_tombol_jeda.ditekan.connect(jeda_diminta.emit)
 	atur_kidal(false)
+	atur_bantu(false)
 	tampilkan_kecepatan(Config.KECEPATAN_SANTAI_UD)
 	tampilkan_stamina(Config.STAMINA_MAKS, false)
 	tampilkan_koran(Config.KORAN_AWAL, Config.KORAN_AWAL)
@@ -149,6 +161,17 @@ func rect_tombol_kidal() -> Rect2:
 	return _tombol_kidal.get_global_rect()
 
 
+## Menyamakan tombol mode bantu dengan `nilai` (ditekan dan teks status) tanpa memancarkan sinyal.
+func atur_bantu(nilai: bool) -> void:
+	_tombol_bantu.set_pressed_no_signal(nilai)
+	_tombol_bantu.text = "HUD_BANTU_NYALA" if nilai else "HUD_BANTU_MATI"
+
+
+## Persegi tombol mode bantu dalam koordinat viewport game.
+func rect_tombol_bantu() -> Rect2:
+	return _tombol_bantu.get_global_rect()
+
+
 ## Persegi area sentuh tombol jeda dalam koordinat viewport game.
 func rect_tombol_jeda() -> Rect2:
 	return _tombol_jeda.get_global_rect()
@@ -169,6 +192,11 @@ func _saat_tombol_kidal(nilai: bool) -> void:
 	kidal_diubah.emit(nilai)
 
 
+func _saat_tombol_bantu(nilai: bool) -> void:
+	atur_bantu(nilai)
+	bantu_diubah.emit(nilai)
+
+
 ## Warna dan bentuk panel dan tombol dari `Palette` (DESIGN_SPEC 1.3): garis luar 1 px, sudut tegas.
 func _terapkan_gaya() -> void:
 	_panel_kecepatan.add_theme_stylebox_override(&"panel", GayaHud.kotak(Palette.HUD_PANEL, Palette.OUTLINE))
@@ -181,3 +209,4 @@ func _terapkan_gaya() -> void:
 	_label_stamina.add_theme_color_override(&"font_color", Palette.ACCENT)
 	_label_lelah.add_theme_color_override(&"font_color", Palette.FAIL)
 	GayaHud.terapkan_tombol(_tombol_kidal)
+	GayaHud.terapkan_tombol(_tombol_bantu)

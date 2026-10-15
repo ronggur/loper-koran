@@ -37,14 +37,31 @@ extends Node2D
 ## dan isi ulang membeku selama jeda dan lanjut tanpa lompatan; jeda di antara jari dilepas dan frame lepas hanya menutup animasi.
 ## Titik kait untuk node lain: sinyal `jeda_berubah` dan `sedang_jeda()`.
 ##
+## Mode bantu (GDD 5.3; K-1 sampai K-4, D-1 sampai D-7 run fase2b-bantu-audio, usulan): sakelar di HUD (`HudDev.bantu_diubah`, bawaan
+## mati, tidak disimpan). Saat menyala, TAP di zona swipe (`TouchRouter.tap_selesai`, posisi = titik awal sentuhan) melempar otomatis:
+## sisi dari posisi tap terhadap garis jalan yang melewati sepeda di layar (`BantuLempar.sisi_tap`, `posisi_layar_sepeda`), sasaran =
+## kotak surat pelanggan terdekat di depan pada sisi itu (`BantuLempar.pilih` atas zona jalan uji sejauh jangkauan lemparan), lintasan =
+## keluaran `ThrowSolver.hitung` dari keadaan sepeda langkah terakhir, dibekukan saat tap diterima (tanpa garis bidik; elips pendaratan
+## dan penanda tetap). Gerbangnya sama dengan swipe (tidak jeda, `SisaKoran.boleh_lempar`, `SisaKoran.terima`) dan langkah sesudahnya juga
+## sama (`_lempar`: koran terbang, animasi, HUD, sinyal `koran_dilempar`). Tap yang ditolak karena tidak ada sasaran tidak memakai koran
+## dan tidak memulai jeda; tanda kecil tampil di titik tap (`KontrolTouch.tampilkan_tanda`, D-6). Ditolak karena habis atau jeda antar
+## lempar = tidak ada tanda (HUD koran sudah memberi tanda HABIS). Swipe manual tetap melempar seperti biasa di mode bantu. Kecepatan
+## otomatis (K-1) = perilaku stick netral (santai 3,0 u/d, tidak menguras stamina); stick tetap aktif penuh.
+##
+## Titik kait bunyi (bagian B run fase2b-bantu-audio): `koran_dilempar` dipancarkan tepat sekali per lemparan yang DITERIMA, swipe maupun
+## tap (lemparan ditolak tidak memancarkannya); `koran_mendarat` tepat sekali per koran pada langkah ia mendarat; `jeda_berubah` saat jeda.
+##
 ## Bunyi sepeda (D-3, D-5): tiap langkah keadaan sebenarnya (pose, kecepatan, rem, jeda) diberikan ke autoload `Audio` (`/root/Audio`,
 ## dicari lewat jalur node, bukan nama global, supaya scene tetap jalan tanpa autoload); `jeda_berubah` disambungkan ke
 ## `Audio.atur_jeda` (semua bunyi sepeda berhenti saat jeda, tanpa decit rem tertunda), dan keluar dari pohon menghentikannya.
 
 ## Status jeda berubah: true = layar jeda dibuka (simulasi, sprite, partikel, dan input berhenti), false = lanjut.
 signal jeda_berubah(jeda: bool)
-## Lemparan diterima (jari dilepas, koran berkurang 1): lintasan beku koran itu.
+## Lemparan diterima (jari swipe dilepas atau tap mode bantu diterima, koran berkurang 1): lintasan beku koran itu. Tepat sekali per
+## koran yang benar-benar terpakai.
 signal koran_dilempar(lintasan: ThrowSolver.Lintasan)
+## Tap mode bantu ditolak karena tidak ada kotak surat terjangkau (D-6): titik tap, koordinat viewport game.
+signal bantu_tanpa_sasaran(posisi: Vector2)
 ## Koran mendarat dan sudah dinilai (`KoranLempar.Koran`: hasil, antaran, penanda).
 signal koran_mendarat(koran: KoranLempar.Koran)
 
@@ -65,6 +82,8 @@ var koran: SisaKoran.Keadaan = SisaKoran.awal(Config.KORAN_AWAL)
 var _terbang: Array[KoranLempar.Koran] = []
 ## Nomor swipe (`TouchRouter.nomor_swipe`) yang garis bidiknya sedang tampil; -1 bila belum ada.
 var _bidik_nomor: int = -1
+## True selama mode bantu menyala (D-7; bawaan mati, tidak disimpan).
+var _mode_bantu: bool = false
 
 @onready var _kamera: Camera2D = %Kamera
 @onready var _tanah: TanahDaur = %Tanah
@@ -82,8 +101,10 @@ var _bidik_nomor: int = -1
 func _ready() -> void:
 	_hud.kidal_diubah.connect(_kontrol.atur_kidal)
 	_hud.jeda_diminta.connect(minta_jeda)
+	_hud.bantu_diubah.connect(atur_mode_bantu)
 	_layar_jeda.lanjut_diminta.connect(minta_lanjut)
 	_kontrol.router.swipe_selesai.connect(_saat_swipe_selesai)
+	_kontrol.router.tap_selesai.connect(_saat_tap_selesai)
 	_layar_jeda.tampilkan(false)
 	_audio = get_node_or_null(^"/root/Audio") as SKRIP_AUDIO
 	if _audio != null:
@@ -163,14 +184,63 @@ func _saat_swipe_selesai(awal: Vector2, akhir: Vector2, _durasi_detik: float) ->
 	var lintasan: ThrowSolver.Lintasan = bidik if bidik != null else lintasan_swipe(awal, akhir)
 	if lintasan == null:
 		return
+	_lempar(lintasan)
+
+
+## Satu tap di zona swipe selesai (D-1): di mode bantu, lempar otomatis ke kotak surat pelanggan terdekat di depan pada sisi tap (D-3 sampai
+## D-6). Di luar mode bantu tidak melakukan apa pun. Gerbang sama dengan swipe; tanpa sasaran = tanda di titik tap, koran dan jeda tetap.
+func _saat_tap_selesai(posisi: Vector2, _durasi_detik: float) -> void:
+	if not _mode_bantu or _jeda or not SisaKoran.boleh_lempar(koran):
+		return
+	var pilihan: BantuLempar.Pilihan = pilihan_bantu(BantuLempar.sisi_tap(posisi, posisi_layar_sepeda()))
+	if pilihan == null:
+		_kontrol.tampilkan_tanda(posisi)
+		bantu_tanpa_sasaran.emit(posisi)
+		return
+	_lempar(pilihan.lintasan)
+
+
+## Gerbang terakhir dan langkah sesudahnya, sama untuk swipe dan tap (D-5): `SisaKoran.terima`; diterima = koran -1, koran terbang dengan
+## lintasan beku, animasi lempar ke sisi lintasan, HUD, dan `koran_dilempar`. Ditolak = tidak ada yang berubah. True bila diterima.
+func _lempar(lintasan: ThrowSolver.Lintasan) -> bool:
 	var hasil: SisaKoran.Hasil = SisaKoran.terima(koran, _sepeda.jarak_ubin)
 	koran = hasil.keadaan
 	if not hasil.diterima:
-		return
+		return false
 	_terbang.append(KoranLempar.baru(lintasan))
 	_sepeda.lempar(lintasan.sisi)
 	_hud.tampilkan_koran(koran.sisa, koran.penuh)
 	koran_dilempar.emit(lintasan)
+	return true
+
+
+## Sasaran lemparan mode bantu untuk tap ke `sisi` dari keadaan sepeda langkah terakhir (posisi dunia, kecepatan maju sebenarnya, kecepatan
+## lateral efektif, jeda lepas animasi sisi itu), atas zona jalan uji dari posisi sepeda sampai jangkauan lemparan; null bila tidak ada.
+func pilihan_bantu(sisi: LoperAnim.Sisi) -> BantuLempar.Pilihan:
+	if sisi == LoperAnim.Sisi.TIDAK_ADA:
+		return null
+	var posisi: Vector2 = _sepeda.posisi_dunia()
+	var jeda_lepas: float = _sepeda.jeda_lepas(sisi)
+	var maju: float = -posisi.y
+	var zona: Array[ZonaSasaran.Zona] = ZonaSasaran.zona_jalan_uji_rentang(maju, maju + BantuLempar.jangkauan_maju_ubin(_sepeda.kecepatan_ud, jeda_lepas))
+	return BantuLempar.pilih(sisi, posisi, _sepeda.kecepatan_ud, _sepeda.lateral_ud, jeda_lepas, get_viewport_rect().size.x, zona)
+
+
+## Titik pijak sepeda di layar, koordinat viewport game (sama dengan koordinat sentuhan): posisi gambar sepeda dikurangi pojok kiri atas
+## kamera (kamera di tengah layar, tanpa zoom). Garis pemisah sisi tap mode bantu melewati titik ini (D-3).
+func posisi_layar_sepeda() -> Vector2:
+	return _sepeda.global_position - _kamera.position + get_viewport_rect().size / 2
+
+
+## Menyalakan atau mematikan mode bantu (sakelar HUD, D-7). Tombol HUD ikut disamakan.
+func atur_mode_bantu(nilai: bool) -> void:
+	_mode_bantu = nilai
+	_hud.atur_bantu(nilai)
+
+
+## True selama mode bantu menyala.
+func mode_bantu() -> bool:
+	return _mode_bantu
 
 
 ## Lintasan garis bidik yang sedang tampil bila dihitung untuk swipe bernomor `nomor` (`TouchRouter.nomor_swipe`), atau null (tidak
@@ -199,6 +269,7 @@ func perbarui(dt: float) -> void:
 		_baru_lanjut = false
 	_sepeda.gerak(_kontrol.vektor_stick(), langkah_dt)
 	_perbarui_lemparan(langkah_dt)
+	_kontrol.langkah_tanda(langkah_dt)
 	_tanah.perbarui(_sepeda.jarak_ubin)
 	_zona.perbarui(_sepeda.jarak_ubin)
 	_objek.perbarui(_sepeda.jarak_ubin)

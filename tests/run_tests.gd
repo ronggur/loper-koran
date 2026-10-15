@@ -98,6 +98,8 @@ func _initialize() -> void:
 	await umpan_balik.jalankan()
 	var scene_koran: TesKoranScene = TesKoranScene.new(check, _judul, self)
 	await scene_koran.jalankan()
+	var scene_bantu: TesBantuScene = TesBantuScene.new(check, _judul, self)
+	await scene_bantu.jalankan()
 	var tata_letak: TesTataLetak = TesTataLetak.new(check, _judul, self)
 	await tata_letak.jalankan()
 	var bunyi: TesBunyi = TesBunyi.new(check, _judul, self)

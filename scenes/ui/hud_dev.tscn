@@ -18,14 +18,28 @@ grow_horizontal = 2
 mouse_filter = 2
 theme = ExtResource("3_theme")
 
-[node name="TombolKidal" type="Button" parent="StripAtas"]
+[node name="BarisTombol" type="HBoxContainer" parent="StripAtas"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 0
+mouse_filter = 2
+
+[node name="TombolKidal" type="Button" parent="StripAtas/BarisTombol"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
 focus_mode = 0
 toggle_mode = true
 text = "HUD_KIDAL"
+
+[node name="TombolBantu" type="Button" parent="StripAtas/BarisTombol"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+focus_mode = 0
+toggle_mode = true
+text = "HUD_BANTU_MATI"
 
 [node name="StripJeda" type="MarginContainer" parent="."]
 unique_name_in_owner = true
