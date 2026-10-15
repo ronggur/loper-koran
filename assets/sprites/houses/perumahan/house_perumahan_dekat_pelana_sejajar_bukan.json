@@ -1,0 +1,12 @@
+{
+ "sprite": "house_perumahan_dekat_pelana_sejajar_bukan.png",
+ "size": [
+  246,
+  196
+ ],
+ "ground_anchor": [
+  96,
+  118
+ ],
+ "note": "Usulan, tools/env_art/fase3.py. Rumah sisi dekat (terlihat belakang), mundur 22 unit dari perumahan.py supaya kotak surat di tepi lajur tidak tertutup atap. Titik pijak = tengah tapak; kotak surat pelanggan ikut di sprite."
+}

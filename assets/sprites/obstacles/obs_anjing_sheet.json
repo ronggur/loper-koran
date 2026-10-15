@@ -1,0 +1,39 @@
+{
+ "sprite": "obs_anjing_sheet.png",
+ "cell": [
+  58,
+  58
+ ],
+ "columns": 5,
+ "rows": 1,
+ "ground_anchor": [
+  24,
+  38
+ ],
+ "frames": [
+  "duduk",
+  "gonggong",
+  "lari_1",
+  "lari_2",
+  "berhenti"
+ ],
+ "note": "Usulan, tools/env_art/fase3.py (cahaya siang). duduk dan gonggong menghadap jalan (kanan bawah); lari_1, lari_2, berhenti menghadap maju (kanan atas). Bayangan = penanda #000000 alpha 28%.",
+ "anim": {
+  "diam": [
+   "duduk"
+  ],
+  "tanda": [
+   "gonggong"
+  ],
+  "lari": [
+   "lari_1",
+   "lari_2"
+  ],
+  "berhenti": [
+   "berhenti"
+  ]
+ },
+ "fps": {
+  "lari": 10
+ }
+}

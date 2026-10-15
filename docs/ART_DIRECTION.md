@@ -332,6 +332,12 @@ Kolom **M2** = dibutuhkan untuk satu hari penuh di perumahan (prototype 3–4). 
 | Jendela menyala (malam) | ⬜ | ✅ | |
 | Pos satpam + portal | ⬜ | ✅ | |
 
+**Usulan dirender (2026-10-15, `tools/env_art/fase3.py`, belum dipasang di game):** rumah pelanggan dan bukan pelanggan untuk dua sisi jalan di `assets/sprites/houses/perumahan/` (PNG 1× + JSON, titik pijak tengah tapak), mock di `design/environment/fase3_*.png`.
+
+- **Sisi seberang:** tiga bentuk dari `perumahan.py` (limasan, pelana, sayap). Pelanggan: dinding dan genteng berwarna (palette swap), teras krem dengan keset merah dan pot, jendela kaca, kotak surat merah di tepi halaman. Bukan pelanggan: dinding abu-abu krem, genteng abu-abu, jendela bertirai, pintu kayu gelap, teras abu-abu tanpa keset, tanpa kotak surat. Pembedanya juga terang-gelap dan benda, bukan hanya hue.
+- **Sisi dekat (terlihat belakang):** tiga atap dari `house_near` (limasan, pelana dengan bubungan tegak lurus jalan, pelana dengan bubungan sejajar jalan), kanopi seng di pintu belakang, halaman belakang berisi toren air dan jemuran. Rumah mundur 22 unit (sekitar ¾ ubin) dari posisi `perumahan.py` supaya kotak surat pelanggan di tepi lajur tidak tertutup atap. Teras sisi dekat tidak terlihat, jadi sasarannya kotak surat (bagian 11).
+- Antena TV ikut dirender bersama rumah (6.5).
+
 ### 6.5 Properti
 
 | Aset | M2 | M3 |
@@ -343,6 +349,8 @@ Kolom **M2** = dibutuhkan untuk satu hari penuh di perumahan (prototype 3–4). 
 | Lampu jalan | ⬜ | ✅ |
 | Selang penyiram | ⬜ | ✅ |
 
+**Antena TV (usulan, 2026-10-15):** enam jenis di `tools/env_art/fase3.py` (`antena_v`): yagi (`lib.antena`), yagi di tiang bambu tinggi, dua yagi bertumpuk, parabola putih, parabola jaring besar, dan panel digital DVB-T2 dengan booster. Yagi dan panel menghadap arah pemancar yang sama (`ANT_DIR`), parabola menghadap langit ke arah satelit. Jenis per rumah dipilih dari seed. Lembar contoh `design/environment/fase3_antena_tv.png`.
+
 ### 6.6 Rintangan dan warga
 
 | Aset | M2 | M3 | Catatan |
@@ -353,6 +361,12 @@ Kolom **M2** = dibutuhkan untuk satu hari penuh di perumahan (prototype 3–4). 
 | Tukang sayur keliling | ⬜ | ✅ | |
 | Pelanggan di teras (reaksi senang / kesal) | ⬜ | ✅ | |
 | Reaksi bel: ikon "!" lalu menepi | ⬜ | ✅ | Untuk warga dan hewan yang bisa minggir (GDD 5.4). Ikon di `design/bel/`; frame menepi per tokoh menyusul, awalnya cukup bergeser |
+
+**Usulan dirender (2026-10-15, `tools/env_art/fase3.py`, belum dipasang di game)** di `assets/sprites/obstacles/`:
+
+- `obs_anjing_sheet.png` (sel 58×58, titik pijak (24, 38)): duduk dan gonggong menghadap jalan, lari_1/lari_2 (10 fps) dan berhenti menghadap maju. Tanda = berdiri dan menggonggong (ROUTE_DESIGN 2). Bulu krem kecokelatan, ukuran ×1,15 supaya terbaca saat ngebut.
+- `obs_mobil_garasi_sheet.png` (sel 132×95, titik pijak (43, 46)): sedan `lib.car()` diputar 90°, moncong ke garasi, bagasi ke jalan. Parkir, lalu nyala dan redup bergantian 4 fps sebagai tanda lampu mundur, dengan asap knalpot dan cahaya di aspal (alpha di sel); frame nyala dipakai saat mundur. Hanya sisi seberang: mobil sisi dekat mundur ke arah kamera dan lampunya tidak terlihat.
+- Bayangan jatuh dipanggang sebagai penanda #000000 alpha 28% (2.1), cahaya siang.
 
 ### 6.7 Misi
 
@@ -375,6 +389,8 @@ Spesifikasi di `design/DESIGN_SPEC.md`.
 | Layar halaman depan koran | ✅ | ✅ |
 | Layar hasil harian | ✅ | ✅ |
 | Layar bengkel | ⬜ | ✅ |
+
+**Usulan (2026-10-15, `tools/ui_art/hud_ikon.py`):** ikon 14×14 koin, reputasi, ban, rem, rantai, dan misi kucing (`assets/sprites/ui/ui_icon_<nama>.png`, `ui_icon_hud_sheet.png`), penanda radar 8×6 dan versi masuk jangkauan 10×8 (`ui_radar_<jenis>.png`, `ui_radar_<jenis>_jangkau.png`, `ui_radar_penanda.png`), bingkai 9-slice strip radar dan panel HUD. Koran tetap `IKON_KORAN` di kode, tombol jeda dari kode. Pratinjau di `design/hud/`. Ikon rem paling lemah di ×1, cek di HP.
 | Tombol bel: diam, ditekan, jeda (usulan, `design/bel/`) | ⬜ | ✅ |
 | Logo "Kring Kring!" untuk layar judul dan ikon aplikasi | ⬜ | ✅ |
 
@@ -530,7 +546,7 @@ Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dib
 - **Stretch mode dan resolusi dasar** (bagian 7): sudah dipilih 2026-10-09, diverifikasi di desktop pada run 0A (hasil di ROADMAP 4b); uji di HP menunggu.
 - **Palet induk** (bagian 2.4): dikunci setelah aset gelombang 1.
 - **Warna bayangan per waktu dan distrik** (bagian 2.5): dikunci bersama palet induk, setelah shader-nya dicek di Fase 0 (shader jalan di Compatibility, dicek 2026-10-14 di vivo V2108; bagian 7).
-- **Cara menampilkan rumah di sisi dekat**, yang hanya terlihat belakangnya.
+- **Cara menampilkan rumah di sisi dekat**, yang hanya terlihat belakangnya. **Usulan (2026-10-15, belum diputuskan):** rumah sisi dekat dimundurkan ¾ ubin dan sasarannya kotak surat di tepi lajur (6.4). Ikut terbuka: kalau aturan warna pelanggan dipakai ketat, sisi tanpa pelanggan (seluruh sisi dekat di distrik pertama) jadi abu-abu; pilihan lain, sisi tanpa pelanggan tetap berwarna dan pembedanya hanya kotak surat. Mock `design/environment/fase3_perumahan.png` memakai pilihan kedua.
 - **Font HUD**: mock memakai Lexend + Lilita One (sama dengan Brainy Dungeon). Kunci atau pilih identitas sendiri.
 - **Apakah sprite pemain dipoles manual** sebelum rilis, terutama wajah dari arah depan.
 
@@ -538,6 +554,7 @@ Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dib
 
 ## Changelog Keputusan
 
+- **2026-10-15** — **Aset Fase 3 perumahan dirender sebagai usulan** (6.4–6.6, 6.8): anjing penjaga, mobil keluar garasi, rumah pelanggan dan bukan pelanggan di dua sisi, enam jenis antena TV (`tools/env_art/fase3.py`), ikon HUD dan penanda radar (`tools/ui_art/hud_ikon.py`). Mock lama dari `perumahan.py` tidak berubah. Belum dipasang di game dan belum dikunci.
 - **2026-10-14** — **Ukuran ubin 64×32 px dikunci** (bagian 2.2, ROADMAP 4b), keputusan pemilik setelah graybox dan uji HP Fase 1. Persegi dunia tetap 32×32 unit; aset dunia gelombang 1 dibuat dengan ukuran ini.
 - **2026-10-13** — **Meluncur dan rem dipasang di jalan uji** (bagian 3.4), tetap usulan sampai dinilai di HP. `loper_agen_frames.tres` kini 48 animasi (15 kayuh, 5 melambat, 18 lempar, 5 meluncur, 5 rem), dibangun `tools/loper_art/bangun_frames.py` dari lima JSON sumber; PNG tidak diubah. Alas dan tapak roda tiap frame sama dengan santai frame 2, jadi sprite tidak melompat saat berganti kayuh, meluncur, dan rem (dites). Pemilihan pose mengikuti fisika (keputusan pemilik 2026-10-13, BALANCING 2).
 - **2026-10-09** — **Melambat dan lempar koran dipasang di jalan uji** (bagian 3.2, 3.4), tetap usulan sampai dinilai di HP. `loper_agen_frames.tres` kini gabungan 38 animasi (15 kayuh, 5 melambat, 18 lempar) yang dibangun `tools/loper_art/bangun_frames.py` dari tiga JSON sumber; sel, titik pijak, dan offset sama dengan sheet kayuh. Hanya animasi pemain: proyektil, skor, dan arah lempar 90° tetap Fase 2 dan aset berikutnya.

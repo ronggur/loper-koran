@@ -1,0 +1,37 @@
+{
+ "sprite": "ui_icon_hud_sheet.png",
+ "cell": [
+  14,
+  14
+ ],
+ "order": [
+  "koin",
+  "reputasi",
+  "ban",
+  "rem",
+  "rantai",
+  "misi_kucing"
+ ],
+ "radar": {
+  "sprite": "ui_radar_penanda.png",
+  "cell": [
+   10,
+   8
+  ],
+  "order": [
+   "pelanggan",
+   "tip",
+   "misi",
+   "bukan"
+  ],
+  "rows": [
+   "normal 8x6 (offset 1,1)",
+   "masuk jangkauan 10x8"
+  ]
+ },
+ "nine_slice": {
+  "ui_radar_strip_9slice.png": 2,
+  "ui_panel_hud_9slice.png": 4
+ },
+ "note": "Usulan, tools/ui_art/hud_ikon.py. Ikon koran tetap IKON_KORAN di pola_piksel.gd; tombol jeda digambar dari kode (tombol_jeda.gd)."
+}
