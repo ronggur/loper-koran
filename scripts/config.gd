@@ -470,3 +470,22 @@ const RUTE_RUMAH_TINGGI_UBIN: float = 2.0
 const RUTE_RUMAH_DEKAT_X_UBIN: float = 3.0
 ## Alpha objek yang menutupi pemain (GDD 2.3, ART_DIRECTION 2.2: semi-transparan); 1,0 saat tidak menutupi (`PenutupPemain`).
 const RUTE_PENUTUP_ALFA: float = 0.45
+
+## --- Scene rute (run fase3a-rute bagian B, usulan, dinilai lewat uji HP) ---
+
+## Rumah yang masih ada (digambar) di belakang sepeda, ubin sepanjang jalan. Rumah di luar jendela daur tidak diinstansiasi (AC-12).
+## 20 (bukan seluruh rute sekitar 250 ubin): layar terlebar 800 piksel game memuat sekitar 25 ubin sepanjang jalan, dan sprite rumah
+## paling lebar 270 piksel menjorok sekitar 8 ubin ke kiri titik pijak.
+const RUTE_DAUR_MUNDUR_UBIN: int = 20
+## Rumah yang sudah ada di depan sepeda, ubin sepanjang jalan (sisi `dekat` paling jauh terlihat sekitar 25 ubin di depan sepeda).
+const RUTE_DAUR_MAJU_UBIN: int = 30
+## Stick buatan yang diberikan ke sepeda sesudah garis akhir: komponen tegak -1 = tarik penuh ke bawah = rem (stick sungguhan dikunci).
+const RUTE_AKHIR_STICK_Y: float = -1.0
+## Jarak banner "Rute selesai" dari tepi atas layar, piksel game: di bawah strip atas HUD dan di luar zona stick dan swipe.
+const RUTE_BANNER_MARGIN_ATAS_PX: int = 64
+## Jarak tombol dev "Main lagi" dari tepi kanan layar, piksel game (strip atas HUD, bebas dari zona stick dan swipe).
+const RUTE_TOMBOL_ULANG_MARGIN_PX: int = 8
+## Nama 12 sprite rumah perumahan (`assets/sprites/houses/perumahan/<nama>.png`), sejajar dengan `RUTE_RUMAH_PIJAK_PX`.
+const RUTE_RUMAH_SPRITE: Array[String] = ["house_perumahan_dekat_limasan_bukan", "house_perumahan_dekat_limasan_pelanggan", "house_perumahan_dekat_pelana_lintang_bukan", "house_perumahan_dekat_pelana_lintang_pelanggan", "house_perumahan_dekat_pelana_sejajar_bukan", "house_perumahan_dekat_pelana_sejajar_pelanggan", "house_perumahan_limasan_bukan", "house_perumahan_limasan_pelanggan", "house_perumahan_pelana_bukan", "house_perumahan_pelana_pelanggan", "house_perumahan_sayap_bukan", "house_perumahan_sayap_pelanggan"]
+## Titik pijak tiap sprite rumah (`ground_anchor` di JSON aset, tengah tapak), piksel dari pojok kiri atas gambar: x lalu y, sejajar dengan `RUTE_RUMAH_SPRITE`. Tes membandingkannya dengan JSON aset.
+const RUTE_RUMAH_PIJAK_PX: Array[int] = [97, 123, 155, 152, 96, 122, 155, 151, 96, 118, 154, 147, 105, 127, 105, 127, 96, 148, 96, 148, 105, 119, 105, 119]

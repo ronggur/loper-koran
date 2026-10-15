@@ -9,7 +9,8 @@ extends RefCounted
 ## `LemparWaktu.waktu_lepas`), tidak bergantung pada sinyal `koran_lepas` sprite: lemparan yang animasinya ditutup jeda game tetap
 ## terbang sesudah lanjut (D-11). Saat mendarat, titik mendarat dinilai `ZonaSasaran` (zona jalan uji, dari titik saja, tanpa sisi
 ## lempar; D-4 run fase2-arah-bebas) dengan fungsi yang sama dengan elips garis bidik (`prediksi_antaran`), lalu penanda tampil
-## `Config.PENANDA_LAMA_DETIK`.
+## `Config.PENANDA_LAMA_DETIK`. Zona dan kotak penutupnya dari `MedanKoran` (parameter `medan`, run fase3a-rute): null = jalan uji
+## seperti sebelumnya, `MedanKoran.dari_rute` = rumah dari data rute; penilaian di scene rute memakai fungsi yang sama.
 
 
 ## Bentuk elips pendaratan garis bidik (D-5; QA-004 iterasi 2): cincin biasa, terisi (sasaran sah), atau putus-putus redup (tertutup rumah).
@@ -50,50 +51,50 @@ static func baru(lintasan: ThrowSolver.Lintasan) -> Koran:
 	return koran
 
 
-## Hasil sasaran di titik mendarat lintasan (zona jalan uji di sekitar titik itu), dari titik mendarat SAJA: arah dan sisi lemparan
-## tidak ikut menilai (D-4 run fase2-arah-bebas). null = `MELESET`.
-static func hasil_mendarat(lintasan: ThrowSolver.Lintasan) -> ZonaSasaran.Hasil:
+## Hasil sasaran di titik mendarat lintasan (zona di sekitar titik itu menurut `medan`; null = jalan uji, `MedanKoran.dari_rute` = rumah rute), dari
+## titik mendarat SAJA: arah dan sisi lemparan tidak ikut menilai (D-4 run fase2-arah-bebas). Lintasan null = `MELESET`.
+static func hasil_mendarat(lintasan: ThrowSolver.Lintasan, medan: MedanKoran = null) -> ZonaSasaran.Hasil:
 	if lintasan == null:
 		return ZonaSasaran.Hasil.MELESET
-	return ZonaSasaran.klasifikasi_jalan_uji(lintasan.titik_mendarat)
+	return ZonaSasaran.klasifikasi(lintasan.titik_mendarat, MedanKoran.zona(medan, lintasan.titik_mendarat))
 
 
 ## Status antaran yang AKAN didapat lintasan ini (elips garis bidik, D-5) dengan sakelar jendela `jendela_bonus`. Sama persis dengan
 ## penilaian saat koran mendarat (`langkah`).
-static func prediksi_antaran(lintasan: ThrowSolver.Lintasan, jendela_bonus: bool) -> ZonaSasaran.Antaran:
-	return ZonaSasaran.status_antaran(hasil_mendarat(lintasan), jendela_bonus)
+static func prediksi_antaran(lintasan: ThrowSolver.Lintasan, jendela_bonus: bool, medan: MedanKoran = null) -> ZonaSasaran.Antaran:
+	return ZonaSasaran.status_antaran(hasil_mendarat(lintasan, medan), jendela_bonus)
 
 
 ## Bentuk elips pendaratan untuk lintasan ini (D-5, QA-004): `SAH` bila `prediksi_antaran` sah; `TERTUTUP` bila titik mendarat tertutup
 ## rumah graybox dari sudut kamera (di dalam atau di belakang kotaknya; koran meleset di sana, jadi elips tidak boleh terbaca sebagai
 ## sasaran di atap atau dinding); selain itu `BIASA`.
-static func bentuk_elips(lintasan: ThrowSolver.Lintasan, jendela_bonus: bool) -> Elips:
+static func bentuk_elips(lintasan: ThrowSolver.Lintasan, jendela_bonus: bool, medan: MedanKoran = null) -> Elips:
 	if lintasan == null:
 		return Elips.BIASA
-	if ZonaSasaran.sah(prediksi_antaran(lintasan, jendela_bonus)):
+	if ZonaSasaran.sah(prediksi_antaran(lintasan, jendela_bonus, medan)):
 		return Elips.SAH
-	if ZonaSasaran.tertutup_rumah_jalan_uji(lintasan.titik_mendarat, 0.0):
+	if MedanKoran.tertutup(medan, lintasan.titik_mendarat, 0.0):
 		return Elips.TERTUTUP
 	return Elips.BIASA
 
 
 ## True bila koran lintasan ini pada `t` detik sejak lepas tertutup rumah graybox dari sudut kamera (titik garis bidik redup, QA-004).
-static func tertutup_pada(lintasan: ThrowSolver.Lintasan, t: float) -> bool:
+static func tertutup_pada(lintasan: ThrowSolver.Lintasan, t: float, medan: MedanKoran = null) -> bool:
 	if lintasan == null:
 		return false
 	var p: Vector3 = ThrowSolver.posisi_pada(lintasan, t)
-	return ZonaSasaran.tertutup_rumah_jalan_uji(Vector2(p.x, p.y), p.z)
+	return MedanKoran.tertutup(medan, Vector2(p.x, p.y), p.z)
 
 
 ## Satu langkah selama `dt` detik (NaN, tak hingga, negatif = 0, jadi jeda game membeku). Koran yang melewati lama total (jeda lepas +
 ## lama terbang) pada langkah ini mendarat dan dinilai dengan sakelar jendela `jendela_bonus`. Masukan tidak diubah.
-static func langkah(koran: Koran, dt: float, jendela_bonus: bool) -> Koran:
+static func langkah(koran: Koran, dt: float, jendela_bonus: bool, medan: MedanKoran = null) -> Koran:
 	var baru: Koran = koran.salin()
 	if is_finite(dt) and dt > 0.0:
 		baru.detik += dt
 	if not baru.mendarat and ThrowSolver.sudah_mendarat(baru.lintasan, baru.detik):
 		baru.mendarat = true
-		baru.hasil = hasil_mendarat(baru.lintasan)
+		baru.hasil = hasil_mendarat(baru.lintasan, medan)
 		baru.antaran = ZonaSasaran.status_antaran(baru.hasil, jendela_bonus)
 		baru.penanda = ZonaSasaran.penanda(baru.antaran)
 	return baru
