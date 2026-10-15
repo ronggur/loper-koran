@@ -64,6 +64,7 @@ func jalankan() -> void:
 	_test_rng_global_tidak_disentuh()
 	_test_koran_awal()
 	_test_waktu_bangun()
+	_test_data_ikut_paket()
 	_test_zona_rumah_literal()
 	_test_zona_rute_dan_penilaian()
 	_test_bantu_di_zona_rute()
@@ -781,6 +782,30 @@ func _test_waktu_bangun() -> void:
 		RouteBuilder.bangun(benih, kumpulan.segmen)
 	var rata_ms: float = float(Time.get_ticks_usec() - mulai_sapuan) / 1000.0 / 100.0
 	check(rata_ms < 50.0, "susun satu rute (tanpa muat berkas) rata-rata %.2f ms (< 50 ms)" % rata_ms)
+
+
+## Data segmen harus ikut paket game: tidak ada pola `exclude_filter` preset Android yang mencocokkan berkas segmen (AC-18). Pemeriksaan
+## isi paket sungguhan: `godot --headless --path . --export-pack "Android" build/kring-uji.pck` lalu cari `assets/data/routes/perumahan/`.
+func _test_data_ikut_paket() -> void:
+	_judul.call("Ekspor: berkas segmen tidak dikecualikan preset Android (AC-18)")
+	var cfg: ConfigFile = ConfigFile.new()
+	var kode: int = cfg.load("res://export_presets.cfg")
+	check(kode == OK, "export_presets.cfg terbaca")
+	var filter: String = ""
+	for bagian: String in cfg.get_sections():
+		if bagian.ends_with(".options"):
+			continue
+		filter = str(cfg.get_value(bagian, "exclude_filter", ""))
+	var tercocok: Array[String] = []
+	for pola: String in filter.split(","):
+		var bersih: String = pola.strip_edges()
+		if bersih.is_empty():
+			continue
+		for id: String in ID_SEGMEN:
+			if ("assets/data/routes/perumahan/%s.json" % id).match(bersih):
+				tercocok.append("%s -> %s" % [bersih, id])
+	check(not filter.is_empty() and tercocok.is_empty(), "tidak ada pola exclude_filter (%s) yang mengecualikan berkas segmen: %s" % [filter, str(tercocok)])
+	check(("docs/ROADMAP.md").match("docs/*") and not ("assets/data/routes/perumahan/per_buka_01.json").match("docs/*"), "pencocok pola memang membedakan docs/* dari berkas segmen (kontrol)")
 
 
 # --- AC-9: zona dari data rute ---
