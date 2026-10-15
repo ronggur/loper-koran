@@ -13,6 +13,7 @@ Spesifikasi visual untuk mengimplementasikan HUD dan layar game di Godot. Pasang
 | `design/source/*.html` | Source HTML kedua papan (versi berdiri sendiri, latar `scene.png`) | Angka persis kalau spec ini kurang detail |
 | `design/character/loper_agen/` | Sprite pemain produksi untuk Godot | Lihat `ART_DIRECTION.md` 3 |
 | `design/bel/` | Tombol bel, efek "kring", ikon "!" (usulan) | Bagian 3.8 |
+| `design/hud/` | Pratinjau ikon HUD, penanda radar, contoh radar di layar (usulan); PNG 1× di `assets/sprites/ui/` | Bagian 1.3, 3.3, 3.4 |
 
 **Skala.** Kanvas dasar game tingginya 360 px dengan lebar 640–800 px tergantung rasio layar (ART_DIRECTION 7). **Semua angka di dokumen ini dalam piksel dasar (kanvas 800×360)**, kecuali ditulis lain. Mock digambar di 1600×720, jadi angka di source HTML dibagi 2. Di HP 1080p pembesarannya ×3.
 
@@ -90,7 +91,7 @@ Font sama dengan Brainy Dungeon dan **belum dikunci** (ART_DIRECTION 11). **Labe
 
 - **Panel HUD**: latar `HUD_PANEL`, garis luar 1 px `OUTLINE`, garis dalam 1 px `UI_PANEL_RAISED`, sudut tumpul 3 px bertingkat. Dibuat sebagai tekstur 9-slice 12×12 px supaya garisnya tetap piksel tajam (bukan StyleBoxFlat dengan radius halus).
 - **Bar**: tinggi 7, garis luar 1 px, isi kosong `UI_PANEL_RAISED`.
-- **Ikon HUD**: 14×14 px pixel art, garis luar 1 px, palet induk. Ditampilkan dengan skala bulat yang sama dengan dunia.
+- **Ikon HUD**: 14×14 px pixel art, garis luar 1 px, palet induk. Ditampilkan dengan skala bulat yang sama dengan dunia. Usulan 2026-10-15: `assets/sprites/ui/ui_icon_<nama>.png` (koin, reputasi, ban, rem, rantai, misi_kucing) dan bingkai panel `ui_panel_hud_9slice.png` (margin 4), dibuat `tools/ui_art/hud_ikon.py`. Ikon koran tetap `IKON_KORAN` di kode, tombol jeda dari kode.
 - **Jarak**: tepi layar 8, antar panel 5, padding panel 5×7.
 
 ---
@@ -156,6 +157,7 @@ GDD 4.3. Strip tipis di tepi kiri dan kanan, di separuh atas layar supaya tidak 
 - Penanda: 8×6 px dengan garis luar. Pelanggan biasa kotak kuning, tip kotak hijau dengan titik terang di tengah, misi bentuk belah ketupat oranye. Rumah bukan pelanggan (abu-abu) hanya tampil di mode bantu.
 - **Masuk jangkauan lempar**: penanda mendapat garis luar `TEXT` dan membesar 2 px, warna jenis tetap supaya pemain tetap tahu jenisnya (tafsiran "berubah warna" di GDD 4.3, usulan).
 - Panjang jangkauan radar adalah upgrade (GDD 4.3); angka awal ditaruh di `scripts/config.gd`.
+- **Aset (usulan, 2026-10-15, `tools/ui_art/hud_ikon.py`):** `assets/sprites/ui/ui_radar_<pelanggan|tip|misi|bukan>.png` (8×6) dan `ui_radar_<jenis>_jangkau.png` (10×8), bingkai strip `ui_radar_strip_9slice.png` (margin 2). Penanda bukan pelanggan digambar kotak abu-abu **berlubang** supaya bentuknya juga beda dari pelanggan (tafsiran, usulan). Contoh di layar: `design/hud/radar_contoh.png`.
 
 ### 3.5 Bawah: kecepatan, stamina, koran
 
