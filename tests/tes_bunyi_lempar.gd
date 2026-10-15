@@ -75,6 +75,7 @@ func jalankan() -> void:
 	await _test_notifikasi_sendiri()
 	await _test_scene_wus()
 	await _test_scene_mendarat()
+	await _test_scene_jendela()
 	await _test_scene_jeda()
 
 
@@ -505,6 +506,67 @@ func _test_scene_mendarat() -> void:
 	for k: KoranLempar.Koran in catatan["mendarat"]:
 		jenis[NAMA_HASIL_PENALTI[k.hasil]] = true
 	check(jenis.size() >= 2, "kontrol: swipe mencakup lebih dari satu permukaan (%s)" % [jenis.keys()])
+	_bersihkan(akar)
+	audio.call(&"hentikan_lempar")
+
+
+func _test_scene_jendela() -> void:
+	_judul.call("Scene: koran mendarat di jendela, bunyi memakai sakelar jendela yang sama dengan penilaian dan penanda (QA-003, D-10)")
+	var audio: Node = _audio()
+	if audio == null:
+		check(false, "autoload Audio ada")
+		return
+	var akar: JalanUji = await _siapkan()
+	var catatan: Dictionary = _catat(akar)
+	var sepeda: SepedaUji = _anak(akar, "Sepeda") as SepedaUji
+	# Sepeda santai di maju 2, lateral 0. Sasaran: zona jendela seberang rumah 1 (pelanggan), x -3..-2,75, maju 5,5..6,25 (config
+	# `JALAN_UJI_SEBERANG_JENDELA_UBIN` + kavling 4), pusat (-2,875, 5,875); teras dan kotak surat tidak menutupinya.
+	var k: BikeMotion.Keadaan = sepeda.keadaan.salin()
+	k.kecepatan_ud = 3.0
+	k.lateral_ubin = 0.0
+	sepeda.keadaan = k
+	sepeda.jarak_ubin = 2.0
+	akar.perbarui(0.0)
+	akar.koran = SisaKoran.awal(Config.KORAN_AWAL)
+	var jendela: Rect2 = Rect2(-3.0, 5.5, 0.25, 0.75)
+	var pusat: Vector2 = Vector2(-2.875, -5.875)
+	# Swipe yang mendarat di pusat jendela: kekuatan dan arah tanah dari pembantu solver, diubah ke vektor layar lewat `Iso`.
+	var lepas: Vector2 = ThrowSolver.titik_lepas(sepeda.posisi_dunia(), sepeda.kecepatan_ud, sepeda.lateral_ud, sepeda.jeda_lepas(LoperAnim.Sisi.SEBERANG))
+	var u: float = BantuLempar.cari_kekuatan(pusat, lepas, sepeda.kecepatan_ud)
+	var arah: Vector2 = BantuLempar.arah_ke(pusat, lepas, sepeda.kecepatan_ud, u)
+	var awal: Vector2 = Vector2(600, 330)
+	var akhir: Vector2 = awal + Iso.dunia_ke_layar(arah).normalized() * ThrowSolver.panjang_untuk_kekuatan(u, LEBAR)
+	var rencana: ThrowSolver.Lintasan = akar.lintasan_swipe(awal, akhir)
+	var rencana_jalan: Vector2 = Vector2(rencana.titik_mendarat.x, -rencana.titik_mendarat.y) if rencana != null else Vector2.INF
+	check(u >= 0.0 and jendela.has_point(rencana_jalan) and Rect2(Vector2.ZERO, Vector2(LEBAR, 360.0)).has_point(akhir), "kontrol: swipe %s -> %s mendarat di zona jendela seberang rumah 1 (titik %s)" % [awal, akhir, rencana_jalan])
+	var j: Array[float] = Config.JALAN_UJI_SEBERANG_JENDELA_UBIN
+	check(ZonaSasaran.pelanggan_jalan_uji(1) and j[0] == -3.0 and j[1] == 1.5 and j[2] == 0.25 and j[3] == 0.75, "kontrol: rumah 1 pelanggan, zona jendela seberang sesuai config")
+	# Swipe turun lalu naik tanpa langkah di antaranya: lintasan dihitung dari posisi lepas dengan keadaan sepeda yang sama.
+	_sentuh(1, awal, true)
+	_sentuh(1, akhir, false)
+	check(int(catatan["lempar"]) == 1, "swipe ke jendela diterima")
+	var sebelum: int = audio.call(&"jumlah_mendarat")
+	var langkah_ke: int = 0
+	while (catatan["mendarat"] as Array).is_empty() and langkah_ke < 180:
+		_langkah(akar, 1)
+		langkah_ke += 1
+	var koran: KoranLempar.Koran = (catatan["mendarat"] as Array)[0] if not (catatan["mendarat"] as Array).is_empty() else null
+	check(koran != null and koran.hasil == ZonaSasaran.Hasil.JENDELA, "koran mendarat dan dinilai JENDELA")
+	if koran == null:
+		_bersihkan(akar)
+		audio.call(&"hentikan_lempar")
+		return
+	# Oracle: permukaan dari tabel D-10 untuk JENDELA dengan nilai sakelar yang sedang dipakai game (bawaan false = penalti = meleset).
+	var permukaan: int = -1
+	for baris: Array in TABEL_PERMUKAAN:
+		if baris[0] == ZonaSasaran.Hasil.JENDELA and baris[1] == Config.JENDELA_KENA_BONUS:
+			permukaan = baris[2]
+	var nama: String = NAMA_PERMUKAAN[permukaan]
+	var harapan: String = FOLDER + "sfx_land_%s_01.wav" % nama
+	check(audio.call(&"jumlah_mendarat") == sebelum + 1 and audio.call(&"mendarat_terakhir") == harapan, "jendela (sakelar %s): bunyi %s (dapat %s)" % [Config.JENDELA_KENA_BONUS, harapan.get_file(), (audio.call(&"mendarat_terakhir") as String).get_file()])
+	check((koran.penanda == ZonaSasaran.Penanda.SILANG) == (nama == "miss"), "jendela: bunyi sejalan dengan penanda koran itu (penanda %s, bunyi %s)" % [ZonaSasaran.Penanda.keys()[koran.penanda], nama])
+	if not Config.JENDELA_KENA_BONUS:
+		check(koran.penanda == ZonaSasaran.Penanda.SILANG and nama == "miss", "sakelar bawaan (penalti): penanda silang, bunyi meleset")
 	_bersihkan(akar)
 	audio.call(&"hentikan_lempar")
 
