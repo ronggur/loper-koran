@@ -1,0 +1,27 @@
+{
+  "id": "per_tengah_05",
+  "distrik": "perumahan",
+  "panjang": 36,
+  "tag": { "tingkat": "padat", "sisi_pelanggan": "seberang", "posisi": "tengah" },
+  "rumah": [
+    { "pos": 2, "sisi": "seberang", "jenis": "pelana", "pelanggan_boleh": false },
+    { "pos": 6, "sisi": "seberang", "jenis": "limasan", "pelanggan_boleh": true },
+    { "pos": 8, "sisi": "dekat", "jenis": "dekat_pelana_sejajar", "pelanggan_boleh": false },
+    { "pos": 10, "sisi": "seberang", "jenis": "sayap", "pelanggan_boleh": false },
+    { "pos": 14, "sisi": "seberang", "jenis": "limasan", "pelanggan_boleh": true },
+    { "pos": 16, "sisi": "dekat", "jenis": "dekat_pelana_lintang", "pelanggan_boleh": false },
+    { "pos": 18, "sisi": "seberang", "jenis": "sayap", "pelanggan_boleh": true },
+    { "pos": 22, "sisi": "seberang", "jenis": "pelana", "pelanggan_boleh": false },
+    { "pos": 24, "sisi": "dekat", "jenis": "dekat_limasan", "pelanggan_boleh": false },
+    { "pos": 26, "sisi": "seberang", "jenis": "limasan", "pelanggan_boleh": true },
+    { "pos": 30, "sisi": "seberang", "jenis": "sayap", "pelanggan_boleh": true },
+    { "pos": 32, "sisi": "dekat", "jenis": "dekat_pelana_sejajar", "pelanggan_boleh": false },
+    { "pos": 34, "sisi": "seberang", "jenis": "pelana", "pelanggan_boleh": false }
+  ],
+  "objek": [
+    { "jenis": "mobil_garasi", "pos": 10, "jalur": "seberang", "tanda_ubin": 9 },
+    { "jenis": "anjing_penjaga", "pos": 20, "jalur": "dekat", "tanda_ubin": 9 },
+    { "jenis": "mobil_garasi", "pos": 28, "jalur": "seberang", "tanda_ubin": 9 }
+  ],
+  "titik_misi": []
+}

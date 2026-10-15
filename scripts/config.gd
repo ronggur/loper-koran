@@ -425,3 +425,48 @@ const JALAN_UJI_BUKAN_PELANGGAN_SISA: int = 2
 ## Isi ulang koran khusus jalan uji (alat uji, bukan aturan game; jalan uji tidak punya akhir rute): sesudah koran habis dan sepeda
 ## menempuh sekian ubin, sisa koran kembali penuh.
 const JALAN_UJI_ISI_ULANG_UBIN: float = 16.0
+
+## --- Rute perumahan dari segmen (BALANCING 6, DATA_SCHEMA 3, ROUTE_DESIGN; usulan run fase3a-rute, dinilai lewat uji HP) ---
+## Segmen JSON buatan tangan di `assets/data/routes/perumahan/` disusun `RouteBuilder` dari seed; tidak ada angka tuning di data.
+
+## Jumlah pelanggan tiap rute perumahan (GDD 14.1, K-2 run fase3a-rute): tepat sekian, semuanya di sisi `seberang`.
+const RUTE_PELANGGAN: int = 25
+## Jumlah segmen berbeda tiap rute: satu pembuka, sisanya tengah, satu penutup (K-2).
+const RUTE_SEGMEN_PER_RUTE: int = 7
+## Seed bawaan rute dev (deterministik); "Main lagi" memakai seed berikutnya (seed + 1).
+const RUTE_SEED_DEV: int = 20261016
+## Koran awal rute = pelanggan + sekian persen dibulatkan ke atas (BALANCING 4): 25 pelanggan = 30 koran.
+const RUTE_KORAN_CADANGAN_PERSEN: int = 20
+## Pembagi persen ke pecahan untuk `RUTE_KORAN_CADANGAN_PERSEN` (100 persen = satu bagian penuh).
+const RUTE_KORAN_PERSEN_PENUH: int = 100
+## Panjang segmen terpendek yang sah, ubin (ROUTE_DESIGN 1).
+const RUTE_SEGMEN_PANJANG_MIN_UBIN: int = 24
+## Panjang segmen terpanjang yang sah, ubin (ROUTE_DESIGN 1).
+const RUTE_SEGMEN_PANJANG_MAKS_UBIN: int = 40
+## Tepi netral tiap ujung segmen: tidak ada rumah, objek, atau titik misi di dalamnya, ubin (ROUTE_DESIGN 1).
+const RUTE_TEPI_UBIN: int = 2
+## Lebar satu petak rumah, ubin: rumah 3 ubin + celah 1 (ROUTE_DESIGN 2); dua rumah sesisi berjarak paling sedikit sekian.
+const RUTE_PETAK_UBIN: int = 4
+## Jendela keputusan, ubin: dua rintangan yang memaksa pindah jalur berjarak paling sedikit sekian (ROUTE_DESIGN 4 aturan 4).
+const RUTE_RINTANGAN_JENDELA_UBIN: int = 6
+## Rintangan paling dekat ke tepi segmen, ubin: setengah jendela, supaya dua segmen yang disambung tidak menumpuk keputusan.
+const RUTE_RINTANGAN_TEPI_UBIN: int = 3
+## Tanda rintangan bergerak terlihat paling sedikit sekian ubin sebelum rintangan: 1,5 detik pada ngebut 6,0 u/d (ROUTE_DESIGN 4 aturan 2).
+const RUTE_TANDA_MIN_UBIN: float = 9.0
+## Celah terpanjang antara dua pelanggan berturut-turut, ubin (usulan; rata-rata sekitar 9 ubin, BALANCING 6).
+const RUTE_PELANGGAN_JARAK_MAKS_UBIN: float = 20.0
+## Goyangan acak (plus minus) target posisi pelanggan terhadap sebaran rata, ubin: memberi rumah berurutan lalu sela panjang (ROUTE_DESIGN 3).
+const RUTE_PELANGGAN_GOYANG_UBIN: float = 3.0
+## Percobaan paling banyak menyusun urutan segmen dan memilih pelanggan sebelum rute dinyatakan gagal dibangun.
+const RUTE_SUSUN_PERCOBAAN_MAKS: int = 200
+## Tapak kotak rumah rute untuk aturan penutup pemain (`PenutupPemain`), ubin. Dari aset `tools/env_art/perumahan.py`: badan 88 unit
+## sepanjang jalan ditambah cucuran atap = sekitar 3 ubin; dalam 94 unit = sekitar 3 ubin; puncak atap 58 sampai 62 unit = sekitar 2 ubin.
+const RUTE_RUMAH_PANJANG_UBIN: float = 3.0
+## Lihat `RUTE_RUMAH_PANJANG_UBIN`.
+const RUTE_RUMAH_DALAM_UBIN: float = 3.0
+## Lihat `RUTE_RUMAH_PANJANG_UBIN`.
+const RUTE_RUMAH_TINGGI_UBIN: float = 2.0
+## Kaki fasad rumah sisi dekat melintang jalan, ubin dari garis tengah (positif = dekat): sesudah halaman dekat (2,0 sampai 3,0).
+const RUTE_RUMAH_DEKAT_X_UBIN: float = 3.0
+## Alpha objek yang menutupi pemain (GDD 2.3, ART_DIRECTION 2.2: semi-transparan); 1,0 saat tidak menutupi (`PenutupPemain`).
+const RUTE_PENUTUP_ALFA: float = 0.45
