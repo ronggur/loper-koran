@@ -83,7 +83,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 - [x] Koran mewarisi kecepatan sepeda, lengkung lemparan terlihat (tinggi + bayangan di tanah) (run 2A, PR #24, 2026-10-14; rasa dinilai di uji HP)
 - [x] Zona sasaran placeholder: kotak surat, teras, halaman, jendela (nilai di BALANCING 5) (run 2A, PR #24, 2026-10-14; jendela lewat sakelar `Config`, bawaan penalti ringan, keputusan akhir ROADMAP 5; sisi dekat datar placeholder)
 - [x] Sisa koran terbatas dan tampil di HUD (run 2A, PR #24, 2026-10-14; jeda antar lempar 0,35 detik; isi ulang khusus jalan uji)
-- [ ] Mode bantu: tap sisi layar untuk lempar otomatis ke kotak surat terdekat; kecepatan otomatis
+- [x] Mode bantu: tap sisi layar untuk lempar otomatis ke kotak surat terdekat; kecepatan otomatis (run 2B, PR #26, 2026-10-15: tap di zona lempar, sisi dari garis jalan, kotak surat pelanggan terdekat di depan selalu kena lewat `ThrowSolver`, santai otomatis dengan stick opsional, sakelar di HUD dev; bunyi lempar dan mendarat placeholder ikut di PR yang sama; rasa dinilai di uji HP)
 - [ ] Animasi lempar pemain ke sisi seberang dan sisi dekat (aset Fase 5)
 - [ ] Uji di HP: ketelitian swipe pendek di layar kecil, lemparan saat ngebut
 
