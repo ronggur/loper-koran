@@ -1,7 +1,7 @@
 # Loop Log — 20261015-fase2b-bantu-audio
 Scope: Run 2B Fase 2 — mode bantu, bunyi lempar dan mendarat, QA-008/QA-005/QA-006, checklist uji HP penutup Fase 2  ·  Branch: `feat/mode-bantu-bunyi-lempar`  ·  Mulai: 2026-10-15  ·  Godot: 4.7.2
 
-## Status: IN_PROGRESS   (iterasi saat ini: 2/2)
+## Status: PASSED   (selesai di iterasi 2/2: QA PASS, 0 Blocker, 0 Major terbuka; QA-001 sampai QA-004 VERIFIED)
 
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
@@ -302,3 +302,4 @@ Ringkas: 19 mutan, 17 mati, 2 setara (R1, R6), 0 hidup bermakna.
 **NEEDS-MANUAL** tidak berubah (daftar di atas tetap berlaku; Fase 2 dan M1 tidak boleh dicentang sebelum uji HP SETUP_ANDROID 8.5).
 
 **Verdict iterasi 2: PASS** — semua gerbang hijau; QA-001 (Major), QA-002 dan QA-003 (Minor), QA-004 (Nit) VERIFIED; tidak ada temuan baru; tidak ada Blocker/Major berstatus OPEN/FIXED/DISPUTED. Jumlah temuan per severity: Blocker 0, Major 1 (VERIFIED), Minor 2 (VERIFIED), Nit 1 (VERIFIED).
+- Orchestrator 2026-10-15: QA iterasi 2 PASS → status PASSED. Orchestrator mengulang `run_tests` di HEAD `0512fbc`: 6522 lolos, 0 gagal, `--ketat` lolos; `uji_sintesis_lempar` 111 lolos. APK debug `builds/kring-kring-debug.apk` (28,8 MB) dibangun tanpa ERROR/WARNING; isi: 13 WAV `throw/`, tanpa `tests/`/`docs/`. Pemasangan ke vivo V2108 tertunda: `adb devices` kosong saat dicek (HP tidak tersambung); A54 juga tidak tersambung.
