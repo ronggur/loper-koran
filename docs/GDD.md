@@ -125,6 +125,15 @@ Mock tampilan dan zona kontrol: kanvas "Loper Koran — Kamera dan Kontrol", pap
 - **Mode bantu:** opsi kecepatan otomatis untuk pemain santai, supaya kontrol tambahan tidak jadi penghalang. Lemparnya juga otomatis: tap di sisi layar yang ada rumahnya, ke kotak surat terdekat di sisi itu.
 - **Opsi kidal:** zona kiri dan kanan bisa ditukar.
 
+**Rincian mode bantu (usulan, 2026-10-15, run fase2b-bantu-audio; keputusan pemilik K-1 sampai K-3 dan rincian orchestrator D-1 sampai D-3, dinilai lewat uji HP, belum dikunci):**
+
+- **Kecepatan otomatis (K-1):** tanpa sentuhan stick sepeda melaju santai 3,0 u/d, sama dengan stick netral, dan santai tidak menguras stamina. Stick tetap aktif penuh (pindah sisi, melambat, meluncur, rem, cepat, ngebut), jadi mode bantu bisa dimainkan dengan satu jempol (tap saja).
+- **Tap di zona lempar (K-2, D-1):** tap dihitung hanya di zona swipe (kanan, atau kiri bila kidal), jadi tidak bentrok dengan stick. Tap = sentuhan yang panjang swipenya tidak pernah mencapai ambang swipe 6% selama sentuhan; sentuhan yang pernah melewati ambang lalu ditarik kembali tetap batal. Swipe manual tetap melempar seperti biasa di mode bantu.
+- **Sisi dari garis jalan (K-2, D-3):** sisi ditentukan dari posisi tap terhadap garis searah jalan di layar yang melewati sepeda: di atas garis = sisi seberang, di bawah = sisi dekat, tepat di garis = dekat. Aturannya sama dengan sisi swipe arah bebas (bagian 5.2). Kidal tidak mengubahnya.
+- **Sasaran (K-3):** kotak surat rumah **pelanggan** terdekat di depan sepeda di sisi yang ditap, yang bisa dicapai lemparan. Lemparannya dihitung lintasan yang sama dengan swipe (warisan kecepatan, jeda lepas, lengkung, sisa koran, jeda antar lempar), diarahkan ke pusat kotak surat, jadi selalu kena. Kalau tidak ada sasaran, tidak ada lemparan: koran tidak berkurang dan muncul tanda kecil di titik tap.
+- Rumah bukan pelanggan tampil abu-abu di mode bantu (penanda radar `RADAR_BUKAN`, DESIGN_SPEC 3.4) **menunggu radar di Fase 3**. Efek kerusakan sepeda di mode bantu masih terbuka (`ROADMAP.md` bagian 5).
+- Angka dan rumus di `BALANCING.md` 4b; tombol dan tanda di `design/DESIGN_SPEC.md` 3.7.
+
 ### 5.4 Bel: "Kring Kring!" (usulan, 2026-10-09)
 
 Bel memberi nama pada game. Pemain membunyikannya sebagai tanda "permisi, mau lewat", seperti loper sungguhan di gang. Semua angka di bawah usulan dan disetel lewat prototype.

@@ -102,6 +102,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 - [ ] Tabrakan: menghambat, tidak menghentikan rute (aturan pasti di BALANCING 6)
 - [ ] Skor: nilai sasaran, combo, pengali kecepatan (BALANCING 5)
 - [ ] Radar di tepi kiri dan kanan (DESIGN_SPEC 3.4)
+- [ ] Mode bantu: rumah bukan pelanggan tampil abu-abu (`RADAR_BUKAN`) begitu radar ada (GDD 5.3; ditunda dari Fase 2 run fase2b-bantu-audio, D-8). Pemilihan sasaran bantu (`BantuLempar.pilih`) dipindah dari zona jalan uji ke data rute
 - [ ] HUD rute: progres pelanggan, koin, sisa koran, kecepatan, stamina (DESIGN_SPEC 3)
 - [ ] Tenggat rute
 - [ ] Layar hasil sederhana: terkirim, meleset, koin, tip

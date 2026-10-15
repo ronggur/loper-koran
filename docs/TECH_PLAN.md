@@ -283,7 +283,7 @@ Setiap fase berisi: tujuan, kaitan cerita, sistem dan kode, aset, konten, uji, d
 
 - `ThrowSolver` (`scripts/systems/throw_solver.gd`): dari vektor swipe di layar (arah tanah = `Iso.layar_ke_dunia(v)` dinormalkan, panjang = \|v\| penuh; arah bebas, keputusan pemilik 2026-10-15, GDD 5.2) dan kecepatan sepeda menghitung titik mendarat, lama terbang, dan puncak lengkung (BALANCING 4). Sisi lempar diturunkan dari arah tanah dan hanya memilih animasi; zona sasaran menilai dari titik mendarat saja. **Garis bidik memakai fungsi yang sama dengan lemparan sebenarnya**, supaya prediksi dan hasil tidak pernah berbeda.
 - Zona sasaran: kotak surat, teras, halaman, jendela, bukan pelanggan (BALANCING 5). Bentuk zona ditulis di data rumah.
-- Mode bantu: tap di sisi layar melempar ke kotak surat terdekat di sisi itu, kecepatan otomatis.
+- Mode bantu (run fase2b-bantu-audio, usulan): tap di zona swipe (`TouchRouter.tap_selesai`) melempar ke kotak surat pelanggan terdekat di depan pada sisi tap; sisi dari garis jalan yang melewati sepeda di layar. Logika murni `BantuLempar` (`scripts/systems/bantu_lempar.gd`: `sisi_tap`, `pilih`, `jangkauan_maju_ubin`), lintasan tetap dari `ThrowSolver.hitung`; scene `JalanUji` (gerbang dan langkah sama dengan swipe), sakelar di `HudDev`. Kecepatan otomatis = stick netral (santai). Aturan di GDD 5.3 dan BALANCING 4b.
 - Sisa koran dan jeda 0,35 detik.
 - Jendela: bonus atau penalti masih ❓ (ROADMAP 5); sediakan sakelar di `config.gd`.
 
