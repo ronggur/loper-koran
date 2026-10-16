@@ -215,7 +215,7 @@ func _test_rute_di_scene() -> void:
 		# Titik pijak tiang (position node) di layar -> (lateral, maju) dunia, harus di dalam persegi zona kotak surat (ditulis ulang).
 		var lateral: float = (sprite.position.x / SKALA + sprite.position.y / SETENGAH) / 2.0
 		var maju: float = (sprite.position.x / SKALA - sprite.position.y / SETENGAH) / 2.0
-		var di_zona: bool = lateral >= -2.125 and lateral < -1.125 and maju >= rumah.maju_ubin + 0.375 and maju < rumah.maju_ubin + 1.875
+		var di_zona: bool = lateral >= -2.75 and lateral < -1.75 and maju >= rumah.maju_ubin + 1.25 and maju < rumah.maju_ubin + 2.5
 		if not di_zona:
 			salah.append("%s: pijak tiang (%.3f, %.3f) di luar zona kotak surat" % [rumah.id, lateral, maju])
 		# Urutan Y-sort: kotak surat lebih ke bawah di layar daripada pusat tapak rumahnya, jadi tergambar di depan rumah.

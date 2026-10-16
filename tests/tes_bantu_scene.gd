@@ -27,18 +27,19 @@ const JEDA_LEPAS_HARAPAN: float = 2.0 / 12.0
 ## Toleransi perbandingan titik (ubin).
 const TOL_UBIN: float = 0.000001
 ## Kasus literal kabel scene (QA-001): [kecepatan maju u/d, lateral ubin, kecepatan lateral efektif u/d (+ = ke dekat), maju ubin, sisi,
-## rumah sasaran, pusat kotak surat sasaran (x lateral, y maju)]. Kotak surat seberang kavling k: x -2,125..-1,125, maju 4k + 0,375..1,875
-## (area 1,0 x 1,5, pusat -1,625; 4k + 1,125); dekat: x 1,125..2,125, pusat 1,625 (BALANCING 5 / config `JALAN_UJI_*_KOTAK_SURAT_UBIN`). Seberang rumah 2 bukan pelanggan (2 mod 4 = 2), rumah 1
-## (5,125) sudah di belakang, jadi sasaran seberang dari maju 5,75 sampai 7,5 adalah rumah 3 (13,125): di luar daftar +-1 kavling di
-## sekitar sepeda (`zona_jalan_uji_sekitar`), di dalam jangkauan santai 7,75 dan ngebut 10,5.
+## rumah sasaran, pusat kotak surat sasaran (x lateral, y maju)]. Kotak surat seberang kavling k: x -2,75..-1,75, maju 4k + 1,25..2,5
+## (area 1,0 x 1,25 di halaman, pusat -2,25; 4k + 1,875); dekat: x 1,75..2,5, maju sama, pusat 2,125 (BALANCING 5 / config
+## `JALAN_UJI_*_KOTAK_SURAT_UBIN`). Seberang rumah 2 bukan pelanggan (2 mod 4 = 2), rumah 1 (5,875) sudah di belakang, jadi sasaran
+## seberang dari maju 7,0 sampai 7,9 adalah rumah 3 (13,875): di luar daftar +-1 kavling di sekitar sepeda (`zona_jalan_uji_sekitar`),
+## di dalam jangkauan santai 7,75 dan ngebut 10,5 (dan, karena kotak surat 2,25 ubin dari garis tengah, terjangkau santai hanya dari maju 6,7).
 const KASUS_KABEL: Array = [
-	[3.0, 0.0, 0.0, 5.75, LoperAnim.Sisi.SEBERANG, 3, Vector2(-1.625, 13.125)],
-	[3.0, 0.0, 0.0, 6.5, LoperAnim.Sisi.SEBERANG, 3, Vector2(-1.625, 13.125)],
-	[3.0, 0.0, 0.0, 7.5, LoperAnim.Sisi.SEBERANG, 3, Vector2(-1.625, 13.125)],
-	[4.5, 0.0, -2.0, 6.5, LoperAnim.Sisi.SEBERANG, 3, Vector2(-1.625, 13.125)],
-	[6.0, 0.0, 2.0, 6.0, LoperAnim.Sisi.SEBERANG, 3, Vector2(-1.625, 13.125)],
-	[6.0, 0.5, -2.4, 2.0, LoperAnim.Sisi.DEKAT, 1, Vector2(1.625, 5.125)],
-	[4.5, -0.5, 2.4, 9.5, LoperAnim.Sisi.DEKAT, 3, Vector2(1.625, 13.125)],
+	[3.0, 0.0, 0.0, 7.0, LoperAnim.Sisi.SEBERANG, 3, Vector2(-2.25, 13.875)],
+	[3.0, 0.0, 0.0, 7.5, LoperAnim.Sisi.SEBERANG, 3, Vector2(-2.25, 13.875)],
+	[3.0, 0.0, 0.0, 7.9, LoperAnim.Sisi.SEBERANG, 3, Vector2(-2.25, 13.875)],
+	[4.5, 0.0, -2.0, 6.5, LoperAnim.Sisi.SEBERANG, 3, Vector2(-2.25, 13.875)],
+	[6.0, 0.0, 2.0, 6.0, LoperAnim.Sisi.SEBERANG, 3, Vector2(-2.25, 13.875)],
+	[6.0, 0.5, -2.4, 2.0, LoperAnim.Sisi.DEKAT, 1, Vector2(2.125, 5.875)],
+	[4.5, -0.5, 2.4, 10.0, LoperAnim.Sisi.DEKAT, 3, Vector2(2.125, 13.875)],
 ]
 
 var _cek: Callable
@@ -379,10 +380,10 @@ func _test_tanpa_sasaran() -> void:
 	var catatan: Dictionary = _catat(akar)
 	var kontrol: KontrolTouch = _kontrol(akar)
 	_nyalakan_bantu(akar)
-	# Maju 5,2: kotak surat seberang rumah 1 (5,125) di belakang, rumah 2 bukan pelanggan, rumah 3 (13,125) di luar jangkauan santai.
-	_sepeda(akar).jarak_ubin = 5.2
+	# Maju 6,2: kotak surat seberang rumah 1 (5,875) di belakang, rumah 2 bukan pelanggan, rumah 3 (13,875) belum terjangkau santai.
+	_sepeda(akar).jarak_ubin = 6.2
 	akar.perbarui(0.0)
-	check(akar.pilihan_bantu(LoperAnim.Sisi.SEBERANG) == null and akar.pilihan_bantu(LoperAnim.Sisi.DEKAT) != null, "kontrol: maju 5,2 santai tidak ada sasaran seberang, ada sasaran dekat (rumah 2 dekat)")
+	check(akar.pilihan_bantu(LoperAnim.Sisi.SEBERANG) == null and akar.pilihan_bantu(LoperAnim.Sisi.DEKAT) != null, "kontrol: maju 6,2 santai tidak ada sasaran seberang, ada sasaran dekat (rumah 2 dekat)")
 	var tap: Vector2 = _tap_seberang(akar)
 	_tap(tap)
 	check((catatan["lempar"] as Array).is_empty() and akar.koran.sisa == 30 and akar.koran_terbang().is_empty(), "tanpa sasaran: tidak ada koran, sisa tetap 30")
@@ -433,10 +434,10 @@ func _test_tanpa_sasaran_gerbang() -> void:
 	var catatan: Dictionary = _catat(akar)
 	var kontrol: KontrolTouch = _kontrol(akar)
 	_nyalakan_bantu(akar)
-	# Maju 5,2 santai: tidak ada kotak surat seberang terjangkau (rumah 1 di belakang, rumah 2 bukan pelanggan, rumah 3 13,125 > 5,2 + 7,75).
-	_sepeda(akar).jarak_ubin = 5.2
+	# Maju 6,2 santai: tidak ada kotak surat seberang terjangkau (rumah 1 di belakang, rumah 2 bukan pelanggan, rumah 3 13,875 belum terjangkau).
+	_sepeda(akar).jarak_ubin = 6.2
 	akar.perbarui(0.0)
-	check(akar.pilihan_bantu(LoperAnim.Sisi.SEBERANG) == null, "kontrol: maju 5,2 santai tanpa sasaran seberang")
+	check(akar.pilihan_bantu(LoperAnim.Sisi.SEBERANG) == null, "kontrol: maju 6,2 santai tanpa sasaran seberang")
 	var tap: Vector2 = _tap_seberang(akar)
 	# Koran habis (jeda antar lempar sudah lewat): tap tanpa sasaran ditolak gerbang koran dulu.
 	var habis: SisaKoran.Keadaan = akar.koran.salin()
@@ -485,9 +486,9 @@ func _pilihan_oracle(sisi: LoperAnim.Sisi, lateral: float, maju: float, v: float
 
 
 ## Titik lepas yang diharapkan (dunia), rumus BALANCING 4 ditulis di sini: posisi + geser selama jeda lepas 2/12 (maju = kecepatan x
-## jeda; lateral = kecepatan lateral x jeda, ke dekat = +x, dijepit tepi jalan +-1).
+## jeda; lateral = kecepatan lateral x jeda, ke dekat = +x, dijepit tepi jalan resmi = tepi trotoar +-2).
 func _lepas_harapan(lateral: float, maju: float, v: float, lateral_ud: float) -> Vector2:
-	return Vector2(clampf(lateral + lateral_ud * JEDA_LEPAS_HARAPAN, -1.0, 1.0), -(maju + v * JEDA_LEPAS_HARAPAN))
+	return Vector2(clampf(lateral + lateral_ud * JEDA_LEPAS_HARAPAN, -2.0, 2.0), -(maju + v * JEDA_LEPAS_HARAPAN))
 
 
 func _dekat(a: Vector2, b: Vector2, tol: float = TOL_UBIN) -> bool:
@@ -532,7 +533,7 @@ func _test_kabel_literal() -> void:
 		check(_dekat(l.titik_lepas, lepas), "%s: titik lepas = posisi sepeda saat tap + geser selama jeda lepas 2/12 dengan kecepatan maju dan lateral sebenarnya %s (dapat %s)" % [tag, lepas, l.titik_lepas])
 		check(is_equal_approx(l.kecepatan_maju_ud, v) and is_equal_approx(l.jeda_lepas, JEDA_LEPAS_HARAPAN) and l.sisi == sisi, "%s: lintasan mewarisi kecepatan %.1f dan jeda lepas 2/12 (dapat %.3f, %.4f)" % [tag, v, l.kecepatan_maju_ud, l.jeda_lepas])
 	# Satu kasus dibiarkan terbang sampai mendarat: dinilai KOTAK_SURAT centang di rumah 3 seberang.
-	_taruh_sepeda(akar, 3.0, 0.0, 0.0, 6.0)
+	_taruh_sepeda(akar, 3.0, 0.0, 0.0, 7.0)
 	var akhir: Array = _tap_ke(akar, catatan, LoperAnim.Sisi.SEBERANG)
 	var mendarat: KoranLempar.Koran = null
 	if akhir[0] != null:
@@ -544,7 +545,7 @@ func _test_kabel_literal() -> void:
 					mendarat = k
 			if mendarat != null:
 				break
-	check(mendarat != null and mendarat.hasil == ZonaSasaran.Hasil.KOTAK_SURAT and mendarat.penanda == ZonaSasaran.Penanda.CENTANG and ZonaSasaran.zona_kena(mendarat.lintasan.titik_mendarat, ZonaSasaran.zona_jalan_uji(3)) != null, "santai maju 6 seberang: koran mendarat dan dinilai KOTAK_SURAT centang di kavling rumah 3")
+	check(mendarat != null and mendarat.hasil == ZonaSasaran.Hasil.KOTAK_SURAT and mendarat.penanda == ZonaSasaran.Penanda.CENTANG and ZonaSasaran.zona_kena(mendarat.lintasan.titik_mendarat, ZonaSasaran.zona_jalan_uji(3)) != null, "santai maju 7 seberang: koran mendarat dan dinilai KOTAK_SURAT centang di kavling rumah 3")
 	_bersihkan(akar)
 
 
@@ -560,32 +561,38 @@ func _test_kabel_kisi(v: float) -> void:
 	var beda_sekitar: int = 0
 	var salah: Array[String] = []
 	var tap_tidak_sah: int = 0
-	for lateral_ud: float in [0.0, 2.0, -2.0]:
-		for i: int in range(64):
+	# [posisi lateral sepeda, kecepatan lateral efektif, langkah indeks maju]. Tiga kecepatan lateral di tengah jalan (semua 64 maju) lalu
+	# dua posisi di tepi trotoar (kotak surat di halaman hanya 0,25 ubin dari tepi seberang: di bawah jarak lempar terpendek, jadi
+	# banyak keadaan tanpa sasaran; di tengah jalan ngebut hampir tidak ada).
+	var kisi: Array = [[0.0, 0.0, 1], [0.0, 2.0, 1], [0.0, -2.0, 1], [-2.0, 0.0, 4], [2.0, 0.0, 4]]
+	for baris: Array in kisi:
+		var posisi: float = baris[0]
+		var lateral_ud: float = baris[1]
+		for i: int in range(0, 64, int(baris[2])):
 			var maju: float = i * 0.25
 			for sisi: LoperAnim.Sisi in [LoperAnim.Sisi.SEBERANG, LoperAnim.Sisi.DEKAT]:
 				keadaan += 1
-				var harapan: BantuLempar.Pilihan = _pilihan_oracle(sisi, 0.0, maju, v, lateral_ud)
-				var sekitar: BantuLempar.Pilihan = BantuLempar.pilih(sisi, Vector2(0.0, -maju), v, lateral_ud, JEDA_LEPAS_HARAPAN, LEBAR, ZonaSasaran.zona_jalan_uji_sekitar(maju))
+				var harapan: BantuLempar.Pilihan = _pilihan_oracle(sisi, posisi, maju, v, lateral_ud)
+				var sekitar: BantuLempar.Pilihan = BantuLempar.pilih(sisi, Vector2(posisi, -maju), v, lateral_ud, JEDA_LEPAS_HARAPAN, LEBAR, ZonaSasaran.zona_jalan_uji_sekitar(maju))
 				if (sekitar == null) != (harapan == null) or (sekitar != null and harapan != null and sekitar.zona.rumah != harapan.zona.rumah):
 					beda_sekitar += 1
-				_taruh_sepeda(akar, v, 0.0, lateral_ud, maju)
+				_taruh_sepeda(akar, v, posisi, lateral_ud, maju)
 				var tanpa_sebelum: int = (catatan["tanpa"] as Array).size()
 				var hasil: Array = _tap_ke(akar, catatan, sisi)
 				if not hasil[1]:
 					tap_tidak_sah += 1
 				var l: ThrowSolver.Lintasan = hasil[0]
-				var tag: String = "vl %.1f maju %.2f %s" % [lateral_ud, maju, LoperAnim.Sisi.keys()[sisi]]
+				var tag: String = "x %.1f vl %.1f maju %.2f %s" % [posisi, lateral_ud, maju, LoperAnim.Sisi.keys()[sisi]]
 				if harapan == null:
 					tanpa += 1
 					if l != null or (catatan["tanpa"] as Array).size() != tanpa_sebelum + 1 or not kontrol.tanda_tampil():
 						salah.append("%s: harap tanpa sasaran" % tag)
 					continue
 				bersasaran += 1
-				if l == null or not _dekat(l.titik_mendarat, harapan.lintasan.titik_mendarat) or not _dekat(l.titik_lepas, harapan.lintasan.titik_lepas) or not _dekat(l.titik_lepas, _lepas_harapan(0.0, maju, v, lateral_ud)):
+				if l == null or not _dekat(l.titik_mendarat, harapan.lintasan.titik_mendarat) or not _dekat(l.titik_lepas, harapan.lintasan.titik_lepas) or not _dekat(l.titik_lepas, _lepas_harapan(posisi, maju, v, lateral_ud)):
 					salah.append("%s: harap rumah %d" % [tag, harapan.zona.rumah])
 	check(tap_tidak_sah == 0, "v %.1f: kontrol semua titik tap di zona swipe dan sisi oracle (%d tidak sah)" % [v, tap_tidak_sah])
-	check(salah.is_empty(), "v %.1f: %d keadaan (3 kecepatan lateral x 64 maju x 2 sisi), tap di scene = oracle (lintasan, titik lepas, atau tanda tanpa sasaran); salah %d: %s" % [v, keadaan, salah.size(), salah.slice(0, 6)])
+	check(salah.is_empty(), "v %.1f: %d keadaan (3 kecepatan lateral x 64 maju + 2 posisi tepi trotoar x 16 maju, x 2 sisi), tap di scene = oracle (lintasan, titik lepas, atau tanda tanpa sasaran); salah %d: %s" % [v, keadaan, salah.size(), salah.slice(0, 6)])
 	check(bersasaran > 0 and tanpa > 0, "v %.1f: kontrol kisi mencakup keadaan bersasaran (%d) dan tanpa sasaran (%d)" % [v, bersasaran, tanpa])
 	if is_equal_approx(v, Config.KECEPATAN_SANTAI_UD):
 		check(beda_sekitar > 0, "v %.1f: kontrol kisi mencakup keadaan di mana daftar +-1 kavling (zona_jalan_uji_sekitar) memberi sasaran lain (%d)" % [v, beda_sekitar])

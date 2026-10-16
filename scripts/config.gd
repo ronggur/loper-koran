@@ -178,7 +178,7 @@ const GARIS_BIDIK_SAMPEL: int = 96
 const GARIS_BIDIK_TERTUTUP_ALPHA: float = 0.5
 ## Alpha garis tepi halaman dan isi zona placeholder di jalan uji.
 const ZONA_GARIS_ALPHA: float = 0.7
-## Alpha isi area kotak surat rumah pelanggan seberang di scene rute (`AreaKotakGambar`): tipis supaya aspal dan trotoar tetap terbaca.
+## Alpha isi area kotak surat rumah pelanggan seberang di scene rute (`AreaKotakGambar`): tipis supaya rumput halaman dan trotoar tetap terbaca.
 const AREA_KOTAK_ISI_ALPHA: float = 0.28
 ## Alpha garis tepi area kotak surat di scene rute: tegas (bentuk terbaca tanpa bergantung warna isi).
 const AREA_KOTAK_TEPI_ALPHA: float = 0.9
@@ -335,10 +335,12 @@ const JALAN_UJI_RUMAH_PANJANG_UBIN: float = 3.0
 const JALAN_UJI_RUMAH_DALAM_UBIN: float = 2.0
 ## Lihat `JALAN_UJI_RUMAH_PANJANG_UBIN`.
 const JALAN_UJI_RUMAH_TINGGI_UBIN: float = 1.5
-## Letak kotak surat graybox melintang jalan, ubin dari garis tengah jalan.
-const JALAN_UJI_KOTAK_SURAT_X_UBIN: float = -1.5
-## Geseran kotak surat graybox sepanjang jalan, ubin.
-const JALAN_UJI_KOTAK_SURAT_MAJU_UBIN: float = 1.0
+## Letak kotak surat melintang jalan, ubin dari garis tengah jalan: di halaman (rumput antara trotoar -2,0 dan fasad -3,0), bukan di
+## trotoar (permintaan pemilik 2026-10-16; dulu -1,5). Tetap 0,125 ubin ke arah jalan dari pusat zona (-2,25), seperti sebelumnya.
+const JALAN_UJI_KOTAK_SURAT_X_UBIN: float = -2.125
+## Geseran kotak surat sepanjang jalan, ubin: bagian halaman terluas, sesudah teras (maju 0 sampai 1,25) dan sebelum ujung kavling
+## (dulu 1,0). Tetap 0,125 ubin di belakang pusat zona (1,875).
+const JALAN_UJI_KOTAK_SURAT_MAJU_UBIN: float = 1.75
 ## Batas atas langkah waktu per frame, detik. Mencegah lompatan jauh setelah app kembali dari background.
 const LANGKAH_WAKTU_MAKS_DETIK: float = 0.1
 ## Pembagi konversi milidetik ke detik.
@@ -408,21 +410,22 @@ const JALAN_UJI_DAUR_MAJU_UBIN: int = 16
 ## kotak surat > jendela > teras > halaman. Sisi dekat datar tanpa fasad dan tanpa jendela, hanya supaya lempar ke sisi dekat bisa
 ## diuji (tidak memutuskan cara menampilkan rumah di sisi dekat, ROADMAP 5).
 
-## Seberang: kotak surat sebagai AREA 1,0 x 1,5 (lateral x maju) di trotoar, berpusat di (-1,625; 1,125) tepat seperti zona 0,5 x 0,5
-## lama, jadi sasaran mode bantu tidak bergeser. Kotak surat graybox (pijak -1,5, 1,0, kotak 0,25 ubin) ada di dalamnya. Tindak lanjut
-## uji HP pemilik: 0,5 x 0,5 (toleransi sekitar +-3 mm gerak jari) terlalu kecil; kini sekitar +-6 mm dan area sekitar 6x (BALANCING 5).
-## Menimpa 0,125 ubin sisi halaman (lateral -2,125 sampai -2,0); kotak surat menang, disengaja. "Inti" 0,5 x 0,5 di pusat adalah calon bonus
-## presisi Run 3B, belum diputuskan.
-const JALAN_UJI_SEBERANG_KOTAK_SURAT_UBIN: Array[float] = [-2.125, 0.375, 1.0, 1.5]
+## Seberang: kotak surat sebagai AREA 1,0 x 1,25 (lateral x maju) di halaman, bagian terluas: sesudah teras (maju 0 sampai 1,25) sampai
+## ujung halaman (2,5), berpusat di (-2,25; 1,875). Permintaan pemilik 2026-10-16: kotak surat di halaman rumah, bukan di trotoar (dulu
+## [-2,125; 0,375; 1,0; 1,5] di trotoar). Lateral -2,75 sampai -1,75: menempel tepi trotoar (-2,0) dengan 0,25 ubin di atasnya supaya
+## bisa dikenai dari trotoar, tidak menimpa teras (maju mulai 1,25, eksklusif) maupun jendela (lateral berakhir -2,75, eksklusif).
+## Area turun dari 1,5 ke 1,25 ubin persegi karena teras harus tetap utuh (BALANCING 5).
+const JALAN_UJI_SEBERANG_KOTAK_SURAT_UBIN: Array[float] = [-2.75, 1.25, 1.0, 1.25]
 ## Seberang: halaman, rumput di antara trotoar (-2,0) dan fasad (-3,0) sepanjang rumah (maju -0,5 sampai 2,5).
 const JALAN_UJI_SEBERANG_HALAMAN_UBIN: Array[float] = [-3.0, -0.5, 1.0, 3.0]
 ## Seberang: teras, di kaki fasad bagian pintu.
 const JALAN_UJI_SEBERANG_TERAS_UBIN: Array[float] = [-3.0, 0.0, 0.5, 1.25]
 ## Seberang: jendela, strip tanah 0,25 ubin di kaki fasad (model placeholder 2D).
 const JALAN_UJI_SEBERANG_JENDELA_UBIN: Array[float] = [-3.0, 1.5, 0.25, 0.75]
-## Dekat: kotak surat di trotoar dekat (datar, tanpa graybox), area 1,0 x 1,5 berpusat di (1,625; 1,125) seperti sisi seberang. Menimpa
-## 0,125 ubin halaman dekat (lateral 2,0 sampai 2,125); tidak bertumpuk dengan zona seberang (celah lateral -1,125 sampai 1,125).
-const JALAN_UJI_DEKAT_KOTAK_SURAT_UBIN: Array[float] = [1.125, 0.375, 1.0, 1.5]
+## Dekat: kotak surat di halaman dekat (datar, tanpa graybox), area 0,75 x 1,25 di lateral 1,75 sampai 2,5, maju 1,25 sampai 2,5,
+## berpusat di (2,125; 1,875). Lebih sempit dari seberang supaya tidak menimpa teras dekat (lateral mulai 2,5, eksklusif); tidak
+## bertumpuk dengan zona seberang (celah lateral -1,75 sampai 1,75).
+const JALAN_UJI_DEKAT_KOTAK_SURAT_UBIN: Array[float] = [1.75, 1.25, 0.75, 1.25]
 ## Dekat: halaman, rumput sesudah trotoar dekat.
 const JALAN_UJI_DEKAT_HALAMAN_UBIN: Array[float] = [2.0, -0.5, 1.0, 3.0]
 ## Dekat: teras, sisi jauh halaman.

@@ -228,8 +228,8 @@ func _test_titik_lepas() -> void:
 	var jeda: float = 1.0 / 6.0
 	var lepas: Vector2 = ThrowSolver.titik_lepas(Vector2(0.2, -10.0), 6.0, 3.0, jeda)
 	check(_dekat_v(lepas, Vector2(0.7, -11.0)), "ngebut 6 u/d + lateral 3 u/d x 1/6 detik: (0,2, -10) -> (0,7, -11), dapat %s" % lepas)
-	var tepi_dekat: Vector2 = ThrowSolver.titik_lepas(Vector2(0.9, 0.0), 3.0, 3.0, jeda)
-	var tepi_seberang: Vector2 = ThrowSolver.titik_lepas(Vector2(-0.9, 0.0), 3.0, -3.0, jeda)
+	var tepi_dekat: Vector2 = ThrowSolver.titik_lepas(Vector2(1.9, 0.0), 3.0, 3.0, jeda)
+	var tepi_seberang: Vector2 = ThrowSolver.titik_lepas(Vector2(-1.9, 0.0), 3.0, -3.0, jeda)
 	var batas: float = BikeMotion.batas_lateral_ubin()
 	check(tepi_dekat.x == batas and tepi_seberang.x == -batas, "lateral dijepit ke tepi jalan resmi +-%s, dapat %s dan %s" % [batas, tepi_dekat.x, tepi_seberang.x])
 	check(_dekat(tepi_dekat.y, -0.5) and _dekat(tepi_seberang.y, -0.5), "maju tetap dihitung walau lateral dijepit (3 x 1/6 = 0,5)")
@@ -509,8 +509,8 @@ func _test_zona_dari_titik() -> void:
 	check(sama, "2145 titik x 3 sisi x 2 sakelar: hasil dan antaran sama untuk sisi apa pun = klasifikasi titik saja %s" % contoh_beda)
 	check(hitung_hasil.has(ZonaSasaran.Hasil.KOTAK_SURAT) and hitung_hasil.has(ZonaSasaran.Hasil.TERAS) and hitung_hasil.has(ZonaSasaran.Hasil.HALAMAN) and hitung_hasil.has(ZonaSasaran.Hasil.BUKAN_PELANGGAN) and hitung_hasil.has(ZonaSasaran.Hasil.MELESET), "kontrol: kisi titik memuat kotak surat, teras, halaman, bukan pelanggan, meleset (%s)" % [hitung_hasil])
 	# Contoh eksplisit: lemparan bersisi DEKAT yang mendarat di kotak surat seberang tetap kena (Run 2A: meleset), dan sebaliknya.
-	var seberang: Vector2 = _titik(-1.625, 1.125)
-	var dekat: Vector2 = _titik(1.625, 1.125)
+	var seberang: Vector2 = _titik(-2.25, 1.875)
+	var dekat: Vector2 = _titik(2.125, 1.875)
 	check(KoranLempar.hasil_mendarat(_lintasan_titik(seberang, LoperAnim.Sisi.DEKAT)) == ZonaSasaran.Hasil.KOTAK_SURAT and KoranLempar.prediksi_antaran(_lintasan_titik(seberang, LoperAnim.Sisi.DEKAT), false) == ZonaSasaran.Antaran.SAH_PENUH, "kotak surat seberang dengan sisi lempar DEKAT: KOTAK_SURAT, sah penuh")
 	check(KoranLempar.hasil_mendarat(_lintasan_titik(dekat, LoperAnim.Sisi.SEBERANG)) == ZonaSasaran.Hasil.KOTAK_SURAT, "kotak surat dekat dengan sisi lempar SEBERANG: KOTAK_SURAT")
 	# Penilaian tidak menerima sisi lempar (penyaring Run 2A dihapus).

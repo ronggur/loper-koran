@@ -423,11 +423,11 @@ func _test_scene_wus() -> void:
 	check(_tunggu_sasaran(akar, LoperAnim.Sisi.SEBERANG), "ada sasaran seberang")
 	_tap(_tap_seberang(akar))
 	check(catatan["lempar"] == 2 and audio.call(&"jumlah_wus") == 2 and wus.playing, "tap mode bantu diterima: tepat satu wus")
-	# Ditolak: tanpa sasaran (maju 5,2 santai: tidak ada kotak surat seberang terjangkau).
+	# Ditolak: tanpa sasaran (maju 6,2 santai: tidak ada kotak surat seberang terjangkau).
 	akar.perbarui(Config.LEMPAR_JEDA_DETIK)
-	(_anak(akar, "Sepeda") as SepedaUji).jarak_ubin = 5.2
+	(_anak(akar, "Sepeda") as SepedaUji).jarak_ubin = 6.2
 	akar.perbarui(0.0)
-	check(akar.pilihan_bantu(LoperAnim.Sisi.SEBERANG) == null, "kontrol: tidak ada sasaran seberang di maju 5,2")
+	check(akar.pilihan_bantu(LoperAnim.Sisi.SEBERANG) == null, "kontrol: tidak ada sasaran seberang di maju 6,2")
 	_tap(_tap_seberang(akar))
 	check(catatan["lempar"] == 2 and audio.call(&"jumlah_wus") == 2, "tap tanpa sasaran: tanpa wus")
 	# Ditolak: koran habis.

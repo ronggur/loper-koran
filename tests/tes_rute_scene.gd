@@ -8,9 +8,9 @@ extends RefCounted
 ##   `RouteBuilder` sendiri sudah diuji literal di `tes_rute.gd`; di sini dijaga bahwa scene memakainya).
 ## - Rumah digambar: jendela [maju - 20, maju + 30] dipindai linear (bukan pencarian biner `JendelaRute`), nama tekstur, titik pijak dari
 ##   JSON aset yang dibaca tes, dan letak layar dari rumus proyeksi iso 2:1 ditulis ulang (tapak seberang tengah x -4,5, dekat +4,5; maju
-##   awal kavling + 1,0), kotak surat graybox di x -1,5 dan maju awal kavling + 1,0.
-## - Zona: koordinat zona rumah tertentu literal (kotak surat seberang x -2,125 sampai -1,125, maju pos + 0,375 sampai 1,875), dan titik yang
-##   di jalan uji kotak surat tetapi di rute meleset.
+##   awal kavling + 1,0), kotak surat sasaran di halaman: x -2,125 dan maju awal kavling + 1,75.
+## - Zona: koordinat zona rumah tertentu literal (kotak surat seberang di halaman, x -2,75 sampai -1,75, maju pos + 1,25 sampai 2,5), dan
+##   titik yang di jalan uji kotak surat tetapi di rute meleset.
 ## - Mode bantu: kisi keadaan (tiga kecepatan, beberapa pelanggan dan jarak) lawan `BantuLempar.pilih` yang dipanggil tes dengan daftar
 ##   zona SELURUH rute (bukan jendela).
 
@@ -372,7 +372,7 @@ func _test_rumah_digambar() -> void:
 			var kotak: Node2D = akar.daur().kotak_surat(i)
 			if seberang and rumah.pelanggan:
 				kotak_harapan += 1
-				if kotak == null or kotak.position != _layar(-1.5, rumah.maju_ubin + 1.0) or not kotak.visible:
+				if kotak == null or kotak.position != _layar(-2.125, rumah.maju_ubin + 1.75) or not kotak.visible:
 					salah.append("%s: kotak surat %s" % [rumah.id, kotak.position if kotak != null else "tidak ada"])
 			elif kotak != null:
 				salah.append("%s: kotak surat di rumah bukan pelanggan" % rumah.id)
@@ -460,10 +460,10 @@ func _test_area_kotak_digambar() -> void:
 				x_maks = maxi(x_maks, r.z)
 				y_min = mini(y_min, r.x)
 				y_maks = maxi(y_maks, r.x + 1)
-			var harap_x_min: float = (m + 0.375 - 2.125) * 32.0
-			var harap_x_maks: float = (m + 1.875 - 1.125) * 32.0
-			var harap_y_min: float = (-2.125 - (m + 1.875)) * 16.0
-			var harap_y_maks: float = (-1.125 - (m + 0.375)) * 16.0
+			var harap_x_min: float = (m + 1.25 - 2.75) * 32.0
+			var harap_x_maks: float = (m + 2.5 - 1.75) * 32.0
+			var harap_y_min: float = (-2.75 - (m + 2.5)) * 16.0
+			var harap_y_maks: float = (-1.75 - (m + 1.25)) * 16.0
 			if absf(x_min - harap_x_min) > 1.0 or absf(x_maks - harap_x_maks) > 1.0 or absf(y_min - harap_y_min) > 1.0 or absf(y_maks - harap_y_maks) > 1.0:
 				salah.append("%s: [%d,%d]x[%d,%d] harap [%.0f,%.0f]x[%.0f,%.0f]" % [rute.rumah[harapan[k]].id, x_min, x_maks, y_min, y_maks, harap_x_min, harap_x_maks, harap_y_min, harap_y_maks])
 		check(salah.is_empty(), "jarak %.0f: letak layar tiap area = zona kotak surat rumahnya: %s" % [jarak, salah.slice(0, 3)])
@@ -497,12 +497,12 @@ func _test_zona_dari_data() -> void:
 	var medan: MedanKoran = akar.medan()
 	var rute: RouteBuilder.Rute = akar.rute()
 	var uji: Array = [
-		["kotak surat pelanggan per_tengah_03@14 (maju 78)", Vector2(-1.625, -79.125), ZonaSasaran.Hasil.KOTAK_SURAT],
+		["kotak surat pelanggan per_tengah_03@14 (maju 78)", Vector2(-2.25, -79.875), ZonaSasaran.Hasil.KOTAK_SURAT],
 		["teras pelanggan per_tengah_03@14", Vector2(-2.75, -78.5), ZonaSasaran.Hasil.TERAS],
-		["halaman pelanggan per_tengah_03@14", Vector2(-2.25, -80.0), ZonaSasaran.Hasil.HALAMAN],
-		["kotak surat pelanggan per_buka_01@6 (maju 6)", Vector2(-1.625, -7.125), ZonaSasaran.Hasil.KOTAK_SURAT],
+		["halaman pelanggan per_tengah_03@14 (sebelum area kotak surat)", Vector2(-2.25, -78.0), ZonaSasaran.Hasil.HALAMAN],
+		["kotak surat pelanggan per_buka_01@6 (maju 6)", Vector2(-2.25, -7.875), ZonaSasaran.Hasil.KOTAK_SURAT],
 		["tengah jalan", Vector2(0.0, -79.0), ZonaSasaran.Hasil.MELESET],
-		["titik yang di jalan uji kotak surat (kavling 1) tapi di rute tidak ada rumah", Vector2(-1.625, -5.125), ZonaSasaran.Hasil.MELESET],
+		["titik yang di jalan uji kotak surat (kavling 1, bagian di atas trotoar) tapi di rute tidak ada rumah", Vector2(-1.9, -5.875), ZonaSasaran.Hasil.MELESET],
 	]
 	for kasus: Array in uji:
 		var titik: Vector2 = kasus[1]
@@ -517,7 +517,7 @@ func _test_zona_dari_data() -> void:
 			dekat = rumah
 	check(bukan_seberang != null and dekat != null, "kontrol data: ada rumah seberang pelanggan_boleh yang tidak terpilih dan rumah dekat")
 	if bukan_seberang != null and dekat != null:
-		var t1: Vector2 = Vector2(-1.625, -(bukan_seberang.maju_ubin + 1.125))
+		var t1: Vector2 = Vector2(-2.25, -(bukan_seberang.maju_ubin + 1.875))
 		var t2: Vector2 = Vector2(2.5, -(dekat.maju_ubin + 1.0))
 		check(ZonaSasaran.klasifikasi(t1, medan.zona_sekitar(t1)) == ZonaSasaran.Hasil.BUKAN_PELANGGAN, "kotak surat rumah seberang yang tidak terpilih (%s) = BUKAN_PELANGGAN" % bukan_seberang.id)
 		check(ZonaSasaran.klasifikasi(t2, medan.zona_sekitar(t2)) == ZonaSasaran.Hasil.BUKAN_PELANGGAN, "halaman rumah dekat (%s) = BUKAN_PELANGGAN (distrik perumahan tanpa pelanggan sisi dekat)" % dekat.id)
@@ -532,7 +532,7 @@ func _test_zona_dari_data() -> void:
 	check(medan.tertutup_titik(seberang_tertutup, 0.0), "titik di dalam tapak rumah seberang (pelanggan ke-9) tertutup")
 	# Penilaian koran sungguhan memakai medan yang sama: lintasan bersintetis mendarat di kotak surat.
 	var lintasan: ThrowSolver.Lintasan = ThrowSolver.Lintasan.new()
-	lintasan.titik_mendarat = Vector2(-1.625, -79.125)
+	lintasan.titik_mendarat = Vector2(-1.9, -79.875)
 	check(KoranLempar.hasil_mendarat(lintasan, medan) == ZonaSasaran.Hasil.KOTAK_SURAT and KoranLempar.hasil_mendarat(lintasan) == ZonaSasaran.Hasil.MELESET, "KoranLempar.hasil_mendarat: medan rute = KOTAK_SURAT, tanpa medan (jalan uji) di titik yang sama meleset")
 	# Mode bantu tidak pernah memilih rumah bukan pelanggan atau sisi dekat (AC-10), sepanjang rute, tiga kecepatan.
 	var salah: Array[String] = []

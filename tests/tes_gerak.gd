@@ -102,7 +102,7 @@ func _test_config_gerak() -> void:
 	check(Config.STAMINA_PULIH_AMBANG == 30.0 and Config.HUD_STAMINA_AMBANG_RENDAH == 30.0, "lelah padam di 30, bar stamina FAIL di bawah 30 (BALANCING 3, DESIGN_SPEC 3.5)")
 	check(Config.PEDAL_RATE_MAKS == 1.5 and Config.POSE_MELUNCUR_TOLERANSI_UD > 0.0 and Config.POSE_MELUNCUR_TOLERANSI_UD < 0.2, "PEDAL_RATE_MAKS 1,5 dan toleransi pose meluncur kecil (0 < t < 0,2 u/d)")
 	check(Config.REM_AMBANG_TOLERANSI > 0.0 and Config.REM_AMBANG_TOLERANSI < 0.0001 and Config.REM_TAHAN_TOLERANSI_DETIK > 0.0 and Config.REM_TAHAN_TOLERANSI_DETIK < 0.0001, "toleransi rem hanya meredam derau presisi (< 1e-4)")
-	check(Config.JALAN_LEBAR_UBIN == 2.0 and BikeMotion.batas_lateral_ubin() == 1.0, "lebar aspal 2 ubin, batas tepi jalan resmi +-1 ubin (D-4)")
+	check(Config.JALAN_LEBAR_UBIN == 2.0 and Config.JALAN_TROTOAR_UBIN == 1.0 and BikeMotion.batas_lateral_ubin() == 2.0, "lebar aspal 2 ubin + trotoar 1 ubin tiap sisi, batas tepi jalan resmi +-2 ubin = tepi trotoar (D-4, sepeda boleh naik trotoar)")
 
 
 # --- AC-2: kecepatan (dipindah dari BikeDrive run 0B, diperluas) ---
@@ -192,7 +192,7 @@ func _test_masukan_aneh_dan_murni() -> void:
 	check(bersih.keadaan.kecepatan_ud == 3.0 and bersih.keadaan.stamina == 100.0 and bersih.keadaan.lateral_ubin == 0.0 and bersih.keadaan.tahan_rem_detik == 0.0, "keadaan NaN dibersihkan: santai, stamina penuh, lateral 0, tahan 0")
 	var k_luar: BikeMotion.Keadaan = _keadaan(9.0, 150.0, 5.0)
 	var jepit: BikeMotion.Hasil = BikeMotion.langkah(k_luar, Vector2.ZERO, 0.0)
-	check(jepit.keadaan.kecepatan_ud == 6.0 and jepit.keadaan.stamina == 100.0 and jepit.keadaan.lateral_ubin == 1.0, "keadaan di luar jangkauan dijepit: 9 -> 6 u/d, stamina 150 -> 100, lateral 5 -> 1")
+	check(jepit.keadaan.kecepatan_ud == 6.0 and jepit.keadaan.stamina == 100.0 and jepit.keadaan.lateral_ubin == 2.0, "keadaan di luar jangkauan dijepit: 9 -> 6 u/d, stamina 150 -> 100, lateral 5 -> 2")
 	check(BikeMotion.langkah(null, Vector2.ZERO, DT).keadaan != null, "keadaan null = keadaan awal (tidak crash)")
 	# Murni: masukan tidak berubah, hasil objek baru, hasil sama untuk masukan sama (2000 rangkaian acak seed tetap).
 	var asli: BikeMotion.Keadaan = _keadaan(4.0, 50.0, 0.2)
@@ -215,7 +215,7 @@ func _test_masukan_aneh_dan_murni() -> void:
 		if not _sama_keadaan(a.keadaan, b.keadaan) or a.maju_ubin != b.maju_ubin or a.pose != b.pose or a.arah_sprite != b.arah_sprite or a.pedal_rate != b.pedal_rate:
 			sama = false
 		var s: BikeMotion.Keadaan = a.keadaan
-		if s.kecepatan_ud < 0.0 or s.kecepatan_ud > 6.0 or absf(s.lateral_ubin) > 1.0 or s.stamina < 0.0 or s.stamina > 100.0 or a.maju_ubin < 0.0 or s.tahan_rem_detik < 0.0:
+		if s.kecepatan_ud < 0.0 or s.kecepatan_ud > 6.0 or absf(s.lateral_ubin) > BikeMotion.batas_lateral_ubin() or s.stamina < 0.0 or s.stamina > 100.0 or a.maju_ubin < 0.0 or s.tahan_rem_detik < 0.0:
 			aman = false
 		if s.kecepatan_ud < Config.KECEPATAN_MELAMBAT_UD - TOLERANSI_TEPAT and not s.rem_aktif and keadaan.kecepatan_ud >= Config.KECEPATAN_MELAMBAT_UD:
 			aman = false
@@ -461,14 +461,14 @@ func _test_lateral() -> void:
 	h = BikeMotion.langkah(_keadaan(), Vector2(-0.5, 0), 0.2)
 	check(is_equal_approx(h.keadaan.lateral_ubin, -0.3) and is_equal_approx(h.lateral_ud, -1.5), "datar -0,5 selama 0,2 detik = -0,3 ubin ke sisi seberang (negatif), lateral_ud -1,5")
 	h = _jalankan(_keadaan(), Vector2(1, 0), 120)
-	check(h.keadaan.lateral_ubin == 1.0, "dijepit di tepi aspal sisi dekat (+1 ubin)")
+	check(h.keadaan.lateral_ubin == 2.0, "dijepit di tepi trotoar sisi dekat (+2 ubin)")
 	h = _jalankan(h.keadaan, Vector2(-1, 0), 120)
-	check(h.keadaan.lateral_ubin == -1.0, "dijepit di tepi aspal sisi seberang (-1 ubin)")
-	h = BikeMotion.langkah(_keadaan(3.0, 100.0, 1.0), Vector2(1, 0), 0.1)
-	check(h.keadaan.lateral_ubin == 1.0 and h.lateral_ud == 0.0, "terhalang tepi: tidak bergeser dan lateral_ud 0")
-	h = BikeMotion.langkah(_keadaan(3.0, 100.0, 0.95), Vector2(1, 0), 0.1)
-	check(h.keadaan.lateral_ubin == 1.0 and is_equal_approx(h.lateral_ud, 0.5), "sebagian terhalang: lateral_ud = perpindahan nyata (0,05 / 0,1 = 0,5), dapat %s" % h.lateral_ud)
-	h = BikeMotion.langkah(_keadaan(3.0, 100.0, -1.0), Vector2(1, 0), 0.1)
+	check(h.keadaan.lateral_ubin == -2.0, "dijepit di tepi trotoar sisi seberang (-2 ubin)")
+	h = BikeMotion.langkah(_keadaan(3.0, 100.0, 2.0), Vector2(1, 0), 0.1)
+	check(h.keadaan.lateral_ubin == 2.0 and h.lateral_ud == 0.0, "terhalang tepi: tidak bergeser dan lateral_ud 0")
+	h = BikeMotion.langkah(_keadaan(3.0, 100.0, 1.95), Vector2(1, 0), 0.1)
+	check(h.keadaan.lateral_ubin == 2.0 and is_equal_approx(h.lateral_ud, 0.5), "sebagian terhalang: lateral_ud = perpindahan nyata (0,05 / 0,1 = 0,5), dapat %s" % h.lateral_ud)
+	h = BikeMotion.langkah(_keadaan(3.0, 100.0, -2.0), Vector2(1, 0), 0.1)
 	check(is_equal_approx(h.lateral_ud, 3.0), "dari tepi seberang ke arah dekat: bebas, lateral_ud +3,0")
 	h = BikeMotion.langkah(_keadaan(), Vector2(-0.7, 0.7), 0.1)
 	check(h.keadaan.kecepatan_ud > 3.0 and h.keadaan.lateral_ubin < 0.0 and h.maju_ubin > 0.0, "diagonal maju + seberang: kecepatan naik, lateral bergeser, maju dalam satu langkah")

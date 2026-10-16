@@ -16,8 +16,9 @@ extends RefCounted
 ##   gerak biasa (meluncur), sesudahnya pengereman, jadi hasilnya tidak bergantung pada pembagian `dt`.
 ## - Stamina (D-5): stick ke bawah atau rem aktif +15/d; selain itu dari kecepatan SEBENARNYA, linear per potong +2 (<= 3,0),
 ##   -4 (4,5), -12 (>= 6,0). Dijepit 0..100. Mencapai 0 menyalakan `lelah`; `lelah` padam saat stamina >= 30.
-## - Lateral (D-4): komponen datar stick x 3,0 u/d, dijepit ke tepi aspal (+-`JALAN_LEBAR_UBIN` / 2) sebagai batas tepi jalan
-##   resmi; positif = sisi `dekat`, negatif = sisi `seberang`. Tanpa kunci atau snap jalur (keputusan pemilik 2026-10-13).
+## - Lateral (D-4): komponen datar stick x 3,0 u/d, dijepit ke tepi trotoar (+-(`JALAN_LEBAR_UBIN` / 2 + `JALAN_TROTOAR_UBIN`)) sebagai
+##   batas tepi jalan resmi (sebelum 2026-10-16: tepi aspal; sepeda boleh naik trotoar, rumput halaman tetap di luar); positif =
+##   sisi `dekat`, negatif = sisi `seberang`. Tanpa kunci atau snap jalur (keputusan pemilik 2026-10-13).
 ## Jarak maju dan stamina dihitung tepat per bagian (rampa linear lalu tetap, rampa dipotong di titik patah laju stamina), jadi
 ## hasil tidak bergantung pada pembagian `dt` (dites dengan langkah tunggal lawan 1/240).
 
@@ -85,9 +86,10 @@ static func kecepatan_tujuan_ud(maju: float, lelah: bool = false) -> float:
 	return tujuan
 
 
-## Batas tepi jalan resmi ke tiap sisi dari garis tengah, ubin (setengah lebar aspal, D-4).
+## Batas tepi jalan resmi ke tiap sisi dari garis tengah, ubin (setengah lebar aspal ditambah lebar trotoar, D-4; sepeda boleh
+## naik trotoar, permintaan pemilik 2026-10-16). Satu-satunya sumber batas: `ThrowSolver.titik_lepas` dan `JalanDaur.sel_tanah` memakainya.
 static func batas_lateral_ubin() -> float:
-	return Config.JALAN_LEBAR_UBIN / 2
+	return Config.JALAN_LEBAR_UBIN / 2 + Config.JALAN_TROTOAR_UBIN
 
 
 ## True bila komponen bawah stick (`-stick.y`, sesudah zona mati) memenuhi syarat rem: >= `REM_AMBANG_STICK`, inklusif,
