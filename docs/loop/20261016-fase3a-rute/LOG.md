@@ -33,7 +33,7 @@ Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MAN
 - [ ] Banner "Rute selesai" dan tombol "Main lagi" terbaca dan tidak tersentuh tak sengaja.
 - [ ] Hasil uji HP Fase 2 (SETUP_ANDROID 8.5) belum diisi pemilik; Fase 2 dan M1 tetap tidak dicentang.
 - [ ] (QA) Urutan gambar rumah `dekat` vs sepeda di lateral +1 sepanjang satu rumah dekat: di probe jendela 2340x1080 tidak ada tumpang tindih salah (QA melihat d = -3 sampai +3 ubin), tetapi perlu dilihat sambil berjalan di HP.
-- [ ] (QA) Bedakan kotak surat merah (sprite) dan kubus oranye (sasaran): apakah pemain tahu mana yang harus dikenai (QA-005).
+- [x] (QA) Bedakan kotak surat merah (sprite) dan kubus oranye (sasaran) (QA-005): kotak merah dihapus dari 3 sprite rumah pelanggan seberang pasca-PASS (D-25); tinggal dinilai pemilik di HP bahwa satu kubus oranye per rumah jelas sebagai sasaran.
 - [ ] (QA) Rute yang sama dimainkan tiga seed berturut-turut: semua 5 segmen tengah selalu dipakai (hanya urutan, pembuka, penutup, dan pelanggan yang berubah); nilai apakah terasa dihafal.
 
 ## Keputusan & catatan
@@ -505,3 +505,9 @@ Jumlah tes naik (8117 -> 8179 -> 8182); tidak ada tes dihapus kecuali `qa_repro_
 ### NEEDS-MANUAL
 
 Daftar di atas tetap berlaku (60 fps dan memuat < 1 detik di vivo V2108, rasa kontrol, keterbacaan banner di HP, kotak surat ganda QA-005, variasi antar tiga seed, urutan gambar rumah dekat vs sepeda). Fase 3 dan DEV_PHASES tidak boleh dicentang untuk butir yang bergantung pada uji HP, dan QA-004 serta QA-005 perlu keputusan pemilik sebelum uji HP SETUP_ANDROID 8.6.
+
+## Keputusan pemilik dan perubahan sesudah QA PASS (2026-10-16)
+
+- **QA-004 (D-17, lemparan ditolak sesudah garis akhir): pemilik setuju rekomendasi, perilaku dipertahankan** sampai Run 3C mengganti akhir rute dengan layar hasil. Tidak ada perubahan kode. Status: DEFERRED, keputusan pemilik tercatat.
+- **QA-005 (D-16, dua kotak surat): dikerjakan orchestrator sesudah QA PASS atas permintaan pemilik.** `tools/env_art/fase3.py`: `house_far_v(..., kotak=False)` pada ekspor sprite rumah seberang, lalu `--salin`. Hanya 3 sprite `house_perumahan_{limasan,pelana,sayap}_pelanggan.png` yang berubah (kotak merah di teras hilang; ukuran sel 270x212 -> 262x208, 253x229 -> 245x225, 270x204 -> 254x196; `ground_anchor` tidak berubah, jadi posisi rumah di scene sama) dan catatan di 6 JSON seberang. Render ulang di mesin ini juga mengubah beberapa piksel berkas lain (mis. `house_perumahan_dekat_pelana_lintang_*` 40 piksel, `obs_mobil_garasi_sheet` 9 piksel, mock `docs/design/environment/`): itu drift renderer terhadap aset yang sudah di-commit, tidak terkait perubahan ini, jadi **dikembalikan** (tidak masuk commit). Bukti: 8182 lolos, 0 gagal (`--ketat` 0 peringatan), `--quit-after 2` bersih, tangkapan `shots/art/2340x1080_rute_tengah.png` memperlihatkan satu kubus oranye per rumah pelanggan tanpa kotak merah. **Perubahan ini TIDAK diaudit QA** (di luar iterasi 2); status QA-005 = FIXED (belum VERIFIED).
+- **D-25 (aset).** Karena kotak surat sasaran kini hanya kubus graybox oranye di pusat zona, penggantian ke aset kotak surat final menjadi pekerjaan Fase 5 (bukan 3A). Sprite rumah dekat tidak diubah (selalu `bukan` di 3A).
