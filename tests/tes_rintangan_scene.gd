@@ -49,8 +49,11 @@ func jalankan() -> void:
 	await _test_rintangan_digambar()
 	await _test_penutup_rintangan()
 	await _test_tabrakan_dari_scene()
+	await _test_tabrakan_mobil_dari_scene()
+	await _test_bunyi_tanda_rintangan_di_scene()
 	await _test_jeda_membekukan()
 	await _test_skor_di_scene()
+	await _test_bunyi_tip_di_scene()
 	await _test_bel_input()
 	await _test_bel_anjing_mundur()
 	await _test_main_lagi()
@@ -378,6 +381,92 @@ func _test_tabrakan_dari_scene() -> void:
 	_bersihkan(akar)
 
 
+## QA-001 iterasi 1: sinyal `tabrakan` membawa jenis rintangan penyebab yang sebenarnya, bukan hanya anjing (AC-8). Bersama
+## `_test_tabrakan_dari_scene` (anjing) kedua jenis data diperiksa dengan harapan literal.
+func _test_tabrakan_mobil_dari_scene() -> void:
+	_judul.call("Scene rute: tabrakan dengan mobil keluar garasi membawa jenis mobil_garasi (AC-8, QA-001)")
+	var akar: RuteMain = await _siapkan()
+	var audio: Node = _audio()
+	if audio == null:
+		check(false, "autoload Audio ada")
+		_bersihkan(akar)
+		return
+	var tabrak: Array[String] = []
+	akar.tabrakan.connect(func(jenis: String) -> void: tabrak.append(jenis))
+	# Sepeda ditahan di maju 40, separuh dekat (lateral 1,5), 5 detik: anjing seberang 36 mengejar sampai batas 39, berhenti, lalu pulang dan
+	# selesai; mobil seberang 46 (tanda 9: sepeda >= 37) tanda 1,5 detik lalu mundur 1,0 u/d sejauh 2,5 ubin dan berhenti di garis tengah.
+	for i: int in range(300):
+		_taruh(akar, 0.0, 1.5, 40.0)
+		akar.perbarui(DT)
+	var anjing: AnjingPenjaga.Keadaan = akar.rintangan().daftar[0].anjing
+	var mobil: MobilGarasi.Keadaan = akar.rintangan().daftar[1].mobil
+	check(tabrak.is_empty() and anjing.status == AnjingPenjaga.Status.DIAM and anjing.selesai and mobil.status == MobilGarasi.Status.BERHENTI, "kontrol: anjing 36 sudah pulang dan selesai, mobil 46 berhenti di jalan, belum ada tabrakan")
+	var kotak: Rect2 = MobilGarasi.kotak(mobil)
+	check(kotak.position.is_equal_approx(Vector2(-1.5, 45.625)) and kotak.size.is_equal_approx(Vector2(1.5, 0.75)), "mobil berhenti: bentuk lateral -1,5..0 (separuh seberang), maju 45,625..46,375, dapat %s" % kotak)
+	var bunyi_awal: int = int(audio.call(&"jumlah_bunyi_rute", BunyiRute.Bunyi.TABRAKAN))
+	# Santai di lateral -0,6 dari maju 44: depan bentuk sepeda (maju + 0,4) melewati 45,625 pada langkah ke-25 (0,05 ubin per langkah).
+	_taruh(akar, 3.0, -0.6, 44.0)
+	var langkah: int = 0
+	while tabrak.is_empty() and langkah < 120:
+		akar.perbarui(DT)
+		langkah += 1
+	check(tabrak == ["mobil_garasi"], "santai menabrak mobil yang berhenti di separuh seberang: sinyal membawa jenis mobil_garasi, dapat %s" % [tabrak])
+	check(langkah == 25 and akar.rintangan().tabrakan.jumlah == 1 and _sepeda(akar).kecepatan_ud == 1.0, "tabrakan di langkah 25 (depan sepeda 44,4 + 0,05 x 25 = 45,65 > 45,625), satu tabrakan, kecepatan 1,0 (dapat langkah %d)" % langkah)
+	check(int(audio.call(&"jumlah_bunyi_rute", BunyiRute.Bunyi.TABRAKAN)) == bunyi_awal + 1, "satu bunyi tabrakan untuk tabrakan mobil")
+	_bersihkan(akar)
+
+
+## Jumlah keputusan bunyi geram, gonggong, bip, mesin di `Audio` (urut itu).
+func _hitung_bunyi_tanda(audio: Node) -> Array[int]:
+	var hasil: Array[int] = []
+	for b: BunyiRute.Bunyi in [BunyiRute.Bunyi.ANJING_GERAM, BunyiRute.Bunyi.ANJING_GONGGONG, BunyiRute.Bunyi.MOBIL_BIP, BunyiRute.Bunyi.MOBIL_MESIN]:
+		hasil.append(int(audio.call(&"jumlah_bunyi_rute", b)))
+	return hasil
+
+
+## Selisih dua hitungan bunyi per bunyi.
+func _selisih(sekarang: Array[int], awal: Array[int]) -> Array[int]:
+	var hasil: Array[int] = []
+	for i: int in range(sekarang.size()):
+		hasil.append(sekarang[i] - awal[i])
+	return hasil
+
+
+## QA-002 iterasi 1 (bagian bunyi tanda): peristiwa rintangan di scene diputar `Audio` (AC-19, SOUND_DESIGN 4.3): geram saat anjing waspada,
+## gonggong saat mengejar, bip saat mobil mulai tanda, mesin saat mobil mulai mundur; masing-masing tepat sekali per peristiwa.
+func _test_bunyi_tanda_rintangan_di_scene() -> void:
+	_judul.call("Scene rute: bunyi tanda rintangan dari Audio, geram, gonggong, bip, mesin, sekali per peristiwa (AC-19, QA-002)")
+	var akar: RuteMain = await _siapkan()
+	var audio: Node = _audio()
+	if audio == null:
+		check(false, "autoload Audio ada")
+		_bersihkan(akar)
+		return
+	var awal: Array[int] = _hitung_bunyi_tanda(audio)
+	# Sepeda di separuh dekat (lateral 1,5): anjing seberang 36 (tanda 9) waspada saat sepeda >= 27, mengejar saat >= 36; mobil seberang
+	# 46 (tanda 9) tanda saat sepeda >= 37, mundur 1,5 detik (90 langkah) sesudahnya. Tidak ada tabrakan di sisi dekat.
+	_taruh(akar, 3.0, 1.5, 26.0)
+	_langkah(akar, 1)
+	check(_selisih(_hitung_bunyi_tanda(audio), awal) == [0, 0, 0, 0], "maju 26,05 (di luar jarak tanda): belum ada bunyi rintangan")
+	_taruh(akar, 3.0, 1.5, 27.0)
+	_langkah(akar, 1)
+	check(_selisih(_hitung_bunyi_tanda(audio), awal) == [1, 0, 0, 0] and akar.rintangan().daftar[0].anjing.status == AnjingPenjaga.Status.WASPADA, "maju 27,05: anjing 36 waspada, satu geram, dapat %s" % [_selisih(_hitung_bunyi_tanda(audio), awal)])
+	_langkah(akar, 30)
+	check(_selisih(_hitung_bunyi_tanda(audio), awal) == [1, 0, 0, 0], "30 langkah waspada berikutnya: geram tetap satu kali")
+	_taruh(akar, 3.0, 1.5, 36.0)
+	_langkah(akar, 1)
+	check(_selisih(_hitung_bunyi_tanda(audio), awal) == [1, 1, 0, 0] and akar.rintangan().daftar[0].anjing.status == AnjingPenjaga.Status.MENGEJAR, "maju 36,05: anjing mengejar, satu gonggong, dapat %s" % [_selisih(_hitung_bunyi_tanda(audio), awal)])
+	_taruh(akar, 3.0, 1.5, 37.0)
+	_langkah(akar, 1)
+	check(_selisih(_hitung_bunyi_tanda(audio), awal) == [1, 1, 1, 0] and akar.rintangan().daftar[1].mobil.status == MobilGarasi.Status.TANDA, "maju 37,05: mobil 46 tanda lampu mundur, satu bip, dapat %s" % [_selisih(_hitung_bunyi_tanda(audio), awal)])
+	_langkah(akar, 80)
+	check(_selisih(_hitung_bunyi_tanda(audio), awal) == [1, 1, 1, 0] and akar.rintangan().daftar[1].mobil.status == MobilGarasi.Status.TANDA, "1,33 detik tanda: belum mundur, belum ada mesin (bip tetap satu)")
+	_langkah(akar, 20)
+	check(_selisih(_hitung_bunyi_tanda(audio), awal) == [1, 1, 1, 1] and akar.rintangan().daftar[1].mobil.status != MobilGarasi.Status.TANDA, "sesudah 1,5 detik tanda: mobil mundur, satu bunyi mesin, dapat %s" % [_selisih(_hitung_bunyi_tanda(audio), awal)])
+	check(akar.rintangan().tabrakan.jumlah == 0, "kontrol: sepeda di separuh dekat tidak bertabrakan")
+	_bersihkan(akar)
+
+
 # --- Jeda (AC-21) ---
 
 func _test_jeda_membekukan() -> void:
@@ -385,15 +474,28 @@ func _test_jeda_membekukan() -> void:
 	var akar: RuteMain = await _siapkan()
 	var tabrak: Array[String] = []
 	akar.tabrakan.connect(func(jenis: String) -> void: tabrak.append(jenis))
+	# Rangkaian 2 antaran sebelum tabrakan, supaya tabrakan memutus combo dan label PUTUS tampil (QA-003: tanpa rangkaian label tidak pernah
+	# tampil dan pemeriksaan bekunya hampa).
+	var skor: SkorRute.Keadaan = SkorRute.awal()
+	skor.beruntun = 2
+	akar.set(&"_skor", skor)
 	_taruh(akar, 3.0, -0.6, 30.0)
 	while tabrak.is_empty() and _sepeda(akar).jarak_ubin < 60.0:
 		akar.perbarui(DT)
 	akar.ketuk_bel()
 	_langkah(akar, 3)
+	# Satu umpan balik melayang (antaran kotak surat +15) sedang tampil saat jeda dimulai (QA-003: pewaktu umpan ikut dicuplik).
+	var hs: SkorRute.Hasil = SkorRute.Hasil.new()
+	hs.status = SkorRute.Status.ANTAR
+	hs.koin_tambah = 15
+	var umpan: Array[UmpanMelayang.Entri] = [UmpanMelayang.dari_hasil(hs, Vector2(-2.25, -38.0))]
+	akar.set(&"_umpan", umpan)
+	check(akar.putus_tampil() and akar.umpan_melayang().size() == 1 and is_equal_approx(akar.umpan_melayang()[0].sisa_detik, 0.8), "kontrol: label PUTUS dan satu umpan melayang (0,8 detik) tampil saat jeda dimulai")
 	var sebelum: Array = _cuplik(akar)
 	akar.minta_jeda()
 	_langkah(akar, 60)
-	check(akar.sedang_jeda() and _cuplik(akar) == sebelum, "60 langkah selama jeda: rintangan, oleng, kebal, bel, label PUTUS tidak berubah")
+	check(akar.sedang_jeda() and _cuplik(akar) == sebelum, "60 langkah selama jeda: rintangan, oleng, kebal, bel, sisa label PUTUS, umpan melayang tidak berubah")
+	check(akar.putus_tampil() and akar.umpan_melayang().size() == 1, "sesudah 1 detik jeda: label PUTUS dan umpan melayang masih tampil")
 	check(akar.ketuk_bel() == Bel.Bunyi.TOLAK and akar.bel().jumlah == 1, "bel tidak bisa dibunyikan saat jeda game")
 	akar.minta_lanjut()
 	_langkah(akar, 1)
@@ -409,7 +511,10 @@ func _cuplik(akar: AdeganJalan) -> Array:
 		hasil.append(RintanganRute.posisi(item))
 		hasil.append(item.anjing.status if item.anjing != null else item.mobil.status)
 	var t: Tabrakan.Keadaan = akar.rintangan().tabrakan
-	hasil.append_array([t.oleng_detik, t.kebal_detik, akar.bel().teks_detik, akar.bel().jeda_detik, akar.putus_tampil(), _sepeda(akar).jarak_ubin])
+	hasil.append_array([t.oleng_detik, t.kebal_detik, akar.bel().teks_detik, akar.bel().jeda_detik, akar.putus_tampil(), float(akar.get(&"_putus_detik")), _sepeda(akar).jarak_ubin])
+	hasil.append(akar.umpan_melayang().size())
+	for e: UmpanMelayang.Entri in akar.umpan_melayang():
+		hasil.append(e.sisa_detik)
 	return hasil
 
 
@@ -472,6 +577,55 @@ func _lempar_ke(akar: RuteMain, maju: float, id_rumah: String, bantu: bool, mend
 		if mendarat.size() > sebelum:
 			return mendarat[sebelum]
 	return null
+
+
+## Melempar koran biasa dari sepeda di `maju` (santai, lateral 0,5) ke titik jalan `titik_jalan` (x = lateral, y = maju) dengan lintasan
+## `ThrowSolver.hitung` yang dibidik ke titik itu (pencari kekuatan dan arah yang sama dengan mode bantu), sampai mendarat.
+func _lempar_ke_titik(akar: RuteMain, maju: float, titik_jalan: Vector2, mendarat: Array[KoranLempar.Koran]) -> KoranLempar.Koran:
+	_taruh(akar, 3.0, 0.5, maju)
+	akar.koran = SisaKoran.awal(30)
+	var sepeda: SepedaUji = _sepeda(akar)
+	var posisi: Vector2 = sepeda.posisi_dunia()
+	var jeda: float = sepeda.jeda_lepas(LoperAnim.Sisi.SEBERANG)
+	var lepas: Vector2 = ThrowSolver.titik_lepas(posisi, sepeda.kecepatan_ud, sepeda.lateral_ud, jeda)
+	var sasaran: Vector2 = Vector2(titik_jalan.x, -titik_jalan.y)
+	var u: float = BantuLempar.cari_kekuatan(sasaran, lepas, sepeda.kecepatan_ud)
+	if u < 0.0:
+		check(false, "pembantu tes: titik %s terjangkau dari maju %.1f" % [titik_jalan, maju])
+		return null
+	var lebar: float = float(LEBAR)
+	var lintasan: ThrowSolver.Lintasan = ThrowSolver.hitung(ThrowSolver.panjang_untuk_kekuatan(u, lebar), lebar, BantuLempar.arah_ke(sasaran, lepas, sepeda.kecepatan_ud, u), posisi, sepeda.kecepatan_ud, sepeda.lateral_ud, jeda)
+	var sebelum: int = mendarat.size()
+	akar.call(&"_lempar", lintasan, false)
+	for i: int in range(150):
+		_langkah(akar, 1)
+		if mendarat.size() > sebelum:
+			return mendarat[sebelum]
+	return null
+
+
+## QA-002 iterasi 1 (bagian tip): koran yang mendarat di teras rumah pemberi tip memutar denting tip lewat `Audio` dari scene (AC-19); teras
+## rumah bukan pemberi tip tidak. Rute seed bawaan 20261016 (literal dari data): per_buka_01@10 pelanggan bukan pemberi tip, teras lateral
+## -3,0..-2,5 x maju 10,0..11,25; per_buka_01@18 pelanggan pemberi tip, teras -3,0..-2,5 x 18,0..19,25.
+func _test_bunyi_tip_di_scene() -> void:
+	_judul.call("Scene rute: teras pemberi tip memutar denting tip lewat Audio, teras biasa tidak (AC-11, AC-19, QA-002)")
+	var akar: RuteMain = await _siapkan()
+	var audio: Node = _audio()
+	if audio == null:
+		check(false, "autoload Audio ada")
+		_bersihkan(akar)
+		return
+	check(not RouteBuilder.pemberi_tip(akar.rute(), "per_buka_01@10") and RouteBuilder.pemberi_tip(akar.rute(), "per_buka_01@18"), "kontrol: @10 bukan pemberi tip, @18 pemberi tip (seed bawaan)")
+	var mendarat: Array[KoranLempar.Koran] = []
+	akar.koran_mendarat.connect(func(k: KoranLempar.Koran) -> void: mendarat.append(k))
+	var tip_awal: int = int(audio.call(&"jumlah_bunyi_rute", BunyiRute.Bunyi.TIP))
+	var k1: KoranLempar.Koran = await _lempar_ke_titik(akar, 4.0, Vector2(-2.75, 10.5), mendarat)
+	check(k1 != null and k1.hasil == ZonaSasaran.Hasil.TERAS and k1.id_rumah == "per_buka_01@10" and akar.skor().koin == 15, "teras @10 (bukan pemberi tip): antaran teras, koin 15")
+	check(int(audio.call(&"jumlah_bunyi_rute", BunyiRute.Bunyi.TIP)) == tip_awal, "teras bukan pemberi tip: tidak ada denting tip")
+	var k2: KoranLempar.Koran = await _lempar_ke_titik(akar, 12.0, Vector2(-2.75, 18.5), mendarat)
+	check(k2 != null and k2.hasil == ZonaSasaran.Hasil.TERAS and k2.id_rumah == "per_buka_01@18" and akar.skor().koin == 35, "teras @18 (pemberi tip): antaran teras, koin 15 + 15 + tip 5 = 35")
+	check(int(audio.call(&"jumlah_bunyi_rute", BunyiRute.Bunyi.TIP)) == tip_awal + 1 and audio.call(&"bunyi_rute_terakhir") == "res://assets/audio/sfx/ui/sfx_ui_tip_01.wav", "teras pemberi tip: satu denting tip (sfx_ui_tip_01.wav) sesudah bunyi mendarat")
+	_bersihkan(akar)
 
 
 # --- Bel: input, visual (AC-14 sampai AC-17) ---
