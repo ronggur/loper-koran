@@ -566,3 +566,106 @@ Gerbang: `--import`; `run_tests.gd` 8296 lolos, 0 gagal (sebelumnya 8182); `cek_
 ### NEEDS-MANUAL
 
 - [ ] Uji HP (SETUP_ANDROID 8.6 butir 9): area terbaca, tidak mengganggu pandangan, kena terasa lebih mudah di tiga kecepatan; apakah 1,0 x 1,5 terlalu mudah atau pas (angka usulan). Bonus "inti" belum diputuskan.
+
+## Catatan QA tindak lanjut zona kotak surat
+
+Auditor: Agent 2 (QA, agen baru, konteks segar). Yang diaudit hanya `git diff 3f64bc8..HEAD` (commit `5e79ef0`, `d760503`, `f958bae`; HEAD `f958bae`) di `feat/fase3a-rute`, macOS, Godot 4.7.2. Semua perintah dijalankan sendiri. Kode produksi hanya dimutasi di klon bersih di scratchpad (`git status` repo kerja bersih sesudahnya selain tes QA dan tangkapan `shots/qa3`).
+
+### Verdict: PASS (0 Blocker, 0 Major, 2 Minor, 1 Nit; QA-010 ditutup dengan tes QA, QA-011 dan QA-012 DEFERRED)
+
+### Gerbang objektif (dijalankan QA)
+
+| Perintah | Hasil |
+|---|---|
+| `godot --headless --import` (repo kerja dan klon bersih `git clone -b feat/fase3a-rute` di scratchpad) | bersih |
+| `godot --headless --script res://tests/run_tests.gd 2>&1 \| tee build/qa_tests.log` | **8296 lolos, 0 gagal** (repo kerja dan klon bersih sama), 0 baris `SCRIPT ERROR`/`ERROR:`/`WARNING:` |
+| `tools/cek_keluaran_tes.py` dan `--ketat` | lolos (8296 lolos, 0 gagal, 0 peringatan), kode keluar 0, repo kerja dan klon |
+| `godot --headless --path . --quit-after 2` | 0 baris ERROR/WARNING (repo dan klon). Catatan: impor mencetak `cannot connect to daemon at tcp:5037` (plugin ekspor Android mencari adb); tidak ada HP atau adb yang disentuh |
+| `uji_pemeriksa.py` / `uji_bangun_frames.py` / `uji_sintesis_sepeda.py` / `uji_sintesis_lempar.py` | 16 kasus 0 menyimpang / 41 lolos / 32 lolos / 111 lolos |
+| `godot --headless --path . --export-pack "Android" build/qa3-uji.pck` | 738.016 byte; 9 `per_*.json` di `assets/data/routes/perumahan/`; 0 `res://tests`, `res://docs`, keystore, apk; `area_kotak_gambar.gd` ikut |
+| Kebersihan diff | `scripts/systems/*` (ThrowSolver, BantuLempar, ZonaSasaran), aset PNG, `DEV_PHASES.md`, ROADMAP, `project.godot` tidak berubah; tidak ada kata "dikunci" baru (hanya penyangkalan "bukan keputusan terkunci"); tidak ada keputusan ROADMAP 5 yang diputuskan; `.uid` berkas baru hadir; 3 commit berformat `tune/feat/docs:` berbahasa Indonesia, tidak ada commit di `main`, tidak ada secret, `.godot/`, `build/`, APK |
+
+Setelah tes QA ditambahkan (lihat di bawah): `run_tests.gd` **8298 lolos, 0 gagal**, `cek_keluaran_tes.py` dan `--ketat` lolos.
+
+### Regresi dan independensi tes
+
+- Jumlah tes naik 8182 -> 8296 (+114 check); `git diff` tidak menghapus atau melewati satu pun `check`; yang diganti hanya literal lama (`tes_rute.gd`, `tes_lempar.gd`) menjadi literal baru, komentar `tes_bantu_scene.gd` dan `tes_rute_scene.gd`.
+- Tes baru (`_test_kotak_surat_area`, `_test_area_kotak_gambar`, `_test_area_kotak_digambar`) menulis angka eksplisit (-2,125; 0,375; 1,0; 1,5; pusat -1,625 dan 1,625; proyeksi iso 32 dan 16 ditulis ulang). Tidak ada pemanggilan `Config.JALAN_UJI_*_KOTAK_SURAT_UBIN` di tes baru; fungsi yang dites dipanggil hanya sebagai SUT, oracle ditulis terpisah. Satu celah: nilai mutlak `AREA_KOTAK_ISI_ALPHA` dan `AREA_KOTAK_TEPI_ALPHA` tidak dipatok (QA-010).
+
+### Dampak desain (diperiksa, bukan diasumsikan)
+
+| Butir | Cara | Hasil |
+|---|---|---|
+| (a) zona tidak bertumpuk dan terjangkau | `_test_keterjangkauan` (lama, tidak diubah) dibaca dan dijalankan: tiap zona kavling 0 dan bukan-pelanggan, tiga kecepatan; tes baru `not kotak_s.intersects(kotak_d)`; skrip QA `scan.gd` (scratchpad) pada 200 seed rute (5000 rumah pelanggan seberang): 0 tumpang tindih kotak surat dengan kotak/teras/jendela/halaman rumah LAIN, 0 zona menyeberang sisi | Hijau. Catatan: pusat zona tidak berubah, jadi keterjangkauan tes lama tidak menguji tepi baru; pusat tetap terjangkau, tepi tidak perlu terjangkau (area boleh lebih besar dari himpunan yang bisa dicapai) |
+| (b) 0,125 ubin halaman tertimpa | tes literal Dev di kedua sisi (-2,05, -2,124, -2,126, 2,1, 2,125, daftar dibalik) dibaca; mutan Q05/Q06 (prioritas dibalik penuh dan sebagian) | Titik di strip dinilai KOTAK_SURAT, di luar strip HALAMAN; mutan mati (41 dan 39) |
+| (c) tidak jadi bisa dicapai dari titik tertutup | `scan.gd`: 4.532.352 titik sampel (grid 0,0625 ubin, tinggi 0) di dalam area kotak surat seberang pelanggan pada 200 seed lewat `MedanKoran.tertutup_titik` | 0 titik tertutup. Sisi dekat: 66% area baru tertutup rumah dekat (84% pada inti 0,5 x 0,5 lama), tidak ada rumah dekat pelanggan di perumahan (0 dari seed 1..50), jadi tidak ada dampak skor; hasilnya BUKAN_PELANGGAN sama dengan MELESET untuk bunyi dan penanda |
+| (d) `jalan_uji.tscn` | `probe_koran_jendela.gd` dijalankan ke scratchpad (bukan repo) dan dua tangkapan dilihat: `kena_kanan_kotak_surat_dekat` dan `kena_atas_kotak_surat_seberang`. Kubus graybox seberang (pijak -1,5; 1,0) berada di dalam zona [-2,125..-1,125] x [0,375..1,875] | Benar. Kotak dekat ACCENT lebih besar, penanda centang tampil. Garis tepi halaman dekat menyilang isi kotak (QA-012) |
+
+### Mutan QA (30 penggantian teks, di empat klon bersih, `run_tests.gd` penuh per mutan; semua klon dikembalikan)
+
+Mati = jumlah `GAGAL:` baru. Daftar berbeda dari 16 mutan Dev.
+
+| # | Mutasi | Hasil |
+|---|---|---|
+| Q01 | seberang saja kembali 0,5 x 0,5 | mati (23) |
+| Q02 | dekat saja kembali 0,5 x 0,5 | mati (5) |
+| Q03 | seberang pusat maju +0,125 | mati (43) |
+| Q04 | dekat pusat lateral +0,125 | mati (7) |
+| Q05 | prioritas dibalik penuh | mati (41) |
+| Q06 | halaman menang atas kotak surat saja | mati (39) |
+| Q07 | area untuk rumah seberang bukan pelanggan | mati (29) |
+| Q08 | area untuk rumah dekat pelanggan | mati (4) |
+| Q09 | area dihitung untuk seluruh rute (luar jendela daur) | mati (11) |
+| Q10 | area dobel (isi dua kali) | mati (16) |
+| Q11 | alfa tepi 0 | mati (1) |
+| Q12 | alfa isi 1,0 | mati (1) |
+| Q13 | `memuat`: tepi maks inklusif | mati (9) |
+| Q14 | `memuat`: tepi min eksklusif | mati (6) |
+| Q15 | halaman seberang membesar | mati (1) |
+| Q16 | teras seberang membesar | mati (8) |
+| Q17 | jendela seberang membesar | mati (2) |
+| Q18 | mode bantu membidik titik 0,25 dari sudut (juga kena pemindai literal) | mati (15) |
+| Q18b | mode bantu membidik pojok maks zona | mati (76) |
+| Q19 | kandidat bantu memakai tepi maks maju | mati (19) |
+| Q20 | penggambar memakai geometri dekat (cermin) | mati (8) |
+| Q21 | tanpa garis tepi | mati (17) |
+| Q22 | garis tepi memakai `TEXT`, bukan `OUTLINE` | mati (1) |
+| Q23 | area untuk jenis zona selain kotak surat | mati (16) |
+| Q24a | `AreaKotak` di `rute.tscn` sesudah `Objek` | mati (1) |
+| Q24b | `AreaKotak` di bawah `Tanah` | mati (1) |
+| Q25 | dekat 1,0 x 1,0 | mati (7) |
+| Q26 | seberang melebar ke aspal (lateral 1,2) | mati (26) |
+| Q27 | `RuteMain` tidak memanggil `perbarui` area | mati (15) |
+| Q28 | `AREA_KOTAK_ISI_ALPHA` 0,85 (menutup tanah) | **SELAMAT** -> QA-010, kini mati (1) dengan tes QA |
+| Q29 | `AREA_KOTAK_TEPI_ALPHA` 0,3 (tidak tegas) | **SELAMAT** -> QA-010, kini mati (1) |
+| Q30 | `AREA_KOTAK_ISI_ALPHA` 0,01 (area nyaris tak terlihat) | **SELAMAT** -> QA-010, kini mati (1) |
+
+Skrip: `qa3/mutan.py`, `qa3/mutan2.py`, `qa3/scan.gd`, `qa3/scan2.gd` di scratchpad (tidak di-commit).
+
+### Temuan
+
+| ID | Severity | Lokasi | Deskripsi | Status |
+|---|---|---|---|---|
+| QA-010 | Minor | `tests/tes_rute.gd:_test_area_kotak_gambar`, `scripts/config.gd` `AREA_KOTAK_*_ALPHA` | Tes hanya memeriksa urutan alfa (isi > 0 dan < tepi), bukan nilai. Mutan Q28 (isi 0,85 menutup trotoar), Q29 (tepi 0,3), Q30 (isi 0,01, area hampir tak terlihat) selamat dengan 8296 lolos. Keterbacaan area adalah inti permintaan pemilik. | **FIXED oleh QA**: dua `check` pita (isi 0,15 sampai 0,5, tepi 0,7 sampai 1,0); Q28 sampai Q30 kini mati (1 gagal masing-masing); 8298 lolos |
+| QA-011 | Minor | `docs/SETUP_ANDROID.md` 8.6 butir 3 dan 4 | Dua butir masih menyebut sasaran hanya "kubus oranye" dan butir 4 berbunyi "sasarannya hanya kubus oranye placeholder", padahal APK yang sama kini menggambar area. Butir 9 meminta "bandingkan dengan butir 3 (zona kecil)", tetapi butir 3 akan dijalankan pada build dengan zona besar, jadi pembanding "zona kecil" hanya ingatan pemilik. Tidak menghalangi uji; pemilik bisa tersesat memberi nilai. | DEFERRED (sunting butir 3 dan 4: sebut area; butir 9: "dibanding kesan sebelum perubahan") |
+| QA-012 | Nit | `scripts/entities/zona_gambar.gd` (jalan uji dev) | Garis tepi halaman dekat (lateral 2,0) digambar sesudah isi kotak surat dekat yang kini 1,0 x 1,5, jadi menyilang isi ACCENT (terlihat di tangkapan jalan uji). Hanya scene dev, tidak memengaruhi penilaian. | DEFERRED |
+
+Catatan non-temuan: klaim "toleransi jari sekitar +-3 mm" di BALANCING 5 dan `config.gd` adalah estimasi Dev; dihitung ulang QA dari `LEMPAR_SWIPE_*` (6% sampai 35% dari 780 px game untuk 3,5 ubin, sekitar 65 px game per ubin, sekitar 4,9 px game per mm pada layar 2340 px selebar ±158 mm) memberi ±3 mm untuk 0,25 ubin, jadi masuk akal, tetapi tetap perlu dinilai di HP (SETUP_ANDROID 8.6 butir 9).
+
+### Validasi visual
+
+`godot --path . --resolution 2340x1080 --position 0,0 --script res://tests/probe_rute_jendela.gd -- docs/loop/20261016-fase3a-rute/shots/qa3` dijalankan: "probe selesai, 0 keadaan tidak sesuai", tanpa ERROR/WARNING. Tangkapan lain dihapus; yang disimpan dan DILIHAT sendiri: `shots/qa3/2340x1080_rute_tengah.png` dan `shots/qa3/2340x1080_rute_bantu_centang.png` (plus potongan diperbesar area di scratchpad).
+
+- Area terlihat sebagai belah ketupat oranye tipis di trotoar dengan sedikit rumput, kubus oranye di tengah; tidak menutupi sepeda, HUD, atau penanda centang (centang di kubus tetap terbaca di `bantu_centang`).
+- Tidak bergantung pada warna isi: ada garis tepi gelap (`OUTLINE`) bertangga 1 piksel game, terbaca sebagai garis putus-putus rapat; masih terbaca di x3, tetapi tipis. Bukan temuan, disarankan dinilai di HP.
+- Rumah bukan pelanggan (abu-abu) dan semua rumah dekat (kanan bawah) tanpa area. Sprite rumah tidak punya kotak merah ganda.
+
+### Kepatuhan
+
+- Static typing lengkap di `area_kotak_gambar.gd` (sama pola `ZonaGambar`; `_perintah: Array` tak bertipe elemen, selaras kode lama); komentar `##` berbahasa Indonesia; tidak ada angka ajaib baru (pemindai literal runner hijau, dua konstanta di `config.gd` satu baris literal); warna dari token `Palette` (`ACCENT`, `OUTLINE`), tanpa hex di skrip atau scene; tidak ada `kiri`/`kanan` pada baris tambahan; teks pemain tidak berubah.
+- Dokumen sinkron dengan `config.gd`: BALANCING 5 (tabel dan catatan), DATA_SCHEMA 3 (p + 0,375 sampai p + 1,875, pusat p + 1,125), SETUP_ANDROID 8.6 butir 9 dan lembar hasil, LOOP-DEV-QA 6d (catatan Run 3B), LOG D-28 sampai D-32. Sisa: QA-011.
+- Mutan Dev (16) terverifikasi mati lewat 27 mutan QA yang berbeda; tidak ada klaim Dev yang bertentangan dengan hasil jalankan QA.
+
+### NEEDS-MANUAL
+
+Tidak berubah dari catatan Dev: SETUP_ANDROID 8.6 butir 9 (area terbaca, tidak mengganggu, kena santai/cepat/ngebut, terlalu mudah atau pas) di HP; ukuran 1,0 x 1,5 tetap usulan. QA tidak menyentuh HP atau adb. Fase 3 dan `DEV_PHASES.md` tidak boleh dicentang untuk butir yang bergantung pada uji HP.

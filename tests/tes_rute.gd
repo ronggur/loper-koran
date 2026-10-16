@@ -1059,6 +1059,10 @@ func _test_area_kotak_gambar() -> void:
 		check(Color(warna_isi, 1.0) == Palette.ACCENT and Color(warna_tepi, 1.0) == Palette.OUTLINE, "warna dari token Palette: isi ACCENT, garis tepi OUTLINE")
 		check(warna_isi.a > 0.0 and warna_isi.a < warna_tepi.a and warna_tepi.a <= 1.0, "isi tipis (alfa %.2f > 0) dan garis tepi lebih tegas (alfa %.2f)" % [warna_isi.a, warna_tepi.a])
 		check(perintah[0][1] == Vector2.ZERO and perintah[1][1] == Vector2.ZERO, "perintah tanpa geseran (koordinat dunia mutlak)")
+	# QA-010 (QA tindak lanjut zona kotak surat): nilai mutlak alfa dijaga, bukan hanya urutannya. Isi tipis tapi terlihat (tanah di bawahnya
+	# tetap terbaca), garis tepi tegas. Pita lebar supaya penyetelan di HP tetap bebas; di luar pita area tak terlihat atau menutup tanah.
+	check(Config.AREA_KOTAK_ISI_ALPHA >= 0.15 and Config.AREA_KOTAK_ISI_ALPHA <= 0.5, "alfa isi area kotak surat di pita 0,15 sampai 0,5 (tipis tapi terlihat), dapat %.2f" % Config.AREA_KOTAK_ISI_ALPHA)
+	check(Config.AREA_KOTAK_TEPI_ALPHA >= 0.7 and Config.AREA_KOTAK_TEPI_ALPHA <= 1.0, "alfa garis tepi area kotak surat di pita 0,7 sampai 1,0 (tegas), dapat %.2f" % Config.AREA_KOTAK_TEPI_ALPHA)
 	# Rentang: hanya rumah yang indeksnya di rentang dan pelanggan seberang menghasilkan area, dua perintah per area, urut.
 	var daftar: Array[RouteBuilder.RumahRute] = [pelanggan, bukan, dekat, tanpa_sisi, _rumah_uji("a@66", 66.0, LoperAnim.Sisi.SEBERANG, true)]
 	check(AreaKotakGambar.perintah_rentang(daftar, Vector2i(0, 5)).size() == 4, "rentang semua: 2 rumah pelanggan seberang = 4 perintah")
