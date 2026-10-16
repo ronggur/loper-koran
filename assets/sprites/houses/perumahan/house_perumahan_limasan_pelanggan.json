@@ -1,12 +1,12 @@
 {
  "sprite": "house_perumahan_limasan_pelanggan.png",
  "size": [
-  270,
-  212
+  262,
+  208
  ],
  "ground_anchor": [
   105,
   127
  ],
- "note": "Usulan, tools/env_art/fase3.py. Rumah sisi seberang, fasad menghadap jalan (kanan bawah). Titik pijak = tengah tapak. Termasuk teras, semak, pot, kotak surat (pelanggan), antena."
+ "note": "Usulan, tools/env_art/fase3.py. Rumah sisi seberang, fasad menghadap jalan (kanan bawah). Titik pijak = tengah tapak. Termasuk teras, semak, pot, antena; TANPA kotak surat (kotak surat sasaran digambar scene di pusat zona kotak surat, run 3A QA-005)."
 }
