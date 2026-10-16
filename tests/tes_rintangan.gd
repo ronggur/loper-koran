@@ -44,6 +44,8 @@ func jalankan() -> void:
 	_test_tabrakan_aturan()
 	_test_oleng_di_bike_motion()
 	_test_rintangan_langkah_tabrak()
+	_test_anjing_berhenti_berbahaya()
+	_test_peristiwa_lompatan_diam_mengejar()
 	_test_tanda_literal()
 	_test_tanda_invarian()
 	_test_ngebut_santai_punya_harga()
@@ -449,6 +451,51 @@ func _test_rintangan_langkah_tabrak() -> void:
 	check(r.tabrakan.jumlah == 1, "satu anjing = satu tabrakan sepanjang lintasan (tanpa ganda)")
 	var beku: RintanganRute.Hasil = RintanganRute.langkah(r, sepeda + 5.0, -2.0, 3.0, 0.0)
 	check(beku.kejadian.is_empty() and not beku.tabrak and beku.keadaan.daftar[0].anjing.status == r.daftar[0].anjing.status, "dt 0: rintangan dan tabrakan membeku (AC-21)")
+
+
+## QA-004 iterasi 1: anjing `BERHENTI` di batas halamannya tetap berbahaya (D-2, BALANCING 6c). Kasus nyata: sepeda berhenti tepat di depan
+## batas halaman di sisi dekat, anjing berhenti di jalur separuh jalannya, lalu sepeda menyamping ke anjing yang berdiri itu.
+func _test_anjing_berhenti_berbahaya() -> void:
+	_judul.call("Anjing BERHENTI di batas halaman berbahaya: sepeda yang menyamping ke sana tertabrak (D-2, QA-004)")
+	var mengejar: AnjingPenjaga.Keadaan = AnjingPenjaga.langkah(AnjingPenjaga.baru(20.0, LoperAnim.Sisi.SEBERANG, 9.0), 21.0, -1.0, 3.0, 0.1)
+	var berhenti: AnjingPenjaga.Keadaan = AnjingPenjaga.kena_tabrak(mengejar)
+	check(berhenti.status == AnjingPenjaga.Status.BERHENTI and AnjingPenjaga.berbahaya(berhenti), "anjing BERHENTI: berbahaya")
+	var pulang: AnjingPenjaga.Keadaan = berhenti.salin()
+	pulang.status = AnjingPenjaga.Status.PULANG
+	var mundur: AnjingPenjaga.Keadaan = AnjingPenjaga.dengar_bel(mengejar)
+	check(not AnjingPenjaga.berbahaya(pulang) and mundur.status == AnjingPenjaga.Status.MUNDUR and not AnjingPenjaga.berbahaya(mundur), "anjing PULANG dan MUNDUR: tidak berbahaya")
+	# Sepeda diam di maju 23,5 lateral +1,0 (separuh dekat), dt 0,125 (pas di float): anjing seberang di 20 langsung mengejar dengan laju bawah
+	# 2,0 u/d (sepeda berkecepatan 0), 0,25 ubin per langkah; menyamping 2,0 u/d ke -0,25 (tepi bentuk di garis tengah) dalam 10 langkah dan
+	# berhenti di batas maju 20 + 3 = 23 pada langkah 12 (1,5 detik).
+	var r: RintanganRute.Keadaan = _satu("anjing_penjaga", 20.0, "seberang")
+	var tabrak_sebelum: bool = false
+	var langkah_berhenti: int = -1
+	for i: int in range(1, 31):
+		var h: RintanganRute.Hasil = RintanganRute.langkah(r, 23.5, 1.0, 0.0, 0.125)
+		r = h.keadaan
+		tabrak_sebelum = tabrak_sebelum or h.tabrak
+		if r.daftar[0].anjing.status == AnjingPenjaga.Status.BERHENTI:
+			langkah_berhenti = i
+			break
+	var anjing: AnjingPenjaga.Keadaan = r.daftar[0].anjing
+	check(langkah_berhenti == 12 and is_equal_approx(anjing.maju_ubin, 23.0) and is_equal_approx(anjing.lateral_ubin, -0.25) and not tabrak_sebelum, "anjing berhenti di batas halaman (-0,25; 23,0) di langkah 12 (3,0 ubin / 0,25 per langkah), sepeda di sisi dekat tidak tertabrak (dapat langkah %d)" % langkah_berhenti)
+	# Sepeda menyamping ke (-0,25; 23,0) selama anjing masih berhenti (0,125 < 0,8 detik): bentuk sepeda -0,5..0 x 22,6..23,4 beririsan
+	# dengan bentuk anjing -0,5..0 x 22,75..23,25.
+	var hb: RintanganRute.Hasil = RintanganRute.langkah(r, 23.0, -0.25, 0.0, 0.125)
+	check(hb.keadaan.daftar[0].anjing.status == AnjingPenjaga.Status.BERHENTI and hb.tabrak and hb.jenis_tabrak == "anjing_penjaga" and hb.id_tabrak == 0, "sepeda menyamping ke anjing yang berhenti di jalurnya: tabrakan dengan anjing_penjaga")
+
+
+## QA-006 iterasi 1: lompatan DIAM -> MENGEJAR dalam satu langkah (dt besar sesudah lag, atau sepeda masuk jarak tanda dan titik rumah sekaligus)
+## tetap memancarkan peristiwa waspada (geram) sebelum mengejar (gonggong), jadi bunyi tanda tidak hilang.
+func _test_peristiwa_lompatan_diam_mengejar() -> void:
+	_judul.call("Lompatan DIAM -> MENGEJAR dalam satu langkah: peristiwa waspada lalu mengejar (QA-006)")
+	for maju: float in [20.0, 25.0]:
+		var r: RintanganRute.Keadaan = _satu("anjing_penjaga", 20.0, "seberang")
+		var h: RintanganRute.Hasil = RintanganRute.langkah(r, maju, 1.0, 3.0, 0.1)
+		var peristiwa: Array[RintanganRute.Peristiwa] = []
+		for kj: RintanganRute.Kejadian in h.kejadian:
+			peristiwa.append(kj.peristiwa)
+		check(r.daftar[0].anjing.status == AnjingPenjaga.Status.DIAM and h.keadaan.daftar[0].anjing.status == AnjingPenjaga.Status.MENGEJAR and peristiwa == [RintanganRute.Peristiwa.ANJING_WASPADA, RintanganRute.Peristiwa.ANJING_MENGEJAR], "anjing DIAM di 20, sepeda langsung di maju %.1f: MENGEJAR dengan peristiwa [waspada, mengejar], dapat %s" % [maju, peristiwa])
 
 
 # --- Tanda sebelum bahaya (AC-3) ---

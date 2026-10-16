@@ -31,6 +31,7 @@ func jalankan() -> void:
 	_test_pengali_kecepatan()
 	_test_skor_literal()
 	_test_urutan_nilai()
+	_test_tip_hanya_teras_dan_tepat_hanya_kotak_surat()
 	_test_putus_combo_dan_combo_maks()
 	_test_koin_tidak_berkurang()
 	_test_inti_tepat_literal()
@@ -152,6 +153,26 @@ func _test_urutan_nilai() -> void:
 	check(h.status == SkorRute.Status.ULANG, "12. rumah a sudah terantar tetap ULANG sampai rute baru")
 	k = h.keadaan
 	check(k.skor == 645 and k.koin == 95 and k.jumlah_antar == 6 and k.jumlah_tepat == 1 and k.jumlah_tip == 1, "total: skor 100 + 110 + 72 + 163 + 100 + 100 = 645, koin 15 + 20 + 15 + 15 + 15 + 15 = 95, 6 antaran, 1 tepat, 1 tip (dapat skor %d koin %d)" % [k.skor, k.koin])
+
+
+## QA-005 dan QA-010 iterasi 1: tip hanya dari teras pemberi tip (K-2, O-3), juga bukan dari jendela dengan sakelar bonus; `tepat` di `nilai`
+## hanya untuk kotak surat walau masukan `tepat` true (penjagaan di `nilai`, bukan hanya di `skor_antaran`).
+func _test_tip_hanya_teras_dan_tepat_hanya_kotak_surat() -> void:
+	_judul.call("Tip hanya teras pemberi tip, juga bukan jendela bonus; tepat hanya kotak surat (K-2, K-4, O-3; QA-005, QA-010)")
+	# [hasil, jendela bonus, tip harapan, koin harapan, penanda harapan]; semua ke rumah pemberi tip, santai, combo x1,0.
+	var tabel: Array = [
+		[ZonaSasaran.Hasil.TERAS, false, 5, 20, ZonaSasaran.Penanda.CENTANG],
+		[ZonaSasaran.Hasil.KOTAK_SURAT, false, 0, 15, ZonaSasaran.Penanda.CENTANG],
+		[ZonaSasaran.Hasil.HALAMAN, false, 0, 15, ZonaSasaran.Penanda.SETENGAH],
+		[ZonaSasaran.Hasil.JENDELA, true, 0, 15, ZonaSasaran.Penanda.BINTANG],
+	]
+	for t: Array in tabel:
+		var h: SkorRute.Hasil = SkorRute.nilai(SkorRute.awal(), t[0], "tip@10", false, 3.0, true, t[1])
+		check(h.status == SkorRute.Status.ANTAR and h.tip == t[2] and h.koin_tambah == t[3] and h.keadaan.jumlah_tip == (1 if t[2] > 0 else 0) and h.penanda == t[4], "%s (jendela bonus %s) ke pemberi tip: tip %d, koin %d (dapat tip %d, koin %d)" % [ZonaSasaran.Hasil.keys()[t[0]], t[1], t[2], t[3], h.tip, h.koin_tambah])
+	var teras: SkorRute.Hasil = SkorRute.nilai(SkorRute.awal(), ZonaSasaran.Hasil.TERAS, "t@6", true, 3.0, false, false)
+	check(not teras.tepat and teras.penanda == ZonaSasaran.Penanda.CENTANG and teras.skor_tambah == 100 and teras.keadaan.jumlah_tepat == 0, "teras dengan masukan tepat true: bukan tepat, centang, skor 100, jumlah tepat 0")
+	var halaman: SkorRute.Hasil = SkorRute.nilai(SkorRute.awal(), ZonaSasaran.Hasil.HALAMAN, "h@6", true, 3.0, false, false)
+	check(not halaman.tepat and halaman.penanda == ZonaSasaran.Penanda.SETENGAH and halaman.skor_tambah == 50 and halaman.keadaan.jumlah_tepat == 0, "halaman dengan masukan tepat true: bukan tepat, setengah, skor 50")
 
 
 func _test_putus_combo_dan_combo_maks() -> void:
