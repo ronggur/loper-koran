@@ -1,5 +1,5 @@
 extends SceneTree
-## Probe umpan balik dan penyetelan run fase1b-umpan-balik di jendela asli, non-headless (AC-9): memuat scene utama, menggerakkan
+## Probe umpan balik dan penyetelan run fase1b-umpan-balik di jendela asli, non-headless (AC-9): memuat `scenes/dev/jalan_uji.tscn` (scene utama sejak run fase3a-rute = rute.tscn), menggerakkan
 ## stick lewat event sentuh sintetis (piksel jendela), memajukan simulasi dan partikel dengan langkah tetap `perbarui(1/60)` dan
 ## `PancaranPiksel.maju(1/60)` (bukan waktu dinding), lalu menyimpan tangkapan layar: santai (debu tipis, tanpa garis), ngebut
 ## (garis + debu, dorongan maju penuh), pindah sisi sambil ngebut (run fase1c-perapian, D-5: jejak debu tertinggal di sisi lama karena
@@ -31,7 +31,7 @@ var _garis: PancaranPiksel
 func _initialize() -> void:
 	var argumen: PackedStringArray = OS.get_cmdline_user_args()
 	_folder = argumen[0] if argumen.size() > 0 else ""
-	var paket: PackedScene = load(str(ProjectSettings.get_setting("application/run/main_scene"))) as PackedScene
+	var paket: PackedScene = load("res://scenes/dev/jalan_uji.tscn") as PackedScene
 	if paket == null:
 		push_error("scene utama tidak bisa dimuat")
 		await ProbeKeluar.keluar(self, 1)

@@ -779,13 +779,14 @@ def ekspor_sprite():
         for pel in (True, False):
             def b(s, kind=kind, wall=wall, roof=roof, pel=pel, antk=antk):
                 st = len(s.prims)
-                house_far_v(s, 0, wall, roof, seed=3, kind=kind, pelanggan=pel, antena_kind=antk)
+                house_far_v(s, 0, wall, roof, seed=3, kind=kind, pelanggan=pel, kotak=False, antena_kind=antk)
                 shift_prims(s.prims[st:], -(PR.FX0 + PR.FX1) / 2, 0)
                 _no_cast_antena(s, st)
             a, o, _, _ = render_sprite(b, pad=4, extra_px=(40, 20))
             _single(a, o, 'house_perumahan_%s_%s' % (kind, 'pelanggan' if pel else 'bukan'),
                     'Usulan, tools/env_art/fase3.py. Rumah sisi seberang, fasad menghadap jalan (kanan bawah). '
-                    'Titik pijak = tengah tapak. Termasuk teras, semak, pot, kotak surat (pelanggan), antena.')
+                    'Titik pijak = tengah tapak. Termasuk teras, semak, pot, antena; TANPA kotak surat (kotak surat sasaran '
+                    'digambar scene di pusat zona kotak surat, run 3A QA-005).')
     for nm, seed, wall, roof, bel, antk in RUMAH_DEKAT:
         for pel in (True, False):
             def b(s, seed=seed, wall=wall, roof=roof, bel=bel, antk=antk, pel=pel):

@@ -1,5 +1,5 @@
 extends SceneTree
-## Probe dorongan kecepatan di jendela asli, non-headless (GDD 15): memuat scene utama, menahan stick lewat event sentuh
+## Probe dorongan kecepatan di jendela asli, non-headless (GDD 15): memuat `scenes/dev/jalan_uji.tscn` (scene utama sejak run fase3a-rute = rute.tscn), menahan stick lewat event sentuh
 ## sintetis (piksel jendela, seperti dari perangkat) sampai kecepatan mantap di tiga keadaan, mencetak posisi sepeda di layar
 ## (koordinat viewport game), dan menyimpan tangkapan layar tiap keadaan. Tidak interaktif: keluar sendiri.
 ##
@@ -23,7 +23,7 @@ var _dasar: Vector2 = Vector2.ZERO
 func _initialize() -> void:
 	var argumen: PackedStringArray = OS.get_cmdline_user_args()
 	_folder = argumen[0] if argumen.size() > 0 else ""
-	var paket: PackedScene = load(str(ProjectSettings.get_setting("application/run/main_scene"))) as PackedScene
+	var paket: PackedScene = load("res://scenes/dev/jalan_uji.tscn") as PackedScene
 	if paket == null:
 		push_error("scene utama tidak bisa dimuat")
 		await ProbeKeluar.keluar(self, 1)

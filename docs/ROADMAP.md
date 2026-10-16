@@ -1,6 +1,6 @@
 # Roadmap — Loper Koran
 
-Status per **14 Oktober 2026**. Dokumen ini mencatat kesiapan sebelum produksi, milestone sampai rilis, dan keputusan yang masih terbuka. Rincian kerja per fase ada di [`DEV_PHASES.md`](./DEV_PHASES.md).
+Status per **16 Oktober 2026** (Fase 3 run 3A: rute perumahan dari segmen, usulan, menunggu uji HP; Fase 2 dan M1 masih menunggu uji HP). Dokumen ini mencatat kesiapan sebelum produksi, milestone sampai rilis, dan keputusan yang masih terbuka. Rincian kerja per fase ada di [`DEV_PHASES.md`](./DEV_PHASES.md).
 
 Status: ⬜ belum mulai · 🟡 sedang dikerjakan · ✅ selesai
 
@@ -13,7 +13,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · ✅ selesai
 | 3 | Sprite produksi pemain | ✅ 15 animasi kayuh (3 kecepatan × 5 arah), SpriteFrames Godot dicek memuat di Godot 4.3 (2026-10-07) dan di 4.7.2 tanpa perubahan (2026-10-09, run 0A). | `design/character/loper_agen/` |
 | 4 | Art bible: aturan pixel art, palet, ukuran, penamaan | 🟡 Ditulis 2026-10-07. Palet induk masih usulan sampai aset gelombang 1; ukuran ubin 64×32 dikunci 2026-10-14 (4b). | `ART_DIRECTION.md` |
 | 5 | Angka tuning awal | 🟡 Usulan awal ditulis 2026-10-07, disetel lewat prototype. | `BALANCING.md` |
-| 6 | Format data (misi, headline, segmen rute, save) | 🟡 Usulan ditulis 2026-10-07, dikunci saat Fase 3–4. | `DATA_SCHEMA.md` |
+| 6 | Format data (misi, headline, segmen rute, save) | 🟡 Usulan ditulis 2026-10-07, dikunci saat Fase 3–4. Segmen rute: JSON buatan tangan, diterapkan di run 3A (2026-10-16), masih usulan sampai uji HP. | `DATA_SCHEMA.md` |
 | 7 | Project Godot, export Android, panduan setup HP | ✅ Project Godot (run 0A), input touch dan sepeda placeholder (run 0B), preset export + APK debug + panduan `SETUP_ANDROID.md` (run 0C) lolos QA 2026-10-09; uji HP di A54 lolos 2026-10-13 (Fase 0 dan M0 selesai). Cek light 2D/glow/partikel pindah ke Fase 1. | `DEV_PHASES.md` Fase 0, `SETUP_ANDROID.md` |
 
 ## 2. Sebelum game penuh
@@ -71,6 +71,7 @@ Skala dipilih Ronggur; sisanya didelegasikan ke agent dengan alasan tertulis. Bi
 | Ketelitian swipe pendek (ambang rem: lolos uji HP pemilik 2026-10-14, angka ≥90% ditahan 0,25 detik dipakai) | M1, Fase 2 (diputuskan lewat uji HP) |
 | Jendela kena koran: bonus atau penalti (GDD 4.1). Bawaan prototype Run 2A: **penalti ringan** (antaran tidak sah, tanpa potong koin) lewat sakelar di `scripts/config.gd`, nilai bonus tetap tersedia (pemilik 2026-10-14); keputusan akhir tetap terbuka | Fase 2–3 (skor) |
 | Cara menampilkan rumah di sisi dekat | Fase 3 (rute), aset rumah |
+| Pemetaan pelanggan tetap (id rumah di save, mis. `per_r014`) ke rute yang diacak. Format segmen **diputuskan JSON buatan tangan** (pemilik 2026-10-16, run 3A, `DATA_SCHEMA` 3 dan 5); run 3A memakai id rute `<id_segmen>@<pos>` dan tidak menulis save | Fase 6 (save dan hari) |
 | Struktur sesi: hari berurutan atau run roguelite | M2 |
 | Game over atau tidak, target harian atau tidak (GDD 3.2) | M2 |
 | Cerita besar dan akhirnya | M3 |

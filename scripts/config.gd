@@ -178,6 +178,10 @@ const GARIS_BIDIK_SAMPEL: int = 96
 const GARIS_BIDIK_TERTUTUP_ALPHA: float = 0.5
 ## Alpha garis tepi halaman dan isi zona placeholder di jalan uji.
 const ZONA_GARIS_ALPHA: float = 0.7
+## Alpha isi area kotak surat rumah pelanggan seberang di scene rute (`AreaKotakGambar`): tipis supaya aspal dan trotoar tetap terbaca.
+const AREA_KOTAK_ISI_ALPHA: float = 0.28
+## Alpha garis tepi area kotak surat di scene rute: tegas (bentuk terbaca tanpa bergantung warna isi).
+const AREA_KOTAK_TEPI_ALPHA: float = 0.9
 
 ## --- Umpan balik kecepatan (GDD 15; usulan run fase1b-umpan-balik, dinilai di HP) ---
 ## Dihitung dari kecepatan SEBENARNYA (`UmpanBalikKecepatan`). Partikel digambar sendiri (`PancaranPiksel`), kotak 1-2 px game.
@@ -404,16 +408,21 @@ const JALAN_UJI_DAUR_MAJU_UBIN: int = 16
 ## kotak surat > jendela > teras > halaman. Sisi dekat datar tanpa fasad dan tanpa jendela, hanya supaya lempar ke sisi dekat bisa
 ## diuji (tidak memutuskan cara menampilkan rumah di sisi dekat, ROADMAP 5).
 
-## Seberang: kotak surat, 0,5 x 0,5 di sekitar kotak surat graybox (pijak -1,5, 1,0, kotak 0,25 ubin) di trotoar.
-const JALAN_UJI_SEBERANG_KOTAK_SURAT_UBIN: Array[float] = [-1.875, 0.875, 0.5, 0.5]
+## Seberang: kotak surat sebagai AREA 1,0 x 1,5 (lateral x maju) di trotoar, berpusat di (-1,625; 1,125) tepat seperti zona 0,5 x 0,5
+## lama, jadi sasaran mode bantu tidak bergeser. Kotak surat graybox (pijak -1,5, 1,0, kotak 0,25 ubin) ada di dalamnya. Tindak lanjut
+## uji HP pemilik: 0,5 x 0,5 (toleransi sekitar +-3 mm gerak jari) terlalu kecil; kini sekitar +-6 mm dan area sekitar 6x (BALANCING 5).
+## Menimpa 0,125 ubin sisi halaman (lateral -2,125 sampai -2,0); kotak surat menang, disengaja. "Inti" 0,5 x 0,5 di pusat adalah calon bonus
+## presisi Run 3B, belum diputuskan.
+const JALAN_UJI_SEBERANG_KOTAK_SURAT_UBIN: Array[float] = [-2.125, 0.375, 1.0, 1.5]
 ## Seberang: halaman, rumput di antara trotoar (-2,0) dan fasad (-3,0) sepanjang rumah (maju -0,5 sampai 2,5).
 const JALAN_UJI_SEBERANG_HALAMAN_UBIN: Array[float] = [-3.0, -0.5, 1.0, 3.0]
 ## Seberang: teras, di kaki fasad bagian pintu.
 const JALAN_UJI_SEBERANG_TERAS_UBIN: Array[float] = [-3.0, 0.0, 0.5, 1.25]
 ## Seberang: jendela, strip tanah 0,25 ubin di kaki fasad (model placeholder 2D).
 const JALAN_UJI_SEBERANG_JENDELA_UBIN: Array[float] = [-3.0, 1.5, 0.25, 0.75]
-## Dekat: kotak surat di trotoar dekat (datar, tanpa graybox).
-const JALAN_UJI_DEKAT_KOTAK_SURAT_UBIN: Array[float] = [1.375, 0.875, 0.5, 0.5]
+## Dekat: kotak surat di trotoar dekat (datar, tanpa graybox), area 1,0 x 1,5 berpusat di (1,625; 1,125) seperti sisi seberang. Menimpa
+## 0,125 ubin halaman dekat (lateral 2,0 sampai 2,125); tidak bertumpuk dengan zona seberang (celah lateral -1,125 sampai 1,125).
+const JALAN_UJI_DEKAT_KOTAK_SURAT_UBIN: Array[float] = [1.125, 0.375, 1.0, 1.5]
 ## Dekat: halaman, rumput sesudah trotoar dekat.
 const JALAN_UJI_DEKAT_HALAMAN_UBIN: Array[float] = [2.0, -0.5, 1.0, 3.0]
 ## Dekat: teras, sisi jauh halaman.
@@ -425,3 +434,75 @@ const JALAN_UJI_BUKAN_PELANGGAN_SISA: int = 2
 ## Isi ulang koran khusus jalan uji (alat uji, bukan aturan game; jalan uji tidak punya akhir rute): sesudah koran habis dan sepeda
 ## menempuh sekian ubin, sisa koran kembali penuh.
 const JALAN_UJI_ISI_ULANG_UBIN: float = 16.0
+
+## --- Rute perumahan dari segmen (BALANCING 6, DATA_SCHEMA 3, ROUTE_DESIGN; usulan run fase3a-rute, dinilai lewat uji HP) ---
+## Segmen JSON buatan tangan di `assets/data/routes/perumahan/` disusun `RouteBuilder` dari seed; tidak ada angka tuning di data.
+
+## Jumlah pelanggan tiap rute perumahan (GDD 14.1, K-2 run fase3a-rute): tepat sekian, semuanya di sisi `seberang`.
+const RUTE_PELANGGAN: int = 25
+## Jumlah segmen berbeda tiap rute: satu pembuka, sisanya tengah, satu penutup (K-2).
+const RUTE_SEGMEN_PER_RUTE: int = 7
+## Segmen pengapit tiap rute (satu pembuka dan satu penutup): sisa `RUTE_SEGMEN_PER_RUTE` adalah segmen tengah berbeda (K-2).
+const RUTE_SEGMEN_PENGAPIT: int = 2
+## Jumlah minimum segmen `pembuka` di pustaka supaya rute bervariasi antar seed (AC-1).
+const RUTE_PEMBUKA_MIN: int = 2
+## Jumlah minimum segmen `penutup` di pustaka supaya rute bervariasi antar seed (AC-1).
+const RUTE_PENUTUP_MIN: int = 2
+## Seed bawaan rute dev (deterministik); "Main lagi" memakai seed berikutnya (seed + 1).
+const RUTE_SEED_DEV: int = 20261016
+## Koran awal rute = pelanggan + sekian persen dibulatkan ke atas (BALANCING 4): 25 pelanggan = 30 koran.
+const RUTE_KORAN_CADANGAN_PERSEN: int = 20
+## Pembagi persen ke pecahan untuk `RUTE_KORAN_CADANGAN_PERSEN` (100 persen = satu bagian penuh).
+const RUTE_KORAN_PERSEN_PENUH: int = 100
+## Panjang segmen terpendek yang sah, ubin (ROUTE_DESIGN 1).
+const RUTE_SEGMEN_PANJANG_MIN_UBIN: int = 24
+## Panjang segmen terpanjang yang sah, ubin (ROUTE_DESIGN 1).
+const RUTE_SEGMEN_PANJANG_MAKS_UBIN: int = 40
+## Tepi netral tiap ujung segmen: tidak ada rumah, objek, atau titik misi di dalamnya, ubin (ROUTE_DESIGN 1).
+const RUTE_TEPI_UBIN: int = 2
+## Lebar satu petak rumah, ubin: rumah 3 ubin + celah 1 (ROUTE_DESIGN 2); dua rumah sesisi berjarak paling sedikit sekian.
+const RUTE_PETAK_UBIN: int = 4
+## Jendela belakang `MedanKoran.tertutup_titik`, petak: sinar ke kamera bergeser maju mundur selama naik, jadi rumah yang bisa menutupi titik tanah ada sampai sekian petak di belakangnya (satu petak di depan tetap).
+const RUTE_PENUTUP_JENDELA_BELAKANG_PETAK: int = 2
+## Jendela keputusan, ubin: dua rintangan yang memaksa pindah jalur berjarak paling sedikit sekian (ROUTE_DESIGN 4 aturan 4).
+const RUTE_RINTANGAN_JENDELA_UBIN: int = 6
+## Rintangan paling dekat ke tepi segmen, ubin: setengah jendela, supaya dua segmen yang disambung tidak menumpuk keputusan.
+const RUTE_RINTANGAN_TEPI_UBIN: int = 3
+## Tanda rintangan bergerak terlihat paling sedikit sekian ubin sebelum rintangan: 1,5 detik pada ngebut 6,0 u/d (ROUTE_DESIGN 4 aturan 2).
+const RUTE_TANDA_MIN_UBIN: float = 9.0
+## Celah terpanjang antara dua pelanggan berturut-turut, ubin (usulan; rata-rata sekitar 9 ubin, BALANCING 6).
+const RUTE_PELANGGAN_JARAK_MAKS_UBIN: float = 20.0
+## Goyangan acak (plus minus) target posisi pelanggan terhadap sebaran rata, ubin: memberi rumah berurutan lalu sela panjang (ROUTE_DESIGN 3).
+const RUTE_PELANGGAN_GOYANG_UBIN: float = 3.0
+## Percobaan paling banyak menyusun urutan segmen dan memilih pelanggan sebelum rute dinyatakan gagal dibangun.
+const RUTE_SUSUN_PERCOBAAN_MAKS: int = 200
+## Tapak kotak rumah rute untuk aturan penutup pemain (`PenutupPemain`), ubin. Dari aset `tools/env_art/perumahan.py`: badan 88 unit
+## sepanjang jalan ditambah cucuran atap = sekitar 3 ubin; dalam 94 unit = sekitar 3 ubin; puncak atap 58 sampai 62 unit = sekitar 2 ubin.
+const RUTE_RUMAH_PANJANG_UBIN: float = 3.0
+## Lihat `RUTE_RUMAH_PANJANG_UBIN`.
+const RUTE_RUMAH_DALAM_UBIN: float = 3.0
+## Lihat `RUTE_RUMAH_PANJANG_UBIN`.
+const RUTE_RUMAH_TINGGI_UBIN: float = 2.0
+## Kaki fasad rumah sisi dekat melintang jalan, ubin dari garis tengah (positif = dekat): sesudah halaman dekat (2,0 sampai 3,0).
+const RUTE_RUMAH_DEKAT_X_UBIN: float = 3.0
+## Alpha objek yang menutupi pemain (GDD 2.3, ART_DIRECTION 2.2: semi-transparan); 1,0 saat tidak menutupi (`PenutupPemain`).
+const RUTE_PENUTUP_ALFA: float = 0.45
+
+## --- Scene rute (run fase3a-rute bagian B, usulan, dinilai lewat uji HP) ---
+
+## Rumah yang masih ada (digambar) di belakang sepeda, ubin sepanjang jalan. Rumah di luar jendela daur tidak diinstansiasi (AC-12).
+## 20 (bukan seluruh rute sekitar 250 ubin): layar terlebar 800 piksel game memuat sekitar 25 ubin sepanjang jalan, dan sprite rumah
+## paling lebar 270 piksel menjorok sekitar 8 ubin ke kiri titik pijak.
+const RUTE_DAUR_MUNDUR_UBIN: int = 20
+## Rumah yang sudah ada di depan sepeda, ubin sepanjang jalan (sisi `dekat` paling jauh terlihat sekitar 25 ubin di depan sepeda).
+const RUTE_DAUR_MAJU_UBIN: int = 30
+## Stick buatan yang diberikan ke sepeda sesudah garis akhir: komponen tegak -1 = tarik penuh ke bawah = rem (stick sungguhan dikunci).
+const RUTE_AKHIR_STICK_Y: float = -1.0
+## Jarak banner "Rute selesai" dari tepi atas layar, piksel game: di bawah strip atas HUD dan di luar zona stick dan swipe.
+const RUTE_BANNER_MARGIN_ATAS_PX: int = 64
+## Jarak tombol dev "Main lagi" dari tepi kanan layar, piksel game (strip atas HUD, bebas dari zona stick dan swipe).
+const RUTE_TOMBOL_ULANG_MARGIN_PX: int = 8
+## Nama 12 sprite rumah perumahan (`assets/sprites/houses/perumahan/<nama>.png`), sejajar dengan `RUTE_RUMAH_PIJAK_PX`.
+const RUTE_RUMAH_SPRITE: Array[String] = ["house_perumahan_dekat_limasan_bukan", "house_perumahan_dekat_limasan_pelanggan", "house_perumahan_dekat_pelana_lintang_bukan", "house_perumahan_dekat_pelana_lintang_pelanggan", "house_perumahan_dekat_pelana_sejajar_bukan", "house_perumahan_dekat_pelana_sejajar_pelanggan", "house_perumahan_limasan_bukan", "house_perumahan_limasan_pelanggan", "house_perumahan_pelana_bukan", "house_perumahan_pelana_pelanggan", "house_perumahan_sayap_bukan", "house_perumahan_sayap_pelanggan"]
+## Titik pijak tiap sprite rumah (`ground_anchor` di JSON aset, tengah tapak), piksel dari pojok kiri atas gambar: x lalu y, sejajar dengan `RUTE_RUMAH_SPRITE`. Tes membandingkannya dengan JSON aset.
+const RUTE_RUMAH_PIJAK_PX: Array[int] = [97, 123, 155, 152, 96, 122, 155, 151, 96, 118, 154, 147, 105, 127, 105, 127, 96, 148, 96, 148, 105, 119, 105, 119]

@@ -17,8 +17,9 @@ var _titik: PackedVector2Array = PackedVector2Array()
 var _tertutup: PackedByteArray = PackedByteArray()
 
 
-## Menampilkan garis bidik untuk `lintasan` (null = sembunyikan) dengan bentuk elips `bentuk` (`KoranLempar.bentuk_elips`).
-func tampilkan(lintasan: ThrowSolver.Lintasan, bentuk: KoranLempar.Elips) -> void:
+## Menampilkan garis bidik untuk `lintasan` (null = sembunyikan) dengan bentuk elips `bentuk` (`KoranLempar.bentuk_elips`). `medan` menentukan
+## titik mana yang tertutup rumah (null = jalan uji, `MedanKoran.dari_rute` di scene rute).
+func tampilkan(lintasan: ThrowSolver.Lintasan, bentuk: KoranLempar.Elips, medan: MedanKoran = null) -> void:
 	if lintasan == null:
 		sembunyikan()
 		return
@@ -28,7 +29,7 @@ func tampilkan(lintasan: ThrowSolver.Lintasan, bentuk: KoranLempar.Elips) -> voi
 	_tertutup.clear()
 	for t: float in KoranLempar.waktu_titik_bidik(lintasan, float(Config.SWIPE_TITIK_JARAK_PX), Config.GARIS_BIDIK_SAMPEL):
 		_titik.append(KoranLempar.layar_pada(lintasan, t).round())
-		_tertutup.append(1 if KoranLempar.tertutup_pada(lintasan, t) else 0)
+		_tertutup.append(1 if KoranLempar.tertutup_pada(lintasan, t, medan) else 0)
 	queue_redraw()
 
 

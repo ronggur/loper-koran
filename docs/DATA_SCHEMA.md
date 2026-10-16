@@ -94,32 +94,43 @@ Kunci `efek` dan artinya didefinisikan di kode (satu `match` per efek), bukan di
 
 ## 3. Segmen rute
 
-File: `assets/data/routes/<distrik>/<id>.json`, satu file per segmen. Aturan menyusun segmen ada di `ROUTE_DESIGN.md`.
+File: `assets/data/routes/<distrik>/<id>.json`, satu file per segmen, **JSON buatan tangan** (keputusan pemilik 2026-10-16, K-1 run `20261016-fase3a-rute`; bukan scene Godot yang diekspor). Aturan menyusun segmen ada di `ROUTE_DESIGN.md`. Bentuk di bawah adalah **usulan yang diterapkan di run 3A** (dibaca `SegmenRute`, `PemuatRute`, `RouteBuilder`), belum dikunci: nilai `jenis`, parameter objek, dan aturan validasi masih bisa berubah setelah uji HP.
 
 | Field | Isi |
 |---|---|
-| `id` | Kode unik, misalnya `per_lurus_01` |
-| `distrik` | Distrik segmen |
-| `panjang` | Panjang dalam ubin (24–40) |
-| `tag` | `tingkat` (`tenang`/`sedang`/`padat`), `sisi_pelanggan`, `posisi` (`pembuka`/`tengah`/`penutup`) |
-| `rumah` | Daftar petak rumah: `pos` (ubin dari awal segmen), `sisi`, `jenis` (aset rumah), `pelanggan_boleh` (true/false) |
-| `objek` | Properti dan rintangan: `jenis`, `pos`, `jalur` (`seberang`/`tengah`/`dekat`), parameter perilaku |
-| `titik_misi` | Tempat yang boleh dipakai misi: `nama` (misalnya `atap`, `balik_pot`), `pos`, `sisi` |
+| `id` | Kode unik huruf kecil dan garis bawah, **sama dengan nama berkas** (`per_tengah_02` di `per_tengah_02.json`) |
+| `distrik` | Distrik segmen (`perumahan`) |
+| `panjang` | Panjang dalam ubin, bilangan bulat 24 sampai 40 |
+| `tag` | `tingkat` (`tenang`/`sedang`/`padat`), `sisi_pelanggan` (`seberang`/`dekat`/`dua_sisi`), `posisi` (`pembuka`/`tengah`/`penutup`). Pembuka dan penutup selalu `tenang` |
+| `rumah` | Daftar petak rumah: `pos` (ubin dari awal segmen, bilangan bulat), `sisi` (`seberang`/`dekat`), `jenis` (bentuk rumah, daftar di bawah), `pelanggan_boleh` (true/false) |
+| `objek` | Rintangan yang ditandai: `jenis`, `pos`, `jalur` (`seberang`/`dekat`; **tidak pernah `tengah`**), `tanda_ubin` (jarak tanda terlihat sebelum rintangan, paling sedikit 9) |
+| `titik_misi` | Tempat yang boleh dipakai misi: `nama` (mis. `atap`, `balik_pot`), `pos`, `sisi`; harus berdiri di rumah (pos dan sisi sama dengan sebuah rumah) |
+
+Contoh dari berkas nyata (`assets/data/routes/perumahan/per_tengah_02.json`):
 
 ```json
 {
-  "id": "per_lurus_01",
+  "id": "per_tengah_02",
   "distrik": "perumahan",
   "panjang": 32,
-  "tag": { "tingkat": "tenang", "sisi_pelanggan": "seberang", "posisi": "pembuka" },
+  "tag": { "tingkat": "sedang", "sisi_pelanggan": "seberang", "posisi": "tengah" },
   "rumah": [
-    { "pos": 2,  "sisi": "seberang", "jenis": "rumah_a", "pelanggan_boleh": true },
-    { "pos": 6,  "sisi": "seberang", "jenis": "rumah_b", "pelanggan_boleh": true },
-    { "pos": 10, "sisi": "seberang", "jenis": "rumah_a", "pelanggan_boleh": false }
+    { "pos": 2, "sisi": "seberang", "jenis": "pelana", "pelanggan_boleh": false },
+    { "pos": 4, "sisi": "dekat", "jenis": "dekat_limasan", "pelanggan_boleh": false },
+    { "pos": 6, "sisi": "seberang", "jenis": "limasan", "pelanggan_boleh": true },
+    { "pos": 10, "sisi": "seberang", "jenis": "sayap", "pelanggan_boleh": true },
+    { "pos": 12, "sisi": "dekat", "jenis": "dekat_pelana_sejajar", "pelanggan_boleh": false },
+    { "pos": 14, "sisi": "seberang", "jenis": "limasan", "pelanggan_boleh": false },
+    { "pos": 18, "sisi": "seberang", "jenis": "pelana", "pelanggan_boleh": true },
+    { "pos": 20, "sisi": "dekat", "jenis": "dekat_pelana_lintang", "pelanggan_boleh": false },
+    { "pos": 22, "sisi": "seberang", "jenis": "sayap", "pelanggan_boleh": true },
+    { "pos": 26, "sisi": "seberang", "jenis": "pelana", "pelanggan_boleh": true },
+    { "pos": 28, "sisi": "dekat", "jenis": "dekat_limasan", "pelanggan_boleh": false },
+    { "pos": 30, "sisi": "seberang", "jenis": "limasan", "pelanggan_boleh": false }
   ],
   "objek": [
-    { "jenis": "tong_sampah", "pos": 14, "jalur": "dekat" },
-    { "jenis": "mobil_garasi", "pos": 22, "sisi": "seberang", "tanda_ubin": 9 }
+    { "jenis": "anjing_penjaga", "pos": 14, "jalur": "dekat", "tanda_ubin": 9 },
+    { "jenis": "mobil_garasi", "pos": 26, "jalur": "seberang", "tanda_ubin": 9 }
   ],
   "titik_misi": [
     { "nama": "atap", "pos": 6, "sisi": "seberang" }
@@ -127,11 +138,21 @@ File: `assets/data/routes/<distrik>/<id>.json`, satu file per segmen. Aturan men
 }
 ```
 
-Rumah mana yang menjadi pelanggan ditentukan saat rute disusun (seed hari itu dan data pelanggan di save), bukan di segmen. Segmen hanya menyatakan rumah mana yang **boleh** jadi pelanggan.
+**Jenis yang dikenal** (jenis lain ditolak pemuat):
 
-Segmen awal mungkin lebih mudah dibuat di editor Godot sebagai scene `.tscn`, lalu diekspor ke JSON lewat skrip. Keputusan ini diambil di Fase 3.
+| Bidang | Nilai | Aset |
+|---|---|---|
+| `rumah.jenis` sisi `seberang` | `limasan`, `pelana`, `sayap` | `assets/sprites/houses/perumahan/house_perumahan_<jenis>_<pelanggan\|bukan>.png` |
+| `rumah.jenis` sisi `dekat` | `dekat_limasan`, `dekat_pelana_lintang`, `dekat_pelana_sejajar` | `house_perumahan_<jenis>_<pelanggan\|bukan>.png` (di distrik perumahan hanya varian `bukan` dipakai; cara menampilkan sisi dekat belum diputuskan, ROADMAP 5) |
+| `objek.jenis` | `anjing_penjaga`, `mobil_garasi` | `assets/sprites/obstacles/obs_anjing_sheet`, `obs_mobil_garasi_sheet` (perilaku di Run 3B; di 3A hanya tempatnya yang ditandai) |
 
----
+**Id rumah** di rute = `<id_segmen>@<pos>` (mis. `per_tengah_02@18`). Satu `pos` hanya boleh dipakai satu rumah per segmen (kedua sisi), supaya id unik tanpa sisi. Ini id sementara untuk rute dan penilaian zona; pemetaan ke id rumah tetap di save (`per_r014`, bagian 4) ditunda ke Fase 6 (bagian 5).
+
+**Geometri.** `pos` adalah awal kavling: zona kotak surat, halaman, teras, dan jendela dihitung relatif terhadap `pos` dengan angka `Config.JALAN_UJI_*` yang sama dengan jalan uji (BALANCING 5), jadi rumah di `pos` p memakai kotak surat sebagai area 1,0 × 1,5 di maju p + 0,375 sampai p + 1,875 (lateral −2,125 sampai −1,125 seberang, 1,125 sampai 2,125 dekat; pusat maju p + 1,125; sekitar 0,125 ubin halaman tertimpa, kotak surat menang). Rumah sesisi berjarak paling sedikit satu petak (4 ubin). Dua ubin di tiap ujung segmen kosong (tidak ada rumah, objek, atau titik misi dengan `pos` kurang dari 2 atau lebih dari `panjang` - 2); rintangan paling dekat 3 ubin ke tepi supaya dua segmen yang disambung tidak menumpuk keputusan.
+
+**Rumah mana yang jadi pelanggan** ditentukan saat rute disusun (seed rute, `RouteBuilder`), bukan di segmen. Segmen hanya menyatakan rumah mana yang **boleh** jadi pelanggan. Distrik pertama: `pelanggan_boleh: true` hanya di sisi `seberang` (GDD 9.1).
+
+**Validasi** (`SegmenRute.parse`, `PemuatRute.periksa_kumpulan`; dijalankan tes pada semua berkas nyata): field wajib ada dan bertipe benar, field tidak dikenal ditolak, sisi hanya `seberang` atau `dekat`, id unik dan sama dengan nama berkas, panjang 24 sampai 40, tepi 2 ubin kosong, pelanggan hanya di seberang, rintangan tidak di jalur `tengah` (jalur utama bersih), tanda rintangan paling sedikit 9 ubin (1,5 detik pada ngebut), dalam jendela 6 ubin maksimal satu rintangan, titik misi di rumah dan di luar jendela rintangan, sekurangnya 2 segmen `pembuka`, 2 `penutup`, dan 5 `tengah` per distrik (satu rute memakai 7 segmen).
 
 ## 4. Save
 
@@ -161,7 +182,7 @@ File: `user://save.json`. Satu slot dulu.
 ```
 
 - `versi` naik setiap format berubah. Game memigrasi save lama, tidak menghapusnya.
-- Id pelanggan memakai rumah tetap di distrik (`per_r014`), supaya pelanggan yang sama tetap ada walau segmen diacak. Cara memetakan rumah tetap ke segmen yang diacak perlu diputuskan di Fase 3.
+- Id pelanggan memakai rumah tetap di distrik (`per_r014`), supaya pelanggan yang sama tetap ada walau segmen diacak. Cara memetakan rumah tetap ke segmen yang diacak ditunda ke Fase 6 (bagian 5); di Fase 3 rumah hanya punya id rute `<id_segmen>@<pos>` (bagian 3) dan tidak ada yang ditulis ke save.
 - Save ditulis di akhir hari (layar hasil), bukan di tengah rute.
 - `kosmetik.baju` memakai nama varian baju dari `ART_DIRECTION.md` 3.3.
 
@@ -169,7 +190,7 @@ File: `user://save.json`. Satu slot dulu.
 
 ## 5. Yang perlu diputuskan
 
-- Segmen ditulis sebagai JSON atau scene Godot yang diekspor.
-- Cara memetakan pelanggan tetap ke rute yang diacak.
+- ~~Segmen ditulis sebagai JSON atau scene Godot yang diekspor.~~ **Diputuskan 2026-10-16 (pemilik, K-1 run 3A): JSON buatan tangan** di `assets/data/routes/<distrik>/<id>.json` (bagian 3). Nilai `jenis`, parameter objek, dan aturan validasi tetap usulan sampai uji HP.
+- Cara memetakan pelanggan tetap ke rute yang diacak. **Masih terbuka, ditunda ke Fase 6** (K-3): run 3A memakai id rute `<id_segmen>@<pos>` dan tidak menulis save; id rumah tetap di save (`per_r014`) belum ada.
 - Misi lintas hari (GDD 10.9) memengaruhi save: misi aktif perlu disimpan atau tidak.
 - Format data milestone dan bengkel (Fase 6).

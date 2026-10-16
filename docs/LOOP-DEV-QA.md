@@ -451,6 +451,8 @@ Disimpan 2026-10-15, sesudah run 2B (`20261015-fase2b-bantu-audio`, PR #26). Fas
 | 3B | Rintangan anjing dan mobil garasi, tabrakan, skor + combo + pengali kecepatan, nada naik combo dan denting tip | PR 3A di-merge |
 | 3C | Radar, HUD rute, tenggat, layar hasil, rumah abu-abu di mode bantu, spike rumah sisi dekat, uji 20 rute | PR 3B di-merge |
 
+**Status (2026-10-16):** Run 3A selesai, `PASSED` di iterasi 2/2, PR #28 (`feat/fase3a-rute`, `docs/loop/20261016-fase3a-rute/`), menunggu merge dan uji HP pemilik (`SETUP_ANDROID.md` 8.6). Perintah Run 3B di bawah sudah diperbarui dengan catatan dari 3A; ganti tanggal `RUN_ID` bila dimulai di hari lain dan isi baris `HASIL UJI HP` dari 8.5 dan 8.6.
+
 Tempel satu blok **utuh sebagai pesan pertama sesi baru** (`/clear` atau sesi baru; Bagian 0c). Isi baris `ISI:` sebelum menempel, hapus baris izin HP kalau HP tidak boleh disentuh, dan ganti tanggal di `RUN_ID` kalau run dimulai di hari lain.
 
 Catatan untuk semua run Fase 3:
@@ -540,7 +542,42 @@ SCOPE: Run 3B — Fase 3, rintangan dan skor (DEV_PHASES Fase 3, TECH_PLAN Fase 
   keputusan): bel dimajukan ke Fase 3 atau tetap Fase 6-7 (rekomendasi orchestrator
   2026-10-15: Fase 3, lihat Bagian 6d); jendela bonus atau penalti (ROADMAP 5, sekarang
   sakelar bawaan penalti); hubungan skor dan koin; aturan pasti tabrakan (BALANCING 6).
-HASIL UJI HP RUN 3A (ISI: tempel catatan; kosongkan bila tidak ada): ISI: ...
+CATATAN DARI RUN 3A (sudah di main sesudah PR #28 di-merge; baca LOG.md dan SPEC.md di
+  docs/loop/20261016-fase3a-rute/, jangan menanyakan ulang):
+  - Struktur: `AdeganJalan` = dasar bersama `JalanUji` (scene dev) dan `RuteMain`
+    (scenes/rute/rute.tscn, scene utama); `RouteBuilder` -> `Rute` (`RumahRute`, `ObjekRute`,
+    `TitikMisiRute`); `PemuatRute` + `SegmenRute` (validasi data); `MedanKoran` (zona dan
+    penutup untuk koran, satu kelas konkret); `ZonaSasaran.zona_rute_rentang`;
+    `PenutupPemain` + satu `PenerapPenutup`.
+  - Rintangan SUDAH ditandai di data segmen (`objek`: jenis `anjing_penjaga` dan
+    `mobil_garasi`, jalur `seberang`/`dekat`, tidak pernah `tengah`, `tanda_ubin` >= 9) tapi
+    belum berperilaku dan tidak digambar hidup. Sprite sheet sudah ada:
+    assets/sprites/obstacles/obs_anjing_sheet.* dan obs_mobil_garasi_sheet.* (pakai apa
+    adanya, titik pijak di JSON). Aturan adil dijaga validasi `SegmenRute`/`RouteBuilder`.
+  - Jebakan GDScript 4.7.2 (LOG D-14): jangan membuat `class X extends MedanKoran` lalu
+    menugaskan `X.new()` ke variabel bertipe `MedanKoran`; skrip tertahan di akhir proses
+    (`ERROR: ... resources still in use at exit`). Satu kelas konkret, atau komposisi.
+  - Keputusan pemilik 3A yang berlaku: sesudah garis akhir swipe dan tap bantu ditolak
+    (QA-004/D-17) sampai 3C; akhir rute sementara = berhenti + banner + tombol dev "Main
+    lagi" (seed + 1); id rumah `<id_segmen>@<pos>`, pemetaan ke id save ditunda ke Fase 6;
+    jendela tetap sakelar penalti; sisi dekat hanya placeholder `bukan`.
+  - Aset: `tools/env_art/fase3.py --salin` di mesin ini menghasilkan drift piksel kecil pada
+    berkas yang tidak diubah. Setelah render ulang, kembalikan berkas yang tidak sengaja
+    berubah (cek `git status`, bandingkan piksel); jangan edit PNG dengan tangan.
+  - Kotak surat sasaran sekarang kubus graybox oranye di pusat zona (rumah pelanggan seberang
+    tanpa kotak merah, QA-005); aset kotak surat final = Fase 5. Zona halaman/teras/jendela
+    tidak digambar di tanah rute (D-20).
+  - Kotak surat sekarang AREA 1,0 x 1,5 (pusat tetap) yang digambar di tanah rute
+    (`AreaKotakGambar`; tindak lanjut review pemilik 2026-10-16, LOG 3A D-28 sampai D-32).
+    Pertimbangkan "inti" 0,5 x 0,5 di pusat (zona lama) sebagai kandidat bonus "tepat" di
+    skor (BALANCING 5); keputusan pemilik, jangan diputuskan sendiri dan tunggu hasil uji HP
+    (SETUP_ANDROID 8.6 butir 9).
+  - Variasi rute (D-1): tiap rute memakai semua 5 segmen tengah. Bila hasil uji HP 3A
+    bilang terasa dihafal, tambah segmen tengah (data saja) sebelum menambah rintangan baru.
+  - Pelajaran QA 3A: tes harus menjaga ketergantungan pada seed (mutan goyangan nol selamat),
+    angka ajaib kecil (2) juga dihitung, dan jangkauan tes literal untuk batas medan.
+HASIL UJI HP RUN 3A (ISI: tempel catatan dari SETUP_ANDROID 8.6; kosongkan bila belum dan
+  orchestrator akan menanyakan sekali) dan FASE 2 (8.5): ISI: ...
 DESIGN: docs/design/DESIGN_SPEC.md (token bagian 1, umpan balik 3.6).
 IZIN HP: sama dengan Run 3A.
 RUN_ID: 20261017-fase3b-rintangan-skor

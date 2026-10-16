@@ -52,7 +52,7 @@ var _lapis_jari: CanvasLayer
 func _initialize() -> void:
 	var argumen: PackedStringArray = OS.get_cmdline_user_args()
 	_folder = argumen[0] if argumen.size() > 0 else ""
-	var paket: PackedScene = load(str(ProjectSettings.get_setting("application/run/main_scene"))) as PackedScene
+	var paket: PackedScene = load("res://scenes/dev/jalan_uji.tscn") as PackedScene
 	if paket == null:
 		push_error("scene utama tidak bisa dimuat")
 		await ProbeKeluar.keluar(self, 1)

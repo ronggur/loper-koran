@@ -11,3 +11,6 @@ HUD_KORAN_ANGKA,{n}
 HUD_KORAN_HABIS,HABIS
 HUD_BANTU_MATI,Bantu: mati
 HUD_BANTU_NYALA,Bantu: nyala
+RUTE_SELESAI,Rute selesai
+RUTE_MAIN_LAGI,Main lagi
+RUTE_GAGAL_MUAT,Rute gagal dimuat

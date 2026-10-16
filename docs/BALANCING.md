@@ -148,7 +148,7 @@ Dari penuh, ngebut terus bertahan sekitar 8 detik, dan cepat terus sekitar 25 de
 | Tinggi puncak | 1,0–1,6 ubin | Bayangan koran di tanah wajib tampil. `LEMPAR_PUNCAK_*_UBIN`; lengkung mulai dari tinggi tangan 0,7 ubin (`LEMPAR_TINGGI_TANGAN_UBIN`) |
 | Warisan kecepatan sepeda | 100% ke arah maju | Ngebut membuat koran mendarat lebih jauh ke depan (GDD 5.1). `LEMPAR_WARISAN_MAJU`; tanpa warisan lateral |
 | Jeda antar lemparan | 0,35 detik | Inklusif, dari lemparan diterima. `LEMPAR_JEDA_DETIK` |
-| Jumlah koran di awal rute | pelanggan + 20% | 25 pelanggan → 30 koran. Jalan uji: `KORAN_AWAL` 30 |
+| Jumlah koran di awal rute | pelanggan + 20% dibulatkan ke atas | 25 pelanggan → 30 koran. Rumus: pelanggan + ceil(pelanggan × `RUTE_KORAN_CADANGAN_PERSEN` / 100) (`RouteBuilder.koran_awal`, usulan run fase3a-rute); contoh 10 → 12, 11 → 14. Jalan uji: `KORAN_AWAL` 30 |
 
 Garis bidik menunjukkan titik mendarat **sudah termasuk** warisan kecepatan, supaya pemain belajar melempar lebih awal saat ngebut lewat apa yang dilihat, bukan coba-coba.
 
@@ -200,11 +200,13 @@ Keputusan pemilik 2026-10-15 (K-1 sampai K-4, usulan) dan rinciannya (D-1 sampai
 
 | Zona | Seberang (lateral, maju, ukuran) | Dekat | Catatan |
 |---|---|---|---|
-| Kotak surat | −1,875, 0,875, 0,5 × 0,5 | 1,375, 0,875, 0,5 × 0,5 | Di trotoar; seberang mengelilingi kotak surat graybox (0,25 ubin) |
+| Kotak surat | −2,125, 0,375, 1,0 × 1,5 | 1,125, 0,375, 1,0 × 1,5 | AREA di trotoar, pusat tetap (−1,625; 1,125) dan (1,625; 1,125); seberang mengelilingi kotak surat graybox (0,25 ubin). Dulu 0,5 × 0,5 (usulan, lihat di bawah) |
 | Halaman | −3,0, −0,5, 1,0 × 3,0 | 2,0, −0,5, 1,0 × 3,0 | Rumput sepanjang rumah. Rumah graybox seberang mundur dari −2,0 ke **−3,0** (`JALAN_UJI_RUMAH_X_UBIN`) supaya ada satu ubin halaman di depan fasad |
 | Teras | −3,0, 0,0, 0,5 × 1,25 | 2,5, 0,25, 0,5 × 1,5 | Seberang di kaki fasad bagian pintu |
 | Jendela | −3,0, 1,5, 0,25 × 0,75 | (tidak ada) | Strip tanah di kaki fasad (model placeholder 2D) |
 
+- **Kotak surat sebagai area** (tindak lanjut uji HP pemilik, 2026-10-16; usulan, dinilai lewat uji HP): pemilik mencoba di HP dan menilai zona kotak surat 0,5 × 0,5 terlalu kecil. Toleransi gerak jari sekitar ±3 mm (setengah sisi 0,25 ubin) dan di scene rute hanya kubus oranye yang tergambar, jadi pemain tidak melihat area sebenarnya. Zona menjadi **1,0 × 1,5** (lateral × maju) dengan **pusat yang sama**, jadi sasaran mode bantu (`BantuLempar.pilih` membidik pusat) tidak bergeser. Toleransi lateral sekitar ±6 mm (dua kali), maju sekitar ±9 mm (tiga kali), area sekitar 6 kali. Zona yang membesar menimpa 0,125 ubin halaman di sisi trotoar (lateral −2,125 sampai −2,0 seberang, 2,0 sampai 2,125 dekat); kotak surat menang atas halaman (prioritas tidak berubah), disengaja. Zona seberang dan dekat tetap tidak bertumpuk (celah lateral −1,125 sampai 1,125 di jalan). Area ini digambar di tanah scene rute (`AreaKotakGambar`, isi tipis `AREA_KOTAK_ISI_ALPHA` dan garis tepi tegas) hanya untuk rumah pelanggan seberang. **Calon bonus presisi, belum diputuskan:** "inti" 0,5 × 0,5 di pusat area (zona lama) bisa menjadi antaran "tepat" dengan bonus skor atau combo di Run 3B; angka dan bentuk bonus menunggu keputusan pemilik dan uji HP. Sampai itu, seluruh area sah penuh (100%).
+- **Zona dari data rute** (run fase3a-rute, usulan): zona jalan uji dan zona rumah rute memakai SATU geometri (`Config.JALAN_UJI_*`), diparametrisasi awal kavling: `ZonaSasaran.zona_rumah_seberang` (kotak surat, halaman, teras, jendela) dan `zona_rumah_dekat` (kotak surat, halaman, teras) menerima jarak maju awal kavling (awal segmen + `pos` rumah). Rumah yang bukan pelanggan (termasuk semua rumah dekat di distrik perumahan) memberi zona `BUKAN_PELANGGAN`. `zona_rute_rentang` hanya menyiapkan kavling di sekitar jangkauan lemparan (rentang + satu petak di tiap ujung), bukan seluruh rute. Prioritas dan penilaian dari titik mendarat tidak berubah.
 - **Prioritas** bila tumpang tindih: kotak surat > jendela > teras > halaman (teras dan jendela ada di dalam halaman). Zona yang menang dulu, baru status pelanggan: zona rumah bukan pelanggan = `BUKAN_PELANGGAN`. Penilaian dari **titik mendarat saja** (run fase2-arah-bebas, D-4): zona yang memuat titik itu menilai koran apa pun arah atau sisi lemparannya (Run 2A: zona hanya untuk lemparan ke sisinya). Zona seberang dan zona dekat tidak bertumpuk (dites). Di luar semua zona = meleset.
 - **Bukan pelanggan**: rumah seberang bernomor n dengan n mod 4 = 2 (`JALAN_UJI_BUKAN_PELANGGAN_*`), minimal satu tiap putaran daur 9 slot. Kavling sisi dekat datar tanpa fasad dan tanpa jendela, selalu pelanggan, **hanya supaya lempar ke sisi dekat bisa diuji**; tidak memutuskan cara menampilkan rumah di sisi dekat (ROADMAP 5, Fase 3).
 - **Status antaran**: kotak surat dan teras sah penuh, halaman sah setengah, bukan pelanggan dan meleset tidak sah, jendela menurut sakelar. Tiap pendaratan dinilai sendiri (status per rumah di luar scope Fase 2). Semua zona terjangkau dari posisi lateral di dalam jalan pada santai, cepat, dan ngebut dengan swipe min sampai maks (dites).
@@ -225,7 +227,7 @@ Keputusan pemilik 2026-10-15 (K-1 sampai K-4, usulan) dan rinciannya (D-1 sampai
 
 | Angka | Usulan | Catatan |
 |---|---|---|
-| Lebar petak rumah | 4 ubin | Rumah 3 ubin + celah 1 ubin |
+| Lebar petak rumah | 4 ubin | Rumah 3 ubin + celah 1 ubin. `RUTE_PETAK_UBIN` |
 | Rute awal perumahan | 25 pelanggan di sisi seberang, panjang sekitar 250 ubin | Distrik pertama hanya satu sisi. Sela antar pelanggan diisi rumah bukan pelanggan, persimpangan, dan taman |
 | Jarak rata-rata antar pelanggan | sekitar 9 ubin | Sekitar 2 detik pada kecepatan cepat, 3 detik pada santai |
 | Lama rute | sekitar 55 detik (cepat) sampai 85 detik (santai) | |
@@ -233,6 +235,30 @@ Keputusan pemilik 2026-10-15 (K-1 sampai K-4, usulan) dan rinciannya (D-1 sampai
 | Tabrakan | kecepatan turun ke 1,0 u/d, oleng 0,6 detik, combo putus | Tidak menghentikan rute |
 
 Apakah ada game over atau batas tabrakan per hari masih terbuka (GDD 3.2).
+
+### 6b. Rute dari segmen (usulan run fase3a-rute 2026-10-16, dinilai lewat uji HP)
+
+Keputusan pemilik K-1 sampai K-5 (SPEC run). Format segmen di `DATA_SCHEMA.md` 3; logika di `scripts/systems/` (`SegmenRute`, `PemuatRute`, `RouteBuilder`, `PenutupPemain`). Semua angka di bawah masuk `scripts/config.gd` (awalan `RUTE_`), kecuali yang tertulis "data".
+
+| Angka | Usulan | Catatan |
+|---|---|---|
+| Segmen per distrik | 9 (data): 2 pembuka, 5 tengah, 2 penutup | `assets/data/routes/perumahan/per_*.json`; satu rute memakai semua 5 tengah, jadi variasi dari urutan dan pilihan pembuka, penutup, dan pelanggan |
+| Segmen per rute | 7 | `RUTE_SEGMEN_PER_RUTE`: satu pembuka, 5 tengah berbeda, satu penutup, tanpa ulang. Pengapit (pembuka + penutup) = `RUTE_SEGMEN_PENGAPIT` 2; pustaka paling sedikit `RUTE_PEMBUKA_MIN` 2 pembuka dan `RUTE_PENUTUP_MIN` 2 penutup |
+| Panjang segmen | 24 sampai 40 ubin | `RUTE_SEGMEN_PANJANG_MIN_UBIN`, `_MAKS_`. Data: 24, 28, 28, 32, 32, 36, 36, 36, 40 |
+| Panjang rute | 232 sampai 240 ubin | Terukur dari data (jumlah 7 segmen); sekitar 250 di BALANCING awal. Garis akhir = panjang rute |
+| Pelanggan per rute | tepat 25 | `RUTE_PELANGGAN`; semuanya rumah `seberang` dengan `pelanggan_boleh`. Data memuat 37 rumah boleh; satu rute punya 31 sampai 32 kandidat |
+| Pilihan pelanggan | sebaran rata dengan goyangan | Target posisi disebar dari kandidat pertama ke terakhir dengan goyangan acak plus minus `RUTE_PELANGGAN_GOYANG_UBIN` (3,0), lalu pencocokan berurutan terbaik. Hasil terukur (1000 seed): jarak rata-rata 8,8 sampai 9,3 ubin (rata-rata 9,2), celah 4 sampai 20 ubin |
+| Celah terpanjang antar pelanggan | 20 ubin | `RUTE_PELANGGAN_JARAK_MAKS_UBIN`; pilihan diundi ulang bila terlampaui (paling banyak `RUTE_SUSUN_PERCOBAAN_MAKS` 200 kali), lalu rute ditolak dengan galat |
+| Koran awal | 30 | Pelanggan + 20% dibulatkan ke atas (bagian 4). Rute tidak memakai isi ulang jalan uji |
+| Tepi segmen | 2 ubin kosong | `RUTE_TEPI_UBIN`; rintangan paling dekat 3 ubin ke tepi (`RUTE_RINTANGAN_TEPI_UBIN`) supaya sambungan tidak menumpuk keputusan |
+| Jendela keputusan | maksimal satu rintangan dalam 6 ubin | `RUTE_RINTANGAN_JENDELA_UBIN`; berlaku di dalam segmen (data) dan di seluruh rute (`RouteBuilder.periksa_rute`) |
+| Tanda rintangan | paling sedikit 9 ubin | `RUTE_TANDA_MIN_UBIN`: 1,5 detik pada ngebut 6,0 u/d (ROUTE_DESIGN 4 aturan 2); perilaku rintangan Run 3B |
+| Urutan keramaian | tidak ada dua segmen `padat` berurutan | ROUTE_DESIGN 5; pembuka dan penutup selalu `tenang`. Data: 1 tenang, 2 sedang, 2 padat di tengah |
+| Jendela daur rumah (scene rute) | 20 ubin di belakang, 30 di depan sepeda | `RUTE_DAUR_MUNDUR_UBIN`, `RUTE_DAUR_MAJU_UBIN`: rumah di luar jendela tidak diinstansiasi (sekitar 11 sampai 20 dari 89 rumah sekaligus). Bukan angka permainan; menyangkut performa dan lebar layar terlebar 800 px |
+| Akhir rute | stick buatan ke bawah penuh (`RUTE_AKHIR_STICK_Y` −1,0) | Sesudah garis akhir sepeda direm dengan rem biasa (tahan 0,25 detik lalu 5,0 u/d²), jadi berhenti paling jauh sekitar 4,5 ubin dari garis (ngebut 6,0 u/d), 1,4 ubin dari santai. Stick sungguhan dan lemparan dikunci; tanpa tenggat, skor, atau layar hasil (3B dan 3C) |
+| Penutup pemain | alfa 0,45 | `RUTE_PENUTUP_ALFA`; objek yang menutupi kaki pemain dari kamera iso 2:1 (`PenutupPemain`), 1,0 bila tidak menutupi. Tapak rumah 3 × 3 ubin dan tinggi 2,0 (`RUTE_RUMAH_*`, dari `tools/env_art/perumahan.py`). Rumah penguji elips dan titik redup: dua petak di belakang titik sampai satu petak di depan (`RUTE_PENUTUP_JENDELA_BELAKANG_PETAK` 2) |
+
+Catatan: rumah di tepi jalan (lateral 3 ubin atau lebih) praktis tidak pernah menutupi pemain di lebar jalan resmi (aturan 3D `PenutupPemain`); aturan ini disiapkan untuk objek yang lebih dekat ke jalan (mobil, pohon, tenda) dan dinilai lewat uji HP.
 
 ---
 
@@ -289,6 +315,10 @@ Belum diisi. Diputuskan di Fase 6 bersama layar bengkel (GDD 12.5). Arah yang su
 ---
 
 ## 10. Catatan perubahan
+
+- **2026-10-16** — Run fase3a-rute bagian B (scene rute; semua usulan, belum diuji di HP): scene utama `scenes/rute/rute.tscn` menggambar rumah dan kotak surat dari data lewat jendela daur (angka baru `RUTE_DAUR_MUNDUR_UBIN` 20 dan `RUTE_DAUR_MAJU_UBIN` 30), akhir rute dengan rem biasa (`RUTE_AKHIR_STICK_Y` −1,0) dan tombol dev "Main lagi" (seed + 1), dan penerap penutup tunggal (alfa 0,45 tidak berubah). Titik pijak sprite rumah disimpan di `RUTE_RUMAH_SPRITE` dan `RUTE_RUMAH_PIJAK_PX` (fakta aset, dicek tes terhadap JSON). Penilaian koran dan mode bantu memakai zona rute lewat `MedanKoran`; angka lintasan, zona, jeda, dan skor tidak berubah. Alasan: kontrak SPEC run 3A (AC-10 sampai AC-16).
+
+- **2026-10-16** — Run fase3a-rute bagian A (logika murni; semua usulan, belum diuji di HP): rute perumahan dari segmen JSON (bagian 6b). Angka baru di `config.gd` (awalan `RUTE_`): 25 pelanggan, 7 segmen per rute, seed dev 20261016, koran cadangan 20%, panjang segmen 24 sampai 40, tepi 2 ubin, petak 4 ubin, jendela rintangan 6 ubin (tepi rintangan 3), tanda paling sedikit 9 ubin, celah pelanggan maks 20 ubin, goyangan target 3,0 ubin, percobaan 200, tapak rumah 3 × 3 × 2,0 ubin, alfa penutup 0,45. Angka lintasan, zona, dan skor tidak berubah (geometri zona rute sama dengan zona jalan uji). Alasan: kontrak SPEC run 3A (K-1 sampai K-5); jarak rata-rata terukur 9,2 ubin dari 1000 seed.
 
 - **2026-10-15** — Run fase2b-bantu-audio bagian B (usulan, belum diuji di HP): bunyi lempar dan mendarat placeholder (bagian 2). Angka baru: volume "wus" −4 dB dan bunyi mendarat −1 dB. Alasan: SOUND_DESIGN 3.1 dan 6 (mendarat terdengar di atas kayuhan, meleset lebih pelan), dinilai di speaker HP.
 

@@ -1,0 +1,53 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/panel_akhir_rute.gd" id="1_script"]
+[ext_resource type="Theme" path="res://assets/ui/theme.tres" id="2_theme"]
+[ext_resource type="Script" path="res://scripts/ui/tombol_sentuh.gd" id="3_tombol"]
+
+[node name="PanelAkhirRute" type="CanvasLayer"]
+layer = 8
+visible = false
+script = ExtResource("1_script")
+
+[node name="BingkaiBanner" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+mouse_filter = 2
+theme = ExtResource("2_theme")
+
+[node name="Tengah" type="CenterContainer" parent="BingkaiBanner"]
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+
+[node name="Banner" type="PanelContainer" parent="BingkaiBanner/Tengah"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="JudulAkhir" type="Label" parent="BingkaiBanner/Tengah/Banner"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"JudulLayar"
+horizontal_alignment = 1
+
+[node name="BingkaiTombol" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -104.0
+offset_bottom = 46.0
+grow_horizontal = 0
+mouse_filter = 2
+theme = ExtResource("2_theme")
+
+[node name="TombolUlang" type="Button" parent="BingkaiTombol"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+focus_mode = 0
+script = ExtResource("3_tombol")

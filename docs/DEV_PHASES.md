@@ -19,15 +19,15 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 |---|---|---|---|---|
 | 0 | Fondasi teknis | M0 | ✅ run 0A (PR #12), 0B+0C (PR #14), uji HP di A54 lolos | 2026-10-13 |
 | 1 | Gerak sepeda & kecepatan (prototype 1) | M1 | ✅ run 1A (PR #20), 1B (PR #21), 1C (PR #23) lolos QA; uji HP oleh pemilik lolos | 2026-10-14 |
-| 2 | Lemparan koran (prototype 2) | M1 | ⬜ | |
-| 3 | Satu rute perumahan (prototype 3) | M2 | ⬜ | |
+| 2 | Lemparan koran (prototype 2) | M1 | 🟨 kode selesai: run 2A (PR #24), arah bebas (PR #25), 2B (PR #26) lolos QA; uji HP penutup (`SETUP_ANDROID.md` 8.5) menunggu pemilik | |
+| 3 | Satu rute perumahan (prototype 3) | M2 | 🟡 run 3A (PR #28) lolos QA: rute dari segmen, scene rute, zona dari data; run 3B (rintangan, skor) dan 3C (radar, HUD, hasil) menyusul | |
 | 4 | Halaman depan koran & misi kucing (prototype 4) | M2 | ⬜ | |
 | 5 | Aset gelombang 1 *(paralel)* | M2–M3 | 🟡 sprite pemain selesai | |
 | 6 | Hari demi hari: reputasi, bengkel, ekonomi | M3 | ⬜ | |
 | 7 | Vertical slice perumahan & audio dasar | M3 | ⬜ | |
 | 8 | Distrik berikutnya, iklan, rilis | M4 | ⬜ | |
 
-**Fase aktif: Fase 2** (lemparan koran). Run 2A (inti lemparan) lolos QA 2026-10-14 di iterasi 2 (PR #24) dan terpasang di vivo V2108; mode bantu, audio lempar/mendarat, uji HP Fase 2, dan QA-008 (DEFERRED) di Run 2B. Fase 1 selesai 2026-10-14: run 1A, 1B, dan 1C (perapian temuan Run 1B, PR #23) lolos QA, dan uji di HP dinyatakan oke oleh pemilik 2026-10-14. Uji HP dilakukan pemilik sendiri, bukan 3-5 orang (keputusan pemilik 2026-10-14: uji HP cukup oleh pemilik sendiri, tanpa 3-5 penguji lain; tidak ada penguji lain). Riwayat Fase 1: dikerjakan lewat loop Dev↔QA (`LOOP-DEV-QA.md` Bagian 6). Run 1A (logika gerak inti) lolos QA 2026-10-14 di iterasi 1 (PR #20). Run 1B (umpan balik, audio placeholder, layar jeda, penyetelan, probe render) lolos QA 2026-10-14 di iterasi 1 (PR #21); APK terpasang di vivo V2108 (Android 12, 2400×1080) 2026-10-14. Yang tersisa: bukti probe render di A54 dan uji 3-5 orang (`SETUP_ANDROID.md` 8.2). Fase 0 selesai 2026-10-13: run 0A dan 0B+0C lolos QA 2026-10-09, dan uji HP di A54 (checklist `SETUP_ANDROID.md` bagian 8) dinyatakan lolos oleh pemilik 2026-10-13. Cek light 2D/glow/partikel/shader di Compatibility dipindah ke Fase 1 (Run 1B) karena butuh scene uji yang belum ada.
+**Fase aktif: Fase 3** (satu rute perumahan; run 3A PR #28, uji HP 3A di `SETUP_ANDROID.md` 8.6; 3B dan 3C menyusul). Fase 2 (lemparan koran) tinggal menunggu uji HP pemilik, dan jalan uji tetap tersedia sebagai scene dev. Riwayat Fase 2:  Run 2A (inti lemparan) lolos QA 2026-10-14 di iterasi 2 (PR #24) dan terpasang di vivo V2108; mode bantu, audio lempar/mendarat, uji HP Fase 2, dan QA-008 (DEFERRED) di Run 2B. Fase 1 selesai 2026-10-14: run 1A, 1B, dan 1C (perapian temuan Run 1B, PR #23) lolos QA, dan uji di HP dinyatakan oke oleh pemilik 2026-10-14. Uji HP dilakukan pemilik sendiri, bukan 3-5 orang (keputusan pemilik 2026-10-14: uji HP cukup oleh pemilik sendiri, tanpa 3-5 penguji lain; tidak ada penguji lain). Riwayat Fase 1: dikerjakan lewat loop Dev↔QA (`LOOP-DEV-QA.md` Bagian 6). Run 1A (logika gerak inti) lolos QA 2026-10-14 di iterasi 1 (PR #20). Run 1B (umpan balik, audio placeholder, layar jeda, penyetelan, probe render) lolos QA 2026-10-14 di iterasi 1 (PR #21); APK terpasang di vivo V2108 (Android 12, 2400×1080) 2026-10-14. Yang tersisa: bukti probe render di A54 dan uji 3-5 orang (`SETUP_ANDROID.md` 8.2). Fase 0 selesai 2026-10-13: run 0A dan 0B+0C lolos QA 2026-10-09, dan uji HP di A54 (checklist `SETUP_ANDROID.md` bagian 8) dinyatakan lolos oleh pemilik 2026-10-13. Cek light 2D/glow/partikel/shader di Compatibility dipindah ke Fase 1 (Run 1B) karena butuh scene uji yang belum ada.
 
 ---
 
@@ -95,9 +95,9 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 
 **Tujuan:** satu rute lengkap dari awal sampai akhir dengan rumah, pelanggan, dan dua rintangan.
 
-- [ ] Format segmen rute dan pemuatnya (`DATA_SCHEMA.md` 3), 8–10 segmen perumahan buatan tangan, satu rute memakai 6–8 (`ROUTE_DESIGN.md`)
-- [ ] Rute dari urutan segmen acak dengan seed
-- [ ] Rumah pelanggan dan bukan pelanggan; distrik pertama hanya pelanggan di sisi seberang
+- [x] Format segmen rute dan pemuatnya (`DATA_SCHEMA.md` 3), 8–10 segmen perumahan buatan tangan, satu rute memakai 6–8 (`ROUTE_DESIGN.md`) (run 3A, PR #28, 2026-10-16: 9 segmen `assets/data/routes/perumahan/per_*.json`, `SegmenRute` + `PemuatRute`, satu rute memakai 7; format tetap usulan yang diterapkan, `DATA_SCHEMA.md` 3)
+- [x] Rute dari urutan segmen acak dengan seed (run 3A, PR #28: `RouteBuilder` berseed, 25 pelanggan, koran awal 30; tiap rute memakai semua 5 segmen tengah, variasi dinilai lewat uji HP, LOG D-1)
+- [x] Rumah pelanggan dan bukan pelanggan; distrik pertama hanya pelanggan di sisi seberang (run 3A, PR #28: rumah dan kotak surat dari data di `scenes/rute/rute.tscn`; rumah sisi dekat hanya placeholder `bukan`, cara tampilnya tetap terbuka)
 - [ ] Dua rintangan perumahan dengan pola perilakunya: anjing penjaga dan mobil keluar garasi (GDD 9.3)
 - [ ] Tabrakan: menghambat, tidak menghentikan rute (aturan pasti di BALANCING 6)
 - [ ] Skor: nilai sasaran, combo, pengali kecepatan (BALANCING 5)
@@ -107,7 +107,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 - [ ] HUD rute: progres pelanggan, koin, sisa koran, kecepatan, stamina (DESIGN_SPEC 3)
 - [ ] Tenggat rute
 - [ ] Layar hasil sederhana: terkirim, meleset, koin, tip
-- [ ] Objek yang menutupi pemain jadi semi-transparan
+- [x] Objek yang menutupi pemain jadi semi-transparan (run 3A, PR #28: `PenutupPemain` + satu `PenerapPenutup`; dibuktikan dengan objek uji, di rute nyata 0 kejadian menutupi pada lebar jalan resmi, LOG D-8 dan D-19; keterbacaan dinilai lewat uji HP 8.6)
 
 **Selesai kalau:** satu rute 25 pelanggan bisa diselesaikan dari awal sampai layar hasil, dan rute yang sama tidak terasa dihafal setelah tiga kali main.
 

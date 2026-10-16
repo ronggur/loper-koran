@@ -1,0 +1,80 @@
+[gd_scene load_steps=22 format=3]
+
+[ext_resource type="Script" path="res://scripts/entities/rute_main.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/entities/tanah_daur.gd" id="2_tanah"]
+[ext_resource type="Script" path="res://scripts/entities/rumah_daur_rute.gd" id="3_daur"]
+[ext_resource type="Script" path="res://scripts/ui/kontrol_touch.gd" id="4_kontrol"]
+[ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/tile_graybox_aspal.png" id="5_aspal"]
+[ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/tile_graybox_trotoar.png" id="6_trotoar"]
+[ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/tile_graybox_rumput.png" id="7_rumput"]
+[ext_resource type="PackedScene" path="res://scenes/dev/kotak_surat_graybox.tscn" id="9_kotak_surat"]
+[ext_resource type="PackedScene" path="res://scenes/entities/sepeda_uji.tscn" id="10_sepeda"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_dev.tscn" id="11_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/layar_jeda.tscn" id="12_jeda"]
+[ext_resource type="Script" path="res://scripts/entities/koran_gambar.gd" id="14_koran"]
+[ext_resource type="Script" path="res://scripts/entities/area_kotak_gambar.gd" id="18_area"]
+[ext_resource type="Script" path="res://scripts/ui/garis_bidik.gd" id="15_bidik"]
+[ext_resource type="Script" path="res://scripts/entities/penerap_penutup.gd" id="16_penerap"]
+[ext_resource type="PackedScene" path="res://scenes/ui/panel_akhir_rute.tscn" id="17_akhir"]
+
+[node name="Rute" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Kamera" type="Camera2D" parent="."]
+unique_name_in_owner = true
+
+[node name="Tanah" type="Node2D" parent="."]
+unique_name_in_owner = true
+texture_filter = 1
+script = ExtResource("2_tanah")
+tekstur_aspal = ExtResource("5_aspal")
+tekstur_trotoar = ExtResource("6_trotoar")
+tekstur_rumput = ExtResource("7_rumput")
+
+[node name="AreaKotak" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("18_area")
+
+[node name="KoranTanah" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("14_koran")
+lapisan = 0
+
+[node name="Objek" type="Node2D" parent="."]
+unique_name_in_owner = true
+y_sort_enabled = true
+texture_filter = 1
+script = ExtResource("3_daur")
+adegan_kotak_surat = ExtResource("9_kotak_surat")
+
+[node name="Sepeda" parent="Objek" instance=ExtResource("10_sepeda")]
+unique_name_in_owner = true
+
+[node name="PenerapPenutup" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("16_penerap")
+
+[node name="KoranUdara" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("14_koran")
+lapisan = 1
+
+[node name="GarisBidik" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("15_bidik")
+
+[node name="Hud" parent="." instance=ExtResource("11_hud")]
+unique_name_in_owner = true
+
+[node name="PanelAkhir" parent="." instance=ExtResource("17_akhir")]
+unique_name_in_owner = true
+
+[node name="LapisanKontrol" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="KontrolTouch" type="Node2D" parent="LapisanKontrol"]
+unique_name_in_owner = true
+script = ExtResource("4_kontrol")
+
+[node name="LayarJeda" parent="." instance=ExtResource("12_jeda")]
+unique_name_in_owner = true
