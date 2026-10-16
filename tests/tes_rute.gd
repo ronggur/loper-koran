@@ -71,6 +71,8 @@ func jalankan() -> void:
 	_test_bantu_di_zona_rute()
 	_test_penutup_literal()
 	_test_penutup_rumah_rute()
+	_test_medan_tertutup_titik()
+	_test_konstanta_pengapit()
 
 
 # --- Pembantu ---
@@ -1113,3 +1115,90 @@ func _test_penutup_rumah_rute() -> void:
 	check(PenutupPemain.menutupi(Vector2(0.0, -12.0), tinggi_x), "objek setinggi 3,5 di tapak dekat menutupi pemain di (0, maju 12)")
 	check(not PenutupPemain.menutupi(Vector2(0.0, -12.0), PenutupPemain.buat(PenutupPemain.tapak_rumah(LoperAnim.Sisi.DEKAT, 8.0), 3.0, "pas")), "objek setinggi 3,0: sinar tepat di puncak (d tunggal 3,0) tidak tertutup")
 	check(not PenutupPemain.menutupi(Vector2(0.0, -9.5), tinggi_x), "pemain di maju 9,5 (tegak lurus tapak): sinar masuk tapak hanya untuk d <= 2,0 padahal butuh d >= 3, tidak tertutup")
+
+
+## QA-002 (Q11 dan Q23): jendela belakang `MedanKoran.tertutup_titik` dan `KoranLempar.tertutup_pada` memakai medan rute.
+func _test_medan_tertutup_titik() -> void:
+	_judul.call("MedanKoran: titik tanah di depan rumah seberang tertutup sampai 4,5 ubin dari awal kavling; tertutup_pada memakai medan (QA-002)")
+	var rute: RouteBuilder.Rute = RouteBuilder.Rute.new()
+	rute.rumah.append(_rumah_uji("uji@6", 6.0, LoperAnim.Sisi.SEBERANG, true))
+	var medan: MedanKoran = MedanKoran.dari_rute(rute)
+	# Tapak seberang di awal 6 = lateral -6 sampai -3, maju 5,5 sampai 8,5, tinggi 2,0. Titik tanah di lateral -5,5: sinar ke kamera
+	# (lateral + d, maju - d, tinggi + d) masuk tapak untuk d antara maju - 8,5 dan maju - 5,5 dan d < 2: tertutup sampai maju 10,5.
+	check(_persegi_sama(PenutupPemain.tapak_rumah(LoperAnim.Sisi.SEBERANG, 6.0), -6.0, 5.5, 3.0, 3.0), "kontrol: tapak seberang di awal 6 = [-6; 5,5; 3 x 3]")
+	var kasus: Array = [
+		[10.0, 0.0, true, "4,0 ubin di depan awal kavling"],
+		[10.2, 0.0, true, "4,2 ubin di depan awal kavling"],
+		[10.3, 0.0, true, "4,3 ubin di depan awal kavling (di luar jendela satu petak [maju - 4])"],
+		[10.45, 0.0, true, "4,45 ubin di depan awal kavling"],
+		[10.6, 0.0, false, "4,6 ubin di depan: sinar masuk tapak hanya pada tinggi 2,0 ke atas, tidak tertutup"],
+		[10.3, 1.9, false, "titik setinggi 1,9 di maju 10,3: tinggi 1,9 + d >= 2 sebelum sinar masuk tapak: sudah di atas atap"],
+		[7.0, 0.0, true, "titik di dalam tapak"],
+		[3.0, 0.0, false, "di belakang rumah (sinar menjauh dari tapak)"],
+	]
+	for k: Array in kasus:
+		var titik: Vector2 = Vector2(-5.5, -float(k[0]))
+		check(medan.tertutup_titik(titik, float(k[1])) == bool(k[2]), "titik tanah di lateral -5,5 maju %.2f tinggi %.1f, %s: tertutup %s" % [float(k[0]), float(k[1]), k[3], k[2]])
+	check(not medan.tertutup_titik(Vector2(0.0, -10.3), 0.0), "tengah jalan di maju 10,3 tidak tertutup")
+	# Rumah di luar jendela belakang dua petak (8 ubin) tidak dicari; titik di sana juga memang tidak tertutup secara geometri.
+	check(not medan.tertutup_titik(Vector2(-5.5, -14.5), 0.0), "titik 8,5 ubin di depan awal kavling: di luar jendela belakang, tidak tertutup")
+	check(Config.RUTE_PENUTUP_JENDELA_BELAKANG_PETAK == 2, "Config.RUTE_PENUTUP_JENDELA_BELAKANG_PETAK = 2 petak (8 ubin) di belakang titik")
+	# KoranLempar.tertutup_pada memakai medan: lintasan ke seberang dari (0, maju 50) mendarat di (-3,25; maju 52,3) dengan satu
+	# sampel garis bidik di balik rumah graybox jalan uji. Medan rute tanpa rumah: tidak ada yang tertutup; rute berumah di awal 50: tertutup.
+	var kosong: MedanKoran = MedanKoran.dari_rute(RouteBuilder.Rute.new())
+	var rute_50: RouteBuilder.Rute = RouteBuilder.Rute.new()
+	rute_50.rumah.append(_rumah_uji("uji@50", 50.0, LoperAnim.Sisi.SEBERANG, true))
+	var medan_50: MedanKoran = MedanKoran.dari_rute(rute_50)
+	var l: ThrowSolver.Lintasan = ThrowSolver.hitung(160.0, LEBAR, Iso.ARAH_SEBERANG, Vector2(0.0, -50.0), 3.0, 0.0, JEDA_LEPAS)
+	check(l != null, "kontrol: lintasan uji terbentuk")
+	if l == null:
+		return
+	var waktu: PackedFloat32Array = KoranLempar.waktu_titik_bidik(l, float(Config.SWIPE_TITIK_JARAK_PX), Config.GARIS_BIDIK_SAMPEL)
+	var graybox: int = 0
+	var kosong_tertutup: int = 0
+	var rumah_50: int = 0
+	var rumah_50_salah: int = 0
+	for t: float in waktu:
+		var p: Vector3 = ThrowSolver.posisi_pada(l, t)
+		var titik: Vector2 = Vector2(p.x, p.y)
+		if KoranLempar.tertutup_pada(l, t):
+			graybox += 1
+		if KoranLempar.tertutup_pada(l, t, kosong):
+			kosong_tertutup += 1
+		var oracle_50: bool = _di_dalam_rumah_50(p)
+		if KoranLempar.tertutup_pada(l, t, medan_50) != medan_50.tertutup_titik(titik, p.z):
+			rumah_50_salah += 1
+		if oracle_50:
+			rumah_50 += 1
+			if not KoranLempar.tertutup_pada(l, t, medan_50):
+				rumah_50_salah += 1
+	check(graybox >= 1, "kontrol: tanpa medan (rumah graybox jalan uji) paling sedikit satu sampel garis bidik tertutup (%d)" % graybox)
+	check(kosong_tertutup == 0, "dengan medan rute tanpa rumah tidak ada sampel tertutup (jalan uji dapat %d, medan dapat %d)" % [graybox, kosong_tertutup])
+	check(rumah_50 >= 1 and rumah_50_salah == 0, "dengan medan rumah di awal 50: sampel di dalam tapak (%d) tertutup dan sama dengan medan.tertutup_titik (salah %d)" % [rumah_50, rumah_50_salah])
+	check(KoranLempar.tertutup_pada(l, l.lama_terbang, medan_50) and not KoranLempar.tertutup_pada(l, l.lama_terbang, kosong), "titik mendarat di tapak rumah awal 50 tertutup lewat medan, tidak lewat medan kosong")
+
+
+## Titik `p` (x lateral, y = -maju, z tinggi) di dalam balok tapak rumah seberang di awal 50: lateral -6 sampai -3, maju 49,5 sampai 52,5,
+## tinggi di bawah 2. Oracle literal, bukan `PenutupPemain`.
+func _di_dalam_rumah_50(p: Vector3) -> bool:
+	return p.x >= -6.0 and p.x <= -3.0 and -p.y >= 49.5 and -p.y <= 52.5 and p.z >= 0.0 and p.z < 2.0
+
+
+## QA-003: konstanta pengapit dan minimum pustaka.
+func _test_konstanta_pengapit() -> void:
+	_judul.call("Config: segmen pengapit rute dan minimum pembuka dan penutup (QA-003)")
+	check(Config.RUTE_SEGMEN_PENGAPIT == 2 and Config.RUTE_PEMBUKA_MIN == 2 and Config.RUTE_PENUTUP_MIN == 2, "pengapit 2 (satu pembuka dan satu penutup), minimum 2 pembuka dan 2 penutup")
+	check(Config.RUTE_SEGMEN_PER_RUTE - Config.RUTE_SEGMEN_PENGAPIT == ID_TENGAH.size(), "segmen tengah per rute = 7 - 2 = 5 = semua segmen tengah di data")
+	var daftar: Array[SegmenRute] = _pustaka()
+	var tanpa_pembuka: Array[SegmenRute] = []
+	for segmen: SegmenRute in daftar:
+		if segmen.id != "per_buka_02":
+			tanpa_pembuka.append(segmen)
+	check(_galat_berisi(PemuatRute.periksa_kumpulan(tanpa_pembuka), "segmen pembuka kurang dari 2 (ada 1)"), "satu pembuka saja ditolak dengan galat bernomor dari Config")
+	var tanpa_tengah: Array[SegmenRute] = []
+	for segmen: SegmenRute in daftar:
+		if segmen.id != "per_tengah_05":
+			tanpa_tengah.append(segmen)
+	check(_galat_berisi(PemuatRute.periksa_kumpulan(tanpa_tengah), "segmen tengah kurang dari 5 (ada 4), satu rute butuh 7 segmen"), "empat tengah ditolak: butuh 7 - 2 = 5")
+	var hasil: RouteBuilder.Hasil = RouteBuilder.bangun(1, tanpa_tengah)
+	check(not hasil.sah() and _galat_berisi(hasil.galat, "tengah 4 (butuh 5)"), "RouteBuilder menolak pustaka dengan empat tengah (butuh 5)")

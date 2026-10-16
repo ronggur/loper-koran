@@ -58,6 +58,7 @@ func jalankan() -> void:
 	for v: float in [Config.KECEPATAN_SANTAI_UD, Config.KECEPATAN_CEPAT_UD, Config.KECEPATAN_NGEBUT_UD]:
 		await _test_bantu_kisi(v)
 	await _test_swipe_dinilai_zona_rute()
+	await _test_garis_bidik_titik_redup()
 	await _test_akhir_rute()
 	await _test_akhir_koran_terbang_dinilai()
 	await _test_main_lagi()
@@ -599,6 +600,47 @@ func _test_swipe_dinilai_zona_rute() -> void:
 	check((catatan["lempar"] as Array).size() >= 20, "kontrol: banyak swipe benar-benar melempar (%d dari %d)" % [(catatan["lempar"] as Array).size(), jumlah])
 	_bersihkan(akar)
 
+
+## QA-002 (Q22): titik garis bidik yang redup menurut rumah RUTE (medan rute), bukan rumah graybox jalan uji.
+func _test_garis_bidik_titik_redup() -> void:
+	_judul.call("Scene rute: titik garis bidik redup menurut rumah rute (QA-002, AC-15)")
+	var akar: RuteMain = await _siapkan()
+	var garis: GarisBidik = akar.garis_bidik()
+	var medan: MedanKoran = akar.medan()
+	var salah: int = 0
+	var tampil: int = 0
+	var redup: int = 0
+	var beda_graybox: int = 0
+	var awal: Vector2 = Vector2(300, 220)
+	for maju: float in [60.0, 62.0, 64.0, 66.0, 68.0, 70.0]:
+		for sudut: float in [100.0, 120.0, 140.0, 160.0, 180.0]:
+			for panjang: float in [110.0, 170.0, 200.0, 230.0]:
+				_taruh_sepeda(akar, 3.0, 0.0, 0.0, maju)
+				var akhir: Vector2 = awal + Vector2(cos(deg_to_rad(sudut)), -sin(deg_to_rad(sudut))) * panjang
+				_sentuh(1, awal, true)
+				_geser(1, akhir)
+				_langkah(akar, 1)
+				if garis.tampil():
+					tampil += 1
+					var waktu: PackedFloat32Array = KoranLempar.waktu_titik_bidik(garis.lintasan(), float(Config.SWIPE_TITIK_JARAK_PX), Config.GARIS_BIDIK_SAMPEL)
+					if waktu.size() != garis.titik_gambar().size():
+						salah += 1
+					for i: int in range(mini(waktu.size(), garis.titik_gambar().size())):
+						var p: Vector3 = ThrowSolver.posisi_pada(garis.lintasan(), waktu[i])
+						var harapan: bool = medan.tertutup_titik(Vector2(p.x, p.y), p.z)
+						if garis.titik_tertutup(i) != harapan:
+							salah += 1
+						if harapan:
+							redup += 1
+						if harapan != ZonaSasaran.tertutup_rumah_jalan_uji(Vector2(p.x, p.y), p.z):
+							beda_graybox += 1
+				_sentuh(1, akhir, false)
+				akar.koran = SisaKoran.awal(30)
+				_langkah(akar, 1)
+	check(tampil >= 60, "kontrol: garis bidik tampil pada banyak swipe (%d dari 120)" % tampil)
+	check(salah == 0, "tiap titik garis bidik redup tepat bila titiknya tertutup rumah rute (medan.tertutup_titik), salah %d" % salah)
+	check(redup >= 1 and beda_graybox >= 1, "kontrol: ada titik redup menurut rumah rute (%d) dan ada yang berbeda dari rumah graybox jalan uji (%d)" % [redup, beda_graybox])
+	_bersihkan(akar)
 
 # --- Akhir rute (AC-14) ---
 
