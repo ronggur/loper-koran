@@ -67,6 +67,7 @@ func jalankan() -> void:
 	_test_waktu_bangun()
 	_test_data_ikut_paket()
 	_test_zona_rumah_literal()
+	_test_kotak_surat_area()
 	_test_zona_rute_dan_penilaian()
 	_test_bantu_di_zona_rute()
 	_test_penutup_literal()
@@ -879,7 +880,7 @@ func _test_zona_rumah_literal() -> void:
 	var seberang: Array[ZonaSasaran.Zona] = ZonaSasaran.zona_rumah_seberang(50.0, true, 0, "per_uji@6")
 	check(seberang.size() == 4, "rumah seberang: 4 zona (kotak surat, halaman, teras, jendela)")
 	if seberang.size() == 4:
-		check(seberang[0].jenis == ZonaSasaran.Jenis.KOTAK_SURAT and _persegi_sama(seberang[0].persegi, -1.875, 50.875, 0.5, 0.5), "kotak surat seberang di awal 50: [-1,875; 50,875; 0,5 x 0,5]")
+		check(seberang[0].jenis == ZonaSasaran.Jenis.KOTAK_SURAT and _persegi_sama(seberang[0].persegi, -2.125, 50.375, 1.0, 1.5), "kotak surat seberang di awal 50: [-2,125; 50,375; 1,0 x 1,5]")
 		check(seberang[1].jenis == ZonaSasaran.Jenis.HALAMAN and _persegi_sama(seberang[1].persegi, -3.0, 49.5, 1.0, 3.0), "halaman seberang di awal 50: [-3; 49,5; 1 x 3]")
 		check(seberang[2].jenis == ZonaSasaran.Jenis.TERAS and _persegi_sama(seberang[2].persegi, -3.0, 50.0, 0.5, 1.25), "teras seberang di awal 50: [-3; 50; 0,5 x 1,25]")
 		check(seberang[3].jenis == ZonaSasaran.Jenis.JENDELA and _persegi_sama(seberang[3].persegi, -3.0, 51.5, 0.25, 0.75), "jendela seberang di awal 50: [-3; 51,5; 0,25 x 0,75]")
@@ -887,7 +888,7 @@ func _test_zona_rumah_literal() -> void:
 	var dekat: Array[ZonaSasaran.Zona] = ZonaSasaran.zona_rumah_dekat(50.0, false, 0, "per_uji@8")
 	check(dekat.size() == 3, "rumah dekat: 3 zona (tanpa jendela)")
 	if dekat.size() == 3:
-		check(dekat[0].jenis == ZonaSasaran.Jenis.KOTAK_SURAT and _persegi_sama(dekat[0].persegi, 1.375, 50.875, 0.5, 0.5), "kotak surat dekat di awal 50: [1,375; 50,875; 0,5 x 0,5]")
+		check(dekat[0].jenis == ZonaSasaran.Jenis.KOTAK_SURAT and _persegi_sama(dekat[0].persegi, 1.125, 50.375, 1.0, 1.5), "kotak surat dekat di awal 50: [1,125; 50,375; 1,0 x 1,5]")
 		check(dekat[1].jenis == ZonaSasaran.Jenis.HALAMAN and _persegi_sama(dekat[1].persegi, 2.0, 49.5, 1.0, 3.0), "halaman dekat di awal 50: [2; 49,5; 1 x 3]")
 		check(dekat[2].jenis == ZonaSasaran.Jenis.TERAS and _persegi_sama(dekat[2].persegi, 2.5, 50.25, 0.5, 1.5), "teras dekat di awal 50: [2,5; 50,25; 0,5 x 1,5]")
 		check(not dekat[0].pelanggan and not dekat[1].pelanggan and not dekat[2].pelanggan, "zona rumah dekat bukan pelanggan")
@@ -896,9 +897,14 @@ func _test_zona_rumah_literal() -> void:
 	zona.append_array(ZonaSasaran.zona_rumah_dekat(50.0, false))
 	var kasus: Array[Array] = [
 		[Vector2(-1.7, -51.0), ZonaSasaran.Hasil.KOTAK_SURAT, "tengah kotak surat seberang"],
-		[Vector2(-1.875, -50.875), ZonaSasaran.Hasil.KOTAK_SURAT, "tepi min kotak surat inklusif"],
-		[Vector2(-1.375, -51.0), ZonaSasaran.Hasil.MELESET, "tepi maks lateral kotak surat eksklusif"],
-		[Vector2(-1.7, -51.375), ZonaSasaran.Hasil.MELESET, "tepi maks maju kotak surat eksklusif"],
+		[Vector2(-2.125, -50.375), ZonaSasaran.Hasil.KOTAK_SURAT, "tepi min kotak surat inklusif (pojok lateral dan maju)"],
+		[Vector2(-1.125, -51.0), ZonaSasaran.Hasil.MELESET, "tepi maks lateral kotak surat eksklusif"],
+		[Vector2(-1.7, -51.875), ZonaSasaran.Hasil.MELESET, "tepi maks maju kotak surat eksklusif"],
+		[Vector2(-1.7, -51.8749), ZonaSasaran.Hasil.KOTAK_SURAT, "tepat di dalam tepi maks maju kotak surat"],
+		[Vector2(-2.0, -50.5), ZonaSasaran.Hasil.KOTAK_SURAT, "titik yang dulu meleset (0,125 ubin halaman) kini kotak surat: lateral -2,0, maju awal + 0,5"],
+		[Vector2(-2.1, -49.9), ZonaSasaran.Hasil.HALAMAN, "di bawah tepi min maju kotak surat tetap halaman"],
+		[Vector2(-2.125, -50.2), ZonaSasaran.Hasil.HALAMAN, "titik lateral tepat -2,125 tapi maju 50,2 (di bawah 50,375) tetap halaman"],
+		[Vector2(-2.13, -50.6), ZonaSasaran.Hasil.HALAMAN, "di luar tepi min lateral kotak surat (-2,13) tetap halaman, bukan kotak surat"],
 		[Vector2(-2.6, -49.8), ZonaSasaran.Hasil.HALAMAN, "halaman depan rumah"],
 		[Vector2(-2.8, -50.5), ZonaSasaran.Hasil.TERAS, "teras menang atas halaman"],
 		[Vector2(-2.9, -51.8), ZonaSasaran.Hasil.JENDELA, "jendela menang atas halaman"],
@@ -921,6 +927,74 @@ func _test_zona_rumah_literal() -> void:
 			sama = false
 	check(sama, "zona jalan uji kavling 3 = zona rumah di awal 12 (satu geometri, tanpa angka baru)")
 	check(ZonaSasaran.zona_rute_rentang([] as Array[RouteBuilder.RumahRute], NAN, 10.0).is_empty(), "rentang dengan batas tidak hingga = kosong")
+
+
+func _test_kotak_surat_area() -> void:
+	_judul.call("Kotak surat sebagai AREA 1,0 x 1,5: ukuran, pusat tetap, tepi, titik yang dulu meleset, halaman tertimpa, prioritas (tune pemilik 2026-10-16)")
+	for awal: float in [0.0, 50.0]:
+		var seberang: Array[ZonaSasaran.Zona] = ZonaSasaran.zona_rumah_seberang(awal, true)
+		var dekat: Array[ZonaSasaran.Zona] = ZonaSasaran.zona_rumah_dekat(awal, true)
+		var kotak_s: Rect2 = seberang[0].persegi
+		var kotak_d: Rect2 = dekat[0].persegi
+		check(seberang[0].jenis == ZonaSasaran.Jenis.KOTAK_SURAT and dekat[0].jenis == ZonaSasaran.Jenis.KOTAK_SURAT, "awal %.0f: zona pertama tiap sisi adalah kotak surat" % awal)
+		check(is_equal_approx(kotak_s.size.x, 1.0) and is_equal_approx(kotak_s.size.y, 1.5), "awal %.0f: kotak surat seberang tepat 1,0 x 1,5 (dapat %s)" % [awal, kotak_s.size])
+		check(is_equal_approx(kotak_d.size.x, 1.0) and is_equal_approx(kotak_d.size.y, 1.5), "awal %.0f: kotak surat dekat tepat 1,0 x 1,5 (dapat %s)" % [awal, kotak_d.size])
+		check(is_equal_approx(kotak_s.get_center().x, -1.625) and is_equal_approx(kotak_s.get_center().y, awal + 1.125), "awal %.0f: pusat kotak surat seberang tetap (-1,625; awal + 1,125), sasaran mode bantu tidak bergeser (dapat %s)" % [awal, kotak_s.get_center()])
+		check(is_equal_approx(kotak_d.get_center().x, 1.625) and is_equal_approx(kotak_d.get_center().y, awal + 1.125), "awal %.0f: pusat kotak surat dekat tetap (1,625; awal + 1,125) (dapat %s)" % [awal, kotak_d.get_center()])
+		check(not kotak_s.intersects(kotak_d), "awal %.0f: kotak surat seberang dan dekat tidak bertumpuk" % awal)
+		# Semua zona seberang/dekat tidak menyentuh sisi lawan: seberang lateral < 0, dekat lateral > 0 (jalan tidak terpotong).
+		var salah_sisi: int = 0
+		for z: ZonaSasaran.Zona in seberang:
+			if z.persegi.end.x > 0.0:
+				salah_sisi += 1
+		for z: ZonaSasaran.Zona in dekat:
+			if z.persegi.position.x < 0.0:
+				salah_sisi += 1
+		check(salah_sisi == 0, "awal %.0f: semua zona seberang di lateral negatif, semua zona dekat positif" % awal)
+	# Titik literal di rumah dengan awal kavling 50 (dunia: y = -maju). Seberang pelanggan, lalu dekat pelanggan.
+	var zona: Array[ZonaSasaran.Zona] = ZonaSasaran.zona_rumah_seberang(50.0, true)
+	zona.append_array(ZonaSasaran.zona_rumah_dekat(50.0, true))
+	var kasus: Array[Array] = [
+		# Pusat dan inti 0,5 x 0,5 lama (-1,875..-1,375; 50,875..51,375).
+		[Vector2(-1.625, -51.125), ZonaSasaran.Hasil.KOTAK_SURAT, "pusat kotak surat seberang"],
+		[Vector2(-1.875, -50.875), ZonaSasaran.Hasil.KOTAK_SURAT, "pojok zona lama 0,5 x 0,5 tetap kotak surat"],
+		# Titik yang dulu MELESET (lateral tepat -2,0 = tepi maks halaman, eksklusif).
+		[Vector2(-2.0, -50.5), ZonaSasaran.Hasil.KOTAK_SURAT, "dulu meleset (lateral -2,0, maju awal + 0,5): sekarang kotak surat"],
+		[Vector2(-1.2, -51.5), ZonaSasaran.Hasil.KOTAK_SURAT, "dulu meleset (lateral -1,2, maju awal + 1,5) di dalam area baru"],
+		# Titik 0,125 ubin halaman yang tertimpa: dulu HALAMAN, sekarang kotak surat menang.
+		[Vector2(-2.05, -50.7), ZonaSasaran.Hasil.KOTAK_SURAT, "dulu halaman (lateral -2,05): tertimpa, kotak surat menang"],
+		[Vector2(-2.124, -51.0), ZonaSasaran.Hasil.KOTAK_SURAT, "tepat di dalam tepi min lateral baru (-2,124)"],
+		[Vector2(-2.126, -51.0), ZonaSasaran.Hasil.HALAMAN, "tepat di luar tepi min lateral baru (-2,126) tetap halaman"],
+		# Tepi: min inklusif, maks eksklusif, kedua sumbu.
+		[Vector2(-2.125, -50.375), ZonaSasaran.Hasil.KOTAK_SURAT, "pojok min (-2,125; 50,375) inklusif"],
+		[Vector2(-2.125, -50.374), ZonaSasaran.Hasil.HALAMAN, "maju di bawah tepi min (50,374) bukan kotak surat"],
+		[Vector2(-1.126, -51.0), ZonaSasaran.Hasil.KOTAK_SURAT, "tepat di dalam tepi maks lateral (-1,126)"],
+		[Vector2(-1.125, -51.0), ZonaSasaran.Hasil.MELESET, "tepi maks lateral -1,125 eksklusif (aspal)"],
+		[Vector2(-1.7, -51.874), ZonaSasaran.Hasil.KOTAK_SURAT, "tepat di dalam tepi maks maju (51,874)"],
+		[Vector2(-1.7, -51.875), ZonaSasaran.Hasil.MELESET, "tepi maks maju 51,875 eksklusif (di luar halaman, jadi meleset)"],
+		# Sisi dekat: pusat, pojok min, tepi maks, halaman dekat yang tertimpa (lateral 2,0 sampai 2,125).
+		[Vector2(1.625, -51.125), ZonaSasaran.Hasil.KOTAK_SURAT, "pusat kotak surat dekat"],
+		[Vector2(1.125, -50.375), ZonaSasaran.Hasil.KOTAK_SURAT, "pojok min kotak surat dekat inklusif"],
+		[Vector2(2.125, -51.0), ZonaSasaran.Hasil.HALAMAN, "tepi maks lateral dekat 2,125 eksklusif: halaman dekat"],
+		[Vector2(2.1, -51.0), ZonaSasaran.Hasil.KOTAK_SURAT, "dulu halaman dekat (lateral 2,1): tertimpa, kotak surat menang"],
+		[Vector2(1.124, -51.0), ZonaSasaran.Hasil.MELESET, "tepat di luar tepi min lateral dekat (aspal)"],
+	]
+	for k: Array in kasus:
+		var hasil: ZonaSasaran.Hasil = ZonaSasaran.klasifikasi(k[0], zona)
+		# Zona dekat di daftar ini pelanggan (true), jadi KOTAK_SURAT dekat = KOTAK_SURAT.
+		check(hasil == k[1], "titik %s = %s (%s); dapat %s" % [k[0], ZonaSasaran.Hasil.keys()[k[1]], k[2], ZonaSasaran.Hasil.keys()[hasil]])
+	# Titik 0,125 ubin halaman tertimpa menurut prioritas: kotak surat > halaman, juga bila daftar zona dibalik (bukan urutan daftar).
+	var terbalik: Array[ZonaSasaran.Zona] = zona.duplicate()
+	terbalik.reverse()
+	check(ZonaSasaran.klasifikasi(Vector2(-2.05, -50.7), terbalik) == ZonaSasaran.Hasil.KOTAK_SURAT, "tumpang tindih kotak surat dan halaman: kotak surat menang walau daftar dibalik (prioritas, bukan urutan)")
+	# Mode bantu tetap membidik pusat: koran mendarat di (-1,625; maju awal + 1,125), di dalam area, pada tiga kecepatan.
+	var rute_uji: Array[ZonaSasaran.Zona] = ZonaSasaran.zona_rumah_seberang(0.0, true, 0, "uji@0")
+	for v: float in [3.0, 4.5, 6.0]:
+		var p: BantuLempar.Pilihan = BantuLempar.pilih(LoperAnim.Sisi.SEBERANG, Vector2(0.0, 0.0), v, 0.0, JEDA_LEPAS, LEBAR, rute_uji)
+		check(p != null and p.zona.jenis == ZonaSasaran.Jenis.KOTAK_SURAT, "mode bantu v %.1f: sasaran kotak surat seberang (dapat %s)" % [v, "null" if p == null else str(p.zona.jenis)])
+		if p != null:
+			check(p.lintasan.titik_mendarat.distance_to(Vector2(-1.625, -1.125)) < 0.0001, "mode bantu v %.1f: mendarat di pusat area (-1,625; -1,125), bukan tepinya (dapat %s)" % [v, p.lintasan.titik_mendarat])
+			check(ZonaSasaran.klasifikasi(p.lintasan.titik_mendarat, rute_uji) == ZonaSasaran.Hasil.KOTAK_SURAT, "mode bantu v %.1f: titik mendarat dinilai KOTAK_SURAT" % v)
 
 
 func _rumah_uji(id: String, maju: float, sisi: LoperAnim.Sisi, pelanggan: bool) -> RouteBuilder.RumahRute:

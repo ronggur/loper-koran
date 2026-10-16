@@ -404,16 +404,21 @@ const JALAN_UJI_DAUR_MAJU_UBIN: int = 16
 ## kotak surat > jendela > teras > halaman. Sisi dekat datar tanpa fasad dan tanpa jendela, hanya supaya lempar ke sisi dekat bisa
 ## diuji (tidak memutuskan cara menampilkan rumah di sisi dekat, ROADMAP 5).
 
-## Seberang: kotak surat, 0,5 x 0,5 di sekitar kotak surat graybox (pijak -1,5, 1,0, kotak 0,25 ubin) di trotoar.
-const JALAN_UJI_SEBERANG_KOTAK_SURAT_UBIN: Array[float] = [-1.875, 0.875, 0.5, 0.5]
+## Seberang: kotak surat sebagai AREA 1,0 x 1,5 (lateral x maju) di trotoar, berpusat di (-1,625; 1,125) tepat seperti zona 0,5 x 0,5
+## lama, jadi sasaran mode bantu tidak bergeser. Kotak surat graybox (pijak -1,5, 1,0, kotak 0,25 ubin) ada di dalamnya. Tindak lanjut
+## uji HP pemilik: 0,5 x 0,5 (toleransi sekitar +-3 mm gerak jari) terlalu kecil; kini sekitar +-6 mm dan area sekitar 6x (BALANCING 5).
+## Menimpa 0,125 ubin sisi halaman (lateral -2,125 sampai -2,0); kotak surat menang, disengaja. "Inti" 0,5 x 0,5 di pusat adalah calon bonus
+## presisi Run 3B, belum diputuskan.
+const JALAN_UJI_SEBERANG_KOTAK_SURAT_UBIN: Array[float] = [-2.125, 0.375, 1.0, 1.5]
 ## Seberang: halaman, rumput di antara trotoar (-2,0) dan fasad (-3,0) sepanjang rumah (maju -0,5 sampai 2,5).
 const JALAN_UJI_SEBERANG_HALAMAN_UBIN: Array[float] = [-3.0, -0.5, 1.0, 3.0]
 ## Seberang: teras, di kaki fasad bagian pintu.
 const JALAN_UJI_SEBERANG_TERAS_UBIN: Array[float] = [-3.0, 0.0, 0.5, 1.25]
 ## Seberang: jendela, strip tanah 0,25 ubin di kaki fasad (model placeholder 2D).
 const JALAN_UJI_SEBERANG_JENDELA_UBIN: Array[float] = [-3.0, 1.5, 0.25, 0.75]
-## Dekat: kotak surat di trotoar dekat (datar, tanpa graybox).
-const JALAN_UJI_DEKAT_KOTAK_SURAT_UBIN: Array[float] = [1.375, 0.875, 0.5, 0.5]
+## Dekat: kotak surat di trotoar dekat (datar, tanpa graybox), area 1,0 x 1,5 berpusat di (1,625; 1,125) seperti sisi seberang. Menimpa
+## 0,125 ubin halaman dekat (lateral 2,0 sampai 2,125); tidak bertumpuk dengan zona seberang (celah lateral -1,125 sampai 1,125).
+const JALAN_UJI_DEKAT_KOTAK_SURAT_UBIN: Array[float] = [1.125, 0.375, 1.0, 1.5]
 ## Dekat: halaman, rumput sesudah trotoar dekat.
 const JALAN_UJI_DEKAT_HALAMAN_UBIN: Array[float] = [2.0, -0.5, 1.0, 3.0]
 ## Dekat: teras, sisi jauh halaman.

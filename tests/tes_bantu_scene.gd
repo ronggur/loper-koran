@@ -27,8 +27,8 @@ const JEDA_LEPAS_HARAPAN: float = 2.0 / 12.0
 ## Toleransi perbandingan titik (ubin).
 const TOL_UBIN: float = 0.000001
 ## Kasus literal kabel scene (QA-001): [kecepatan maju u/d, lateral ubin, kecepatan lateral efektif u/d (+ = ke dekat), maju ubin, sisi,
-## rumah sasaran, pusat kotak surat sasaran (x lateral, y maju)]. Kotak surat seberang kavling k: x -1,875..-1,375, maju 4k + 0,875..1,375;
-## dekat: x 1,375..1,875 (BALANCING 4 / config `JALAN_UJI_*_KOTAK_SURAT_UBIN`). Seberang rumah 2 bukan pelanggan (2 mod 4 = 2), rumah 1
+## rumah sasaran, pusat kotak surat sasaran (x lateral, y maju)]. Kotak surat seberang kavling k: x -2,125..-1,125, maju 4k + 0,375..1,875
+## (area 1,0 x 1,5, pusat -1,625; 4k + 1,125); dekat: x 1,125..2,125, pusat 1,625 (BALANCING 5 / config `JALAN_UJI_*_KOTAK_SURAT_UBIN`). Seberang rumah 2 bukan pelanggan (2 mod 4 = 2), rumah 1
 ## (5,125) sudah di belakang, jadi sasaran seberang dari maju 5,75 sampai 7,5 adalah rumah 3 (13,125): di luar daftar +-1 kavling di
 ## sekitar sepeda (`zona_jalan_uji_sekitar`), di dalam jangkauan santai 7,75 dan ngebut 10,5.
 const KASUS_KABEL: Array = [

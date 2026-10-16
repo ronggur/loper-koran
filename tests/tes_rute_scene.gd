@@ -9,7 +9,7 @@ extends RefCounted
 ## - Rumah digambar: jendela [maju - 20, maju + 30] dipindai linear (bukan pencarian biner `JendelaRute`), nama tekstur, titik pijak dari
 ##   JSON aset yang dibaca tes, dan letak layar dari rumus proyeksi iso 2:1 ditulis ulang (tapak seberang tengah x -4,5, dekat +4,5; maju
 ##   awal kavling + 1,0), kotak surat graybox di x -1,5 dan maju awal kavling + 1,0.
-## - Zona: koordinat zona rumah tertentu literal (kotak surat seberang x -1,875 sampai -1,375, maju pos + 0,875 sampai 1,375), dan titik yang
+## - Zona: koordinat zona rumah tertentu literal (kotak surat seberang x -2,125 sampai -1,125, maju pos + 0,375 sampai 1,875), dan titik yang
 ##   di jalan uji kotak surat tetapi di rute meleset.
 ## - Mode bantu: kisi keadaan (tiga kecepatan, beberapa pelanggan dan jarak) lawan `BantuLempar.pilih` yang dipanggil tes dengan daftar
 ##   zona SELURUH rute (bukan jendela).

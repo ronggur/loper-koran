@@ -1049,7 +1049,7 @@ func _test_pola_piksel() -> void:
 		check(baik, "elips %s: satu rentang per baris, simetris, di dalam kotak" % ukuran)
 	check(PolaPiksel.rentang_elips(0, 4).is_empty(), "elips ukuran 0 kosong")
 	# Zona iso: luas piksel = luas belah ketupat (64x32 per ubin persegi = 1024 px), tepi bagian dari isi, sudut bulat.
-	for persegi: Rect2 in [Rect2(-3.0, -0.5, 1.0, 3.0), Rect2(1.375, 0.875, 0.5, 0.5), Rect2(-3.0, 1.5, 0.25, 0.75)]:
+	for persegi: Rect2 in [Rect2(-3.0, -0.5, 1.0, 3.0), Rect2(1.125, 0.375, 1.0, 1.5), Rect2(-3.0, 1.5, 0.25, 0.75)]:
 		var isi: Array[Vector3i] = PolaPiksel.rentang_poligon(PolaPiksel.sudut_zona(persegi))
 		var luas: int = 0
 		for r: Vector3i in isi:
