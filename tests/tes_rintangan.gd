@@ -50,6 +50,7 @@ func jalankan() -> void:
 	_test_tanda_invarian()
 	_test_ngebut_santai_punya_harga()
 	_test_rute_jalan_keluar_20_seed()
+	_test_tenggat_rute_20_seed()
 	_test_tabrakan_tidak_menghentikan_rute()
 
 
@@ -607,8 +608,10 @@ func _test_ngebut_santai_punya_harga() -> void:
 
 ## Simulasi headless satu rute. `bot` = "bebas" (tetap di sisi bebas rintangan yang relevan) atau "tabrak" (sengaja menuju tiap
 ## rintangan). `maju_stick` = komponen maju stick (0 = santai). Hasil: Dictionary {tabrak: jumlah, id_tabrak: Dictionary, selesai: jumlah
-## `baru_selesai`, waktu, okupansi_ok, separuh_ok, pulih_ok, jarak, kecepatan_min_sebelum_akhir}.
-func _sim_rute(rute: RouteBuilder.Rute, bot: String, maju_stick: float) -> Dictionary:
+## `baru_selesai`, waktu, okupansi_ok, separuh_ok, pulih_ok, jarak, kecepatan_min_sebelum_akhir, tenggat (detik), waktu_akhir (jam tenggat
+## saat garis akhir), tenggat_lewat (di garis akhir)}. `rem_detik` > 0 = bot berhenti lama dulu: stick ditarik penuh ke bawah (rem) selama
+## sekian detik di awal rute, lalu santai (run fase3c-hud-hasil, AC-3).
+func _sim_rute(rute: RouteBuilder.Rute, bot: String, maju_stick: float, rem_detik: float = 0.0) -> Dictionary:
 	var dt: float = DT_RUTE
 	var sepeda: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
 	var jarak: float = 0.0
@@ -632,11 +635,15 @@ func _sim_rute(rute: RouteBuilder.Rute, bot: String, maju_stick: float) -> Dicti
 	tepi_seb.fill(-100.0)
 	tepi_dek.fill(100.0)
 	var waktu: float = 0.0
-	var waktu_maks: float = rute.panjang_ubin / Config.TABRAKAN_KECEPATAN_UD + 60.0
+	var waktu_maks: float = rute.panjang_ubin / Config.TABRAKAN_KECEPATAN_UD + 60.0 + rem_detik
 	var kec_min: float = INF
+	var tenggat: TenggatRute.Keadaan = TenggatRute.awal(rute.panjang_ubin)
 	while waktu < waktu_maks:
 		waktu += dt
+		tenggat = TenggatRute.langkah(tenggat, dt)
 		var stick: Vector2 = Vector2(0.0, maju_stick)
+		if waktu <= rem_detik:
+			stick = Vector2(0.0, -1.0)
 		var sasaran: float = _sasaran_bot(bot, r, jarak, id_tabrak)
 		stick.x = clampf((sasaran - sepeda.lateral_ubin) / (Config.KECEPATAN_LATERAL_UD * dt), -1.0, 1.0)
 		if selesai:
@@ -661,7 +668,7 @@ func _sim_rute(rute: RouteBuilder.Rute, bot: String, maju_stick: float) -> Dicti
 			elif detik_sejak_tabrak > 3.0 and not selesai:
 				pulih_ok = false
 				detik_sejak_tabrak = -1.0
-		if not selesai:
+		if not selesai and waktu > rem_detik:
 			kec_min = minf(kec_min, sepeda.kecepatan_ud)
 		for item: RintanganRute.Item in r.daftar:
 			var k: Rect2 = RintanganRute.kotak(item)
@@ -679,6 +686,7 @@ func _sim_rute(rute: RouteBuilder.Rute, bot: String, maju_stick: float) -> Dicti
 		selesai = status.selesai
 		if status.baru_selesai:
 			jumlah_selesai += 1
+			tenggat = TenggatRute.hentikan(tenggat)
 		if selesai and sepeda.kecepatan_ud <= 0.0:
 			break
 	# Jalan keluar (AC-4): di tiap bucket ada pusat sepeda di [-2, 2] (kisi 0,05) yang pitanya tidak beririsan dengan sisi mana pun.
@@ -693,7 +701,7 @@ func _sim_rute(rute: RouteBuilder.Rute, bot: String, maju_stick: float) -> Dicti
 				break
 		if not ada:
 			okupansi_ok = false
-	return {"tabrak": jumlah_tabrak, "id_tabrak": id_tabrak, "selesai": jumlah_selesai, "waktu": waktu, "okupansi_ok": okupansi_ok, "separuh_ok": separuh_ok, "pulih_ok": pulih_ok, "jarak": jarak, "kec_min": kec_min, "combo_putus_ok": combo_putus_ok, "berhenti": selesai and sepeda.kecepatan_ud <= 0.0}
+	return {"tabrak": jumlah_tabrak, "id_tabrak": id_tabrak, "selesai": jumlah_selesai, "waktu": waktu, "okupansi_ok": okupansi_ok, "separuh_ok": separuh_ok, "pulih_ok": pulih_ok, "jarak": jarak, "kec_min": kec_min, "combo_putus_ok": combo_putus_ok, "berhenti": selesai and sepeda.kecepatan_ud <= 0.0, "tenggat": tenggat.tenggat_detik, "waktu_akhir": tenggat.waktu_detik, "tenggat_lewat": TenggatRute.lewat(tenggat)}
 
 
 ## Lateral sasaran bot. "bebas": rintangan relevan = titik rumah paling awal di [maju - 3,7, maju + 12]; sasaran sisi lawannya (+-0,5).
@@ -753,6 +761,39 @@ func _test_rute_jalan_keluar_20_seed() -> void:
 	check(separuh == 20, "20 rute: tidak ada rintangan yang melewati garis tengah (%d/20)" % separuh)
 	check(selesai == 20, "20 rute: garis akhir tercapai tepat sekali (%d/20)" % selesai)
 	check(ngebut_bersih == 20, "20 rute: bot ngebut di sisi bebas juga tanpa tabrakan dan jalan keluar tetap ada (%d/20)" % ngebut_bersih)
+
+
+## Run fase3c-hud-hasil AC-3, AC-18: bot santai (kecepatan otomatis mode bantu = stick netral) yang tidak berhenti menyelesaikan rute
+## sebelum tenggat tanpa tabrakan di 20 seed; bot yang berhenti lama (rem 100 detik) melewati tenggat tetapi tetap menyelesaikan rute,
+## garis akhir tepat sekali (tenggat tidak menghentikan rute; santai punya harga bila berhenti lama).
+func _test_tenggat_rute_20_seed() -> void:
+	_judul.call("Tenggat (AC-3, AC-18): santai tanpa berhenti sempat di 20 seed; berhenti lama lewat tenggat tapi rute tetap selesai")
+	var sempat: int = 0
+	var gagal: Array[int] = []
+	var cadangan_min: float = INF
+	for i: int in range(20):
+		var benih: int = Config.RUTE_SEED_DEV + i
+		var rute: RouteBuilder.Rute = _rute(benih)
+		if rute == null:
+			gagal.append(benih)
+			continue
+		var h: Dictionary = _sim_rute(rute, "bebas", 0.0)
+		if h["selesai"] == 1 and h["tabrak"] == 0 and not h["tenggat_lewat"] and float(h["waktu_akhir"]) <= float(h["tenggat"]):
+			sempat += 1
+			cadangan_min = minf(cadangan_min, float(h["tenggat"]) - float(h["waktu_akhir"]))
+		else:
+			gagal.append(benih)
+	check(sempat == 20, "20 rute: santai tanpa berhenti sampai garis akhir sebelum tenggat, tanpa tabrakan (gagal: %s)" % [gagal])
+	# Waktu tempuh santai = panjang / 3,0 (77,3 sampai 80 detik) lawan tenggat 89 sampai 92: cadangan paling sedikit sekitar 11 detik.
+	check(cadangan_min >= 10.0, "cadangan waktu santai paling sedikit 10 detik (dapat %.2f)" % cadangan_min)
+	for benih: int in [Config.RUTE_SEED_DEV, Config.RUTE_SEED_DEV + 1, Config.RUTE_SEED_DEV + 2]:
+		var rute: RouteBuilder.Rute = _rute(benih)
+		if rute == null:
+			check(false, "seed %d dibangun" % benih)
+			continue
+		var h: Dictionary = _sim_rute(rute, "bebas", 0.0, 100.0)
+		check(h["tenggat_lewat"] and float(h["waktu_akhir"]) > float(h["tenggat"]), "seed %d: berhenti 100 detik -> tenggat lewat (jam %.1f dari %d)" % [benih, h["waktu_akhir"], h["tenggat"]])
+		check(h["selesai"] == 1 and h["jarak"] >= rute.panjang_ubin and h["berhenti"], "seed %d: sesudah tenggat lewat rute tetap selesai, garis akhir tepat sekali, sepeda berhenti" % benih)
 
 
 func _test_tabrakan_tidak_menghentikan_rute() -> void:

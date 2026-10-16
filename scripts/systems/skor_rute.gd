@@ -7,7 +7,8 @@ extends RefCounted
 ## - `ANTAR`: antaran sah pertama ke rumah pelanggan (kotak surat, teras, halaman, jendela dengan sakelar bonus). Rumah jadi terantar (O-1).
 ##   Skor = `SKOR_SASARAN_DASAR` x persen sasaran (penuh 100, halaman 50) x pengali combo x pengali kecepatan saat lepas (O-5) x
 ##   `SKOR_TEPAT_PENGALI` bila tepat (K-4). Dihitung bilangan bulat (persen dan persepuluh, `_persen`) lalu dibulatkan ke bilangan bulat
-##   terdekat, setengah ke atas. Koin = `KOIN_ONGKOS_ANTAR` (juga halaman, O-2) + `KOIN_TIP` bila teras ke pemberi tip (O-3).
+##   terdekat, setengah ke atas. Koin = `KOIN_ONGKOS_ANTAR` (juga halaman, O-2) + `KOIN_TIP` bila teras ke pemberi tip (O-3) dan tenggat
+##   belum lewat (K-1 run fase3c-hud-hasil: sesudah tenggat lewat ongkos, skor, dan combo tetap, tip 0 dan `jumlah_tip` tidak naik).
 ## - `ULANG`: koran ke zona rumah yang sudah terantar: 0 skor, 0 koin, combo tidak putus dan tidak naik, penanda netral (O-1).
 ## - `TIDAK_SAH`: meleset, bukan pelanggan, jendela dengan sakelar penalti: 0 skor, 0 koin, combo putus. Koin tidak pernah berkurang.
 ## Combo (AC-10): pengali = `SKOR_COMBO_AWAL` + `SKOR_COMBO_LANGKAH` x antaran sah beruntun SEBELUM antaran ini, dijepit `SKOR_COMBO_MAKS`;
@@ -31,6 +32,8 @@ class Keadaan extends RefCounted:
 	var jumlah_antar: int = 0
 	var jumlah_tepat: int = 0
 	var jumlah_tip: int = 0
+	## Bagian `koin` yang berasal dari tip (untuk layar hasil, run fase3c-hud-hasil).
+	var koin_tip: int = 0
 
 	func salin() -> Keadaan:
 		var baru: Keadaan = Keadaan.new()
@@ -41,6 +44,7 @@ class Keadaan extends RefCounted:
 		baru.jumlah_antar = jumlah_antar
 		baru.jumlah_tepat = jumlah_tepat
 		baru.jumlah_tip = jumlah_tip
+		baru.koin_tip = koin_tip
 		return baru
 
 
@@ -113,9 +117,9 @@ static func skor_antaran(hasil: ZonaSasaran.Hasil, jendela_bonus: bool, beruntun
 
 
 ## Menilai satu koran yang mendarat: hasil zona `hasil`, id rumah zona `id_rumah`, `tepat` (`KoranLempar.Koran.tepat`, sudah false untuk
-## mode bantu), kecepatan saat lepas `kecepatan_ud`, `pemberi_tip` (rumah itu, `RouteBuilder.pemberi_tip`), sakelar jendela. Masukan tidak
-## diubah.
-static func nilai(k: Keadaan, hasil: ZonaSasaran.Hasil, id_rumah: String, tepat: bool, kecepatan_ud: float, pemberi_tip: bool, jendela_bonus: bool) -> Hasil:
+## mode bantu), kecepatan saat lepas `kecepatan_ud`, `pemberi_tip` (rumah itu, `RouteBuilder.pemberi_tip`), sakelar jendela, dan
+## `tenggat_lewat` (`TenggatRute.lewat` saat koran mendarat; true = tip tidak diberikan, K-1). Masukan tidak diubah.
+static func nilai(k: Keadaan, hasil: ZonaSasaran.Hasil, id_rumah: String, tepat: bool, kecepatan_ud: float, pemberi_tip: bool, jendela_bonus: bool, tenggat_lewat: bool = false) -> Hasil:
 	var h: Hasil = Hasil.new()
 	var s: Keadaan = k.salin()
 	h.keadaan = s
@@ -135,7 +139,7 @@ static func nilai(k: Keadaan, hasil: ZonaSasaran.Hasil, id_rumah: String, tepat:
 	h.status = Status.ANTAR
 	h.tepat = tepat and hasil == ZonaSasaran.Hasil.KOTAK_SURAT
 	h.skor_tambah = skor_antaran(hasil, jendela_bonus, s.beruntun, kecepatan_ud, h.tepat)
-	h.tip = Config.KOIN_TIP if pemberi_tip and hasil == ZonaSasaran.Hasil.TERAS else 0
+	h.tip = Config.KOIN_TIP if pemberi_tip and hasil == ZonaSasaran.Hasil.TERAS and not tenggat_lewat else 0
 	h.koin_tambah = Config.KOIN_ONGKOS_ANTAR + h.tip
 	h.penanda = ZonaSasaran.Penanda.TEPAT if h.tepat else ZonaSasaran.penanda(antaran)
 	s.skor += h.skor_tambah
@@ -147,15 +151,17 @@ static func nilai(k: Keadaan, hasil: ZonaSasaran.Hasil, id_rumah: String, tepat:
 		s.jumlah_tepat += 1
 	if h.tip > 0:
 		s.jumlah_tip += 1
+		s.koin_tip += h.tip
 	if id_rumah != "":
 		s.terantar[id_rumah] = true
 	return h
 
 
-## Menilai koran `koran` (`KoranLempar.Koran` yang sudah mendarat) di rute `rute` (pemberi tip dari `RouteBuilder.pemberi_tip`).
-static func nilai_koran(k: Keadaan, koran: KoranLempar.Koran, rute: RouteBuilder.Rute, jendela_bonus: bool) -> Hasil:
+## Menilai koran `koran` (`KoranLempar.Koran` yang sudah mendarat) di rute `rute` (pemberi tip dari `RouteBuilder.pemberi_tip`), dengan
+## status tenggat saat mendarat `tenggat_lewat` (K-1).
+static func nilai_koran(k: Keadaan, koran: KoranLempar.Koran, rute: RouteBuilder.Rute, jendela_bonus: bool, tenggat_lewat: bool = false) -> Hasil:
 	var kecepatan: float = koran.lintasan.kecepatan_maju_ud if koran.lintasan != null else 0.0
-	return nilai(k, koran.hasil, koran.id_rumah, koran.tepat, kecepatan, RouteBuilder.pemberi_tip(rute, koran.id_rumah), jendela_bonus)
+	return nilai(k, koran.hasil, koran.id_rumah, koran.tepat, kecepatan, RouteBuilder.pemberi_tip(rute, koran.id_rumah), jendela_bonus, tenggat_lewat)
 
 
 ## Combo putus karena tabrakan (AC-6): rangkaian kembali 0 (pengali x1,0). Skor, koin, dan rumah terantar tetap. Masukan tidak diubah.
