@@ -242,7 +242,7 @@ Keputusan pemilik K-1 sampai K-5 (SPEC run). Format segmen di `DATA_SCHEMA.md` 3
 | Angka | Usulan | Catatan |
 |---|---|---|
 | Segmen per distrik | 9 (data): 2 pembuka, 5 tengah, 2 penutup | `assets/data/routes/perumahan/per_*.json`; satu rute memakai semua 5 tengah, jadi variasi dari urutan dan pilihan pembuka, penutup, dan pelanggan |
-| Segmen per rute | 7 | `RUTE_SEGMEN_PER_RUTE`: satu pembuka, 5 tengah berbeda, satu penutup, tanpa ulang |
+| Segmen per rute | 7 | `RUTE_SEGMEN_PER_RUTE`: satu pembuka, 5 tengah berbeda, satu penutup, tanpa ulang. Pengapit (pembuka + penutup) = `RUTE_SEGMEN_PENGAPIT` 2; pustaka paling sedikit `RUTE_PEMBUKA_MIN` 2 pembuka dan `RUTE_PENUTUP_MIN` 2 penutup |
 | Panjang segmen | 24 sampai 40 ubin | `RUTE_SEGMEN_PANJANG_MIN_UBIN`, `_MAKS_`. Data: 24, 28, 28, 32, 32, 36, 36, 36, 40 |
 | Panjang rute | 232 sampai 240 ubin | Terukur dari data (jumlah 7 segmen); sekitar 250 di BALANCING awal. Garis akhir = panjang rute |
 | Pelanggan per rute | tepat 25 | `RUTE_PELANGGAN`; semuanya rumah `seberang` dengan `pelanggan_boleh`. Data memuat 37 rumah boleh; satu rute punya 31 sampai 32 kandidat |
@@ -255,7 +255,7 @@ Keputusan pemilik K-1 sampai K-5 (SPEC run). Format segmen di `DATA_SCHEMA.md` 3
 | Urutan keramaian | tidak ada dua segmen `padat` berurutan | ROUTE_DESIGN 5; pembuka dan penutup selalu `tenang`. Data: 1 tenang, 2 sedang, 2 padat di tengah |
 | Jendela daur rumah (scene rute) | 20 ubin di belakang, 30 di depan sepeda | `RUTE_DAUR_MUNDUR_UBIN`, `RUTE_DAUR_MAJU_UBIN`: rumah di luar jendela tidak diinstansiasi (sekitar 11 sampai 20 dari 89 rumah sekaligus). Bukan angka permainan; menyangkut performa dan lebar layar terlebar 800 px |
 | Akhir rute | stick buatan ke bawah penuh (`RUTE_AKHIR_STICK_Y` −1,0) | Sesudah garis akhir sepeda direm dengan rem biasa (tahan 0,25 detik lalu 5,0 u/d²), jadi berhenti paling jauh sekitar 4,5 ubin dari garis (ngebut 6,0 u/d), 1,4 ubin dari santai. Stick sungguhan dan lemparan dikunci; tanpa tenggat, skor, atau layar hasil (3B dan 3C) |
-| Penutup pemain | alfa 0,45 | `RUTE_PENUTUP_ALFA`; objek yang menutupi kaki pemain dari kamera iso 2:1 (`PenutupPemain`), 1,0 bila tidak menutupi. Tapak rumah 3 × 3 ubin dan tinggi 2,0 (`RUTE_RUMAH_*`, dari `tools/env_art/perumahan.py`) |
+| Penutup pemain | alfa 0,45 | `RUTE_PENUTUP_ALFA`; objek yang menutupi kaki pemain dari kamera iso 2:1 (`PenutupPemain`), 1,0 bila tidak menutupi. Tapak rumah 3 × 3 ubin dan tinggi 2,0 (`RUTE_RUMAH_*`, dari `tools/env_art/perumahan.py`). Rumah penguji elips dan titik redup: dua petak di belakang titik sampai satu petak di depan (`RUTE_PENUTUP_JENDELA_BELAKANG_PETAK` 2) |
 
 Catatan: rumah di tepi jalan (lateral 3 ubin atau lebih) praktis tidak pernah menutupi pemain di lebar jalan resmi (aturan 3D `PenutupPemain`); aturan ini disiapkan untuk objek yang lebih dekat ke jalan (mobil, pohon, tenda) dan dinilai lewat uji HP.
 

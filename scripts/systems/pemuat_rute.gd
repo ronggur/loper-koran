@@ -82,11 +82,11 @@ static func periksa_kumpulan(daftar: Array[SegmenRute], nama_berkas: Array[Strin
 		if i < nama_berkas.size() and nama_berkas[i] != segmen.id:
 			galat.append("berkas '%s' berisi id '%s' (id harus sama dengan nama berkas)" % [nama_berkas[i], segmen.id])
 		jumlah[segmen.posisi] += 1
-	if jumlah[SegmenRute.Posisi.PEMBUKA] < 2:
-		galat.append("segmen pembuka kurang dari 2 (ada %d)" % jumlah[SegmenRute.Posisi.PEMBUKA])
-	if jumlah[SegmenRute.Posisi.PENUTUP] < 2:
-		galat.append("segmen penutup kurang dari 2 (ada %d)" % jumlah[SegmenRute.Posisi.PENUTUP])
-	var perlu_tengah: int = Config.RUTE_SEGMEN_PER_RUTE - 2
+	if jumlah[SegmenRute.Posisi.PEMBUKA] < Config.RUTE_PEMBUKA_MIN:
+		galat.append("segmen pembuka kurang dari %d (ada %d)" % [Config.RUTE_PEMBUKA_MIN, jumlah[SegmenRute.Posisi.PEMBUKA]])
+	if jumlah[SegmenRute.Posisi.PENUTUP] < Config.RUTE_PENUTUP_MIN:
+		galat.append("segmen penutup kurang dari %d (ada %d)" % [Config.RUTE_PENUTUP_MIN, jumlah[SegmenRute.Posisi.PENUTUP]])
+	var perlu_tengah: int = Config.RUTE_SEGMEN_PER_RUTE - Config.RUTE_SEGMEN_PENGAPIT
 	if jumlah[SegmenRute.Posisi.TENGAH] < perlu_tengah:
 		galat.append("segmen tengah kurang dari %d (ada %d), satu rute butuh %d segmen" % [perlu_tengah, jumlah[SegmenRute.Posisi.TENGAH], Config.RUTE_SEGMEN_PER_RUTE])
 	return galat

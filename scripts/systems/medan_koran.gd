@@ -48,7 +48,7 @@ func tertutup_titik(titik_dunia: Vector2, tinggi_ubin: float) -> bool:
 	var maju: float = ZonaSasaran.ke_jalan(titik_dunia).y
 	if not is_finite(maju) or not is_finite(tinggi_ubin):
 		return false
-	var rentang: Vector2i = JendelaRute.rentang(_rumah, maju - float(Config.RUTE_PETAK_UBIN * 2), maju + float(Config.RUTE_PETAK_UBIN))
+	var rentang: Vector2i = JendelaRute.rentang(_rumah, maju - float(Config.RUTE_PETAK_UBIN * Config.RUTE_PENUTUP_JENDELA_BELAKANG_PETAK), maju + float(Config.RUTE_PETAK_UBIN))
 	for i: int in range(rentang.x, rentang.y):
 		var objek: PenutupPemain.Objek = PenutupPemain.dari_rumah(_rumah[i])
 		if ZonaSasaran.tertutup_kotak(titik_dunia, tinggi_ubin, objek.tapak, objek.tinggi_ubin):

@@ -6,7 +6,7 @@ extends RefCounted
 ## dulu supaya urutan berkas tidak memengaruhi hasil.
 ##
 ## Langkah:
-## 1. Segmen: satu `pembuka`, `RUTE_SEGMEN_PER_RUTE - 2` segmen `tengah` berbeda, satu `penutup`, tanpa ulang. Urutan tengah dikocok
+## 1. Segmen: satu `pembuka`, `RUTE_SEGMEN_PER_RUTE - RUTE_SEGMEN_PENGAPIT` segmen `tengah` berbeda, satu `penutup`, tanpa ulang. Urutan tengah dikocok
 ##    (Fisher-Yates dari RNG rute) sampai tidak ada dua segmen `padat` berurutan (ROUTE_DESIGN 5).
 ## 2. Rumah, rintangan, dan titik misi diberi posisi maju dari awal rute (awal segmen + `pos`). Id rumah `<id_segmen>@<pos>` (K-3).
 ## 3. Pelanggan: tepat `RUTE_PELANGGAN` rumah `seberang` yang `pelanggan_boleh`. Target posisi disebar rata dari kandidat pertama ke
@@ -195,7 +195,7 @@ static func _susun_segmen(rng: RandomNumberGenerator, pustaka: Array[SegmenRute]
 				penutup.append(segmen)
 			_:
 				tengah.append(segmen)
-	var perlu_tengah: int = Config.RUTE_SEGMEN_PER_RUTE - 2
+	var perlu_tengah: int = Config.RUTE_SEGMEN_PER_RUTE - Config.RUTE_SEGMEN_PENGAPIT
 	if pembuka.is_empty() or penutup.is_empty() or tengah.size() < perlu_tengah:
 		galat.append("pustaka tidak cukup: pembuka %d, tengah %d (butuh %d), penutup %d" % [pembuka.size(), tengah.size(), perlu_tengah, penutup.size()])
 		return kosong

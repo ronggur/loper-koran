@@ -433,6 +433,12 @@ const JALAN_UJI_ISI_ULANG_UBIN: float = 16.0
 const RUTE_PELANGGAN: int = 25
 ## Jumlah segmen berbeda tiap rute: satu pembuka, sisanya tengah, satu penutup (K-2).
 const RUTE_SEGMEN_PER_RUTE: int = 7
+## Segmen pengapit tiap rute (satu pembuka dan satu penutup): sisa `RUTE_SEGMEN_PER_RUTE` adalah segmen tengah berbeda (K-2).
+const RUTE_SEGMEN_PENGAPIT: int = 2
+## Jumlah minimum segmen `pembuka` di pustaka supaya rute bervariasi antar seed (AC-1).
+const RUTE_PEMBUKA_MIN: int = 2
+## Jumlah minimum segmen `penutup` di pustaka supaya rute bervariasi antar seed (AC-1).
+const RUTE_PENUTUP_MIN: int = 2
 ## Seed bawaan rute dev (deterministik); "Main lagi" memakai seed berikutnya (seed + 1).
 const RUTE_SEED_DEV: int = 20261016
 ## Koran awal rute = pelanggan + sekian persen dibulatkan ke atas (BALANCING 4): 25 pelanggan = 30 koran.
@@ -447,6 +453,8 @@ const RUTE_SEGMEN_PANJANG_MAKS_UBIN: int = 40
 const RUTE_TEPI_UBIN: int = 2
 ## Lebar satu petak rumah, ubin: rumah 3 ubin + celah 1 (ROUTE_DESIGN 2); dua rumah sesisi berjarak paling sedikit sekian.
 const RUTE_PETAK_UBIN: int = 4
+## Jendela belakang `MedanKoran.tertutup_titik`, petak: sinar ke kamera bergeser maju mundur selama naik, jadi rumah yang bisa menutupi titik tanah ada sampai sekian petak di belakangnya (satu petak di depan tetap).
+const RUTE_PENUTUP_JENDELA_BELAKANG_PETAK: int = 2
 ## Jendela keputusan, ubin: dua rintangan yang memaksa pindah jalur berjarak paling sedikit sekian (ROUTE_DESIGN 4 aturan 4).
 const RUTE_RINTANGAN_JENDELA_UBIN: int = 6
 ## Rintangan paling dekat ke tepi segmen, ubin: setengah jendela, supaya dua segmen yang disambung tidak menumpuk keputusan.
