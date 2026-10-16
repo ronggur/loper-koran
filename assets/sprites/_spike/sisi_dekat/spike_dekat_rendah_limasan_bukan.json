@@ -1,0 +1,19 @@
+{
+ "sprite": "spike_dekat_rendah_limasan_bukan.png",
+ "size": [
+  219,
+  145
+ ],
+ "ground_anchor": [
+  97,
+  82
+ ],
+ "tapak_ubin": [
+  -1.5,
+  -1.4062,
+  3.0,
+  2.8125
+ ],
+ "tinggi_ubin": 0.9688,
+ "note": "Spike sisi dekat pendekatan 1 (usulan): punggung rumah rendah (dinding 18, atap 31 unit) dan kontras rendah (40% warna rumput)."
+}

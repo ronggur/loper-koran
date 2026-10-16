@@ -1,0 +1,19 @@
+{
+ "sprite": "spike_dekat_penuh_pelana_lintang_pelanggan.png",
+ "size": [
+  247,
+  201
+ ],
+ "ground_anchor": [
+  96,
+  122
+ ],
+ "tapak_ubin": [
+  -1.5,
+  -1.4062,
+  3.0,
+  2.8125
+ ],
+ "tinggi_ubin": 1.75,
+ "note": "Spike sisi dekat pendekatan 3 (usulan, tools/env_art/spike_sisi_dekat.py): punggung rumah penuh seperti fase3.py, tanpa kotak surat di sprite. Tinggi = puncak atap (antena tidak dihitung)."
+}

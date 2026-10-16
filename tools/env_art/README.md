@@ -26,6 +26,12 @@ Aset Fase 3 perumahan (usulan) dibuat oleh `fase3.py`, juga dari root repo. Tanp
 python3 tools/env_art/fase3.py --salin            # rintangan, rumah dua sisi, antena TV, kotak surat sasaran, layar contoh
 ```
 
+Graybox spike rumah sisi dekat (run fase3c-hud-hasil, usulan, TECH_PLAN Fase 3; bukan keputusan) dibuat oleh `spike_sisi_dekat.py`, dari root repo. Memakai `fase3.py` apa adanya. Hasil ke `build/env_art/spike_sisi_dekat/`; dengan `--salin` PNG + JSON (titik pijak, `tapak_ubin`, `tinggi_ubin` untuk kotak penutup) disalin ke `assets/sprites/_spike/sisi_dekat/`, yang dipakai hanya oleh scene dev `scenes/dev/spike_sisi_dekat.tscn` dan dikecualikan dari paket ekspor. Deterministik:
+
+```
+python3 tools/env_art/spike_sisi_dekat.py --salin  # tiga pendekatan: rendah + kontras rendah, tembok belakang, punggung penuh
+```
+
 Hasil masuk ke `build/env_art/` (tidak di-commit, bisa diganti lewat `ENV_ART_OUT`). Setelah dicek, salin yang dipakai ke `docs/design/environment/`.
 
 ## Cara kerja
@@ -46,6 +52,7 @@ Hasil masuk ke `build/env_art/` (tidak di-commit, bisa diganti lewat `ENV_ART_OU
 | `kampung.py` | Gang perkampungan 2 ubin: rumah rapat, warung, jemuran melintang, halaman, tiang listrik |
 | `districts.py` | Ruko, pasar, desa, pinggir sungai, dan vinyet enam distrik |
 | `fase3.py` | Aset Fase 3 perumahan (usulan): anjing penjaga lima pose, mobil keluar garasi (sedan `lib.car()` diputar 90°, lampu mundur, cahaya di aspal, asap knalpot), rumah sisi seberang dan sisi dekat versi pelanggan dan bukan pelanggan (toren air, jemuran), enam jenis antena TV (`antena_v`), kotak surat sasaran oranye `prop_kotak_surat` (`kotak_surat_oranye`, sprite tunggal), layar contoh satu sisi dan dua sisi, ekspor sprite + JSON titik pijak. Memakai `engine.py`, `lib.py`, `perumahan.py` tanpa mengubahnya |
+| `spike_sisi_dekat.py` | Spike rumah sisi dekat (usulan): punggung rumah rendah dan kontras rendah (`house_near_rendah`, warna dicampur 40% ke rumput), tembok belakang rendah (`tembok_belakang`), punggung penuh tanpa kotak surat di sprite; JSON dengan tapak dan tinggi untuk aturan penutup. Memakai `fase3.py` tanpa mengubahnya |
 | `details.py` | Loop detail pinggir jalan |
 | `anim_hero.py` | Animasi adegan utama |
 | `graybox.py` | Ubin graybox 64x32 (aspal, trotoar, rumput), kotak rumah, dan kotak surat untuk `assets/sprites/_placeholder/` (hanya stdlib, bukan mock) |

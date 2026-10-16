@@ -1,0 +1,19 @@
+{
+ "sprite": "spike_dekat_tembok_pelanggan.png",
+ "size": [
+  126,
+  83
+ ],
+ "ground_anchor": [
+  57,
+  46
+ ],
+ "tapak_ubin": [
+  -0.0938,
+  -1.5,
+  0.1875,
+  3.0
+ ],
+ "tinggi_ubin": 0.4688,
+ "note": "Spike sisi dekat pendekatan 2 (usulan): tembok belakang rendah 14 unit sepanjang kavling; rumah di belakangnya digambar scene dari sprite pendekatan 3 yang digeser menjauh."
+}
