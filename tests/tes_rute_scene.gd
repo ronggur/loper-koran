@@ -445,6 +445,15 @@ func _test_zona_dari_data() -> void:
 		var t2: Vector2 = Vector2(2.5, -(dekat.maju_ubin + 1.0))
 		check(ZonaSasaran.klasifikasi(t1, medan.zona_sekitar(t1)) == ZonaSasaran.Hasil.BUKAN_PELANGGAN, "kotak surat rumah seberang yang tidak terpilih (%s) = BUKAN_PELANGGAN" % bukan_seberang.id)
 		check(ZonaSasaran.klasifikasi(t2, medan.zona_sekitar(t2)) == ZonaSasaran.Hasil.BUKAN_PELANGGAN, "halaman rumah dekat (%s) = BUKAN_PELANGGAN (distrik perumahan tanpa pelanggan sisi dekat)" % dekat.id)
+	# Elips TERTUTUP: titik mendarat di balik atap rumah dari kamera iso (rumah rute kedua sisi, bukan hanya graybox seberang).
+	if dekat != null:
+		var di_balik_dekat: Vector2 = Vector2(2.5, -(dekat.maju_ubin + 1.0))
+		var l_dekat: ThrowSolver.Lintasan = ThrowSolver.Lintasan.new()
+		l_dekat.titik_mendarat = di_balik_dekat
+		check(medan.tertutup_titik(di_balik_dekat, 0.0) and not medan.tertutup_titik(Vector2(0.0, di_balik_dekat.y), 0.0), "halaman rumah dekat %s tertutup atap dari kamera (sinar ke kamera bergeser 1 ubin masuk tapak), tengah jalan tidak" % dekat.id)
+		check(KoranLempar.bentuk_elips(l_dekat, false, medan) == KoranLempar.Elips.TERTUTUP and KoranLempar.bentuk_elips(l_dekat, false) == KoranLempar.Elips.SAH, "elips di balik rumah dekat = TERTUTUP di medan rute (BUKAN_PELANGGAN), sedangkan zona jalan uji di titik yang sama = SAH (halaman pelanggan dekat)")
+	var seberang_tertutup: Vector2 = Vector2(-4.5, -(rute.pelanggan[8].maju_ubin + 1.0))
+	check(medan.tertutup_titik(seberang_tertutup, 0.0), "titik di dalam tapak rumah seberang (pelanggan ke-9) tertutup")
 	# Penilaian koran sungguhan memakai medan yang sama: lintasan bersintetis mendarat di kotak surat.
 	var lintasan: ThrowSolver.Lintasan = ThrowSolver.Lintasan.new()
 	lintasan.titik_mendarat = Vector2(-1.625, -79.125)
