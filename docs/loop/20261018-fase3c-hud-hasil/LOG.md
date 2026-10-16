@@ -43,7 +43,7 @@ Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MAN
 - Keputusan pemilik 2026-10-17 (jawaban satu pesan orchestrator): K-1 tenggat = ceil(panjang / santai 3,0 × 1,15), tip hilang sesudah tenggat lewat (ongkos, skor, combo tetap); K-2 radar 30 ubin ke depan; K-3 jangkauan bel 1 ubin ke belakang dipertahankan (D-5/QA-008 run 3B selesai); K-4 mulai tanpa hasil uji HP 8.5–8.7.
 - Usulan orchestrator O-6 sampai O-12 di SPEC (bisa ditolak di review PR).
 - Lingkungan (dicek orchestrator 2026-10-17): Godot 4.7.2 `/opt/homebrew/bin/godot`; `adb devices`: vivo V2108 `12d8c9da` tersambung; A54 tidak tersambung.
-- Spike rumah sisi dekat: keputusan milik pemilik; orchestrator menanyakan sesudah tangkapan layar ada.
+- Spike rumah sisi dekat: **K-5 pemilik 2026-10-17 memilih pendekatan (2) tembok/pagar belakang rendah** (ditanyakan orchestrator sesudah tangkapan Dev 1b; dicatat di ROADMAP 4b, TECH_PLAN, ART_DIRECTION, GDD 17, ROUTE_DESIGN 8, content-data).
 
 ### Dev iterasi 1 bagian 1a (2026-10-17)
 

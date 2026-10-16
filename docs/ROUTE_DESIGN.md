@@ -89,5 +89,5 @@ Rintangan prototype 3: **anjing penjaga** (mengejar sesuai kecepatan, berhenti d
 
 - Panjang segmen dan rute final setelah graybox.
 - Rute bercabang (gang pintas vs jalan utama, GDD 4.1): bagaimana cabang disusun dari segmen.
-- Cara menampilkan rumah di sisi dekat.
+- ~~Cara menampilkan rumah di sisi dekat~~: diputuskan 2026-10-17, tembok/pagar belakang rendah dengan kavling sisi dekat lebih dalam sekitar 1,25 ubin (`ROADMAP.md` 4b); segmen dua sisi memperhitungkannya.
 - Persimpangan: hanya dekorasi, atau ada lalu lintas yang memotong.

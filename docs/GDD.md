@@ -520,7 +520,7 @@ Beberapa keputusan masih terbuka dan paling baik diputuskan lewat prototype kasa
 **Pertanyaan terbuka**
 
 - Cerita besar dan kondisi gagal (bagian 3.2).
-- Cara menampilkan rumah di sisi dekat, yang hanya terlihat belakangnya di isometrik (kanan bawah jalan).
+- ~~Cara menampilkan rumah di sisi dekat~~: diputuskan pemilik 2026-10-17, tembok atau pagar belakang rendah di kaki kavling dengan rumah penuh di belakangnya (pendekatan 2 spike run 3C; keputusan pemilik 2026-10-17) (`ROADMAP.md` 4b).
 - Kontrol landscape: apakah ambang rem di ujung bawah stick nyaman tanpa berhenti tak sengaja, dan apakah swipe pendek cukup teliti di layar kecil.
 - Bel: apakah tombol di pojok kanan bawah mudah dijangkau tanpa terpencet saat swipe, dan apakah bel dimajukan ke prototype awal karena sekarang menjadi ciri judul game (saat ini dijadwalkan Fase 6–7, `SOUND_DESIGN.md` 8).
 - Struktur sesi: rute harian berurutan, atau run roguelite dengan rute acak.
