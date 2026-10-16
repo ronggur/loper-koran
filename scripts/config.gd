@@ -613,3 +613,24 @@ const RUTE_PEMBERI_TIP_PERSEN: int = 30
 const JALAN_UJI_SEBERANG_KOTAK_SURAT_INTI_UBIN: Array[float] = [-2.5, 1.625, 0.5, 0.5]
 ## Inti "tepat" kotak surat dekat: 0,5 x 0,5 di pusat area `JALAN_UJI_DEKAT_KOTAK_SURAT_UBIN` (pusat 2,125; 1,875).
 const JALAN_UJI_DEKAT_KOTAK_SURAT_INTI_UBIN: Array[float] = [1.875, 1.625, 0.5, 0.5]
+
+## --- Audio rute placeholder (SOUND_DESIGN 3.1, 3.3, 4.1-4.3; AC-18, AC-19 run fase3b-rintangan-skor; usulan, dinilai di HP) ---
+## Bunyi dibuat `tools/audio_art/sintesis_rute.py` (puncak sama dengan bunyi lain, tabrakan lebih pelan di berkasnya). Diputar autoload
+## `Audio` di bus `SFX`; pemetaan peristiwa ke bunyi di `BunyiRute`, nada combo di `BunyiLempar`.
+
+## Nada combo: bunyi mendarat antaran sah naik setengah nada tiap antaran beruntun sampai sekian tingkat, lalu bertahan (SOUND_DESIGN 3.1).
+const AUDIO_COMBO_NADA_MAKS: int = 5
+## Jumlah setengah nada dalam satu oktaf (rasio pitch satu setengah nada = rasio oktaf pangkat 1/12).
+const AUDIO_SETENGAH_NADA_PER_OKTAF: float = 12.0
+## Rasio frekuensi satu oktaf.
+const AUDIO_RASIO_OKTAF: float = 2.0
+## Bunyi kedua "kring kring!" diputar sekian setengah nada lebih tinggi supaya dua bunyi terdengar satu frasa (SOUND_DESIGN 3.3).
+const AUDIO_BEL_KEDUA_SETENGAH_NADA: float = 1.0
+## Volume bel, dB (bel terdengar jelas di atas kayuhan, SOUND_DESIGN 3.3).
+const AUDIO_BEL_VOLUME_DB: float = -2.0
+## Volume geram, gonggong, bip, dan mesin rintangan, dB (peringatan di atas kayuhan, SOUND_DESIGN 6).
+const AUDIO_RINTANGAN_VOLUME_DB: float = -3.0
+## Volume tabrakan, dB (berkasnya sudah sekitar 3 dB lebih pelan: lembut, SOUND_DESIGN 2).
+const AUDIO_TABRAKAN_VOLUME_DB: float = -2.0
+## Volume denting tip dan kilau tepat, dB.
+const AUDIO_TIP_VOLUME_DB: float = -3.0

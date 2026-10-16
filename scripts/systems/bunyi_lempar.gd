@@ -8,7 +8,10 @@ extends RefCounted
 ##   jendela ada (SOUND_DESIGN 4.2). Jadi bunyi selalu sejalan dengan penanda kena/meleset yang tampil.
 ## - **Variasi bergiliran** (`berkas_mendarat`, `giliran_berikut`): tiap permukaan punya tiga berkas, dipilih 01, 02, 03, 01, ... per
 ##   permukaan, tanpa RNG. Pencacah giliran disimpan pemanggil (`Audio`, satu per permukaan); fungsi ini hanya memetakan giliran ke berkas.
-## - Nada naik mengikuti combo ditunda ke Fase 3 (skor dan combo belum ada); acak nada ±5% (SOUND_DESIGN 2) belum dipakai.
+## - **Nada combo** (AC-18 run fase3b-rintangan-skor, SOUND_DESIGN 3.1): bunyi mendarat antaran sah ke-n dalam rangkaian combo
+##   (`SkorRute.Hasil.urutan_beruntun`) diputar `tingkat_nada` = n - 1 setengah nada lebih tinggi, dijepit `AUDIO_COMBO_NADA_MAKS` (5),
+##   lalu bertahan; pitch = rasio oktaf pangkat (tingkat / 12) (`pitch_nada`). Bukan antaran (meleset, rumah sudah terantar) = nada dasar;
+##   combo putus mengembalikan antaran berikutnya ke nada dasar tanpa bunyi tambahan. Acak nada ±5% (SOUND_DESIGN 2) belum dipakai.
 
 ## Permukaan tempat koran mendarat, untuk memilih bunyi.
 enum Permukaan { KOTAK_SURAT, TERAS, RUMPUT, MELESET }
@@ -61,3 +64,19 @@ static func semua_berkas() -> Array[String]:
 		for berkas: String in BERKAS_MENDARAT[p]:
 			hasil.append(berkas)
 	return hasil
+
+
+## Tingkat nada combo (0 = nada dasar) untuk antaran ke-`urutan_beruntun` dalam rangkaian (1 = pertama); 0 atau kurang (bukan antaran) = 0.
+static func tingkat_nada(urutan_beruntun: int) -> int:
+	return clampi(urutan_beruntun - 1, 0, Config.AUDIO_COMBO_NADA_MAKS)
+
+
+## Pitch untuk tingkat nada `tingkat` (dijepit 0..`AUDIO_COMBO_NADA_MAKS`): rasio oktaf pangkat (tingkat / setengah nada per oktaf).
+static func pitch_nada(tingkat: int) -> float:
+	var n: int = clampi(tingkat, 0, Config.AUDIO_COMBO_NADA_MAKS)
+	return pow(Config.AUDIO_RASIO_OKTAF, float(n) / Config.AUDIO_SETENGAH_NADA_PER_OKTAF)
+
+
+## Pitch bunyi mendarat untuk antaran ke-`urutan_beruntun` (0 = bukan antaran: nada dasar).
+static func pitch_mendarat(urutan_beruntun: int) -> float:
+	return pitch_nada(tingkat_nada(urutan_beruntun))

@@ -14,6 +14,12 @@ extends Node
 ## baru, dan jeda, background, kehilangan fokus, atau tutup jendela menghentikan yang sedang berbunyi seketika (D-12), lewat jalur yang
 ## sama dengan decit rem.
 ##
+## Bunyi rute run 3B (AC-18, AC-19 run fase3b-rintangan-skor) juga di bus `SFX`, satu pemutar per berkas `BunyiRute.BERKAS`: peristiwa
+## rintangan (`putar_peristiwa`), tabrakan (`putar_tabrakan`), bel (`putar_bel`, tiga variasi bergiliran, "kring kring!" lebih tinggi), tip
+## (`putar_tip`), dan tepat (`putar_tepat`). Bunyi mendarat menerima pitch nada combo (`putar_mendarat(..., pitch)`, `BunyiLempar.pitch_mendarat`).
+## Keputusan di `BunyiRute`/`BunyiLempar` (logika murni). Jalur jeda sama: tidak ada bunyi baru selama jeda, dan jeda, background, kehilangan
+## fokus, tutup jendela, atau `hentikan_lempar` menghentikan semua bunyi bus SFX (lempar, mendarat, dan rute) seketika.
+##
 ## **Tidak merujuk autoload lain** (rule `gdscript`): semua data datang dari pemanggil sebagai argumen. Pemilik sepeda (`JalanUji`)
 ## memanggil `perbarui_sepeda` tiap langkah, menyambungkan sinyal `jeda_berubah` ke `atur_jeda`, dan memanggil `hentikan_sepeda`
 ## saat keluar dari pohon.
@@ -58,6 +64,15 @@ var _giliran: Dictionary = {}
 var _jumlah_wus: int = 0
 var _jumlah_mendarat: int = 0
 var _mendarat_terakhir: String = ""
+var _pitch_mendarat_terakhir: float = 1.0
+## Pemutar bunyi rute per berkas (`BunyiRute.BERKAS`): String jalur -> AudioStreamPlayer.
+var _pemutar_rute: Dictionary = {}
+## Giliran variasi berikutnya per bunyi rute (`BunyiRute.Bunyi` -> int).
+var _giliran_rute: Dictionary = {}
+## Jumlah keputusan putar per bunyi rute (`BunyiRute.Bunyi` -> int), untuk tes.
+var _jumlah_rute: Dictionary = {}
+var _rute_terakhir: String = ""
+var _pitch_rute_terakhir: float = 1.0
 
 
 func _init() -> void:
@@ -70,6 +85,10 @@ func _init() -> void:
 		if berkas != BunyiLempar.BERKAS_WUS:
 			var nama: StringName = StringName("PemutarMendarat_" + berkas.get_file().get_basename())
 			_pemutar_mendarat[berkas] = _buat_pemutar(nama, berkas, Config.AUDIO_MENDARAT_VOLUME_DB, BUS_LEMPAR)
+	for b: BunyiRute.Bunyi in BunyiRute.BERKAS:
+		for berkas: String in BunyiRute.BERKAS[b]:
+			var nama_rute: StringName = StringName("PemutarRute_" + berkas.get_file().get_basename())
+			_pemutar_rute[berkas] = _buat_pemutar(nama_rute, berkas, BunyiRute.volume_db(b), BUS_LEMPAR)
 
 
 func _notification(what: int) -> void:
@@ -122,8 +141,9 @@ func putar_lempar() -> void:
 
 
 ## Koran mendarat dengan hasil `hasil` (`ZonaSasaran.Hasil`) dan sakelar jendela `jendela_bonus` (D-10, D-11): satu bunyi permukaan,
-## variasi bergiliran per permukaan. Tidak ada bunyi baru selama jeda (koran beku, jadi tidak mendarat).
-func putar_mendarat(hasil: ZonaSasaran.Hasil, jendela_bonus: bool) -> void:
+## variasi bergiliran per permukaan, dengan `pitch` nada combo (AC-18; `BunyiLempar.pitch_mendarat`, bawaan nada dasar). Tidak ada bunyi
+## baru selama jeda (koran beku, jadi tidak mendarat).
+func putar_mendarat(hasil: ZonaSasaran.Hasil, jendela_bonus: bool, pitch: float = 1.0) -> void:
 	if _jeda:
 		return
 	var p: BunyiLempar.Permukaan = BunyiLempar.permukaan(hasil, jendela_bonus)
@@ -132,11 +152,98 @@ func putar_mendarat(hasil: ZonaSasaran.Hasil, jendela_bonus: bool) -> void:
 	_giliran[p] = BunyiLempar.giliran_berikut(p, giliran)
 	_jumlah_mendarat += 1
 	_mendarat_terakhir = berkas
+	_pitch_mendarat_terakhir = pitch
+	var pemutar: AudioStreamPlayer = _pemutar_mendarat[berkas]
+	pemutar.pitch_scale = pitch
 	if _boleh_putar():
-		(_pemutar_mendarat[berkas] as AudioStreamPlayer).play()
+		pemutar.play()
 
 
-## Menghentikan "wus" dan bunyi mendarat yang sedang berbunyi (scene pemilik keluar, atau sebelum Godot keluar).
+## Pitch bunyi mendarat terakhir (nada combo, untuk tes).
+func pitch_mendarat_terakhir() -> float:
+	return _pitch_mendarat_terakhir
+
+
+## Satu bunyi rute `b` (`BunyiRute.Bunyi`) dengan `pitch`; variasi bergiliran per bunyi. Tidak ada bunyi baru selama jeda.
+func putar_rute(b: BunyiRute.Bunyi, pitch: float = 1.0) -> void:
+	if _jeda:
+		return
+	var giliran: int = _giliran_rute.get(b, 0)
+	var berkas: String = BunyiRute.berkas(b, giliran)
+	_giliran_rute[b] = BunyiRute.giliran_berikut(b, giliran)
+	_jumlah_rute[b] = int(_jumlah_rute.get(b, 0)) + 1
+	_rute_terakhir = berkas
+	_pitch_rute_terakhir = pitch
+	var pemutar: AudioStreamPlayer = _pemutar_rute[berkas]
+	pemutar.pitch_scale = pitch
+	if _boleh_putar():
+		pemutar.play()
+
+
+## Peristiwa rintangan (`RintanganRute.Peristiwa`): geram, gonggong, bip, atau mesin; peristiwa tanpa bunyi diabaikan.
+func putar_peristiwa(peristiwa: RintanganRute.Peristiwa) -> void:
+	if BunyiRute.berbunyi(peristiwa):
+		putar_rute(BunyiRute.dari_peristiwa(peristiwa))
+
+
+## Tabrakan: satu bunyi tabrakan lembut.
+func putar_tabrakan() -> void:
+	putar_rute(BunyiRute.Bunyi.TABRAKAN)
+
+
+## Ketukan bel dengan hasil `bunyi_bel` (`Bel.Bunyi`): "kring" atau "kring kring!" (lebih tinggi); `TOLAK` tidak berbunyi.
+func putar_bel(bunyi_bel: Bel.Bunyi) -> void:
+	if Bel.berbunyi(bunyi_bel):
+		putar_rute(BunyiRute.Bunyi.BEL, BunyiRute.pitch_bel(bunyi_bel))
+
+
+## Denting tip (berkasnya diawali senyap, jadi terdengar sesudah bunyi mendarat yang diputar bersamaan).
+func putar_tip() -> void:
+	putar_rute(BunyiRute.Bunyi.TIP)
+
+
+## Kilau antaran tepat.
+func putar_tepat() -> void:
+	putar_rute(BunyiRute.Bunyi.TEPAT)
+
+
+## Mengembalikan pencacah dan giliran bunyi rute ke awal (untuk tes dan "Main lagi").
+func atur_ulang_rute() -> void:
+	_giliran_rute.clear()
+	_jumlah_rute.clear()
+	_rute_terakhir = ""
+	_pitch_rute_terakhir = 1.0
+
+
+## Berapa kali bunyi rute `b` diputuskan sejak autoload dibuat atau `atur_ulang_rute` (untuk tes).
+func jumlah_bunyi_rute(b: BunyiRute.Bunyi) -> int:
+	return int(_jumlah_rute.get(b, 0))
+
+
+## Jalur berkas bunyi rute terakhir ("" bila belum ada) dan pitch-nya (untuk tes).
+func bunyi_rute_terakhir() -> String:
+	return _rute_terakhir
+
+
+func pitch_rute_terakhir() -> float:
+	return _pitch_rute_terakhir
+
+
+## Pemutar bunyi rute untuk jalur `berkas` (`BunyiRute.BERKAS`), atau null (untuk tes dan probe).
+func pemutar_rute(berkas: String) -> AudioStreamPlayer:
+	return _pemutar_rute.get(berkas, null) as AudioStreamPlayer
+
+
+## True bila salah satu bunyi rute sedang berbunyi.
+func ada_bunyi_rute() -> bool:
+	for pemutar: AudioStreamPlayer in _pemutar_rute.values():
+		if pemutar.playing:
+			return true
+	return false
+
+
+## Menghentikan semua bunyi bus SFX yang sedang berbunyi: "wus", bunyi mendarat, dan bunyi rute (scene pemilik keluar, atau sebelum Godot
+## keluar).
 func hentikan_lempar() -> void:
 	_hentikan_pemutar_lempar()
 
@@ -263,4 +370,6 @@ func _hentikan_pemutar() -> void:
 func _hentikan_pemutar_lempar() -> void:
 	_wus.stop()
 	for pemutar: AudioStreamPlayer in _pemutar_mendarat.values():
+		pemutar.stop()
+	for pemutar: AudioStreamPlayer in _pemutar_rute.values():
 		pemutar.stop()

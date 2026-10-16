@@ -111,6 +111,14 @@ Selama jeda partikel berhenti (tidak memancar, tidak bergerak) karena `SceneTree
 | Volume "wus" | −4 dB | `AUDIO_WUS_VOLUME_DB`; sedikit di atas kayuhan (−6), di bawah bunyi mendarat |
 | Volume bunyi mendarat | −1 dB (keempat permukaan) | `AUDIO_MENDARAT_VOLUME_DB`; di atas kayuhan supaya hasil lemparan selalu terdengar (SOUND_DESIGN 6). Meleset sudah sekitar 5 dB lebih pelan di berkasnya (puncak 0,5 lawan 0,89), jadi tidak perlu angka volume terpisah |
 
+**Bunyi rute** (`scripts/systems/bunyi_rute.gd`, nada combo di `bunyi_lempar.gd`, autoload `Audio` bus `SFX`; SOUND_DESIGN 3.1, 3.3, 4.3; run fase3b-rintangan-skor 2026-10-16, usulan, dinilai di HP). Nada combo: antaran sah ke-n diputar n − 1 setengah nada lebih tinggi (pitch 2^(tingkat/12)), paling tinggi 5 tingkat lalu bertahan; meleset dan koran ke rumah terantar di nada dasar. "Kring kring!" +1 setengah nada.
+
+| Angka | Usulan | Catatan |
+|---|---|---|
+| Nada combo | 5 tingkat setengah nada (pitch maks 1,3348) | `AUDIO_COMBO_NADA_MAKS`, `AUDIO_SETENGAH_NADA_PER_OKTAF` 12, `AUDIO_RASIO_OKTAF` 2 |
+| Bel kedua | +1 setengah nada (1,0595) | `AUDIO_BEL_KEDUA_SETENGAH_NADA` |
+| Volume bel, rintangan, tabrakan, tip/tepat | −2, −3, −2, −3 dB | `AUDIO_BEL_VOLUME_DB`, `AUDIO_RINTANGAN_VOLUME_DB`, `AUDIO_TABRAKAN_VOLUME_DB`, `AUDIO_TIP_VOLUME_DB`; peringatan di atas kayuhan (−6); tabrakan sudah sekitar 3 dB lebih pelan di berkasnya (lembut, SOUND_DESIGN 2) |
+
 **Jalan terlihat di depan saat ngebut** (run fase1b-umpan-balik, dihitung dari garis tengah jalan: titik pijak sepeda + dorongan maju penuh sampai tepi layar, 1 ubin maju = 32 px datar, 6,0 u/d): 780 (A54) dari sekitar 2,10 detik (0,6 dan 28 px) menjadi sekitar **2,52 detik**; 800 dari 2,10 menjadi sekitar 2,59 detik. Di **640 (16:9)** jalan keluar layar lewat tepi kanan, bukan tepi atas, jadi menurunkan sepeda tidak menolong dan dorongan 36 sedikit memperpendek: dari sekitar 2,08 menjadi sekitar 2,03 detik (tanpa dorongan 2,22 detik di keduanya). Dinilai di HP (NEEDS-MANUAL).
 
 ---
@@ -377,6 +385,7 @@ Belum diisi. Diputuskan di Fase 6 bersama layar bengkel (GDD 12.5). Arah yang su
 
 ## 10. Catatan perubahan
 
+- **2026-10-16** — Run fase3b-rintangan-skor bagian A, bunyi (usulan, belum diuji di HP): nada combo (5 tingkat setengah nada), bel kedua +1 setengah nada, volume bel −2, rintangan −3, tabrakan −2, tip/tepat −3 dB (bagian 2). Alasan: SOUND_DESIGN 3.1 dan 3.3 (AC-18, AC-19).
 - **2026-10-16** — Run fase3b-rintangan-skor bagian A (logika murni; keputusan pemilik K-1 sampai K-4 dan usulan orchestrator O-1 sampai O-5; semua angka usulan, belum diuji di HP): rintangan anjing penjaga dan mobil keluar garasi, tabrakan, bel (bagian 6c dan 6d), skor, combo, pengali kecepatan, tepat, rumah terantar (bagian 5b), koin dan tip (bagian 7). Angka BALANCING 5-7 yang sudah ada dipakai apa adanya (combo +0,1 maks ×2,0; pengali 1,0 / 1,2 / 1,5; ongkos 15; tip 5; tabrakan 1,0 u/d dan oleng 0,6). Angka baru: kebal 1,0 detik, tepat ×1,25 dengan inti 0,5 × 0,5, skor dasar 100 dan halaman 50%, pemberi tip 30%, semua angka rintangan (bagian 6c), bel (teks 0,5, jeda 1,0, jangkauan 4,0 depan dan 1,0 belakang). Alasan: kontrak SPEC run 3B (AC-1 sampai AC-14); angka rintangan dipilih supaya invarian prinsip desain lolos (tanda ≥ 1,5 detik pada ngebut, separuh jalan selalu bebas, santai tersusul anjing, ngebut lolos).
 
 - **2026-10-16** — Sepeda boleh naik trotoar dan kotak surat pindah ke halaman (permintaan pemilik, usulan, belum diuji di HP): batas tepi jalan resmi ±1,0 → ±2,0 ubin (bagian 2), kotak surat seberang `[−2,125; 0,375; 1,0 × 1,5]` → `[−2,75; 1,25; 1,0 × 1,25]` dan dekat `[1,125; 0,375; 1,0 × 1,5]` → `[1,75; 1,25; 0,75 × 1,25]` (bagian 5), sprite kotak surat dari (−1,5; +1,0) ke (−2,125; +1,75). Angka lain tidak berubah.

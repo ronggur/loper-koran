@@ -1,6 +1,6 @@
 # Sound Design Guide — Loper Koran
 
-Dokumen pendamping [`GDD.md`](./GDD.md) (bagian 15) dan [`ART_DIRECTION.md`](./ART_DIRECTION.md). Formatnya mengikuti `SOUND_DESIGN.md` Brainy Dungeon. Seluruh dokumen ini **draf usulan**: yang sudah ada hanya bunyi placeholder dari rumus, yaitu tiga bunyi sepeda (bagian 3.2, run fase1b-umpan-balik 2026-10-14) serta "wus" lemparan dan bunyi mendarat empat permukaan (bagian 3.1, run fase2b-bantu-audio 2026-10-15). Apakah game memakai musik masih terbuka (ROADMAP 5).
+Dokumen pendamping [`GDD.md`](./GDD.md) (bagian 15) dan [`ART_DIRECTION.md`](./ART_DIRECTION.md). Formatnya mengikuti `SOUND_DESIGN.md` Brainy Dungeon. Seluruh dokumen ini **draf usulan**: yang sudah ada hanya bunyi placeholder dari rumus, yaitu tiga bunyi sepeda (bagian 3.2, run fase1b-umpan-balik 2026-10-14) "wus" lemparan dan bunyi mendarat empat permukaan (bagian 3.1, run fase2b-bantu-audio 2026-10-15), serta nada combo, denting tip, kilau tepat, bunyi anjing, mobil, tabrakan, dan bel (bagian 3.1, 3.3, 4.3, run fase3b-rintangan-skor 2026-10-16). Apakah game memakai musik masih terbuka (ROADMAP 5).
 
 ---
 
@@ -55,7 +55,12 @@ Hadiah inti tiap antaran. Bunyinya membedakan permukaan, supaya pemain tahu hasi
 - Variasi dipilih **bergiliran** per permukaan (01, 02, 03, 01, ...), tanpa acak; pencacahnya di `Audio`, satu per permukaan. Satu pemutar per berkas, jadi bunyi permukaan lain tidak terpotong.
 - Volume: "wus" −4 dB, mendarat −1 dB (`Config.AUDIO_WUS_VOLUME_DB`, `AUDIO_MENDARAT_VOLUME_DB`; BALANCING 2), di atas kayuhan −6 dB.
 - Pasangan visual: garis bidik hilang dan koran muncul ("wus"); penanda centang/setengah/bintang/silang di titik mendarat (bunyi mendarat, DESIGN_SPEC 3.6).
-- **Ditunda ke Fase 3:** nada naik mengikuti combo (skor dan combo belum ada), denting tip. Bunyi jendela pecah (bagian 4.2) belum ada. Acak nada ±5% (bagian 2 butir 3) belum dipakai; giliran tiga variasi dulu, dinilai di HP.
+- **Ditunda:** bunyi jendela pecah (bagian 4.2) belum ada. Acak nada ±5% (bagian 2 butir 3) belum dipakai; giliran tiga variasi dulu, dinilai di HP.
+
+**Placeholder Fase 3: nada combo, tip, tepat (sudah ada logikanya, usulan, run fase3b-rintangan-skor 2026-10-16; dinilai di HP).** Disambungkan ke scene di bagian B run itu.
+- **Nada combo** (`BunyiLempar.tingkat_nada`, `pitch_nada`, `pitch_mendarat`): bunyi mendarat antaran sah ke-n dalam rangkaian combo (`SkorRute`) diputar n − 1 setengah nada lebih tinggi (pitch = 2^(tingkat/12)), paling tinggi 5 tingkat (`AUDIO_COMBO_NADA_MAKS`, pitch 1,3348), lalu bertahan. Meleset dan koran ke rumah yang sudah terantar di nada dasar. Combo putus (meleset, tabrakan) mengembalikan antaran berikutnya ke nada dasar tanpa bunyi tambahan. Lewat `pitch_scale` pemutar, jadi berkas tidak berubah.
+- **Denting tip** `assets/audio/sfx/ui/sfx_ui_tip_01.wav` (0,35 detik, `tools/audio_art/sintesis_rute.py`): diputar bersamaan dengan bunyi mendarat teras pemberi tip; berkasnya diawali 0,12 detik senyap, jadi terdengar **sesudah** bunyi mendarat tanpa pewaktu di kode. Pasangan visual: "+tip" melayang (DESIGN_SPEC 3.6).
+- **Kilau tepat** `assets/audio/sfx/ui/sfx_ui_tepat_01.wav` (0,30 detik, diawali 0,05 detik senyap): diputar bersama bunyi kotak surat untuk antaran tepat. Pasangan visual: penanda tepat (bentuk berbeda dari centang dan bintang).
 
 ### 3.2 Kayuhan dan kecepatan
 
@@ -80,6 +85,8 @@ Hadiah inti tiap antaran. Bunyinya membedakan permukaan, supaya pemain tahu hasi
 
 Bel adalah efek suara sekaligus alat mengusir pejalan kaki (GDD 5.4, 11, 15), dan sejak 2026-10-09 memberi nama pada game: **Kring Kring!** Satu "kring" yang jelas, 300–500 ms, dengan 3 variasi. Ketukan kedua selama teks masih tampil memutar bunyi kedua, jadi terdengar "kring kring!"; bunyi kedua sebaiknya sedikit lebih tinggi supaya dua bunyi terdengar sebagai satu frasa (usulan). Bel yang di-upgrade punya bunyi berbeda (kosmetik). Pasangan visualnya selalu tampil, juga saat suara mati (`design/bel/`).
 
+**Placeholder Fase 3 (usulan, run fase3b-rintangan-skor 2026-10-16; dinilai di HP).** `assets/audio/sfx/bell/sfx_bike_bell_0{1,2,3}.wav` ("kring" 0,40 / 0,36 / 0,44 detik, empat parsial logam tak harmonis dengan getar pemukul 32 Hz, nada dasar 2100 / 2350 / 1900 Hz) dari `tools/audio_art/sintesis_rute.py`, diputar autoload `Audio` di bus `SFX` (`putar_bel`). Variasi bergiliran 01, 02, 03, 01 tanpa acak; "kring kring!" = variasi berikutnya dengan pitch +1 setengah nada (`AUDIO_BEL_KEDUA_SETENGAH_NADA`, 1,0595), jadi dua bunyi terdengar satu frasa. Ketukan yang ditolak (jeda bel 1,0 detik, jeda game) tidak berbunyi (`Bel`, BALANCING 6d).
+
 ---
 
 ## 4. Daftar Efek Suara
@@ -93,8 +100,8 @@ Kolom **M2** menandai yang dibutuhkan untuk satu hari penuh di perumahan (ROADMA
 | Kayuhan (loop, 3 kecepatan lewat pitch) | ✅ | Animasi kayuh, bar kecepatan |
 | Freewheel saat meluncur | ✅ | Pedal diam |
 | Rem dan decit | ✅ | Animasi rem, cincin stick bawah menyala |
-| Bel ("kring", dan "kring kring!" saat diketuk dua kali) | ⬜ | Garis getar dan teks "KRING!" di atas setang (`design/bel/`) |
-| Tabrakan (lembut, "bruk" + kerincing) | ✅ | Oleng, bintang kecil |
+| Bel ("kring", dan "kring kring!" saat diketuk dua kali) — placeholder ada (bagian 3.3, dimajukan ke Fase 3) | ✅ | Garis getar dan teks "KRING!" / "KRING KRING!" di atas setang (`design/bel/`); ikon "!" di atas anjing yang mundur |
+| Tabrakan (lembut, "bruk" + kerincing) — placeholder `sfx/obstacle/sfx_obs_crash_01.wav` | ✅ | Sepeda oleng, kilatan atau bintang kecil, combo putus di HUD |
 | Selip di genangan / kerikil | ⬜ | Percikan, sepeda bergeser |
 
 ### 4.2 Lemparan dan sasaran
@@ -103,7 +110,8 @@ Kolom **M2** menandai yang dibutuhkan untuk satu hari penuh di perumahan (ROADMA
 |---|---|---|
 | Swipe / koran dilempar ("wus") — placeholder ada (bagian 3.1) | ✅ | Koran berputar, garis bidik hilang |
 | Mendarat: kotak surat, teras, rumput, meleset — placeholder ada, 3 variasi bergiliran (bagian 3.1); jendela memakai teras (bonus) atau meleset (penalti) | ✅ | Bintang kecil, umpan balik melayang (DESIGN_SPEC 3.6) |
-| Tip / koin | ✅ | Koin muncul |
+| Tip / koin — placeholder `sfx/ui/sfx_ui_tip_01.wav` (bagian 3.1) | ✅ | "+tip" melayang, koin bertambah di HUD |
+| Antaran tepat — placeholder `sfx/ui/sfx_ui_tepat_01.wav` (bagian 3.1) | ✅ | Penanda tepat (bentuk berbeda dari centang dan bintang) |
 | Pelanggan kesal (gumam pendek) | ⬜ | Pelanggan di teras bereaksi |
 | Jendela pecah (kalau dipakai, GDD 4.1) | ⬜ | Kaca retak |
 
@@ -111,8 +119,9 @@ Kolom **M2** menandai yang dibutuhkan untuk satu hari penuh di perumahan (ROADMA
 
 | Suara | M2 | Pasangan visual |
 |---|---|---|
-| Anjing menggeram (peringatan), menggonggong (mengejar) | ✅ | Anjing berdiri, lalu lari |
-| Mobil: bip lampu mundur, mesin | ✅ | Lampu mundur menyala |
+| Anjing menggeram (peringatan), menggonggong (mengejar) — placeholder `sfx/obstacle/sfx_obs_dog_growl.wav` (0,80 detik), `sfx_obs_dog_bark_01.wav` (dua "guk", 0,42 detik) | ✅ | Geram = anjing berdiri (animasi `tanda`), gonggong = anjing lari (`lari`) |
+| Mobil: bip lampu mundur, mesin — placeholder `sfx/obstacle/sfx_obs_car_beep.wav` (tiga bip selama tanda 1,5 detik), `sfx_obs_car_engine.wav` (1,0 detik) | ✅ | Bip = lampu mundur berkedip (`tanda`), mesin = mobil bergerak mundur (`mundur`) |
+| Anjing mundur karena bel | ✅ | Tanpa bunyi sendiri (bel itu sendiri yang berbunyi); ikon "!" di atas anjing |
 | Tukang sayur (teriakan pendek tanpa kata jelas) | ⬜ | Gerobak muncul |
 | Angkot, motor lewat | ⬜ | Kendaraan |
 | Ayam, bebek, kerbau (lonceng) | ⬜ | Hewan |
@@ -190,7 +199,7 @@ Master
 
 Slider terpisah untuk suasana dan efek suara di pengaturan (DESIGN_SPEC 4).
 
-**Yang sudah ada (run fase1b-umpan-balik 2026-10-14, usulan):** `default_bus_layout.tres` di root repo memuat `Master` → `SFX` → `Sepeda` saja (semua 0 dB, tanpa efek). `Ambience`, `Musik`, dan `UI` ditambahkan saat bunyinya ada; musik belum diputuskan. Bus `Sepeda` belum diredam saat jeda: autoload `Audio` menghentikan pemutarnya langsung (lihat "Perilaku di Android"). Bunyi lempar dan mendarat (run fase2b-bantu-audio 2026-10-15) diputar langsung di bus `SFX`, bukan `Sepeda`; tidak ada bus baru.
+**Yang sudah ada (run fase1b-umpan-balik 2026-10-14, usulan):** `default_bus_layout.tres` di root repo memuat `Master` → `SFX` → `Sepeda` saja (semua 0 dB, tanpa efek). `Ambience`, `Musik`, dan `UI` ditambahkan saat bunyinya ada; musik belum diputuskan. Bus `Sepeda` belum diredam saat jeda: autoload `Audio` menghentikan pemutarnya langsung (lihat "Perilaku di Android"). Bunyi lempar dan mendarat (run fase2b-bantu-audio 2026-10-15) dan bunyi rute run 3B (rintangan, tabrakan, bel, tip, tepat) diputar langsung di bus `SFX`, bukan `Sepeda`; tidak ada bus baru.
 
 ### Level dan pencampuran
 
@@ -204,6 +213,7 @@ Slider terpisah untuk suasana dan efek suara di pengaturan (DESIGN_SPEC 4).
 - Berhenti saat app masuk background, lanjut wajar saat kembali.
   - **Bunyi sepeda (sudah ada):** background, kehilangan fokus, tombol jeda, dan back Android membuka layar jeda (BALANCING 2, keputusan pemilik 2026-10-14); autoload `Audio` menghentikan ketiga pemutar seketika lewat sinyal `JalanUji.jeda_berubah`, termasuk decit rem yang sedang berbunyi, dan juga saat `NOTIFICATION_APPLICATION_PAUSED`/`FOCUS_OUT` sampai sendiri. `Audio` `PROCESS_MODE_ALWAYS`, jadi pemutar tidak di-pause lalu dilanjutkan otomatis oleh `SceneTree.paused` (yang akan memutar sisa decit lama). Sesudah "Lanjut" bunyi kembali dari keadaan sekarang pada langkah berikutnya; rem harus ditahan ulang, jadi tidak ada decit tertunda.
   - **Bunyi lempar dan mendarat (sudah ada, run fase2b-bantu-audio):** jalur yang sama. Jeda (tombol jeda, back, `FOCUS_OUT`, `APPLICATION_PAUSED`) menghentikan "wus" dan bunyi mendarat yang sedang berbunyi seketika; selama jeda tidak ada bunyi baru (koran beku, lemparan ditolak); sesudah "Lanjut" bunyi lama tidak diputar ulang.
+  - **Bunyi rute (sudah ada logikanya, run fase3b-rintangan-skor):** jalur yang sama di bus `SFX`. Selama jeda tidak ada geram, gonggong, bip, mesin, tabrakan, bel, tip, atau tepat baru; jeda, background, kehilangan fokus, tutup jendela, dan `hentikan_lempar` menghentikan yang sedang berbunyi seketika, dan sesudah lanjut tidak diputar ulang (dites `tests/tes_bunyi_rute.gd`).
 - Tangani headphone dicabut.
 - Hormati mode senyap perangkat.
 
@@ -234,9 +244,10 @@ assets/audio/
   sfx/
     bike/
     throw/
-    obstacle/
+    obstacle/   <- run 3B: anjing, mobil, tabrakan
+    bell/       <- run 3B: tiga variasi "kring"
     mission/
-    ui/
+    ui/         <- run 3B: tip, tepat
   LICENSES.md     <- WAJIB
 ```
 
@@ -253,8 +264,8 @@ assets/audio/
 ## 8. Urutan Produksi
 
 1. **Fase 1–2:** kayuhan dengan pitch, freewheel, rem, swipe, empat bunyi mendarat. Placeholder boleh. (Kayuhan, freewheel, dan rem placeholder sudah ada sejak run fase1b-umpan-balik, bagian 3.2; "wus" dan empat bunyi mendarat sejak run fase2b-bantu-audio, bagian 3.1.)
-2. **Fase 3–4:** anjing, mobil, tabrakan, tip, suara misi kucing, UI dasar, ambience perumahan.
-3. **Fase 6–7:** kerusakan sepeda, bengkel, hasil harian, bel, keputusan musik.
+2. **Fase 3–4:** anjing, mobil, tabrakan, tip, bel (dimajukan dari Fase 6–7, keputusan pemilik 2026-10-16), suara misi kucing, UI dasar, ambience perumahan. (Anjing, mobil, tabrakan, tip, tepat, dan bel placeholder sudah ada sejak run fase3b-rintangan-skor, bagian 3.1, 3.3, 4.3.)
+3. **Fase 6–7:** kerusakan sepeda, bengkel, hasil harian, bel kosmetik/upgrade, keputusan musik.
 4. **Fase 8:** ambience dan suara khas distrik berikutnya.
 
 ---

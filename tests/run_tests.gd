@@ -119,6 +119,8 @@ func _initialize() -> void:
 	await bunyi.jalankan()
 	var bunyi_lempar: TesBunyiLempar = TesBunyiLempar.new(check, _judul, self)
 	await bunyi_lempar.jalankan()
+	var bunyi_rute: TesBunyiRute = TesBunyiRute.new(check, _judul, self)
+	await bunyi_rute.jalankan()
 	var cek_render: TesCekRender = TesCekRender.new(check, _judul, self)
 	await cek_render.jalankan()
 	root.size = ukuran_sebelum
