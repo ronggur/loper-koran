@@ -1137,6 +1137,8 @@ func _test_medan_tertutup_titik() -> void:
 		[10.6, 0.0, false, "4,6 ubin di depan: sinar masuk tapak hanya pada tinggi 2,0 ke atas, tidak tertutup"],
 		[10.3, 1.9, false, "titik setinggi 1,9 di maju 10,3: tinggi 1,9 + d >= 2 sebelum sinar masuk tapak: sudah di atas atap"],
 		[7.0, 0.0, true, "titik di dalam tapak"],
+		[5.7, 0.0, true, "titik di dalam tapak, 0,3 ubin SEBELUM awal kavling 6 (tapak mulai di maju 5,5): rumah ini ada di depan titik (QA-007 run 3A)"],
+		[5.4, 0.0, false, "titik 0,1 ubin sebelum tapak (maju 5,5): sinar menjauh dari tapak, tidak tertutup"],
 		[3.0, 0.0, false, "di belakang rumah (sinar menjauh dari tapak)"],
 	]
 	for k: Array in kasus:

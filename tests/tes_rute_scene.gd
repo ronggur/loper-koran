@@ -797,6 +797,7 @@ func _test_galat_muat_terlihat() -> void:
 	var akar: RuteMain = await _siapkan()
 	check(tr("RUTE_GAGAL_MUAT") == "Rute gagal dimuat", "kunci RUTE_GAGAL_MUAT diterjemahkan: %s" % tr("RUTE_GAGAL_MUAT"))
 	check(akar.galat_rute().is_empty() and not akar.panel_akhir().tampil(), "kontrol: rute baik, tanpa galat dan tanpa banner")
+	check(akar.lapor_galat_ke_log, "galat rute dicatat ke log developer secara bawaan (push_error); hanya tes yang mematikannya (QA-008 run 3A)")
 	akar.lapor_galat_ke_log = false
 	var pustaka: Array[SegmenRute] = akar._pustaka
 	var rusak: Array[SegmenRute] = [pustaka[0]]

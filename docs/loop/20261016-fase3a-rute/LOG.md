@@ -1,7 +1,7 @@
 # Loop Log — 20261016-fase3a-rute
 Scope: Run 3A Fase 3, fondasi rute (segmen JSON, RouteBuilder berseed, scene rute, zona dari data, penutup semi-transparan)  ·  Branch: `feat/fase3a-rute`  ·  Mulai: 2026-10-16  ·  Godot: 4.7.2
 
-## Status: IN_PROGRESS   (iterasi saat ini: 2/2, Dev iterasi 2 selesai: QA-001, QA-002, QA-003, QA-006 FIXED; QA-004 dan QA-005 DEFERRED menunggu keputusan pemilik; menunggu verifikasi QA)
+## Status: PASSED   (iterasi saat ini: 2/2; QA iterasi 2: QA-001, QA-002, QA-003, QA-006 a/b/c VERIFIED; QA-007 dan QA-008 (Minor/Nit baru) ditutup dengan tes QA; QA-004, QA-005, QA-009 DEFERRED; 0 Blocker/Major OPEN; NEEDS-MANUAL tetap, Fase 3 dan DEV_PHASES tidak dicentang)
 
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
@@ -9,19 +9,22 @@ Scope: Run 3A Fase 3, fondasi rute (segmen JSON, RouteBuilder berseed, scene rut
 | 1a | Bagian A (logika murni): 9 segmen JSON, `SegmenRute`/`PemuatRute`/`RouteBuilder`/`PenutupPemain`, zona dari rute, `tes_rute.gd`; scene belum | ✅ import bersih; 7853 lolos, 0 gagal (`--ketat` 0 peringatan); `--quit-after 2` bersih; 4 `uji_*.py` lolos; `--export-pack` memuat 9 JSON | menunggu bagian B | 0 | 0 |
 | 1b | Bagian B: `rute.tscn` jadi scene utama (rumah dan kotak surat dari data, jendela daur, zona dan mode bantu dari data rute, akhir rute + banner + Main lagi, penerap penutup tunggal), `AdeganJalan` dasar bersama, `tes_rute_scene.gd`, `probe_rute_jendela.gd`, dokumen | ✅ import bersih; 8117 lolos, 0 gagal (`--ketat` 0 peringatan); `--quit-after 2` bersih; 4 `uji_*.py` lolos; `--export-pack` memuat 9 JSON + `rute.tscn`, tanpa `tests/` dan `docs/`, rute dimuat dari paket; probe 2340x1080 dan 1600x720 bersih | menunggu | 0 | 0 |
 | 1 (QA) | audit independen Agent 2: gerbang dijalankan ulang di repo dan klon bersih, 40 mutan QA, probe jendela 2340x1080 dan 1600x720, muat dari `.pck` | ✅ import bersih; 8117 lolos, 0 gagal (`--ketat` 0 peringatan; klon bersih sama); `--quit-after 2` bersih; 4 `uji_*.py` lolos; `--export-pack` 9 JSON, 0 `tests/` `docs/`; rute dimuat dari `.pck` | **FAIL** (1 Major) | 6 (1 Major, 4 Minor, 1 Nit) | 0 |
-| 2 (Dev) | QA-001 (tes pilihan pelanggan bergantung seed, ketukan Main lagi dipindah ke tes permanen, `qa_repro_rute.gd` dihapus), QA-002 (tes titik tertutup literal, garis bidik redup di rute, `tertutup_pada` memakai medan), QA-003 (4 konstanta `Config`), QA-006 a, b, c; QA-004 dan QA-005 DEFERRED; QA-006 d dan e dicatat | ✅ import bersih; 8179 lolos, 0 gagal (`--ketat` 0 peringatan); `--quit-after 2` bersih; 4 `uji_*.py` lolos; `--export-pack` 9 JSON, 0 `tests/` `docs/` | menunggu | 0 | 0 |
+| 2 (Dev) | QA-001 (tes pilihan pelanggan bergantung seed, ketukan Main lagi dipindah ke tes permanen, `qa_repro_rute.gd` dihapus), QA-002 (tes titik tertutup literal, garis bidik redup di rute, `tertutup_pada` memakai medan), QA-003 (4 konstanta `Config`), QA-006 a, b, c; QA-004 dan QA-005 DEFERRED; QA-006 d dan e dicatat | ✅ import bersih; 8179 lolos, 0 gagal (`--ketat` 0 peringatan); `--quit-after 2` bersih; 4 `uji_*.py` lolos; `--export-pack` 9 JSON, 0 `tests/` `docs/` | **PASS** (QA iterasi 2) | 3 (1 Minor, 2 Nit; QA-007 dan QA-008 ditutup dengan tes QA) | 4 (QA-001, QA-002, QA-003, QA-006 a/b/c) |
 
 ## Temuan
 Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MANUAL | BLOCKED
 
 | ID | Iter | Sev | Lokasi | Temuan & reproduksi/bukti | Status | Fix (file/commit) | Tes regresi |
 |---|---|---|---|---|---|---|---|
-| QA-001 | 1 | Major | `scripts/systems/route_builder.gd:_cocokkan` (goyangan pilihan pelanggan), tes `tests/tes_rute.gd` | Pilihan pelanggan tidak dijaga bergantung pada seed. Mutan QA Q04 (`target.append(dasar + rng.randf_range(-G, G))` diganti `target.append(dasar)`, goyangan nol) **selamat**: `run_tests.gd` tetap 8117 lolos, 0 gagal. Akibatnya K-3 (pelanggan dipilih lewat RNG berseed rute) dan AC-5 (seed beda = rute beda) hanya terjaga lewat urutan segmen; dengan mutan itu, dua seed berurutan segmen sama memilih 25 pelanggan identik, dan konstanta `RUTE_PELANGGAN_GOYANG_UBIN` tidak dirujuk tes mana pun (`grep RUTE_PELANGGAN_GOYANG tests/` kosong). Reproduksi: terapkan mutan, `godot --headless --path . --script res://tests/qa_repro_rute.gd` -> `GAGAL: R1 ... (0 dari 210 urutan punya variasi)`; pada kode asli R1 lolos (122 dari 210 urutan segmen punya lebih dari satu himpunan pelanggan di 400 seed). Perbaikan yang diharapkan: tes di `tes_rute.gd` (atau pindahkan R1) yang menegaskan bahwa urutan segmen yang sama menghasilkan lebih dari satu himpunan pelanggan di sapuan seed, dan bahwa jarak antar pelanggan tidak seragam (ROUTE_DESIGN 3: rumah berurutan lalu sela panjang). | FIXED | `f03cecc`: `tests/tes_rute.gd:_test_pelanggan_bergantung_seed` (sapuan seed 1000..1399), `tests/tes_rute_scene.gd:_test_main_lagi_ketuk`; `qa_repro_rute.gd` (+ `.uid`) dihapus | `_test_pelanggan_bergantung_seed` (mutan Q04: 3 GAGAL), `_test_main_lagi_ketuk` |
-| QA-002 | 1 | Minor | `scripts/systems/medan_koran.gd:51` (`tertutup_titik`), `scripts/entities/adegan_jalan.gd` (`_garis_bidik.tampilkan(..., _medan)`), `scripts/systems/koran_lempar.gd:tertutup_pada` | Tiga mutan QA selamat (0 tes gagal): Q11 jendela belakang `tertutup_titik` dari dua petak (8 ubin) jadi satu petak; Q22 `_medan` tidak diteruskan ke `GarisBidik.tampilkan` (titik redup garis bidik memakai rumah graybox jalan uji di rute); Q23 `KoranLempar.tertutup_pada` memakai medan null. Q11 bukan mutan setara: titik tanah (tinggi 0) di maju 10,3, lateral -5,5 tertutup rumah seberang berawal maju 6 (tapak maju 5,5 sampai 8,5, lateral -6 sampai -3; sinar ke kamera masuk tapak di maju 8,3 pada tinggi 1,8 < 2), padahal jendela satu petak [6,3; 14,3] terhadap `maju_ubin` rumah (6) melewatkannya. Akibat: elips TERTUTUP atau titik redup bisa salah di rute tanpa tes yang gagal. Perbaikan: tes literal untuk titik 4 sampai 4,5 ubin di depan awal kavling rumah, dan tes scene bahwa `GarisBidik` di rute menandai titik redup menurut rumah rute. | FIXED | `b6f3895` (hanya tes; kode produksi benar) | `tes_rute.gd:_test_medan_tertutup_titik` (Q11: 3 GAGAL, Q23: 2 GAGAL), `tes_rute_scene.gd:_test_garis_bidik_titik_redup` (Q22: 1 GAGAL, 30 titik salah) |
-| QA-003 | 1 | Minor | `scripts/systems/pemuat_rute.gd:85,87,89`, `scripts/systems/route_builder.gd:198`, `scripts/systems/medan_koran.gd:51` | Angka ajaib baru di kode, melanggar `gdscript.mdc` ("tidak ada angka ajaib") dan `balancing.mdc`: minimal 2 pembuka dan 2 penutup (`< 2`, AC-1) tertanam di `periksa_kumpulan`; `RUTE_SEGMEN_PER_RUTE - 2` (pembuka + penutup) di dua tempat; `RUTE_PETAK_UBIN * 2` (jendela belakang penutup) di `medan_koran.gd`. Pemindai literal di `run_tests.gd` meloloskan angka 2. Perbaikan: konstanta `Config` (mis. `RUTE_PEMBUKA_MIN`, `RUTE_PENUTUP_MIN`, `RUTE_SEGMEN_PENGAPIT`, `RUTE_PENUTUP_JENDELA_BELAKANG_PETAK`). | FIXED | `cc5ee6b` (konstanta di `config.gd`, `BALANCING.md` 6b) dan `b6f3895` (tes) | `tes_rute.gd:_test_konstanta_pengapit`, `_test_kumpulan`, `_test_medan_tertutup_titik` (mutan nilai 1: 3, 2, 546, 4 GAGAL) |
+| QA-001 | 1 | Major | `scripts/systems/route_builder.gd:_cocokkan` (goyangan pilihan pelanggan), tes `tests/tes_rute.gd` | Pilihan pelanggan tidak dijaga bergantung pada seed. Mutan QA Q04 (`target.append(dasar + rng.randf_range(-G, G))` diganti `target.append(dasar)`, goyangan nol) **selamat**: `run_tests.gd` tetap 8117 lolos, 0 gagal. Akibatnya K-3 (pelanggan dipilih lewat RNG berseed rute) dan AC-5 (seed beda = rute beda) hanya terjaga lewat urutan segmen; dengan mutan itu, dua seed berurutan segmen sama memilih 25 pelanggan identik, dan konstanta `RUTE_PELANGGAN_GOYANG_UBIN` tidak dirujuk tes mana pun (`grep RUTE_PELANGGAN_GOYANG tests/` kosong). Reproduksi: terapkan mutan, `godot --headless --path . --script res://tests/qa_repro_rute.gd` -> `GAGAL: R1 ... (0 dari 210 urutan punya variasi)`; pada kode asli R1 lolos (122 dari 210 urutan segmen punya lebih dari satu himpunan pelanggan di 400 seed). Perbaikan yang diharapkan: tes di `tes_rute.gd` (atau pindahkan R1) yang menegaskan bahwa urutan segmen yang sama menghasilkan lebih dari satu himpunan pelanggan di sapuan seed, dan bahwa jarak antar pelanggan tidak seragam (ROUTE_DESIGN 3: rumah berurutan lalu sela panjang). | VERIFIED (QA iterasi 2) | `f03cecc`: `tests/tes_rute.gd:_test_pelanggan_bergantung_seed` (sapuan seed 1000..1399), `tests/tes_rute_scene.gd:_test_main_lagi_ketuk`; `qa_repro_rute.gd` (+ `.uid`) dihapus | `_test_pelanggan_bergantung_seed` (mutan Q04: 3 GAGAL), `_test_main_lagi_ketuk` |
+| QA-002 | 1 | Minor | `scripts/systems/medan_koran.gd:51` (`tertutup_titik`), `scripts/entities/adegan_jalan.gd` (`_garis_bidik.tampilkan(..., _medan)`), `scripts/systems/koran_lempar.gd:tertutup_pada` | Tiga mutan QA selamat (0 tes gagal): Q11 jendela belakang `tertutup_titik` dari dua petak (8 ubin) jadi satu petak; Q22 `_medan` tidak diteruskan ke `GarisBidik.tampilkan` (titik redup garis bidik memakai rumah graybox jalan uji di rute); Q23 `KoranLempar.tertutup_pada` memakai medan null. Q11 bukan mutan setara: titik tanah (tinggi 0) di maju 10,3, lateral -5,5 tertutup rumah seberang berawal maju 6 (tapak maju 5,5 sampai 8,5, lateral -6 sampai -3; sinar ke kamera masuk tapak di maju 8,3 pada tinggi 1,8 < 2), padahal jendela satu petak [6,3; 14,3] terhadap `maju_ubin` rumah (6) melewatkannya. Akibat: elips TERTUTUP atau titik redup bisa salah di rute tanpa tes yang gagal. Perbaikan: tes literal untuk titik 4 sampai 4,5 ubin di depan awal kavling rumah, dan tes scene bahwa `GarisBidik` di rute menandai titik redup menurut rumah rute. | VERIFIED (QA iterasi 2) | `b6f3895` (hanya tes; kode produksi benar) | `tes_rute.gd:_test_medan_tertutup_titik` (Q11: 3 GAGAL, Q23: 2 GAGAL), `tes_rute_scene.gd:_test_garis_bidik_titik_redup` (Q22: 1 GAGAL, 30 titik salah) |
+| QA-003 | 1 | Minor | `scripts/systems/pemuat_rute.gd:85,87,89`, `scripts/systems/route_builder.gd:198`, `scripts/systems/medan_koran.gd:51` | Angka ajaib baru di kode, melanggar `gdscript.mdc` ("tidak ada angka ajaib") dan `balancing.mdc`: minimal 2 pembuka dan 2 penutup (`< 2`, AC-1) tertanam di `periksa_kumpulan`; `RUTE_SEGMEN_PER_RUTE - 2` (pembuka + penutup) di dua tempat; `RUTE_PETAK_UBIN * 2` (jendela belakang penutup) di `medan_koran.gd`. Pemindai literal di `run_tests.gd` meloloskan angka 2. Perbaikan: konstanta `Config` (mis. `RUTE_PEMBUKA_MIN`, `RUTE_PENUTUP_MIN`, `RUTE_SEGMEN_PENGAPIT`, `RUTE_PENUTUP_JENDELA_BELAKANG_PETAK`). | VERIFIED (QA iterasi 2) | `cc5ee6b` (konstanta di `config.gd`, `BALANCING.md` 6b) dan `b6f3895` (tes) | `tes_rute.gd:_test_konstanta_pengapit`, `_test_kumpulan`, `_test_medan_tertutup_titik` (mutan nilai 1: 3, 2, 546, 4 GAGAL) |
 | QA-004 | 1 | Minor | `scripts/entities/rute_main.gd:_lempar_diizinkan` (D-17) | Perilaku di luar SPEC: sesudah garis akhir, swipe dan tap bantu baru ditolak dan garis bidik disembunyikan. K-5 dan AC-14 hanya meminta stick dikunci dan koran yang sudah terbang tetap dinilai. Dev mencatatnya sebagai D-17 (bukan diam-diam), tetapi ini keputusan perilaku yang menyentuh area "struktur sesi" (ROADMAP 5, M2) tanpa persetujuan pemilik. Tes menjaga perilakunya (M29), jadi bukan bug; perlu konfirmasi pemilik (ganti `_lempar_diizinkan` bila tidak diinginkan). | DEFERRED (menunggu keputusan pemilik) | tidak diubah, rekomendasi di Keputusan & catatan | M29 tetap menjaga perilaku sekarang |
 | QA-005 | 1 | Minor | `scripts/entities/rumah_daur_rute.gd:_pasang`, aset `house_perumahan_*_pelanggan` | Dua kotak surat per rumah pelanggan (D-16): kotak merah di teras sprite dan kubus oranye graybox di pusat zona; lihat `shots/qa/2340x1080_rute_tengah.png` dan `..._bantu_centang.png`. Sasaran sebenarnya (zona, penanda centang) hanya kubus oranye yang berdiri di trotoar, jadi kotak merah yang tampak seperti kotak surat bukan sasaran. Dev sudah melaporkan dan SPEC melarang menyentuh aset; keputusan akhir ada di pemilik/art (`tools/env_art/fase3.py`). | DEFERRED (menunggu keputusan pemilik) | tidak diubah, rekomendasi di Keputusan & catatan | (tidak ada; aset) |
-| QA-006 | 1 | Nit | beberapa | (a) `SegmenRute._nama_sah`: `id` dengan akhiran baris baru (`"per_x\n"`) lolos `parse` karena `$` PCRE mencocokkan sebelum `\n` akhir (diverifikasi, `galat=[]`); pakai `\z`. (b) `PemuatRute`/`RuteMain._susun`: bila memuat gagal hanya `push_error`, pemain melihat jalan kosong tanpa pesan di layar. (c) `RumahDaurRute._tekstur_untuk`: `load()` PNG pertama kali jenis rumah muncul terjadi di tengah frame (12 PNG saja, risiko patah kecil); bisa dimuat di `atur_rute`. (d) Tidak ada penanda garis akhir di dunia (hanya banner sesudah lewat); sepeda berhenti 1,4 sampai 4,5 ubin lewat garis di tanah kosong. (e) Branch 15 commit, 90 berkas (`git-workflow.mdc`: satu branch satu topik yang bisa di-review sekali duduk); diterima sebagai run 3A. | FIXED (a, b, c); (d) ditunda ke Run 3C; (e) diterima | a, b, c: `b2663d9`. d dan e tidak dikerjakan (perintah orchestrator) | a: `tes_rute.gd:_test_segmen_sah_dan_mutan` (`id_baris_baru`, `titik_nama_baris_baru`; mutan `$`: 2 GAGAL); b: `tes_rute_scene.gd:_test_galat_muat_terlihat` (mutan tanpa banner: 2 GAGAL); c: `_test_tekstur_dimuat_di_atur_rute` (mutan tanpa muat awal: 2 GAGAL) |
+| QA-006 | 1 | Nit | beberapa | (a) `SegmenRute._nama_sah`: `id` dengan akhiran baris baru (`"per_x\n"`) lolos `parse` karena `$` PCRE mencocokkan sebelum `\n` akhir (diverifikasi, `galat=[]`); pakai `\z`. (b) `PemuatRute`/`RuteMain._susun`: bila memuat gagal hanya `push_error`, pemain melihat jalan kosong tanpa pesan di layar. (c) `RumahDaurRute._tekstur_untuk`: `load()` PNG pertama kali jenis rumah muncul terjadi di tengah frame (12 PNG saja, risiko patah kecil); bisa dimuat di `atur_rute`. (d) Tidak ada penanda garis akhir di dunia (hanya banner sesudah lewat); sepeda berhenti 1,4 sampai 4,5 ubin lewat garis di tanah kosong. (e) Branch 15 commit, 90 berkas (`git-workflow.mdc`: satu branch satu topik yang bisa di-review sekali duduk); diterima sebagai run 3A. | VERIFIED (a, b, c, QA iterasi 2); (d) DEFERRED ke Run 3C; (e) diterima | a, b, c: `b2663d9`. d dan e tidak dikerjakan (perintah orchestrator) | a: `tes_rute.gd:_test_segmen_sah_dan_mutan` (`id_baris_baru`, `titik_nama_baris_baru`; mutan `$`: 2 GAGAL); b: `tes_rute_scene.gd:_test_galat_muat_terlihat` (mutan tanpa banner: 2 GAGAL); c: `_test_tekstur_dimuat_di_atur_rute` (mutan tanpa muat awal: 2 GAGAL) |
+| QA-007 | 2 | Minor | `scripts/systems/medan_koran.gd:51` (`tertutup_titik`, jendela depan `+ RUTE_PETAK_UBIN`), tes `tes_rute.gd:_test_medan_tertutup_titik` | Mutan QA N16 (jendela depan `maju + float(PETAK)` jadi `maju`) **selamat** (8179 lolos, 0 gagal). Bukan setara: tapak rumah seberang mulai 0,5 ubin sebelum awal kavling (`maju_ubin`), jadi titik di lateral -5,5, maju 5,7 untuk rumah di awal 6 ada DI DALAM tapak (tertutup), tetapi rumah itu berada di depan titik dan terlewat bila jendela depan nol. Semua titik uji Dev berada di maju >= awal kavling. Kode produksi benar; hanya celah tes (sejenis QA-002). | VERIFIED (kode benar; tes ditambah QA) | tidak ada perubahan kode produksi | `tes_rute.gd:_test_medan_tertutup_titik` dua baris `kasus` baru (5,7 tertutup; 5,4 tidak); mutan N16: 1 GAGAL |
+| QA-008 | 2 | Nit | `scripts/entities/rute_main.gd:lapor_galat_ke_log` (D-25) | Mutan QA N14 (bawaan `lapor_galat_ke_log` true jadi false) **selamat**: tidak ada tes yang menjaga bahwa galat rute dicatat ke log developer secara bawaan; hanya tes yang boleh mematikannya. Kode benar. | VERIFIED (kode benar; tes ditambah QA) | tidak ada perubahan kode produksi | `tes_rute_scene.gd:_test_galat_muat_terlihat` satu `check` baru; mutan N14: 1 GAGAL |
+| QA-009 | 2 | Nit | `scripts/systems/route_builder.gd:_cocokkan` | Mutan QA N01 (goyangan target satu arah `randf_range(0, G)` bukan `(-G, G)`) selamat: tes menjaga goyangan bukan nol (QA-001) tetapi tidak simetri. Efek: pelanggan sedikit bergeser maju secara sistematik, rata-rata jarak tetap 8,5 sampai 9,8 dan celah <= 20 (tidak melanggar AC). Dicatat, tidak ada perubahan. | DEFERRED (Nit, dicatat saja) | tidak ada | (tidak ada) |
 
 ## NEEDS-MANUAL (uji di HP)
 - [ ] Rute dari awal sampai garis akhir tanpa patah, 60 fps, memuat < 1 detik; tiga seed berbeda tidak terasa dihafal.
@@ -412,3 +415,93 @@ Hanya temuan OPEN QA iterasi 1 yang dikerjakan. Branch `feat/fase3a-rute`, tidak
 ### BLOCKED
 
 Tidak ada.
+
+
+## Catatan QA iterasi 2
+
+Auditor: Agent 2 (QA, agen baru, konteks segar). Semua perintah dijalankan sendiri di `feat/fase3a-rute` (HEAD `1392bae`, basis `main` `51aaedf`; diff iterasi 2 = `0d9ad18..HEAD`), macOS, Godot 4.7.2.
+
+### Verdict: PASS (0 Blocker, 0 Major; 1 Minor dan 1 Nit baru ditutup dengan tes QA; 1 Nit DEFERRED; QA-004 dan QA-005 menunggu pemilik)
+
+### Gerbang objektif (dijalankan QA)
+
+| Perintah | Hasil |
+|---|---|
+| `godot --headless --import` (repo dan klon bersih di scratchpad, `git clone -b feat/fase3a-rute`) | bersih |
+| `godot --headless --script res://tests/run_tests.gd 2>&1 \| tee build/qa2_tests.log` | **8179 lolos, 0 gagal**, 0 baris `SCRIPT ERROR`/`ERROR:`/`WARNING:`; klon bersih sama (8179 lolos, 0 gagal, `git status` bersih sesudah import dan tes) |
+| `tools/cek_keluaran_tes.py` dan `--ketat` | lolos (8179 lolos, 0 gagal, 0 peringatan), kode keluar 0 |
+| `godot --headless --path . --quit-after 2` | 0 baris ERROR/WARNING (repo dan klon) |
+| `uji_pemeriksa.py` / `uji_bangun_frames.py` / `uji_sintesis_sepeda.py` / `uji_sintesis_lempar.py` | 16 kasus 0 menyimpang / 41 lolos / 32 lolos / 111 lolos |
+| `godot --headless --path . --export-pack "Android" build/qa2-uji.pck` | 735.212 byte; 9 `per_*.json`; 0 `tests/`, `docs/`, keystore, apk |
+| Muat dari paket: `godot --headless --main-pack build/qa2-uji.pck --script <skrip scratchpad>` dari folder di luar repo | `res://tests` dan `res://docs` tidak ada; `daftar_berkas` 9 nama asli; `muat_folder` 9 segmen 0 galat; `bangun(20261016)` = 236 ubin, 25 pelanggan, koran 30, 0 galat; `rute.tscn` termuat |
+| Perilaku QA-003 tak berubah | skrip hash: 800 seed rute (id, pelanggan, maju, panjang) dan 60.000 titik `MedanKoran.tertutup_titik` identik antara `0d9ad18` dan `HEAD` (hash sama, 38.361 titik tertutup) |
+| Kebersihan repo | tidak ada secret, keystore, `.godot/`, `build/`, APK di diff; tidak ada commit di `main`; 6 commit iterasi 2 berformat `test/refactor/fix/docs:` berbahasa Indonesia; `qa_repro_rute.gd.uid` ikut dihapus; `.uid` berkas baru: tidak ada berkas `.gd` baru; `ui.id.translation` ikut commit dan reproduksibel (impor ulang di klon tidak mengubah apa pun); `DEV_PHASES.md`, ROADMAP, aset, `project.godot` tidak disentuh |
+
+Setelah tes QA ditambahkan (lihat di bawah): `run_tests.gd` **8182 lolos, 0 gagal**, `--ketat` lolos.
+
+### Verifikasi temuan FIXED
+
+| ID | Cara | Hasil |
+|---|---|---|
+| QA-001 | mutan Q04 (`target.append(dasar)`) | 3 GAGAL (urutan bervariasi 0 dari 210; himpunan terbanyak 1; celah terpanjang 16 < 18) -> **VERIFIED**. Mutan tambahan N02 (celah 20 ditolak) 1 GAGAL, N03 (percobaan ulang jadi `break`) 2 GAGAL. R1, R2, R3 `qa_repro_rute.gd` tercakup: R1 = `_test_pelanggan_bergantung_seed`, R2 = `_test_main_lagi_ketuk`, R3 = sapuan 400 seed (25 pelanggan, seberang, panjang 200..300) + `_test_berkas_nyata`; penghapusan sah |
+| QA-002 | Q11 (jendela belakang satu petak) / Q22 (`_medan` tidak diteruskan) / Q23 (`tertutup_pada` medan null) | 3 / 1 (30 titik salah) / 3 GAGAL -> **VERIFIED**. Q11 dengan nilai konstanta 1 dan 3: 4 dan 1 GAGAL |
+| QA-003 | `grep` literal `2` di `pemuat_rute.gd`, `route_builder.gd`, `medan_koran.gd`: tidak ada (sisa hanya `/ 2` rata-rata di `_cocokkan`, bukan tuning); 4 konstanta satu baris literal di `config.gd` (pemeriksa format hijau); `BALANCING.md` 6b memuat keempatnya; mutan nilai: PEMBUKA_MIN 3 -> 65 GAGAL, PENUTUP_MIN 3 -> 64, PENGAPIT 1 -> 553, JENDELA_BELAKANG 3 -> 1; perilaku identik (hash) | **VERIFIED** |
+| QA-006 a | mutan `\\z` -> `$` | 2 GAGAL -> VERIFIED |
+| QA-006 b | mutan tanpa `tampilkan_galat()` (dan mutan teks banner tetap "Rute selesai") | 2 GAGAL (masing-masing); kunci `RUTE_GAGAL_MUAT` ada di `ui.csv` dan `.translation` -> VERIFIED. Mutan N12 (`tampilkan` tidak mengembalikan teks "Rute selesai") 1 GAGAL, N13 (`_galat` tidak direset) 2 GAGAL |
+| QA-006 c | mutan tanpa muat awal PNG | 2 GAGAL (7 dari 9) -> VERIFIED |
+| QA-004, QA-005 | `git diff 0d9ad18..HEAD`: `_lempar_diizinkan`, aset, `tools/env_art` tidak berubah; rekomendasi tertulis di "Keputusan & catatan"; N18 (lemparan diterima sesudah akhir) 2 GAGAL, jadi perilaku D-17 tetap dijaga | tetap **DEFERRED** (keputusan pemilik) |
+
+### Review diff iterasi 2
+
+Static typing lengkap pada kode baru (`gagal: bool`, `jumlah_tekstur_dimuat() -> int`, `tampilkan_galat() -> void`); komentar `##` berbahasa Indonesia; tidak ada angka ajaib baru (pemindai literal hijau); tidak ada `kiri`/`kanan` pada baris tambahan; teks pemain lewat `tr("RUTE_GAGAL_MUAT")` dengan kunci baru di `ui.csv` dan `ui.id.translation`; tidak ada keputusan terbuka ROADMAP 5 yang diputuskan (struktur sesi, game over, jendela bonus, rumah dekat tidak disentuh); `DEV_PHASES.md` tidak dicentang; tidak ada perubahan di luar temuan (16 berkas, semuanya terkait QA-001..003, QA-006 atau LOG/BALANCING). Catatan kecil: `tes_rute_scene.gd` mengakses `akar._pustaka` (anggota privat) untuk menyuntikkan pustaka rusak; dapat diterima di tes.
+
+### Mutan QA iterasi 2 (33, di empat klon bersih terpisah, `run_tests.gd` per mutan)
+
+Mati = jumlah `GAGAL:` baru. Selamat: N01, N04, N14, N16, N17.
+
+| # | Mutasi | Hasil |
+|---|---|---|
+| Q04, Q11, Q22, Q23 | lihat Verifikasi QA-001/002 | mati (3, 3, 1, 3) |
+| Q03a-e | nilai 4 konstanta QA-003 | mati (65, 64, 553, 1, 4) |
+| Q06a-c | `\z`->`$`, tanpa `tampilkan_galat`, tanpa muat awal PNG | mati (2, 2, 2) |
+| N01 | goyangan target satu arah `(0, G)` | **SELAMAT** -> QA-009 (Nit) |
+| N02 | celah pelanggan `>` -> `>=` (celah tepat 20 ditolak) | mati (1) |
+| N03 | celah tidak sah: `continue` -> `break` | mati (2) |
+| N04 | DP seri `<` -> `<=` | SELAMAT: setara praktis (target float acak, seri hampir mustahil); bukan temuan |
+| N05 | tengah per rute dikurangi satu | mati (547) |
+| N06 | `randi()` global ditambahkan di pemilih pembuka | mati (12) |
+| N07 | `AkhirRute.periksa` lapor `baru_selesai` lagi | mati (7) |
+| N08 | stick akhir (0, 0) | mati (4) |
+| N09 | penerap tidak menghitung penutup | mati (1) |
+| N10 | `lepas` tidak mengembalikan alfa | mati (1) |
+| N11 | alfa penutup 0,8 di penerap | mati (3) |
+| N12 | `tampilkan` tidak mengatur teks "Rute selesai" | mati (1) |
+| N13 | `_galat` tidak direset di `_susun` | mati (2) |
+| N14 | bawaan `lapor_galat_ke_log` false | **SELAMAT** -> QA-008 (Nit), kini mati (1) dengan tes QA |
+| N15 | kotak surat di semua rumah `pelanggan_boleh` | mati (4) |
+| N16 | jendela depan `tertutup_titik` nol | **SELAMAT** -> QA-007 (Minor), kini mati (1) dengan tes QA |
+| N17 | akhir rute tanpa `_garis_bidik.sembunyikan()` | SELAMAT: setara (Q19 iterasi 1: `_lempar_diizinkan` sudah menyembunyikan garis bidik pada langkah berikutnya); bukan temuan |
+| N18 | `_lempar_diizinkan` selalu true | mati (2) |
+| N19 | pustaka butuh tengah `<=` | mati (62) |
+| N20 | posisi maju rumah + 0,5 | mati (14) |
+| N21 | banner galat memakai teks "Rute selesai" | mati (2) |
+
+Skrip mutan dan klon ada di scratchpad (`qa2/mutan2.py`, tidak di-commit); repo kerja tidak dimutasi (`git status` hanya menampilkan dua tes QA dan LOG).
+
+### Tes yang ditambahkan QA
+
+- `tests/tes_rute.gd:_test_medan_tertutup_titik`: dua baris `kasus` (titik di dalam tapak 0,3 ubin sebelum awal kavling: tertutup; 0,1 ubin sebelum tapak: tidak). Membunuh N16.
+- `tests/tes_rute_scene.gd:_test_galat_muat_terlihat`: satu `check` bahwa `lapor_galat_ke_log` bawaan true. Membunuh N14.
+- Total 8179 -> 8182 lolos, 0 gagal.
+
+### Validasi visual
+
+`godot --path . --resolution 2340x1080 --position 0,0 --script res://tests/probe_rute_jendela.gd -- docs/loop/20261016-fase3a-rute/shots/qa2` dijalankan: "probe selesai, 0 keadaan tidak sesuai", tanpa ERROR/WARNING. Dua tangkapan dilihat sendiri (`shots/qa2/2340x1080_rute_tengah.png` dan `..._rute_akhir_berhenti.png`): rumah pelanggan dan bukan pelanggan terbedakan, kotak surat merah (sprite) dan kubus oranye (sasaran) tampil ganda (QA-005 tetap DEFERRED), HUD terbaca, banner "Rute selesai" dan tombol "Main lagi" di tempat yang benar, sepeda berhenti di tanah kosong (QA-006 d ditunda ke 3C). Tidak ada regresi visual dibanding iterasi 1. Tangkapan lain dihapus dari `qa2` untuk menghemat repo.
+
+### Regresi
+
+Jumlah tes naik (8117 -> 8179 -> 8182); tidak ada tes dihapus kecuali `qa_repro_rute.gd` (tercakup, lihat QA-001); tidak ada tes di-skip; `jalan_uji.tscn` dan tes jalan uji lama tidak diubah (diff iterasi 2 tidak menyentuhnya).
+
+### NEEDS-MANUAL
+
+Daftar di atas tetap berlaku (60 fps dan memuat < 1 detik di vivo V2108, rasa kontrol, keterbacaan banner di HP, kotak surat ganda QA-005, variasi antar tiga seed, urutan gambar rumah dekat vs sepeda). Fase 3 dan DEV_PHASES tidak boleh dicentang untuk butir yang bergantung pada uji HP, dan QA-004 serta QA-005 perlu keputusan pemilik sebelum uji HP SETUP_ANDROID 8.6.
