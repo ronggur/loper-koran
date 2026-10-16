@@ -679,6 +679,7 @@ func _test_rute_jalan_keluar_20_seed() -> void:
 	var separuh: int = 0
 	var selesai: int = 0
 	var gagal: Array[int] = []
+	var ngebut_bersih: int = 0
 	for i: int in range(20):
 		var benih: int = Config.RUTE_SEED_DEV + i
 		var rute: RouteBuilder.Rute = _rute(benih)
@@ -690,6 +691,10 @@ func _test_rute_jalan_keluar_20_seed() -> void:
 			tanpa_tabrak += 1
 		else:
 			gagal.append(benih)
+		# Ngebut (stick penuh; lelah menjepit ke cepat sesudah stamina habis) di sisi bebas juga tanpa tabrakan.
+		var hn: Dictionary = _sim_rute(rute, "bebas", 1.0)
+		if hn["tabrak"] == 0 and hn["okupansi_ok"]:
+			ngebut_bersih += 1
 		if h["okupansi_ok"]:
 			okupansi += 1
 		if h["separuh_ok"]:
@@ -700,6 +705,7 @@ func _test_rute_jalan_keluar_20_seed() -> void:
 	check(okupansi == 20, "20 rute: di setiap posisi maju ada posisi lateral yang tidak dimasuki rintangan (%d/20)" % okupansi)
 	check(separuh == 20, "20 rute: tidak ada rintangan yang melewati garis tengah (%d/20)" % separuh)
 	check(selesai == 20, "20 rute: garis akhir tercapai tepat sekali (%d/20)" % selesai)
+	check(ngebut_bersih == 20, "20 rute: bot ngebut di sisi bebas juga tanpa tabrakan dan jalan keluar tetap ada (%d/20)" % ngebut_bersih)
 
 
 func _test_tabrakan_tidak_menghentikan_rute() -> void:
