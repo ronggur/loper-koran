@@ -391,7 +391,9 @@ func _test_rumah_digambar() -> void:
 	for anak: Node in objek.get_children():
 		if anak is CanvasItem and (anak as CanvasItem).visible:
 			anak_gambar += 1
-	check(anak_gambar == akar.daur().jumlah_rumah() + akar.daur().jumlah_kotak_surat() + 1, "tidak ada node lain yang digambar di Objek (rintangan di data tidak digambar): %d" % anak_gambar)
+	# Run fase3b-rintangan-skor: rintangan kini digambar, tetapi di dalam satu node induk `Rintangan` (anak Y-sort Objek), jadi anak Objek =
+	# rumah + kotak surat + sepeda + node Rintangan (rintangan sendiri dites di `tes_rintangan_scene.gd`).
+	check(anak_gambar == akar.daur().jumlah_rumah() + akar.daur().jumlah_kotak_surat() + 2 and akar.rintangan_daur().get_parent() == objek, "tidak ada node lain yang digambar di Objek (rumah, kotak surat, sepeda, induk rintangan): %d" % anak_gambar)
 	_bersihkan(akar)
 
 
@@ -410,7 +412,7 @@ func _test_jendela_daur_bergerak() -> void:
 			salah.append("jarak %.1f: %s" % [jarak, tampil.size()])
 		maks_tampil = maxi(maks_tampil, tampil.size())
 		maks_node = maxi(maks_node, akar.daur().jumlah_node_rumah())
-		if akar.penerap_penutup().jumlah() != tampil.size():
+		if akar.penerap_penutup().jumlah() != tampil.size() + akar.rintangan_daur().jumlah_tampil():
 			salah.append("jarak %.1f: penerap %d, tampil %d" % [jarak, akar.penerap_penutup().jumlah(), tampil.size()])
 	check(salah.is_empty(), "sepanjang rute (100 titik): rumah digambar = jendela oracle dan didaftarkan ke penerap penutup: %s" % [salah.slice(0, 3)])
 	check(maks_tampil <= 30 and maks_tampil >= 20, "paling banyak %d rumah sekaligus (jendela, bukan 89)" % maks_tampil)
@@ -589,6 +591,9 @@ func _test_bantu_kisi(v: float) -> void:
 	var tanpa: int = 0
 	var mendarat_sah: int = 0
 	var indeks_pelanggan: Array[int] = [0, 3, 8, 12, 17, 20, 24]
+	# Run fase3b-rintangan-skor (O-1, O-4): antaran pertama ke tiap rumah = centang (bantu tidak pernah tepat), koran berikutnya ke rumah yang
+	# sama = penanda netral. Rumah terantar dicatat tes sendiri.
+	var terantar: Dictionary = {}
 	for ip: int in indeks_pelanggan:
 		var pusat_maju: float = rute.pelanggan[ip].maju_ubin
 		for selisih: float in [-6.0, -3.0, -1.0, 0.0, 2.0]:
@@ -617,7 +622,9 @@ func _test_bantu_kisi(v: float) -> void:
 					salah.append("%s: lintasan beda dari oracle" % tag)
 					continue
 				var k: KoranLempar.Koran = _sampai_mendarat(akar, catatan, l)
-				if k == null or k.hasil != ZonaSasaran.Hasil.KOTAK_SURAT or k.penanda != ZonaSasaran.Penanda.CENTANG or k.antaran != ZonaSasaran.Antaran.SAH_PENUH:
+				var penanda_harapan: ZonaSasaran.Penanda = ZonaSasaran.Penanda.NETRAL if terantar.has(harapan.zona.id_rumah) else ZonaSasaran.Penanda.CENTANG
+				terantar[harapan.zona.id_rumah] = true
+				if k == null or k.hasil != ZonaSasaran.Hasil.KOTAK_SURAT or k.penanda != penanda_harapan or k.antaran != ZonaSasaran.Antaran.SAH_PENUH:
 					salah.append("%s: tidak dinilai KOTAK_SURAT sah penuh" % tag)
 				else:
 					mendarat_sah += 1
@@ -953,7 +960,7 @@ func _test_penutup() -> void:
 	check(pencacah == 1, "hanya satu simpul PenerapPenutup di seluruh scene (%d)" % pencacah)
 	_taruh_sepeda(akar, 3.0, 0.5, 0.0, 100.0)
 	# Rumah rute di jendela daur terdaftar ke penerap yang sama; tidak ada yang menutupi pemain di jalan resmi (D-8 run 3A).
-	check(penerap.jumlah() == akar.daur().jumlah_rumah() and penerap.jumlah() > 0, "rumah di jendela daur terdaftar ke penerap (%d)" % penerap.jumlah())
+	check(penerap.jumlah() == akar.daur().jumlah_rumah() + akar.rintangan_daur().jumlah_tampil() and akar.daur().jumlah_rumah() > 0, "rumah (dan rintangan) di jendela daur terdaftar ke penerap (%d)" % penerap.jumlah())
 	var menutupi_nyata: int = 0
 	for lateral: float in [-1.0, 0.0, 1.0]:
 		for maju: int in range(0, 237, 2):
@@ -982,7 +989,7 @@ func _test_penutup() -> void:
 	akar.perbarui(0.0)
 	check(is_equal_approx(gambar.modulate.a, 0.45), "pemain di lateral -0,9: menutupi lagi (alfa 0,45)")
 	penerap.lepas(gambar)
-	check(gambar.modulate.a == 1.0 and penerap.jumlah() == akar.daur().jumlah_rumah(), "objek dilepas dari penerap: alfa kembali 1,0")
+	check(gambar.modulate.a == 1.0 and penerap.jumlah() == akar.daur().jumlah_rumah() + akar.rintangan_daur().jumlah_tampil(), "objek dilepas dari penerap: alfa kembali 1,0")
 	gambar.queue_free()
 	_bersihkan(akar)
 

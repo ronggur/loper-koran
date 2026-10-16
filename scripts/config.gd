@@ -455,7 +455,7 @@ const RUTE_PENUTUP_MIN: int = 2
 const RUTE_SEED_DEV: int = 20261016
 ## Koran awal rute = pelanggan + sekian persen dibulatkan ke atas (BALANCING 4): 25 pelanggan = 30 koran.
 const RUTE_KORAN_CADANGAN_PERSEN: int = 20
-## Pembagi persen ke pecahan untuk `RUTE_KORAN_CADANGAN_PERSEN` (100 persen = satu bagian penuh).
+## Pembagi persen ke pecahan untuk persen rute (`RUTE_KORAN_CADANGAN_PERSEN`, `RUTE_PEMBERI_TIP_PERSEN`; 100 persen = satu bagian penuh).
 const RUTE_KORAN_PERSEN_PENUH: int = 100
 ## Panjang segmen terpendek yang sah, ubin (ROUTE_DESIGN 1).
 const RUTE_SEGMEN_PANJANG_MIN_UBIN: int = 24
@@ -509,3 +509,185 @@ const RUTE_TOMBOL_ULANG_MARGIN_PX: int = 8
 const RUTE_RUMAH_SPRITE: Array[String] = ["house_perumahan_dekat_limasan_bukan", "house_perumahan_dekat_limasan_pelanggan", "house_perumahan_dekat_pelana_lintang_bukan", "house_perumahan_dekat_pelana_lintang_pelanggan", "house_perumahan_dekat_pelana_sejajar_bukan", "house_perumahan_dekat_pelana_sejajar_pelanggan", "house_perumahan_limasan_bukan", "house_perumahan_limasan_pelanggan", "house_perumahan_pelana_bukan", "house_perumahan_pelana_pelanggan", "house_perumahan_sayap_bukan", "house_perumahan_sayap_pelanggan"]
 ## Titik pijak tiap sprite rumah (`ground_anchor` di JSON aset, tengah tapak), piksel dari pojok kiri atas gambar: x lalu y, sejajar dengan `RUTE_RUMAH_SPRITE`. Tes membandingkannya dengan JSON aset.
 const RUTE_RUMAH_PIJAK_PX: Array[int] = [97, 123, 155, 152, 96, 122, 155, 151, 96, 118, 154, 147, 105, 127, 105, 127, 96, 148, 96, 148, 105, 119, 105, 119]
+
+## --- Rintangan perumahan (GDD 9.3, ROUTE_DESIGN 4, BALANCING 6c; usulan run fase3b-rintangan-skor, dinilai lewat uji HP) ---
+## Posisi dalam koordinat jalan: lateral dari garis tengah (negatif = `seberang`), maju dari awal rute, ubin. Bentuk tabrakan = persegi di
+## bidang tanah (setengah ukuran di bawah). Anjing dan mobil hanya memakai separuh jalan di sisinya (K-1): tepi bentuknya tidak pernah
+## melewati garis tengah, jadi separuh lain selalu bebas (ROUTE_DESIGN 4 aturan 1). Jarak tanda dari data segmen (`tanda_ubin`).
+
+## Setengah lebar bentuk tabrakan sepeda melintang jalan, ubin (lebar 0,5).
+const TABRAKAN_SEPEDA_SETENGAH_LATERAL_UBIN: float = 0.25
+## Setengah panjang bentuk tabrakan sepeda sepanjang jalan, ubin (panjang 0,8).
+const TABRAKAN_SEPEDA_SETENGAH_MAJU_UBIN: float = 0.4
+## Anjing penjaga: setengah sisi bentuk persegi, ubin (sisi 0,5).
+const ANJING_SETENGAH_UBIN: float = 0.25
+## Anjing: jarak pusat dari garis tengah saat di halamannya (duduk), ubin. Tepi bentuknya (2,5) di luar jangkauan sepeda di tepi trotoar.
+const ANJING_RUMAH_LATERAL_UBIN: float = 2.75
+## Anjing mulai mengejar saat sepeda sudah sejauh ini di belakang titik rumahnya atau lebih maju, ubin (0 = sepeda melewati anjing).
+const ANJING_KEJAR_JARAK_UBIN: float = 0.0
+## Anjing: laju maju saat mengejar = kecepatan sepeda x pengali ini, dijepit `ANJING_LAJU_MIN_UD` sampai `ANJING_LAJU_MAKS_UD`.
+const ANJING_KEJAR_PENGALI: float = 1.25
+## Anjing: laju maju terkecil saat mengejar, u/d (sepeda yang berhenti tetap dikejar).
+const ANJING_LAJU_MIN_UD: float = 2.0
+## Anjing: batas laju maju, u/d. Di bawah ngebut (6,0) supaya pemain ngebut lolos; di atas santai x pengali supaya santai tersusul.
+const ANJING_LAJU_MAKS_UD: float = 4.5
+## Anjing: laju menyamping ke arah sepeda (di dalam separuh jalan sisinya), u/d.
+const ANJING_LATERAL_UD: float = 2.0
+## Anjing: batas halaman, paling jauh sekian ubin maju dari titik rumahnya; sampai di sini anjing berhenti mengejar.
+const ANJING_BATAS_MAJU_UBIN: float = 3.0
+## Anjing: lama berdiri di batas halaman (atau sesudah menabrak sepeda) sebelum pulang, detik.
+const ANJING_BERHENTI_DETIK: float = 0.8
+## Anjing: laju pulang ke titik rumahnya (per sumbu), u/d.
+const ANJING_PULANG_UD: float = 2.0
+## Anjing yang mendengar bel: lama diam menampilkan ikon "!" sebelum mundur, detik (DESIGN_SPEC 3.8: sekitar 0,5).
+const ANJING_KAGET_DETIK: float = 0.5
+## Anjing yang mendengar bel: laju mundur ke titik rumahnya (per sumbu), u/d.
+const ANJING_MUNDUR_UD: float = 3.0
+## Mobil keluar garasi: panjang mobil melintang jalan (mobil mundur tegak lurus jalan), ubin.
+const MOBIL_PANJANG_UBIN: float = 1.5
+## Mobil: setengah lebar mobil sepanjang jalan, ubin (lebar 0,75).
+const MOBIL_SETENGAH_LEBAR_UBIN: float = 0.375
+## Mobil: jarak bagasi (ujung belakang) dari garis tengah saat parkir di garasi, ubin. Di luar jangkauan sepeda di tepi trotoar.
+const MOBIL_BELAKANG_AWAL_UBIN: float = 2.5
+## Mobil: bagasi berhenti sejauh ini dari garis tengah, ubin (0 = tepat di garis tengah; tidak pernah melewatinya, K-1).
+const MOBIL_BELAKANG_AKHIR_UBIN: float = 0.0
+## Mobil: lama lampu mundur dan bip menyala sebelum mobil bergerak, detik (ROUTE_DESIGN 4 aturan 2: tanda minimal 1,5 detik).
+const MOBIL_TANDA_DETIK: float = 1.5
+## Mobil: laju mundur ke jalan, u/d.
+const MOBIL_MUNDUR_UD: float = 1.0
+
+## --- Tabrakan (BALANCING 6, K-1 run fase3b-rintangan-skor; usulan, dinilai lewat uji HP) ---
+
+## Kecepatan sepeda langsung turun ke sini saat tabrakan (bila lebih tinggi), u/d.
+const TABRAKAN_KECEPATAN_UD: float = 1.0
+## Lama oleng sesudah tabrakan, detik: kecepatan tidak bisa naik; lateral dan lemparan tetap bisa.
+const TABRAKAN_OLENG_DETIK: float = 0.6
+## Lama kebal dihitung dari saat tabrakan, detik: tidak ada tabrakan kedua dari rintangan mana pun.
+const TABRAKAN_KEBAL_DETIK: float = 1.0
+## Toleransi derau float untuk waktu rintangan, tabrakan, dan bel (sisa oleng, kebal, jeda bel, lama berhenti anjing, lama tanda mobil), detik.
+const TABRAKAN_TOLERANSI_DETIK: float = 0.000001
+
+## --- Bel "Kring Kring!" (GDD 5.4, DESIGN_SPEC 3.8, K-3 run fase3b-rintangan-skor; usulan, dinilai lewat uji HP) ---
+
+## Lama teks "KRING!" tampil sesudah ketukan, detik. Ketukan kedua selama teks tampil = "KRING KRING!" (GDD 5.4).
+const BEL_TEKS_DETIK: float = 0.5
+## Jeda bel sesudah "kring kring!" (dua bunyi), detik; ketukan selama jeda ditolak tanpa bunyi.
+const BEL_JEDA_DETIK: float = 1.0
+## Jangkauan bel di depan sepeda, ubin (GDD 5.4: sekitar 4 ubin).
+const BEL_JANGKAUAN_UBIN: float = 4.0
+## Jangkauan bel di belakang sepeda, ubin: anjing yang mengejar berlari tepat di samping atau sedikit di belakang sepeda (D-5 run ini).
+const BEL_JANGKAUAN_BELAKANG_UBIN: float = 1.0
+
+## --- Skor, combo, koin, tip, tepat (BALANCING 5 dan 7, GDD 14.1; K-2, K-4, O-1 sampai O-5 run fase3b-rintangan-skor; usulan) ---
+## Skor dan koin dua besaran terpisah (K-2). Skor = dasar x persen sasaran x pengali combo x pengali kecepatan saat lepas (x tepat),
+## dihitung dengan bilangan bulat (persen dan persepuluh) lalu dibulatkan ke bilangan bulat terdekat, setengah ke atas (`SkorRute`).
+
+## Skor dasar satu antaran sah penuh, poin.
+const SKOR_SASARAN_DASAR: int = 100
+## Persen skor sasaran sah penuh (kotak surat, teras, jendela dengan sakelar bonus).
+const SKOR_PERSEN_PENUH: int = 100
+## Persen skor antaran halaman (sah setengah, BALANCING 5).
+const SKOR_PERSEN_HALAMAN: int = 50
+## Pengali combo antaran pertama dalam rangkaian.
+const SKOR_COMBO_AWAL: float = 1.0
+## Pengali combo naik sekian tiap antaran sah beruntun.
+const SKOR_COMBO_LANGKAH: float = 0.1
+## Pengali combo paling besar.
+const SKOR_COMBO_MAKS: float = 2.0
+## Pengali skor saat koran dilepas di pita santai (dan melambat), dari kecepatan SEBENARNYA (O-5).
+const SKOR_PENGALI_SANTAI: float = 1.0
+## Pengali skor di pita cepat.
+const SKOR_PENGALI_CEPAT: float = 1.2
+## Pengali skor di pita ngebut.
+const SKOR_PENGALI_NGEBUT: float = 1.5
+## Pengali skor antaran "tepat" (inti kotak surat, K-4; bukan mode bantu, O-4).
+const SKOR_TEPAT_PENGALI: float = 1.25
+## Ongkos antar tiap antaran sah pertama ke rumah pelanggan, koin (GDD 14.1, BALANCING 7).
+const KOIN_ONGKOS_ANTAR: int = 15
+## Tip dari pelanggan pemberi tip yang korannya mendarat di teras, koin (BALANCING 7).
+const KOIN_TIP: int = 5
+## Persen pelanggan rute yang memberi tip, dipilih berseed oleh `RouteBuilder` (O-3); dibulatkan ke bawah: 25 x 30% = 7.
+const RUTE_PEMBERI_TIP_PERSEN: int = 30
+## Inti "tepat" kotak surat seberang [lateral_min, maju_min, lebar, panjang], ubin relatif awal kavling: 0,5 x 0,5 di pusat area
+## `JALAN_UJI_SEBERANG_KOTAK_SURAT_UBIN` (pusat -2,25; 1,875). Tepi min inklusif, maks eksklusif (K-4).
+const JALAN_UJI_SEBERANG_KOTAK_SURAT_INTI_UBIN: Array[float] = [-2.5, 1.625, 0.5, 0.5]
+## Inti "tepat" kotak surat dekat: 0,5 x 0,5 di pusat area `JALAN_UJI_DEKAT_KOTAK_SURAT_UBIN` (pusat 2,125; 1,875).
+const JALAN_UJI_DEKAT_KOTAK_SURAT_INTI_UBIN: Array[float] = [1.875, 1.625, 0.5, 0.5]
+
+## --- Audio rute placeholder (SOUND_DESIGN 3.1, 3.3, 4.1-4.3; AC-18, AC-19 run fase3b-rintangan-skor; usulan, dinilai di HP) ---
+## Bunyi dibuat `tools/audio_art/sintesis_rute.py` (puncak sama dengan bunyi lain, tabrakan lebih pelan di berkasnya). Diputar autoload
+## `Audio` di bus `SFX`; pemetaan peristiwa ke bunyi di `BunyiRute`, nada combo di `BunyiLempar`.
+
+## Nada combo: bunyi mendarat antaran sah naik setengah nada tiap antaran beruntun sampai sekian tingkat, lalu bertahan (SOUND_DESIGN 3.1).
+const AUDIO_COMBO_NADA_MAKS: int = 5
+## Jumlah setengah nada dalam satu oktaf (rasio pitch satu setengah nada = rasio oktaf pangkat 1/12).
+const AUDIO_SETENGAH_NADA_PER_OKTAF: float = 12.0
+## Rasio frekuensi satu oktaf.
+const AUDIO_RASIO_OKTAF: float = 2.0
+## Bunyi kedua "kring kring!" diputar sekian setengah nada lebih tinggi supaya dua bunyi terdengar satu frasa (SOUND_DESIGN 3.3).
+const AUDIO_BEL_KEDUA_SETENGAH_NADA: float = 1.0
+## Volume bel, dB (bel terdengar jelas di atas kayuhan, SOUND_DESIGN 3.3).
+const AUDIO_BEL_VOLUME_DB: float = -2.0
+## Volume geram, gonggong, bip, dan mesin rintangan, dB (peringatan di atas kayuhan, SOUND_DESIGN 6).
+const AUDIO_RINTANGAN_VOLUME_DB: float = -3.0
+## Volume tabrakan, dB (berkasnya sudah sekitar 3 dB lebih pelan: lembut, SOUND_DESIGN 2).
+const AUDIO_TABRAKAN_VOLUME_DB: float = -2.0
+## Volume denting tip dan kilau tepat, dB.
+const AUDIO_TIP_VOLUME_DB: float = -3.0
+
+## --- Scene rute run fase3b-rintangan-skor bagian B: rintangan digambar, tabrakan, bel, HUD skor (usulan, dinilai lewat uji HP) ---
+
+## Tinggi kotak penutup anjing untuk aturan objek yang menutupi pemain (`PenutupPemain`), ubin: badan anjing sekitar 26 piksel = 0,8 ubin.
+const RINTANGAN_ANJING_TINGGI_UBIN: float = 0.8
+## Tinggi kotak penutup mobil, ubin: sedan sekitar 32 piksel dari tanah sampai atap = 1,0 ubin.
+const RINTANGAN_MOBIL_TINGGI_UBIN: float = 1.0
+## Titik jangkar ikon "!" di atas anjing yang bereaksi pada bel, piksel game di atas titik pijak anjing (kepala sekitar 26 piksel + 2).
+const RINTANGAN_SERU_ATAS_PX: int = 28
+## Oleng sesudah tabrakan (AC-8): sprite pemain bergeser mendatar sekian piksel game bolak-balik.
+const TABRAKAN_OLENG_GESER_PX: int = 1
+## Oleng: lama satu arah geseran, detik (bolak-balik tiap sekian detik selama `TABRAKAN_OLENG_DETIK`).
+const TABRAKAN_OLENG_PERIODE_DETIK: float = 0.05
+## Kebal sesudah tabrakan: sprite pemain berkedip, lama satu fase kedip, detik.
+const TABRAKAN_KEDIP_PERIODE_DETIK: float = 0.1
+## Alpha sprite pemain pada fase redup kedip kebal.
+const TABRAKAN_KEDIP_ALFA: float = 0.5
+## Kaki ikon kilatan tabrakan di atas titik pijak pemain selama oleng, piksel game (di atas kepala sprite 46x58, titik pijak y 46).
+const TABRAKAN_IKON_ATAS_PX: int = 50
+## Tombol bel: sisi persegi gambar, piksel game (DESIGN_SPEC 3.8: 40x40).
+const BEL_TOMBOL_UKURAN_PX: int = 40
+## Pusat tombol dan zona tap bel dari tepi layar sisi tombol dan dari tepi bawah, piksel game: pusat (lebar - 28, 332), kidal (28, 332).
+const BEL_TOMBOL_PUSAT_TEPI_PX: int = 28
+## Jari-jari zona tap bel dari pusat tombol, piksel game (inklusif); sentuhan yang DIMULAI di sini membunyikan bel, bukan swipe.
+const BEL_ZONA_RADIUS_PX: float = 28.0
+## Jumlah frame jeda tombol bel di `assets/sprites/ui/ui_bel_tombol.png` (cincin n/8 sampai 1/8, sesudah frame diam dan ditekan).
+const BEL_TOMBOL_JEDA_LANGKAH: int = 8
+## Efek "kring": laju frame garis getar dan naik teks, frame per detik (DESIGN_SPEC 3.8: 12 fps).
+const BEL_EFEK_FPS: float = 12.0
+## Efek "kring": jumlah frame garis getar (`ui_bel_getar.png`).
+const BEL_GETAR_FRAME: int = 4
+## Titik jangkar garis getar di sel 16x16 `ui_bel_getar.png` (titik bel), piksel: x lalu y (`ui_bel.json`).
+const BEL_GETAR_JANGKAR_PX: Array[int] = [3, 12]
+## Titik bel relatif titik pijak sprite pemain, piksel game: x lalu y (dari `santai_normal` (31, 17) di `docs/design/bel/bell_anchors.json` dikurangi titik pijak (23, 46)); satu titik untuk semua animasi (usulan).
+const BEL_TITIK_PX: Array[int] = [8, -29]
+## Teks "KRING!": pojok kiri bawah teks relatif titik bel, piksel game: x lalu y (README bel: 11 ke kanan, 12 ke atas).
+const BEL_TEKS_GESER_PX: Array[int] = [11, -12]
+## Teks "KRING!" naik 1 piksel per frame efek, paling banyak sekian piksel.
+const BEL_TEKS_NAIK_MAKS_PX: int = 4
+## Alpha teks "KRING!" pada frame terakhirnya (versi redup sebelum hilang).
+const BEL_TEKS_REDUP_ALFA: float = 0.6
+## Panel skor HUD dev: jarak tepi luar panel dari tepi layar sisi swipe, piksel game (strip atas; tombol "Main lagi" 96 + margin 8 + jarak 8 di sisi itu).
+const HUD_SKOR_GESER_PX: int = 112
+## Label "PUTUS" tampil sekian detik sesudah combo putus (tabrakan atau antaran tidak sah), dt efektif.
+const HUD_COMBO_PUTUS_DETIK: float = 0.8
+## Umpan balik melayang (DESIGN_SPEC 3.6): lama tampil, detik.
+const UMPAN_MELAYANG_DETIK: float = 0.8
+## Umpan balik melayang: naik sekian piksel game selama tampil.
+const UMPAN_MELAYANG_NAIK_PX: int = 12
+## Umpan balik melayang: paling banyak sekian sekaligus; yang lama hilang lebih dulu.
+const UMPAN_MELAYANG_MAKS: int = 2
+## Umpan balik melayang: kaki teks di atas titik mendarat saat muncul, piksel game (di atas penanda 7 + 9 px).
+const UMPAN_MELAYANG_ATAS_PX: int = 18
+## Tebal garis luar teks di dunia (teks "KRING!", umpan balik melayang), piksel game: terbaca di atas aspal dan rumput.
+const HUD_TEKS_GARIS_PX: int = 2
+## Panel skor HUD dev: lebar minimum, piksel game (angka skor dan koin berubah tanpa membuat panel melompat).
+const HUD_SKOR_LEBAR_PX: int = 72

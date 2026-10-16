@@ -66,7 +66,7 @@ static func perintah_koran(lapisan_gambar: Lapisan, koran: KoranLempar.Koran) ->
 		var frame: int = KoranLempar.frame_putar(koran, PolaPiksel.KORAN_PUTAR.size())
 		return GambarPiksel.perintah_pola(PolaPiksel.pola_koran(frame), pojok_koran(koran), Palette.TEXT)
 	if koran.mendarat and KoranLempar.sisa_penanda(koran) > 0.0:
-		return GambarPiksel.perintah_pola(PolaPiksel.pola_penanda(koran.penanda), pojok_penanda(koran), warna_penanda(koran.antaran))
+		return GambarPiksel.perintah_pola(PolaPiksel.pola_penanda(koran.penanda), pojok_penanda(koran), warna_penanda_koran(koran))
 	return []
 
 
@@ -93,6 +93,14 @@ static func pojok_koran(koran: KoranLempar.Koran) -> Vector2:
 	var p: Vector3 = KoranLempar.posisi(koran)
 	var ukuran: Vector2i = PolaPiksel.ukuran(PolaPiksel.pola_koran(0))
 	return Iso.posisi_gambar_tinggi(Vector2(p.x, p.y), p.z) - Vector2(floori(float(ukuran.x) / 2), ukuran.y)
+
+
+## Warna utama penanda koran yang sudah dinilai: penanda netral (O-1 run fase3b-rintangan-skor, rumah sudah terantar) `TEXT_2` walau
+## zonanya sah; selain itu `warna_penanda` dari status antaran (tepat = `OK`, bentuknya yang membedakan dari centang).
+static func warna_penanda_koran(koran: KoranLempar.Koran) -> Color:
+	if koran.penanda == ZonaSasaran.Penanda.NETRAL:
+		return Palette.TEXT_2
+	return warna_penanda(koran.antaran)
 
 
 ## Warna utama penanda: `OK` untuk antaran sah (penuh, setengah, bonus), `FAIL` untuk tidak sah. Bentuknya yang membedakan (D-10).

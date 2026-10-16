@@ -53,6 +53,16 @@ Aturan adil (GDD 2, prinsip 3):
 
 Rintangan prototype 3: **anjing penjaga** (mengejar sesuai kecepatan, berhenti di batas halaman) dan **mobil keluar garasi** (lampu mundur dulu, baru bergerak).
 
+**Pola yang diterapkan (run 3B `20261017-fase3b-rintangan-skor`, usulan, dinilai lewat uji HP; angka di `BALANCING.md` 6c dan 6d):**
+
+- **Separuh jalan (K-1, aturan 1).** Anjing dan mobil hanya memakai separuh jalan di sisinya (`jalur` di data segmen): sisi `seberang` dari tepi trotoar −2,0 sampai garis tengah 0, sisi `dekat` dari 0 sampai +2,0. Tepi bentuk rintangan tidak pernah melewati garis tengah, jadi separuh lain selalu bebas. Sepeda selebar 0,5 ubin, jadi sepeda yang tepat di garis tengah masih bisa menyentuh mobil yang sudah berhenti; jalan aman = tetap di separuh jalan lawan.
+- **Anjing penjaga (D-2 run 3B).** Duduk di halaman; **waspada** (berdiri, menggeram) saat sepeda masuk `tanda_ubin` (9 ubin) di belakang titik rumahnya; **mengejar** (menggonggong, lari) baru saat sepeda sampai di titik rumahnya, dengan laju 1,25 × kecepatan sepeda (2,0 sampai 4,5 u/d) dan menyamping di separuh jalannya; berhenti di batas halaman (3 ubin maju dari rumahnya) atau sesudah menabrak, lalu pulang dan tidak mengejar lagi. Pemain ngebut di separuh jalan lawan lolos; pemain santai di sisi anjing tersusul.
+- **Mobil keluar garasi (D-1 run 3B).** Lampu mundur berkedip dan bip selama 1,5 detik (waktu, bukan jarak) sesudah sepeda masuk `tanda_ubin`, lalu mundur 1,0 u/d sampai bagasi tepat di garis tengah dan berhenti di sana sampai rute disusun ulang (menutup separuh jalan sisinya). Tidak bereaksi pada bel.
+- **Bel (K-3, D-5).** Anjing yang waspada atau mengejar dalam jangkauan bel (1 ubin di belakang sampai 4 ubin di depan sepeda) menampilkan "!" lalu mundur ke halamannya; reaksi per jenis rintangan diatur di satu tabel (`Bel.REAKSI_JENIS`), jadi pejalan kaki nanti cukup ditambah di sana.
+- **Tabrakan (K-1, BALANCING 6c).** Kecepatan turun ke 1,0 u/d, oleng 0,6 detik, combo putus, kebal 1,0 detik; rute tidak berhenti. Di scene: sprite pemain bergeser bolak-balik, ikon kilatan di atas kepala, berkedip selama kebal, bunyi tabrakan lembut, label PUTUS di HUD dev.
+- **Data.** Tidak ada field baru: rintangan dibangun dari `objek` segmen yang sudah ada (`jenis`, `pos`, `jalur`, `tanda_ubin`; `DATA_SCHEMA.md` 3). Data perumahan saat ini hanya punya mobil di sisi `seberang` (sprite mobil hanya untuk sisi itu); anjing di kedua sisi.
+- **Diperiksa mesin (tes headless):** tanda ≥ 1,5 detik sebelum bahaya di santai, cepat, dan ngebut untuk semua posisi lateral (aturan 2); di 20 rute uji selalu ada sisi bebas dan bot di sisi bebas tidak pernah tertabrak (aturan 1); tabrakan tidak menghentikan rute.
+
 ## 5. Ritme dan kesulitan
 
 - Segmen pembuka selalu `tenang`: tanpa rintangan bergerak, 2–3 pelanggan berdekatan untuk pemanasan.

@@ -22,6 +22,19 @@ Ke-13 berkas di bawah dibuat dari rumus oleh skrip project `tools/audio_art/sint
 | `sfx/throw/sfx_land_grass_01.wav`, `sfx_land_grass_02.wav`, `sfx_land_grass_03.wav` | "Puk" lembut redup (mendarat di rumput/halaman), tiga variasi | 0,15 / 0,17 / 0,19 detik | `tools/audio_art/sintesis_lempar.py` | Milik project, tanpa atribusi pihak ketiga |
 | `sfx/throw/sfx_land_miss_01.wav`, `sfx_land_miss_02.wav`, `sfx_land_miss_03.wav` | "Plek" datar, lebih pelan (meleset: jalan, rumah salah, jendela penalti), tiga variasi | 0,14 / 0,15 / 0,16 detik | `tools/audio_art/sintesis_lempar.py` | Milik project, tanpa atribusi pihak ketiga |
 
+Ke-10 berkas di bawah dibuat dari rumus oleh skrip project `tools/audio_art/sintesis_rute.py` (hanya pustaka standar Python, benih acak tetap, deterministik), **tanpa rekaman, sampel, atau unduhan apa pun**. Placeholder Fase 3 (run fase3b-rintangan-skor, 2026-10-16), usulan; diganti bunyi final di fase aset. Jangan diedit dengan tangan: ubah skripnya lalu jalankan ulang (`tools/tests_cek/uji_sintesis_rute.py` memeriksa berkas di repo sama dengan keluaran skrip).
+
+| Berkas | Isi | Durasi | Dibuat oleh | Lisensi |
+|---|---|---|---|---|
+| `sfx/obstacle/sfx_obs_dog_growl.wav` | Geraman anjing waspada: dengung rendah bergetar + desis | 0,80 detik | `tools/audio_art/sintesis_rute.py` | Milik project, tanpa atribusi pihak ketiga |
+| `sfx/obstacle/sfx_obs_dog_bark_01.wav` | Gonggongan anjing mulai mengejar: dua "guk" bernada turun | 0,42 detik | `tools/audio_art/sintesis_rute.py` | Milik project, tanpa atribusi pihak ketiga |
+| `sfx/obstacle/sfx_obs_car_beep.wav` | Bip lampu mundur mobil: tiga bip selama tanda | 1,50 detik | `tools/audio_art/sintesis_rute.py` | Milik project, tanpa atribusi pihak ketiga |
+| `sfx/obstacle/sfx_obs_car_engine.wav` | Mesin mobil mundur: gemuruh rendah berdenyut | 1,00 detik | `tools/audio_art/sintesis_rute.py` | Milik project, tanpa atribusi pihak ketiga |
+| `sfx/obstacle/sfx_obs_crash_01.wav` | Tabrakan lembut: "bruk" rendah + kerincing kecil, lebih pelan | 0,45 detik | `tools/audio_art/sintesis_rute.py` | Milik project, tanpa atribusi pihak ketiga |
+| `sfx/bell/sfx_bike_bell_01.wav`, `sfx_bike_bell_02.wav`, `sfx_bike_bell_03.wav` | "Kring" bel sepeda, tiga variasi (nada dasar berbeda) | 0,40 / 0,36 / 0,44 detik | `tools/audio_art/sintesis_rute.py` | Milik project, tanpa atribusi pihak ketiga |
+| `sfx/ui/sfx_ui_tip_01.wav` | Denting koin tip, diawali 0,12 detik senyap (sesudah bunyi mendarat) | 0,35 detik | `tools/audio_art/sintesis_rute.py` | Milik project, tanpa atribusi pihak ketiga |
+| `sfx/ui/sfx_ui_tepat_01.wav` | Kilau antaran tepat: dua nada naik, diawali 0,05 detik senyap | 0,30 detik | `tools/audio_art/sintesis_rute.py` | Milik project, tanpa atribusi pihak ketiga |
+
 ## Pihak ketiga
 
 Belum ada.

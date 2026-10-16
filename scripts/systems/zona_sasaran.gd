@@ -1,7 +1,9 @@
 class_name ZonaSasaran
 extends RefCounted
 ## Zona sasaran koran, status antaran, dan bentuk penanda, logika murni (BALANCING 5, DESIGN_SPEC 3.6; D-6, D-7, D-10 run
-## fase2a-lemparan, D-4 run fase2-arah-bebas). Semua usulan placeholder untuk jalan uji; skor, combo, dan koin belum ada (Fase 3).
+## fase2a-lemparan, D-4 run fase2-arah-bebas). Semua usulan placeholder untuk jalan uji; skor, combo, dan koin ada di `SkorRute`.
+## Inti "tepat" (K-4 run fase3b-rintangan-skor): zona kotak surat membawa `inti`, persegi 0,5 x 0,5 di pusat areanya
+## (`Config.JALAN_UJI_*_KOTAK_SURAT_INTI_UBIN`, seberang dan dekat); titik di inti = antaran tepat (`tepat`), tepi seperti zona lain.
 ##
 ## Zona = persegi di bidang tanah dalam koordinat JALAN: x = lateral (ubin dari garis tengah, negatif = `seberang`), y = maju (ubin
 ## sepanjang jalan; dunia y = -maju, `Iso`). Tepi min inklusif, tepi maks eksklusif, di kedua sumbu: dua zona yang bersebelahan tidak
@@ -22,8 +24,10 @@ enum Hasil { MELESET, KOTAK_SURAT, TERAS, HALAMAN, JENDELA, BUKAN_PELANGGAN }
 ## Status antaran dari hasil (BALANCING 5).
 enum Antaran { TIDAK_SAH, SAH_PENUH, SAH_SETENGAH, SAH_BONUS }
 ## Bentuk penanda di titik mendarat (D-10, DESIGN_SPEC 3.6), tidak hanya warna: centang (sah penuh, `OK`), bintang (bonus jendela,
-## bentuk berbeda dari sah biasa), setengah (halaman), silang kecil (tidak sah, `FAIL`; bukan panel merah besar).
-enum Penanda { SILANG, CENTANG, SETENGAH, BINTANG }
+## bentuk berbeda dari sah biasa), setengah (halaman), silang kecil (tidak sah, `FAIL`; bukan panel merah besar). Run fase3b-rintangan-skor
+## menambah `TEPAT` (antaran tepat di inti kotak surat, K-4, bentuk berbeda dari centang dan bintang) dan `NETRAL` (koran ke rumah yang sudah
+## terantar, O-1); keduanya dipilih `SkorRute.penanda`, bukan `penanda` di bawah (yang tidak tahu status rumah).
+enum Penanda { SILANG, CENTANG, SETENGAH, BINTANG, TEPAT, NETRAL }
 
 ## Urutan prioritas jenis bila zona tumpang tindih, dari yang paling diutamakan.
 const PRIORITAS: Array[Jenis] = [Jenis.KOTAK_SURAT, Jenis.JENDELA, Jenis.TERAS, Jenis.HALAMAN]
@@ -43,6 +47,8 @@ class Zona extends RefCounted:
 	var rumah: int = 0
 	## Id rumah di rute (`<id_segmen>@<pos>`, DATA_SCHEMA 3); kosong untuk zona jalan uji.
 	var id_rumah: String = ""
+	## Inti "tepat" (K-4), koordinat jalan, ubin; hanya zona kotak surat (ukuran nol = tidak ada inti).
+	var inti: Rect2 = Rect2()
 
 
 ## Zona baru (persegi dalam koordinat jalan, ubin).
@@ -140,6 +146,15 @@ static func penanda(antaran: Antaran) -> Penanda:
 	return Penanda.SILANG
 
 
+## True bila titik dunia ada di inti "tepat" zona kotak surat `zona` (K-4): tepi min inklusif, maks eksklusif, seperti `memuat`. Zona lain,
+## zona tanpa inti, null, atau titik tidak hingga = false. Status pelanggan dan mode bantu diperiksa pemanggil (`KoranLempar`, O-4).
+static func tepat(zona: Zona, titik_dunia: Vector2) -> bool:
+	if zona == null or zona.jenis != Jenis.KOTAK_SURAT or not zona.inti.has_area() or not titik_dunia.is_finite():
+		return false
+	var p: Vector2 = ke_jalan(titik_dunia)
+	return p.x >= zona.inti.position.x and p.x < zona.inti.end.x and p.y >= zona.inti.position.y and p.y < zona.inti.end.y
+
+
 ## Bentuk penanda langsung dari hasil dan sakelar jendela.
 static func penanda_hasil(hasil: Hasil, jendela_bonus: bool) -> Penanda:
 	return penanda(status_antaran(hasil, jendela_bonus))
@@ -173,6 +188,7 @@ static func zona_rumah_seberang(maju_awal_ubin: float, pelanggan: bool, nomor: i
 	hasil.append(buat(_persegi(Config.JALAN_UJI_SEBERANG_HALAMAN_UBIN, maju_awal_ubin), LoperAnim.Sisi.SEBERANG, Jenis.HALAMAN, pelanggan, nomor))
 	hasil.append(buat(_persegi(Config.JALAN_UJI_SEBERANG_TERAS_UBIN, maju_awal_ubin), LoperAnim.Sisi.SEBERANG, Jenis.TERAS, pelanggan, nomor))
 	hasil.append(buat(_persegi(Config.JALAN_UJI_SEBERANG_JENDELA_UBIN, maju_awal_ubin), LoperAnim.Sisi.SEBERANG, Jenis.JENDELA, pelanggan, nomor))
+	hasil[0].inti = _persegi(Config.JALAN_UJI_SEBERANG_KOTAK_SURAT_INTI_UBIN, maju_awal_ubin)
 	for zona: Zona in hasil:
 		zona.id_rumah = id_rumah
 	return hasil
@@ -184,6 +200,7 @@ static func zona_rumah_dekat(maju_awal_ubin: float, pelanggan: bool, nomor: int 
 	hasil.append(buat(_persegi(Config.JALAN_UJI_DEKAT_KOTAK_SURAT_UBIN, maju_awal_ubin), LoperAnim.Sisi.DEKAT, Jenis.KOTAK_SURAT, pelanggan, nomor))
 	hasil.append(buat(_persegi(Config.JALAN_UJI_DEKAT_HALAMAN_UBIN, maju_awal_ubin), LoperAnim.Sisi.DEKAT, Jenis.HALAMAN, pelanggan, nomor))
 	hasil.append(buat(_persegi(Config.JALAN_UJI_DEKAT_TERAS_UBIN, maju_awal_ubin), LoperAnim.Sisi.DEKAT, Jenis.TERAS, pelanggan, nomor))
+	hasil[0].inti = _persegi(Config.JALAN_UJI_DEKAT_KOTAK_SURAT_INTI_UBIN, maju_awal_ubin)
 	for zona: Zona in hasil:
 		zona.id_rumah = id_rumah
 	return hasil

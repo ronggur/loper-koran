@@ -1,0 +1,46 @@
+{
+ "note": "Usulan, tools/ui_art/bel.py --salin (docs/design/bel/README.md). Tombol: diam, ditekan, lalu jeda_<n> dengan cincin ACCENT n/8 (berkurang searah jarum jam). Getar: 4 frame 12 fps, jangkar = titik bel. Seru: jangkar 2 px di atas kepala.",
+ "tombol": {
+  "sprite": "ui_bel_tombol.png",
+  "cell": [
+   40,
+   40
+  ],
+  "frames": [
+   "diam",
+   "ditekan",
+   "jeda_8",
+   "jeda_7",
+   "jeda_6",
+   "jeda_5",
+   "jeda_4",
+   "jeda_3",
+   "jeda_2",
+   "jeda_1"
+  ]
+ },
+ "getar": {
+  "sprite": "ui_bel_getar.png",
+  "cell": [
+   16,
+   16
+  ],
+  "frames": 4,
+  "fps": 12,
+  "anchor": [
+   3,
+   12
+  ]
+ },
+ "seru": {
+  "sprite": "ui_ikon_seru.png",
+  "size": [
+   11,
+   13
+  ],
+  "anchor": [
+   5,
+   12
+  ]
+ }
+}

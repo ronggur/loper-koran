@@ -69,10 +69,11 @@ Skala dipilih Ronggur; sisanya didelegasikan ke agent dengan alasan tertulis. Bi
 |---|---|
 | Subjudul Inggris dan cek ketersediaan nama "Kring Kring!" (Play Store, App Store, Steam, PDKI/DJKI) | Fase 0 (export). Nama package sudah `com.rmh.kring` (4b), jadi cek ini sebaiknya selesai sebelum upload pertama ke Play Console |
 | Ketelitian swipe pendek (ambang rem: lolos uji HP pemilik 2026-10-14, angka ≥90% ditahan 0,25 detik dipakai) | M1, Fase 2 (diputuskan lewat uji HP) |
-| Jendela kena koran: bonus atau penalti (GDD 4.1). Bawaan prototype Run 2A: **penalti ringan** (antaran tidak sah, tanpa potong koin) lewat sakelar di `scripts/config.gd`, nilai bonus tetap tersedia (pemilik 2026-10-14); keputusan akhir tetap terbuka | Fase 2–3 (skor) |
+| Jendela kena koran: bonus atau penalti (GDD 4.1). Bawaan prototype Run 2A: **penalti ringan** (antaran tidak sah, tanpa potong koin) lewat sakelar di `scripts/config.gd`, nilai bonus tetap tersedia (pemilik 2026-10-14); keputusan akhir tetap terbuka. Run 3B memakai sakelar yang sama untuk skor dan koin (penalti = meleset: 0 skor, 0 koin, combo putus; bonus = sah penuh + bintang) tanpa mengubahnya | Fase 2–3 (skor) |
 | Cara menampilkan rumah di sisi dekat | Fase 3 (rute), aset rumah |
 | Pemetaan pelanggan tetap (id rumah di save, mis. `per_r014`) ke rute yang diacak. Format segmen **diputuskan JSON buatan tangan** (pemilik 2026-10-16, run 3A, `DATA_SCHEMA` 3 dan 5); run 3A memakai id rute `<id_segmen>@<pos>` dan tidak menulis save | Fase 6 (save dan hari) |
 | Struktur sesi: hari berurutan atau run roguelite | M2 |
+| Batas tabrakan per rute (run 3B: tanpa batas dan tanpa game over, tabrakan hanya menghambat, K-1); dicek ulang bersama game over | M2 |
 | Game over atau tidak, target harian atau tidak (GDD 3.2) | M2 |
 | Cerita besar dan akhirnya | M3 |
 | Distrik bebas dipilih atau berurutan, syarat reputasi tiap distrik (GDD 9.5) | M3 |
@@ -81,6 +82,8 @@ Skala dipilih Ronggur; sisanya didelegasikan ke agent dengan alasan tertulis. Bi
 | Iklan satu-satunya pemasukan atau ada "hapus iklan", besar bonus iklan (GDD 14.3) | M4 |
 | Target usia dan pasar | M4 (kebijakan privasi, aturan iklan) |
 | Musik atau hanya ambience | M3 (audio) |
+
+**Sudah diputuskan (tidak lagi terbuka):** hubungan skor dan koin, **dua besaran terpisah dan keduanya dihitung** (keputusan pemilik 2026-10-16, run 3B K-2): skor = nilai sasaran × combo × pengali kecepatan (× tepat), koin = ongkos antar 15 per antaran sah + tip 5 dari teras pemberi tip; skor tidak dikonversi ke koin dan sebaliknya (`BALANCING.md` 5, 5b, 7). Angka skor dan tip tetap usulan sampai uji HP.
 
 ## 6. Cara menjalankan project
 

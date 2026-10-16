@@ -19,12 +19,19 @@ extends RefCounted
 ## BUKAN tap (tetap batal). Tap tidak dibatasi durasi. Saat jari tap diangkat, `swipe_selesai` tetap dipancarkan seperti biasa (jalan uji
 ## menolaknya karena pendek), lalu `tap_selesai` dengan posisi tap = titik awal sentuhan. `batal`/`batal_semua` tidak pernah menjadi tap,
 ## dan sentuhan yang mulai di luar zona swipe (stick, tombol HUD) tidak pernah diklaim, jadi juga bukan tap.
+##
+## Bel (AC-15 run fase3b-rintangan-skor, DESIGN_SPEC 3.8): jari yang TURUN di zona tap bel (`TouchZones.Zona.BEL`) memancarkan `bel_ditekan`
+## sekali dan dilacak sebagai jari bel (untuk gambar tombol ditekan) sampai diangkat atau batal; jari itu tidak pernah menjadi stick, swipe,
+## garis bidik, atau tap mode bantu, walau digeser ke zona lain. Swipe yang dimulai di luar lalu melewati tombol tetap swipe (zona hanya
+## dibaca saat turun). Bel tidak memakai slot stick atau swipe, jadi stick + bel dan swipe + bel tidak saling mengganggu.
 
 ## Satu swipe selesai: titik awal, titik akhir (koordinat viewport game), durasi dari parameter waktu.
 signal swipe_selesai(awal: Vector2, akhir: Vector2, durasi_detik: float)
 ## Satu tap selesai (D-1): posisi tap = titik awal sentuhan (koordinat viewport game), durasi dari parameter waktu. Dipancarkan sesudah
 ## `swipe_selesai` untuk sentuhan yang sama.
 signal tap_selesai(posisi: Vector2, durasi_detik: float)
+## Jari turun di zona tap bel: posisi turun (koordinat viewport game). Tepat sekali per sentuhan.
+signal bel_ditekan(posisi: Vector2)
 
 const TIDAK_ADA: int = -1
 
@@ -37,6 +44,8 @@ var jumlah_swipe_selesai: int = 0
 var nomor_swipe: int = 0
 ## Jumlah tap yang selesai sejak instance dibuat.
 var jumlah_tap_selesai: int = 0
+## Jumlah sentuhan yang turun di zona bel sejak instance dibuat.
+var jumlah_bel: int = 0
 
 var _kidal: bool = false
 var _index_stick: int = TIDAK_ADA
@@ -48,6 +57,8 @@ var _posisi_swipe: Vector2 = Vector2.ZERO
 var _waktu_awal_swipe: float = 0.0
 ## Panjang swipe |v| terbesar yang pernah dicapai jari swipe yang sedang ditahan, piksel game (D-1).
 var _maks_swipe_px: float = 0.0
+## Jari terakhir yang turun di zona bel dan belum diangkat; `TIDAK_ADA` bila tidak ada.
+var _index_bel: int = TIDAK_ADA
 
 
 ## Opsi kidal: True menukar zona. Mengganti nilai membatalkan semua jari aktif.
@@ -66,9 +77,13 @@ func kidal() -> bool:
 func tekan(index: int, posisi: Vector2, waktu_detik: float) -> void:
 	if index < 0 or not posisi.is_finite():
 		return
-	if index == _index_stick or index == _index_swipe:
+	if index == _index_stick or index == _index_swipe or index == _index_bel:
 		return
 	match TouchZones.zona_di(posisi, lebar_viewport, _kidal):
+		TouchZones.Zona.BEL:
+			_index_bel = index
+			jumlah_bel += 1
+			bel_ditekan.emit(posisi)
 		TouchZones.Zona.STICK:
 			if _index_stick == TIDAK_ADA:
 				_index_stick = index
@@ -101,7 +116,9 @@ func geser(index: int, posisi: Vector2) -> void:
 func lepas(index: int, posisi: Vector2, waktu_detik: float) -> void:
 	if index < 0:
 		return
-	if index == _index_stick:
+	if index == _index_bel:
+		_index_bel = TIDAK_ADA
+	elif index == _index_stick:
 		_bebaskan_stick()
 	elif index == _index_swipe:
 		var akhir: Vector2 = posisi if posisi.is_finite() else _posisi_swipe
@@ -121,7 +138,9 @@ func lepas(index: int, posisi: Vector2, waktu_detik: float) -> void:
 func batal(index: int) -> void:
 	if index < 0:
 		return
-	if index == _index_stick:
+	if index == _index_bel:
+		_index_bel = TIDAK_ADA
+	elif index == _index_stick:
 		_bebaskan_stick()
 	elif index == _index_swipe:
 		_bebaskan_swipe()
@@ -131,6 +150,12 @@ func batal(index: int) -> void:
 func batal_semua() -> void:
 	_bebaskan_stick()
 	_bebaskan_swipe()
+	_index_bel = TIDAK_ADA
+
+
+## True selama jari yang turun di zona bel masih menempel (tombol bel tampil ditekan).
+func bel_ditahan() -> bool:
+	return _index_bel != TIDAK_ADA
 
 
 func stick_aktif() -> bool:

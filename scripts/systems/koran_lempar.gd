@@ -11,6 +11,10 @@ extends RefCounted
 ## lempar; D-4 run fase2-arah-bebas) dengan fungsi yang sama dengan elips garis bidik (`prediksi_antaran`), lalu penanda tampil
 ## `Config.PENANDA_LAMA_DETIK`. Zona dan kotak penutupnya dari `MedanKoran` (parameter `medan`, run fase3a-rute): null = jalan uji
 ## seperti sebelumnya, `MedanKoran.dari_rute` = rumah dari data rute; penilaian di scene rute memakai fungsi yang sama.
+## Run fase3b-rintangan-skor: saat mendarat koran juga mencatat id rumah zona yang kena (`id_rumah`, untuk status terantar dan tip di
+## `SkorRute`) dan `tepat` (titik di inti kotak surat, K-4), yang selalu false untuk lemparan mode bantu (`bantu`, O-4: bantu membidik
+## pusat kotak surat, jadi tidak mendapat bonus tepat). `penanda` di sini tetap dari zona saja; penanda akhir (tepat, netral) dari
+## `SkorRute.penanda` karena hanya skor yang tahu rumah mana yang sudah terantar (O-1).
 
 
 ## Bentuk elips pendaratan garis bidik (D-5; QA-004 iterasi 2): cincin biasa, terisi (sasaran sah), atau putus-putus redup (tertutup rumah).
@@ -31,6 +35,12 @@ class Koran extends RefCounted:
 	var antaran: ZonaSasaran.Antaran = ZonaSasaran.Antaran.TIDAK_SAH
 	## Bentuk penanda (berlaku bila `mendarat`).
 	var penanda: ZonaSasaran.Penanda = ZonaSasaran.Penanda.SILANG
+	## True bila koran ini dilempar mode bantu (tap), bukan swipe.
+	var bantu: bool = false
+	## Id rumah zona yang kena (`ZonaSasaran.Zona.id_rumah`; kosong bila meleset atau jalan uji; berlaku bila `mendarat`).
+	var id_rumah: String = ""
+	## True bila mendarat di inti kotak surat rumah pelanggan dan bukan lemparan mode bantu (K-4, O-4; berlaku bila `mendarat`).
+	var tepat: bool = false
 
 	## Salinan bebas (lintasan dipakai bersama karena tidak pernah diubah).
 	func salin() -> Koran:
@@ -41,14 +51,25 @@ class Koran extends RefCounted:
 		baru.hasil = hasil
 		baru.antaran = antaran
 		baru.penanda = penanda
+		baru.bantu = bantu
+		baru.id_rumah = id_rumah
+		baru.tepat = tepat
 		return baru
 
 
-## Koran baru untuk lintasan yang baru diterima (jari baru dilepas).
-static func baru(lintasan: ThrowSolver.Lintasan) -> Koran:
+## Koran baru untuk lintasan yang baru diterima (jari baru dilepas). `bantu` true untuk lemparan tap mode bantu (O-4).
+static func baru(lintasan: ThrowSolver.Lintasan, bantu: bool = false) -> Koran:
 	var koran: Koran = Koran.new()
 	koran.lintasan = lintasan
+	koran.bantu = bantu
 	return koran
+
+
+## Zona yang menang di titik mendarat lintasan (`ZonaSasaran.zona_kena` atas zona `medan`), atau null (meleset, atau lintasan null).
+static func zona_mendarat(lintasan: ThrowSolver.Lintasan, medan: MedanKoran = null) -> ZonaSasaran.Zona:
+	if lintasan == null:
+		return null
+	return ZonaSasaran.zona_kena(lintasan.titik_mendarat, MedanKoran.zona(medan, lintasan.titik_mendarat))
 
 
 ## Hasil sasaran di titik mendarat lintasan (zona di sekitar titik itu menurut `medan`; null = jalan uji, `MedanKoran.dari_rute` = rumah rute), dari
@@ -94,7 +115,10 @@ static func langkah(koran: Koran, dt: float, jendela_bonus: bool, medan: MedanKo
 		baru.detik += dt
 	if not baru.mendarat and ThrowSolver.sudah_mendarat(baru.lintasan, baru.detik):
 		baru.mendarat = true
-		baru.hasil = hasil_mendarat(baru.lintasan, medan)
+		var zona: ZonaSasaran.Zona = zona_mendarat(baru.lintasan, medan)
+		baru.hasil = ZonaSasaran.hasil_zona(zona)
+		baru.id_rumah = zona.id_rumah if zona != null else ""
+		baru.tepat = baru.hasil == ZonaSasaran.Hasil.KOTAK_SURAT and not baru.bantu and ZonaSasaran.tepat(zona, baru.lintasan.titik_mendarat)
 		baru.antaran = ZonaSasaran.status_antaran(baru.hasil, jendela_bonus)
 		baru.penanda = ZonaSasaran.penanda(baru.antaran)
 	return baru

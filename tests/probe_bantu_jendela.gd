@@ -23,8 +23,10 @@ const TAP_KIDAL_SEBERANG: Vector2 = Vector2(150, 120)
 const TAP_KIDAL_DEKAT: Vector2 = Vector2(150, 345)
 ## Foto koran terbang diambil di pecahan lama terbang ini sesudah jeda lepas (0,5 = sekitar puncak lengkung).
 const FOTO_TERBANG_PECAHAN: float = 0.5
-## Maju sepeda (ubin) tempat tidak ada kotak surat seberang terjangkau di santai (sama dengan tes AC-5 tanpa sasaran).
-const MAJU_TANPA_SASARAN: float = 5.2
+## Maju sepeda (ubin) tempat tidak ada kotak surat seberang terjangkau di santai, sama dengan `TesBantuScene._test_tanpa_sasaran` (AC-5): kotak
+## surat seberang rumah 1 (5,875) sudah di belakang, rumah 2 bukan pelanggan, rumah 3 (13,875) belum terjangkau. Sejak PR #30 (kotak surat
+## di halaman) maju 5,2 lama masih menjangkau kotak surat rumah 1 (QA-009 run fase3b-rintangan-skor); tes sudah memakai 6,2, probe belum.
+const MAJU_TANPA_SASARAN: float = 6.2
 
 var _skala: float = 1.0
 var _folder: String = ""
@@ -89,7 +91,11 @@ func _initialize() -> void:
 	await _maju(DT)
 	var tap: Vector2 = _akar.posisi_layar_sepeda() + TAP_SEBERANG
 	var sisa: int = _akar.koran.sisa
-	print("tanpa_sasaran: pilihan seberang %s" % [_akar.pilihan_bantu(LoperAnim.Sisi.SEBERANG)])
+	var pilihan_seberang: BantuLempar.Pilihan = _akar.pilihan_bantu(LoperAnim.Sisi.SEBERANG)
+	print("tanpa_sasaran: pilihan seberang %s" % [pilihan_seberang])
+	if pilihan_seberang != null:
+		print("PERINGATAN tanpa_sasaran: masih ada kotak surat seberang terjangkau di maju %.2f" % _sepeda.jarak_ubin)
+		_gagal += 1
 	_tap(tap)
 	await _maju(0.1)
 	print("tanpa_sasaran: tap %s, sisi %s, tanda tampil %s di %s, koran %d -> %d, terbang %d" % [tap, LoperAnim.Sisi.keys()[BantuLempar.sisi_tap(tap, _akar.posisi_layar_sepeda())], _kontrol.tanda_tampil(), _kontrol.posisi_tanda(), sisa, _akar.koran.sisa, _akar.koran_terbang().size()])

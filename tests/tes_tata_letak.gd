@@ -8,6 +8,7 @@ extends RefCounted
 ## (dicatat di LOG, bukan gagal: layar 16:9 dinilai di HP).
 
 const BERKAS_JALAN_UJI: String = "res://scenes/dev/jalan_uji.tscn"
+const BERKAS_RUTE: String = "res://scenes/rute/rute.tscn"
 const DT: float = 1.0 / 60.0
 ## Jendela uji: [lebar jendela, tinggi jendela, lebar viewport] (skala x3).
 const KASUS: Array = [[1920, 1080, 640], [2340, 1080, 780], [2400, 1080, 800]]
@@ -34,6 +35,7 @@ func jalankan() -> void:
 	for kasus: Array in KASUS:
 		for kidal: bool in [false, true]:
 			await _test_tata_letak(kasus, kidal)
+			await _test_tata_letak_rute(kasus, kidal)
 
 
 func _test_angka_paket() -> void:
@@ -133,5 +135,48 @@ func _test_tata_letak(kasus: Array, kidal: bool) -> void:
 	check(not tombol_kidal.intersects(tombol_jeda, true), "%s: tombol kidal %s dan tombol jeda %s tidak bertumpuk" % [tag, tombol_kidal, tombol_jeda])
 	check(tombol_jeda.position == Vector2(17, 4), "%s: tombol jeda tidak dicerminkan saat kidal (tetap x 17, y 4), dapat %s" % [tag, tombol_jeda.position])
 	check(not swipe.intersects(stick, true), "%s: zona stick dan swipe tidak bertumpuk" % tag)
+	_tree.root.remove_child(akar)
+	akar.free()
+
+
+## Run fase3b-rintangan-skor bagian B (AC-13, AC-15): tombol bel 40x40 dan panel skor HUD dev di scene rute. Harapan literal: tombol bel
+## pusat (lebar - 28, 332), kidal (28, 332), persegi 40x40; zona tap bel (kotak luar lingkaran radius 28) tidak menumpuk panel bawah,
+## tombol mode bantu, tombol kidal, atau tombol jeda. Panel skor di strip atas (y 4 sampai paling bawah 48), 112 dari tepi sisi swipe
+## (kidal dicerminkan), tidak menumpuk tombol strip atas, tombol "Main lagi", atau sprite pemain.
+func _test_tata_letak_rute(kasus: Array, kidal: bool) -> void:
+	var lebar: int = kasus[2]
+	var tag: String = "rute %d %s" % [lebar, "kidal" if kidal else "kanan"]
+	_judul.call("Tata letak %s: tombol bel dan panel skor (AC-13, AC-15)" % tag)
+	_tree.root.size = Vector2i(kasus[0], kasus[1])
+	var akar: RuteMain = (load(BERKAS_RUTE) as PackedScene).instantiate() as RuteMain
+	_tree.root.add_child(akar)
+	await _tree.process_frame
+	await _tree.process_frame
+	akar.set_process(false)
+	var hud: HudDev = _anak(akar, "Hud") as HudDev
+	var sprite: LoperSprite = _anak(akar, "LoperAgen") as LoperSprite
+	sprite.set_process(false)
+	(_anak(hud, "TombolKidal") as Button).button_pressed = kidal
+	await _tree.process_frame
+	await _tree.process_frame
+	akar.perbarui(0.0)
+	await _tree.process_frame
+	var layar: Rect2 = Rect2(Vector2.ZERO, akar.get_viewport_rect().size)
+	var bel: Rect2 = hud.rect_tombol_bel()
+	var bel_harapan: Rect2 = Rect2(8, 312, 40, 40) if kidal else Rect2(lebar - 48, 312, 40, 40)
+	check(bel == bel_harapan, "%s: tombol bel %s, dapat %s" % [tag, bel_harapan, bel])
+	var pusat: Vector2 = Vector2(28, 332) if kidal else Vector2(lebar - 28, 332)
+	check(TouchZones.pusat_bel(lebar, kidal) == pusat and bel.get_center() == pusat, "%s: pusat zona tap bel = pusat tombol %s" % [tag, pusat])
+	var zona_bel: Rect2 = Rect2(pusat - Vector2(28, 28), Vector2(56, 56))
+	var lain: Array = [["panel kecepatan", hud.rect_panel_kecepatan()], ["panel koran", hud.rect_panel_koran()], ["tombol bantu", hud.rect_tombol_bantu()], ["tombol kidal", hud.rect_tombol_kidal()], ["tombol jeda", hud.rect_tombol_jeda()]]
+	for pasang: Array in lain:
+		check(not zona_bel.intersects(pasang[1], true) and not bel.intersects(pasang[1], true), "%s: tombol dan zona tap bel %s tidak menumpuk %s %s" % [tag, zona_bel, pasang[0], pasang[1]])
+	check(layar.encloses(bel) and not zona_bel.intersects(TouchZones.rect_stick(lebar, kidal), true), "%s: tombol bel di dalam layar, zona bel tidak menyentuh zona stick" % tag)
+	var skor: Rect2 = hud.rect_panel_skor()
+	var x_harapan: float = float(Config.HUD_SKOR_GESER_PX) if kidal else float(lebar - Config.HUD_SKOR_GESER_PX) - skor.size.x
+	check(absf(skor.position.x - x_harapan) <= 1.0 and skor.position.y == 4.0 and skor.end.y <= 48.0, "%s: panel skor %s di x %s, y 4, bawah <= 48 (strip atas)" % [tag, skor, x_harapan])
+	for pasang: Array in [["tombol bantu", hud.rect_tombol_bantu()], ["tombol kidal", hud.rect_tombol_kidal()], ["tombol jeda", hud.rect_tombol_jeda()], ["tombol Main lagi", akar.panel_akhir().rect_tombol()]]:
+		check(not skor.intersects(pasang[1], true), "%s: panel skor tidak menumpuk %s %s" % [tag, pasang[0], pasang[1]])
+	check(not skor.intersects(_rect_sprite(sprite), true) and not bel.intersects(_rect_sprite(sprite), true), "%s: panel skor dan tombol bel tidak menutupi sprite pemain" % tag)
 	_tree.root.remove_child(akar)
 	akar.free()

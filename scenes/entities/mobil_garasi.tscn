@@ -1,0 +1,53 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/obstacles/obs_mobil_garasi_sheet.png" id="1_sheet"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_parkir"]
+atlas = ExtResource("1_sheet")
+region = Rect2(0, 0, 132, 95)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nyala"]
+atlas = ExtResource("1_sheet")
+region = Rect2(132, 0, 132, 95)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_redup"]
+atlas = ExtResource("1_sheet")
+region = Rect2(264, 0, 132, 95)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_rintangan"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nyala")
+}],
+"loop": true,
+"name": &"mundur",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_parkir")
+}],
+"loop": true,
+"name": &"parkir",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nyala")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_redup")
+}],
+"loop": true,
+"name": &"tanda",
+"speed": 4.0
+}]
+
+[node name="MobilGarasi" type="AnimatedSprite2D"]
+texture_filter = 1
+sprite_frames = SubResource("SpriteFrames_rintangan")
+animation = &"parkir"
+autoplay = "parkir"
+centered = false
+offset = Vector2(-43, -46)

@@ -9,6 +9,10 @@ extends Node2D
 ## fase2a-lemparan), yang membaca keadaan sepeda di sini: posisi dunia, kecepatan maju, kecepatan lateral efektif langkah terakhir
 ## (`lateral_ud`, D-4), dan jeda lepas animasi (`jeda_lepas`). Umpan balik kecepatan (debu roda, garis kecepatan; `UmpanBalikSepeda`,
 ## run fase1b-umpan-balik) diisi tiap langkah dari kecepatan sebenarnya dan status rem.
+## Run fase3b-rintangan-skor bagian B: `gerak` meneruskan `tahan_naik` (oleng, `Tabrakan.oleng`) ke `BikeMotion.langkah`; `tabrak` menerapkan
+## `Tabrakan.terapkan_ke_sepeda` (kecepatan turun ke 1,0 u/d bila lebih tinggi). Umpan balik visual tabrakan (AC-8): sprite pemain bergeser
+## bolak-balik selama oleng (`Tabrakan.geser_oleng_px`) dan berkedip selama kebal (`Tabrakan.alfa_kebal`), ikon kilatan di atas kepala
+## (`EfekSepeda`). Efek bel (AC-16): garis getar `GetarBel` (di bawah sprite pemain) di titik bel dan teks "KRING!" (`EfekSepeda`, di atas).
 
 ## Keadaan gerak saat ini (kecepatan, lateral, stamina, rem, lelah). Diganti objek baru tiap langkah, tidak diubah di tempat.
 var keadaan: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
@@ -20,6 +24,8 @@ var lateral_ud: float = 0.0
 
 @onready var _sprite: LoperSprite = %LoperAgen
 @onready var _umpan: UmpanBalikSepeda = %UmpanBalik
+@onready var _getar: Sprite2D = %GetarBel
+@onready var _efek: EfekSepeda = %Efek
 
 ## Kecepatan maju saat ini, u/d.
 var kecepatan_ud: float:
@@ -48,9 +54,10 @@ func posisi_dunia() -> Vector2:
 	return Vector2(keadaan.lateral_ubin, -jarak_ubin)
 
 
-## Satu langkah gerak dari vektor stick (x: datar, y: atas) selama `dt` detik, lalu memperbarui sprite dan posisi.
-func gerak(stick: Vector2, dt: float) -> void:
-	var hasil: BikeMotion.Hasil = BikeMotion.langkah(keadaan, stick, dt)
+## Satu langkah gerak dari vektor stick (x: datar, y: atas) selama `dt` detik, lalu memperbarui sprite dan posisi. `tahan_naik` true
+## selama oleng sesudah tabrakan: kecepatan tidak bisa naik (`BikeMotion.langkah`).
+func gerak(stick: Vector2, dt: float, tahan_naik: bool = false) -> void:
+	var hasil: BikeMotion.Hasil = BikeMotion.langkah(keadaan, stick, dt, tahan_naik)
 	keadaan = hasil.keadaan
 	jarak_ubin += hasil.maju_ubin
 	lateral_ud = hasil.lateral_ud
@@ -78,6 +85,49 @@ func atur_ulang() -> void:
 	lateral_ud = 0.0
 	batalkan_lempar()
 	gerak(Vector2.ZERO, 0.0)
+
+
+## Tabrakan (AC-6): kecepatan langsung turun ke `TABRAKAN_KECEPATAN_UD` bila lebih tinggi (`Tabrakan.terapkan_ke_sepeda`); lateral,
+## stamina, dan jarak tetap.
+func tabrak() -> void:
+	keadaan = Tabrakan.terapkan_ke_sepeda(keadaan)
+
+
+## Umpan balik visual keadaan tabrakan `t`: geseran oleng dan kedip kebal pada sprite pemain, ikon kilatan selama oleng.
+func tampilkan_tabrakan(t: Tabrakan.Keadaan) -> void:
+	_sprite.position.x = float(Tabrakan.geser_oleng_px(t))
+	_sprite.modulate.a = Tabrakan.alfa_kebal(t)
+	_efek.tampilkan_tabrakan(Tabrakan.oleng(t))
+
+
+## Efek bel dari keadaan `b`: garis getar (frame `Bel.frame_getar`, jangkar = titik bel) dan teks "KRING!" / "KRING KRING!".
+func tampilkan_bel(b: Bel.Keadaan) -> void:
+	var frame: int = Bel.frame_getar(b)
+	_getar.visible = frame >= 0
+	if frame >= 0:
+		_getar.frame = frame
+		_getar.position = EfekSepeda.titik_bel() - Vector2(Config.BEL_GETAR_JANGKAR_PX[0], Config.BEL_GETAR_JANGKAR_PX[1])
+	_efek.tampilkan_bel(b)
+
+
+## Node efek di atas pemain (ikon tabrakan, teks bel; untuk tes dan probe).
+func efek() -> EfekSepeda:
+	return _efek
+
+
+## Sprite garis getar bel (untuk tes dan probe).
+func getar_bel() -> Sprite2D:
+	return _getar
+
+
+## Geseran mendatar sprite pemain saat ini (oleng), piksel game (untuk tes).
+func geser_sprite_px() -> float:
+	return _sprite.position.x
+
+
+## Alpha sprite pemain saat ini (kedip kebal; untuk tes).
+func alfa_sprite() -> float:
+	return _sprite.modulate.a
 
 
 ## Pose sprite pemain dari langkah terakhir (`LoperAnim.Pose`: kayuh/melambat, meluncur, rem); dipakai bunyi sepeda (`Audio`).

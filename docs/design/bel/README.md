@@ -45,6 +45,9 @@ Efek visual selalu tampil, juga saat suara mati, supaya pemain yang main tanpa s
 
 ```
 python3 tools/ui_art/bel.py --out docs/design/bel
+python3 tools/ui_art/bel.py --out build/ui_art/bel --salin   # aset game ke assets/sprites/ui/
 ```
+
+**Di game (run fase3b-rintangan-skor, usulan):** `--salin` menulis `assets/sprites/ui/ui_bel_tombol.png` (diam, ditekan, lalu 8 frame jeda: cincin `ACCENT` 8/8 sampai 1/8, jadi cincin berkurang selama jeda), `ui_bel_getar.png` (garis getar), `ui_ikon_seru.png`, dan `ui_bel.json` (sel, frame, jangkar). Teks "KRING!" / "KRING KRING!" di game adalah kunci terjemahan (`RUTE_KRING`, `RUTE_KRING_KRING`) yang dirender font HUD, bukan `teks_kring*.png` (rule `content-data`: tidak ada teks pemain di gambar). Titik bel memakai satu titik tetap relatif titik pijak pemain (`Config.BEL_TITIK_*`, dari `santai_normal` di `bell_anchors.json`), bukan titik per animasi (usulan, dinilai di HP).
 
 Hasilnya deterministik. Warna dari palet induk (`ART_DIRECTION.md` 2.4) dan token UI (`DESIGN_SPEC.md` 1.1).

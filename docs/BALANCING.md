@@ -111,6 +111,14 @@ Selama jeda partikel berhenti (tidak memancar, tidak bergerak) karena `SceneTree
 | Volume "wus" | −4 dB | `AUDIO_WUS_VOLUME_DB`; sedikit di atas kayuhan (−6), di bawah bunyi mendarat |
 | Volume bunyi mendarat | −1 dB (keempat permukaan) | `AUDIO_MENDARAT_VOLUME_DB`; di atas kayuhan supaya hasil lemparan selalu terdengar (SOUND_DESIGN 6). Meleset sudah sekitar 5 dB lebih pelan di berkasnya (puncak 0,5 lawan 0,89), jadi tidak perlu angka volume terpisah |
 
+**Bunyi rute** (`scripts/systems/bunyi_rute.gd`, nada combo di `bunyi_lempar.gd`, autoload `Audio` bus `SFX`; SOUND_DESIGN 3.1, 3.3, 4.3; run fase3b-rintangan-skor 2026-10-16, usulan, dinilai di HP). Nada combo: antaran sah ke-n diputar n − 1 setengah nada lebih tinggi (pitch 2^(tingkat/12)), paling tinggi 5 tingkat lalu bertahan; meleset dan koran ke rumah terantar di nada dasar. "Kring kring!" +1 setengah nada.
+
+| Angka | Usulan | Catatan |
+|---|---|---|
+| Nada combo | 5 tingkat setengah nada (pitch maks 1,3348) | `AUDIO_COMBO_NADA_MAKS`, `AUDIO_SETENGAH_NADA_PER_OKTAF` 12, `AUDIO_RASIO_OKTAF` 2 |
+| Bel kedua | +1 setengah nada (1,0595) | `AUDIO_BEL_KEDUA_SETENGAH_NADA` |
+| Volume bel, rintangan, tabrakan, tip/tepat | −2, −3, −2, −3 dB | `AUDIO_BEL_VOLUME_DB`, `AUDIO_RINTANGAN_VOLUME_DB`, `AUDIO_TABRAKAN_VOLUME_DB`, `AUDIO_TIP_VOLUME_DB`; peringatan di atas kayuhan (−6); tabrakan sudah sekitar 3 dB lebih pelan di berkasnya (lembut, SOUND_DESIGN 2) |
+
 **Jalan terlihat di depan saat ngebut** (run fase1b-umpan-balik, dihitung dari garis tengah jalan: titik pijak sepeda + dorongan maju penuh sampai tepi layar, 1 ubin maju = 32 px datar, 6,0 u/d): 780 (A54) dari sekitar 2,10 detik (0,6 dan 28 px) menjadi sekitar **2,52 detik**; 800 dari 2,10 menjadi sekitar 2,59 detik. Di **640 (16:9)** jalan keluar layar lewat tepi kanan, bukan tepi atas, jadi menurunkan sepeda tidak menolong dan dorongan 36 sedikit memperpendek: dari sekitar 2,08 menjadi sekitar 2,03 detik (tanpa dorongan 2,22 detik di keduanya). Dinilai di HP (NEEDS-MANUAL).
 
 ---
@@ -206,7 +214,7 @@ Keputusan pemilik 2026-10-15 (K-1 sampai K-4, usulan) dan rinciannya (D-1 sampai
 | Jendela | −3,0, 1,5, 0,25 × 0,75 | (tidak ada) | Strip tanah di kaki fasad (model placeholder 2D) |
 
 - **Kotak surat dipindah ke halaman** (permintaan pemilik 2026-10-16, usulan, dinilai lewat uji HP): kotak surat sebelumnya di trotoar, padahal kotak surat nyata ada di halaman rumah (mock `ART_DIRECTION` 2.6) dan sepeda kini boleh naik trotoar. Halaman hanya 1 ubin lebar dan teras (maju 0 sampai 1,25) serta jendela (lateral −3,0 sampai −2,75) ada di kaki fasad, jadi area digeser ke **bagian halaman terluas**, sesudah teras: seberang `[−2,75; 1,25; 1,0 × 1,25]`, dekat `[1,75; 1,25; 0,75 × 1,25]` (lebih sempit supaya teras dekat tidak tertimpa). Tidak ada zona lain yang tertimpa selain halaman; teras dan jendela utuh (dites). Area turun dari 1,5 ke 1,25 ubin persegi seberang (sekitar −17%); toleransi jari lateral tetap sekitar ±6 mm, maju sekitar ±7,5 mm. 0,25 ubin area berada di atas trotoar supaya bisa dikenai dari sepeda di trotoar. Pusat berpindah ke (−2,25; maju + 1,875), jadi sasaran mode bantu bergeser; dari tepi trotoar (lateral −2,0) pusat hanya 0,25 ubin ke samping, di bawah jarak lempar terpendek 1,5, jadi harus dikenai dengan lemparan serong ke depan. Mode bantu dan keterjangkauan tetap lolos tes dari semua posisi lateral di jalan. Kotak surat bersprite di (−2,125; maju + 1,75), dan kotak surat dekat tetap tanpa sprite.
-- **Kotak surat sebagai area** (tindak lanjut uji HP pemilik, 2026-10-16; usulan, dinilai lewat uji HP; letak lama di trotoar, kini lihat atas): pemilik mencoba di HP dan menilai zona kotak surat 0,5 × 0,5 terlalu kecil. Toleransi gerak jari sekitar ±3 mm (setengah sisi 0,25 ubin) dan di scene rute hanya kotak surat sasaran oranye (waktu itu kubus graybox) yang tergambar, jadi pemain tidak melihat area sebenarnya. Zona menjadi **1,0 × 1,5** (lateral × maju) dengan **pusat yang sama**, jadi sasaran mode bantu (`BantuLempar.pilih` membidik pusat) tidak bergeser. Toleransi lateral sekitar ±6 mm (dua kali), maju sekitar ±9 mm (tiga kali), area sekitar 6 kali. Zona yang membesar menimpa 0,125 ubin halaman di sisi trotoar (lateral −2,125 sampai −2,0 seberang, 2,0 sampai 2,125 dekat); kotak surat menang atas halaman (prioritas tidak berubah), disengaja. Zona seberang dan dekat tetap tidak bertumpuk (celah lateral −1,125 sampai 1,125 di jalan). Area ini digambar di tanah scene rute (`AreaKotakGambar`, isi tipis `AREA_KOTAK_ISI_ALPHA` dan garis tepi tegas) hanya untuk rumah pelanggan seberang. **Calon bonus presisi, belum diputuskan:** "inti" 0,5 × 0,5 di pusat area (zona lama) bisa menjadi antaran "tepat" dengan bonus skor atau combo di Run 3B; angka dan bentuk bonus menunggu keputusan pemilik dan uji HP. Sampai itu, seluruh area sah penuh (100%).
+- **Kotak surat sebagai area** (tindak lanjut uji HP pemilik, 2026-10-16; usulan, dinilai lewat uji HP; letak lama di trotoar, kini lihat atas): pemilik mencoba di HP dan menilai zona kotak surat 0,5 × 0,5 terlalu kecil. Toleransi gerak jari sekitar ±3 mm (setengah sisi 0,25 ubin) dan di scene rute hanya kotak surat sasaran oranye (waktu itu kubus graybox) yang tergambar, jadi pemain tidak melihat area sebenarnya. Zona menjadi **1,0 × 1,5** (lateral × maju) dengan **pusat yang sama**, jadi sasaran mode bantu (`BantuLempar.pilih` membidik pusat) tidak bergeser. Toleransi lateral sekitar ±6 mm (dua kali), maju sekitar ±9 mm (tiga kali), area sekitar 6 kali. Zona yang membesar menimpa 0,125 ubin halaman di sisi trotoar (lateral −2,125 sampai −2,0 seberang, 2,0 sampai 2,125 dekat); kotak surat menang atas halaman (prioritas tidak berubah), disengaja. Zona seberang dan dekat tetap tidak bertumpuk (celah lateral −1,125 sampai 1,125 di jalan). Area ini digambar di tanah scene rute (`AreaKotakGambar`, isi tipis `AREA_KOTAK_ISI_ALPHA` dan garis tepi tegas) hanya untuk rumah pelanggan seberang. **Calon bonus presisi, belum diputuskan:** "inti" 0,5 × 0,5 di pusat area (zona lama) bisa menjadi antaran "tepat" dengan bonus skor atau combo di Run 3B; angka dan bentuk bonus menunggu keputusan pemilik dan uji HP. Sampai itu, seluruh area sah penuh (100%). **Diputuskan pemilik 2026-10-16 (K-4 run fase3b-rintangan-skor):** inti 0,5 × 0,5 di pusat area = antaran tepat, skor ×1,25 (usulan), bagian 5b.
 - **Zona dari data rute** (run fase3a-rute, usulan): zona jalan uji dan zona rumah rute memakai SATU geometri (`Config.JALAN_UJI_*`), diparametrisasi awal kavling: `ZonaSasaran.zona_rumah_seberang` (kotak surat, halaman, teras, jendela) dan `zona_rumah_dekat` (kotak surat, halaman, teras) menerima jarak maju awal kavling (awal segmen + `pos` rumah). Rumah yang bukan pelanggan (termasuk semua rumah dekat di distrik perumahan) memberi zona `BUKAN_PELANGGAN`. `zona_rute_rentang` hanya menyiapkan kavling di sekitar jangkauan lemparan (rentang + satu petak di tiap ujung), bukan seluruh rute. Prioritas dan penilaian dari titik mendarat tidak berubah.
 - **Prioritas** bila tumpang tindih: kotak surat > jendela > teras > halaman (teras dan jendela ada di dalam halaman). Zona yang menang dulu, baru status pelanggan: zona rumah bukan pelanggan = `BUKAN_PELANGGAN`. Penilaian dari **titik mendarat saja** (run fase2-arah-bebas, D-4): zona yang memuat titik itu menilai koran apa pun arah atau sisi lemparannya (Run 2A: zona hanya untuk lemparan ke sisinya). Zona seberang dan zona dekat tidak bertumpuk (dites). Di luar semua zona = meleset.
 - **Bukan pelanggan**: rumah seberang bernomor n dengan n mod 4 = 2 (`JALAN_UJI_BUKAN_PELANGGAN_*`), minimal satu tiap putaran daur 9 slot. Kavling sisi dekat datar tanpa fasad dan tanpa jendela, selalu pelanggan, **hanya supaya lempar ke sisi dekat bisa diuji**; tidak memutuskan cara menampilkan rumah di sisi dekat (ROADMAP 5, Fase 3).
@@ -216,11 +224,32 @@ Keputusan pemilik 2026-10-15 (K-1 sampai K-4, usulan) dan rinciannya (D-1 sampai
 | Angka | Usulan |
 |---|---|
 | Combo | +0,1 pengali tiap antaran beruntun, maksimum ×2,0 |
-| Combo putus | Meleset atau tabrakan |
-| Bonus zigzag (seberang ↔ dekat bergantian) | +0,05 pengali tambahan, mulai distrik dua sisi |
+| Combo putus | Meleset, bukan pelanggan, jendela penalti, atau tabrakan |
+| Bonus zigzag (seberang ↔ dekat bergantian) | +0,05 pengali tambahan, mulai distrik dua sisi (belum dipakai) |
 | Pengali kecepatan saat melempar | santai ×1,0 · cepat ×1,2 · ngebut ×1,5 |
+| Bonus presisi "tepat" | inti 0,5 × 0,5 di pusat area kotak surat: skor ×1,25 |
 
-**Skor dan koin dipisah (usulan):** skor dipakai untuk milestone keahlian dan rasa main, sedangkan koin hanya dari ongkos antar, tip, dan hadiah misi (bagian 7), supaya ekonomi tetap dekat dengan patokan dunia nyata. Hubungan keduanya perlu diputuskan setelah prototype 3.
+**Skor dan koin dipisah (keputusan pemilik 2026-10-16, K-2 run fase3b-rintangan-skor):** skor dipakai untuk milestone keahlian dan rasa main, sedangkan koin hanya dari ongkos antar, tip, dan hadiah misi (bagian 7), supaya ekonomi tetap dekat dengan patokan dunia nyata. Keduanya dihitung di rute sejak run 3B; skor tidak pernah menjadi koin dan sebaliknya.
+
+### 5b. Skor, combo, tepat, dan rumah terantar (usulan run fase3b-rintangan-skor 2026-10-16, dinilai lewat uji HP)
+
+Logika di `scripts/systems/skor_rute.gd` (`SkorRute`), satu sumber untuk HUD, umpan balik, dan bunyi; angka di `config.gd` (awalan `SKOR_`, `KOIN_`). Keputusan pemilik K-2 dan K-4, keputusan orchestrator O-1 sampai O-5 (SPEC run).
+
+- **Rumus skor satu antaran:** `SKOR_SASARAN_DASAR` 100 × persen sasaran × pengali combo × pengali kecepatan × (`SKOR_TEPAT_PENGALI` 1,25 bila tepat). Persen sasaran: kotak surat, teras, dan jendela dengan sakelar bonus 100 (`SKOR_PERSEN_PENUH`); halaman 50 (`SKOR_PERSEN_HALAMAN`); meleset, bukan pelanggan, jendela dengan sakelar penalti 0.
+- **Pembulatan:** semua pengali diubah ke bilangan bulat persen (×1,1 = 110, ×1,25 = 125) dan dikalikan sebagai bilangan bulat, lalu dibagi sekali dan **dibulatkan ke bilangan bulat terdekat, setengah ke atas**. Contoh: halaman, combo ×1,1, ngebut = 50 × 1,1 × 1,5 = 82,5 → 83; tepat, combo ×1,3, ngebut = 243,75 → 244; tepat, combo ×1,3, santai = 162,5 → 163.
+- **Combo (kapan naik):** pengali = 1,0 + 0,1 × jumlah antaran sah beruntun **sebelum** antaran yang sedang dinilai, dijepit ×2,0. Antaran yang dinilai memakai pengali sebelum naik, lalu rangkaian bertambah satu. Jadi antaran ke-1 ×1,0, ke-2 ×1,1, ..., ke-11 dan seterusnya ×2,0 (santai: 100, 110, ..., 200, 200, ...). Halaman dan jendela bonus termasuk antaran sah (ikut menaikkan). Putus = kembali ke ×1,0.
+- **Satu antaran per pelanggan (O-1):** antaran sah pertama ke rumah pelanggan menandainya terantar (juga halaman: tidak bisa "diperbaiki" dengan lemparan kedua). Koran berikutnya ke zona rumah itu (termasuk jendela penalti): 0 skor, 0 koin, combo **tidak putus dan tidak naik**, penanda netral (bentuk sendiri). Rumah bukan pelanggan tidak pernah terantar.
+- **Pengali kecepatan (O-5):** dari kecepatan **sebenarnya** saat jari dilepas (`ThrowSolver.Lintasan.kecepatan_maju_ud`), bukan posisi stick. Pita sama dengan pita sprite: kecepatan dipetakan ke kekuatan setara (santai 3,0 = 0, ngebut 6,0 = 1) lalu ambang `SPRITE_AMBANG_CEPAT` 0,33 dan `SPRITE_AMBANG_NGEBUT` 0,80 (`LoperAnim.tingkat_dari_stick`). Hasil: santai di bawah sekitar 3,99 u/d (termasuk melambat dan berhenti), cepat sampai sekitar 5,4, ngebut di atasnya.
+- **Tepat (K-4):** titik mendarat di inti 0,5 × 0,5 di pusat area kotak surat, seberang `[−2,5; 1,625; 0,5 × 0,5]` dan dekat `[1,875; 1,625; 0,5 × 0,5]` relatif awal kavling (`JALAN_UJI_*_KOTAK_SURAT_INTI_UBIN`), tepi min inklusif dan maks eksklusif seperti zona lain. Di area tapi di luar inti = kotak surat biasa. Tepat hanya untuk rumah pelanggan dan **tidak untuk mode bantu** (O-4: mode bantu membidik pusat, jadi akan selalu tepat); koin sama dengan kotak surat biasa. Penanda tepat berbeda bentuk dari centang dan bintang (DESIGN_SPEC 3.6).
+- **Mode bantu (O-4):** dinilai lewat jalur yang sama (skor, combo, koin, tip seperti biasa), hanya tepat diturunkan ke kotak surat biasa.
+
+| Angka | Usulan | Catatan |
+|---|---|---|
+| Skor dasar | 100 | `SKOR_SASARAN_DASAR` |
+| Persen sasaran | penuh 100, halaman 50 | `SKOR_PERSEN_PENUH`, `SKOR_PERSEN_HALAMAN` |
+| Combo | ×1,0 + 0,1 per antaran beruntun sebelumnya, maks ×2,0 | `SKOR_COMBO_AWAL`, `SKOR_COMBO_LANGKAH`, `SKOR_COMBO_MAKS` |
+| Pengali kecepatan | ×1,0 / ×1,2 / ×1,5 | `SKOR_PENGALI_SANTAI`, `_CEPAT`, `_NGEBUT` |
+| Tepat | ×1,25, inti 0,5 × 0,5 | `SKOR_TEPAT_PENGALI`, `JALAN_UJI_*_KOTAK_SURAT_INTI_UBIN`; seberapa sulit dinilai di HP |
 
 ---
 
@@ -233,9 +262,9 @@ Keputusan pemilik 2026-10-15 (K-1 sampai K-4, usulan) dan rinciannya (D-1 sampai
 | Jarak rata-rata antar pelanggan | sekitar 9 ubin | Sekitar 2 detik pada kecepatan cepat, 3 detik pada santai |
 | Lama rute | sekitar 55 detik (cepat) sampai 85 detik (santai) | |
 | Tenggat | waktu tempuh rute pada kecepatan santai × 1,15 (sekitar 95 detik) | Santai terus masih sempat, tapi berhenti lama untuk misi butuh ngebut di bagian lain |
-| Tabrakan | kecepatan turun ke 1,0 u/d, oleng 0,6 detik, combo putus | Tidak menghentikan rute |
+| Tabrakan | kecepatan turun ke 1,0 u/d, oleng 0,6 detik, combo putus, lalu kebal 1,0 detik | Tidak menghentikan rute (K-1 run fase3b-rintangan-skor, bagian 6c) |
 
-Apakah ada game over atau batas tabrakan per hari masih terbuka (GDD 3.2).
+Apakah ada game over atau batas tabrakan per hari masih terbuka (GDD 3.2, ROADMAP 5); run 3B tidak menguncinya (tanpa batas tabrakan per rute).
 
 ### 6b. Rute dari segmen (usulan run fase3a-rute 2026-10-16, dinilai lewat uji HP)
 
@@ -261,6 +290,61 @@ Keputusan pemilik K-1 sampai K-5 (SPEC run). Format segmen di `DATA_SCHEMA.md` 3
 
 Catatan: rumah di tepi jalan (lateral 3 ubin atau lebih) praktis tidak pernah menutupi pemain di lebar jalan resmi (aturan 3D `PenutupPemain`); aturan ini disiapkan untuk objek yang lebih dekat ke jalan (mobil, pohon, tenda) dan dinilai lewat uji HP.
 
+### 6c. Rintangan perumahan dan tabrakan (usulan run fase3b-rintangan-skor 2026-10-16, dinilai lewat uji HP)
+
+Logika murni di `scripts/systems/` (`AnjingPenjaga`, `MobilGarasi`, `RintanganRute`, `Tabrakan`); angka di `config.gd` (awalan `ANJING_`, `MOBIL_`, `TABRAKAN_`). Rintangan dibangun dari `objek` segmen (jenis, `pos`, `jalur`, `tanda_ubin`) tanpa field data baru. Posisi dalam koordinat jalan (lateral dari garis tengah, negatif = seberang; maju dari awal rute). Bentuk tabrakan = persegi di bidang tanah; tepi yang hanya bersentuhan bukan tabrakan.
+
+- **Separuh jalan (K-1):** anjing dan mobil hanya memakai separuh jalan di sisi jalurnya; tepi bentuknya paling jauh tepat di garis tengah. Separuh lain selalu bebas (ROUTE_DESIGN 4 aturan 1), dites di 20 rute seed.
+- **Anjing penjaga:** duduk di halaman (pusat lateral ±2,75, tepi 2,5 di luar jangkauan sepeda di tepi trotoar 2,25). **Waspada** (berdiri, menggeram) saat sepeda masuk `tanda_ubin` (data, paling sedikit 9) di belakang titik rumahnya. **Mengejar** (menggonggong, lari) saat sepeda sampai di titik rumahnya (`ANJING_KEJAR_JARAK_UBIN` 0 = sepeda melewati anjing): maju menuju maju sepeda tanpa mendahuluinya dengan laju kecepatan sepeda × 1,25, dijepit 2,0 sampai 4,5 u/d, dan menyamping ke arah sepeda 2,0 u/d di separuh jalannya. **Berhenti** di batas halaman (3,0 ubin maju dari titik rumah) atau sesudah menabrak, diam 0,8 detik, lalu **pulang** 2,0 u/d dan duduk lagi; sesudah itu tidak waspada lagi untuk lintasan itu. Berbahaya hanya saat mengejar dan berhenti.
+- **Harga kecepatan (prinsip 1):** tanda ke anjing mengejar = 9 ubin / kecepatan = 3,0 detik di santai, 1,5 detik di ngebut. Anjing (3,75 u/d) menyusul pemain santai (3,0) di separuh jalannya; pemain ngebut (6,0) di tengah separuh itu (lateral ±1,0) lolos karena anjing butuh sekitar 0,6 detik menyamping, saat itu sepeda sudah sekitar 0,9 ubin di depan (jarak sentuh 0,65). Di tepi trotoar sisi anjing, ngebut pun bisa tertabrak.
+- **Mobil keluar garasi (D-1, pola sederhana):** parkir dengan bagasi 2,5 ubin dari garis tengah. **Tanda** (lampu mundur berkedip + bip) saat sepeda masuk `tanda_ubin`; tanda menyala **1,5 detik** (waktu, sama di semua kecepatan), lalu **mundur** 1,0 u/d sampai bagasi di garis tengah, lalu **berhenti** di sana menutup separuh jalan sisinya sampai rute disusun ulang. Mobil 1,5 ubin melintang × 0,75 ubin sepanjang jalan. Selalu padat; tidak bereaksi pada bel.
+- **Tanda sebelum bahaya (ROUTE_DESIGN 4 aturan 2):** selang dari tanda pertama sampai bentuk rintangan pertama kali beririsan dengan jalur sepeda (pita lateral bentuk sepeda) ≥ 1,5 detik di santai, cepat, dan ngebut untuk semua posisi lateral −2,0 sampai 2,0, dan di posisi yang kena di dua kecepatan, yang lebih pelan tidak lebih pendek (dites 204 kasus). Terpendek di tepi trotoar sisi rintangan pada ngebut: anjing sekitar 1,63 detik, mobil 1,75 detik (contoh literal dengan langkah 1/8 detik: anjing tanda di 1,875 detik dan menyentuh di 3,5 detik).
+- **Tabrakan (K-1):** sepeda 0,5 × 0,8 ubin (`TABRAKAN_SEPEDA_SETENGAH_*`). Saat tabrakan kecepatan langsung turun ke 1,0 u/d bila lebih tinggi, **oleng** 0,6 detik (kecepatan tidak bisa naik; lateral, melambat, rem, dan lemparan tetap bisa; `BikeMotion.langkah(..., tahan_naik)`), combo putus, dan **kebal** 1,0 detik dihitung dari saat tabrakan (tidak ada tabrakan kedua dari rintangan mana pun). Stamina tidak dihukum. **Tanpa tabrakan ganda:** rintangan yang bersentuhan saat tabrakan atau selama kebal tidak memicu tabrakan lagi sampai sepeda terpisah darinya (sepeda yang terus melewati mobil yang ditabraknya tidak tertabrak berulang). Anjing penyebab berhenti mengejar. Tanpa batas tabrakan per rute dan tanpa game over (ROADMAP 5 tetap terbuka).
+- **Urutan per langkah** (`RintanganRute.langkah`, dipakai scene dan simulasi tes): sepeda bergerak (oleng menahan naik), rintangan melangkah dengan posisi dan kecepatan sepeda baru, lalu tabrakan diperiksa. Jeda (dt 0) membekukan semuanya.
+- **Dites (invarian prinsip):** 20 rute seed: pemain santai di sisi bebas tanpa tabrakan, dan di setiap posisi maju ada posisi lateral yang tidak pernah dimasuki rintangan. Pemain santai yang sengaja menabrak setiap rintangan (11 per rute) tetap sampai garis akhir, kecepatan kembali ke santai dalam 3 detik sesudah tiap tabrakan, `rute_selesai` tepat sekali.
+
+| Angka | Usulan | Catatan |
+|---|---|---|
+| Bentuk sepeda | 0,5 lateral × 0,8 maju | `TABRAKAN_SEPEDA_SETENGAH_LATERAL_UBIN` 0,25, `_MAJU_UBIN` 0,4 |
+| Anjing: bentuk, halaman | 0,5 × 0,5; pusat ±2,75 | `ANJING_SETENGAH_UBIN`, `ANJING_RUMAH_LATERAL_UBIN` |
+| Anjing: mulai mengejar | sepeda di titik rumah (0 ubin di belakang) | `ANJING_KEJAR_JARAK_UBIN` |
+| Anjing: laju | sepeda × 1,25, dijepit 2,0..4,5 u/d; menyamping 2,0 u/d | `ANJING_KEJAR_PENGALI`, `ANJING_LAJU_MIN_UD`, `ANJING_LAJU_MAKS_UD`, `ANJING_LATERAL_UD` |
+| Anjing: batas halaman | 3,0 ubin maju | `ANJING_BATAS_MAJU_UBIN` |
+| Anjing: berhenti, pulang | 0,8 detik; 2,0 u/d | `ANJING_BERHENTI_DETIK`, `ANJING_PULANG_UD` |
+| Mobil: ukuran | 1,5 melintang × 0,75 sepanjang jalan | `MOBIL_PANJANG_UBIN`, `MOBIL_SETENGAH_LEBAR_UBIN` 0,375 |
+| Mobil: bagasi | 2,5 ubin saat parkir, berhenti di 0 (garis tengah) | `MOBIL_BELAKANG_AWAL_UBIN`, `MOBIL_BELAKANG_AKHIR_UBIN` |
+| Mobil: tanda, mundur | 1,5 detik; 1,0 u/d | `MOBIL_TANDA_DETIK`, `MOBIL_MUNDUR_UD` |
+| Tabrakan | 1,0 u/d, oleng 0,6, kebal 1,0 detik | `TABRAKAN_KECEPATAN_UD`, `TABRAKAN_OLENG_DETIK`, `TABRAKAN_KEBAL_DETIK`; `TABRAKAN_TOLERANSI_DETIK` 0,000001 hanya derau float |
+
+### 6d. Bel "Kring Kring!" (usulan run fase3b-rintangan-skor 2026-10-16, dinilai lewat uji HP)
+
+Logika di `scripts/systems/bel.gd` (`Bel`), reaksi lewat `RintanganRute.terapkan_bel`; GDD 5.4, K-3. Ketukan pertama = "kring", teks "KRING!" tampil 0,5 detik; ketukan kedua selama teks tampil = "kring kring!", lalu bel jeda 1,0 detik (ketukan ditolak tanpa bunyi, sisa jeda dibaca sebagai cincin). "Kring" tunggal yang teksnya sudah habis tidak memulai jeda. Bel ditolak saat jeda game; teks dan jeda bel membeku selama jeda. Jangkauan: rintangan dari 1,0 ubin di belakang sampai 4,0 ubin di depan sepeda, seluruh lebar jalan. Reaksi per jenis dari SATU tabel (`Bel.REAKSI_JENIS`): anjing penjaga yang waspada atau mengejar kaget 0,5 detik (ikon "!") lalu mundur ke halamannya 3,0 u/d dan tidak mengejar lagi untuk lintasan itu; anjing yang duduk tidak bereaksi; mobil tidak pernah bereaksi.
+
+| Angka | Usulan | Catatan |
+|---|---|---|
+| Teks bel | 0,5 detik | `BEL_TEKS_DETIK`; jendela ketukan kedua |
+| Jeda bel | 1,0 detik sesudah "kring kring!" | `BEL_JEDA_DETIK` |
+| Jangkauan | 4,0 ubin di depan, 1,0 di belakang | `BEL_JANGKAUAN_UBIN`, `BEL_JANGKAUAN_BELAKANG_UBIN` (D-5: anjing yang mengejar berlari di samping atau sedikit di belakang sepeda) |
+| Anjing kaget, mundur | 0,5 detik; 3,0 u/d | `ANJING_KAGET_DETIK`, `ANJING_MUNDUR_UD` |
+
+### 6e. Scene rute run 3B: tampilan rintangan, tabrakan, bel, HUD skor (usulan run fase3b-rintangan-skor bagian B 2026-10-16, dinilai lewat uji HP)
+
+Angka tampilan dan input bagian B di `config.gd` (tidak mengubah aturan main di 5b, 6c, 6d). Tata letaknya di `DESIGN_SPEC.md` 3.6 dan 3.8.
+
+| Angka | Usulan | Catatan |
+|---|---|---|
+| Tinggi kotak penutup rintangan | anjing 0,8 ubin, mobil 1,0 ubin | `RINTANGAN_ANJING_TINGGI_UBIN`, `RINTANGAN_MOBIL_TINGGI_UBIN`; aturan penutup `PenutupPemain` yang sama dengan rumah |
+| Ikon "!" anjing | 28 px game di atas titik pijak | `RINTANGAN_SERU_ATAS_PX` (kepala sekitar 26 px + 2) |
+| Oleng (visual) | sprite bergeser ±1 px tiap 0,05 detik | `TABRAKAN_OLENG_GESER_PX`, `TABRAKAN_OLENG_PERIODE_DETIK`; geser kecil supaya tidak berlebihan (rule `ui-scenes`) |
+| Kedip kebal | alpha 0,5 tiap fase 0,1 detik | `TABRAKAN_KEDIP_PERIODE_DETIK`, `TABRAKAN_KEDIP_ALFA` |
+| Ikon kilatan tabrakan | 50 px game di atas titik pijak | `TABRAKAN_IKON_ATAS_PX` |
+| Tombol bel | 40×40, pusat 28 dari tepi samping dan bawah, zona tap radius 28 inklusif | `BEL_TOMBOL_UKURAN_PX`, `BEL_TOMBOL_PUSAT_TEPI_PX`, `BEL_ZONA_RADIUS_PX`; 8 frame cincin jeda `BEL_TOMBOL_JEDA_LANGKAH` |
+| Efek bel | 12 fps, garis getar 4 frame (jangkar (3, 12)), titik bel (8, −29) dari titik pijak pemain, teks (11, −12) dari titik bel, naik paling banyak 4 px, redup 0,6 | `BEL_EFEK_FPS`, `BEL_GETAR_FRAME`, `BEL_GETAR_JANGKAR_PX`, `BEL_TITIK_PX`, `BEL_TEKS_GESER_PX`, `BEL_TEKS_NAIK_MAKS_PX`, `BEL_TEKS_REDUP_ALFA` |
+| Panel skor HUD dev | 112 px dari tepi sisi swipe, lebar minimum 72 | `HUD_SKOR_GESER_PX`, `HUD_SKOR_LEBAR_PX` |
+| Label PUTUS | 0,8 detik sesudah combo putus | `HUD_COMBO_PUTUS_DETIK` |
+| Umpan balik melayang | 0,8 detik, naik 12 px, paling banyak 2, kaki 18 px di atas titik mendarat | `UMPAN_MELAYANG_DETIK`, `UMPAN_MELAYANG_NAIK_PX`, `UMPAN_MELAYANG_MAKS`, `UMPAN_MELAYANG_ATAS_PX` (DESIGN_SPEC 3.6) |
+| Garis luar teks dunia | 2 px game | `HUD_TEKS_GARIS_PX` (teks KRING dan umpan balik melayang) |
+
 ---
 
 ## 7. Ekonomi
@@ -272,7 +356,7 @@ Patokan dari GDD 14.1 (diputuskan sebagai acuan). Angka bengkel di bawah adalah 
 | 1 koin | Rp100 |
 | Ongkos satu pengantaran | 15 koin (rentang 6–20 tergantung jenis koran) |
 | Pemasukan satu hari rapi (25 rumah) | 300–375 koin |
-| Tip pelanggan pemberi tip (teras tepat) | 5 koin (usulan) |
+| Tip pelanggan pemberi tip (koran di teras) | 5 koin (usulan, `KOIN_TIP`) |
 | Hadiah misi kecil / sedang / besar | 45 / 75 / 120 koin |
 | Tambal ban | 100–150 koin (sekitar 1–2 jam kerja loper, usulan) |
 | Servis rem | 80 koin (usulan) |
@@ -280,6 +364,8 @@ Patokan dari GDD 14.1 (diputuskan sebagai acuan). Angka bengkel di bawah adalah 
 | Upgrade komponen tingkat 1 | 500–800 koin, sekitar 2 hari kerja (usulan) |
 
 Gagal misi tidak pernah mengurangi koin (GDD 10.5).
+
+**Koin di rute (usulan run fase3b-rintangan-skor 2026-10-16, K-2, O-1 sampai O-3; `SkorRute`):** antaran sah **pertama** tiap pelanggan +15 koin ongkos (`KOIN_ONGKOS_ANTAR`), juga antaran halaman (sah setengah untuk skor, ongkos penuh, O-2) dan jendela dengan sakelar bonus. Koran ke teras pelanggan pemberi tip +5 koin tip (`KOIN_TIP`); tip hanya dari teras. Meleset, bukan pelanggan, jendela penalti, dan koran ke rumah yang sudah terantar 0 koin. Koin tidak pernah berkurang (prinsip 2). Tepat tidak menambah koin. **Pemberi tip** = 30% pelanggan rute dibulatkan ke bawah (`RUTE_PEMBERI_TIP_PERSEN`: 25 pelanggan = 7), dipilih `RouteBuilder` dengan RNG rute yang sama sesudah pelanggan (seed sama = sama), tanpa penanda visual di 3B (GDD 8). Rute 25 pelanggan terantar semua = 375 koin ongkos + tip (semua ke teras: 375 + 7 × 5 = 410), dites dengan simulasi; patokan hari rapi 300 sampai 375 koin (GDD 14.1) tetap untuk ongkos.
 
 ### 7.1 Ekonomi cerita (usulan, direvisi 2026-10-08)
 
@@ -316,6 +402,11 @@ Belum diisi. Diputuskan di Fase 6 bersama layar bengkel (GDD 12.5). Arah yang su
 ---
 
 ## 10. Catatan perubahan
+
+- **2026-10-16** — Run fase3b-rintangan-skor bagian B (scene; usulan, belum diuji di HP): angka tampilan dan input baru di bagian 6e (tinggi penutup rintangan, ikon "!", oleng ±1 px, kedip kebal, ikon kilatan, tombol dan zona bel, efek bel, panel skor HUD dev, label PUTUS, umpan balik melayang). Aturan main bagian 5b, 6c, 6d, 7 tidak berubah. Alasan: AC-8, AC-13, AC-15, AC-16, DESIGN_SPEC 3.6 dan 3.8; nilai dinilai lewat uji HP (`SETUP_ANDROID.md` 8.7). Anjing yang kaget karena bel kini memakai animasi `berhenti` (bukan `lari`) selama ikon "!" tampil, supaya terbaca kaget.
+
+- **2026-10-16** — Run fase3b-rintangan-skor bagian A, bunyi (usulan, belum diuji di HP): nada combo (5 tingkat setengah nada), bel kedua +1 setengah nada, volume bel −2, rintangan −3, tabrakan −2, tip/tepat −3 dB (bagian 2). Alasan: SOUND_DESIGN 3.1 dan 3.3 (AC-18, AC-19).
+- **2026-10-16** — Run fase3b-rintangan-skor bagian A (logika murni; keputusan pemilik K-1 sampai K-4 dan usulan orchestrator O-1 sampai O-5; semua angka usulan, belum diuji di HP): rintangan anjing penjaga dan mobil keluar garasi, tabrakan, bel (bagian 6c dan 6d), skor, combo, pengali kecepatan, tepat, rumah terantar (bagian 5b), koin dan tip (bagian 7). Angka BALANCING 5-7 yang sudah ada dipakai apa adanya (combo +0,1 maks ×2,0; pengali 1,0 / 1,2 / 1,5; ongkos 15; tip 5; tabrakan 1,0 u/d dan oleng 0,6). Angka baru: kebal 1,0 detik, tepat ×1,25 dengan inti 0,5 × 0,5, skor dasar 100 dan halaman 50%, pemberi tip 30%, semua angka rintangan (bagian 6c), bel (teks 0,5, jeda 1,0, jangkauan 4,0 depan dan 1,0 belakang). Alasan: kontrak SPEC run 3B (AC-1 sampai AC-14); angka rintangan dipilih supaya invarian prinsip desain lolos (tanda ≥ 1,5 detik pada ngebut, separuh jalan selalu bebas, santai tersusul anjing, ngebut lolos).
 
 - **2026-10-16** — Sepeda boleh naik trotoar dan kotak surat pindah ke halaman (permintaan pemilik, usulan, belum diuji di HP): batas tepi jalan resmi ±1,0 → ±2,0 ubin (bagian 2), kotak surat seberang `[−2,125; 0,375; 1,0 × 1,5]` → `[−2,75; 1,25; 1,0 × 1,25]` dan dekat `[1,125; 0,375; 1,0 × 1,5]` → `[1,75; 1,25; 0,75 × 1,25]` (bagian 5), sprite kotak surat dari (−1,5; +1,0) ke (−2,125; +1,75). Angka lain tidak berubah.
 - **2026-10-16** — Run fase3a-rute bagian B (scene rute; semua usulan, belum diuji di HP): scene utama `scenes/rute/rute.tscn` menggambar rumah dan kotak surat dari data lewat jendela daur (angka baru `RUTE_DAUR_MUNDUR_UBIN` 20 dan `RUTE_DAUR_MAJU_UBIN` 30), akhir rute dengan rem biasa (`RUTE_AKHIR_STICK_Y` −1,0) dan tombol dev "Main lagi" (seed + 1), dan penerap penutup tunggal (alfa 0,45 tidak berubah). Titik pijak sprite rumah disimpan di `RUTE_RUMAH_SPRITE` dan `RUTE_RUMAH_PIJAK_PX` (fakta aset, dicek tes terhadap JSON). Penilaian koran dan mode bantu memakai zona rute lewat `MedanKoran`; angka lintasan, zona, jeda, dan skor tidak berubah. Alasan: kontrak SPEC run 3A (AC-10 sampai AC-16).

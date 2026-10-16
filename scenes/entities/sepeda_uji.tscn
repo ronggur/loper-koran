@@ -1,8 +1,10 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/entities/sepeda_uji.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/entities/loper_agen.tscn" id="2_loper"]
 [ext_resource type="PackedScene" path="res://scenes/entities/umpan_balik_sepeda.tscn" id="3_umpan"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/ui_bel_getar.png" id="4_getar"]
+[ext_resource type="Script" path="res://scripts/entities/efek_sepeda.gd" id="5_efek"]
 
 [node name="SepedaUji" type="Node2D"]
 script = ExtResource("1_script")
@@ -10,5 +12,17 @@ script = ExtResource("1_script")
 [node name="UmpanBalik" parent="." instance=ExtResource("3_umpan")]
 unique_name_in_owner = true
 
+[node name="GetarBel" type="Sprite2D" parent="."]
+unique_name_in_owner = true
+visible = false
+texture_filter = 1
+texture = ExtResource("4_getar")
+centered = false
+hframes = 4
+
 [node name="LoperAgen" parent="." instance=ExtResource("2_loper")]
 unique_name_in_owner = true
+
+[node name="Efek" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("5_efek")
