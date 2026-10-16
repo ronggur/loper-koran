@@ -1,5 +1,5 @@
 extends SceneTree
-## Probe mode bantu di jendela asli, non-headless (AC-19 run fase2b-bantu-audio): memuat scene utama, menekan tombol "Bantu" di HUD,
+## Probe mode bantu di jendela asli, non-headless (AC-19 run fase2b-bantu-audio): memuat `scenes/dev/jalan_uji.tscn` (scene utama sejak run fase3a-rute = rute.tscn), menekan tombol "Bantu" di HUD,
 ## mengetuk zona lempar lewat event sentuh sintetis (piksel jendela, seperti dari perangkat), memajukan simulasi, sprite, dan partikel
 ## dengan langkah tetap `perbarui(1/60)` (bukan waktu dinding), lalu menyimpan tangkapan layar: tombol mode bantu mati dan nyala, koran
 ## bantu terbang ke kotak surat seberang dan dekat, penanda centang di kotak surat, tanda tanpa sasaran, dan kidal + mode bantu. Titik
@@ -43,7 +43,7 @@ var _lapis: CanvasLayer
 func _initialize() -> void:
 	var argumen: PackedStringArray = OS.get_cmdline_user_args()
 	_folder = argumen[0] if argumen.size() > 0 else ""
-	var paket: PackedScene = load(str(ProjectSettings.get_setting("application/run/main_scene"))) as PackedScene
+	var paket: PackedScene = load("res://scenes/dev/jalan_uji.tscn") as PackedScene
 	if paket == null:
 		push_error("scene utama tidak bisa dimuat")
 		await ProbeKeluar.keluar(self, 1)

@@ -1,5 +1,5 @@
 extends SceneTree
-## Probe gerak Fase 1 di jendela asli, non-headless (run fase1a-gerak, AC-13): memuat scene utama, menggerakkan stick lewat event
+## Probe gerak Fase 1 di jendela asli, non-headless (run fase1a-gerak, AC-13): memuat `scenes/dev/jalan_uji.tscn` (scene utama sejak run fase3a-rute = rute.tscn), menggerakkan stick lewat event
 ## sentuh sintetis (piksel jendela, seperti dari perangkat), lalu memajukan simulasi dengan `JalanUji.perbarui(1/60)` (bukan waktu
 ## dinding, jadi keadaannya pasti) dan menyimpan tangkapan layar: stamina penuh, rendah (< 30), lelah, meluncur, melambat, rem
 ## bergerak dan berhenti (cincin rem `WARN`), lalu kayuh lagi. Di tiap pergantian pose (kayuh -> meluncur -> melambat -> rem ->
@@ -34,7 +34,7 @@ var _kontrol: KontrolTouch
 func _initialize() -> void:
 	var argumen: PackedStringArray = OS.get_cmdline_user_args()
 	_folder = argumen[0] if argumen.size() > 0 else ""
-	var paket: PackedScene = load(str(ProjectSettings.get_setting("application/run/main_scene"))) as PackedScene
+	var paket: PackedScene = load("res://scenes/dev/jalan_uji.tscn") as PackedScene
 	if paket == null:
 		push_error("scene utama tidak bisa dimuat")
 		await ProbeKeluar.keluar(self, 1)

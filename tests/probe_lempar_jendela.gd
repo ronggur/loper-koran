@@ -1,5 +1,5 @@
 extends SceneTree
-## Probe melambat dan lempar koran di jendela asli, non-headless (run sprite-lempar-melambat, AC-8): memuat scene utama,
+## Probe melambat dan lempar koran di jendela asli, non-headless (run sprite-lempar-melambat, AC-8): memuat `scenes/dev/jalan_uji.tscn` (scene utama sejak run fase3a-rute = rute.tscn),
 ## menggerakkan stick dan swipe lewat event sentuh sintetis (piksel jendela, seperti dari perangkat), menyimpan tangkapan layar
 ## tiap keadaan, dan mencetak posisi alas sprite sebelum, saat, dan sesudah lempar. Tidak interaktif: keluar sendiri.
 ## Bukti visual untuk LOG, bukan tes lulus/gagal (tes otomatisnya di `tests/tes_sprite.gd` dan `tests/tes_input_scene.gd`).
@@ -39,7 +39,7 @@ var _akar: Node
 func _initialize() -> void:
 	var argumen: PackedStringArray = OS.get_cmdline_user_args()
 	_folder = argumen[0] if argumen.size() > 0 else ""
-	var paket: PackedScene = load(str(ProjectSettings.get_setting("application/run/main_scene"))) as PackedScene
+	var paket: PackedScene = load("res://scenes/dev/jalan_uji.tscn") as PackedScene
 	if paket == null:
 		push_error("scene utama tidak bisa dimuat")
 		await ProbeKeluar.keluar(self, 1)

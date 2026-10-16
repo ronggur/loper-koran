@@ -987,12 +987,13 @@ func _test_probe_keluar_bersih() -> void:
 		if not berkas.get_file().begins_with("probe_") or berkas.ends_with("/probe_keluar.gd"):
 			continue
 		var teks: String = FileAccess.get_file_as_string(berkas)
-		if not teks.contains("application/run/main_scene"):
+		# Sejak run fase3a-rute scene utama = rute.tscn; probe yang menguji jalan uji memuat `jalan_uji.tscn` langsung.
+		if not teks.contains("application/run/main_scene") and not teks.contains("scenes/dev/jalan_uji.tscn") and not teks.contains("scenes/rute/rute.tscn"):
 			continue
 		probe_scene += 1
 		var langsung: Array[String] = _quit_langsung(teks)
 		check(langsung.is_empty() and teks.contains("await ProbeKeluar.keluar(self"), "%s: semua jalur keluar lewat await ProbeKeluar.keluar (tanpa quit langsung): %s" % [berkas, "; ".join(langsung)])
-	check(probe_scene >= 6, "pemindai menemukan probe jendela yang memuat scene utama (%d)" % probe_scene)
+	check(probe_scene >= 6, "pemindai menemukan probe jendela yang memuat scene utama atau jalan uji (%d)" % probe_scene)
 	var pembantu: String = FileAccess.get_file_as_string("res://tests/probe_keluar.gd")
 	check(pembantu.contains("tree.paused = true") and pembantu.contains("hentikan_sepeda") and pembantu.contains("hentikan_lempar") and pembantu.contains("create_timer(TUNGGU_DETIK") and pembantu.contains("tree.quit(kode)"), "ProbeKeluar menjeda pohon, menghentikan bunyi sepeda dan lempar/mendarat, menunggu, lalu keluar")
 	check(not _quit_langsung("	if gagal:
