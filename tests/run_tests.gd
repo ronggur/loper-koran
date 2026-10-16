@@ -105,6 +105,8 @@ func _initialize() -> void:
 	await scene_bantu.jalankan()
 	var scene_rute: TesRuteScene = TesRuteScene.new(check, _judul, self)
 	await scene_rute.jalankan()
+	var kotak_surat: TesKotakSurat = TesKotakSurat.new(check, _judul, self)
+	await kotak_surat.jalankan()
 	var tata_letak: TesTataLetak = TesTataLetak.new(check, _judul, self)
 	await tata_letak.jalankan()
 	var bunyi: TesBunyi = TesBunyi.new(check, _judul, self)

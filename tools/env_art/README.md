@@ -20,10 +20,10 @@ Ubin dan kotak graybox untuk project Godot (Fase 0) dibuat oleh `graybox.py`, ya
 python3 tools/env_art/graybox.py                   # dari root repo; hasil deterministik
 ```
 
-Aset Fase 3 perumahan (usulan) dibuat oleh `fase3.py`, juga dari root repo. Tanpa argumen hasilnya ke `build/env_art/fase3/`; dengan `--salin` sprite 1× beserta JSON titik pijaknya disalin ke `assets/sprites/obstacles/` dan `assets/sprites/houses/perumahan/`, dan mock ×2 ke `docs/design/environment/fase3_*.png`. Hasilnya deterministik:
+Aset Fase 3 perumahan (usulan) dibuat oleh `fase3.py`, juga dari root repo. Tanpa argumen hasilnya ke `build/env_art/fase3/`; dengan `--salin` sprite 1× beserta JSON titik pijaknya disalin ke `assets/sprites/obstacles/`, `assets/sprites/houses/perumahan/`, dan `assets/sprites/props/` (`prop_kotak_surat`: bentuk `lib.kotak_surat` berwarna oranye graybox, sasaran scene rute), dan mock ×2 ke `docs/design/environment/fase3_*.png`. Hasilnya deterministik:
 
 ```
-python3 tools/env_art/fase3.py --salin            # rintangan, rumah dua sisi, antena TV, layar contoh
+python3 tools/env_art/fase3.py --salin            # rintangan, rumah dua sisi, antena TV, kotak surat sasaran, layar contoh
 ```
 
 Hasil masuk ke `build/env_art/` (tidak di-commit, bisa diganti lewat `ENV_ART_OUT`). Setelah dicek, salin yang dipakai ke `docs/design/environment/`.
@@ -45,7 +45,7 @@ Hasil masuk ke `build/env_art/` (tidak di-commit, bisa diganti lewat `ENV_ART_OU
 | `perumahan.py` | Jalan perumahan: aspal 3 ubin, lajur sepeda di kedua sisi, tiga bentuk rumah (`HOUSE_TYPES`: limasan, pelana, sayap) |
 | `kampung.py` | Gang perkampungan 2 ubin: rumah rapat, warung, jemuran melintang, halaman, tiang listrik |
 | `districts.py` | Ruko, pasar, desa, pinggir sungai, dan vinyet enam distrik |
-| `fase3.py` | Aset Fase 3 perumahan (usulan): anjing penjaga lima pose, mobil keluar garasi (sedan `lib.car()` diputar 90°, lampu mundur, cahaya di aspal, asap knalpot), rumah sisi seberang dan sisi dekat versi pelanggan dan bukan pelanggan (toren air, jemuran), enam jenis antena TV (`antena_v`), layar contoh satu sisi dan dua sisi, ekspor sprite + JSON titik pijak. Memakai `engine.py`, `lib.py`, `perumahan.py` tanpa mengubahnya |
+| `fase3.py` | Aset Fase 3 perumahan (usulan): anjing penjaga lima pose, mobil keluar garasi (sedan `lib.car()` diputar 90°, lampu mundur, cahaya di aspal, asap knalpot), rumah sisi seberang dan sisi dekat versi pelanggan dan bukan pelanggan (toren air, jemuran), enam jenis antena TV (`antena_v`), kotak surat sasaran oranye `prop_kotak_surat` (`kotak_surat_oranye`, sprite tunggal), layar contoh satu sisi dan dua sisi, ekspor sprite + JSON titik pijak. Memakai `engine.py`, `lib.py`, `perumahan.py` tanpa mengubahnya |
 | `details.py` | Loop detail pinggir jalan |
 | `anim_hero.py` | Animasi adegan utama |
 | `graybox.py` | Ubin graybox 64x32 (aspal, trotoar, rumput), kotak rumah, dan kotak surat untuk `assets/sprites/_placeholder/` (hanya stdlib, bukan mock) |

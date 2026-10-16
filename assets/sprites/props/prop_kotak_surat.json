@@ -1,0 +1,12 @@
+{
+ "sprite": "prop_kotak_surat.png",
+ "size": [
+  30,
+  39
+ ],
+ "ground_anchor": [
+  10,
+  26
+ ],
+ "note": "Usulan, tools/env_art/fase3.py. Kotak surat sasaran scene rute: bentuk lib.kotak_surat() (tiang dan badan dengan celah surat) berwarna oranye graybox (placeholder sasaran), skala 1x. Titik pijak = kaki tiang di tanah, dipasang di pusat zona kotak surat. Bayangan = penanda #000000 alpha 28%."
+}
