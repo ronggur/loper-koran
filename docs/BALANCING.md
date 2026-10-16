@@ -258,10 +258,10 @@ Logika di `scripts/systems/skor_rute.gd` (`SkorRute`), satu sumber untuk HUD, um
 | Angka | Usulan | Catatan |
 |---|---|---|
 | Lebar petak rumah | 4 ubin | Rumah 3 ubin + celah 1 ubin. `RUTE_PETAK_UBIN` |
-| Rute awal perumahan | 25 pelanggan di sisi seberang, panjang sekitar 250 ubin | Distrik pertama hanya satu sisi. Sela antar pelanggan diisi rumah bukan pelanggan, persimpangan, dan taman |
+| Rute awal perumahan | 25 pelanggan di sisi seberang, panjang 232 sampai 240 ubin (terukur dari 7 segmen data, bagian 6b; rencana awal sekitar 250) | Distrik pertama hanya satu sisi. Sela antar pelanggan diisi rumah bukan pelanggan, persimpangan, dan taman. Panjang satu rute = `RouteBuilder` (jumlah panjang segmen) |
 | Jarak rata-rata antar pelanggan | sekitar 9 ubin | Sekitar 2 detik pada kecepatan cepat, 3 detik pada santai |
-| Lama rute | sekitar 55 detik (cepat) sampai 85 detik (santai) | |
-| Tenggat | waktu tempuh rute pada kecepatan santai × 1,15, dibulatkan ke atas: `ceil(panjang / 3,0 × 1,15)` = 89 / 91 / 92 detik untuk rute 232 / 236 / 240 ubin | Santai terus masih sempat (cadangan sekitar 11 detik), tapi berhenti lama untuk misi butuh ngebut di bagian lain. Sesudah tenggat lewat hanya tip yang hilang (K-1 run fase3c-hud-hasil, bagian 6f) |
+| Lama rute | sekitar 39 sampai 40 detik (ngebut 6,0 u/d), 52 sampai 53 detik (cepat 4,5 u/d), 77 sampai 80 detik (santai 3,0 u/d) | Panjang 232 sampai 240 ubin dibagi kecepatan tetap, tanpa berhenti dan tanpa tabrakan |
+| Tenggat | waktu tempuh rute pada kecepatan santai × 1,15, dibulatkan ke atas: `ceil(panjang / 3,0 × 1,15)` = 89 / 91 / 92 detik untuk rute 232 / 236 / 240 ubin | Santai terus masih sempat (cadangan sekitar 12 detik: 89 − 77,3, 91 − 78,7, 92 − 80,0), tapi berhenti lama untuk misi butuh ngebut di bagian lain. Sesudah tenggat lewat hanya tip yang hilang (K-1 run fase3c-hud-hasil, bagian 6f) |
 | Tabrakan | kecepatan turun ke 1,0 u/d, oleng 0,6 detik, combo putus, lalu kebal 1,0 detik | Tidak menghentikan rute (K-1 run fase3b-rintangan-skor, bagian 6c) |
 
 Apakah ada game over atau batas tabrakan per hari masih terbuka (GDD 3.2, ROADMAP 5); run 3B tidak menguncinya (tanpa batas tabrakan per rute).
@@ -424,6 +424,8 @@ Belum diisi. Diputuskan di Fase 6 bersama layar bengkel (GDD 12.5). Arah yang su
 ---
 
 ## 10. Catatan perubahan
+
+- **2026-10-17** — Run fase3c-hud-hasil iterasi 2 (QA-006, dokumen saja; tidak ada angka `config.gd` yang berubah): bagian 6 baris "Rute awal perumahan" dan "Lama rute" masih memakai panjang rencana 250 ubin ("sekitar 250 ubin", "55 detik cepat sampai 85 detik santai"), berselisih dengan baris tenggat di tabel yang sama dan dengan bagian 6b (232 sampai 240 ubin terukur dari data). Diperbaiki dari panjang terukur: lama rute 77 sampai 80 detik santai, 52 sampai 53 detik cepat, 39 sampai 40 detik ngebut; cadangan tenggat santai ditulis ulang sekitar 12 detik (dulu "sekitar 11"). `docs/SETUP_ANDROID.md` 8.6 butir 1 (checklist 3A yang belum diisi) yang menyalin angka lama ikut diperbaiki.
 
 - **2026-10-17** — Run fase3c-hud-hasil iterasi 1a (keputusan pemilik K-1 dan K-2, usulan orchestrator O-6 sampai O-12; semua angka usulan, belum diuji di HP): tenggat dihitung dari rute `ceil(panjang / 3,0 × 1,15)` (89 sampai 92 detik; dulu tertulis "sekitar 95 detik" dari panjang 250 lama) dan tip hilang sesudah tenggat lewat (ongkos, skor, combo tetap); radar 30 ubin dengan jangkau = jarak lempar terjauh 5,0; kotak progres terlewat sesudah 3,0 ubin; angka tampilan HUD rute final dan layar hasil (bagian 6f). Angka gerak, lemparan, skor, ekonomi, rintangan, dan bel tidak berubah. Alasan: kontrak SPEC run 3C (AC-1 sampai AC-13, AC-16).
 
