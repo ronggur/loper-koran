@@ -25,6 +25,8 @@ var _rute: RouteBuilder.Rute = RouteBuilder.Rute.new()
 var _pustaka: Array[SegmenRute] = []
 ## Galat memuat segmen atau menyusun rute (kosong bila baik).
 var _galat: Array[String] = []
+## False hanya di tes yang sengaja memicu galat: galat tidak dicetak sebagai `ERROR:` ke log (pemeriksa keluaran tes menolak baris itu).
+var lapor_galat_ke_log: bool = true
 var _selesai: bool = false
 
 @onready var _daur: RumahDaurRute = %Objek
@@ -74,16 +76,21 @@ func _susun(benih: int) -> void:
 		_pustaka = kumpulan.segmen
 	var hasil: RouteBuilder.Hasil = RouteBuilder.bangun(benih, _pustaka)
 	_galat.append_array(hasil.galat)
+	var gagal: bool = false
 	if hasil.rute != null and _galat.is_empty():
 		_rute = hasil.rute
 	else:
-		push_error("Rute tidak bisa disusun (seed %d): %s" % [benih, "; ".join(_galat)])
+		if lapor_galat_ke_log:
+			push_error("Rute tidak bisa disusun (seed %d): %s" % [benih, "; ".join(_galat)])
 		_rute = RouteBuilder.Rute.new()
+		gagal = true
 	_medan = MedanKoran.dari_rute(_rute)
 	_selesai = false
 	_daur.atur_rute(_rute)
 	_penerap.terapkan(_sepeda.posisi_dunia())
 	_panel_akhir.tampilkan(false)
+	if gagal:
+		_panel_akhir.tampilkan_galat()
 	_kembalikan_awal(_rute.koran_awal)
 	rute_disusun.emit(_rute)
 

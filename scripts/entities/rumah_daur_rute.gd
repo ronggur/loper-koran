@@ -31,6 +31,9 @@ func atur_rute(rute: RouteBuilder.Rute) -> void:
 	for indeks: int in _rumah.keys():
 		_lepas(indeks)
 	_rute = rute
+	# Semua PNG jenis rumah yang dipakai rute dimuat sekarang, bukan di tengah frame saat rumah pertama jenis itu muncul.
+	for r: RouteBuilder.RumahRute in rute.rumah:
+		_tekstur_untuk(SpriteRumah.nama_rumah(r))
 	_tampil = Vector2i(-1, -1)
 	perbarui(0.0)
 
@@ -55,6 +58,11 @@ func perbarui(jarak_ubin: float) -> void:
 ## Banyaknya rumah yang sedang digambar.
 func jumlah_rumah() -> int:
 	return _rumah.size()
+
+
+## Banyaknya tekstur rumah yang sudah dimuat (jenis berbeda yang dipakai rute; dimuat di `atur_rute`).
+func jumlah_tekstur_dimuat() -> int:
+	return _tekstur.size()
 
 
 ## Banyaknya kotak surat yang sedang digambar.

@@ -303,7 +303,7 @@ static func _bulat(nilai: Variant) -> bool:
 
 
 static func _nama_sah(teks: String) -> bool:
-	var re: RegEx = RegEx.create_from_string("^[a-z][a-z0-9_]*$")
+	var re: RegEx = RegEx.create_from_string("^[a-z][a-z0-9_]*\\z")
 	return re.search(teks) != null
 
 

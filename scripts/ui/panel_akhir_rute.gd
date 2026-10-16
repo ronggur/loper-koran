@@ -6,7 +6,7 @@ extends CanvasLayer
 ## bawah strip HUD dan tidak menerima sentuhan; tombol di pojok kanan atas strip HUD, di luar zona stick dan swipe (`ZONA_SWIPE_Y_MIN_PX`
 ## sama dengan tinggi strip) dan jauh dari tombol jeda, kidal, dan bantu, supaya tidak tersentuh tak sengaja (rule `ui-scenes`). Tombol
 ## memakai `TombolSentuh` (bisa diketuk jari mana pun walau jempol lain masih di layar) dan tinggi `HUD_TOMBOL_TINGGI_PX`. Teks lewat
-## kunci terjemahan (`RUTE_SELESAI`, `RUTE_MAIN_LAGI`), warna dari `Palette`. Tersembunyi sampai rute selesai.
+## kunci terjemahan (`RUTE_SELESAI`, `RUTE_MAIN_LAGI`, `RUTE_GAGAL_MUAT`), warna dari `Palette`. Tersembunyi sampai rute selesai.
 
 ## Tombol "Main lagi" ditekan.
 signal main_lagi_diminta
@@ -32,9 +32,17 @@ func _ready() -> void:
 	tampilkan(false)
 
 
-## Menampilkan atau menyembunyikan banner dan tombol.
+## Menampilkan atau menyembunyikan banner "Rute selesai" dan tombol.
 func tampilkan(nilai: bool) -> void:
+	_judul.text = tr("RUTE_SELESAI")
 	visible = nilai
+
+
+## Menampilkan banner galat `RUTE_GAGAL_MUAT` (rute tidak bisa dimuat atau disusun) dan tombol "Main lagi" untuk mencoba seed berikutnya.
+## Teks galat rinci hanya ke log developer (`push_error`); pemain tidak dibiarkan menatap jalan kosong tanpa penjelasan.
+func tampilkan_galat() -> void:
+	_judul.text = tr("RUTE_GAGAL_MUAT")
+	visible = true
 
 
 ## True bila banner dan tombol sedang tampil.

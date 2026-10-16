@@ -63,6 +63,8 @@ func jalankan() -> void:
 	await _test_akhir_koran_terbang_dinilai()
 	await _test_main_lagi()
 	await _test_main_lagi_ketuk()
+	await _test_galat_muat_terlihat()
+	await _test_tekstur_dimuat_di_atur_rute()
 	await _test_jeda()
 	await _test_penutup()
 	for kasus: Array in [[1920, 1080, 640], [2340, 1080, 780], [2400, 1080, 800]]:
@@ -786,6 +788,48 @@ func _test_main_lagi_ketuk() -> void:
 	await _tree.process_frame
 	check(seed_awal == SEED_DEV and akar.benih() == SEED_BERIKUT, "ketukan sentuh pada tombol memakai seed berikutnya (%d -> %d)" % [seed_awal, akar.benih()])
 	check(not akar.panel_akhir().tampil(), "banner dan tombol tersembunyi lagi sesudah ketukan")
+	_bersihkan(akar)
+
+
+## QA-006 (b): rute gagal dimuat tidak membiarkan pemain menatap jalan kosong; banner `RUTE_GAGAL_MUAT` tampil, bukan "Rute selesai".
+func _test_galat_muat_terlihat() -> void:
+	_judul.call("Scene rute: rute gagal dimuat menampilkan pesan galat di layar (QA-006)")
+	var akar: RuteMain = await _siapkan()
+	check(tr("RUTE_GAGAL_MUAT") == "Rute gagal dimuat", "kunci RUTE_GAGAL_MUAT diterjemahkan: %s" % tr("RUTE_GAGAL_MUAT"))
+	check(akar.galat_rute().is_empty() and not akar.panel_akhir().tampil(), "kontrol: rute baik, tanpa galat dan tanpa banner")
+	akar.lapor_galat_ke_log = false
+	var pustaka: Array[SegmenRute] = akar._pustaka
+	var rusak: Array[SegmenRute] = [pustaka[0]]
+	akar._pustaka = rusak
+	akar.main_lagi()
+	check(not akar.galat_rute().is_empty() and akar.rute().rumah.is_empty(), "pustaka tidak cukup: galat tercatat dan rute kosong")
+	check(akar.panel_akhir().tampil() and akar.panel_akhir().teks_banner() == "Rute gagal dimuat", "banner galat tampil dengan teks RUTE_GAGAL_MUAT (dapat '%s')" % akar.panel_akhir().teks_banner())
+	_langkah(akar, 10)
+	check(akar.panel_akhir().teks_banner() == "Rute gagal dimuat" and not akar.rute_sudah_selesai(), "rute kosong tidak langsung dinyatakan selesai (banner tetap galat)")
+	akar._pustaka = pustaka
+	akar.main_lagi()
+	check(akar.galat_rute().is_empty() and not akar.panel_akhir().tampil(), "Main lagi dengan pustaka pulih: banner hilang")
+	_sepeda(akar).jarak_ubin = akar.rute().panjang_ubin
+	_langkah(akar, 3)
+	check(akar.rute_sudah_selesai() and akar.panel_akhir().teks_banner() == "Rute selesai", "rute pulih selesai dengan banner \"Rute selesai\" (bukan teks galat)")
+	_bersihkan(akar)
+
+
+## QA-006 (c): semua PNG jenis rumah rute dimuat di `atur_rute`, bukan di tengah frame saat rumah pertama jenis itu muncul.
+func _test_tekstur_dimuat_di_atur_rute() -> void:
+	_judul.call("Scene rute: PNG semua jenis rumah rute dimuat saat rute diatur (QA-006)")
+	var akar: RuteMain = await _siapkan()
+	var jenis: Dictionary = {}
+	for r: RouteBuilder.RumahRute in akar.rute().rumah:
+		jenis[SpriteRumah.nama_rumah(r)] = true
+	check(jenis.size() >= 6, "kontrol: rute memakai banyak jenis sprite rumah (%d)" % jenis.size())
+	check(akar.daur().jumlah_tekstur_dimuat() == jenis.size(), "sebelum sepeda bergerak, tekstur dimuat = jenis sprite di rute (%d dari %d)" % [akar.daur().jumlah_tekstur_dimuat(), jenis.size()])
+	var sebelum: int = akar.daur().jumlah_tekstur_dimuat()
+	var sepeda: SepedaUji = _sepeda(akar)
+	for jarak: int in range(0, 237, 4):
+		sepeda.jarak_ubin = float(jarak)
+		akar.perbarui(0.0)
+	check(akar.daur().jumlah_tekstur_dimuat() == sebelum, "tidak ada tekstur baru dimuat sepanjang rute (%d)" % akar.daur().jumlah_tekstur_dimuat())
 	_bersihkan(akar)
 
 

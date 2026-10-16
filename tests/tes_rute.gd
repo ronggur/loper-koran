@@ -113,6 +113,8 @@ func _mutasi(d: Dictionary, kode: String) -> void:
 		"tanpa_objek": d.erase("objek")
 		"tanpa_titik_misi": d.erase("titik_misi")
 		"id_huruf_besar": d["id"] = "Per_Uji"
+		"id_baris_baru": d["id"] = "per_uji_01\n"
+		"titik_nama_baris_baru": (titik[0] as Dictionary)["nama"] = "atap\n"
 		"panjang_23": d["panjang"] = 23
 		"panjang_41": d["panjang"] = 41
 		"panjang_pecahan": d["panjang"] = 30.5
@@ -232,6 +234,7 @@ func _test_segmen_sah_dan_mutan() -> void:
 		["tanpa_id", "field wajib 'id'"], ["tanpa_distrik", "field wajib 'distrik'"], ["tanpa_panjang", "field wajib 'panjang'"],
 		["tanpa_tag", "field wajib 'tag'"], ["tanpa_rumah", "field wajib 'rumah'"], ["tanpa_objek", "field wajib 'objek'"],
 		["tanpa_titik_misi", "field wajib 'titik_misi'"], ["id_huruf_besar", "huruf kecil"],
+		["id_baris_baru", "harus huruf kecil, angka, dan garis bawah"], ["titik_nama_baris_baru", "harus huruf kecil, angka, dan garis bawah"],
 		["panjang_23", "di luar 24 sampai 40"], ["panjang_41", "di luar 24 sampai 40"], ["panjang_pecahan", "bilangan bulat"],
 		["tingkat_salah", "tingkat 'ramai'"], ["posisi_salah", "posisi 'tengah_dua'"],
 		["sisi_pelanggan_salah", "sisi_pelanggan 'kiri'"], ["sisi_pelanggan_dekat", "hanya punya pelanggan di sisi seberang"],
