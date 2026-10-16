@@ -451,7 +451,7 @@ Disimpan 2026-10-15, sesudah run 2B (`20261015-fase2b-bantu-audio`, PR #26). Fas
 | 3B | Rintangan anjing dan mobil garasi, tabrakan, skor + combo + pengali kecepatan, nada naik combo dan denting tip | PR 3A di-merge |
 | 3C | Radar, HUD rute, tenggat, layar hasil, rumah abu-abu di mode bantu, spike rumah sisi dekat, uji 20 rute | PR 3B di-merge |
 
-**Status (2026-10-16):** Run 3A selesai, `PASSED` di iterasi 2/2, PR #28 (`feat/fase3a-rute`, `docs/loop/20261016-fase3a-rute/`), menunggu merge dan uji HP pemilik (`SETUP_ANDROID.md` 8.6). Perintah Run 3B di bawah sudah diperbarui dengan catatan dari 3A; ganti tanggal `RUN_ID` bila dimulai di hari lain dan isi baris `HASIL UJI HP` dari 8.5 dan 8.6.
+**Status (2026-10-16):** Run 3A selesai, `PASSED` di iterasi 2/2, PR #28 (`feat/fase3a-rute`, `docs/loop/20261016-fase3a-rute/`), menunggu merge dan uji HP pemilik (`SETUP_ANDROID.md` 8.6). Perintah Run 3B di bawah sudah diperbarui dengan catatan dari 3A; ganti tanggal `RUN_ID` bila dimulai di hari lain dan isi baris `HASIL UJI HP` dari 8.5 dan 8.6. Run 3B selesai 2026-10-16, `PASSED` di iterasi 2/2, PR #32 (`feat/fase3b-rintangan-skor`, `docs/loop/20261017-fase3b-rintangan-skor/`), APK terpasang di vivo V2108, menunggu merge dan uji HP pemilik (`SETUP_ANDROID.md` 8.7). Perintah Run 3C di bawah memuat catatan dari 3B.
 
 Tempel satu blok **utuh sebagai pesan pertama sesi baru** (`/clear` atau sesi baru; Bagian 0c). Isi baris `ISI:` sebelum menempel, hapus baris izin HP kalau HP tidak boleh disentuh, dan ganti tanggal di `RUN_ID` kalau run dimulai di hari lain.
 
@@ -620,7 +620,24 @@ SCOPE: Run 3C — Fase 3, sisa butir dan penutup M2 bagian rute (DEV_PHASES Fase
   keputusan): angka tenggat; apa yang terjadi saat tenggat lewat (tanpa memutuskan game
   over); jangkauan radar bawaan; pendekatan rumah sisi dekat (setelah spike).
   Fase 3 baru selesai setelah uji HP pemilik; jangan dicentang sebelum itu.
-HASIL UJI HP RUN 3B (ISI: tempel catatan; kosongkan bila tidak ada): ISI: ...
+CATATAN DARI RUN 3B (sudah di main sesudah PR #32 di-merge; baca SPEC.md dan LOG.md di
+  docs/loop/20261017-fase3b-rintangan-skor/, jangan menanyakan ulang):
+  - Keputusan pemilik 2026-10-16: K-1 tabrakan BALANCING 6 (1,0 u/d, oleng 0,6, kebal 1,0,
+    combo putus, tanpa game over), rintangan hanya separuh jalan sisinya; K-2 skor dan koin
+    dihitung terpisah (koin 15 per antaran sah + tip 5); K-3 bel membuat anjing mundur;
+    K-4 bonus tepat x1,25 aktif. Usulan orchestrator O-1..O-5 (satu antaran per pelanggan,
+    halaman koin penuh, 30% pemberi tip berseed, bantu tanpa tepat, pengali dari kecepatan
+    sebenarnya) berlaku sampai pemilik menolaknya di review PR #32.
+  - HUD 3B = HUD dev sementara (skor, combo, koin); HUD final menggantikannya di 3C.
+    QA-007 (DEFERRED ke 3C): tombol dev Kidal/Bantu di strip atas menutupi sebagian mobil
+    seberang saat tanda lampu mundur; selesaikan saat menata HUD final.
+  - Masih terbuka: D-5 jangkauan bel 1 ubin ke belakang (QA-008, tanyakan pemilik bila belum
+    diputuskan di review PR #32); QA-012 (arah umpan melayang) dan QA-013 (label PUTUS) Minor
+    celah tes, boleh ditutup di 3C bila menyentuh berkas yang sama.
+  - Layar hasil memakai angka dari `SkorRute` (terkirim, meleset, koin, tip, skor); jangan
+    menghitung ulang di UI.
+HASIL UJI HP RUN 3B (ISI: tempel catatan dari SETUP_ANDROID 8.7, juga 8.5 dan 8.6 bila ada;
+  kosongkan bila belum): ISI: ...
 DESIGN: docs/design/DESIGN_SPEC.md (HUD 3, radar 3.4, umpan balik 3.6),
   docs/design/screens/hud-rute.png.
 IZIN HP: sama dengan Run 3A.
