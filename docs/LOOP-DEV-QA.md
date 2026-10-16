@@ -458,7 +458,7 @@ Tempel satu blok **utuh sebagai pesan pertama sesi baru** (`/clear` atau sesi ba
 Catatan untuk semua run Fase 3:
 - **Aset.** Ada branch kerja lain `art/aset-fase3-perumahan` (dibuat 2026-10-15 di mesin pemilik, belum di-push saat bagian ini ditulis). Kalau PR-nya sudah di-merge, pakai asetnya. Kalau belum, tetap graybox lewat `tools/env_art/graybox.py`. Jangan menunggu aset (Fase 5 boleh paralel) dan jangan menggambar PNG sendiri.
 - **Fase 2 harus tertutup dulu.** Kalau uji HP Fase 2 belum dilakukan, orchestrator menanyakan sekali apakah tetap mulai (Fase 3 boleh berjalan, tapi `DEV_PHASES` Fase 2 dan M1 tetap belum dicentang).
-- **Bel.** Pertanyaan pemilik 2026-10-15 "fungsi bel ada di fase berapa?": dokumen menjadwalkan bel di Fase 6–7 (SOUND_DESIGN 8, GDD 17), dan orchestrator merekomendasikan memajukannya ke Fase 3 karena fungsinya mengusir pejalan kaki dan rintangan baru masuk Fase 3. Belum diputuskan. Run 3B menanyakannya sekali.
+- **Bel.** Pertanyaan pemilik 2026-10-15 "fungsi bel ada di fase berapa?": dokumen menjadwalkan bel di Fase 6–7 (SOUND_DESIGN 8, GDD 17), dan orchestrator merekomendasikan memajukannya ke Fase 3 karena fungsinya mengusir pejalan kaki dan rintangan baru masuk Fase 3. **Diputuskan pemilik 2026-10-16: bel dimajukan ke Fase 3, dikerjakan di Run 3B** (jangan ditanyakan lagi).
 
 ### Run 3A — rute dari segmen dan rumah dari data
 
@@ -537,11 +537,17 @@ SCOPE: Run 3B — Fase 3, rintangan dan skor (DEV_PHASES Fase 3, TECH_PLAN Fase 
     stdlib di tools/audio_art/, JANGAN mengunduh aset). Setiap bunyi punya pasangan visual.
   - Invarian prinsip desain dites: tabrakan tidak menghentikan rute; ngebut punya harga dan
     santai punya harga; tanda bahaya datang sebelum bahaya.
+  - Bel "Kring Kring!" (dimajukan dari Fase 6-7 oleh pemilik 2026-10-16; GDD 5.4, SOUND_DESIGN
+    3.3): tombol bel di pojok kanan bawah (kidal: kiri bawah) yang tidak memulai swipe, satu
+    ketukan "kring", ketukan kedua "kring kring!", jeda sekitar 1 detik, efek visual di atas
+    setang (garis getar dan teks "KRING!"), bunyi placeholder lewat sintesis stdlib; fungsinya
+    mengusir/membuat minggir rintangan yang boleh diusir (GDD 9.3, 15). Pejalan kaki belum ada
+    di Fase 3, jadi cukup anjing atau rintangan yang aturannya jelas di GDD. Angka usulan.
   - Tes headless dengan mutan nyata dan oracle independen.
   Keputusan terbuka yang mungkin menghambat (tanyakan SEKALI, satu rekomendasi per
-  keputusan): bel dimajukan ke Fase 3 atau tetap Fase 6-7 (rekomendasi orchestrator
-  2026-10-15: Fase 3, lihat Bagian 6d); jendela bonus atau penalti (ROADMAP 5, sekarang
-  sakelar bawaan penalti); hubungan skor dan koin; aturan pasti tabrakan (BALANCING 6).
+  keputusan): jendela bonus atau penalti (ROADMAP 5, sekarang sakelar bawaan penalti);
+  hubungan skor dan koin; aturan pasti tabrakan (BALANCING 6). Bel SUDAH diputuskan
+  (pemilik 2026-10-16, Bagian 6d): masuk Run 3B, jangan ditanyakan.
 CATATAN DARI RUN 3A (sudah di main sesudah PR #28 di-merge; baca LOG.md dan SPEC.md di
   docs/loop/20261016-fase3a-rute/, jangan menanyakan ulang):
   - Struktur: `AdeganJalan` = dasar bersama `JalanUji` (scene dev) dan `RuteMain`
@@ -564,14 +570,17 @@ CATATAN DARI RUN 3A (sudah di main sesudah PR #28 di-merge; baca LOG.md dan SPEC
   - Aset: `tools/env_art/fase3.py --salin` di mesin ini menghasilkan drift piksel kecil pada
     berkas yang tidak diubah. Setelah render ulang, kembalikan berkas yang tidak sengaja
     berubah (cek `git status`, bandingkan piksel); jangan edit PNG dengan tangan.
-  - Kotak surat sasaran sekarang kubus graybox oranye di pusat zona (rumah pelanggan seberang
-    tanpa kotak merah, QA-005); aset kotak surat final = Fase 5. Zona halaman/teras/jendela
-    tidak digambar di tanah rute (D-20).
-  - Kotak surat sekarang AREA 1,0 x 1,5 (pusat tetap) yang digambar di tanah rute
-    (`AreaKotakGambar`; tindak lanjut review pemilik 2026-10-16, LOG 3A D-28 sampai D-32).
+  - Kotak surat sasaran sekarang sprite kotak surat oranye (PR #29, bukan lagi kubus graybox)
+    di pusat zona (rumah pelanggan seberang tanpa kotak merah, QA-005); aset final = Fase 5.
+    Zona halaman/teras/jendela tidak digambar di tanah rute (D-20).
+  - Kotak surat sekarang AREA di RUMPUT HALAMAN (PR #30, 2026-10-16): seberang 1,0 x 1,25 dan
+    dekat 0,75 x 1,25 ubin, menempel trotoar, digambar di tanah rute (`AreaKotakGambar`;
+    tindak lanjut review pemilik, LOG 3A D-28 sampai D-32). Sepeda boleh naik trotoar: batas
+    lateral +-2,0 ubin (tepi trotoar), bukan lagi +-1,0 (revisi D-4, BALANCING 2 dan 5);
+    rintangan (anjing, mobil garasi) harus diuji dari posisi sepeda di trotoar juga.
     Pertimbangkan "inti" 0,5 x 0,5 di pusat (zona lama) sebagai kandidat bonus "tepat" di
     skor (BALANCING 5); keputusan pemilik, jangan diputuskan sendiri dan tunggu hasil uji HP
-    (SETUP_ANDROID 8.6 butir 9).
+    (SETUP_ANDROID 8.6 butir 9 dan 10).
   - Variasi rute (D-1): tiap rute memakai semua 5 segmen tengah. Bila hasil uji HP 3A
     bilang terasa dihafal, tambah segmen tengah (data saja) sebelum menambah rintangan baru.
   - Pelajaran QA 3A: tes harus menjaga ketergantungan pada seed (mutan goyangan nol selamat),
