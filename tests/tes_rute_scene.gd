@@ -153,8 +153,19 @@ func _catat(akar: RuteMain) -> Dictionary:
 	return catatan
 
 
+## Mode bantu dinyalakan lewat sakelar layar jeda (O-6 run fase3c-hud-hasil; HUD rute tidak punya tombol dev).
 func _nyalakan_bantu(akar: RuteMain) -> void:
-	(_anak(akar, "TombolBantu") as Button).button_pressed = true
+	if not akar.mode_bantu():
+		(_anak(akar, "LayarJeda") as LayarJeda).sakelar_bantu().ditekan.emit()
+
+
+## Langkah sampai layar hasil terbuka (paling banyak `maks` langkah). True bila terbuka.
+func _sampai_hasil(akar: RuteMain, maks: int = 600) -> bool:
+	for i: int in range(maks):
+		if akar.hasil_tampil():
+			return true
+		_langkah(akar, 1)
+	return akar.hasil_tampil()
 
 
 ## Rute oracle: dimuat dan disusun tes sendiri dari folder segmen (tanpa jalur scene).
@@ -321,8 +332,8 @@ func _test_rute_dari_data() -> void:
 	check(rute.panjang_ubin == PANJANG_RUTE and rute.rumah.size() == JUMLAH_RUMAH and rute.pelanggan.size() == 25, "rute: panjang 236, 89 rumah, 25 pelanggan (dapat %s, %d, %d)" % [rute.panjang_ubin, rute.rumah.size(), rute.pelanggan.size()])
 	check(rute.pelanggan[0].id == "per_buka_01@6" and rute.pelanggan[0].maju_ubin == 6.0 and rute.pelanggan[8].id == "per_tengah_03@14" and rute.pelanggan[8].maju_ubin == 78.0 and rute.pelanggan[24].id == "per_tutup_02@18" and rute.pelanggan[24].maju_ubin == 226.0, "pelanggan ke-1, ke-9, dan ke-25 literal (id dan jarak maju)")
 	check(rute.koran_awal == 30 and akar.koran.sisa == 30 and akar.koran.penuh == 30, "koran awal rute = 30 dari data (sisa %d)" % akar.koran.sisa)
-	var hud: HudDev = _anak(akar, "Hud") as HudDev
-	check(hud.teks_koran() == "30" and hud.ikon_koran() == Vector2i(8, 8), "HUD koran menampilkan 30 dan delapan ikon terang")
+	var hud: HudDasar = _anak(akar, "Hud") as HudDasar
+	check(hud is HudRute and hud.teks_koran() == "30" and hud.ikon_koran() == Vector2i(8, 8), "HUD koran menampilkan 30 dan delapan ikon terang")
 	var oracle: RouteBuilder.Rute = _rute_oracle(SEED_DEV)
 	var sama: bool = oracle != null and oracle.rumah.size() == rute.rumah.size()
 	if sama:
@@ -330,7 +341,7 @@ func _test_rute_dari_data() -> void:
 			if oracle.rumah[i].id != rute.rumah[i].id or oracle.rumah[i].pelanggan != rute.rumah[i].pelanggan or oracle.rumah[i].maju_ubin != rute.rumah[i].maju_ubin:
 				sama = false
 	check(sama, "rumah di scene = rute yang disusun tes dari folder segmen yang sama (id, pelanggan, jarak)")
-	check(not akar.panel_akhir().tampil() and not akar.rute_sudah_selesai(), "banner dan tombol Main lagi tersembunyi di awal rute")
+	check(not akar.panel_akhir().tampil() and not akar.rute_sudah_selesai() and not akar.layar_hasil().tampil(), "banner dan layar hasil tersembunyi di awal rute")
 	check(akar.medan() != null and (akar.medan() as MedanKoran).adalah_rute(), "penilaian koran memakai medan rute (bukan zona jalan uji)")
 	_bersihkan(akar)
 
@@ -571,7 +582,7 @@ func _test_koran_tanpa_isi_ulang() -> void:
 		_sepeda(akar).jarak_ubin += 8.0
 		_langkah(akar, 2)
 	check(akar.koran.sisa == 0 and akar.koran.penuh == 1, "96 ubin sesudah habis: sisa tetap 0 (tidak ada isi ulang jalan uji), dapat %d" % akar.koran.sisa)
-	var hud: HudDev = _anak(akar, "Hud") as HudDev
+	var hud: HudDasar = _anak(akar, "Hud") as HudDasar
 	check(hud.penanda_habis_tampil() and hud.teks_koran() == "0", "HUD: penanda habis tampil dan angka 0")
 	_bersihkan(akar)
 
@@ -741,7 +752,8 @@ func _test_akhir_rute() -> void:
 	_langkah(akar, 30)
 	check(akar.rute_sudah_selesai() and (catatan["selesai"] as int) == 1, "melewati garis akhir: selesai dan rute_selesai tepat sekali (%d)" % catatan["selesai"])
 	check(sepeda.jarak_ubin >= PANJANG_RUTE, "sepeda sudah mencapai garis akhir (%.2f >= 236)" % sepeda.jarak_ubin)
-	check(akar.panel_akhir().tampil() and akar.panel_akhir().teks_banner() == "Rute selesai" and akar.panel_akhir().teks_tombol() == "Main lagi", "banner 'Rute selesai' dan tombol 'Main lagi' tampil lewat kunci terjemahan")
+	check(akar.panel_akhir().tampil() and akar.panel_akhir().teks_banner() == "Rute selesai" and not akar.panel_akhir().tombol_tampil(), "banner 'Rute selesai' tampil lewat kunci terjemahan, tanpa tombol (Main lagi di layar hasil, O-11)")
+	check(not akar.layar_hasil().tampil(), "layar hasil belum terbuka selagi sepeda masih melaju sesudah garis")
 	check(tr("RUTE_SELESAI") == "Rute selesai" and tr("RUTE_MAIN_LAGI") == "Main lagi", "kunci RUTE_SELESAI dan RUTE_MAIN_LAGI diterjemahkan")
 	# Stick ke atas tetap ditahan, tetapi dikunci: sepeda direm sampai berhenti dengan rem biasa.
 	var rem_terlihat: bool = false
@@ -753,6 +765,8 @@ func _test_akhir_rute() -> void:
 		if sepeda.kecepatan_ud == 0.0:
 			break
 	check(sepeda.kecepatan_ud == 0.0 and rem_terlihat, "sepeda berhenti (kecepatan 0) dengan rem aktif walau stick ke atas masih ditahan")
+	_langkah(akar, 1)
+	check(akar.layar_hasil().tampil() and akar.hasil_tampil() and not akar.panel_akhir().tampil(), "sepeda berhenti tanpa koran terbang: layar hasil terbuka, banner disembunyikan (O-11)")
 	var jarak_berhenti: float = sepeda.jarak_ubin
 	_langkah(akar, 120)
 	check(sepeda.kecepatan_ud == 0.0 and sepeda.jarak_ubin == jarak_berhenti, "tetap diam 2 detik walau stick ke atas ditahan (stick dikunci)")
@@ -775,15 +789,15 @@ func _test_akhir_rute() -> void:
 	_sentuh(3, Vector2(360, 160), false)
 	check(akar.koran.sisa == sisa and (catatan["lempar"] as Array).is_empty() and (catatan["tanpa"] as Array).size() == tanpa_sebelum, "sesudah akhir rute: tap bantu dan swipe tidak melempar (sisa %d, lempar %d)" % [akar.koran.sisa, (catatan["lempar"] as Array).size()])
 	check((catatan["selesai"] as int) == 1, "sinyal rute_selesai tetap satu kali sesudah semua itu")
-	# Jeda dan back tetap bekerja sesudah akhir rute.
-	akar.minta_jeda()
-	check(akar.sedang_jeda() and _tree.paused, "jeda bekerja sesudah akhir rute")
-	akar.minta_lanjut()
-	check(not akar.sedang_jeda() and not _tree.paused, "lanjut bekerja sesudah akhir rute")
+	# Jeda (app ke background) tetap bekerja di layar hasil; back Android di layar hasil diabaikan (O-11: tidak memulai ulang diam-diam dan
+	# tidak membuka layar jeda di atas hasil).
+	akar._notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
+	check(akar.sedang_jeda() and _tree.paused, "kehilangan fokus menjeda di layar hasil")
 	akar._notification(Node.NOTIFICATION_WM_GO_BACK_REQUEST)
-	check(akar.sedang_jeda(), "back Android menjeda sesudah akhir rute")
+	check(not akar.sedang_jeda() and not _tree.paused, "back saat layar jeda terbuka di atas hasil: melanjutkan (perilaku jeda biasa)")
+	var benih_hasil: int = akar.benih()
 	akar._notification(Node.NOTIFICATION_WM_GO_BACK_REQUEST)
-	check(not akar.sedang_jeda(), "back kedua melanjutkan")
+	check(not akar.sedang_jeda() and akar.layar_hasil().tampil() and akar.benih() == benih_hasil, "back Android di layar hasil diabaikan: tidak jeda, hasil tetap, seed tetap")
 	_langkah(akar, 10)
 	check((catatan["selesai"] as int) == 1 and akar.rute_sudah_selesai(), "sinyal rute_selesai tetap tepat sekali sesudah jeda dan lanjut")
 	_bersihkan(akar)
@@ -812,6 +826,14 @@ func _test_akhir_koran_terbang_dinilai() -> void:
 		_langkah(akar, 1)
 		check(akar.rute_sudah_selesai() and (catatan["selesai"] as int) == 1, "garis akhir tercapai selagi koran terbang")
 		check(akar.koran_terbang().size() == 1, "koran masih terbang saat rute selesai")
+		var hasil_saat_terbang: bool = false
+		for i: int in range(60):
+			if not akar.koran_terbang().is_empty() and not akar.koran_terbang()[0].mendarat:
+				hasil_saat_terbang = hasil_saat_terbang or akar.hasil_tampil()
+			_langkah(akar, 1)
+			if akar.koran_terbang().is_empty() or akar.koran_terbang()[0].mendarat:
+				break
+		check(not hasil_saat_terbang, "layar hasil tidak terbuka selama koran masih terbang (O-11)")
 		var k: KoranLempar.Koran = _sampai_mendarat(akar, catatan, l)
 		check(k != null and k.hasil == ZonaSasaran.Hasil.KOTAK_SURAT and k.penanda == ZonaSasaran.Penanda.CENTANG, "koran mendarat sesudah akhir rute dan dinilai KOTAK_SURAT centang (pelanggan terakhir)")
 		check((catatan["mendarat"] as Array).size() == 1 and (catatan["selesai"] as int) == 1, "satu pendaratan dan satu sinyal rute_selesai")
@@ -830,16 +852,14 @@ func _test_main_lagi() -> void:
 	var sisa: int = akar.koran.sisa
 	check(sisa == 29 and akar.koran_terbang().size() == 1, "kontrol: satu koran dilempar sebelum Main lagi")
 	sepeda.jarak_ubin = PANJANG_RUTE
-	_langkah(akar, 3)
-	check(akar.rute_sudah_selesai() and akar.panel_akhir().tampil(), "kontrol: rute selesai dan tombol tampil")
-	var tombol: Button = _anak(akar, "TombolUlang") as Button
-	tombol.pressed.emit()
+	check(_sampai_hasil(akar) and akar.rute_sudah_selesai(), "kontrol: rute selesai dan layar hasil terbuka")
+	akar.layar_hasil().tombol_main_lagi().pressed.emit()
 	check(akar.benih() == SEED_BERIKUT, "Main lagi: seed + 1 = 20261017 (dapat %d)" % akar.benih())
 	var ids: Array[String] = []
 	for s: SegmenRute in akar.rute().segmen:
 		ids.append(s.id)
 	check(ids == ID_SEGMEN_BERIKUT and ids != ID_SEGMEN_DEV, "rute baru = literal seed 20261017, beda dari rute lama: %s" % [ids])
-	check(not akar.rute_sudah_selesai() and not akar.panel_akhir().tampil(), "banner dan tombol tersembunyi lagi")
+	check(not akar.rute_sudah_selesai() and not akar.panel_akhir().tampil() and not akar.layar_hasil().tampil(), "banner dan layar hasil tersembunyi lagi")
 	check(sepeda.jarak_ubin == 0.0 and sepeda.kecepatan_ud == Config.KECEPATAN_SANTAI_UD and sepeda.lateral_ubin == 0.0 and sepeda.stamina() == Config.STAMINA_MAKS, "sepeda kembali ke awal: jarak 0, santai, lateral 0, stamina penuh")
 	check(akar.koran.sisa == 30 and akar.koran.penuh == 30 and akar.koran_terbang().is_empty(), "koran kembali 30, koran terbang dibuang")
 	check((catatan["disusun"] as int) == 1, "rute_disusun dipancarkan sekali untuk rute baru")
@@ -850,23 +870,26 @@ func _test_main_lagi() -> void:
 	sepeda.jarak_ubin = PANJANG_RUTE
 	_langkah(akar, 3)
 	check((catatan["selesai"] as int) == 2 and akar.rute_sudah_selesai(), "rute baru bisa selesai lagi: sinyal kedua tepat sekali")
+	check(_sampai_hasil(akar), "rute baru: layar hasil terbuka lagi")
 	_bersihkan(akar)
 
 
-## Ketukan sentuh sungguhan (bukan `pressed.emit()`) pada tombol "Main lagi" lewat jalur `TombolSentuh` (QA run 3A iterasi 1).
+## Ketukan sentuh sungguhan (bukan `pressed.emit()`) pada tombol "Main lagi" layar hasil lewat jalur `TombolSentuh` (QA run 3A iterasi 1;
+## tombol pindah ke layar hasil di run fase3c-hud-hasil, O-11).
 func _test_main_lagi_ketuk() -> void:
-	_judul.call("Scene rute: ketukan sentuh pada tombol Main lagi menyusun ulang rute dengan seed berikutnya (AC-14)")
+	_judul.call("Scene rute: ketukan sentuh pada tombol Main lagi layar hasil menyusun ulang rute dengan seed berikutnya (AC-13, O-11)")
 	var akar: RuteMain = await _siapkan()
 	var seed_awal: int = akar.benih()
-	akar.panel_akhir().tampilkan(true)
+	_sepeda(akar).jarak_ubin = PANJANG_RUTE
+	check(_sampai_hasil(akar), "kontrol: layar hasil terbuka")
 	await _tree.process_frame
 	await _tree.process_frame
-	var tombol: Rect2 = akar.panel_akhir().rect_tombol()
-	check(tombol.size.x > 0.0 and tombol.size.y > 0.0, "kontrol: tombol Main lagi punya ukuran")
+	var tombol: Rect2 = akar.layar_hasil().rect_tombol()
+	check(tombol.size.x >= 42.0 and tombol.size.y >= 42.0, "kontrol: tombol Main lagi >= 42 px game (%s)" % tombol.size)
 	_tap(tombol.position + tombol.size / 2.0, 5)
 	await _tree.process_frame
 	check(seed_awal == SEED_DEV and akar.benih() == SEED_BERIKUT, "ketukan sentuh pada tombol memakai seed berikutnya (%d -> %d)" % [seed_awal, akar.benih()])
-	check(not akar.panel_akhir().tampil(), "banner dan tombol tersembunyi lagi sesudah ketukan")
+	check(not akar.layar_hasil().tampil() and not akar.panel_akhir().tampil(), "layar hasil dan banner tersembunyi lagi sesudah ketukan")
 	_bersihkan(akar)
 
 
@@ -884,11 +907,13 @@ func _test_galat_muat_terlihat() -> void:
 	akar.main_lagi()
 	check(not akar.galat_rute().is_empty() and akar.rute().rumah.is_empty(), "pustaka tidak cukup: galat tercatat dan rute kosong")
 	check(akar.panel_akhir().tampil() and akar.panel_akhir().teks_banner() == "Rute gagal dimuat", "banner galat tampil dengan teks RUTE_GAGAL_MUAT (dapat '%s')" % akar.panel_akhir().teks_banner())
+	check(akar.panel_akhir().tombol_tampil() and akar.panel_akhir().teks_tombol() == "Main lagi", "banner galat membawa tombol Main lagi (mencoba seed berikutnya)")
+	check(not (_anak(akar, "KontrolTouch") as KontrolTouch).is_processing_input(), "galat: kontrol sentuh tidak membaca sentuhan (tombol galat di zona swipe bukan tap atau swipe)")
 	_langkah(akar, 10)
 	check(akar.panel_akhir().teks_banner() == "Rute gagal dimuat" and not akar.rute_sudah_selesai(), "rute kosong tidak langsung dinyatakan selesai (banner tetap galat)")
 	akar._pustaka = pustaka
 	akar.main_lagi()
-	check(akar.galat_rute().is_empty() and not akar.panel_akhir().tampil(), "Main lagi dengan pustaka pulih: banner hilang")
+	check(akar.galat_rute().is_empty() and not akar.panel_akhir().tampil() and (_anak(akar, "KontrolTouch") as KontrolTouch).is_processing_input(), "Main lagi dengan pustaka pulih: banner hilang, kontrol sentuh aktif lagi")
 	_sepeda(akar).jarak_ubin = akar.rute().panjang_ubin
 	_langkah(akar, 3)
 	check(akar.rute_sudah_selesai() and akar.panel_akhir().teks_banner() == "Rute selesai", "rute pulih selesai dengan banner \"Rute selesai\" (bukan teks galat)")
@@ -998,19 +1023,17 @@ func _test_penutup() -> void:
 
 func _test_tata_letak_akhir(kasus: Array) -> void:
 	var lebar: int = kasus[2]
-	_judul.call("Scene rute: banner dan tombol Main lagi di luar zona stick dan swipe, ukuran sentuh, lebar %d (ui-scenes)" % lebar)
+	_judul.call("Scene rute: banner akhir dan banner galat tidak menutupi HUD rute, tombol galat >= 42 px, lebar %d (ui-scenes)" % lebar)
 	var akar: RuteMain = await _siapkan(Vector2i(kasus[0], kasus[1]))
-	akar.panel_akhir().tampilkan(true)
+	akar.panel_akhir().tampilkan_galat()
 	await _tree.process_frame
 	await _tree.process_frame
-	var hud: HudDev = _anak(akar, "Hud") as HudDev
+	var hud: HudRute = akar.hud_rute()
 	var tombol: Rect2 = akar.panel_akhir().rect_tombol()
 	var banner: Rect2 = akar.panel_akhir().rect_banner()
 	var layar: Rect2 = Rect2(Vector2.ZERO, Vector2(float(lebar), 360.0))
 	for kidal: bool in [false, true]:
-		var stick: Rect2 = TouchZones.rect_stick(lebar, kidal)
-		var swipe: Rect2 = TouchZones.rect_swipe(lebar, kidal)
-		check(not tombol.intersects(stick, true) and not tombol.intersects(swipe, true), "kidal %s: tombol Main lagi di luar zona stick dan swipe (%s)" % [kidal, tombol])
+		check(not banner.intersects(TouchZones.rect_stick(lebar, kidal), true), "kidal %s: banner (dan tombol galat di dalamnya) di luar zona stick (%s)" % [kidal, banner])
 	var menyentuh: Array[String] = []
 	var simpul: Node = _anak(akar, "Banner")
 	while simpul != null and simpul != akar.panel_akhir():
@@ -1018,9 +1041,14 @@ func _test_tata_letak_akhir(kasus: Array) -> void:
 			menyentuh.append(simpul.name)
 		simpul = simpul.get_parent()
 	check(menyentuh.is_empty(), "banner dan wadahnya mengabaikan sentuhan (tidak mencuri swipe di zona swipe): %s" % [menyentuh])
-	check(layar.encloses(tombol) and layar.encloses(banner), "tombol dan banner di dalam viewport %d x 360" % lebar)
+	check(layar.encloses(tombol) and layar.encloses(banner) and banner.encloses(tombol), "tombol galat di dalam banner, keduanya di dalam viewport %d x 360" % lebar)
 	check(tombol.size.y >= float(Config.HUD_TOMBOL_TINGGI_PX) and tombol.size.x >= float(Config.HUD_TOMBOL_LEBAR_PX), "ukuran tombol >= tombol HUD (%s)" % tombol.size)
-	check(not tombol.intersects(hud.rect_tombol_kidal(), true) and not tombol.intersects(hud.rect_tombol_bantu(), true) and not tombol.intersects(hud.rect_tombol_jeda(), true), "tombol tidak bertumpuk dengan tombol kidal, bantu, dan jeda")
-	check(not banner.intersects(hud.rect_tombol_kidal(), true) and not banner.intersects(hud.rect_tombol_bantu(), true) and not banner.intersects(hud.rect_panel_kecepatan(), true) and not banner.intersects(hud.rect_panel_koran(), true), "banner tidak menutupi tombol kidal, bantu, dan panel HUD")
-	check(tombol.position.x > banner.end.x or tombol.position.y > banner.end.y or tombol.end.y < banner.position.y or tombol.end.x < banner.position.x, "tombol tidak bertumpuk dengan banner")
+	var hud_rect: Array = [["tombol jeda", hud.rect_tombol_jeda()], ["panel progres", hud.rect_panel_progres()], ["panel koin", hud.rect_panel_koin()], ["panel skor", hud.rect_panel_skor()], ["radar seberang", hud.rect_radar_seberang()], ["radar dekat", hud.rect_radar_dekat()], ["panel kecepatan", hud.rect_panel_kecepatan()], ["panel koran", hud.rect_panel_koran()], ["tombol bel", hud.rect_tombol_bel()]]
+	for pasang: Array in hud_rect:
+		check(not banner.intersects(pasang[1], true), "banner tidak menutupi %s %s" % [pasang[0], pasang[1]])
+	akar.panel_akhir().tampilkan(true)
+	await _tree.process_frame
+	var banner_selesai: Rect2 = akar.panel_akhir().rect_banner()
+	for pasang: Array in hud_rect:
+		check(not banner_selesai.intersects(pasang[1], true), "banner Rute selesai tidak menutupi %s" % pasang[0])
 	_bersihkan(akar)

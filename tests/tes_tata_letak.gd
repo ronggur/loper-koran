@@ -3,6 +3,7 @@ extends RefCounted
 ## Tes tata letak paket penyetelan run fase1b-umpan-balik (AC-6, D-7): sepeda di `KAMERA_SEPEDA_Y_PECAHAN`, dorongan maju dan mundur
 ## penuh, panel kecepatan dengan teks HUD 8 px, tombol kidal dan tombol jeda 42 px, di viewport 640, 780, dan 800, tangan kanan dan
 ## kidal. Scene sungguhan (`jalan_uji.tscn`), stick lewat keyboard editor yang dinyalakan tes, `perbarui(DT)` dengan dt tetap.
+## Scene rute: HUD rute final dan zona aman tiruan (run fase3c-hud-hasil, `_test_tata_letak_rute`).
 ##
 ## Dipanggil dari `tests/run_tests.gd`. Potongan persegi sprite dengan zona stick di 640 dicetak sebagai baris `[tata_letak]`
 ## (dicatat di LOG, bukan gagal: layar 16:9 dinilai di HP).
@@ -139,44 +140,97 @@ func _test_tata_letak(kasus: Array, kidal: bool) -> void:
 	akar.free()
 
 
-## Run fase3b-rintangan-skor bagian B (AC-13, AC-15): tombol bel 40x40 dan panel skor HUD dev di scene rute. Harapan literal: tombol bel
-## pusat (lebar - 28, 332), kidal (28, 332), persegi 40x40; zona tap bel (kotak luar lingkaran radius 28) tidak menumpuk panel bawah,
-## tombol mode bantu, tombol kidal, atau tombol jeda. Panel skor di strip atas (y 4 sampai paling bawah 48), 112 dari tepi sisi swipe
-## (kidal dicerminkan), tidak menumpuk tombol strip atas, tombol "Main lagi", atau sprite pemain.
+## HUD rute final (run fase3c-hud-hasil AC-5, AC-8, AC-9; dulu tombol bel dan panel skor HUD dev run 3B). Harapan literal dari DESIGN_SPEC
+## 3.1-3.5 dan 3.8: tombol jeda area sentuh (17, 4) 42x42; radar seberang (4, 10) 12x172 dan dekat (lebar - 16, 10) 12x172, tidak ditukar
+## saat kidal; panel progres lebar 260 di tengah, y 8; panel skor berakhir 28 dari tepi kanan, y 8, panel koin 5 di kirinya; tombol bel
+## pusat (lebar - 28, 332), kidal (28, 332). Tidak ada tumpang tindih antar elemen (zona tap bel = kotak luar lingkaran radius 28), tidak
+## ada yang masuk zona stick, panel atas dan radar tidak menutupi sprite pemain (diam dan dorongan maju penuh), panel progres di dalam
+## 640 tengah, semua di dalam layar, tidak ada yang menerima sentuhan kecuali tombol jeda. Tanpa tombol dev Kidal, Bantu, Main lagi.
 func _test_tata_letak_rute(kasus: Array, kidal: bool) -> void:
 	var lebar: int = kasus[2]
 	var tag: String = "rute %d %s" % [lebar, "kidal" if kidal else "kanan"]
-	_judul.call("Tata letak %s: tombol bel dan panel skor (AC-13, AC-15)" % tag)
+	_judul.call("Tata letak %s: HUD rute final, radar, tombol bel (AC-5, AC-8, AC-9)" % tag)
 	_tree.root.size = Vector2i(kasus[0], kasus[1])
 	var akar: RuteMain = (load(BERKAS_RUTE) as PackedScene).instantiate() as RuteMain
 	_tree.root.add_child(akar)
 	await _tree.process_frame
 	await _tree.process_frame
 	akar.set_process(false)
-	var hud: HudDev = _anak(akar, "Hud") as HudDev
+	var hud: HudRute = akar.hud_rute()
 	var sprite: LoperSprite = _anak(akar, "LoperAgen") as LoperSprite
 	sprite.set_process(false)
-	(_anak(hud, "TombolKidal") as Button).button_pressed = kidal
+	akar.atur_kidal(kidal)
 	await _tree.process_frame
 	await _tree.process_frame
 	akar.perbarui(0.0)
 	await _tree.process_frame
+	check(hud != null and akar.kidal() == kidal, "%s: HUD rute terpasang, mode tangan %s" % [tag, kidal])
+	check(_anak(akar, "TombolKidal") == null and _anak(akar, "TombolBantu") == null and _anak(akar, "PanelAkhir").find_child("TombolUlang", true, false) != null and not akar.panel_akhir().tombol_tampil(), "%s: tanpa tombol dev Kidal/Bantu di HUD; tombol banner hanya untuk galat" % tag)
 	var layar: Rect2 = Rect2(Vector2.ZERO, akar.get_viewport_rect().size)
 	var bel: Rect2 = hud.rect_tombol_bel()
 	var bel_harapan: Rect2 = Rect2(8, 312, 40, 40) if kidal else Rect2(lebar - 48, 312, 40, 40)
 	check(bel == bel_harapan, "%s: tombol bel %s, dapat %s" % [tag, bel_harapan, bel])
 	var pusat: Vector2 = Vector2(28, 332) if kidal else Vector2(lebar - 28, 332)
-	check(TouchZones.pusat_bel(lebar, kidal) == pusat and bel.get_center() == pusat, "%s: pusat zona tap bel = pusat tombol %s" % [tag, pusat])
+	check(TouchZones.pusat_bel(lebar, kidal) == pusat and bel.get_center() == pusat and akar.kontrol_router().geser_bel == Vector2.ZERO, "%s: pusat zona tap bel = pusat tombol %s, tanpa geseran zona aman" % [tag, pusat])
 	var zona_bel: Rect2 = Rect2(pusat - Vector2(28, 28), Vector2(56, 56))
-	var lain: Array = [["panel kecepatan", hud.rect_panel_kecepatan()], ["panel koran", hud.rect_panel_koran()], ["tombol bantu", hud.rect_tombol_bantu()], ["tombol kidal", hud.rect_tombol_kidal()], ["tombol jeda", hud.rect_tombol_jeda()]]
-	for pasang: Array in lain:
-		check(not zona_bel.intersects(pasang[1], true) and not bel.intersects(pasang[1], true), "%s: tombol dan zona tap bel %s tidak menumpuk %s %s" % [tag, zona_bel, pasang[0], pasang[1]])
-	check(layar.encloses(bel) and not zona_bel.intersects(TouchZones.rect_stick(lebar, kidal), true), "%s: tombol bel di dalam layar, zona bel tidak menyentuh zona stick" % tag)
+	check(hud.rect_tombol_jeda() == Rect2(17, 4, 42, 42), "%s: area sentuh tombol jeda (17, 4) 42x42 (tidak dicerminkan), dapat %s" % [tag, hud.rect_tombol_jeda()])
+	check(hud.rect_radar_seberang() == Rect2(4, 10, 12, 172), "%s: radar seberang (4, 10) 12x172 (tidak ditukar kidal), dapat %s" % [tag, hud.rect_radar_seberang()])
+	check(hud.rect_radar_dekat() == Rect2(lebar - 16, 10, 12, 172), "%s: radar dekat (%d, 10) 12x172, dapat %s" % [tag, lebar - 16, hud.rect_radar_dekat()])
+	var progres: Rect2 = hud.rect_panel_progres()
+	check(progres.size.x == 260.0 and progres.position.y == 8.0 and absf(progres.get_center().x - float(lebar) / 2) <= 0.5, "%s: panel progres lebar 260, y 8, di tengah (%s)" % [tag, progres])
+	var tengah_640: Rect2 = Rect2(float(lebar - 640) / 2, 0, 640, 360)
+	check(tengah_640.encloses(progres), "%s: panel progres di dalam 640 tengah" % tag)
 	var skor: Rect2 = hud.rect_panel_skor()
-	var x_harapan: float = float(Config.HUD_SKOR_GESER_PX) if kidal else float(lebar - Config.HUD_SKOR_GESER_PX) - skor.size.x
-	check(absf(skor.position.x - x_harapan) <= 1.0 and skor.position.y == 4.0 and skor.end.y <= 48.0, "%s: panel skor %s di x %s, y 4, bawah <= 48 (strip atas)" % [tag, skor, x_harapan])
-	for pasang: Array in [["tombol bantu", hud.rect_tombol_bantu()], ["tombol kidal", hud.rect_tombol_kidal()], ["tombol jeda", hud.rect_tombol_jeda()], ["tombol Main lagi", akar.panel_akhir().rect_tombol()]]:
-		check(not skor.intersects(pasang[1], true), "%s: panel skor tidak menumpuk %s %s" % [tag, pasang[0], pasang[1]])
-	check(not skor.intersects(_rect_sprite(sprite), true) and not bel.intersects(_rect_sprite(sprite), true), "%s: panel skor dan tombol bel tidak menutupi sprite pemain" % tag)
+	var koin: Rect2 = hud.rect_panel_koin()
+	check(skor.end.x == float(lebar - 28) and skor.position.y == 8.0 and skor.size.x >= 72.0, "%s: panel skor berakhir 28 dari tepi kanan, y 8, lebar >= 72 (%s)" % [tag, skor])
+	check(koin.end.x + 5.0 == skor.position.x and koin.position.y == 8.0, "%s: panel koin 5 di kiri panel skor, y 8 (%s)" % [tag, koin])
+	var elemen: Array = [["tombol jeda", hud.rect_tombol_jeda()], ["radar seberang", hud.rect_radar_seberang()], ["radar dekat", hud.rect_radar_dekat()], ["panel progres", progres], ["panel koin", koin], ["panel skor", skor], ["zona bel", zona_bel], ["panel kecepatan", hud.rect_panel_kecepatan()], ["panel koran", hud.rect_panel_koran()]]
+	var stick: Rect2 = TouchZones.rect_stick(lebar, kidal)
+	for i: int in range(elemen.size()):
+		var a: Rect2 = elemen[i][1]
+		check(layar.encloses(a), "%s: %s di dalam layar (%s)" % [tag, elemen[i][0], a])
+		check(not a.intersects(stick, true), "%s: %s tidak masuk zona stick" % [tag, elemen[i][0]])
+		for j: int in range(i + 1, elemen.size()):
+			check(not a.intersects(elemen[j][1], true), "%s: %s %s dan %s %s tidak bertumpuk" % [tag, elemen[i][0], a, elemen[j][0], elemen[j][1]])
+	# Panel atas dan radar tidak menutupi sprite pemain, diam dan pada dorongan maju penuh (sepeda bergeser maju di layar).
+	var rect_sprite: Rect2 = _rect_sprite(sprite)
+	var geser: Vector2 = DoronganKecepatan.geser_target(Config.KECEPATAN_NGEBUT_UD)
+	for r: Rect2 in [rect_sprite, Rect2(rect_sprite.position + geser, rect_sprite.size)]:
+		for pasang: Array in [["panel progres", progres], ["panel koin", koin], ["panel skor", skor], ["radar seberang", hud.rect_radar_seberang()], ["radar dekat", hud.rect_radar_dekat()], ["tombol bel", bel]]:
+			check(not r.intersects(pasang[1], true), "%s: %s tidak menutupi sprite pemain %s" % [tag, pasang[0], r])
+	# Hanya tombol jeda yang menerima sentuhan: radar dan panel mengabaikan mouse/sentuh GUI.
+	var penangkap: Array[String] = []
+	for simpul: Node in hud.find_children("*", "Control", true, false):
+		var c: Control = simpul as Control
+		if c.mouse_filter != Control.MOUSE_FILTER_IGNORE and not (c is TombolJeda):
+			penangkap.append(String(c.name))
+	check(penangkap.is_empty(), "%s: elemen HUD rute selain tombol jeda tidak menerima sentuhan: %s" % [tag, penangkap])
+	if lebar == 780 and not kidal:
+		await _test_zona_aman_tiruan(akar, hud, lebar)
 	_tree.root.remove_child(akar)
 	akar.free()
+
+
+## Inset aman tiruan (AC-9): tepi x 0 inset 10, tepi x lebar 11, bawah 20 (atas 0) -> geseran 6, 7, 12. Harapan literal; zona tap bel ikut.
+func _test_zona_aman_tiruan(akar: RuteMain, hud: HudRute, lebar: int) -> void:
+	var inset: ZonaAman.Inset = ZonaAman.Inset.new()
+	inset.awal_x = 10
+	inset.akhir_x = 11
+	inset.bawah = 20
+	hud.atur_inset(inset)
+	await _tree.process_frame
+	await _tree.process_frame
+	akar.perbarui(0.0)
+	check(hud.rect_radar_seberang() == Rect2(10, 10, 12, 172) and hud.rect_tombol_jeda() == Rect2(23, 4, 42, 42), "inset tiruan: radar seberang x 10 (= inset), tombol jeda ikut bergeser 6 ke x 23")
+	check(hud.rect_radar_dekat() == Rect2(lebar - 23, 10, 12, 172) and hud.rect_panel_skor().end.x == float(lebar - 35), "inset tiruan: radar dekat berakhir 11 dari tepi (inset), panel skor 35 dari tepi")
+	check(hud.rect_tombol_bel() == Rect2(lebar - 55, 300, 40, 40) and hud.rect_panel_kecepatan().end.y == 340.0, "inset tiruan: tombol bel dan panel bawah naik 12 (bawah 20 dari tepi), bel 15 dari tepi kanan")
+	check(akar.kontrol_router().geser_bel == Vector2(-7, -12) and TouchZones.pusat_bel(lebar, false, akar.kontrol_router().geser_bel) == hud.rect_tombol_bel().get_center(), "inset tiruan: zona tap bel ikut tombol (geser (-7, -12))")
+	akar.atur_kidal(true)
+	await _tree.process_frame
+	akar.perbarui(0.0)
+	check(hud.rect_tombol_bel() == Rect2(14, 300, 40, 40) and akar.kontrol_router().geser_bel == Vector2(6, -12), "inset tiruan kidal: bel di x 14 (inset 10 + 4), zona ikut (6, -12)")
+	akar.atur_kidal(false)
+	hud.atur_inset(null)
+	await _tree.process_frame
+	akar.perbarui(0.0)
+	check(hud.rect_radar_seberang() == Rect2(4, 10, 12, 172) and akar.kontrol_router().geser_bel == Vector2.ZERO, "inset kembali nol: tata letak semula")

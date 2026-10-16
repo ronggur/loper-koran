@@ -9,9 +9,10 @@ extends AdeganJalan
 ##   mode bantu sejauh jangkauan lemparan. Koran awal = `rute.koran_awal` (30), tanpa isi ulang jalan uji.
 ## - Akhir rute (AC-14, `AkhirRute`): sepeda mencapai garis akhir (`panjang_ubin`) -> `rute_selesai` tepat sekali, stick sungguhan dikunci
 ##   dan diganti stick buatan ke bawah penuh (rem dengan laju rem biasa), lemparan baru tidak diterima (koran yang sudah terbang tetap
-##   mendarat dan dinilai), banner `RUTE_SELESAI` dan tombol dev "Main lagi" tampil. Jeda dan back tetap bekerja.
+##   mendarat dan dinilai), banner `RUTE_SELESAI` tampil sesaat. Jeda dan back tetap bekerja.
 ## - Penutup pemain (AC-15): SATU penerap (`PenerapPenutup`) memanggil `PenutupPemain` tiap langkah untuk semua rumah di jendela daur.
-## - "Main lagi": seed + 1, rute baru, sepeda, sisa koran, dan koran terbang dikembalikan ke awal (`_kembalikan_awal`).
+## - "Main lagi" (tombol layar hasil sejak run fase3c-hud-hasil, O-11; tombol banner hanya untuk galat muat): seed + 1, rute baru, sepeda,
+##   sisa koran, koran terbang, skor, tenggat, radar, progres, rintangan, bel, dan oleng dikembalikan ke awal (`_susun`, `_kembalikan_awal`).
 ## - Area kotak surat (tindak lanjut uji HP 2026-10-16): `AreaKotakGambar` menggambar persegi zona kotak surat rumah pelanggan seberang di
 ##   tanah (jendela daur yang sama dengan rumah), supaya area yang dinilai terlihat.
 ## - Rintangan (run fase3b-rintangan-skor bagian B, AC-20): `RintanganRute.dari_rute` (kait `_rintangan_awal`, juga tiap "Main lagi"),
@@ -19,11 +20,23 @@ extends AdeganJalan
 ##   SAMA dengan rumah).
 ## - Skor dan koin (AC-9 sampai AC-13): kait `_skor_aktif` true, `_rute_skor` = rute ini (pemberi tip); umpan balik melayang digambar
 ##   `UmpanMelayangGambar` di atas objek.
+## - Run fase3c-hud-hasil (K-1, O-6 sampai O-12, AC-1 sampai AC-13, usulan):
+##   - Tenggat (`TenggatRute`): jam dimulai saat rute disusun, maju dengan dt efektif lewat kait `_langkah_waktu` (beku saat jeda dan
+##     background), berhenti di garis akhir. Sesudah lewat rute tetap berjalan; koran yang mendarat tidak memberi tip (`_tenggat_lewat`).
+##   - HUD rute final (`HudRute`): tiap langkah radar (`RadarRute.penanda` dari jarak sepeda, rumah terantar, mode bantu, tenggat lewat),
+##     kotak progres (`ProgresRute.status`), "n/25 TERKIRIM", dan tenggat. HUD hanya menampilkan.
+##   - Layar hasil (`LayarHasil`, O-11): terbuka tepat sekali sesudah garis akhir, saat sepeda berhenti dan tidak ada koran terbang
+##     (`HasilRute.siap_tampil`); angka dari `HasilRute.dari` (satu sumber). Saat terbuka banner disembunyikan, HUD disembunyikan (tombol
+##     jeda tidak bisa disentuh) dan kontrol sentuh tidak membaca sentuhan (stick, swipe, tap, bel), jadi hanya tombol "Main lagi" yang
+##     aktif. Back Android di layar hasil diabaikan (`_saring_jeda`; tidak memulai ulang diam-diam dan tidak membuka layar jeda di atasnya);
+##     app ke background tetap menjeda seperti biasa.
 
 ## Sepeda mencapai garis akhir rute (tepat sekali per rute; diulang hanya sesudah "Main lagi").
 signal rute_selesai
 ## Rute baru disusun (saat scene siap dan tiap "Main lagi").
 signal rute_disusun(rute: RouteBuilder.Rute)
+## Layar hasil terbuka (tepat sekali per rute): angka yang ditampilkan.
+signal hasil_dibuka(angka: HasilRute.Angka)
 
 ## Seed rute yang sedang dimainkan.
 var _benih: int = Config.RUTE_SEED_DEV
@@ -34,6 +47,12 @@ var _galat: Array[String] = []
 ## False hanya di tes yang sengaja memicu galat: galat tidak dicetak sebagai `ERROR:` ke log (pemeriksa keluaran tes menolak baris itu).
 var lapor_galat_ke_log: bool = true
 var _selesai: bool = false
+## Jam tenggat rute (`TenggatRute`).
+var _tenggat: TenggatRute.Keadaan = TenggatRute.Keadaan.new()
+## True sejak layar hasil terbuka sampai "Main lagi".
+var _hasil_tampil: bool = false
+## Angka layar hasil terakhir (null sebelum layar hasil terbuka).
+var _angka_hasil: HasilRute.Angka = null
 
 @onready var _daur: RumahDaurRute = %Objek
 @onready var _area_kotak: AreaKotakGambar = %AreaKotak
@@ -41,12 +60,14 @@ var _selesai: bool = false
 @onready var _panel_akhir: PanelAkhirRute = %PanelAkhir
 @onready var _rintangan_daur: RintanganDaur = %Rintangan
 @onready var _umpan_gambar: UmpanMelayangGambar = %UmpanMelayang
+@onready var _layar_hasil: LayarHasil = %LayarHasil
 
 
 func _siapkan_dunia() -> void:
 	_daur.penerap = _penerap
 	_rintangan_daur.penerap = _penerap
 	_panel_akhir.main_lagi_diminta.connect(main_lagi)
+	_layar_hasil.main_lagi_diminta.connect(main_lagi)
 	_susun(_benih)
 
 
@@ -59,10 +80,53 @@ func _perbarui_dunia(jarak_ubin: float) -> void:
 	var status: AkhirRute.Status = AkhirRute.periksa(_selesai, jarak_ubin, _rute.panjang_ubin)
 	_selesai = status.selesai
 	if status.baru_selesai:
+		_tenggat = TenggatRute.hentikan(_tenggat)
 		_kontrol.lepas_semua()
 		_garis_bidik.sembunyikan()
 		_panel_akhir.tampilkan(true)
 		rute_selesai.emit()
+	_perbarui_hud_rute(jarak_ubin)
+	if _selesai and not _hasil_tampil and HasilRute.siap_tampil(_selesai, _sepeda.kecepatan_ud, koran_terbang()):
+		_buka_hasil()
+
+
+## HUD rute final dari keadaan murni (hanya menampilkan).
+func _perbarui_hud_rute(jarak_ubin: float) -> void:
+	var hud: HudRute = _hud as HudRute
+	if hud == null:
+		return
+	var lewat: bool = TenggatRute.lewat(_tenggat)
+	hud.tampilkan_tenggat(_tenggat)
+	hud.tampilkan_radar(RadarRute.penanda(_rute, jarak_ubin, _skor.terantar, mode_bantu(), lewat))
+	hud.tampilkan_progres(ProgresRute.status(_rute, jarak_ubin, _skor.terantar, _selesai), ProgresRute.jumlah_terkirim(_rute, _skor.terantar), _rute.pelanggan.size())
+
+
+## Membuka layar hasil (tepat sekali per rute): angka dari `HasilRute`, banner dan HUD disembunyikan, kontrol sentuh berhenti membaca.
+func _buka_hasil() -> void:
+	_hasil_tampil = true
+	_angka_hasil = HasilRute.dari(_skor, _rute, _tenggat)
+	_layar_hasil.isi(_angka_hasil)
+	_layar_hasil.tampilkan(true)
+	_panel_akhir.tampilkan(false)
+	_hud.visible = false
+	_kontrol.lepas_semua()
+	_kontrol.set_process_input(false)
+	hasil_dibuka.emit(_angka_hasil)
+
+
+func _langkah_waktu(langkah_dt: float) -> void:
+	if not _selesai:
+		_tenggat = TenggatRute.langkah(_tenggat, langkah_dt)
+
+
+func _tenggat_lewat() -> bool:
+	return TenggatRute.lewat(_tenggat)
+
+
+func _saring_jeda(peristiwa: JedaSim.Peristiwa) -> JedaSim.Peristiwa:
+	if _hasil_tampil and peristiwa == JedaSim.Peristiwa.BACK and not sedang_jeda():
+		return JedaSim.Peristiwa.TIDAK_ADA
+	return peristiwa
 
 
 func _zona_bantu(maju_awal_ubin: float, maju_akhir_ubin: float) -> Array[ZonaSasaran.Zona]:
@@ -111,6 +175,12 @@ func _susun(benih: int) -> void:
 		gagal = true
 	_medan = MedanKoran.dari_rute(_rute)
 	_selesai = false
+	_tenggat = TenggatRute.awal(_rute.panjang_ubin)
+	_hasil_tampil = false
+	_angka_hasil = null
+	_layar_hasil.tampilkan(false)
+	_hud.visible = true
+	_kontrol.set_process_input(true)
 	_daur.atur_rute(_rute)
 	_area_kotak.atur_rute(_rute)
 	_rintangan_daur.lepas_semua()
@@ -118,11 +188,14 @@ func _susun(benih: int) -> void:
 	_panel_akhir.tampilkan(false)
 	if gagal:
 		_panel_akhir.tampilkan_galat()
+		# Tanpa rute tidak ada yang bisa disetir atau dilempar; tombol banner galat ada di zona swipe, jadi kontrol sentuh tidak membaca
+		# sentuhan supaya ketukannya bukan tap atau swipe.
+		_kontrol.set_process_input(false)
 	_kembalikan_awal(_rute.koran_awal)
 	rute_disusun.emit(_rute)
 
 
-## Tombol dev "Main lagi" (juga dipanggil tes): seed berikutnya (seed + 1), rute baru dari awal.
+## Tombol "Main lagi" layar hasil atau banner galat (juga dipanggil tes): seed berikutnya (seed + 1), rute baru dari awal.
 func main_lagi() -> void:
 	_susun(_benih + 1)
 	perbarui(0.0)
@@ -171,6 +244,36 @@ func penerap_penutup() -> PenerapPenutup:
 ## Panel banner dan tombol akhir rute (untuk tes dan probe).
 func panel_akhir() -> PanelAkhirRute:
 	return _panel_akhir
+
+
+## Layar hasil (untuk tes dan probe).
+func layar_hasil() -> LayarHasil:
+	return _layar_hasil
+
+
+## True sejak layar hasil terbuka sampai "Main lagi".
+func hasil_tampil() -> bool:
+	return _hasil_tampil
+
+
+## Angka layar hasil terakhir (null sebelum terbuka).
+func angka_hasil() -> HasilRute.Angka:
+	return _angka_hasil
+
+
+## Jam tenggat rute saat ini (untuk tes dan probe).
+func tenggat() -> TenggatRute.Keadaan:
+	return _tenggat
+
+
+## Mengganti jam tenggat (hanya untuk tes dan probe: mis. tenggat hampir habis tanpa menunggu 90 detik).
+func atur_tenggat(k: TenggatRute.Keadaan) -> void:
+	_tenggat = k
+
+
+## HUD rute final (untuk tes dan probe).
+func hud_rute() -> HudRute:
+	return _hud as HudRute
 
 
 ## Medan sasaran koran rute yang sedang dimainkan (untuk tes).

@@ -20,7 +20,7 @@ var _folder: String = ""
 var _awalan: String = ""
 var _akar: RuteMain
 var _sepeda: SepedaUji
-var _hud: HudDev
+var _hud: HudRute
 var _kontrol: KontrolTouch
 var _sprite: LoperSprite
 var _debu: PancaranPiksel
@@ -45,7 +45,7 @@ func _initialize() -> void:
 	_skala = float(root.size.x) / terlihat.x
 	_awalan = "%dx%d" % [root.size.x, root.size.y]
 	_sepeda = _akar.find_child("Sepeda", true, false) as SepedaUji
-	_hud = _akar.find_child("Hud", true, false) as HudDev
+	_hud = _akar.hud_rute()
 	_kontrol = _akar.find_child("KontrolTouch", true, false) as KontrolTouch
 	_sprite = _akar.find_child("LoperAgen", true, false) as LoperSprite
 	_sprite.set_process(false)
@@ -142,7 +142,7 @@ func _initialize() -> void:
 	await _foto("tepat_hud_skor")
 
 	# --- Kidal: tombol bel dan panel skor dicerminkan; bel diketuk di pusat kidal ---
-	(_akar.find_child("TombolKidal", true, false) as Button).button_pressed = true
+	_akar.atur_kidal(true)
 	await _tunggu(3)
 	await _maju(0.5)
 	var pusat_kidal: Vector2 = TouchZones.pusat_bel(int(_akar.get_viewport_rect().size.x), true)

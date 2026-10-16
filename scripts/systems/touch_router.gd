@@ -37,6 +37,8 @@ const TIDAK_ADA: int = -1
 
 ## Lebar viewport game saat ini, piksel. Diperbarui node input sebelum meneruskan event.
 var lebar_viewport: int = Config.LAYAR_LEBAR_DASAR_PX
+## Geseran pusat zona tap bel karena zona aman, piksel game (`HudDasar.geser_bel`, diatur adegan; run fase3c-hud-hasil). Bawaan nol.
+var geser_bel: Vector2 = Vector2.ZERO
 ## Jumlah swipe yang selesai sejak instance dibuat (tiap swipe dicatat tepat sekali).
 var jumlah_swipe_selesai: int = 0
 ## Nomor swipe terakhir yang diklaim (naik 1 tiap jari mengklaim slot swipe, tidak berubah saat jari dilepas atau batal). Selama
@@ -79,7 +81,7 @@ func tekan(index: int, posisi: Vector2, waktu_detik: float) -> void:
 		return
 	if index == _index_stick or index == _index_swipe or index == _index_bel:
 		return
-	match TouchZones.zona_di(posisi, lebar_viewport, _kidal):
+	match TouchZones.zona_di(posisi, lebar_viewport, _kidal, geser_bel):
 		TouchZones.Zona.BEL:
 			_index_bel = index
 			jumlah_bel += 1

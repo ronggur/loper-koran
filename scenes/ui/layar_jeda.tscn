@@ -46,3 +46,23 @@ size_flags_horizontal = 4
 focus_mode = 0
 text = "JEDA_LANJUT"
 script = ExtResource("3_tombol")
+
+[node name="BarisSakelar" type="HBoxContainer" parent="Latar/Tengah/Isi"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+
+[node name="SakelarKidal" type="Button" parent="Latar/Tengah/Isi/BarisSakelar"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+text = "JEDA_KIDAL_MATI"
+script = ExtResource("3_tombol")
+
+[node name="SakelarBantu" type="Button" parent="Latar/Tengah/Isi/BarisSakelar"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+text = "HUD_BANTU_MATI"
+script = ExtResource("3_tombol")

@@ -503,8 +503,6 @@ const RUTE_DAUR_MAJU_UBIN: int = 30
 const RUTE_AKHIR_STICK_Y: float = -1.0
 ## Jarak banner "Rute selesai" dari tepi atas layar, piksel game: di bawah strip atas HUD dan di luar zona stick dan swipe.
 const RUTE_BANNER_MARGIN_ATAS_PX: int = 64
-## Jarak tombol dev "Main lagi" dari tepi kanan layar, piksel game (strip atas HUD, bebas dari zona stick dan swipe).
-const RUTE_TOMBOL_ULANG_MARGIN_PX: int = 8
 ## Nama 12 sprite rumah perumahan (`assets/sprites/houses/perumahan/<nama>.png`), sejajar dengan `RUTE_RUMAH_PIJAK_PX`.
 const RUTE_RUMAH_SPRITE: Array[String] = ["house_perumahan_dekat_limasan_bukan", "house_perumahan_dekat_limasan_pelanggan", "house_perumahan_dekat_pelana_lintang_bukan", "house_perumahan_dekat_pelana_lintang_pelanggan", "house_perumahan_dekat_pelana_sejajar_bukan", "house_perumahan_dekat_pelana_sejajar_pelanggan", "house_perumahan_limasan_bukan", "house_perumahan_limasan_pelanggan", "house_perumahan_pelana_bukan", "house_perumahan_pelana_pelanggan", "house_perumahan_sayap_bukan", "house_perumahan_sayap_pelanggan"]
 ## Titik pijak tiap sprite rumah (`ground_anchor` di JSON aset, tengah tapak), piksel dari pojok kiri atas gambar: x lalu y, sejajar dengan `RUTE_RUMAH_SPRITE`. Tes membandingkannya dengan JSON aset.

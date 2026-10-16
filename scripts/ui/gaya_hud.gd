@@ -3,7 +3,9 @@ extends RefCounted
 ## Gaya panel dan tombol HUD sementara (DESIGN_SPEC 1.3): kotak bergaris luar 1 px, sudut tegas, isi berjarak `HUD_PANEL_PAD_*`.
 ##
 ## Dipakai bersama oleh `HudDev` dan `LayarJeda` supaya bentuk tombol sama. Warna selalu dari `Palette`. Panel 9-slice final
-## (DESIGN_SPEC 1.3) menggantikan ini nanti.
+## (DESIGN_SPEC 1.3, `ui_panel_hud_9slice.png` dari `tools/ui_art/hud_ikon.py`) dipakai HUD rute (`panel_hud`, run fase3c-hud-hasil).
+
+const TEKSTUR_PANEL_HUD: Texture2D = preload("res://assets/sprites/ui/ui_panel_hud_9slice.png")
 
 
 ## Kotak `StyleBoxFlat` berisi `isi`, garis luar 1 px `garis`, tanpa anti-alias, padding dari Config.
@@ -31,3 +33,16 @@ static func terapkan_tombol(tombol: Button) -> void:
 	tombol.add_theme_color_override(&"font_hover_color", Palette.TEXT)
 	tombol.add_theme_color_override(&"font_pressed_color", Palette.ACCENT)
 	tombol.add_theme_color_override(&"font_hover_pressed_color", Palette.ACCENT)
+
+
+## Panel HUD 9-slice (DESIGN_SPEC 1.3): latar `HUD_PANEL`, garis luar `OUTLINE`, garis dalam `UI_PANEL_RAISED`, sudut tumpul bertingkat, dari
+## tekstur 12x12 dengan tepi `HUD_PANEL_9SLICE_PX`; isi berjarak `pad_x` ke samping dan `HUD_PANEL_PAD_Y_PX` ke atas dan bawah.
+static func panel_hud(pad_x: int = Config.HUD_PANEL_PAD_X_PX) -> StyleBoxTexture:
+	var hasil: StyleBoxTexture = StyleBoxTexture.new()
+	hasil.texture = TEKSTUR_PANEL_HUD
+	hasil.set_texture_margin_all(float(Config.HUD_PANEL_9SLICE_PX))
+	hasil.content_margin_left = float(pad_x)
+	hasil.content_margin_right = float(pad_x)
+	hasil.content_margin_top = float(Config.HUD_PANEL_PAD_Y_PX)
+	hasil.content_margin_bottom = float(Config.HUD_PANEL_PAD_Y_PX)
+	return hasil

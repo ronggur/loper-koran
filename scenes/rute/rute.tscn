@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3]
+[gd_scene load_steps=27 format=3]
 
 [ext_resource type="Script" path="res://scripts/entities/rute_main.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/entities/tanah_daur.gd" id="2_tanah"]
@@ -9,7 +9,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/tile_graybox_rumput.png" id="7_rumput"]
 [ext_resource type="PackedScene" path="res://scenes/entities/kotak_surat.tscn" id="9_kotak_surat"]
 [ext_resource type="PackedScene" path="res://scenes/entities/sepeda_uji.tscn" id="10_sepeda"]
-[ext_resource type="PackedScene" path="res://scenes/ui/hud_dev.tscn" id="11_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_rute.tscn" id="11_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/layar_jeda.tscn" id="12_jeda"]
 [ext_resource type="Script" path="res://scripts/entities/koran_gambar.gd" id="14_koran"]
 [ext_resource type="Script" path="res://scripts/entities/area_kotak_gambar.gd" id="18_area"]
@@ -20,6 +20,7 @@
 [ext_resource type="PackedScene" path="res://scenes/entities/anjing_penjaga.tscn" id="20_anjing"]
 [ext_resource type="PackedScene" path="res://scenes/entities/mobil_garasi.tscn" id="21_mobil"]
 [ext_resource type="Script" path="res://scripts/entities/umpan_melayang_gambar.gd" id="22_umpan"]
+[ext_resource type="PackedScene" path="res://scenes/ui/layar_hasil.tscn" id="23_hasil"]
 
 [node name="Rute" type="Node2D"]
 script = ExtResource("1_script")
@@ -91,6 +92,9 @@ layer = 10
 [node name="KontrolTouch" type="Node2D" parent="LapisanKontrol"]
 unique_name_in_owner = true
 script = ExtResource("4_kontrol")
+
+[node name="LayarHasil" parent="." instance=ExtResource("23_hasil")]
+unique_name_in_owner = true
 
 [node name="LayarJeda" parent="." instance=ExtResource("12_jeda")]
 unique_name_in_owner = true

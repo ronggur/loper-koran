@@ -76,6 +76,12 @@ extends Node2D
 ##   `RintanganRute.terapkan_bel` (anjing waspada/mengejar dalam jangkauan mundur, ikon "!"). Tombol dan efek "KRING!" dari `Bel` tiap langkah.
 ## - Semua waktu (rintangan, oleng, kebal, bel, label PUTUS, umpan balik melayang) ikut `dt` efektif: jeda membekukannya, tanpa lanjut
 ##   otomatis. `_kembalikan_awal` ("Main lagi") mengatur ulang rintangan, tabrakan, skor, combo, koin, status terantar, bel, dan bunyi rute.
+##
+## Run fase3c-hud-hasil (O-6, K-1, AC-9): HUD bertipe `HudDasar` (jalan uji `HudDev`, rute `HudRute`). Kidal dan mode bantu diubah dari
+## sakelar layar jeda (`LayarJeda.kidal_diubah` / `bantu_diubah`) atau sakelar HUD dev jalan uji; keduanya lewat `atur_kidal` /
+## `atur_mode_bantu`, yang menyamakan kontrol, HUD, dan layar jeda. Zona tap bel mengikuti geseran zona aman HUD (`HudDasar.geser_bel`)
+## tiap langkah. Kait baru: `_langkah_waktu` (jam tenggat rute, dt efektif, sesudah sepeda digerakkan), `_tenggat_lewat` (status tenggat
+## saat koran mendarat, untuk tip, `SkorRute.nilai_koran`), dan `_saring_jeda` (rute mengabaikan back di layar hasil).
 
 ## Status jeda berubah: true = layar jeda dibuka (simulasi, sprite, partikel, dan input berhenti), false = lanjut.
 signal jeda_berubah(jeda: bool)
@@ -132,7 +138,7 @@ var _medan: MedanKoran = null
 @onready var _tanah: TanahDaur = %Tanah
 @onready var _sepeda: SepedaUji = %Sepeda
 @onready var _kontrol: KontrolTouch = %KontrolTouch
-@onready var _hud: HudDev = %Hud
+@onready var _hud: HudDasar = %Hud
 @onready var _layar_jeda: LayarJeda = %LayarJeda
 @onready var _koran_tanah: KoranGambar = %KoranTanah
 @onready var _koran_udara: KoranGambar = %KoranUdara
@@ -140,10 +146,12 @@ var _medan: MedanKoran = null
 
 
 func _ready() -> void:
-	_hud.kidal_diubah.connect(_kontrol.atur_kidal)
+	_hud.kidal_diubah.connect(atur_kidal)
 	_hud.jeda_diminta.connect(minta_jeda)
 	_hud.bantu_diubah.connect(atur_mode_bantu)
 	_layar_jeda.lanjut_diminta.connect(minta_lanjut)
+	_layar_jeda.kidal_diubah.connect(atur_kidal)
+	_layar_jeda.bantu_diubah.connect(atur_mode_bantu)
 	_kontrol.router.swipe_selesai.connect(_saat_swipe_selesai)
 	_kontrol.router.tap_selesai.connect(_saat_tap_selesai)
 	_kontrol.router.bel_ditekan.connect(_saat_bel_ditekan)
@@ -200,8 +208,11 @@ func minta_lanjut() -> void:
 
 ## Menerapkan satu peristiwa jeda. Saat menjeda (juga bila sudah jeda): sepeda dijeda, jari dilepas, cincin rem padam. Saat status
 ## berubah: layar jeda tampil atau hilang, `SceneTree.paused` mengikuti, dan `jeda_berubah` dipancarkan.
-func _terapkan_jeda(peristiwa: JedaSim.Peristiwa) -> void:
-	if peristiwa == JedaSim.Peristiwa.TIDAK_ADA or not is_node_ready():
+func _terapkan_jeda(peristiwa_masuk: JedaSim.Peristiwa) -> void:
+	if not is_node_ready():
+		return
+	var peristiwa: JedaSim.Peristiwa = _saring_jeda(peristiwa_masuk)
+	if peristiwa == JedaSim.Peristiwa.TIDAK_ADA:
 		return
 	var jeda_baru: bool = JedaSim.jeda_sesudah(_jeda, peristiwa)
 	_baru_lanjut = JedaSim.baru_lanjut_sesudah(_jeda, _baru_lanjut, peristiwa)
@@ -269,6 +280,21 @@ func _vektor_stick() -> Vector2:
 ## False bila lemparan (swipe dan tap mode bantu) sedang tidak diterima, mis. sesudah akhir rute. Bawaan true.
 func _lempar_diizinkan() -> bool:
 	return true
+
+
+## Dipanggil tiap langkah sesudah sepeda digerakkan, dengan `dt` efektif (0 saat jeda): jam tenggat rute. Bawaan tidak melakukan apa pun.
+func _langkah_waktu(_langkah_dt: float) -> void:
+	pass
+
+
+## True bila tenggat rute sudah lewat saat ini (koran yang mendarat tidak memberi tip, K-1). Bawaan false (jalan uji tanpa tenggat).
+func _tenggat_lewat() -> bool:
+	return false
+
+
+## Peristiwa jeda sesudah disaring adegan turunan (mis. back diabaikan di layar hasil). Bawaan apa adanya.
+func _saring_jeda(peristiwa: JedaSim.Peristiwa) -> JedaSim.Peristiwa:
+	return peristiwa
 
 
 ## Lintasan koran untuk swipe dari `awal` ke `akhir` (piksel game) dengan keadaan sepeda SAAT INI, atau null bila swipe tidak melempar.
@@ -344,10 +370,26 @@ func posisi_layar_sepeda() -> Vector2:
 	return _sepeda.global_position - _kamera.position + get_viewport_rect().size / 2
 
 
-## Menyalakan atau mematikan mode bantu (sakelar HUD, D-7). Tombol HUD ikut disamakan.
+## Menyalakan atau mematikan mode bantu (sakelar layar jeda O-6, atau sakelar HUD dev jalan uji, D-7). Sakelar HUD dan layar jeda ikut
+## disamakan.
 func atur_mode_bantu(nilai: bool) -> void:
 	_mode_bantu = nilai
 	_hud.atur_bantu(nilai)
+	_layar_jeda.atur_bantu(nilai)
+
+
+## Menyalakan atau mematikan opsi kidal (sakelar layar jeda O-6, atau sakelar HUD dev jalan uji): zona kontrol ditukar (`KontrolTouch`),
+## panel bawah dan tombol bel HUD dicerminkan, sakelar layar jeda disamakan, dan zona tap bel ikut tombolnya.
+func atur_kidal(nilai: bool) -> void:
+	_kontrol.atur_kidal(nilai)
+	_hud.atur_kidal(nilai)
+	_layar_jeda.atur_kidal(nilai)
+	_kontrol.router.geser_bel = _hud.geser_bel()
+
+
+## True selama opsi kidal menyala.
+func kidal() -> bool:
+	return _kontrol.router.kidal()
 
 
 ## True selama mode bantu menyala.
@@ -373,6 +415,11 @@ func garis_bidik() -> GarisBidik:
 	return _garis_bidik
 
 
+## Pelacak jari kontrol sentuh (untuk tes dan probe).
+func kontrol_router() -> TouchRouter:
+	return _kontrol.router
+
+
 ## Satu langkah permainan selama `dt` detik. Publik supaya tes terpadu bisa menjalankannya tanpa menunggu frame. Selama jeda
 ## dan pada langkah pertama sesudah lanjut `dt` diganti 0 (`JedaSim.dt_efektif`).
 func perbarui(dt: float) -> void:
@@ -380,6 +427,7 @@ func perbarui(dt: float) -> void:
 	if not _jeda:
 		_baru_lanjut = false
 	_sepeda.gerak(_vektor_stick(), langkah_dt, Tabrakan.oleng(_rintangan.tabrakan))
+	_langkah_waktu(langkah_dt)
 	_langkah_rintangan(langkah_dt)
 	_bel = Bel.langkah(_bel, langkah_dt)
 	_putus_detik = maxf(_putus_detik - langkah_dt, 0.0) if is_finite(langkah_dt) and langkah_dt > 0.0 else _putus_detik
@@ -395,6 +443,7 @@ func perbarui(dt: float) -> void:
 	_sepeda.tampilkan_bel(_bel)
 	_hud.tampilkan_skor(_skor.skor, _skor.beruntun, _skor.koin, putus_tampil())
 	_hud.tampilkan_bel(_kontrol.router.bel_ditahan(), Bel.sisa_jeda_pecahan(_bel))
+	_kontrol.router.geser_bel = _hud.geser_bel()
 	if _audio != null:
 		_audio.perbarui_sepeda(_sepeda.pose(), _sepeda.kecepatan_ud, _sepeda.rem_aktif(), _jeda)
 	_geser_dorongan = DoronganKecepatan.haluskan(_geser_dorongan, DoronganKecepatan.geser_target(_sepeda.kecepatan_ud), langkah_dt)
@@ -456,7 +505,7 @@ func _putus_combo() -> void:
 func _saat_koran_mendarat(k: KoranLempar.Koran) -> void:
 	var hs: SkorRute.Hasil = null
 	if _skor_aktif():
-		hs = SkorRute.nilai_koran(_skor, k, _rute_skor(), Config.JENDELA_KENA_BONUS)
+		hs = SkorRute.nilai_koran(_skor, k, _rute_skor(), Config.JENDELA_KENA_BONUS, _tenggat_lewat())
 		if hs.status == SkorRute.Status.TIDAK_SAH and _skor.beruntun > 0:
 			_putus_detik = Config.HUD_COMBO_PUTUS_DETIK
 		_skor = hs.keadaan
