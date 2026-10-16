@@ -72,9 +72,9 @@ func _f_oracle(pusat_jalan: Vector2, lepas_jalan: Vector2, v: float, u: float) -
 	return r.length() - jarak
 
 
-## Titik lepas oracle dalam koordinat jalan: lateral + vl x jeda dijepit ke +-1 (tepi jalan resmi), maju + v x jeda.
+## Titik lepas oracle dalam koordinat jalan: lateral + vl x jeda dijepit ke +-2 (tepi jalan resmi = tepi trotoar), maju + v x jeda.
 func _lepas_oracle(lateral: float, maju: float, v: float, vl: float, jeda: float) -> Vector2:
-	return Vector2(clampf(lateral + vl * jeda, -1.0, 1.0), maju + v * jeda)
+	return Vector2(clampf(lateral + vl * jeda, -2.0, 2.0), maju + v * jeda)
 
 
 ## Keterjangkauan oracle: 1 = pasti terjangkau (ada perubahan tanda f di [0, 1] dengan jarak aman), 0 = pasti tidak, -1 = di dekat batas
@@ -312,24 +312,24 @@ func _test_rentang_zona() -> void:
 func _test_sasaran_dasar() -> void:
 	_judul.call("Sasaran: kotak surat pelanggan terdekat di depan, sisi benar (AC-3, D-4)")
 	var semua: Array[ZonaSasaran.Zona] = _zona_jalan_uji([-1, 0, 1, 2, 3, 4])
-	# m 0,5: kotak surat kavling 0 (pusat maju 1,125) di depan dan terjangkau di santai.
+	# m 0,5: kotak surat kavling 0 (pusat maju 1,875) di depan dan terjangkau di santai.
 	var p: BantuLempar.Pilihan = BantuLempar.pilih(LoperAnim.Sisi.SEBERANG, Vector2(0.0, -0.5), 3.0, 0.0, JEDA_LEPAS, LEBAR_SASARAN, semua)
 	check(p != null and p.zona.rumah == 0 and p.zona.jenis == ZonaSasaran.Jenis.KOTAK_SURAT and p.zona.sisi == LoperAnim.Sisi.SEBERANG and p.zona.pelanggan, "maju 0,5 seberang: kotak surat rumah 0 seberang (dapat %s)" % _nama(p))
 	p = BantuLempar.pilih(LoperAnim.Sisi.DEKAT, Vector2(0.0, -0.5), 3.0, 0.0, JEDA_LEPAS, LEBAR_SASARAN, semua)
 	check(p != null and p.zona.rumah == 0 and p.zona.sisi == LoperAnim.Sisi.DEKAT and p.zona.jenis == ZonaSasaran.Jenis.KOTAK_SURAT, "maju 0,5 dekat: kotak surat rumah 0 dekat (dapat %s)" % _nama(p))
 	# Rumah 1 lebih jauh juga terjangkau; yang terdekat dipilih.
-	var pusat_jalan_1: Vector2 = Vector2(-1.625, 5.125)
-	check(_terjangkau_oracle(pusat_jalan_1, _lepas_oracle(0.0, 0.5, 3.0, 0.0, JEDA_LEPAS), 3.0) == 1, "kontrol: kotak surat rumah 1 (maju 5,125) juga terjangkau dari maju 0,5 (pilihan terdekat benar-benar memilih)")
+	var pusat_jalan_1: Vector2 = Vector2(-2.25, 5.875)
+	check(_terjangkau_oracle(pusat_jalan_1, _lepas_oracle(0.0, 0.5, 3.0, 0.0, JEDA_LEPAS), 3.0) == 1, "kontrol: kotak surat rumah 1 (maju 5,875) juga terjangkau dari maju 0,5 (pilihan terdekat benar-benar memilih)")
 	# m 8: rumah 2 seberang bukan pelanggan (2 mod 4 = 2) dilewati ke rumah 3; sisi dekat rumah 2 selalu pelanggan.
 	check(not ZonaSasaran.pelanggan_jalan_uji(2) and ZonaSasaran.pelanggan_jalan_uji(3), "kontrol: rumah 2 seberang bukan pelanggan, rumah 3 pelanggan")
 	p = BantuLempar.pilih(LoperAnim.Sisi.SEBERANG, Vector2(0.0, -8.0), 3.0, 0.0, JEDA_LEPAS, LEBAR_SASARAN, semua)
 	check(p != null and p.zona.rumah == 3 and p.zona.sisi == LoperAnim.Sisi.SEBERANG, "maju 8 seberang: rumah 2 bukan pelanggan dilewati, kotak surat rumah 3 dipilih (dapat %s)" % _nama(p))
 	p = BantuLempar.pilih(LoperAnim.Sisi.DEKAT, Vector2(0.0, -8.0), 3.0, 0.0, JEDA_LEPAS, LEBAR_SASARAN, semua)
 	check(p != null and p.zona.rumah == 2 and p.zona.sisi == LoperAnim.Sisi.DEKAT, "maju 8 dekat: kotak surat rumah 2 dekat (pelanggan) dipilih, bukan sisi seberang (dapat %s)" % _nama(p))
-	# m 1,2: kotak surat rumah 0 (1,125) sudah di belakang walau masih terjangkau; rumah 1 dipilih.
-	check(_terjangkau_oracle(Vector2(-1.625, 1.125), _lepas_oracle(0.0, 1.2, 3.0, 0.0, JEDA_LEPAS), 3.0) == 1, "kontrol: kotak surat rumah 0 di belakang (maju 1,125 < 1,2) masih terjangkau lintasan")
-	p = BantuLempar.pilih(LoperAnim.Sisi.SEBERANG, Vector2(0.0, -1.2), 3.0, 0.0, JEDA_LEPAS, LEBAR_SASARAN, semua)
-	check(p != null and p.zona.rumah == 1, "maju 1,2: kotak surat di belakang sepeda tidak dipilih, rumah 1 di depan (dapat %s)" % _nama(p))
+	# m 2,0: kotak surat rumah 0 (1,875) sudah di belakang walau masih terjangkau; rumah 1 dipilih.
+	check(_terjangkau_oracle(Vector2(-2.25, 1.875), _lepas_oracle(0.0, 2.0, 3.0, 0.0, JEDA_LEPAS), 3.0) == 1, "kontrol: kotak surat rumah 0 di belakang (maju 1,875 < 2,0) masih terjangkau lintasan")
+	p = BantuLempar.pilih(LoperAnim.Sisi.SEBERANG, Vector2(0.0, -2.0), 3.0, 0.0, JEDA_LEPAS, LEBAR_SASARAN, semua)
+	check(p != null and p.zona.rumah == 1, "maju 2,0: kotak surat di belakang sepeda tidak dipilih, rumah 1 di depan (dapat %s)" % _nama(p))
 	# Hanya zona sisi lain = null.
 	var dekat_saja: Array[ZonaSasaran.Zona] = []
 	for z: ZonaSasaran.Zona in semua:
@@ -338,7 +338,7 @@ func _test_sasaran_dasar() -> void:
 	check(BantuLempar.pilih(LoperAnim.Sisi.SEBERANG, Vector2(0.0, -0.5), 3.0, 0.0, JEDA_LEPAS, LEBAR_SASARAN, dekat_saja) == null, "hanya zona sisi dekat, tap seberang = null (tidak memilih sisi lain)")
 	# Kotak surat terlalu jauh di depan; satu-satunya kandidat bukan pelanggan; daftar kosong.
 	var jauh: Array[ZonaSasaran.Zona] = _zona_jalan_uji([5])
-	check(_terjangkau_oracle(Vector2(-1.625, 21.125), _lepas_oracle(0.0, 0.5, 3.0, 0.0, JEDA_LEPAS), 3.0) == 0, "kontrol: kotak surat rumah 5 (maju 21,125) tidak terjangkau dari maju 0,5")
+	check(_terjangkau_oracle(Vector2(-2.25, 21.875), _lepas_oracle(0.0, 0.5, 3.0, 0.0, JEDA_LEPAS), 3.0) == 0, "kontrol: kotak surat rumah 5 (maju 21,875) tidak terjangkau dari maju 0,5")
 	check(BantuLempar.pilih(LoperAnim.Sisi.SEBERANG, Vector2(0.0, -0.5), 3.0, 0.0, JEDA_LEPAS, LEBAR_SASARAN, jauh) == null, "kotak surat terlalu jauh di depan = null")
 	check(BantuLempar.pilih(LoperAnim.Sisi.SEBERANG, Vector2(0.0, -8.0), 3.0, 0.0, JEDA_LEPAS, LEBAR_SASARAN, _zona_jalan_uji([2])) == null, "satu-satunya kotak surat seberang di depan bukan pelanggan = null")
 	var kosong: Array[ZonaSasaran.Zona] = []

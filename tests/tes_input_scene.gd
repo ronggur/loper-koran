@@ -191,7 +191,7 @@ func _test_scene_jalan_uji() -> void:
 		check(ukuran == Vector2(lebar, 360), "jendela %dx%d -> viewport %dx360, dapat %s" % [kasus[0], kasus[1], lebar, ukuran])
 		var simpang: float = 0.0
 		var simpang_y: float = 0.0
-		for lateral: float in [-1.0, 0.0, 0.7, 1.0]:
+		for lateral: float in [-BikeMotion.batas_lateral_ubin(), -1.0, 0.0, 0.7, 1.0, BikeMotion.batas_lateral_ubin()]:
 			for jarak: float in [0.0, 17.3, 250.75]:
 				sepeda.lateral_ubin = lateral
 				sepeda.jarak_ubin = jarak
@@ -305,7 +305,7 @@ func _test_input_terpadu() -> void:
 	_langkah(akar, 6)
 	check(sepeda.lateral_ubin < 0.0 and sepeda.nama_animasi() == &"santai_serong_kiri", "stick ke kiri: bergeser ke sisi seberang dan sprite serong seberang (dari gerak nyata), dapat lateral %s animasi %s" % [sepeda.lateral_ubin, sepeda.nama_animasi()])
 	_langkah(akar, 120)
-	check(sepeda.lateral_ubin == -1.0 and sepeda.nama_animasi() == &"santai_normal" and sepeda.kecepatan_ud == 3.0, "setelah membentur tepi jalan seberang: lateral -1, sprite normal, kecepatan 3,0 u/d, dapat %s" % sepeda.nama_animasi())
+	check(sepeda.lateral_ubin == -2.0 and sepeda.nama_animasi() == &"santai_normal" and sepeda.kecepatan_ud == 3.0, "setelah membentur tepi jalan (tepi trotoar) seberang: lateral -2, sprite normal, kecepatan 3,0 u/d, dapat %s" % sepeda.nama_animasi())
 	# Dua jari: swipe di zona kanan tidak mengganggu stick.
 	_sentuh(1, Vector2(450, 200), true)
 	check(router.stick_aktif() and router.swipe_aktif() and router.jumlah_jari_aktif() == 2, "dua jari bersamaan: stick dan swipe aktif")
@@ -338,7 +338,7 @@ func _test_input_terpadu() -> void:
 	_geser(6, Vector2(135, 260))
 	check(router.stick_aktif() and router.swipe_aktif() and router.vektor_stick().is_equal_approx(Vector2(1, 0)), "dua jari dengan swipe lebih dulu: stick ke sisi dekat (1, 0)")
 	_langkah(akar, 6)
-	check(sepeda.lateral_ubin > -1.0 and sepeda.nama_animasi() == &"santai_serong_kanan", "stick ke kanan layar: bergeser ke sisi dekat dengan sprite serong dekat, dapat %s" % sepeda.nama_animasi())
+	check(sepeda.lateral_ubin > -2.0 and sepeda.nama_animasi() == &"santai_serong_kanan", "stick ke kanan layar: bergeser ke sisi dekat dengan sprite serong dekat, dapat %s" % sepeda.nama_animasi())
 	# App di-background atau kehilangan fokus: semua jari dilepas, tidak ada gerak sendiri.
 	_tree.root.propagate_notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
 	check(router.jumlah_jari_aktif() == 0 and router.vektor_stick() == Vector2.ZERO, "NOTIFICATION_APPLICATION_FOCUS_OUT melepas semua jari dan menolkan vektor")

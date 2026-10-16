@@ -516,7 +516,7 @@ func _test_stick_ke_animasi() -> void:
 	d = _jalankan(Vector2(-1, 0), 10, dt)
 	check(_animasi(d) == &"santai_serong_kiri", "10d: tetap serong seberang selama lateral belum membentur tepi jalan (setelah 10 langkah)")
 	d = _jalankan(Vector2(-1, 0), 60, dt)
-	check(d.keadaan.lateral_ubin == -1.0 and d.arah_sprite == 0, "10d: setelah membentur tepi jalan seberang lateral nyata 0 -> sprite kembali normal (arah dari gerak sebenarnya, D-4)")
+	check(d.keadaan.lateral_ubin == -2.0 and d.arah_sprite == 0, "10d: setelah membentur tepi jalan (tepi trotoar) seberang lateral nyata 0 -> sprite kembali normal (arah dari gerak sebenarnya, D-4)")
 	# (e) kanan penuh: serong dekat
 	var e: BikeMotion.Hasil = _jalankan(Vector2(1, 0), 1, dt)
 	check(e.arah_sprite == 1 and _animasi(e) == &"santai_serong_kanan", "10e: kanan penuh = serong dekat (santai_serong_kanan), dapat %s" % _animasi(e))
@@ -560,7 +560,7 @@ func _test_jalan_daur() -> void:
 		check(kamus.size() == sel.size(), "lebar %d: tidak ada ubin kembar di blok tanah" % lebar)
 		var semua_ada: bool = true
 		var contoh_gagal: String = ""
-		for lateral: float in [-1.0, -0.37, 0.0, 0.62, 1.0]:
+		for lateral: float in [-BikeMotion.batas_lateral_ubin(), -1.0, -0.37, 0.0, 0.62, 1.0, BikeMotion.batas_lateral_ubin()]:
 			for pecahan: float in [0.0, 0.25, 0.5, 0.999]:
 				var posisi_sepeda: float = 123.0 + pecahan
 				var sepeda_layar: Vector2 = Iso.dunia_ke_layar(Vector2(lateral, -posisi_sepeda))

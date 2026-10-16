@@ -24,14 +24,18 @@ static func jenis_di(x: float) -> Jenis:
 ## Pusat ubin tanah (x dunia, y dunia) yang perlu ada supaya seluruh layar tertutup, relatif terhadap
 ## titik awal blok (garis tengah jalan di jarak maju bulat). Pusat ubin: x di tengah ubin (kelipatan
 ## setengah ganjil), y bilangan bulat. Cakupan dihitung untuk lebar viewport terbesar dan sepeda di
-## posisi mana pun pada lebar jalan, dengan batas satu ubin ekstra supaya tepi tidak pernah terlihat.
+## posisi mana pun di dalam batas tepi jalan resmi (`BikeMotion.batas_lateral_ubin`, termasuk trotoar), dengan batas ekstra
+## sebesar geseran lateral terjauh ditambah satu ubin maju (blok digeser kelipatan satu ubin) supaya tepi tidak pernah terlihat.
 static func sel_tanah(lebar_viewport: int, tinggi_viewport: int) -> PackedVector2Array:
 	var hasil: PackedVector2Array = PackedVector2Array()
 	var ubin: Vector2 = Vector2(Config.UBIN_LEBAR_PX, Config.UBIN_TINGGI_PX)
 	var lebar: float = float(lebar_viewport)
 	var tinggi: float = float(tinggi_viewport)
-	var kiri_atas: Vector2 = Vector2(-lebar * Config.KAMERA_SEPEDA_X_PECAHAN, -tinggi * Config.KAMERA_SEPEDA_Y_PECAHAN) - ubin
-	var kanan_bawah: Vector2 = Vector2(lebar * (1.0 - Config.KAMERA_SEPEDA_X_PECAHAN), tinggi * (1.0 - Config.KAMERA_SEPEDA_Y_PECAHAN)) + ubin
+	var geser_lateral: Vector2 = Iso.dunia_ke_layar(Vector2(BikeMotion.batas_lateral_ubin(), 0.0)).abs()
+	var geser_maju: Vector2 = Iso.dunia_ke_layar(-Iso.ARAH_MAJU).abs()
+	var batas: Vector2 = geser_lateral + geser_maju
+	var kiri_atas: Vector2 = Vector2(-lebar * Config.KAMERA_SEPEDA_X_PECAHAN, -tinggi * Config.KAMERA_SEPEDA_Y_PECAHAN) - batas
+	var kanan_bawah: Vector2 = Vector2(lebar * (1.0 - Config.KAMERA_SEPEDA_X_PECAHAN), tinggi * (1.0 - Config.KAMERA_SEPEDA_Y_PECAHAN)) + batas
 	var jangkauan: int = int(ceilf(lebar / float(Config.UBIN_LEBAR_PX))) * 2 + 2
 	var setengah: Vector2 = ubin / 2
 	for maju: int in range(-jangkauan, jangkauan + 1):
