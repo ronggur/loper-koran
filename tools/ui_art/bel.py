@@ -342,10 +342,49 @@ def chicken_preview(out_png):
     big(im, 5).save(out_png)
 
 
+# ---------------------------------------------------------------- aset game (assets/sprites/ui/)
+# Run fase3b-rintangan-skor: tombol bel di HUD butuh cincin jeda yang BERKURANG, jadi sheet game memuat diam, ditekan, lalu
+# JEDA_LANGKAH frame jeda dengan cincin penuh sampai 1/JEDA_LANGKAH (button("jeda", p) yang sama dengan render dokumen). Teks
+# "KRING!" tidak disalin: di game teksnya kunci terjemahan (rule content-data: tidak ada teks pemain di gambar).
+SALIN_KE = os.path.join(ROOT, "assets", "sprites", "ui")
+JEDA_LANGKAH = 8
+
+
+def salin_aset_game(dst=SALIN_KE):
+    """Menulis aset 1x yang dipakai Godot ke `dst` (bawaan assets/sprites/ui/) beserta ui_bel.json."""
+    import json
+    os.makedirs(dst, exist_ok=True)
+    states = [button("diam"), button("ditekan")]
+    states += [button("jeda", (JEDA_LANGKAH - i) / JEDA_LANGKAH) for i in range(JEDA_LANGKAH)]
+    tb = canvas(40 * len(states), 40)
+    for i, s in enumerate(states):
+        tb[:, i * 40:(i + 1) * 40] = s
+    to_img(tb).save(os.path.join(dst, "ui_bel_tombol.png"))
+    to_img(sheet(vfx_frames())).save(os.path.join(dst, "ui_bel_getar.png"))
+    to_img(seru()).save(os.path.join(dst, "ui_ikon_seru.png"))
+    meta = {
+        "note": "Usulan, tools/ui_art/bel.py --salin (docs/design/bel/README.md). Tombol: diam, ditekan, lalu jeda_<n> dengan "
+                "cincin ACCENT n/%d (berkurang searah jarum jam). Getar: 4 frame 12 fps, jangkar = titik bel. "
+                "Seru: jangkar 2 px di atas kepala." % JEDA_LANGKAH,
+        "tombol": {"sprite": "ui_bel_tombol.png", "cell": [40, 40],
+                   "frames": ["diam", "ditekan"] + ["jeda_%d" % (JEDA_LANGKAH - i) for i in range(JEDA_LANGKAH)]},
+        "getar": {"sprite": "ui_bel_getar.png", "cell": [FW, FH], "frames": 4, "fps": 12, "anchor": [AX, AY]},
+        "seru": {"sprite": "ui_ikon_seru.png", "size": [11, 13], "anchor": [5, 12]},
+    }
+    with open(os.path.join(dst, "ui_bel.json"), "w") as f:
+        json.dump(meta, f, indent=1)
+        f.write("\n")
+    print("disalin ke", dst)
+
+
 def main():
     ap = argparse.ArgumentParser(description="Aset bel Kring Kring! (usulan)")
     ap.add_argument("--out", default="build/ui_art/bel")
-    out = ap.parse_args().out
+    ap.add_argument("--salin", action="store_true", help="tulis juga aset game 1x ke assets/sprites/ui/ (ui_bel_*.png, ui_ikon_seru.png)")
+    args = ap.parse_args()
+    out = args.out
+    if args.salin:
+        salin_aset_game()
     pv = os.path.join(out, "preview")
     os.makedirs(pv, exist_ok=True)
 
