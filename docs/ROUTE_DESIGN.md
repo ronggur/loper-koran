@@ -17,18 +17,19 @@ Rute perumahan pertama (prototype 3): sekitar 250 ubin, 25 pelanggan di sisi seb
 
 ```
  sisi seberang (kiri pelempar, kiri atas layar)
- ─────────────── petak rumah: fasad, teras, kotak surat ───────────────
- ··············· trotoar ½ ubin ·······································
+ ─────────────── petak rumah: fasad, teras ───────────────────────────
+ ··············· halaman 1 ubin (kotak surat di sini) ·····················
+ ··············· trotoar 1 ubin (bisa dilalui sepeda) ····················
  [ jalur seberang ]   ← lempar ke seberang paling dekat
  [ jalur tengah   ]   ← bisa menjangkau dua sisi, lemparan lebih jauh
  [ jalur dekat    ]   ← lempar ke sisi dekat paling dekat
- ··············· trotoar ½ ubin ·······································
+ ··············· trotoar 1 ubin (bisa dilalui sepeda) ····················
  ─────────────── petak rumah: belakang rumah ──────────────────────────
  sisi dekat (kanan pelempar, kanan bawah layar)
 ```
 
-- Jalan perumahan 2 ubin. Posisi lateral sepeda bebas (stick analog), tapi untuk merancang dipakai **tiga jalur bantu**: seberang, tengah, dekat.
-- **Petak rumah** 4 ubin (rumah 3 ubin + celah 1). Kotak surat di tepi jalan, teras di depan pintu.
+- Jalan perumahan 2 ubin aspal, trotoar 1 ubin tiap sisi. Posisi lateral sepeda bebas (stick analog) sampai tepi trotoar (±2 ubin; sepeda boleh naik trotoar, halaman tidak), tapi untuk merancang dipakai **tiga jalur bantu**: seberang, tengah, dekat.
+- **Petak rumah** 4 ubin (rumah 3 ubin + celah 1). Kotak surat di halaman rumah (bagian halaman terluas, sesudah teras), bukan di trotoar; teras di depan pintu.
 - Jarak lempar 1,5–5 ubin ke samping (BALANCING 4): dari jalur seberang, kotak surat terjangkau swipe pendek; teras butuh swipe sedang.
 
 ## 3. Menempatkan rumah pelanggan

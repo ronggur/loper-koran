@@ -62,7 +62,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 - [x] Uji ukuran kontrol dan HUD di A54: radius stick 35 px game, tombol kidal 38 dp (di bawah 44 dp rule `ui-scenes`), teks HUD 6 px. Perbesar kontrol dan HUD tanpa mengubah skala dunia bila perlu (run 1B: tombol 42 px game ≈ 44 dp, teks HUD 8 px, stick 35 tetap; lolos uji HP pemilik 2026-10-14)
 - [x] Gerak maju terus dengan tiga tingkat kecepatan dari stick (santai/cepat/ngebut) dan transisi halus (BALANCING 2) (run 1A, PR #20, 2026-10-14; rasa dinilai di uji HP)
 - [x] Melambat dan meluncur (stick bawah), rem saat ditarik penuh dan ditahan dengan ambang di ujung bawah (run 1A, PR #20, 2026-10-14; rasa dinilai di uji HP); ambang rem tetap usulan, ROADMAP 5
-- [x] Pindah posisi lateral ke sisi seberang dan sisi dekat; batas tepi jalan (analog bebas, keputusan pemilik 2026-10-13; batas tepi aspal ±1 ubin; run 1A, PR #20)
+- [x] Pindah posisi lateral ke sisi seberang dan sisi dekat; batas tepi jalan (analog bebas, keputusan pemilik 2026-10-13; batas tepi aspal ±1 ubin; run 1A, PR #20; sejak 2026-10-16 batas tepi trotoar ±2 ubin, sepeda boleh naik trotoar)
 - [x] Stamina: terkuras saat cepat dan ngebut, pulih saat meluncur (BALANCING 3) (run 1A, PR #20, 2026-10-14; rasa dinilai di uji HP)
 - [x] Animasi pemain memilih `kecepatan_arah` dari input lewat `loper_sprite.gd`, laju kayuh mengikuti kecepatan (termasuk pose meluncur dan rem; run 1A, PR #20)
 - [x] Umpan balik kecepatan dasar: debu roda, garis kecepatan (placeholder) (run 1B, PR #21, 2026-10-14; keterbacaan dinilai di uji HP); bunyi kayuhan, freewheel, dan rem placeholder lewat autoload `Audio`; tombol dan layar jeda
