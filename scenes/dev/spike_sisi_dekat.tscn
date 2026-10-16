@@ -1,0 +1,87 @@
+[gd_scene load_steps=14 format=3]
+
+[ext_resource type="Script" path="res://scripts/dev/spike_sisi_dekat.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/entities/tanah_daur.gd" id="2_tanah"]
+[ext_resource type="Script" path="res://scripts/ui/kontrol_touch.gd" id="3_kontrol"]
+[ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/tile_graybox_aspal.png" id="4_aspal"]
+[ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/tile_graybox_trotoar.png" id="5_trotoar"]
+[ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/tile_graybox_rumput.png" id="6_rumput"]
+[ext_resource type="PackedScene" path="res://scenes/entities/sepeda_uji.tscn" id="7_sepeda"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_dev.tscn" id="8_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/layar_jeda.tscn" id="9_jeda"]
+[ext_resource type="Script" path="res://scripts/entities/koran_gambar.gd" id="10_koran"]
+[ext_resource type="Script" path="res://scripts/ui/garis_bidik.gd" id="11_bidik"]
+[ext_resource type="Script" path="res://scripts/entities/penerap_penutup.gd" id="12_penerap"]
+[ext_resource type="Script" path="res://scripts/ui/tombol_sentuh.gd" id="13_tombol"]
+
+[node name="SpikeSisiDekat" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Kamera" type="Camera2D" parent="."]
+unique_name_in_owner = true
+
+[node name="Tanah" type="Node2D" parent="."]
+unique_name_in_owner = true
+texture_filter = 1
+script = ExtResource("2_tanah")
+tekstur_aspal = ExtResource("4_aspal")
+tekstur_trotoar = ExtResource("5_trotoar")
+tekstur_rumput = ExtResource("6_rumput")
+
+[node name="AreaSasaran" type="Node2D" parent="."]
+unique_name_in_owner = true
+
+[node name="KoranTanah" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("10_koran")
+lapisan = 0
+
+[node name="Objek" type="Node2D" parent="."]
+unique_name_in_owner = true
+y_sort_enabled = true
+texture_filter = 1
+
+[node name="Sepeda" parent="Objek" instance=ExtResource("7_sepeda")]
+unique_name_in_owner = true
+
+[node name="KoranUdara" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("10_koran")
+lapisan = 1
+
+[node name="GarisBidik" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("11_bidik")
+
+[node name="PenerapPenutup" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("12_penerap")
+
+[node name="Hud" parent="." instance=ExtResource("8_hud")]
+unique_name_in_owner = true
+
+[node name="LapisanSpike" type="CanvasLayer" parent="."]
+layer = 6
+
+[node name="StripSpike" type="MarginContainer" parent="LapisanSpike"]
+offset_left = 4.0
+offset_top = 56.0
+offset_right = 46.0
+offset_bottom = 98.0
+
+[node name="TombolPendekatan" type="Button" parent="LapisanSpike/StripSpike"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(42, 42)
+layout_mode = 2
+focus_mode = 0
+script = ExtResource("13_tombol")
+
+[node name="LapisanKontrol" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="KontrolTouch" type="Node2D" parent="LapisanKontrol"]
+unique_name_in_owner = true
+script = ExtResource("3_kontrol")
+
+[node name="LayarJeda" parent="." instance=ExtResource("9_jeda")]
+unique_name_in_owner = true
