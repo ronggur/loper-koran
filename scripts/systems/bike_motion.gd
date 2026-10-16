@@ -142,8 +142,10 @@ static func jeda(keadaan: Keadaan) -> Keadaan:
 
 ## Satu langkah selama `dt` detik dengan vektor `stick`. `dt` nol, negatif, NaN, atau tak hingga = keadaan tidak berubah
 ## (hanya dibersihkan: nilai NaN atau di luar jangkauan dikembalikan ke jangkauan sah). Stick NaN atau di luar +-1 aman
-## (tiap komponen dijepit, NaN = 0). Keadaan masukan tidak pernah diubah.
-static func langkah(keadaan: Keadaan, stick: Vector2, dt: float) -> Hasil:
+## (tiap komponen dijepit, NaN = 0). Keadaan masukan tidak pernah diubah. `tahan_naik` (oleng sesudah tabrakan, `Tabrakan.oleng`,
+## run fase3b-rintangan-skor): kecepatan tujuan dijepit ke kecepatan awal langkah, jadi sepeda tidak bisa menambah kecepatan; turun, rem,
+## lateral, dan stamina tetap seperti biasa.
+static func langkah(keadaan: Keadaan, stick: Vector2, dt: float, tahan_naik: bool = false) -> Hasil:
 	var hasil: Hasil = Hasil.new()
 	var waktu: float = dt if is_finite(dt) and dt > 0.0 else 0.0
 	var maju: float = _sumbu_bersih(stick.y)
@@ -152,6 +154,8 @@ static func langkah(keadaan: Keadaan, stick: Vector2, dt: float) -> Hasil:
 	var awal: Keadaan = s.salin()
 	hasil.stick_maju = maju
 	hasil.tujuan_ud = kecepatan_tujuan_ud(maju, s.lelah)
+	if tahan_naik:
+		hasil.tujuan_ud = minf(hasil.tujuan_ud, s.kecepatan_ud)
 
 	if waktu > 0.0:
 		# Rem: lama tahan dan saat rem mulai di dalam langkah.

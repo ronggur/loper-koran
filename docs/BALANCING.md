@@ -254,9 +254,9 @@ Logika di `scripts/systems/skor_rute.gd` (`SkorRute`), satu sumber untuk HUD, um
 | Jarak rata-rata antar pelanggan | sekitar 9 ubin | Sekitar 2 detik pada kecepatan cepat, 3 detik pada santai |
 | Lama rute | sekitar 55 detik (cepat) sampai 85 detik (santai) | |
 | Tenggat | waktu tempuh rute pada kecepatan santai × 1,15 (sekitar 95 detik) | Santai terus masih sempat, tapi berhenti lama untuk misi butuh ngebut di bagian lain |
-| Tabrakan | kecepatan turun ke 1,0 u/d, oleng 0,6 detik, combo putus | Tidak menghentikan rute |
+| Tabrakan | kecepatan turun ke 1,0 u/d, oleng 0,6 detik, combo putus, lalu kebal 1,0 detik | Tidak menghentikan rute (K-1 run fase3b-rintangan-skor, bagian 6c) |
 
-Apakah ada game over atau batas tabrakan per hari masih terbuka (GDD 3.2).
+Apakah ada game over atau batas tabrakan per hari masih terbuka (GDD 3.2, ROADMAP 5); run 3B tidak menguncinya (tanpa batas tabrakan per rute).
 
 ### 6b. Rute dari segmen (usulan run fase3a-rute 2026-10-16, dinilai lewat uji HP)
 
@@ -282,6 +282,42 @@ Keputusan pemilik K-1 sampai K-5 (SPEC run). Format segmen di `DATA_SCHEMA.md` 3
 
 Catatan: rumah di tepi jalan (lateral 3 ubin atau lebih) praktis tidak pernah menutupi pemain di lebar jalan resmi (aturan 3D `PenutupPemain`); aturan ini disiapkan untuk objek yang lebih dekat ke jalan (mobil, pohon, tenda) dan dinilai lewat uji HP.
 
+### 6c. Rintangan perumahan dan tabrakan (usulan run fase3b-rintangan-skor 2026-10-16, dinilai lewat uji HP)
+
+Logika murni di `scripts/systems/` (`AnjingPenjaga`, `MobilGarasi`, `RintanganRute`, `Tabrakan`); angka di `config.gd` (awalan `ANJING_`, `MOBIL_`, `TABRAKAN_`). Rintangan dibangun dari `objek` segmen (jenis, `pos`, `jalur`, `tanda_ubin`) tanpa field data baru. Posisi dalam koordinat jalan (lateral dari garis tengah, negatif = seberang; maju dari awal rute). Bentuk tabrakan = persegi di bidang tanah; tepi yang hanya bersentuhan bukan tabrakan.
+
+- **Separuh jalan (K-1):** anjing dan mobil hanya memakai separuh jalan di sisi jalurnya; tepi bentuknya paling jauh tepat di garis tengah. Separuh lain selalu bebas (ROUTE_DESIGN 4 aturan 1), dites di 20 rute seed.
+- **Anjing penjaga:** duduk di halaman (pusat lateral ±2,75, tepi 2,5 di luar jangkauan sepeda di tepi trotoar 2,25). **Waspada** (berdiri, menggeram) saat sepeda masuk `tanda_ubin` (data, paling sedikit 9) di belakang titik rumahnya. **Mengejar** (menggonggong, lari) saat sepeda sampai di titik rumahnya (`ANJING_KEJAR_JARAK_UBIN` 0 = sepeda melewati anjing): maju menuju maju sepeda tanpa mendahuluinya dengan laju kecepatan sepeda × 1,25, dijepit 2,0 sampai 4,5 u/d, dan menyamping ke arah sepeda 2,0 u/d di separuh jalannya. **Berhenti** di batas halaman (3,0 ubin maju dari titik rumah) atau sesudah menabrak, diam 0,8 detik, lalu **pulang** 2,0 u/d dan duduk lagi; sesudah itu tidak waspada lagi untuk lintasan itu. Berbahaya hanya saat mengejar dan berhenti.
+- **Harga kecepatan (prinsip 1):** tanda ke anjing mengejar = 9 ubin / kecepatan = 3,0 detik di santai, 1,5 detik di ngebut. Anjing (3,75 u/d) menyusul pemain santai (3,0) di separuh jalannya; pemain ngebut (6,0) di tengah separuh itu (lateral ±1,0) lolos karena anjing butuh sekitar 0,6 detik menyamping, saat itu sepeda sudah sekitar 0,9 ubin di depan (jarak sentuh 0,65). Di tepi trotoar sisi anjing, ngebut pun bisa tertabrak.
+- **Mobil keluar garasi (D-1, pola sederhana):** parkir dengan bagasi 2,5 ubin dari garis tengah. **Tanda** (lampu mundur berkedip + bip) saat sepeda masuk `tanda_ubin`; tanda menyala **1,5 detik** (waktu, sama di semua kecepatan), lalu **mundur** 1,0 u/d sampai bagasi di garis tengah, lalu **berhenti** di sana menutup separuh jalan sisinya sampai rute disusun ulang. Mobil 1,5 ubin melintang × 0,75 ubin sepanjang jalan. Selalu padat; tidak bereaksi pada bel.
+- **Tanda sebelum bahaya (ROUTE_DESIGN 4 aturan 2):** selang dari tanda pertama sampai bentuk rintangan pertama kali beririsan dengan jalur sepeda (pita lateral bentuk sepeda) ≥ 1,5 detik di santai, cepat, dan ngebut untuk semua posisi lateral −2,0 sampai 2,0, dan di posisi yang kena di dua kecepatan, yang lebih pelan tidak lebih pendek (dites 204 kasus). Terpendek di tepi trotoar sisi rintangan pada ngebut: anjing sekitar 1,63 detik, mobil 1,75 detik (contoh literal dengan langkah 1/8 detik: anjing tanda di 1,875 detik dan menyentuh di 3,5 detik).
+- **Tabrakan (K-1):** sepeda 0,5 × 0,8 ubin (`TABRAKAN_SEPEDA_SETENGAH_*`). Saat tabrakan kecepatan langsung turun ke 1,0 u/d bila lebih tinggi, **oleng** 0,6 detik (kecepatan tidak bisa naik; lateral, melambat, rem, dan lemparan tetap bisa; `BikeMotion.langkah(..., tahan_naik)`), combo putus, dan **kebal** 1,0 detik dihitung dari saat tabrakan (tidak ada tabrakan kedua dari rintangan mana pun). Stamina tidak dihukum. **Tanpa tabrakan ganda:** rintangan yang bersentuhan saat tabrakan atau selama kebal tidak memicu tabrakan lagi sampai sepeda terpisah darinya (sepeda yang terus melewati mobil yang ditabraknya tidak tertabrak berulang). Anjing penyebab berhenti mengejar. Tanpa batas tabrakan per rute dan tanpa game over (ROADMAP 5 tetap terbuka).
+- **Urutan per langkah** (`RintanganRute.langkah`, dipakai scene dan simulasi tes): sepeda bergerak (oleng menahan naik), rintangan melangkah dengan posisi dan kecepatan sepeda baru, lalu tabrakan diperiksa. Jeda (dt 0) membekukan semuanya.
+- **Dites (invarian prinsip):** 20 rute seed: pemain santai di sisi bebas tanpa tabrakan, dan di setiap posisi maju ada posisi lateral yang tidak pernah dimasuki rintangan. Pemain santai yang sengaja menabrak setiap rintangan (11 per rute) tetap sampai garis akhir, kecepatan kembali ke santai dalam 3 detik sesudah tiap tabrakan, `rute_selesai` tepat sekali.
+
+| Angka | Usulan | Catatan |
+|---|---|---|
+| Bentuk sepeda | 0,5 lateral × 0,8 maju | `TABRAKAN_SEPEDA_SETENGAH_LATERAL_UBIN` 0,25, `_MAJU_UBIN` 0,4 |
+| Anjing: bentuk, halaman | 0,5 × 0,5; pusat ±2,75 | `ANJING_SETENGAH_UBIN`, `ANJING_RUMAH_LATERAL_UBIN` |
+| Anjing: mulai mengejar | sepeda di titik rumah (0 ubin di belakang) | `ANJING_KEJAR_JARAK_UBIN` |
+| Anjing: laju | sepeda × 1,25, dijepit 2,0..4,5 u/d; menyamping 2,0 u/d | `ANJING_KEJAR_PENGALI`, `ANJING_LAJU_MIN_UD`, `ANJING_LAJU_MAKS_UD`, `ANJING_LATERAL_UD` |
+| Anjing: batas halaman | 3,0 ubin maju | `ANJING_BATAS_MAJU_UBIN` |
+| Anjing: berhenti, pulang | 0,8 detik; 2,0 u/d | `ANJING_BERHENTI_DETIK`, `ANJING_PULANG_UD` |
+| Mobil: ukuran | 1,5 melintang × 0,75 sepanjang jalan | `MOBIL_PANJANG_UBIN`, `MOBIL_SETENGAH_LEBAR_UBIN` 0,375 |
+| Mobil: bagasi | 2,5 ubin saat parkir, berhenti di 0 (garis tengah) | `MOBIL_BELAKANG_AWAL_UBIN`, `MOBIL_BELAKANG_AKHIR_UBIN` |
+| Mobil: tanda, mundur | 1,5 detik; 1,0 u/d | `MOBIL_TANDA_DETIK`, `MOBIL_MUNDUR_UD` |
+| Tabrakan | 1,0 u/d, oleng 0,6, kebal 1,0 detik | `TABRAKAN_KECEPATAN_UD`, `TABRAKAN_OLENG_DETIK`, `TABRAKAN_KEBAL_DETIK`; `TABRAKAN_TOLERANSI_DETIK` 0,000001 hanya derau float |
+
+### 6d. Bel "Kring Kring!" (usulan run fase3b-rintangan-skor 2026-10-16, dinilai lewat uji HP)
+
+Logika di `scripts/systems/bel.gd` (`Bel`), reaksi lewat `RintanganRute.terapkan_bel`; GDD 5.4, K-3. Ketukan pertama = "kring", teks "KRING!" tampil 0,5 detik; ketukan kedua selama teks tampil = "kring kring!", lalu bel jeda 1,0 detik (ketukan ditolak tanpa bunyi, sisa jeda dibaca sebagai cincin). "Kring" tunggal yang teksnya sudah habis tidak memulai jeda. Bel ditolak saat jeda game; teks dan jeda bel membeku selama jeda. Jangkauan: rintangan dari 1,0 ubin di belakang sampai 4,0 ubin di depan sepeda, seluruh lebar jalan. Reaksi per jenis dari SATU tabel (`Bel.REAKSI_JENIS`): anjing penjaga yang waspada atau mengejar kaget 0,5 detik (ikon "!") lalu mundur ke halamannya 3,0 u/d dan tidak mengejar lagi untuk lintasan itu; anjing yang duduk tidak bereaksi; mobil tidak pernah bereaksi.
+
+| Angka | Usulan | Catatan |
+|---|---|---|
+| Teks bel | 0,5 detik | `BEL_TEKS_DETIK`; jendela ketukan kedua |
+| Jeda bel | 1,0 detik sesudah "kring kring!" | `BEL_JEDA_DETIK` |
+| Jangkauan | 4,0 ubin di depan, 1,0 di belakang | `BEL_JANGKAUAN_UBIN`, `BEL_JANGKAUAN_BELAKANG_UBIN` (D-5: anjing yang mengejar berlari di samping atau sedikit di belakang sepeda) |
+| Anjing kaget, mundur | 0,5 detik; 3,0 u/d | `ANJING_KAGET_DETIK`, `ANJING_MUNDUR_UD` |
 
 ---
 
@@ -341,7 +377,7 @@ Belum diisi. Diputuskan di Fase 6 bersama layar bengkel (GDD 12.5). Arah yang su
 
 ## 10. Catatan perubahan
 
-- **2026-10-16** — Run fase3b-rintangan-skor bagian A, skor dan koin (logika murni; keputusan pemilik K-2 dan K-4, usulan orchestrator O-1 sampai O-5; semua angka usulan, belum diuji di HP): skor, combo, pengali kecepatan, tepat, rumah terantar (bagian 5b), koin dan tip (bagian 7). Angka BALANCING 5 dan 7 yang sudah ada dipakai apa adanya (combo +0,1 maks ×2,0; pengali 1,0 / 1,2 / 1,5; ongkos 15; tip 5). Angka baru: tepat ×1,25 dengan inti 0,5 × 0,5, skor dasar 100 dan halaman 50%, pemberi tip 30%. Alasan: kontrak SPEC run 3B (AC-9 sampai AC-12).
+- **2026-10-16** — Run fase3b-rintangan-skor bagian A (logika murni; keputusan pemilik K-1 sampai K-4 dan usulan orchestrator O-1 sampai O-5; semua angka usulan, belum diuji di HP): rintangan anjing penjaga dan mobil keluar garasi, tabrakan, bel (bagian 6c dan 6d), skor, combo, pengali kecepatan, tepat, rumah terantar (bagian 5b), koin dan tip (bagian 7). Angka BALANCING 5-7 yang sudah ada dipakai apa adanya (combo +0,1 maks ×2,0; pengali 1,0 / 1,2 / 1,5; ongkos 15; tip 5; tabrakan 1,0 u/d dan oleng 0,6). Angka baru: kebal 1,0 detik, tepat ×1,25 dengan inti 0,5 × 0,5, skor dasar 100 dan halaman 50%, pemberi tip 30%, semua angka rintangan (bagian 6c), bel (teks 0,5, jeda 1,0, jangkauan 4,0 depan dan 1,0 belakang). Alasan: kontrak SPEC run 3B (AC-1 sampai AC-14); angka rintangan dipilih supaya invarian prinsip desain lolos (tanda ≥ 1,5 detik pada ngebut, separuh jalan selalu bebas, santai tersusul anjing, ngebut lolos).
 
 - **2026-10-16** — Sepeda boleh naik trotoar dan kotak surat pindah ke halaman (permintaan pemilik, usulan, belum diuji di HP): batas tepi jalan resmi ±1,0 → ±2,0 ubin (bagian 2), kotak surat seberang `[−2,125; 0,375; 1,0 × 1,5]` → `[−2,75; 1,25; 1,0 × 1,25]` dan dekat `[1,125; 0,375; 1,0 × 1,5]` → `[1,75; 1,25; 0,75 × 1,25]` (bagian 5), sprite kotak surat dari (−1,5; +1,0) ke (−2,125; +1,75). Angka lain tidak berubah.
 - **2026-10-16** — Run fase3a-rute bagian B (scene rute; semua usulan, belum diuji di HP): scene utama `scenes/rute/rute.tscn` menggambar rumah dan kotak surat dari data lewat jendela daur (angka baru `RUTE_DAUR_MUNDUR_UBIN` 20 dan `RUTE_DAUR_MAJU_UBIN` 30), akhir rute dengan rem biasa (`RUTE_AKHIR_STICK_Y` −1,0) dan tombol dev "Main lagi" (seed + 1), dan penerap penutup tunggal (alfa 0,45 tidak berubah). Titik pijak sprite rumah disimpan di `RUTE_RUMAH_SPRITE` dan `RUTE_RUMAH_PIJAK_PX` (fakta aset, dicek tes terhadap JSON). Penilaian koran dan mode bantu memakai zona rute lewat `MedanKoran`; angka lintasan, zona, jeda, dan skor tidak berubah. Alasan: kontrak SPEC run 3A (AC-10 sampai AC-16).

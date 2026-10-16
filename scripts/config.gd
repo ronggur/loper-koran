@@ -510,6 +510,74 @@ const RUTE_RUMAH_SPRITE: Array[String] = ["house_perumahan_dekat_limasan_bukan",
 ## Titik pijak tiap sprite rumah (`ground_anchor` di JSON aset, tengah tapak), piksel dari pojok kiri atas gambar: x lalu y, sejajar dengan `RUTE_RUMAH_SPRITE`. Tes membandingkannya dengan JSON aset.
 const RUTE_RUMAH_PIJAK_PX: Array[int] = [97, 123, 155, 152, 96, 122, 155, 151, 96, 118, 154, 147, 105, 127, 105, 127, 96, 148, 96, 148, 105, 119, 105, 119]
 
+## --- Rintangan perumahan (GDD 9.3, ROUTE_DESIGN 4, BALANCING 6c; usulan run fase3b-rintangan-skor, dinilai lewat uji HP) ---
+## Posisi dalam koordinat jalan: lateral dari garis tengah (negatif = `seberang`), maju dari awal rute, ubin. Bentuk tabrakan = persegi di
+## bidang tanah (setengah ukuran di bawah). Anjing dan mobil hanya memakai separuh jalan di sisinya (K-1): tepi bentuknya tidak pernah
+## melewati garis tengah, jadi separuh lain selalu bebas (ROUTE_DESIGN 4 aturan 1). Jarak tanda dari data segmen (`tanda_ubin`).
+
+## Setengah lebar bentuk tabrakan sepeda melintang jalan, ubin (lebar 0,5).
+const TABRAKAN_SEPEDA_SETENGAH_LATERAL_UBIN: float = 0.25
+## Setengah panjang bentuk tabrakan sepeda sepanjang jalan, ubin (panjang 0,8).
+const TABRAKAN_SEPEDA_SETENGAH_MAJU_UBIN: float = 0.4
+## Anjing penjaga: setengah sisi bentuk persegi, ubin (sisi 0,5).
+const ANJING_SETENGAH_UBIN: float = 0.25
+## Anjing: jarak pusat dari garis tengah saat di halamannya (duduk), ubin. Tepi bentuknya (2,5) di luar jangkauan sepeda di tepi trotoar.
+const ANJING_RUMAH_LATERAL_UBIN: float = 2.75
+## Anjing mulai mengejar saat sepeda sudah sejauh ini di belakang titik rumahnya atau lebih maju, ubin (0 = sepeda melewati anjing).
+const ANJING_KEJAR_JARAK_UBIN: float = 0.0
+## Anjing: laju maju saat mengejar = kecepatan sepeda x pengali ini, dijepit `ANJING_LAJU_MIN_UD` sampai `ANJING_LAJU_MAKS_UD`.
+const ANJING_KEJAR_PENGALI: float = 1.25
+## Anjing: laju maju terkecil saat mengejar, u/d (sepeda yang berhenti tetap dikejar).
+const ANJING_LAJU_MIN_UD: float = 2.0
+## Anjing: batas laju maju, u/d. Di bawah ngebut (6,0) supaya pemain ngebut lolos; di atas santai x pengali supaya santai tersusul.
+const ANJING_LAJU_MAKS_UD: float = 4.5
+## Anjing: laju menyamping ke arah sepeda (di dalam separuh jalan sisinya), u/d.
+const ANJING_LATERAL_UD: float = 2.0
+## Anjing: batas halaman, paling jauh sekian ubin maju dari titik rumahnya; sampai di sini anjing berhenti mengejar.
+const ANJING_BATAS_MAJU_UBIN: float = 3.0
+## Anjing: lama berdiri di batas halaman (atau sesudah menabrak sepeda) sebelum pulang, detik.
+const ANJING_BERHENTI_DETIK: float = 0.8
+## Anjing: laju pulang ke titik rumahnya (per sumbu), u/d.
+const ANJING_PULANG_UD: float = 2.0
+## Anjing yang mendengar bel: lama diam menampilkan ikon "!" sebelum mundur, detik (DESIGN_SPEC 3.8: sekitar 0,5).
+const ANJING_KAGET_DETIK: float = 0.5
+## Anjing yang mendengar bel: laju mundur ke titik rumahnya (per sumbu), u/d.
+const ANJING_MUNDUR_UD: float = 3.0
+## Mobil keluar garasi: panjang mobil melintang jalan (mobil mundur tegak lurus jalan), ubin.
+const MOBIL_PANJANG_UBIN: float = 1.5
+## Mobil: setengah lebar mobil sepanjang jalan, ubin (lebar 0,75).
+const MOBIL_SETENGAH_LEBAR_UBIN: float = 0.375
+## Mobil: jarak bagasi (ujung belakang) dari garis tengah saat parkir di garasi, ubin. Di luar jangkauan sepeda di tepi trotoar.
+const MOBIL_BELAKANG_AWAL_UBIN: float = 2.5
+## Mobil: bagasi berhenti sejauh ini dari garis tengah, ubin (0 = tepat di garis tengah; tidak pernah melewatinya, K-1).
+const MOBIL_BELAKANG_AKHIR_UBIN: float = 0.0
+## Mobil: lama lampu mundur dan bip menyala sebelum mobil bergerak, detik (ROUTE_DESIGN 4 aturan 2: tanda minimal 1,5 detik).
+const MOBIL_TANDA_DETIK: float = 1.5
+## Mobil: laju mundur ke jalan, u/d.
+const MOBIL_MUNDUR_UD: float = 1.0
+
+## --- Tabrakan (BALANCING 6, K-1 run fase3b-rintangan-skor; usulan, dinilai lewat uji HP) ---
+
+## Kecepatan sepeda langsung turun ke sini saat tabrakan (bila lebih tinggi), u/d.
+const TABRAKAN_KECEPATAN_UD: float = 1.0
+## Lama oleng sesudah tabrakan, detik: kecepatan tidak bisa naik; lateral dan lemparan tetap bisa.
+const TABRAKAN_OLENG_DETIK: float = 0.6
+## Lama kebal dihitung dari saat tabrakan, detik: tidak ada tabrakan kedua dari rintangan mana pun.
+const TABRAKAN_KEBAL_DETIK: float = 1.0
+## Toleransi derau float untuk waktu rintangan, tabrakan, dan bel (sisa oleng, kebal, jeda bel, lama berhenti anjing, lama tanda mobil), detik.
+const TABRAKAN_TOLERANSI_DETIK: float = 0.000001
+
+## --- Bel "Kring Kring!" (GDD 5.4, DESIGN_SPEC 3.8, K-3 run fase3b-rintangan-skor; usulan, dinilai lewat uji HP) ---
+
+## Lama teks "KRING!" tampil sesudah ketukan, detik. Ketukan kedua selama teks tampil = "KRING KRING!" (GDD 5.4).
+const BEL_TEKS_DETIK: float = 0.5
+## Jeda bel sesudah "kring kring!" (dua bunyi), detik; ketukan selama jeda ditolak tanpa bunyi.
+const BEL_JEDA_DETIK: float = 1.0
+## Jangkauan bel di depan sepeda, ubin (GDD 5.4: sekitar 4 ubin).
+const BEL_JANGKAUAN_UBIN: float = 4.0
+## Jangkauan bel di belakang sepeda, ubin: anjing yang mengejar berlari tepat di samping atau sedikit di belakang sepeda (D-5 run ini).
+const BEL_JANGKAUAN_BELAKANG_UBIN: float = 1.0
+
 ## --- Skor, combo, koin, tip, tepat (BALANCING 5 dan 7, GDD 14.1; K-2, K-4, O-1 sampai O-5 run fase3b-rintangan-skor; usulan) ---
 ## Skor dan koin dua besaran terpisah (K-2). Skor = dasar x persen sasaran x pengali combo x pengali kecepatan saat lepas (x tepat),
 ## dihitung dengan bilangan bulat (persen dan persepuluh) lalu dibulatkan ke bilangan bulat terdekat, setengah ke atas (`SkorRute`).
