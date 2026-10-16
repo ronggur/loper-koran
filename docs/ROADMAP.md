@@ -1,6 +1,6 @@
 # Roadmap — Loper Koran
 
-Status per **16 Oktober 2026** (Fase 3 run 3A: rute perumahan dari segmen, usulan, menunggu uji HP; Fase 2 dan M1 masih menunggu uji HP). Dokumen ini mencatat kesiapan sebelum produksi, milestone sampai rilis, dan keputusan yang masih terbuka. Rincian kerja per fase ada di [`DEV_PHASES.md`](./DEV_PHASES.md).
+Status per **17 Oktober 2026** (Fase 3 run 3C: radar, HUD rute final, tenggat, layar hasil, dan spike sisi dekat, usulan, menunggu uji HP penutup Fase 3 dan keputusan sisi dekat; run 3A dan 3B juga menunggu uji HP; Fase 2 dan M1 masih menunggu uji HP). Dokumen ini mencatat kesiapan sebelum produksi, milestone sampai rilis, dan keputusan yang masih terbuka. Rincian kerja per fase ada di [`DEV_PHASES.md`](./DEV_PHASES.md).
 
 Status: ⬜ belum mulai · 🟡 sedang dikerjakan · ✅ selesai
 
@@ -70,7 +70,7 @@ Skala dipilih Ronggur; sisanya didelegasikan ke agent dengan alasan tertulis. Bi
 | Subjudul Inggris dan cek ketersediaan nama "Kring Kring!" (Play Store, App Store, Steam, PDKI/DJKI) | Fase 0 (export). Nama package sudah `com.rmh.kring` (4b), jadi cek ini sebaiknya selesai sebelum upload pertama ke Play Console |
 | Ketelitian swipe pendek (ambang rem: lolos uji HP pemilik 2026-10-14, angka ≥90% ditahan 0,25 detik dipakai) | M1, Fase 2 (diputuskan lewat uji HP) |
 | Jendela kena koran: bonus atau penalti (GDD 4.1). Bawaan prototype Run 2A: **penalti ringan** (antaran tidak sah, tanpa potong koin) lewat sakelar di `scripts/config.gd`, nilai bonus tetap tersedia (pemilik 2026-10-14); keputusan akhir tetap terbuka. Run 3B memakai sakelar yang sama untuk skor dan koin (penalti = meleset: 0 skor, 0 koin, combo putus; bonus = sah penuh + bintang) tanpa mengubahnya | Fase 2–3 (skor) |
-| Cara menampilkan rumah di sisi dekat | Fase 3 (rute), aset rumah |
+| Cara menampilkan rumah di sisi dekat. Spike run 3C (2026-10-17): tiga pendekatan di graybox `scenes/dev/spike_sisi_dekat.tscn`, tangkapan di `docs/loop/20261018-fase3c-hud-hasil/shots/spike_sisi_dekat/`, catatan perbandingan di LOG run itu; **menunggu keputusan pemilik** (paling lambat sebelum aset Fase 8, TECH_PLAN Fase 3) | Fase 3 (rute), aset rumah |
 | Pemetaan pelanggan tetap (id rumah di save, mis. `per_r014`) ke rute yang diacak. Format segmen **diputuskan JSON buatan tangan** (pemilik 2026-10-16, run 3A, `DATA_SCHEMA` 3 dan 5); run 3A memakai id rute `<id_segmen>@<pos>` dan tidak menulis save | Fase 6 (save dan hari) |
 | Struktur sesi: hari berurutan atau run roguelite | M2 |
 | Batas tabrakan per rute (run 3B: tanpa batas dan tanpa game over, tabrakan hanya menghambat, K-1); dicek ulang bersama game over | M2 |

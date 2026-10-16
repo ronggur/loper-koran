@@ -323,6 +323,8 @@ Setiap fase berisi: tujuan, kaitan cerita, sistem dan kode, aset, konten, uji, d
 
 **Spike teknis yang harus selesai di fase ini: rumah di sisi dekat.** Perumahan hanya memakai sisi seberang, tapi keputusan tampilan sisi dekat memengaruhi desain aset rumah, dan Bab 2 (Perkampungan) adalah bab pertama yang memakai dua sisi. Bandingkan di graybox tiga pendekatan (usulan): (1) punggung rumah apa adanya, rendah dan kontras rendah; (2) tembok atau pagar belakang rendah dengan rumah di belakangnya; (3) punggung rumah semi-transparan di dekat pemain. Keputusan paling lambat sebelum aset Fase 8 dibuat. Pinggir sungai (Bab 6) tidak punya masalah ini karena sisi dekat adalah air (GDD 9.2).
 
+**Status spike (run `20261018-fase3c-hud-hasil`, 2026-10-17): tangkapan ada, menunggu keputusan pemilik.** Ketiga pendekatan dibuat di scene dev `scenes/dev/spike_sisi_dekat.tscn` (sakelar 1/2/3, pelanggan sisi dekat placeholder hanya di spike, dikecualikan dari paket ekspor; rute perumahan tidak berubah), aset graybox dari `tools/env_art/spike_sisi_dekat.py`, pendekatan 3 lewat aturan penutup yang sudah ada (`PenutupPemain` + satu `PenerapPenutup`). Tangkapan 2340×1080 (jalur dekat, trotoar dekat, lemparan ke sisi dekat) di `docs/loop/20261018-fase3c-hud-hasil/shots/spike_sisi_dekat/`, catatan perbandingan netral (keterbacaan sasaran, menutupi sepeda, beban aset Fase 5 dan 8) di LOG run itu. Belum ada pendekatan yang dipilih; `ROADMAP.md` 5 tetap terbuka.
+
 **Aset (M2, dari ART_DIRECTION 6)**
 
 | Kelompok | Aset | Jumlah |

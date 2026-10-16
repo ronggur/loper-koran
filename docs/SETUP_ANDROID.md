@@ -491,3 +491,47 @@ Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build 
 12. Jeda dan Main lagi: ya / tidak
 Angka, bunyi, dan aset yang ingin diubah dan alasannya: ____
 ```
+
+### 8.8 Uji penutup Fase 3: radar, HUD rute final, tenggat, layar hasil (run `20261018-fase3c-hud-hasil`, belum diuji)
+
+Penguji: pemilik sendiri (rule `testing`; tidak ada penguji lain). APK normal terbaru (bagian 4) di vivo V2108 (`12d8c9da`, 2400×1080, ada lubang kamera), atau A54 bila tersambung. Uji 8.5 (Fase 2 dan M1), 8.6 (3A), dan 8.7 (3B) tetap terpisah dan diisi di lembarnya sendiri. Semua angka, aset, dan tata letak usulan (`BALANCING.md` 6 dan 6f, `DESIGN_SPEC.md` 3, 3.2 sampai 3.4, dan 4; usulan O-6 sampai O-12 di `docs/loop/20261018-fase3c-hud-hasil/SPEC.md`): catat yang ingin diubah beserta alasannya, jangan diubah di sesi uji. Tangkapan desktop pembanding: `docs/loop/20261018-fase3c-hud-hasil/shots/*_hud_*.png` (`tests/probe_hud_rute_jendela.gd`, 1920×1080, 2340×1080, 2400×1080, 1600×720). Fase 3 baru selesai sesudah lembar ini diisi (`DEV_PHASES.md`).
+
+1. [ ] **20 rute dibangun tanpa galat (bukti mesin, tidak perlu dimainkan).** Tes headless `tests/tes_rute.gd` (20 seed: urutan segmen dan pelanggan bervariasi, panjang 200 sampai 300 ubin) dan `tests/tes_rintangan.gd` (20 seed: sisi bebas selalu ada, bot santai dan ngebut di sisi bebas tanpa tabrakan, garis akhir tepat sekali, bot santai sampai sebelum tenggat) lolos di `run_tests.gd`. Hasil: lolos ya / tidak, commit: ___
+2. [ ] **3 rute dimainkan (ROUTE_DESIGN 7).** Langkah: mainkan tiga rute berturut-turut lewat "Main lagi" di layar hasil (seed + 1 tiap kali), campur santai, cepat, dan ngebut. Diharapkan: ketiganya bisa dilewati tanpa tabrakan oleh pemain yang memperhatikan; tiap rute selesai dengan layar hasil. Hasil: ___
+3. [ ] **Tidak terasa dihafal setelah tiga kali.** Diharapkan: urutan segmen, letak pelanggan, rintangan terasa berbeda; tidak menebak rumah berikutnya dari ingatan. Hasil: ya / tidak. Catatan: ___
+4. [ ] **Tiap tabrakan bisa dijelaskan.** Catat tiap tabrakan selama tiga rute: penyebab (anjing/mobil), tanda terlihat atau tidak, dan apakah pemain bisa menjelaskan kenapa menabrak (ROUTE_DESIGN 7). Hasil: ___ tabrakan, tak terjelaskan: ___
+5. [ ] **Radar terbaca saat ngebut.** Strip kiri (seberang) dan kanan (dekat), penanda 8×6 px game bergerak turun saat rumah mendekat; jangkauan 30 ubin (sekitar 5 detik ngebut). Langkah: ngebut sambil melirik radar. Diharapkan: penanda pelanggan (kuning), pemberi tip (hijau bertitik), dan "masuk jangkauan lempar" (membesar, garis terang) terbedakan tanpa berhenti; ancang-ancang terasa cukup; radar tidak tertutup jempol. Hasil: terbaca ya / tidak, jangkauan 30 ubin pas / pendek / panjang, tip terbaca ya / tidak, jangkau terbaca ya / tidak.
+6. [ ] **HUD final terbaca dan tidak menutupi apa pun di vivo V2108.** Panel progres tengah atas (WAKTU / LEWAT, "n/25 TERKIRIM", 25 kotak 8×8 dengan simbol ✓ × ▶ kosong), panel koin dan skor/combo kanan atas, radar, tombol jeda, panel bawah, bel. Diharapkan: teks 8 px terbaca; simbol kotak terbedakan di ×3; tidak ada yang tertutup lubang kamera atau keluar zona aman (orientasi landscape dua arah); HUD tidak menutupi sepeda, jalan di depan, atau tanda rintangan (mobil seberang saat tanda lampu mundur bisa sebagian di bawah panel koin/skor, lihat butir 13). Hasil: terbaca ya / tidak, tertutup lubang kamera: ___, menutupi: ___
+7. [ ] **Tenggat terasa adil.** Tenggat = waktu tempuh santai × 1,15 (sekitar 89 sampai 92 detik). Langkah: satu rute santai tanpa berhenti; satu rute dengan berhenti lama (rem) beberapa kali. Diharapkan: santai sampai sebelum tenggat dengan sisa sedikit; berhenti lama terasa ada harganya; ngebut terasa tidak perlu memburu jam. Hasil: santai sempat ya / tidak (sisa ___ detik), berhenti lama terasa ya / tidak, 1,15 pas / ketat / longgar.
+8. [ ] **Tip hilang sesudah tenggat terbaca.** Sesudah "LEWAT +m:ss" (oranye, teks berubah), antaran tetap memberi ongkos 15, skor, dan combo, tetapi teras pemberi tip tidak memberi "tip +5" dan tidak berdenting; radar menampilkan pemberi tip sebagai pelanggan biasa. Diharapkan: pemain paham kenapa tip tidak ada; tidak terasa menghukum (tanpa potong koin, rute jalan terus). Hasil: paham ya / tidak, terasa wajar / menghukum.
+9. [ ] **Layar hasil hangat.** Muncul sekitar 0,6 detik (santai) sampai 1,2 detik (ngebut) sesudah garis akhir, saat sepeda berhenti dan koran sudah mendarat. Urutan: Terkirim, Tip, Koin, Skor, Tepat, lalu Meleset dan status tenggat abu-abu netral. Diharapkan: terasa menghargai yang berhasil, bukan layar kalah; terbaca di 2400×1080; "Main lagi" tidak tertekan tak sengaja (jari masih di layar saat hasil muncul); back Android di layar hasil tidak melakukan apa-apa. Hasil: hangat ya / tidak, terbaca ya / tidak, tak sengaja ___ kali, back wajar ya / tidak.
+10. [ ] **Sakelar Kidal dan Bantu di layar jeda mudah.** Langkah: jeda, ketuk "Kidal: mati" dan "Bantu: mati" (96×42 px game), lanjut, lalu jeda lagi dan matikan. Diharapkan: satu ketukan membalik, status terbaca dari teks dan bingkai oranye; kidal menukar zona stick/swipe, panel bawah, dan bel, tetapi radar tetap (kiri = seberang); bantu langsung memakai tap dan menampilkan rumah bukan pelanggan abu-abu (berlubang) di radar. Hasil: mudah ya / tidak, radar tetap saat kidal terasa benar ya / tidak.
+11. [ ] **Mode bantu menyelesaikan rute sebelum tenggat.** Langkah: satu rute penuh mode bantu, hanya tap. Diharapkan: sampai sebelum tenggat tanpa tabrakan bila memilih sisi bebas; abu-abu di radar membantu memilih sisi tap. Hasil: ya / tidak.
+12. [ ] **Zona aman nyata (NEEDS-MANUAL D-7 run 3C).** Apakah `DisplayServer.get_display_safe_area()` melaporkan inset di vivo V2108? Bila ya, radar, tombol jeda, panel koin/skor, panel bawah, dan bel bergeser ke dalam sama besar dan tidak ada yang tertutup lubang kamera; bila tidak (inset 0), catat apakah lubang kamera menutupi radar kiri/kanan atau tombol jeda. Hasil: inset terbaca ya / tidak, yang tertutup: ___
+13. [ ] **Mobil seberang dan panel kanan atas (NEEDS-MANUAL run 3C).** Saat tanda lampu mundur mobil garasi seberang mulai terlihat, mobil bisa tampil sebagian di bawah panel koin/skor kanan atas (lebih kecil dari QA-007 run 3B karena strip atas tengah kini hanya panel progres). Diharapkan: lampu mundur tetap tertangkap mata. Hasil: tertangkap ya / tidak.
+14. [ ] **Panel progres terbaca (NEEDS-MANUAL run 3C).** "WAKTU 1:31" / "LEWAT +0:12" dan "n/25 TERKIRIM" dengan font 8 px; kotak terlewat muncul sekitar 3 ubin sesudah rumah pelanggan yang tidak terantar dilewati (masih bisa dikenai lemparan ke belakang sebelum itu). Hasil: terbaca ya / tidak, terlewat muncul pada saat yang wajar ya / tidak.
+15. [ ] **Tanpa suara.** Semua isyarat baru (tenggat lewat, tip hilang, layar hasil) terbaca dari visual. Hasil: ya / tidak.
+16. [ ] **Keputusan rumah sisi dekat (bukan uji HP wajib).** Lihat `docs/loop/20261018-fase3c-hud-hasil/shots/spike_sisi_dekat/` (tiga pendekatan × jalur, trotoar, lempar) dan catatan perbandingan di LOG run itu, lalu pilih pendekatan atau tetapkan tanggal keputusan (paling lambat sebelum aset Fase 8, TECH_PLAN Fase 3). Spike bisa dicoba di desktop: `godot --path . scenes/dev/spike_sisi_dekat.tscn` (tombol 1/2/3). Hasil: pendekatan ___ / tanggal keputusan ___
+
+**Lembar hasil 8.8 (penutup Fase 3):**
+
+```
+Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build (commit): ____
+1. 20 rute tanpa galat (tes): lolos ya / tidak   commit: ____
+2. 3 rute dimainkan: ya / tidak   bisa dilewati tanpa tabrakan: ya / tidak
+3. Dihafal setelah tiga kali: ya / tidak
+4. Tabrakan: __ kali   tak terjelaskan: ____
+5. Radar saat ngebut: terbaca ya / tidak   30 ubin pas / pendek / panjang   tip ya / tidak   jangkau ya / tidak
+6. HUD final: terbaca ya / tidak   tertutup lubang kamera: ____   menutupi: ____
+7. Tenggat: santai sempat ya / tidak (sisa __ detik)   berhenti lama terasa ya / tidak   1,15 pas / ketat / longgar
+8. Tip hilang sesudah tenggat: paham ya / tidak   wajar / menghukum
+9. Layar hasil: hangat ya / tidak   terbaca ya / tidak   Main lagi tak sengaja __ kali   back wajar ya / tidak
+10. Sakelar layar jeda: mudah ya / tidak   radar tetap saat kidal benar ya / tidak
+11. Mode bantu sebelum tenggat: ya / tidak
+12. Zona aman: inset terbaca ya / tidak   tertutup: ____
+13. Lampu mundur mobil di bawah panel kanan atas tertangkap: ya / tidak
+14. Panel progres terbaca: ya / tidak   terlewat wajar: ya / tidak
+15. Tanpa suara terbaca: ya / tidak
+16. Rumah sisi dekat: pendekatan 1 / 2 / 3 / tanggal keputusan ____
+Angka, tata letak, dan aset yang ingin diubah dan alasannya: ____
+```
