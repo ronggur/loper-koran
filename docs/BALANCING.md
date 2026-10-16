@@ -253,6 +253,8 @@ Keputusan pemilik K-1 sampai K-5 (SPEC run). Format segmen di `DATA_SCHEMA.md` 3
 | Jendela keputusan | maksimal satu rintangan dalam 6 ubin | `RUTE_RINTANGAN_JENDELA_UBIN`; berlaku di dalam segmen (data) dan di seluruh rute (`RouteBuilder.periksa_rute`) |
 | Tanda rintangan | paling sedikit 9 ubin | `RUTE_TANDA_MIN_UBIN`: 1,5 detik pada ngebut 6,0 u/d (ROUTE_DESIGN 4 aturan 2); perilaku rintangan Run 3B |
 | Urutan keramaian | tidak ada dua segmen `padat` berurutan | ROUTE_DESIGN 5; pembuka dan penutup selalu `tenang`. Data: 1 tenang, 2 sedang, 2 padat di tengah |
+| Jendela daur rumah (scene rute) | 20 ubin di belakang, 30 di depan sepeda | `RUTE_DAUR_MUNDUR_UBIN`, `RUTE_DAUR_MAJU_UBIN`: rumah di luar jendela tidak diinstansiasi (sekitar 11 sampai 20 dari 89 rumah sekaligus). Bukan angka permainan; menyangkut performa dan lebar layar terlebar 800 px |
+| Akhir rute | stick buatan ke bawah penuh (`RUTE_AKHIR_STICK_Y` −1,0) | Sesudah garis akhir sepeda direm dengan rem biasa (tahan 0,25 detik lalu 5,0 u/d²), jadi berhenti paling jauh sekitar 4,5 ubin dari garis (ngebut 6,0 u/d), 1,4 ubin dari santai. Stick sungguhan dan lemparan dikunci; tanpa tenggat, skor, atau layar hasil (3B dan 3C) |
 | Penutup pemain | alfa 0,45 | `RUTE_PENUTUP_ALFA`; objek yang menutupi kaki pemain dari kamera iso 2:1 (`PenutupPemain`), 1,0 bila tidak menutupi. Tapak rumah 3 × 3 ubin dan tinggi 2,0 (`RUTE_RUMAH_*`, dari `tools/env_art/perumahan.py`) |
 
 Catatan: rumah di tepi jalan (lateral 3 ubin atau lebih) praktis tidak pernah menutupi pemain di lebar jalan resmi (aturan 3D `PenutupPemain`); aturan ini disiapkan untuk objek yang lebih dekat ke jalan (mobil, pohon, tenda) dan dinilai lewat uji HP.
@@ -312,6 +314,8 @@ Belum diisi. Diputuskan di Fase 6 bersama layar bengkel (GDD 12.5). Arah yang su
 ---
 
 ## 10. Catatan perubahan
+
+- **2026-10-16** — Run fase3a-rute bagian B (scene rute; semua usulan, belum diuji di HP): scene utama `scenes/rute/rute.tscn` menggambar rumah dan kotak surat dari data lewat jendela daur (angka baru `RUTE_DAUR_MUNDUR_UBIN` 20 dan `RUTE_DAUR_MAJU_UBIN` 30), akhir rute dengan rem biasa (`RUTE_AKHIR_STICK_Y` −1,0) dan tombol dev "Main lagi" (seed + 1), dan penerap penutup tunggal (alfa 0,45 tidak berubah). Titik pijak sprite rumah disimpan di `RUTE_RUMAH_SPRITE` dan `RUTE_RUMAH_PIJAK_PX` (fakta aset, dicek tes terhadap JSON). Penilaian koran dan mode bantu memakai zona rute lewat `MedanKoran`; angka lintasan, zona, jeda, dan skor tidak berubah. Alasan: kontrak SPEC run 3A (AC-10 sampai AC-16).
 
 - **2026-10-16** — Run fase3a-rute bagian A (logika murni; semua usulan, belum diuji di HP): rute perumahan dari segmen JSON (bagian 6b). Angka baru di `config.gd` (awalan `RUTE_`): 25 pelanggan, 7 segmen per rute, seed dev 20261016, koran cadangan 20%, panjang segmen 24 sampai 40, tepi 2 ubin, petak 4 ubin, jendela rintangan 6 ubin (tepi rintangan 3), tanda paling sedikit 9 ubin, celah pelanggan maks 20 ubin, goyangan target 3,0 ubin, percobaan 200, tapak rumah 3 × 3 × 2,0 ubin, alfa penutup 0,45. Angka lintasan, zona, dan skor tidak berubah (geometri zona rute sama dengan zona jalan uji). Alasan: kontrak SPEC run 3A (K-1 sampai K-5); jarak rata-rata terukur 9,2 ubin dari 1000 seed.
 

@@ -1,6 +1,6 @@
 # Roadmap — Loper Koran
 
-Status per **14 Oktober 2026**. Dokumen ini mencatat kesiapan sebelum produksi, milestone sampai rilis, dan keputusan yang masih terbuka. Rincian kerja per fase ada di [`DEV_PHASES.md`](./DEV_PHASES.md).
+Status per **16 Oktober 2026** (Fase 3 run 3A: rute perumahan dari segmen, usulan, menunggu uji HP; Fase 2 dan M1 masih menunggu uji HP). Dokumen ini mencatat kesiapan sebelum produksi, milestone sampai rilis, dan keputusan yang masih terbuka. Rincian kerja per fase ada di [`DEV_PHASES.md`](./DEV_PHASES.md).
 
 Status: ⬜ belum mulai · 🟡 sedang dikerjakan · ✅ selesai
 
