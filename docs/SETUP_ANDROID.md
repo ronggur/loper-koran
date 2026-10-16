@@ -422,7 +422,7 @@ Angka yang ingin diubah dan alasannya: ____
 Keputusan pemilik: Fase 2 selesai ya / belum   M1 selesai ya / belum
 ```
 
-### 8.6 Uji penutup 3A: rute perumahan dari segmen (run `20261016-fase3a-rute`, belum diuji)
+### 8.6 Uji penutup 3A: rute perumahan dari segmen (run `20261016-fase3a-rute`, terpasang di vivo V2108 2026-10-16, belum diuji)
 
 Penguji: pemilik sendiri (rule `testing`). APK normal terbaru (bagian 4; scene utama sekarang `scenes/rute/rute.tscn`) di vivo V2108 (`12d8c9da`), atau A54 bila tersambung. Semua angka dan aset usulan: catat yang ingin diubah beserta alasannya, jangan diubah di sesi uji. Bukti desktop: tangkapan `docs/loop/20261016-fase3a-rute/shots/` (`tests/probe_rute_jendela.gd`, 2340x1080 dan 1600x720). Uji 8.5 (Fase 2 dan M1) tetap terpisah dan belum diisi.
 
@@ -435,7 +435,9 @@ Penguji: pemilik sendiri (rule `testing`). APK normal terbaru (bagian 4; scene u
 7. [ ] **Banner "Rute selesai" dan tombol "Main lagi".** Langkah: sampai garis akhir. Diharapkan: sepeda mengerem sampai berhenti, banner di tengah atas terbaca, tombol "Main lagi" di pojok kanan atas terbaca dan tidak tersentuh tak sengaja saat bermain (tersembunyi sampai akhir rute); stick tidak lagi menggerakkan sepeda; koran yang sudah terbang tetap mendarat. Tekan "Main lagi": rute baru dari awal, koran 30. Hasil: banner terbaca ya / tidak, tombol tertekan tak sengaja ___ kali, jarak berhenti pas / terlalu jauh. Catatan: ___
 8. [ ] **Jeda dan back di rute.** Langkah: tekan jeda di tengah rute (juga tombol back dan home). Diharapkan: sama dengan 8.5 butir 11: sepeda dan koran terbang membeku, tanpa lanjut otomatis, lanjut tanpa lompatan. Hasil: ya / tidak.
 
-9. [ ] **Area kotak surat terbaca dan terasa lebih mudah** (tindak lanjut review pemilik, 2026-10-16). Zona kotak surat diperbesar dari 0,5 x 0,5 ke area 1,0 x 1,5 (pusat tetap; toleransi jari sekitar +-6 mm, area sekitar 6x) dan digambar di tanah rute (isi oranye tipis, garis tepi gelap) di sekitar kotak surat oranye, hanya untuk rumah pelanggan seberang. Langkah: lempar ke kotak surat pelanggan di santai, cepat, dan ngebut, mode bantu mati; bandingkan dengan butir 3 (zona kecil). Diharapkan: area terbaca jelas tanpa menutupi sepeda atau penanda centang, dan kena terasa lebih mudah. Hasil: area terbaca ya / tidak, tidak mengganggu pandangan ya / tidak, kena santai ___/10, cepat ___/10, ngebut ___/10, terlalu mudah / pas / masih sulit. Catatan: ___ (angka usulan; "inti" 0,5 x 0,5 sebagai bonus presisi belum diputuskan, Run 3B).
+9. [ ] **Area kotak surat terbaca dan terasa lebih mudah** (tindak lanjut review pemilik, 2026-10-16). Zona kotak surat diperbesar dari 0,5 x 0,5 ke area sekitar 1,0 x 1,5 dan digambar di tanah rute (isi oranye tipis, garis tepi gelap) di sekitar kotak surat oranye, hanya untuk rumah pelanggan seberang. Sejak PR #30 (2026-10-16) area itu ada di rumput halaman: seberang 1,0 x 1,25 ubin, dekat 0,75 x 1,25 (lihat butir 10). Langkah: lempar ke kotak surat pelanggan di santai, cepat, dan ngebut, mode bantu mati; bandingkan dengan butir 3 (zona kecil). Diharapkan: area terbaca jelas tanpa menutupi sepeda atau penanda centang, dan kena terasa lebih mudah. Hasil: area terbaca ya / tidak, tidak mengganggu pandangan ya / tidak, kena santai ___/10, cepat ___/10, ngebut ___/10, terlalu mudah / pas / masih sulit. Catatan: ___ (angka usulan; "inti" 0,5 x 0,5 sebagai bonus presisi belum diputuskan, Run 3B).
+
+10. [ ] **Sepeda boleh naik trotoar dan kotak surat di halaman** (permintaan pemilik, 2026-10-16, PR #30; merevisi batas tepi jalan D-4). Batas lateral sepeda kini tepi trotoar (+-2,0 ubin), rumput halaman tetap tidak bisa dimasuki. Langkah: geser sepeda sampai mentok ke kiri dan kanan di santai, cepat, dan ngebut; lempar ke kotak surat pelanggan dari aspal dan dari tepi trotoar seberang. Diharapkan: sepeda berhenti di tepi trotoar, tepi peta tidak terlihat, sepeda tidak tertutup rumah secara janggal; kotak surat oranye berdiri di rumput halaman dan areanya menempel trotoar; dari tepi trotoar seberang kotak surat hanya sekitar 0,25 ubin ke samping, jadi kena butuh lemparan serong ke depan. Hasil: trotoar terasa bisa dilalui ya / tidak, tepi peta terlihat ya / tidak, kotak surat di halaman terbaca ya / tidak, kena dari trotoar terasa wajar / terlalu sulit. Catatan: ___
 
 **Lembar hasil 3A:**
 
@@ -450,5 +452,6 @@ Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build 
 7. Banner terbaca: ya / tidak   tombol tak sengaja __ kali   jarak berhenti pas / jauh
 8. Jeda dan back: ya / tidak
 9. Area kotak surat: terbaca ya / tidak   tidak mengganggu ya / tidak   santai __/10  cepat __/10  ngebut __/10   terlalu mudah / pas / sulit
+10. Trotoar bisa dilalui: ya / tidak   tepi peta terlihat: ya / tidak   kotak surat di halaman terbaca: ya / tidak   kena dari trotoar: wajar / terlalu sulit
 Angka dan aset yang ingin diubah dan alasannya: ____
 ```
