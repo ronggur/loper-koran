@@ -77,6 +77,12 @@ func _test_hasil_meleset_dan_tenggat_lewat() -> void:
 	check(a.koin == 50 and a.koin_tip == 5 and a.jumlah_tip == 1, "koin 20 + 15 + 15 = 50, tip hanya sebelum tenggat (5, 1 pelanggan)")
 	check(a.skor == 255 and a.jumlah_tepat == 0, "skor 100 + 100 + 55 = 255 (combo putus oleh meleset), tepat 0")
 	check(a.tenggat_lewat and a.detik_lewat == 12, "104 detik dari 92: tenggat lewat 12 detik")
+	# QA-004 iterasi 1: detik lewat pecahan dibulatkan KE ATAS, sama dengan HUD "LEWAT +m:ss" (D-1): 103,25 dari 92 = 11,25 -> 12;
+	# 92,01 = 0,01 -> 1; 102,5 = 10,5 -> 11. Ke bawah atau terdekat akan memberi 11 / 0 / 10 atau 11 / 0 / 11.
+	for baris: Array in [[103.25, 12], [92.01, 1], [102.5, 11]]:
+		var jam: TenggatRute.Keadaan = TenggatRute.hentikan(TenggatRute.langkah(TenggatRute.awal(240.0), baris[0]))
+		var hasil_pecahan: HasilRute.Angka = HasilRute.dari(k, rute, jam)
+		check(hasil_pecahan.tenggat_lewat and hasil_pecahan.detik_lewat == baris[1], "jam %.2f dari 92: detik lewat di layar hasil %d (ke atas), dapat %d" % [baris[0], baris[1], hasil_pecahan.detik_lewat])
 	var kosong: HasilRute.Angka = HasilRute.dari(SkorRute.awal(), null, null)
 	check(kosong.pelanggan == 0 and kosong.terkirim == 0 and kosong.meleset == 0 and not kosong.tenggat_lewat, "rute dan tenggat null: semua 0, tidak lewat")
 	# Id terantar yang bukan pelanggan rute ini tidak dihitung terkirim.
