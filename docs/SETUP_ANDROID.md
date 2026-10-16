@@ -435,6 +435,8 @@ Penguji: pemilik sendiri (rule `testing`). APK normal terbaru (bagian 4; scene u
 7. [ ] **Banner "Rute selesai" dan tombol "Main lagi".** Langkah: sampai garis akhir. Diharapkan: sepeda mengerem sampai berhenti, banner di tengah atas terbaca, tombol "Main lagi" di pojok kanan atas terbaca dan tidak tersentuh tak sengaja saat bermain (tersembunyi sampai akhir rute); stick tidak lagi menggerakkan sepeda; koran yang sudah terbang tetap mendarat. Tekan "Main lagi": rute baru dari awal, koran 30. Hasil: banner terbaca ya / tidak, tombol tertekan tak sengaja ___ kali, jarak berhenti pas / terlalu jauh. Catatan: ___
 8. [ ] **Jeda dan back di rute.** Langkah: tekan jeda di tengah rute (juga tombol back dan home). Diharapkan: sama dengan 8.5 butir 11: sepeda dan koran terbang membeku, tanpa lanjut otomatis, lanjut tanpa lompatan. Hasil: ya / tidak.
 
+9. [ ] **Area kotak surat terbaca dan terasa lebih mudah** (tindak lanjut review pemilik, 2026-10-16). Zona kotak surat diperbesar dari 0,5 x 0,5 ke area 1,0 x 1,5 (pusat tetap; toleransi jari sekitar +-6 mm, area sekitar 6x) dan digambar di tanah rute (isi oranye tipis, garis tepi gelap) di sekitar kubus oranye, hanya untuk rumah pelanggan seberang. Langkah: lempar ke kotak surat pelanggan di santai, cepat, dan ngebut, mode bantu mati; bandingkan dengan butir 3 (zona kecil). Diharapkan: area terbaca jelas tanpa menutupi sepeda atau penanda centang, dan kena terasa lebih mudah. Hasil: area terbaca ya / tidak, tidak mengganggu pandangan ya / tidak, kena santai ___/10, cepat ___/10, ngebut ___/10, terlalu mudah / pas / masih sulit. Catatan: ___ (angka usulan; "inti" 0,5 x 0,5 sebagai bonus presisi belum diputuskan, Run 3B).
+
 **Lembar hasil 3A:**
 
 ```
@@ -447,5 +449,6 @@ Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build 
 6. Penutup: tumpang tindih mengganggu ya / tidak (____)   tajam di x3 ya / tidak
 7. Banner terbaca: ya / tidak   tombol tak sengaja __ kali   jarak berhenti pas / jauh
 8. Jeda dan back: ya / tidak
+9. Area kotak surat: terbaca ya / tidak   tidak mengganggu ya / tidak   santai __/10  cepat __/10  ngebut __/10   terlalu mudah / pas / sulit
 Angka dan aset yang ingin diubah dan alasannya: ____
 ```

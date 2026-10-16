@@ -511,3 +511,58 @@ Daftar di atas tetap berlaku (60 fps dan memuat < 1 detik di vivo V2108, rasa ko
 - **QA-004 (D-17, lemparan ditolak sesudah garis akhir): pemilik setuju rekomendasi, perilaku dipertahankan** sampai Run 3C mengganti akhir rute dengan layar hasil. Tidak ada perubahan kode. Status: DEFERRED, keputusan pemilik tercatat.
 - **QA-005 (D-16, dua kotak surat): dikerjakan orchestrator sesudah QA PASS atas permintaan pemilik.** `tools/env_art/fase3.py`: `house_far_v(..., kotak=False)` pada ekspor sprite rumah seberang, lalu `--salin`. Hanya 3 sprite `house_perumahan_{limasan,pelana,sayap}_pelanggan.png` yang berubah (kotak merah di teras hilang; ukuran sel 270x212 -> 262x208, 253x229 -> 245x225, 270x204 -> 254x196; `ground_anchor` tidak berubah, jadi posisi rumah di scene sama) dan catatan di 6 JSON seberang. Render ulang di mesin ini juga mengubah beberapa piksel berkas lain (mis. `house_perumahan_dekat_pelana_lintang_*` 40 piksel, `obs_mobil_garasi_sheet` 9 piksel, mock `docs/design/environment/`): itu drift renderer terhadap aset yang sudah di-commit, tidak terkait perubahan ini, jadi **dikembalikan** (tidak masuk commit). Bukti: 8182 lolos, 0 gagal (`--ketat` 0 peringatan), `--quit-after 2` bersih, tangkapan `shots/art/2340x1080_rute_tengah.png` memperlihatkan satu kubus oranye per rumah pelanggan tanpa kotak merah. **Perubahan ini TIDAK diaudit QA** (di luar iterasi 2); status QA-005 = FIXED (belum VERIFIED).
 - **D-25 (aset).** Karena kotak surat sasaran kini hanya kubus graybox oranye di pusat zona, penggantian ke aset kotak surat final menjadi pekerjaan Fase 5 (bukan 3A). Sprite rumah dekat tidak diubah (selalu `bukan` di 3A).
+
+## Tindak lanjut review pemilik: zona kotak surat jadi area (2026-10-16)
+
+Pemilik mencoba di HP dan menilai zona kotak surat (100%) terlalu kecil: zona 0,5 x 0,5 ubin memberi toleransi sekitar +-3 mm gerak jari, dan di scene rute hanya kubus oranye yang tergambar, jadi pemain tidak melihat area yang sebenarnya. Keputusan pemilik: jadikan area. Di luar iterasi QA 1 dan 2 (dikerjakan sesudah PASS, di branch dan PR yang sama): **perubahan ini TIDAK diaudit QA**. Bukan keputusan terkunci; semuanya usulan yang dinilai lewat uji HP.
+
+### Commit (branch `feat/fase3a-rute`, tidak di-push)
+
+- `tune: kotak surat jadi area 1,0 x 1,5 dengan pusat tetap`: `Config.JALAN_UJI_SEBERANG_KOTAK_SURAT_UBIN` `[-1.875, 0.875, 0.5, 0.5]` menjadi `[-2.125, 0.375, 1.0, 1.5]`, `JALAN_UJI_DEKAT_KOTAK_SURAT_UBIN` `[1.375, 0.875, 0.5, 0.5]` menjadi `[1.125, 0.375, 1.0, 1.5]`; tes literal; BALANCING 5; DATA_SCHEMA 3.
+- `feat: gambar area kotak surat di tanah scene rute`: `AreaKotakGambar`, simpul `AreaKotak` di `rute.tscn`, `AREA_KOTAK_ISI_ALPHA` dan `AREA_KOTAK_TEPI_ALPHA`, tes, tangkapan `shots/area/`.
+- `docs:` SETUP_ANDROID 8.6 butir 9, LOG ini, LOOP-DEV-QA 6d Run 3B.
+
+### Keputusan Dev (lanjutan D-27; D-26 dan D-27 sudah dipakai iterasi 2, jadi nomor berikutnya D-28)
+
+- **D-28 (ukuran, pusat tetap).** Area 1,0 x 1,5 (lateral x maju), pusat tidak berubah: seberang (-1,625; 1,125), dekat (1,625; 1,125). Sasaran mode bantu (`BantuLempar.pilih` membidik pusat zona) dan `KASUS_KABEL` tidak bergeser; `BantuLempar` dan `ThrowSolver` tidak disentuh. Toleransi lateral sekitar +-6 mm (dua kali), maju sekitar +-9 mm (tiga kali), area sekitar 6 kali. Seberang dan dekat tidak bertumpuk (celah lateral -1,125 sampai 1,125 di jalan, dites). Semua zona tetap terjangkau (tes keterjangkauan lama lolos tanpa perubahan).
+- **D-29 (tumpang tindih halaman, disengaja).** Zona yang membesar menimpa 0,125 ubin halaman di sisi trotoar (seberang lateral -2,125 sampai -2,0; dekat 2,0 sampai 2,125). Prioritas kotak surat > jendela > teras > halaman tidak berubah, jadi kotak surat menang; titik di sana yang dulu HALAMAN (50%) atau MELESET (lateral tepat -2,0, tepi maks halaman eksklusif) kini KOTAK_SURAT (100%). Dites literal, juga dengan daftar zona dibalik (prioritas, bukan urutan daftar).
+- **D-30 (penggambar area).** `AreaKotakGambar` (`scripts/entities/area_kotak_gambar.gd`, pola `ZonaGambar`: perintah `GambarPiksel` dari `PolaPiksel.rentang_poligon(sudut_zona(persegi))` dan `rentang_tepi`). Persegi diambil dari `ZonaSasaran.zona_rumah` (jenis kotak surat), SATU sumber dengan penilaian, jadi yang terlihat = yang dinilai. Hanya rumah pelanggan sisi seberang di jendela daur yang sama dengan `RumahDaurRute` (`JendelaRute.rentang_sekitar`); gambar ulang hanya saat rentang jendela berganti. Rumah bukan pelanggan dan sisi dekat tidak digambar (jawaban atas D-20 untuk kotak surat; zona halaman, teras, dan jendela tetap tidak digambar di rute). Node `AreaKotak` di antara `Tanah` dan `KoranTanah`, jadi di bawah bayangan koran, rumah, dan sepeda. Isi `ACCENT` alfa 0,28, garis tepi `OUTLINE` alfa 0,9 (token `Palette`, tanpa hex); bentuk terbaca dari garis tepi bertangga 2x1, tidak hanya warna isi (rule `ui-scenes`).
+- **D-31 (jalan uji).** `ZonaGambar` jalan uji menggambar kotak surat sisi dekat dari data yang sama, jadi sisi dekat jalan uji otomatis membesar; sisi seberang jalan uji tetap hanya kotak graybox (tidak diubah, `JalanUji` bukan scene rute).
+- **D-32 (calon bonus presisi, TIDAK diputuskan).** "Inti" 0,5 x 0,5 di pusat area (zona lama) bisa menjadi antaran "tepat" dengan bonus skor atau combo di Run 3B. Hanya dicatat (BALANCING 5, LOOP-DEV-QA 6d); seluruh area sah penuh 100% sampai pemilik memutuskan.
+
+### Tes
+
+Gerbang: `--import`; `run_tests.gd` 8296 lolos, 0 gagal (sebelumnya 8182); `cek_keluaran_tes.py` dan `--ketat` lolos (0 peringatan); `--quit-after 2` bersih; empat `tools/tests_cek/uji_*.py` lolos; probe jendela rute 2340x1080, 0 keadaan tidak sesuai.
+
+- `tests/tes_rute.gd:_test_kotak_surat_area`: persegi seberang dan dekat tepat 1,0 x 1,5 di awal 0 dan 50, pusat tetap, tidak bertumpuk, sisi tidak menyeberang; titik literal (pusat, pojok zona lama, dulu meleset lateral -2,0 maju +0,5, halaman tertimpa -2,05 dan 2,1, tepi min inklusif dan maks eksklusif kedua sumbu, 0,001 di dalam dan di luar tepi, aspal); prioritas dengan daftar dibalik; mode bantu v 3,0, 4,5, 6,0 mendarat di pusat (-1,625; -1,125) dan dinilai KOTAK_SURAT. Literal lama di `tes_rute.gd`, `tes_lempar.gd`, komentar `tes_bantu_scene.gd` dan `tes_rute_scene.gd` diganti; tetap literal, tidak dihitung dari `Config`.
+- `tests/tes_rute.gd:_test_area_kotak_gambar`: dua perintah untuk pelanggan seberang, nol untuk bukan pelanggan, dekat, dan tanpa sisi; letak layar (x 1544..1624, y -864..-824 di awal 50, ditulis ulang dari proyeksi iso), isi sekitar 1536 piksel, tepi lebih sedikit dari isi, warna token `Palette`, alfa isi > 0 dan lebih pudar dari tepi; rentang indeks dan geseran 16 ubin.
+- `tests/tes_rute_scene.gd:_test_area_kotak_digambar`: scene nyata di enam jarak: area = rumah pelanggan seberang di jendela daur (oracle dipindai linear), dua perintah per area, letak layar per rumah, urutan simpul (tanah, area, koran tanah, objek), tanpa `z_index`, tidak dihitung ulang selama jendela sama, berganti saat jendela berganti, mengikuti rute baru sesudah "Main lagi".
+
+### Mutan (16 nyata, satu penggantian teks, di pohon kerja lalu dipulihkan dengan `git checkout`; semua mati)
+
+| # | Mutan | Gagal |
+|---|---|---|
+| M1 | area digambar untuk rumah seberang bukan pelanggan | 29 |
+| M2 | area juga untuk rumah dekat | 4 |
+| M3 | ukuran seberang kembali 0,5 x 0,5 | 23 |
+| M4 | pusat bergeser maju 0,25 | 44 |
+| M5 | prioritas dibalik (halaman menang atas kotak surat) | 41 |
+| M6 | zona dekat tidak ikut membesar | 5 |
+| M7 | alfa isi 0 | 1 |
+| M8 | area tidak mengikuti jendela daur (`perbarui` dihapus dari `_perbarui_dunia`) | 15 |
+| M9 | area di atas objek (`z_index = 1`) | 1 |
+| M10 | semua jenis zona digambar, bukan hanya kotak surat | 16 |
+| M11 | tepi maks lateral zona inklusif | 4 |
+| M12 | tanpa cache jendela (gambar ulang tiap langkah) | 1 |
+| M13 | garis tepi lebih pudar dari isi | 1 |
+| M14 | lebar 1,2 (pusat lateral bergeser) | 26 |
+| M15 | isi memakai `TEXT`, bukan `ACCENT` | 1 |
+| M16 | area tidak diganti sesudah "Main lagi" | 15 |
+
+### Validasi visual
+
+`shots/area/2340x1080_rute_tengah.png` dan `shots/area/2340x1080_rute_bantu_centang.png` (`tests/probe_rute_jendela.gd`): tiap rumah pelanggan seberang punya belah ketupat oranye tipis dengan garis tepi gelap bertangga di trotoar dan sedikit rumput, kubus oranye di tengahnya; sepeda tidak tertutup dan penanda centang di kubus tetap terbaca. Rumah bukan pelanggan dan rumah dekat tanpa area.
+
+### NEEDS-MANUAL
+
+- [ ] Uji HP (SETUP_ANDROID 8.6 butir 9): area terbaca, tidak mengganggu pandangan, kena terasa lebih mudah di tiga kecepatan; apakah 1,0 x 1,5 terlalu mudah atau pas (angka usulan). Bonus "inti" belum diputuskan.

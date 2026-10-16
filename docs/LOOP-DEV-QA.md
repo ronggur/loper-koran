@@ -567,6 +567,11 @@ CATATAN DARI RUN 3A (sudah di main sesudah PR #28 di-merge; baca LOG.md dan SPEC
   - Kotak surat sasaran sekarang kubus graybox oranye di pusat zona (rumah pelanggan seberang
     tanpa kotak merah, QA-005); aset kotak surat final = Fase 5. Zona halaman/teras/jendela
     tidak digambar di tanah rute (D-20).
+  - Kotak surat sekarang AREA 1,0 x 1,5 (pusat tetap) yang digambar di tanah rute
+    (`AreaKotakGambar`; tindak lanjut review pemilik 2026-10-16, LOG 3A D-28 sampai D-32).
+    Pertimbangkan "inti" 0,5 x 0,5 di pusat (zona lama) sebagai kandidat bonus "tepat" di
+    skor (BALANCING 5); keputusan pemilik, jangan diputuskan sendiri dan tunggu hasil uji HP
+    (SETUP_ANDROID 8.6 butir 9).
   - Variasi rute (D-1): tiap rute memakai semua 5 segmen tengah. Bila hasil uji HP 3A
     bilang terasa dihafal, tambah segmen tengah (data saja) sebelum menambah rintangan baru.
   - Pelajaran QA 3A: tes harus menjaga ketergantungan pada seed (mutan goyangan nol selamat),
