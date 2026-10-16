@@ -12,6 +12,8 @@ extends AdeganJalan
 ##   mendarat dan dinilai), banner `RUTE_SELESAI` dan tombol dev "Main lagi" tampil. Jeda dan back tetap bekerja.
 ## - Penutup pemain (AC-15): SATU penerap (`PenerapPenutup`) memanggil `PenutupPemain` tiap langkah untuk semua rumah di jendela daur.
 ## - "Main lagi": seed + 1, rute baru, sepeda, sisa koran, dan koran terbang dikembalikan ke awal (`_kembalikan_awal`).
+## - Area kotak surat (tindak lanjut uji HP 2026-10-16): `AreaKotakGambar` menggambar persegi zona kotak surat rumah pelanggan seberang di
+##   tanah (jendela daur yang sama dengan rumah), supaya area yang dinilai terlihat.
 ## Rintangan di data rute tidak digambar dan tidak berperilaku (Run 3B).
 
 ## Sepeda mencapai garis akhir rute (tepat sekali per rute; diulang hanya sesudah "Main lagi").
@@ -30,6 +32,7 @@ var lapor_galat_ke_log: bool = true
 var _selesai: bool = false
 
 @onready var _daur: RumahDaurRute = %Objek
+@onready var _area_kotak: AreaKotakGambar = %AreaKotak
 @onready var _penerap: PenerapPenutup = %PenerapPenutup
 @onready var _panel_akhir: PanelAkhirRute = %PanelAkhir
 
@@ -42,6 +45,7 @@ func _siapkan_dunia() -> void:
 
 func _perbarui_dunia(jarak_ubin: float) -> void:
 	_daur.perbarui(jarak_ubin)
+	_area_kotak.perbarui(jarak_ubin)
 	_penerap.terapkan(_sepeda.posisi_dunia())
 	var status: AkhirRute.Status = AkhirRute.periksa(_selesai, jarak_ubin, _rute.panjang_ubin)
 	_selesai = status.selesai
@@ -87,6 +91,7 @@ func _susun(benih: int) -> void:
 	_medan = MedanKoran.dari_rute(_rute)
 	_selesai = false
 	_daur.atur_rute(_rute)
+	_area_kotak.atur_rute(_rute)
 	_penerap.terapkan(_sepeda.posisi_dunia())
 	_panel_akhir.tampilkan(false)
 	if gagal:

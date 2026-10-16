@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3]
+[gd_scene load_steps=22 format=3]
 
 [ext_resource type="Script" path="res://scripts/entities/rute_main.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/entities/tanah_daur.gd" id="2_tanah"]
@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/hud_dev.tscn" id="11_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/layar_jeda.tscn" id="12_jeda"]
 [ext_resource type="Script" path="res://scripts/entities/koran_gambar.gd" id="14_koran"]
+[ext_resource type="Script" path="res://scripts/entities/area_kotak_gambar.gd" id="18_area"]
 [ext_resource type="Script" path="res://scripts/ui/garis_bidik.gd" id="15_bidik"]
 [ext_resource type="Script" path="res://scripts/entities/penerap_penutup.gd" id="16_penerap"]
 [ext_resource type="PackedScene" path="res://scenes/ui/panel_akhir_rute.tscn" id="17_akhir"]
@@ -29,6 +30,10 @@ script = ExtResource("2_tanah")
 tekstur_aspal = ExtResource("5_aspal")
 tekstur_trotoar = ExtResource("6_trotoar")
 tekstur_rumput = ExtResource("7_rumput")
+
+[node name="AreaKotak" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("18_area")
 
 [node name="KoranTanah" type="Node2D" parent="."]
 unique_name_in_owner = true

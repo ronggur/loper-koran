@@ -53,6 +53,7 @@ func jalankan() -> void:
 	await _test_rute_dari_data()
 	await _test_rumah_digambar()
 	await _test_jendela_daur_bergerak()
+	await _test_area_kotak_digambar()
 	await _test_zona_dari_data()
 	await _test_koran_tanpa_isi_ulang()
 	for v: float in [Config.KECEPATAN_SANTAI_UD, Config.KECEPATAN_CEPAT_UD, Config.KECEPATAN_NGEBUT_UD]:
@@ -414,6 +415,77 @@ func _test_jendela_daur_bergerak() -> void:
 	check(salah.is_empty(), "sepanjang rute (100 titik): rumah digambar = jendela oracle dan didaftarkan ke penerap penutup: %s" % [salah.slice(0, 3)])
 	check(maks_tampil <= 30 and maks_tampil >= 20, "paling banyak %d rumah sekaligus (jendela, bukan 89)" % maks_tampil)
 	check(maks_node <= 30, "node rumah dipakai ulang dari kolam (paling banyak %d node dibuat, 89 rumah)" % maks_node)
+	_bersihkan(akar)
+
+
+func _test_area_kotak_digambar() -> void:
+	_judul.call("Scene rute: area kotak surat digambar di tanah untuk rumah pelanggan seberang di jendela daur, di bawah rumah dan sepeda (tune pemilik 2026-10-16)")
+	var akar: RuteMain = await _siapkan()
+	var rute: RouteBuilder.Rute = _rute_oracle(SEED_DEV)
+	var area: AreaKotakGambar = _anak(akar, "AreaKotak") as AreaKotakGambar
+	check(area != null, "scene rute punya satu simpul AreaKotak")
+	var tanah: Node = _anak(akar, "Tanah")
+	var objek: Node = _anak(akar, "Objek")
+	var koran_tanah: Node = _anak(akar, "KoranTanah")
+	check(area.get_parent() == akar and tanah.get_index() < area.get_index() and area.get_index() < koran_tanah.get_index() and area.get_index() < objek.get_index(), "urutan gambar: tanah, area kotak, koran tanah, objek (area di bawah rumah, sepeda, dan koran)")
+	check(area.z_index == 0 and not area.y_sort_enabled and area.visible, "area kotak biasa (tanpa z_index, bukan Y-sort) dan terlihat")
+	var total_area: int = 0
+	for jarak: float in [0.0, 50.0, 100.0, 150.0, 200.0, 236.0]:
+		_taruh_sepeda(akar, 3.0, 0.0, 0.0, jarak)
+		var harapan: Array[int] = []
+		var tanpa_area: int = 0
+		for i: int in _indeks_harapan(rute, jarak):
+			var rumah: RouteBuilder.RumahRute = rute.rumah[i]
+			if rumah.pelanggan and rumah.sisi == LoperAnim.Sisi.SEBERANG:
+				harapan.append(i)
+			else:
+				tanpa_area += 1
+		var tampil: Array[int] = area.indeks_tampil()
+		check(tampil == harapan, "jarak %.0f: area hanya di rumah pelanggan seberang dalam jendela daur (harap %s, dapat %s)" % [jarak, harapan, tampil])
+		check(area.perintah_tampil().size() == 2 * harapan.size(), "jarak %.0f: tepat dua perintah (isi, tepi) per area, %d area (dapat %d perintah)" % [jarak, harapan.size(), area.perintah_tampil().size()])
+		check(area.jumlah_area() == harapan.size(), "jarak %.0f: jumlah_area = %d" % [jarak, harapan.size()])
+		check(tanpa_area > 0 or jarak >= 236.0, "jarak %.0f: kontrol, ada rumah di jendela yang tidak boleh punya area (%d)" % [jarak, tanpa_area])
+		# Letak: tiap area di layar = persegi zona kotak surat rumahnya (x = (lateral + maju) x 32 dan y = (lateral - maju) x 16, ditulis ulang).
+		var salah: Array[String] = []
+		for k: int in range(harapan.size()):
+			var m: float = rute.rumah[harapan[k]].maju_ubin
+			var data: Array = area.perintah_tampil()[2 * k]
+			var daftar: Array[Vector3i] = data[0]
+			var x_min: int = 1000000
+			var x_maks: int = -1000000
+			var y_min: int = 1000000
+			var y_maks: int = -1000000
+			for r: Vector3i in daftar:
+				x_min = mini(x_min, r.y)
+				x_maks = maxi(x_maks, r.z)
+				y_min = mini(y_min, r.x)
+				y_maks = maxi(y_maks, r.x + 1)
+			var harap_x_min: float = (m + 0.375 - 2.125) * 32.0
+			var harap_x_maks: float = (m + 1.875 - 1.125) * 32.0
+			var harap_y_min: float = (-2.125 - (m + 1.875)) * 16.0
+			var harap_y_maks: float = (-1.125 - (m + 0.375)) * 16.0
+			if absf(x_min - harap_x_min) > 1.0 or absf(x_maks - harap_x_maks) > 1.0 or absf(y_min - harap_y_min) > 1.0 or absf(y_maks - harap_y_maks) > 1.0:
+				salah.append("%s: [%d,%d]x[%d,%d] harap [%.0f,%.0f]x[%.0f,%.0f]" % [rute.rumah[harapan[k]].id, x_min, x_maks, y_min, y_maks, harap_x_min, harap_x_maks, harap_y_min, harap_y_maks])
+		check(salah.is_empty(), "jarak %.0f: letak layar tiap area = zona kotak surat rumahnya: %s" % [jarak, salah.slice(0, 3)])
+		total_area += harapan.size()
+	check(total_area > 0, "kontrol: sepanjang rute ada area yang digambar (%d)" % total_area)
+	# Gambar ulang hanya saat jendela berganti: gerak kecil di dalam jendela yang sama mempertahankan objek perintah.
+	_taruh_sepeda(akar, 3.0, 0.0, 0.0, 100.5)
+	var sebelum: Array = area.perintah_tampil()
+	var harapan_sebelum: Array[int] = _indeks_harapan(rute, 100.5)
+	_taruh_sepeda(akar, 3.0, 0.0, 0.0, 100.51)
+	check(_indeks_harapan(rute, 100.51) == harapan_sebelum, "kontrol: jendela oracle sama di 100,5 dan 100,51")
+	check(is_same(sebelum, area.perintah_tampil()), "gerak kecil dalam jendela yang sama: perintah tidak dihitung ulang (objek sama)")
+	_taruh_sepeda(akar, 3.0, 0.0, 0.0, 180.0)
+	check(not is_same(sebelum, area.perintah_tampil()), "jendela berganti: perintah baru")
+	# "Main lagi": area mengikuti rute baru (seed berikutnya).
+	akar.main_lagi()
+	var rute_berikut: RouteBuilder.Rute = _rute_oracle(SEED_BERIKUT)
+	var harapan_berikut: Array[int] = []
+	for i: int in _indeks_harapan(rute_berikut, 0.0):
+		if rute_berikut.rumah[i].pelanggan and rute_berikut.rumah[i].sisi == LoperAnim.Sisi.SEBERANG:
+			harapan_berikut.append(i)
+	check(area.indeks_tampil() == harapan_berikut and not harapan_berikut.is_empty(), "sesudah Main lagi: area mengikuti rute seed berikutnya (harap %s, dapat %s)" % [harapan_berikut, area.indeks_tampil()])
 	_bersihkan(akar)
 
 
