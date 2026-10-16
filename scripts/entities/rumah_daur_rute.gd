@@ -5,11 +5,11 @@ extends Node2D
 ## Induk Y-sort seperti `ObjekDaur`: rumah, kotak surat, dan sepeda anak langsungnya, jadi urutan gambar ditentukan posisi tegak titik
 ## pijak (sama dengan jalan uji). Hanya rumah di jendela `JendelaRute.rentang_sekitar` (`Config.RUTE_DAUR_*`) yang punya node; sprite
 ## dan kotak surat dipakai ulang dari kolam, bukan diinstansiasi ulang tiap langkah. Sprite = `house_perumahan_<jenis>_<pelanggan|bukan>`
-## (`SpriteRumah.nama_rumah`), kotak surat graybox hanya di rumah pelanggan, dan titik pijak sprite dihitung dari tapak rumah
+## (`SpriteRumah.nama_rumah`), kotak surat sasaran hanya di rumah pelanggan, dan titik pijak sprite dihitung dari tapak rumah
 ## (`SpriteRumah.pusat_tapak_dunia`), bukan dari `maju_ubin`. Tanda rintangan di data tidak digambar. Alfa penutup pemain diurus satu
 ## penerap (`PenerapPenutup`), bukan node ini: tiap rumah yang muncul didaftarkan ke penerap dan dilepas saat dibuang.
 
-## Scene kotak surat graybox (rumah pelanggan).
+## Scene kotak surat sasaran (rumah pelanggan): sprite berbentuk kotak surat, oranye placeholder (`scenes/entities/kotak_surat.tscn`).
 @export var adegan_kotak_surat: PackedScene
 ## Penerap penutup pemain (opsional; diisi scene rute). Rumah yang muncul didaftarkan dengan kotak `PenutupPemain.dari_rumah`.
 var penerap: PenerapPenutup = null

@@ -45,7 +45,7 @@ static func pusat_tapak_dunia(rumah: RouteBuilder.RumahRute) -> Vector2:
 	return Vector2(pusat.x, -pusat.y)
 
 
-## Titik pijak gambar kotak surat graybox rumah pelanggan di dunia (ubin; y dunia = -maju): sama dengan kotak surat jalan uji
+## Titik pijak gambar kotak surat sasaran rumah pelanggan di dunia (ubin; y dunia = -maju): sama dengan kotak surat jalan uji
 ## (`JALAN_UJI_KOTAK_SURAT_*`, di tengah zona kotak surat), digeser ke awal kavling rumah.
 static func titik_kotak_surat_dunia(rumah: RouteBuilder.RumahRute) -> Vector2:
 	return Vector2(Config.JALAN_UJI_KOTAK_SURAT_X_UBIN, -(rumah.maju_ubin + Config.JALAN_UJI_KOTAK_SURAT_MAJU_UBIN))

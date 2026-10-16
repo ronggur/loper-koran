@@ -6,6 +6,7 @@ Memakai engine.py, lib.py, dan perumahan.py apa adanya (tidak mengubah mock lama
 - house_far_v(): rumah sisi seberang, varian pelanggan / bukan pelanggan
 - house_near_v(): rumah sisi dekat (terlihat belakang), varian pelanggan / bukan, toren dan jemuran
 - antena_v(): enam jenis antena TV
+- kotak_surat_oranye(): kotak surat berbentuk lib.kotak_surat() berwarna oranye graybox, sprite tunggal sasaran scene rute
 
 Menjalankan (dari root repo):
     python3 tools/env_art/fase3.py            # render ke build/env_art/fase3/
@@ -753,6 +754,16 @@ def _single(a, o, fname, note):
                                     'ground_anchor': list(o), 'note': note})
 
 
+# Tiga nada oranye = KOTAK_SURAT di tools/env_art/graybox.py (atas, samping, fasad): warna sasaran yang sudah dikenal pemain.
+KOTAK_SURAT_ORANYE = Mat('#FFE08A', '#FFC94A', '#E98E3F')
+
+
+def kotak_surat_oranye(s):
+    """Kotak surat sasaran rute: bentuk lib.kotak_surat() (tiang metal_dk + badan dengan celah surat), skala 1x, tanpa
+    membesarkan. Titik pijak (0, 0, 0) = kaki tiang di tanah."""
+    kotak_surat(s, 0, 0, mat=KOTAK_SURAT_ORANYE)
+
+
 def _no_cast_antena(s, start):
     for p in s.prims[start:]:
         if p.tag == 'antena':
@@ -802,6 +813,11 @@ def ekspor_sprite():
                     'Usulan, tools/env_art/fase3.py. Rumah sisi dekat (terlihat belakang), mundur %d unit dari '
                     'perumahan.py supaya kotak surat di tepi lajur tidak tertutup atap. Titik pijak = tengah tapak; '
                     'kotak surat pelanggan ikut di sprite.' % MUNDUR_DEKAT)
+    a, o, _, _ = render_sprite(kotak_surat_oranye, pad=4, extra_px=(10, 6))
+    _single(a, o, 'prop_kotak_surat',
+            'Usulan, tools/env_art/fase3.py. Kotak surat sasaran scene rute: bentuk lib.kotak_surat() (tiang dan badan dengan '
+            'celah surat) berwarna oranye graybox (placeholder sasaran), skala 1x. Titik pijak = kaki tiang di tanah, '
+            'dipasang di pusat zona kotak surat. Bayangan = penanda #000000 alpha 28%.')
     # lembar contoh antena di atas potongan atap (tanpa bayangan tanah)
     frames = []
     for k in ANT_KINDS:
@@ -822,6 +838,7 @@ def ekspor_layar():
 
 # ------------------------------------------------------------- salin ke repo ----
 SALIN_SPRITE = {
+    'assets/sprites/props': ['prop_kotak_surat'],
     'assets/sprites/obstacles': ['obs_anjing_sheet', 'obs_mobil_garasi_sheet'],
     'assets/sprites/houses/perumahan': ['house_perumahan_%s_%s' % (k, p) for k, *_ in RUMAH_SEBERANG
                                         for p in ('pelanggan', 'bukan')] +
