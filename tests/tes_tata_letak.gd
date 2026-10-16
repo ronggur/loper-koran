@@ -225,12 +225,74 @@ func _test_zona_aman_tiruan(akar: RuteMain, hud: HudRute, lebar: int) -> void:
 	check(hud.rect_radar_dekat() == Rect2(lebar - 23, 10, 12, 172) and hud.rect_panel_skor().end.x == float(lebar - 35), "inset tiruan: radar dekat berakhir 11 dari tepi (inset), panel skor 35 dari tepi")
 	check(hud.rect_tombol_bel() == Rect2(lebar - 55, 300, 40, 40) and hud.rect_panel_kecepatan().end.y == 340.0, "inset tiruan: tombol bel dan panel bawah naik 12 (bawah 20 dari tepi), bel 15 dari tepi kanan")
 	check(akar.kontrol_router().geser_bel == Vector2(-7, -12) and TouchZones.pusat_bel(lebar, false, akar.kontrol_router().geser_bel) == hud.rect_tombol_bel().get_center(), "inset tiruan: zona tap bel ikut tombol (geser (-7, -12))")
+	# QA-002 iterasi 1: jari sungguhan ke router. (725, 305) ada di tombol bel bergeser (725..765, 300..340), berjarak 25 dari pusat baru
+	# (745, 320) dan 38,2 dari pusat lama (752, 332) (radius 28): harus BEL, bukan swipe.
+	await _cek_jari_bel(akar, Vector2(725, 305), "inset tiruan kanan")
 	akar.atur_kidal(true)
 	await _tree.process_frame
 	akar.perbarui(0.0)
 	check(hud.rect_tombol_bel() == Rect2(14, 300, 40, 40) and akar.kontrol_router().geser_bel == Vector2(6, -12), "inset tiruan kidal: bel di x 14 (inset 10 + 4), zona ikut (6, -12)")
+	# Kidal: (40, 300) di tombol (14..54, 300..340), 20,9 dari pusat baru (34, 320), 34,2 dari pusat lama (28, 332).
+	await _cek_jari_bel(akar, Vector2(40, 300), "inset tiruan kidal")
 	akar.atur_kidal(false)
 	hud.atur_inset(null)
 	await _tree.process_frame
 	akar.perbarui(0.0)
 	check(hud.rect_radar_seberang() == Rect2(4, 10, 12, 172) and akar.kontrol_router().geser_bel == Vector2.ZERO, "inset kembali nol: tata letak semula")
+	# Kontrol (tanpa inset): titik yang sama di luar zona bel lama, jadi swipe. Membuktikan titik uji di atas memang bergantung pada geseran.
+	var router: TouchRouter = akar.kontrol_router()
+	var bel_awal: int = router.jumlah_bel
+	_sentuh_layar(7, Vector2(725, 305), true)
+	check(router.swipe_aktif() and router.jumlah_bel == bel_awal, "kontrol tanpa inset: jari di (725, 305) menjadi swipe, bukan bel")
+	_sentuh_layar(7, Vector2(725, 305), false)
+	await _test_zona_aman_atas(akar, hud, lebar)
+
+
+## Jari sungguhan (event sentuh lewat `KontrolTouch`) turun di `titik` (koordinat viewport game, skala x3): router mengklaimnya sebagai bel,
+## bel adegan berbunyi, tidak ada swipe atau stick; setelah diangkat tidak ada swipe/tap yang tercatat.
+func _cek_jari_bel(akar: RuteMain, titik: Vector2, tag: String) -> void:
+	var router: TouchRouter = akar.kontrol_router()
+	var bel_router: int = router.jumlah_bel
+	var bel_adegan: int = akar.bel().jumlah
+	var swipe_selesai: int = router.jumlah_swipe_selesai
+	_sentuh_layar(6, titik, true)
+	check(router.jumlah_bel == bel_router + 1 and router.bel_ditahan() and not router.swipe_aktif() and not router.stick_aktif(), "%s: jari di %s diklaim zona bel (bukan swipe/stick)" % [tag, titik])
+	check(akar.bel().jumlah == bel_adegan + 1, "%s: bel adegan berbunyi sekali (%d -> %d)" % [tag, bel_adegan, akar.bel().jumlah])
+	_sentuh_layar(6, titik, false)
+	check(not router.bel_ditahan() and router.jumlah_swipe_selesai == swipe_selesai, "%s: jari diangkat tanpa swipe atau tap" % tag)
+
+
+## QA-003 iterasi 1: inset aman ATAS tiruan 15 px game (lain 0) -> geseran atas = max(4, 15) - 4 = 11 (acuan area sentuh jeda y 4). Semua
+## elemen atas turun 11 sama besar; radar bawah tetap y 182; elemen bawah tidak berubah. Harapan literal.
+func _test_zona_aman_atas(akar: RuteMain, hud: HudRute, lebar: int) -> void:
+	var inset: ZonaAman.Inset = ZonaAman.Inset.new()
+	inset.atas = 15
+	hud.atur_inset(inset)
+	await _tree.process_frame
+	await _tree.process_frame
+	akar.perbarui(0.0)
+	check(hud.rect_tombol_jeda() == Rect2(17, 15, 42, 42), "inset atas 15: area sentuh jeda turun 11 ke (17, 15), dapat %s" % hud.rect_tombol_jeda())
+	check(hud.rect_radar_seberang() == Rect2(4, 21, 12, 161) and hud.rect_radar_dekat() == Rect2(lebar - 16, 21, 12, 161), "inset atas 15: kedua radar mulai y 21 (10 + 11), bawah tetap 182, dapat %s / %s" % [hud.rect_radar_seberang(), hud.rect_radar_dekat()])
+	check(hud.rect_panel_progres().position.y == 19.0 and hud.rect_panel_progres().size.x == 260.0, "inset atas 15: panel progres turun ke y 19 (8 + 11), dapat %s" % hud.rect_panel_progres())
+	check(hud.rect_panel_skor().position.y == 19.0 and hud.rect_panel_koin().position.y == 19.0 and hud.rect_panel_skor().end.x == float(lebar - 28), "inset atas 15: panel koin dan skor turun ke y 19, tepi kanan tetap 28, dapat %s / %s" % [hud.rect_panel_koin(), hud.rect_panel_skor()])
+	check(hud.rect_tombol_bel() == Rect2(lebar - 48, 312, 40, 40) and hud.rect_panel_kecepatan().end.y == 352.0 and akar.kontrol_router().geser_bel == Vector2.ZERO, "inset atas 15: tombol bel, panel bawah, dan zona bel tidak bergeser")
+	var atas: Array = [["tombol jeda", hud.rect_tombol_jeda()], ["radar seberang", hud.rect_radar_seberang()], ["radar dekat", hud.rect_radar_dekat()], ["panel progres", hud.rect_panel_progres()], ["panel koin", hud.rect_panel_koin()], ["panel skor", hud.rect_panel_skor()]]
+	for i: int in range(atas.size()):
+		var a: Rect2 = atas[i][1]
+		check(a.position.y >= 15.0, "inset atas 15: %s tidak masuk inset atas (%s)" % [atas[i][0], a])
+		for j: int in range(i + 1, atas.size()):
+			check(not a.intersects(atas[j][1], true), "inset atas 15: %s dan %s tidak bertumpuk" % [atas[i][0], atas[j][0]])
+	hud.atur_inset(null)
+	await _tree.process_frame
+	akar.perbarui(0.0)
+	check(hud.rect_tombol_jeda() == Rect2(17, 4, 42, 42) and hud.rect_radar_seberang() == Rect2(4, 10, 12, 172) and hud.rect_panel_progres().position.y == 8.0, "inset atas kembali nol: tata letak semula")
+
+
+## Event sentuh layar (jendela x3) untuk jari `index` di `posisi_viewport` (koordinat viewport game).
+func _sentuh_layar(index: int, posisi_viewport: Vector2, tekan: bool) -> void:
+	var peristiwa: InputEventScreenTouch = InputEventScreenTouch.new()
+	peristiwa.index = index
+	peristiwa.position = posisi_viewport * 3.0
+	peristiwa.pressed = tekan
+	Input.parse_input_event(peristiwa)
+	Input.flush_buffered_events()
