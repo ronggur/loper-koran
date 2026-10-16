@@ -669,3 +669,5 @@ Catatan non-temuan: klaim "toleransi jari sekitar +-3 mm" di BALANCING 5 dan `co
 ### NEEDS-MANUAL
 
 Tidak berubah dari catatan Dev: SETUP_ANDROID 8.6 butir 9 (area terbaca, tidak mengganggu, kena santai/cepat/ngebut, terlalu mudah atau pas) di HP; ukuran 1,0 x 1,5 tetap usulan. QA tidak menyentuh HP atau adb. Fase 3 dan `DEV_PHASES.md` tidak boleh dicentang untuk butir yang bergantung pada uji HP.
+
+- **QA-011 (Minor) ditutup oleh orchestrator:** `SETUP_ANDROID.md` 8.6 butir 3 dan 4 disamakan dengan butir 9 (sasaran = area oranye tipis dengan kubus di tengahnya). QA-012 (Nit, garis halaman menyilang kotak surat dekat di jalan uji dev) tetap DEFERRED.
