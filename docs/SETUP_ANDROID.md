@@ -455,3 +455,39 @@ Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build 
 10. Trotoar bisa dilalui: ya / tidak   tepi peta terlihat: ya / tidak   kotak surat di halaman terbaca: ya / tidak   kena dari trotoar: wajar / terlalu sulit
 Angka dan aset yang ingin diubah dan alasannya: ____
 ```
+
+### 8.7 Uji penutup 3B: rintangan, tabrakan, skor, dan bel (run `20261017-fase3b-rintangan-skor`, belum diuji)
+
+Penguji: pemilik sendiri (rule `testing`). APK normal terbaru (bagian 4) di vivo V2108 (`12d8c9da`), atau A54 bila tersambung. Semua angka, aset, dan bunyi usulan (`BALANCING.md` 5b, 6c, 6d, 6e; `DESIGN_SPEC.md` 3.6 dan 3.8). Tangkapan desktop pembanding: `docs/loop/20261017-fase3b-rintangan-skor/shots/iter1/` (`probe_rintangan_jendela.gd`).
+
+1. [ ] **Tanda rintangan cukup.** Langkah: lewati anjing dan mobil di santai, cepat, dan ngebut. Diharapkan: anjing berdiri dan menggeram, mobil berkedip lampu mundur dan berbunyi bip, cukup lama sebelum bahaya (tidak "tidak sempat"); tiap tabrakan bisa dijelaskan dari tanda yang terlihat.
+2. [ ] **Pola anjing adil (D-2).** Anjing baru mengejar sesudah sepeda melewati rumahnya. Diharapkan: ngebut di separuh jalan lawan lolos, santai di sisi anjing tersusul, di tepi trotoar sisi anjing bisa tertabrak. Terasa adil?
+3. [ ] **Pola mobil (D-1).** Mobil yang sudah keluar berhenti di separuh jalannya sampai rute habis. Diharapkan: separuh jalan lain selalu bebas. Wajar, atau perlu kembali ke garasi?
+4. [ ] **Rasa tabrakan.** Kecepatan turun ke 1,0 u/d, sprite oleng dan kilatan di atas kepala, sepeda berkedip sesaat, bunyi tabrakan lembut, label PUTUS di HUD. Diharapkan: menghambat tapi tidak menyebalkan; tidak ada tabrakan dobel beruntun.
+5. [ ] **Dua rintangan berseberangan rapat** (mis. anjing `dekat` lalu mobil `seberang` sekitar 6 ubin). Diharapkan: pindah sisi masih sempat di santai, cepat, ngebut.
+6. [ ] **Skor, combo, koin terbaca.** Panel SKOR / COMBO / KOIN di kanan atas (kidal: kiri atas) tidak menutupi apa pun di 2400×1080. Combo naik x0,1 tiap antaran beruntun, kembali x1.0 dengan label PUTUS saat meleset atau tabrakan.
+7. [ ] **Nada combo, denting tip, bonus tepat.** Antaran beruntun terdengar naik nadanya (sampai 5 tingkat); teras ke pelanggan pemberi tip berdenting; kena tepat di tengah kotak surat memberi penanda sasaran (bukan centang), "+15 / TEPAT" melayang, dan kilau. Diharapkan: memuaskan; tepat tidak terlalu sulit atau terlalu mudah.
+8. [ ] **Koran kedua ke rumah yang sama.** Diharapkan: penanda garis abu-abu (netral), skor dan koin tidak bertambah, combo tidak putus.
+9. [ ] **Tombol bel terjangkau.** Ketuk tombol bel di pojok kanan bawah (kidal: kiri bawah). Diharapkan: "KRING!" di atas setang dan bunyi bel; ketuk lagi cepat = "KRING KRING!" lalu cincin jeda berkurang; tombol tidak bentrok dengan swipe (swipe yang melewati tombol tetap melempar) dan tidak terpencet tak sengaja.
+10. [ ] **Bel membuat anjing mundur (K-3, D-5).** Bunyikan bel saat anjing waspada atau mengejar di dekat sepeda (sampai 1 ubin di belakang). Diharapkan: "!" di atas anjing, anjing diam sebentar lalu lari pulang; mobil tidak bereaksi. Terasa adil (anjing tidak jadi tak berarti)? Jangkauan 1 ubin ke belakang perlu ditinjau.
+11. [ ] **Tanpa suara.** Matikan suara. Diharapkan: semua isyarat (tanda rintangan, tabrakan, bel, tepat, tip) tetap terbaca dari visual.
+12. [ ] **Jeda dan Main lagi.** Jeda di tengah anjing mengejar, sesudah tabrakan, dan sesudah bel: semua membeku, tanpa lanjut otomatis. "Main lagi" di akhir rute: skor, koin, combo, rintangan, bel kembali ke awal.
+
+**Lembar hasil 3B:**
+
+```
+Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build (commit): ____
+1. Tanda cukup: santai ya/tidak  cepat ya/tidak  ngebut ya/tidak   tabrakan tak terjelaskan: ____
+2. Pola anjing adil: ya / tidak (____)
+3. Mobil berhenti di jalan: wajar / perlu kembali ke garasi
+4. Tabrakan: pas / terlalu menghukum / terlalu ringan   dobel: ya / tidak
+5. Berseberangan rapat sempat: santai ya/tidak  cepat ya/tidak  ngebut ya/tidak
+6. HUD skor terbaca: ya / tidak   menutupi: ____
+7. Nada combo: ya / tidak   tip: ya / tidak   tepat: terlalu sulit / pas / terlalu mudah
+8. Netral jelas: ya / tidak
+9. Bel terjangkau: ya / tidak   bentrok swipe __ kali   terpencet tak sengaja __ kali
+10. Anjing mundur adil: ya / tidak   jangkauan belakang 1 ubin: perlu / tidak
+11. Tanpa suara terbaca: ya / tidak
+12. Jeda dan Main lagi: ya / tidak
+Angka, bunyi, dan aset yang ingin diubah dan alasannya: ____
+```

@@ -327,6 +327,24 @@ Logika di `scripts/systems/bel.gd` (`Bel`), reaksi lewat `RintanganRute.terapkan
 | Jangkauan | 4,0 ubin di depan, 1,0 di belakang | `BEL_JANGKAUAN_UBIN`, `BEL_JANGKAUAN_BELAKANG_UBIN` (D-5: anjing yang mengejar berlari di samping atau sedikit di belakang sepeda) |
 | Anjing kaget, mundur | 0,5 detik; 3,0 u/d | `ANJING_KAGET_DETIK`, `ANJING_MUNDUR_UD` |
 
+### 6e. Scene rute run 3B: tampilan rintangan, tabrakan, bel, HUD skor (usulan run fase3b-rintangan-skor bagian B 2026-10-16, dinilai lewat uji HP)
+
+Angka tampilan dan input bagian B di `config.gd` (tidak mengubah aturan main di 5b, 6c, 6d). Tata letaknya di `DESIGN_SPEC.md` 3.6 dan 3.8.
+
+| Angka | Usulan | Catatan |
+|---|---|---|
+| Tinggi kotak penutup rintangan | anjing 0,8 ubin, mobil 1,0 ubin | `RINTANGAN_ANJING_TINGGI_UBIN`, `RINTANGAN_MOBIL_TINGGI_UBIN`; aturan penutup `PenutupPemain` yang sama dengan rumah |
+| Ikon "!" anjing | 28 px game di atas titik pijak | `RINTANGAN_SERU_ATAS_PX` (kepala sekitar 26 px + 2) |
+| Oleng (visual) | sprite bergeser ±1 px tiap 0,05 detik | `TABRAKAN_OLENG_GESER_PX`, `TABRAKAN_OLENG_PERIODE_DETIK`; geser kecil supaya tidak berlebihan (rule `ui-scenes`) |
+| Kedip kebal | alpha 0,5 tiap fase 0,1 detik | `TABRAKAN_KEDIP_PERIODE_DETIK`, `TABRAKAN_KEDIP_ALFA` |
+| Ikon kilatan tabrakan | 50 px game di atas titik pijak | `TABRAKAN_IKON_ATAS_PX` |
+| Tombol bel | 40×40, pusat 28 dari tepi samping dan bawah, zona tap radius 28 inklusif | `BEL_TOMBOL_UKURAN_PX`, `BEL_TOMBOL_PUSAT_TEPI_PX`, `BEL_ZONA_RADIUS_PX`; 8 frame cincin jeda `BEL_TOMBOL_JEDA_LANGKAH` |
+| Efek bel | 12 fps, garis getar 4 frame (jangkar (3, 12)), titik bel (8, −29) dari titik pijak pemain, teks (11, −12) dari titik bel, naik paling banyak 4 px, redup 0,6 | `BEL_EFEK_FPS`, `BEL_GETAR_FRAME`, `BEL_GETAR_JANGKAR_PX`, `BEL_TITIK_PX`, `BEL_TEKS_GESER_PX`, `BEL_TEKS_NAIK_MAKS_PX`, `BEL_TEKS_REDUP_ALFA` |
+| Panel skor HUD dev | 112 px dari tepi sisi swipe, lebar minimum 72 | `HUD_SKOR_GESER_PX`, `HUD_SKOR_LEBAR_PX` |
+| Label PUTUS | 0,8 detik sesudah combo putus | `HUD_COMBO_PUTUS_DETIK` |
+| Umpan balik melayang | 0,8 detik, naik 12 px, paling banyak 2, kaki 18 px di atas titik mendarat | `UMPAN_MELAYANG_DETIK`, `UMPAN_MELAYANG_NAIK_PX`, `UMPAN_MELAYANG_MAKS`, `UMPAN_MELAYANG_ATAS_PX` (DESIGN_SPEC 3.6) |
+| Garis luar teks dunia | 2 px game | `HUD_TEKS_GARIS_PX` (teks KRING dan umpan balik melayang) |
+
 ---
 
 ## 7. Ekonomi
@@ -384,6 +402,8 @@ Belum diisi. Diputuskan di Fase 6 bersama layar bengkel (GDD 12.5). Arah yang su
 ---
 
 ## 10. Catatan perubahan
+
+- **2026-10-16** — Run fase3b-rintangan-skor bagian B (scene; usulan, belum diuji di HP): angka tampilan dan input baru di bagian 6e (tinggi penutup rintangan, ikon "!", oleng ±1 px, kedip kebal, ikon kilatan, tombol dan zona bel, efek bel, panel skor HUD dev, label PUTUS, umpan balik melayang). Aturan main bagian 5b, 6c, 6d, 7 tidak berubah. Alasan: AC-8, AC-13, AC-15, AC-16, DESIGN_SPEC 3.6 dan 3.8; nilai dinilai lewat uji HP (`SETUP_ANDROID.md` 8.7). Anjing yang kaget karena bel kini memakai animasi `berhenti` (bukan `lari`) selama ikon "!" tampil, supaya terbaca kaget.
 
 - **2026-10-16** — Run fase3b-rintangan-skor bagian A, bunyi (usulan, belum diuji di HP): nada combo (5 tingkat setengah nada), bel kedua +1 setengah nada, volume bel −2, rintangan −3, tabrakan −2, tip/tepat −3 dB (bagian 2). Alasan: SOUND_DESIGN 3.1 dan 3.3 (AC-18, AC-19).
 - **2026-10-16** — Run fase3b-rintangan-skor bagian A (logika murni; keputusan pemilik K-1 sampai K-4 dan usulan orchestrator O-1 sampai O-5; semua angka usulan, belum diuji di HP): rintangan anjing penjaga dan mobil keluar garasi, tabrakan, bel (bagian 6c dan 6d), skor, combo, pengali kecepatan, tepat, rumah terantar (bagian 5b), koin dan tip (bagian 7). Angka BALANCING 5-7 yang sudah ada dipakai apa adanya (combo +0,1 maks ×2,0; pengali 1,0 / 1,2 / 1,5; ongkos 15; tip 5; tabrakan 1,0 u/d dan oleng 0,6). Angka baru: kebal 1,0 detik, tepat ×1,25 dengan inti 0,5 × 0,5, skor dasar 100 dan halaman 50%, pemberi tip 30%, semua angka rintangan (bagian 6c), bel (teks 0,5, jeda 1,0, jangkauan 4,0 depan dan 1,0 belakang). Alasan: kontrak SPEC run 3B (AC-1 sampai AC-14); angka rintangan dipilih supaya invarian prinsip desain lolos (tanda ≥ 1,5 detik pada ngebut, separuh jalan selalu bebas, santai tersusul anjing, ngebut lolos).
