@@ -61,6 +61,7 @@ func jalankan() -> void:
 	await _test_akhir_rute()
 	await _test_akhir_koran_terbang_dinilai()
 	await _test_main_lagi()
+	await _test_main_lagi_ketuk()
 	await _test_jeda()
 	await _test_penutup()
 	for kasus: Array in [[1920, 1080, 640], [2340, 1080, 780], [2400, 1080, 800]]:
@@ -726,6 +727,23 @@ func _test_main_lagi() -> void:
 	sepeda.jarak_ubin = PANJANG_RUTE
 	_langkah(akar, 3)
 	check((catatan["selesai"] as int) == 2 and akar.rute_sudah_selesai(), "rute baru bisa selesai lagi: sinyal kedua tepat sekali")
+	_bersihkan(akar)
+
+
+## Ketukan sentuh sungguhan (bukan `pressed.emit()`) pada tombol "Main lagi" lewat jalur `TombolSentuh` (QA run 3A iterasi 1).
+func _test_main_lagi_ketuk() -> void:
+	_judul.call("Scene rute: ketukan sentuh pada tombol Main lagi menyusun ulang rute dengan seed berikutnya (AC-14)")
+	var akar: RuteMain = await _siapkan()
+	var seed_awal: int = akar.benih()
+	akar.panel_akhir().tampilkan(true)
+	await _tree.process_frame
+	await _tree.process_frame
+	var tombol: Rect2 = akar.panel_akhir().rect_tombol()
+	check(tombol.size.x > 0.0 and tombol.size.y > 0.0, "kontrol: tombol Main lagi punya ukuran")
+	_tap(tombol.position + tombol.size / 2.0, 5)
+	await _tree.process_frame
+	check(seed_awal == SEED_DEV and akar.benih() == SEED_BERIKUT, "ketukan sentuh pada tombol memakai seed berikutnya (%d -> %d)" % [seed_awal, akar.benih()])
+	check(not akar.panel_akhir().tampil(), "banner dan tombol tersembunyi lagi sesudah ketukan")
 	_bersihkan(akar)
 
 

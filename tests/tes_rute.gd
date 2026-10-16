@@ -59,6 +59,7 @@ func jalankan() -> void:
 	_test_builder_struktur()
 	_test_builder_pelanggan()
 	_test_builder_sapuan()
+	_test_pelanggan_bergantung_seed()
 	_test_builder_pustaka_rusak()
 	_test_periksa_rute_mutan()
 	_test_rng_global_tidak_disentuh()
@@ -591,6 +592,60 @@ func _test_builder_sapuan() -> void:
 	check(pertama_terjauh <= 14.0 and terakhir_ke_akhir <= 14.0 and terakhir_ke_akhir >= 4.0, "pelanggan pertama paling jauh %.0f ubin dari awal dan pelanggan terakhir %.0f ubin dari garis akhir (<= 14, rute tidak berhenti kosong)" % [pertama_terjauh, terakhir_ke_akhir])
 	check(kombinasi.size() == 4, "empat kombinasi pembuka x penutup semuanya muncul dan semuanya sah (%d)" % kombinasi.size())
 	check(urutan_unik.size() >= 100, "400 seed menghasilkan paling sedikit 100 urutan segmen berbeda dari 288 yang mungkin (%d)" % urutan_unik.size())
+
+
+func _test_pelanggan_bergantung_seed() -> void:
+	_judul.call("RouteBuilder: pilihan pelanggan bergantung pada seed walau urutan segmen sama, jarak tidak seragam (QA-001, K-3, AC-5)")
+	check(Config.RUTE_PELANGGAN_GOYANG_UBIN > 0.0 and Config.RUTE_PELANGGAN_GOYANG_UBIN == 3.0, "goyangan target pelanggan 3,0 ubin dan lebih dari nol (nol = pilihan pelanggan hanya mengikuti urutan segmen)")
+	var pustaka: Array[SegmenRute] = _pustaka()
+	var himpunan_per_urutan: Dictionary = {}
+	var gagal: int = 0
+	var rute_rata: int = 0
+	var celah_terpanjang: float = 0.0
+	var celah_terpendek: float = 999.0
+	var terlalu_seragam: int = 0
+	var pelanggan_dekat: int = 0
+	var panjang_luar: int = 0
+	for benih: int in range(1000, 1400):
+		var rute: RouteBuilder.Rute = _rute(benih, pustaka)
+		if rute == null or rute.pelanggan.size() != 25:
+			gagal += 1
+			continue
+		for p: RouteBuilder.RumahRute in rute.pelanggan:
+			if p.sisi != LoperAnim.Sisi.SEBERANG:
+				pelanggan_dekat += 1
+		if rute.panjang_ubin < 200.0 or rute.panjang_ubin > 300.0:
+			panjang_luar += 1
+		var kunci: String = ",".join(_id_urutan(rute))
+		if not himpunan_per_urutan.has(kunci):
+			himpunan_per_urutan[kunci] = {}
+		(himpunan_per_urutan[kunci] as Dictionary)[",".join(_id_pelanggan(rute))] = true
+		var terpendek: float = 999.0
+		var terpanjang: float = 0.0
+		for j: int in range(1, rute.pelanggan.size()):
+			var selisih: float = rute.pelanggan[j].maju_ubin - rute.pelanggan[j - 1].maju_ubin
+			terpendek = minf(terpendek, selisih)
+			terpanjang = maxf(terpanjang, selisih)
+		celah_terpanjang = maxf(celah_terpanjang, terpanjang)
+		celah_terpendek = minf(celah_terpendek, terpendek)
+		# Rumah berurutan (ritme cepat) lalu sela panjang (napas): satu rute memuat keduanya (ROUTE_DESIGN 3).
+		if terpendek > 6.0 or terpanjang < 12.0:
+			terlalu_seragam += 1
+		rute_rata += 1
+	var urutan_bervariasi: int = 0
+	var himpunan_terbanyak: int = 0
+	for kunci: String in himpunan_per_urutan.keys():
+		var jumlah: int = (himpunan_per_urutan[kunci] as Dictionary).size()
+		if jumlah > 1:
+			urutan_bervariasi += 1
+		himpunan_terbanyak = maxi(himpunan_terbanyak, jumlah)
+	check(gagal == 0 and rute_rata == 400, "400 seed (1000..1399) dibangun dengan 25 pelanggan (gagal %d)" % gagal)
+	check(pelanggan_dekat == 0 and panjang_luar == 0, "sapuan 400 seed: tidak ada pelanggan di sisi dekat dan panjang rute selalu 200 sampai 300 (dekat %d, di luar %d)" % [pelanggan_dekat, panjang_luar])
+	check(himpunan_per_urutan.size() >= 100, "sapuan memuat paling sedikit 100 urutan segmen berbeda (dapat %d)" % himpunan_per_urutan.size())
+	check(urutan_bervariasi >= 50, "paling sedikit 50 urutan segmen yang sama menghasilkan lebih dari satu himpunan pelanggan di sapuan seed (dapat %d dari %d; goyangan nol = 0)" % [urutan_bervariasi, himpunan_per_urutan.size()])
+	check(himpunan_terbanyak >= 3, "satu urutan segmen yang sama menghasilkan paling sedikit 3 himpunan pelanggan berbeda (dapat %d)" % himpunan_terbanyak)
+	check(terlalu_seragam == 0, "tiap rute memuat rumah berurutan (jarak <= 6) dan sela panjang (>= 12): rute terlalu seragam %d" % terlalu_seragam)
+	check(celah_terpendek <= 4.0 and celah_terpanjang >= 18.0, "sapuan: jarak antar pelanggan terpendek %.1f (<= 4) dan terpanjang %.1f (>= 18, goyangan nol paling jauh 16)" % [celah_terpendek, celah_terpanjang])
 
 
 func _test_builder_pustaka_rusak() -> void:
