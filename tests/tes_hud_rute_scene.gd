@@ -297,6 +297,20 @@ func _test_progres_di_layar() -> void:
 	check(hud.teks_terkirim() == "1/25 TERKIRIM", "'1/25 TERKIRIM' (dapat %s)" % hud.teks_terkirim())
 	var perintah: Array = hud.kotak_progres().perintah_tampil()
 	check(not perintah.is_empty(), "kotak digambar lewat perintah GambarPiksel (simbol pola PolaPiksel)")
+	# QA-005 iterasi 1: warna utama kotak yang benar-benar digambar (DESIGN_SPEC 3.2, harapan literal): terkirim OK, terlewat FAIL,
+	# berikutnya ACCENT, belum UI_PANEL_RAISED. Kotak ke-i digambar mulai x = i x (8 + 2).
+	var harap_warna: Array = [["terkirim", Palette.OK], ["terlewat", Palette.FAIL], ["berikutnya", Palette.ACCENT], ["belum", Palette.UI_PANEL_RAISED]]
+	var semua_warna: Array[Color] = [Palette.OK, Palette.FAIL, Palette.ACCENT, Palette.UI_PANEL_RAISED]
+	for i: int in range(harap_warna.size()):
+		var warna_kotak: Array[Color] = []
+		for p: Array in perintah:
+			if p[1] == Vector2(i * 10, 0):
+				warna_kotak.append(p[2])
+		var lain_ada: bool = false
+		for w: Color in semua_warna:
+			if w != harap_warna[i][1] and warna_kotak.has(w):
+				lain_ada = true
+		check(warna_kotak.has(harap_warna[i][1]) and not lain_ada, "kotak %d (%s) digambar dengan warna %s, bukan warna status lain (dapat %s)" % [i, harap_warna[i][0], harap_warna[i][1], warna_kotak])
 	check(PolaPiksel.pola_progres(ProgresRute.Status.TERKIRIM) != PolaPiksel.pola_progres(ProgresRute.Status.TERLEWAT) and PolaPiksel.pola_progres(ProgresRute.Status.BERIKUTNYA) != PolaPiksel.pola_progres(ProgresRute.Status.BELUM) and PolaPiksel.pola_progres(ProgresRute.Status.TERKIRIM) != PolaPiksel.pola_progres(ProgresRute.Status.BELUM), "empat status berbeda bentuk (centang, silang, segitiga, garis putus-putus), bukan warna saja")
 	_bersihkan(akar)
 
@@ -370,6 +384,29 @@ func _test_sakelar_layar_jeda() -> void:
 	akar.perbarui(0.0)
 	await _tree.process_frame
 	check(hud.rect_tombol_bel() == Rect2(8, 312, 40, 40) and hud.rect_panel_kecepatan().end.x == float(LEBAR - Config.HUD_PANEL_KECEPATAN_GESER_PX), "sesudah lanjut: panel bawah dan bel dicerminkan (kidal)")
+	# QA-001 iterasi 1: mematikan Kidal lagi lewat sakelar yang sama (satu-satunya jalur kidal di scene rute, O-6), dengan sentuhan sungguhan.
+	# Harapan literal tangan kanan 780 (DESIGN_SPEC 3.5, 3.8): bel (732, 312) 40x40, panel kecepatan mulai x 210, radar seberang tetap
+	# (4, 10); stick di kiri (100, 260 masuk zona stick kanan), swipe di kanan.
+	akar.minta_jeda()
+	await _tree.process_frame
+	await _tree.process_frame
+	_tap(layar.rect_sakelar_kidal().get_center(), 4)
+	await _tree.process_frame
+	var router: TouchRouter = akar.kontrol_router()
+	check(not akar.kidal() and not hud.kidal() and not router.kidal() and tr(layar.sakelar_kidal().text) == "Kidal: mati" and akar.sedang_jeda(), "ketuk Kidal kedua kali saat jeda: kidal mati di adegan, HUD, dan router; teks 'Kidal: mati'; tetap jeda")
+	check(akar.mode_bantu() and tr(layar.sakelar_bantu().text) == "Bantu: nyala", "mematikan Kidal tidak menyentuh mode bantu")
+	akar.minta_lanjut()
+	akar.perbarui(0.0)
+	await _tree.process_frame
+	check(hud.rect_tombol_bel() == Rect2(732, 312, 40, 40) and hud.rect_panel_kecepatan().position.x == 210.0, "sesudah lanjut: bel kembali (732, 312) dan panel kecepatan kembali mulai x 210 (sisi kanan), dapat %s / %s" % [hud.rect_tombol_bel(), hud.rect_panel_kecepatan()])
+	check(hud.rect_radar_seberang() == Rect2(4, 10, 12, 172) and hud.rect_radar_dekat() == Rect2(764, 10, 12, 172), "radar tidak berpindah saat kidal dimatikan")
+	_sentuh(0, TITIK_STICK, true)
+	check(router.stick_aktif() and not router.swipe_aktif(), "jari turun di (100, 260): stick (zona stick kembali di kiri)")
+	_sentuh(0, TITIK_STICK, false)
+	_sentuh(1, Vector2(600, 200), true)
+	check(router.swipe_aktif() and not router.stick_aktif(), "jari turun di (600, 200): swipe (zona swipe kembali di kanan)")
+	_sentuh(1, Vector2(600, 200), false)
+	akar.atur_kidal(true)
 	akar.atur_kidal(false)
 	check(not akar.kidal() and tr(layar.sakelar_kidal().text) == "Kidal: mati", "atur_kidal dari tempat lain menyamakan sakelar layar jeda")
 	_bersihkan(akar)
