@@ -455,7 +455,7 @@ const RUTE_PENUTUP_MIN: int = 2
 const RUTE_SEED_DEV: int = 20261016
 ## Koran awal rute = pelanggan + sekian persen dibulatkan ke atas (BALANCING 4): 25 pelanggan = 30 koran.
 const RUTE_KORAN_CADANGAN_PERSEN: int = 20
-## Pembagi persen ke pecahan untuk `RUTE_KORAN_CADANGAN_PERSEN` (100 persen = satu bagian penuh).
+## Pembagi persen ke pecahan untuk persen rute (`RUTE_KORAN_CADANGAN_PERSEN`, `RUTE_PEMBERI_TIP_PERSEN`; 100 persen = satu bagian penuh).
 const RUTE_KORAN_PERSEN_PENUH: int = 100
 ## Panjang segmen terpendek yang sah, ubin (ROUTE_DESIGN 1).
 const RUTE_SEGMEN_PANJANG_MIN_UBIN: int = 24
@@ -509,3 +509,39 @@ const RUTE_TOMBOL_ULANG_MARGIN_PX: int = 8
 const RUTE_RUMAH_SPRITE: Array[String] = ["house_perumahan_dekat_limasan_bukan", "house_perumahan_dekat_limasan_pelanggan", "house_perumahan_dekat_pelana_lintang_bukan", "house_perumahan_dekat_pelana_lintang_pelanggan", "house_perumahan_dekat_pelana_sejajar_bukan", "house_perumahan_dekat_pelana_sejajar_pelanggan", "house_perumahan_limasan_bukan", "house_perumahan_limasan_pelanggan", "house_perumahan_pelana_bukan", "house_perumahan_pelana_pelanggan", "house_perumahan_sayap_bukan", "house_perumahan_sayap_pelanggan"]
 ## Titik pijak tiap sprite rumah (`ground_anchor` di JSON aset, tengah tapak), piksel dari pojok kiri atas gambar: x lalu y, sejajar dengan `RUTE_RUMAH_SPRITE`. Tes membandingkannya dengan JSON aset.
 const RUTE_RUMAH_PIJAK_PX: Array[int] = [97, 123, 155, 152, 96, 122, 155, 151, 96, 118, 154, 147, 105, 127, 105, 127, 96, 148, 96, 148, 105, 119, 105, 119]
+
+## --- Skor, combo, koin, tip, tepat (BALANCING 5 dan 7, GDD 14.1; K-2, K-4, O-1 sampai O-5 run fase3b-rintangan-skor; usulan) ---
+## Skor dan koin dua besaran terpisah (K-2). Skor = dasar x persen sasaran x pengali combo x pengali kecepatan saat lepas (x tepat),
+## dihitung dengan bilangan bulat (persen dan persepuluh) lalu dibulatkan ke bilangan bulat terdekat, setengah ke atas (`SkorRute`).
+
+## Skor dasar satu antaran sah penuh, poin.
+const SKOR_SASARAN_DASAR: int = 100
+## Persen skor sasaran sah penuh (kotak surat, teras, jendela dengan sakelar bonus).
+const SKOR_PERSEN_PENUH: int = 100
+## Persen skor antaran halaman (sah setengah, BALANCING 5).
+const SKOR_PERSEN_HALAMAN: int = 50
+## Pengali combo antaran pertama dalam rangkaian.
+const SKOR_COMBO_AWAL: float = 1.0
+## Pengali combo naik sekian tiap antaran sah beruntun.
+const SKOR_COMBO_LANGKAH: float = 0.1
+## Pengali combo paling besar.
+const SKOR_COMBO_MAKS: float = 2.0
+## Pengali skor saat koran dilepas di pita santai (dan melambat), dari kecepatan SEBENARNYA (O-5).
+const SKOR_PENGALI_SANTAI: float = 1.0
+## Pengali skor di pita cepat.
+const SKOR_PENGALI_CEPAT: float = 1.2
+## Pengali skor di pita ngebut.
+const SKOR_PENGALI_NGEBUT: float = 1.5
+## Pengali skor antaran "tepat" (inti kotak surat, K-4; bukan mode bantu, O-4).
+const SKOR_TEPAT_PENGALI: float = 1.25
+## Ongkos antar tiap antaran sah pertama ke rumah pelanggan, koin (GDD 14.1, BALANCING 7).
+const KOIN_ONGKOS_ANTAR: int = 15
+## Tip dari pelanggan pemberi tip yang korannya mendarat di teras, koin (BALANCING 7).
+const KOIN_TIP: int = 5
+## Persen pelanggan rute yang memberi tip, dipilih berseed oleh `RouteBuilder` (O-3); dibulatkan ke bawah: 25 x 30% = 7.
+const RUTE_PEMBERI_TIP_PERSEN: int = 30
+## Inti "tepat" kotak surat seberang [lateral_min, maju_min, lebar, panjang], ubin relatif awal kavling: 0,5 x 0,5 di pusat area
+## `JALAN_UJI_SEBERANG_KOTAK_SURAT_UBIN` (pusat -2,25; 1,875). Tepi min inklusif, maks eksklusif (K-4).
+const JALAN_UJI_SEBERANG_KOTAK_SURAT_INTI_UBIN: Array[float] = [-2.5, 1.625, 0.5, 0.5]
+## Inti "tepat" kotak surat dekat: 0,5 x 0,5 di pusat area `JALAN_UJI_DEKAT_KOTAK_SURAT_UBIN` (pusat 2,125; 1,875).
+const JALAN_UJI_DEKAT_KOTAK_SURAT_INTI_UBIN: Array[float] = [1.875, 1.625, 0.5, 0.5]

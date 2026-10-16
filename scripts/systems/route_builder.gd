@@ -14,6 +14,9 @@ extends RefCounted
 ##    mutlak terkecil) memilih kandidat, jadi jarak rata-rata sekitar sebaran rata tetapi ada rumah berurutan lalu sela panjang
 ##    (ROUTE_DESIGN 3). Celah terpanjang dibatasi `RUTE_PELANGGAN_JARAK_MAKS_UBIN`; bila terlampaui, goyangan diundi ulang.
 ## 4. Koran awal = pelanggan + `RUTE_KORAN_CADANGAN_PERSEN` persen dibulatkan ke atas (`koran_awal`).
+## 5. Pemberi tip (O-3 run fase3b-rintangan-skor): `jumlah_pemberi_tip` pelanggan (`RUTE_PEMBERI_TIP_PERSEN` persen dibulatkan ke bawah)
+##    dipilih dengan RNG rute yang sama SESUDAH pelanggan (Fisher-Yates sebagian), jadi seed sama = pemberi tip sama dan susunan rute,
+##    pelanggan, serta koran awal tidak berubah dari run 3A. Tidak ditandai visual (GDD 8: pelanggan "punya kebiasaan").
 
 
 ## Satu rumah di rute, dengan posisi maju dari awal rute.
@@ -31,6 +34,8 @@ class RumahRute extends RefCounted:
 	var pelanggan_boleh: bool = false
 	## True bila rumah ini pelanggan rute ini (dipilih dari yang `pelanggan_boleh`).
 	var pelanggan: bool = false
+	## True bila pelanggan ini memberi tip saat korannya mendarat di teras (O-3).
+	var pemberi_tip: bool = false
 
 
 ## Satu rintangan yang ditandai di rute (perilaku di Run 3B).
@@ -70,6 +75,8 @@ class Rute extends RefCounted:
 	var pelanggan: Array[RumahRute] = []
 	## Koran di awal rute (pelanggan + cadangan).
 	var koran_awal: int = 0
+	## Id rumah pelanggan pemberi tip (id -> true), untuk `SkorRute` (O-3).
+	var id_pemberi_tip: Dictionary = {}
 
 
 ## Hasil `bangun`: rute (null bila ada galat) dan daftar galat.
@@ -96,6 +103,7 @@ static func bangun(benih: int, pustaka: Array[SegmenRute]) -> Hasil:
 	if not _pilih_pelanggan(rute, rng, hasil.galat):
 		return hasil
 	rute.koran_awal = koran_awal(rute.pelanggan.size())
+	_pilih_pemberi_tip(rute, rng)
 	var salah: Array[String] = periksa_rute(rute)
 	if not salah.is_empty():
 		hasil.galat.append_array(salah)
@@ -109,6 +117,18 @@ static func koran_awal(jumlah_pelanggan: int) -> int:
 	if jumlah_pelanggan <= 0:
 		return 0
 	return jumlah_pelanggan + ceili(float(jumlah_pelanggan * Config.RUTE_KORAN_CADANGAN_PERSEN) / float(Config.RUTE_KORAN_PERSEN_PENUH))
+
+
+## Jumlah pemberi tip untuk `jumlah_pelanggan`: `RUTE_PEMBERI_TIP_PERSEN` persen dibulatkan ke bawah (25 = 7).
+static func jumlah_pemberi_tip(jumlah_pelanggan: int) -> int:
+	if jumlah_pelanggan <= 0:
+		return 0
+	return floori(float(jumlah_pelanggan * Config.RUTE_PEMBERI_TIP_PERSEN) / float(Config.RUTE_KORAN_PERSEN_PENUH))
+
+
+## True bila rumah `id_rumah` pelanggan pemberi tip di `rute`.
+static func pemberi_tip(rute: Rute, id_rumah: String) -> bool:
+	return rute != null and rute.id_pemberi_tip.has(id_rumah)
 
 
 ## Selisih maju antara pelanggan berturut-turut, ubin (jumlah pelanggan - 1 nilai).
@@ -165,6 +185,15 @@ static func periksa_rute(rute: Rute) -> Array[String]:
 	for j: float in jarak:
 		if j > Config.RUTE_PELANGGAN_JARAK_MAKS_UBIN:
 			galat.append("celah antar pelanggan %.1f ubin melebihi %.1f" % [j, Config.RUTE_PELANGGAN_JARAK_MAKS_UBIN])
+	var tip: int = 0
+	for pelanggan: RumahRute in rute.pelanggan:
+		if pelanggan.pemberi_tip:
+			tip += 1
+	for rumah: RumahRute in rute.rumah:
+		if rumah.pemberi_tip and not rumah.pelanggan:
+			galat.append("rumah '%s' pemberi tip tetapi bukan pelanggan" % rumah.id)
+	if tip != jumlah_pemberi_tip(rute.pelanggan.size()) or rute.id_pemberi_tip.size() != tip:
+		galat.append("pemberi tip %d (peta %d), seharusnya %d" % [tip, rute.id_pemberi_tip.size(), jumlah_pemberi_tip(rute.pelanggan.size())])
 	var rintangan: Array[float] = []
 	for objek: ObjekRute in rute.objek:
 		rintangan.append(objek.maju_ubin)
@@ -305,6 +334,22 @@ static func _pilih_pelanggan(rute: Rute, rng: RandomNumberGenerator, galat: Arra
 		return true
 	galat.append("tidak ada pilihan pelanggan dengan celah di bawah %.1f ubin dalam %d percobaan" % [Config.RUTE_PELANGGAN_JARAK_MAKS_UBIN, Config.RUTE_SUSUN_PERCOBAAN_MAKS])
 	return false
+
+
+## Tandai `jumlah_pemberi_tip` pelanggan secara berseed: Fisher-Yates sebagian atas indeks pelanggan dengan `rng` rute (O-3).
+static func _pilih_pemberi_tip(rute: Rute, rng: RandomNumberGenerator) -> void:
+	var indeks: Array[int] = []
+	for i: int in range(rute.pelanggan.size()):
+		indeks.append(i)
+	var jumlah: int = jumlah_pemberi_tip(indeks.size())
+	for i: int in range(jumlah):
+		var j: int = rng.randi_range(i, indeks.size() - 1)
+		var simpan: int = indeks[i]
+		indeks[i] = indeks[j]
+		indeks[j] = simpan
+		var rumah: RumahRute = rute.pelanggan[indeks[i]]
+		rumah.pemberi_tip = true
+		rute.id_pemberi_tip[rumah.id] = true
 
 
 ## Pilih `jumlah` indeks dari `maju` (terurut menaik) yang paling dekat ke target tersebar rata + goyangan acak: pencocokan berurutan
