@@ -1,0 +1,77 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/obstacles/obs_anjing_sheet.png" id="1_sheet"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/ui_ikon_seru.png" id="2_seru"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_duduk"]
+atlas = ExtResource("1_sheet")
+region = Rect2(0, 0, 58, 58)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gonggong"]
+atlas = ExtResource("1_sheet")
+region = Rect2(58, 0, 58, 58)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lari_1"]
+atlas = ExtResource("1_sheet")
+region = Rect2(116, 0, 58, 58)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lari_2"]
+atlas = ExtResource("1_sheet")
+region = Rect2(174, 0, 58, 58)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_berhenti"]
+atlas = ExtResource("1_sheet")
+region = Rect2(232, 0, 58, 58)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_rintangan"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_berhenti")
+}],
+"loop": true,
+"name": &"berhenti",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_duduk")
+}],
+"loop": true,
+"name": &"diam",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lari_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lari_2")
+}],
+"loop": true,
+"name": &"lari",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gonggong")
+}],
+"loop": true,
+"name": &"tanda",
+"speed": 5.0
+}]
+
+[node name="AnjingPenjaga" type="AnimatedSprite2D"]
+texture_filter = 1
+sprite_frames = SubResource("SpriteFrames_rintangan")
+animation = &"diam"
+autoplay = "diam"
+centered = false
+offset = Vector2(-24, -38)
+
+[node name="Seru" type="Sprite2D" parent="."]
+visible = false
+texture_filter = 1
+texture = ExtResource("2_seru")
+centered = false
+offset = Vector2(-5, -12)

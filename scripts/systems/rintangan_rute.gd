@@ -184,6 +184,29 @@ static func animasi(item: Item) -> String:
 	return AnjingPenjaga.animasi(item.anjing)
 
 
+## True bila sprite rintangan digambar dicerminkan mendatar (bagian B, usulan; sheet dari `tools/env_art/fase3.py` hanya punya satu arah):
+## - anjing `PULANG` atau `MUNDUR` (sesudah kaget): sheet `lari` menghadap maju, anjing bergerak mundur ke rumahnya;
+## - anjing `dekat` yang duduk atau waspada (`DIAM`, `WASPADA`): sheet `duduk`/`gonggong` menghadap jalan dari sisi seberang (kanan bawah
+##   layar); dicerminkan anjing di sisi dekat menghadap ke belakang sepanjang jalan, ke arah sepeda yang datang;
+## - mobil: tidak pernah (sheet = mobil sisi seberang, bagasi ke jalan; data perumahan hanya punya mobil `seberang`).
+static func cermin_sprite(item: Item) -> bool:
+	if item.jenis != Jenis.ANJING:
+		return false
+	match item.anjing.status:
+		AnjingPenjaga.Status.PULANG:
+			return true
+		AnjingPenjaga.Status.MUNDUR:
+			return not AnjingPenjaga.ikon_seru(item.anjing)
+		AnjingPenjaga.Status.DIAM, AnjingPenjaga.Status.WASPADA:
+			return item.anjing.sisi == LoperAnim.Sisi.DEKAT
+	return false
+
+
+## Tinggi kotak penutup rintangan untuk `PenutupPemain`, ubin (`RINTANGAN_*_TINGGI_UBIN`).
+static func tinggi_penutup(item: Item) -> float:
+	return Config.RINTANGAN_MOBIL_TINGGI_UBIN if item.jenis == Jenis.MOBIL else Config.RINTANGAN_ANJING_TINGGI_UBIN
+
+
 ## True selama ikon "!" tampil di atas rintangan (anjing yang kaget karena bel).
 static func ikon_seru(item: Item) -> bool:
 	return item.jenis == Jenis.ANJING and AnjingPenjaga.ikon_seru(item.anjing)

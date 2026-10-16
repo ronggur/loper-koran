@@ -176,8 +176,11 @@ static func kotak(k: Keadaan) -> Rect2:
 	return Rect2(pusat - setengah, setengah + setengah)
 
 
-## Nama animasi sprite untuk status sekarang (`ANIMASI`).
+## Nama animasi sprite untuk status sekarang (`ANIMASI`). Selama kaget sesudah bel (ikon "!", `ikon_seru`) anjing diam berdiri:
+## animasi `berhenti`, baru `lari` saat mundur (bagian B, tangkapan probe: anjing kaget yang "berlari" di tempat tidak terbaca kaget).
 static func animasi(k: Keadaan) -> String:
+	if ikon_seru(k):
+		return ANIMASI[Status.BERHENTI]
 	return ANIMASI[k.status]
 
 

@@ -153,16 +153,22 @@ func _test_scene_jalan_uji() -> void:
 	# Run fase1b-umpan-balik: kontainer anchor ketiga StripJeda (pojok kiri atas, anchor bawaan) memuat tombol jeda.
 	var strip_jeda: MarginContainer = _anak(hud, "StripJeda") as MarginContainer
 	check(strip_jeda != null and strip_jeda.anchor_left == 0.0 and strip_jeda.anchor_right == 0.0 and strip_jeda.anchor_top == 0.0 and strip_jeda.anchor_bottom == 0.0 and strip_jeda.theme == tema, "HUD: strip jeda ber-anchor di pojok kiri atas, margin dari Config (bukan posisi piksel)")
+	# Run fase3b-rintangan-skor: dua kontainer anchor lagi, StripSkor (strip atas lebar penuh, panel skor) dan StripBel (tepi bawah lebar
+	# penuh, tombol bel); posisinya dari margin Config.
+	var strip_skor: MarginContainer = _anak(hud, "StripSkor") as MarginContainer
+	var strip_bel: MarginContainer = _anak(hud, "StripBel") as MarginContainer
+	check(strip_skor != null and strip_skor.anchor_left == 0.0 and strip_skor.anchor_right == 1.0 and strip_skor.anchor_top == 0.0 and strip_skor.anchor_bottom == 0.0 and strip_skor.theme == tema, "HUD: strip skor ber-anchor lebar penuh di tepi atas")
+	check(strip_bel != null and strip_bel.anchor_left == 0.0 and strip_bel.anchor_right == 1.0 and strip_bel.anchor_top == 1.0 and strip_bel.anchor_bottom == 1.0 and strip_bel.theme == tema, "HUD: strip bel ber-anchor lebar penuh di tepi bawah")
 	var tanpa_posisi_absolut: bool = true
 	var hanya_tombol_menerima: bool = true
 	for node: Node in _semua_node(hud):
 		if node is Control:
 			var kontrol_hud: Control = node as Control
-			if kontrol_hud != strip and kontrol_hud != panel_bawah and kontrol_hud != strip_jeda and not kontrol_hud.get_parent() is Container:
+			if not [strip, panel_bawah, strip_jeda, strip_skor, strip_bel].has(kontrol_hud) and not kontrol_hud.get_parent() is Container:
 				tanpa_posisi_absolut = false
 			if not kontrol_hud is Button and kontrol_hud.mouse_filter != Control.MOUSE_FILTER_IGNORE:
 				hanya_tombol_menerima = false
-	check(tanpa_posisi_absolut, "HUD: semua Control selain tiga kontainer anchor ditata oleh Container induknya (tanpa posisi piksel absolut)")
+	check(tanpa_posisi_absolut, "HUD: semua Control selain lima kontainer anchor ditata oleh Container induknya (tanpa posisi piksel absolut)")
 	check(hanya_tombol_menerima, "HUD: hanya tombol yang menerima sentuhan (kontainer, panel, label, dan bar memakai MOUSE_FILTER_IGNORE)")
 	# Umpan balik stick (AC-14): tekstur cakram/cincin/knob dirasterisasi per piksel game dengan warna dari Palette.
 	var tekstur_isi: ImageTexture = kontrol.get("_tekstur_isi") as ImageTexture

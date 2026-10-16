@@ -61,6 +61,21 @@ extends Node2D
 ## Bunyi sepeda (D-3, D-5): tiap langkah keadaan sebenarnya (pose, kecepatan, rem, jeda) diberikan ke autoload `Audio` (`/root/Audio`,
 ## dicari lewat jalur node, bukan nama global, supaya scene tetap jalan tanpa autoload); `jeda_berubah` disambungkan ke
 ## `Audio.atur_jeda` (semua bunyi sepeda berhenti saat jeda, tanpa decit rem tertunda), dan keluar dari pohon menghentikannya.
+##
+## Rintangan, tabrakan, skor, dan bel (run fase3b-rintangan-skor bagian B; keadaan murni `RintanganRute`, `SkorRute`, `Bel`):
+## - Urutan satu langkah (sama dengan simulasi `TesRintangan._sim_rute`): sepeda digerakkan dengan `tahan_naik = Tabrakan.oleng`, lalu
+##   `RintanganRute.langkah` dengan posisi dan kecepatan sepeda baru; tiap peristiwa (waspada, mengejar, lampu mundur, mesin) ke
+##   `Audio.putar_peristiwa` (pasangan visualnya animasi sprite rintangan); tabrakan baru: `SepedaUji.tabrak` (1,0 u/d), combo putus,
+##   `Audio.putar_tabrakan`, sinyal `tabrakan(jenis)` dengan jenis data penyebabnya (AC-8), dan visual oleng/kedip/kilatan dari keadaan
+##   tabrakan tiap langkah. Rintangan dunia diisi kait `_rintangan_awal` (jalan uji: kosong, scene rute: dari data rute).
+## - Koran mendarat: di scene yang menilai skor (`_skor_aktif`, hanya rute) `SkorRute.nilai_koran` dulu, penanda koran ditimpa penanda skor
+##   (tepat, netral), umpan balik melayang, lalu `koran_mendarat` dan bunyi: mendarat dengan nada combo (`BunyiLempar.pitch_mendarat`),
+##   denting tip, kilau tepat. Jalan uji tidak menilai skor (zonanya tanpa id rumah) dan bunyinya tetap nada dasar.
+## - Mode bantu: koran tap dibuat `KoranLempar.baru(lintasan, true)`, jadi tidak pernah tepat (O-4).
+## - Bel: jari yang turun di zona bel (`TouchRouter.bel_ditekan`) -> `ketuk_bel`: `Bel.ketuk` (ditolak saat jeda game), bunyi bel, dan
+##   `RintanganRute.terapkan_bel` (anjing waspada/mengejar dalam jangkauan mundur, ikon "!"). Tombol dan efek "KRING!" dari `Bel` tiap langkah.
+## - Semua waktu (rintangan, oleng, kebal, bel, label PUTUS, umpan balik melayang) ikut `dt` efektif: jeda membekukannya, tanpa lanjut
+##   otomatis. `_kembalikan_awal` ("Main lagi") mengatur ulang rintangan, tabrakan, skor, combo, koin, status terantar, bel, dan bunyi rute.
 
 ## Status jeda berubah: true = layar jeda dibuka (simulasi, sprite, partikel, dan input berhenti), false = lanjut.
 signal jeda_berubah(jeda: bool)
@@ -69,8 +84,14 @@ signal jeda_berubah(jeda: bool)
 signal koran_dilempar(lintasan: ThrowSolver.Lintasan)
 ## Tap mode bantu ditolak karena tidak ada kotak surat terjangkau (D-6): titik tap, koordinat viewport game.
 signal bantu_tanpa_sasaran(posisi: Vector2)
-## Koran mendarat dan sudah dinilai (`KoranLempar.Koran`: hasil, antaran, penanda).
+## Koran mendarat dan sudah dinilai (`KoranLempar.Koran`: hasil, antaran, penanda; di scene rute penanda sudah dari skor).
 signal koran_mendarat(koran: KoranLempar.Koran)
+## Tabrakan baru dengan rintangan berjenis data `jenis` (`anjing_penjaga`, `mobil_garasi`; AC-8).
+signal tabrakan(jenis: String)
+## Satu koran dinilai skor (hanya scene yang menilai skor): hasil `SkorRute.nilai`.
+signal skor_dinilai(hasil: SkorRute.Hasil)
+## Ketukan bel berbunyi (`Bel.Bunyi.KRING` atau `KRING_KRING`); `bereaksi` = id rintangan yang mundur.
+signal bel_berbunyi(bunyi: Bel.Bunyi, bereaksi: Array[int])
 
 ## Skrip autoload `Audio`, hanya untuk tipe (`Audio` tidak merujuk autoload lain, rule `gdscript`).
 const SKRIP_AUDIO := preload("res://scripts/autoload/audio.gd")
@@ -91,6 +112,17 @@ var _terbang: Array[KoranLempar.Koran] = []
 var _bidik_nomor: int = -1
 ## True selama mode bantu menyala (D-7; bawaan mati, tidak disimpan).
 var _mode_bantu: bool = false
+
+## Rintangan dunia dan tabrakan sepeda (`RintanganRute`). Kosong di jalan uji.
+var _rintangan: RintanganRute.Keadaan = RintanganRute.Keadaan.new()
+## Skor, combo, koin, tip, rumah terantar (`SkorRute`).
+var _skor: SkorRute.Keadaan = SkorRute.awal()
+## Bel (`Bel`).
+var _bel: Bel.Keadaan = Bel.awal()
+## Sisa waktu label PUTUS di HUD, detik.
+var _putus_detik: float = 0.0
+## Umpan balik melayang yang sedang tampil (`UmpanMelayang`).
+var _umpan: Array[UmpanMelayang.Entri] = []
 
 ## Medan sasaran koran (zona penilaian dan kotak penutup): null = jalan uji, `MedanKoran.dari_rute` di scene rute. Dipakai penilaian koran dan garis
 ## bidik dengan fungsi yang sama (prediksi = hasil).
@@ -114,12 +146,13 @@ func _ready() -> void:
 	_layar_jeda.lanjut_diminta.connect(minta_lanjut)
 	_kontrol.router.swipe_selesai.connect(_saat_swipe_selesai)
 	_kontrol.router.tap_selesai.connect(_saat_tap_selesai)
+	_kontrol.router.bel_ditekan.connect(_saat_bel_ditekan)
 	_layar_jeda.tampilkan(false)
+	_hud.atur_skor_tampil(_skor_aktif())
 	_audio = get_node_or_null(^"/root/Audio") as SKRIP_AUDIO
 	if _audio != null:
 		jeda_berubah.connect(_audio.atur_jeda)
 		koran_dilempar.connect(_bunyi_lempar)
-		koran_mendarat.connect(_bunyi_mendarat)
 	_siapkan_dunia()
 	perbarui(0.0)
 
@@ -142,9 +175,17 @@ func _bunyi_lempar(_lintasan: ThrowSolver.Lintasan) -> void:
 	_audio.putar_lempar()
 
 
-## Koran mendarat: satu bunyi permukaan lewat `Audio`, dengan sakelar jendela yang sama dengan penilaian koran (D-10, D-11).
-func _bunyi_mendarat(koran_mendarat_ini: KoranLempar.Koran) -> void:
-	_audio.putar_mendarat(koran_mendarat_ini.hasil, Config.JENDELA_KENA_BONUS)
+## Koran mendarat: satu bunyi permukaan lewat `Audio`, dengan sakelar jendela yang sama dengan penilaian koran (D-10, D-11), nada combo dari
+## urutan antaran beruntun (AC-18; 0 = nada dasar: jalan uji, tidak sah, ulang), lalu denting tip dan kilau tepat bila ada (AC-19).
+func _bunyi_mendarat(koran_mendarat_ini: KoranLempar.Koran, hasil_skor: SkorRute.Hasil) -> void:
+	if _audio == null:
+		return
+	var urutan: int = hasil_skor.urutan_beruntun if hasil_skor != null else 0
+	_audio.putar_mendarat(koran_mendarat_ini.hasil, Config.JENDELA_KENA_BONUS, BunyiLempar.pitch_mendarat(urutan))
+	if hasil_skor != null and hasil_skor.tip > 0:
+		_audio.putar_tip()
+	if hasil_skor != null and hasil_skor.tepat:
+		_audio.putar_tepat()
 
 
 ## Tombol jeda di HUD: membuka layar jeda (tidak berpengaruh bila sudah jeda).
@@ -205,6 +246,21 @@ func _langkah_koran(keadaan: SisaKoran.Keadaan) -> SisaKoran.Keadaan:
 	return keadaan
 
 
+## True bila scene ini menilai skor dan koin (bawaan false: jalan uji tidak punya id rumah).
+func _skor_aktif() -> bool:
+	return false
+
+
+## Rute untuk pemberi tip `SkorRute.nilai_koran` (bawaan: rute kosong, tanpa pemberi tip).
+func _rute_skor() -> RouteBuilder.Rute:
+	return null
+
+
+## Rintangan dunia di awal (dan sesudah "Main lagi"). Bawaan kosong (jalan uji).
+func _rintangan_awal() -> RintanganRute.Keadaan:
+	return RintanganRute.Keadaan.new()
+
+
 ## Vektor stick yang diberikan ke sepeda langkah ini (bawaan: kontrol touch atau keyboard di editor).
 func _vektor_stick() -> Vector2:
 	return _kontrol.vektor_stick()
@@ -252,17 +308,18 @@ func _saat_tap_selesai(posisi: Vector2, _durasi_detik: float) -> void:
 		_kontrol.tampilkan_tanda(posisi)
 		bantu_tanpa_sasaran.emit(posisi)
 		return
-	_lempar(pilihan.lintasan)
+	_lempar(pilihan.lintasan, true)
 
 
 ## Gerbang terakhir dan langkah sesudahnya, sama untuk swipe dan tap (D-5): `SisaKoran.terima`; diterima = koran -1, koran terbang dengan
 ## lintasan beku, animasi lempar ke sisi lintasan, HUD, dan `koran_dilempar`. Ditolak = tidak ada yang berubah. True bila diterima.
-func _lempar(lintasan: ThrowSolver.Lintasan) -> bool:
+## `bantu` true untuk tap mode bantu (koran bantu tidak pernah tepat, O-4).
+func _lempar(lintasan: ThrowSolver.Lintasan, bantu: bool = false) -> bool:
 	var hasil: SisaKoran.Hasil = SisaKoran.terima(koran, _sepeda.jarak_ubin)
 	koran = hasil.keadaan
 	if not hasil.diterima:
 		return false
-	_terbang.append(KoranLempar.baru(lintasan))
+	_terbang.append(KoranLempar.baru(lintasan, bantu))
 	_sepeda.lempar(lintasan.sisi)
 	_hud.tampilkan_koran(koran.sisa, koran.penuh)
 	koran_dilempar.emit(lintasan)
@@ -322,7 +379,11 @@ func perbarui(dt: float) -> void:
 	var langkah_dt: float = JedaSim.dt_efektif(_jeda, _baru_lanjut, dt)
 	if not _jeda:
 		_baru_lanjut = false
-	_sepeda.gerak(_vektor_stick(), langkah_dt)
+	_sepeda.gerak(_vektor_stick(), langkah_dt, Tabrakan.oleng(_rintangan.tabrakan))
+	_langkah_rintangan(langkah_dt)
+	_bel = Bel.langkah(_bel, langkah_dt)
+	_putus_detik = maxf(_putus_detik - langkah_dt, 0.0) if is_finite(langkah_dt) and langkah_dt > 0.0 else _putus_detik
+	_umpan = UmpanMelayang.langkah(_umpan, langkah_dt)
 	_perbarui_lemparan(langkah_dt)
 	_kontrol.langkah_tanda(langkah_dt)
 	_tanah.perbarui(_sepeda.jarak_ubin)
@@ -330,6 +391,10 @@ func perbarui(dt: float) -> void:
 	_hud.tampilkan_kecepatan(_sepeda.kecepatan_ud)
 	_hud.tampilkan_stamina(_sepeda.stamina(), _sepeda.lelah())
 	_kontrol.atur_rem(_sepeda.rem_aktif())
+	_sepeda.tampilkan_tabrakan(_rintangan.tabrakan)
+	_sepeda.tampilkan_bel(_bel)
+	_hud.tampilkan_skor(_skor.skor, _skor.beruntun, _skor.koin, putus_tampil())
+	_hud.tampilkan_bel(_kontrol.router.bel_ditahan(), Bel.sisa_jeda_pecahan(_bel))
 	if _audio != null:
 		_audio.perbarui_sepeda(_sepeda.pose(), _sepeda.kecepatan_ud, _sepeda.rem_aktif(), _jeda)
 	_geser_dorongan = DoronganKecepatan.haluskan(_geser_dorongan, DoronganKecepatan.geser_target(_sepeda.kecepatan_ud), langkah_dt)
@@ -345,7 +410,7 @@ func _perbarui_lemparan(langkah_dt: float) -> void:
 		for lama: KoranLempar.Koran in _terbang:
 			var baru: KoranLempar.Koran = KoranLempar.langkah(lama, langkah_dt, Config.JENDELA_KENA_BONUS, _medan)
 			if baru.mendarat and not lama.mendarat:
-				koran_mendarat.emit(baru)
+				_saat_koran_mendarat(baru)
 			if not KoranLempar.selesai(baru):
 				sisa.append(baru)
 		_terbang = sisa
@@ -362,11 +427,105 @@ func _perbarui_lemparan(langkah_dt: float) -> void:
 	_garis_bidik.sembunyikan()
 
 
+## Satu langkah rintangan sesudah sepeda digerakkan (urutan di atas): peristiwa ke bunyi; tabrakan baru diterapkan ke sepeda, combo putus,
+## bunyi, dan sinyal `tabrakan`.
+func _langkah_rintangan(langkah_dt: float) -> void:
+	var hr: RintanganRute.Hasil = RintanganRute.langkah(_rintangan, _sepeda.jarak_ubin, _sepeda.lateral_ubin, _sepeda.kecepatan_ud, langkah_dt)
+	_rintangan = hr.keadaan
+	if _audio != null:
+		for k: RintanganRute.Kejadian in hr.kejadian:
+			_audio.putar_peristiwa(k.peristiwa)
+	if not hr.tabrak:
+		return
+	_sepeda.tabrak()
+	_putus_combo()
+	if _audio != null:
+		_audio.putar_tabrakan()
+	tabrakan.emit(hr.jenis_tabrak)
+
+
+## Combo putus (tabrakan atau antaran tidak sah): rangkaian kembali 0; label PUTUS tampil bila ada rangkaian yang putus.
+func _putus_combo() -> void:
+	if _skor.beruntun > 0:
+		_putus_detik = Config.HUD_COMBO_PUTUS_DETIK
+	_skor = SkorRute.putus_combo(_skor)
+
+
+## Koran `k` (objek baru langkah ini) baru mendarat: dinilai skor bila scene menilai skor (penanda ditimpa penanda skor, umpan balik
+## melayang), lalu `koran_mendarat`, `skor_dinilai`, dan bunyi.
+func _saat_koran_mendarat(k: KoranLempar.Koran) -> void:
+	var hs: SkorRute.Hasil = null
+	if _skor_aktif():
+		hs = SkorRute.nilai_koran(_skor, k, _rute_skor(), Config.JENDELA_KENA_BONUS)
+		if hs.status == SkorRute.Status.TIDAK_SAH and _skor.beruntun > 0:
+			_putus_detik = Config.HUD_COMBO_PUTUS_DETIK
+		_skor = hs.keadaan
+		k.penanda = hs.penanda
+		_umpan = UmpanMelayang.tambah(_umpan, UmpanMelayang.dari_hasil(hs, k.lintasan.titik_mendarat))
+	koran_mendarat.emit(k)
+	if hs != null:
+		skor_dinilai.emit(hs)
+	_bunyi_mendarat(k, hs)
+
+
+## Jari turun di zona bel (`TouchRouter.bel_ditekan`).
+func _saat_bel_ditekan(_posisi: Vector2) -> void:
+	ketuk_bel()
+
+
+## Satu ketukan bel (tombol, juga dipanggil tes): `Bel.ketuk` dengan status jeda game; bila berbunyi: bunyi bel, rintangan dalam jangkauan
+## bereaksi (`RintanganRute.terapkan_bel`), dan `bel_berbunyi`. Hasil ketukan dikembalikan.
+func ketuk_bel() -> Bel.Bunyi:
+	var hb: Bel.Hasil = Bel.ketuk(_bel, _jeda)
+	_bel = hb.keadaan
+	if not Bel.berbunyi(hb.bunyi):
+		return hb.bunyi
+	if _audio != null:
+		_audio.putar_bel(hb.bunyi)
+	var reaksi: RintanganRute.HasilBel = RintanganRute.terapkan_bel(_rintangan, _sepeda.jarak_ubin)
+	_rintangan = reaksi.keadaan
+	_sepeda.tampilkan_bel(_bel)
+	bel_berbunyi.emit(hb.bunyi, reaksi.bereaksi)
+	return hb.bunyi
+
+
+## Keadaan rintangan dan tabrakan saat ini (untuk tes dan probe).
+func rintangan() -> RintanganRute.Keadaan:
+	return _rintangan
+
+
+## Keadaan skor saat ini (untuk tes dan probe).
+func skor() -> SkorRute.Keadaan:
+	return _skor
+
+
+## Keadaan bel saat ini (untuk tes dan probe).
+func bel() -> Bel.Keadaan:
+	return _bel
+
+
+## Umpan balik melayang yang sedang tampil (untuk tes dan probe).
+func umpan_melayang() -> Array[UmpanMelayang.Entri]:
+	return _umpan
+
+
+## True selama label PUTUS tampil.
+func putus_tampil() -> bool:
+	return _putus_detik > Config.TABRAKAN_TOLERANSI_DETIK
+
+
 ## Mengembalikan adegan ke keadaan awal tanpa memuat ulang scene ("Main lagi", run fase3a-rute): sepeda di awal (jarak 0, kecepatan santai,
 ## stamina penuh), sisa koran `koran_awal` dengan jeda antar lempar belum berjalan, koran terbang dibuang, garis bidik dan jari dilepas,
 ## dan geseran dorongan kamera nol. Status jeda tidak diubah.
 func _kembalikan_awal(koran_awal: int) -> void:
 	_sepeda.atur_ulang()
+	_rintangan = _rintangan_awal()
+	_skor = SkorRute.awal()
+	_bel = Bel.awal()
+	_putus_detik = 0.0
+	_umpan = []
+	if _audio != null:
+		_audio.atur_ulang_rute()
 	koran = SisaKoran.awal(koran_awal)
 	_terbang = []
 	_bidik_nomor = -1
@@ -377,6 +536,10 @@ func _kembalikan_awal(koran_awal: int) -> void:
 	_koran_tanah.tampilkan(_terbang)
 	_koran_udara.tampilkan(_terbang)
 	_hud.tampilkan_koran(koran.sisa, koran.penuh)
+	_sepeda.tampilkan_tabrakan(_rintangan.tabrakan)
+	_sepeda.tampilkan_bel(_bel)
+	_hud.tampilkan_skor(_skor.skor, _skor.beruntun, _skor.koin, false)
+	_hud.tampilkan_bel(false, 0.0)
 
 
 ## True selama layar jeda terbuka (simulasi, sprite, partikel, dan input berhenti).

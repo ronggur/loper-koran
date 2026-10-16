@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3]
+[gd_scene load_steps=26 format=3]
 
 [ext_resource type="Script" path="res://scripts/entities/rute_main.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/entities/tanah_daur.gd" id="2_tanah"]
@@ -16,6 +16,10 @@
 [ext_resource type="Script" path="res://scripts/ui/garis_bidik.gd" id="15_bidik"]
 [ext_resource type="Script" path="res://scripts/entities/penerap_penutup.gd" id="16_penerap"]
 [ext_resource type="PackedScene" path="res://scenes/ui/panel_akhir_rute.tscn" id="17_akhir"]
+[ext_resource type="Script" path="res://scripts/entities/rintangan_daur.gd" id="19_rintangan"]
+[ext_resource type="PackedScene" path="res://scenes/entities/anjing_penjaga.tscn" id="20_anjing"]
+[ext_resource type="PackedScene" path="res://scenes/entities/mobil_garasi.tscn" id="21_mobil"]
+[ext_resource type="Script" path="res://scripts/entities/umpan_melayang_gambar.gd" id="22_umpan"]
 
 [node name="Rute" type="Node2D"]
 script = ExtResource("1_script")
@@ -50,6 +54,14 @@ adegan_kotak_surat = ExtResource("9_kotak_surat")
 [node name="Sepeda" parent="Objek" instance=ExtResource("10_sepeda")]
 unique_name_in_owner = true
 
+[node name="Rintangan" type="Node2D" parent="Objek"]
+unique_name_in_owner = true
+y_sort_enabled = true
+texture_filter = 1
+script = ExtResource("19_rintangan")
+adegan_anjing = ExtResource("20_anjing")
+adegan_mobil = ExtResource("21_mobil")
+
 [node name="PenerapPenutup" type="Node" parent="."]
 unique_name_in_owner = true
 script = ExtResource("16_penerap")
@@ -62,6 +74,10 @@ lapisan = 1
 [node name="GarisBidik" type="Node2D" parent="."]
 unique_name_in_owner = true
 script = ExtResource("15_bidik")
+
+[node name="UmpanMelayang" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("22_umpan")
 
 [node name="Hud" parent="." instance=ExtResource("11_hud")]
 unique_name_in_owner = true

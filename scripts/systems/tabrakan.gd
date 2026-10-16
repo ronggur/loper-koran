@@ -133,6 +133,24 @@ static func terapkan_ke_sepeda(sepeda: BikeMotion.Keadaan) -> BikeMotion.Keadaan
 	return baru
 
 
+## Umpan balik visual tabrakan (AC-8, bagian B): geseran mendatar sprite pemain selama oleng, piksel game. Bolak-balik
+## +`TABRAKAN_OLENG_GESER_PX` / - tiap `TABRAKAN_OLENG_PERIODE_DETIK` sejak tabrakan (fase genap +, ganjil -); 0 bila tidak oleng.
+static func geser_oleng_px(k: Keadaan) -> int:
+	if not oleng(k) or Config.TABRAKAN_OLENG_PERIODE_DETIK <= 0.0:
+		return 0
+	var fase: int = floori((Config.TABRAKAN_OLENG_DETIK - k.oleng_detik) / Config.TABRAKAN_OLENG_PERIODE_DETIK + Config.TABRAKAN_TOLERANSI_DETIK)
+	return Config.TABRAKAN_OLENG_GESER_PX if posmod(fase, 2) == 0 else -Config.TABRAKAN_OLENG_GESER_PX
+
+
+## Alpha sprite pemain selama kebal: kedip `TABRAKAN_KEDIP_ALFA` pada fase ganjil (tiap `TABRAKAN_KEDIP_PERIODE_DETIK` sejak tabrakan), 1,0
+## pada fase genap dan saat tidak kebal.
+static func alfa_kebal(k: Keadaan) -> float:
+	if not kebal(k) or Config.TABRAKAN_KEDIP_PERIODE_DETIK <= 0.0:
+		return 1.0
+	var fase: int = floori((Config.TABRAKAN_KEBAL_DETIK - k.kebal_detik) / Config.TABRAKAN_KEDIP_PERIODE_DETIK + Config.TABRAKAN_TOLERANSI_DETIK)
+	return Config.TABRAKAN_KEDIP_ALFA if posmod(fase, 2) == 1 else 1.0
+
+
 static func _tempel(s: Keadaan, kena: Array[Kandidat]) -> void:
 	for c: Kandidat in kena:
 		if not s.menempel.has(c.id):

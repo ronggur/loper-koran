@@ -634,3 +634,60 @@ const AUDIO_RINTANGAN_VOLUME_DB: float = -3.0
 const AUDIO_TABRAKAN_VOLUME_DB: float = -2.0
 ## Volume denting tip dan kilau tepat, dB.
 const AUDIO_TIP_VOLUME_DB: float = -3.0
+
+## --- Scene rute run fase3b-rintangan-skor bagian B: rintangan digambar, tabrakan, bel, HUD skor (usulan, dinilai lewat uji HP) ---
+
+## Tinggi kotak penutup anjing untuk aturan objek yang menutupi pemain (`PenutupPemain`), ubin: badan anjing sekitar 26 piksel = 0,8 ubin.
+const RINTANGAN_ANJING_TINGGI_UBIN: float = 0.8
+## Tinggi kotak penutup mobil, ubin: sedan sekitar 32 piksel dari tanah sampai atap = 1,0 ubin.
+const RINTANGAN_MOBIL_TINGGI_UBIN: float = 1.0
+## Titik jangkar ikon "!" di atas anjing yang bereaksi pada bel, piksel game di atas titik pijak anjing (kepala sekitar 26 piksel + 2).
+const RINTANGAN_SERU_ATAS_PX: int = 28
+## Oleng sesudah tabrakan (AC-8): sprite pemain bergeser mendatar sekian piksel game bolak-balik.
+const TABRAKAN_OLENG_GESER_PX: int = 1
+## Oleng: lama satu arah geseran, detik (bolak-balik tiap sekian detik selama `TABRAKAN_OLENG_DETIK`).
+const TABRAKAN_OLENG_PERIODE_DETIK: float = 0.05
+## Kebal sesudah tabrakan: sprite pemain berkedip, lama satu fase kedip, detik.
+const TABRAKAN_KEDIP_PERIODE_DETIK: float = 0.1
+## Alpha sprite pemain pada fase redup kedip kebal.
+const TABRAKAN_KEDIP_ALFA: float = 0.5
+## Kaki ikon kilatan tabrakan di atas titik pijak pemain selama oleng, piksel game (di atas kepala sprite 46x58, titik pijak y 46).
+const TABRAKAN_IKON_ATAS_PX: int = 50
+## Tombol bel: sisi persegi gambar, piksel game (DESIGN_SPEC 3.8: 40x40).
+const BEL_TOMBOL_UKURAN_PX: int = 40
+## Pusat tombol dan zona tap bel dari tepi layar sisi tombol dan dari tepi bawah, piksel game: pusat (lebar - 28, 332), kidal (28, 332).
+const BEL_TOMBOL_PUSAT_TEPI_PX: int = 28
+## Jari-jari zona tap bel dari pusat tombol, piksel game (inklusif); sentuhan yang DIMULAI di sini membunyikan bel, bukan swipe.
+const BEL_ZONA_RADIUS_PX: float = 28.0
+## Jumlah frame jeda tombol bel di `assets/sprites/ui/ui_bel_tombol.png` (cincin n/8 sampai 1/8, sesudah frame diam dan ditekan).
+const BEL_TOMBOL_JEDA_LANGKAH: int = 8
+## Efek "kring": laju frame garis getar dan naik teks, frame per detik (DESIGN_SPEC 3.8: 12 fps).
+const BEL_EFEK_FPS: float = 12.0
+## Efek "kring": jumlah frame garis getar (`ui_bel_getar.png`).
+const BEL_GETAR_FRAME: int = 4
+## Titik jangkar garis getar di sel 16x16 `ui_bel_getar.png` (titik bel), piksel: x lalu y (`ui_bel.json`).
+const BEL_GETAR_JANGKAR_PX: Array[int] = [3, 12]
+## Titik bel relatif titik pijak sprite pemain, piksel game: x lalu y (dari `santai_normal` (31, 17) di `docs/design/bel/bell_anchors.json` dikurangi titik pijak (23, 46)); satu titik untuk semua animasi (usulan).
+const BEL_TITIK_PX: Array[int] = [8, -29]
+## Teks "KRING!": pojok kiri bawah teks relatif titik bel, piksel game: x lalu y (README bel: 11 ke kanan, 12 ke atas).
+const BEL_TEKS_GESER_PX: Array[int] = [11, -12]
+## Teks "KRING!" naik 1 piksel per frame efek, paling banyak sekian piksel.
+const BEL_TEKS_NAIK_MAKS_PX: int = 4
+## Alpha teks "KRING!" pada frame terakhirnya (versi redup sebelum hilang).
+const BEL_TEKS_REDUP_ALFA: float = 0.6
+## Panel skor HUD dev: jarak tepi luar panel dari tepi layar sisi swipe, piksel game (strip atas; tombol "Main lagi" 96 + margin 8 + jarak 8 di sisi itu).
+const HUD_SKOR_GESER_PX: int = 112
+## Label "PUTUS" tampil sekian detik sesudah combo putus (tabrakan atau antaran tidak sah), dt efektif.
+const HUD_COMBO_PUTUS_DETIK: float = 0.8
+## Umpan balik melayang (DESIGN_SPEC 3.6): lama tampil, detik.
+const UMPAN_MELAYANG_DETIK: float = 0.8
+## Umpan balik melayang: naik sekian piksel game selama tampil.
+const UMPAN_MELAYANG_NAIK_PX: int = 12
+## Umpan balik melayang: paling banyak sekian sekaligus; yang lama hilang lebih dulu.
+const UMPAN_MELAYANG_MAKS: int = 2
+## Umpan balik melayang: kaki teks di atas titik mendarat saat muncul, piksel game (di atas penanda 7 + 9 px).
+const UMPAN_MELAYANG_ATAS_PX: int = 18
+## Tebal garis luar teks di dunia (teks "KRING!", umpan balik melayang), piksel game: terbaca di atas aspal dan rumput.
+const HUD_TEKS_GARIS_PX: int = 2
+## Panel skor HUD dev: lebar minimum, piksel game (angka skor dan koin berubah tanpa membuat panel melompat).
+const HUD_SKOR_LEBAR_PX: int = 72

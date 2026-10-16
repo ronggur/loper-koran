@@ -19,6 +19,11 @@ enum Bunyi { TOLAK, KRING, KRING_KRING }
 ## Reaksi rintangan pada bel.
 enum Reaksi { TIDAK_ADA, MUNDUR }
 
+## Urutan frame di `assets/sprites/ui/ui_bel_tombol.png` (`ui_bel.json`): diam, ditekan, lalu frame jeda.
+const FRAME_DIAM: int = 0
+const FRAME_DITEKAN: int = 1
+const FRAME_JEDA_PERTAMA: int = 2
+
 ## Reaksi per jenis rintangan (nama jenis di data segmen, DATA_SCHEMA 3). Jenis yang tidak ada di tabel = `TIDAK_ADA`.
 const REAKSI_JENIS: Dictionary = {
 	"anjing_penjaga": Reaksi.MUNDUR,
@@ -118,6 +123,39 @@ static func dalam_jangkauan(sepeda_maju: float, objek_maju: float) -> bool:
 ## Reaksi jenis rintangan `jenis` (nama data) pada bel, dari `REAKSI_JENIS`.
 static func reaksi(jenis: String) -> Reaksi:
 	return REAKSI_JENIS.get(jenis, Reaksi.TIDAK_ADA)
+
+
+## Frame efek "kring" sejak ketukan terakhir (bagian B, DESIGN_SPEC 3.8): `floor(waktu sejak ketukan x BEL_EFEK_FPS)`, waktu = sisa teks
+## yang sudah lewat (ketukan kedua mengulang dari 0). -1 bila teks tidak tampil.
+static func frame_efek(k: Keadaan) -> int:
+	if not teks_tampil(k):
+		return -1
+	return maxi(floori((Config.BEL_TEKS_DETIK - k.teks_detik) * Config.BEL_EFEK_FPS + Config.TABRAKAN_TOLERANSI_DETIK), 0)
+
+
+## Frame garis getar (0..`BEL_GETAR_FRAME` - 1) yang tampil sekarang, atau -1 (sudah habis atau teks tidak tampil).
+static func frame_getar(k: Keadaan) -> int:
+	var f: int = frame_efek(k)
+	return f if f < Config.BEL_GETAR_FRAME else -1
+
+
+## Teks "KRING!" naik 1 piksel per frame efek, paling banyak `BEL_TEKS_NAIK_MAKS_PX`; 0 bila teks tidak tampil.
+static func naik_teks_px(k: Keadaan) -> int:
+	return clampi(frame_efek(k), 0, Config.BEL_TEKS_NAIK_MAKS_PX)
+
+
+## True pada frame efek terakhir teks (sisa teks tidak lebih dari satu frame efek): teks memakai versi redup.
+static func teks_redup(k: Keadaan) -> bool:
+	return teks_tampil(k) and k.teks_detik <= 1.0 / Config.BEL_EFEK_FPS + Config.TABRAKAN_TOLERANSI_DETIK
+
+
+## Frame tombol bel di `ui_bel_tombol.png` (DESIGN_SPEC 3.8): selama jeda bel `2 + (LANGKAH - ceil(pecahan x LANGKAH))` (cincin berkurang,
+## frame 2 = penuh), selain itu 1 bila jari menahan tombol (ditekan), 0 (diam). Jeda menang atas ditekan.
+static func frame_tombol(ditekan: bool, pecahan_jeda: float) -> int:
+	if is_finite(pecahan_jeda) and pecahan_jeda > 0.0:
+		var tingkat: int = clampi(ceili(pecahan_jeda * Config.BEL_TOMBOL_JEDA_LANGKAH - Config.TABRAKAN_TOLERANSI_DETIK), 1, Config.BEL_TOMBOL_JEDA_LANGKAH)
+		return FRAME_JEDA_PERTAMA + Config.BEL_TOMBOL_JEDA_LANGKAH - tingkat
+	return FRAME_DITEKAN if ditekan else FRAME_DIAM
 
 
 ## True bila ketukan menghasilkan bunyi (bukan `TOLAK`).

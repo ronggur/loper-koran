@@ -21,6 +21,14 @@ extends CanvasLayer
 ## tengah, jarak `HUD_TOMBOL_JARAK_PX`), ukuran sama dengan tombol kidal, tidak dicerminkan saat kidal. Bawaan mati dan tidak disimpan
 ## (belum ada save). Status tampil lewat teks (`HUD_BANTU_MATI` / `HUD_BANTU_NYALA`) selain gaya ditekan, jadi tidak hanya warna.
 ## Menekannya memancarkan `bantu_diubah`.
+## Run fase3b-rintangan-skor bagian B (AC-13, AC-15, usulan; HUD rute final di Run 3C):
+## - Panel skor (`PanelSkor`) di strip atas sisi swipe, `HUD_SKOR_GESER_PX` dari tepi (tempat tombol dev "Main lagi" di sisi itu tetap
+##   bebas), tiga baris kunci terjemahan: `HUD_SKOR` + angka, `HUD_COMBO` + pengali berikutnya (`HUD_COMBO_ANGKA`, "x1.3") dan label
+##   `HUD_COMBO_PUTUS` (`FAIL`) sesaat sesudah combo putus (penanda teks, bukan hanya warna), `HUD_KOIN` + angka. Kidal: dicerminkan ke sisi
+##   lain (sisi swipe kidal). Hanya tampil di scene yang menilai skor (`atur_skor_tampil`; jalan uji tidak).
+## - Tombol bel (`TombolBel`) 40x40 di pojok bawah sisi swipe (kontainer `StripBel` lebar penuh di tepi bawah), pusat
+##   `BEL_TOMBOL_PUSAT_TEPI_PX` dari tepi samping dan bawah; kidal dicerminkan.
+##   Hanya gambar: sentuhannya dibaca `TouchRouter` (zona tap bel), frame dari `tampilkan_bel`.
 
 ## Tombol kidal diubah: True = zona ditukar untuk tangan kiri.
 signal kidal_diubah(nilai: bool)
@@ -31,6 +39,8 @@ signal bantu_diubah(nilai: bool)
 
 var _angka_terakhir: String = ""
 var _koran_terakhir: Vector2i = Vector2i(-1, -1)
+## [skor, combo x10, koin, putus] terakhir yang ditampilkan.
+var _skor_terakhir: Array = []
 
 @onready var _strip_atas: MarginContainer = %StripAtas
 @onready var _panel_bawah: MarginContainer = %PanelBawah
@@ -52,6 +62,17 @@ var _koran_terakhir: Vector2i = Vector2i(-1, -1)
 @onready var _baris_tombol: HBoxContainer = %BarisTombol
 @onready var _strip_jeda: MarginContainer = %StripJeda
 @onready var _tombol_jeda: TombolJeda = %TombolJeda
+@onready var _strip_skor: MarginContainer = %StripSkor
+@onready var _panel_skor: PanelContainer = %PanelSkor
+@onready var _label_skor: Label = %LabelSkor
+@onready var _angka_skor: Label = %AngkaSkor
+@onready var _label_combo: Label = %LabelCombo
+@onready var _label_putus: Label = %LabelPutus
+@onready var _angka_combo: Label = %AngkaCombo
+@onready var _label_koin: Label = %LabelKoin
+@onready var _angka_koin: Label = %AngkaKoin
+@onready var _strip_bel: MarginContainer = %StripBel
+@onready var _tombol_bel: TombolBel = %TombolBel
 
 
 func _ready() -> void:
@@ -68,6 +89,8 @@ func _ready() -> void:
 	_strip_jeda.add_theme_constant_override(&"margin_left", tepi_jeda)
 	_strip_jeda.add_theme_constant_override(&"margin_top", Config.HUD_TOMBOL_MARGIN_ATAS_PX)
 	_tombol_jeda.geser_gambar = Vector2(Config.HUD_JEDA_GAMBAR_X_PX - tepi_jeda, Config.HUD_JEDA_GAMBAR_Y_PX - Config.HUD_TOMBOL_MARGIN_ATAS_PX)
+	_strip_skor.add_theme_constant_override(&"margin_top", Config.HUD_TOMBOL_MARGIN_ATAS_PX)
+	_panel_skor.custom_minimum_size = Vector2(Config.HUD_SKOR_LEBAR_PX, 0)
 	_terapkan_gaya()
 	_tombol_kidal.toggled.connect(_saat_tombol_kidal)
 	_tombol_bantu.toggled.connect(_saat_tombol_bantu)
@@ -77,6 +100,69 @@ func _ready() -> void:
 	tampilkan_kecepatan(Config.KECEPATAN_SANTAI_UD)
 	tampilkan_stamina(Config.STAMINA_MAKS, false)
 	tampilkan_koran(Config.KORAN_AWAL, Config.KORAN_AWAL)
+	tampilkan_skor(0, 0, 0, false)
+	tampilkan_bel(false, 0.0)
+
+
+## Menampilkan skor, pengali combo untuk antaran berikutnya (`SkorRute.pengali_combo(beruntun)`), koin, dan label PUTUS. Diperbarui hanya
+## bila berubah.
+func tampilkan_skor(skor: int, beruntun: int, koin: int, putus: bool) -> void:
+	var kunci: Array = [skor, beruntun, koin, putus]
+	if kunci == _skor_terakhir:
+		return
+	_skor_terakhir = kunci
+	_angka_skor.text = tr("HUD_SKOR_ANGKA").format({"n": skor})
+	_angka_combo.text = tr("HUD_COMBO_ANGKA").format({"x": "%.1f" % SkorRute.pengali_combo(beruntun)})
+	_angka_koin.text = tr("HUD_KOIN_ANGKA").format({"n": koin})
+	_label_putus.visible = putus
+
+
+## Menampilkan atau menyembunyikan panel skor (scene yang tidak menilai skor menyembunyikannya).
+func atur_skor_tampil(nilai: bool) -> void:
+	_strip_skor.visible = nilai
+
+
+## True bila panel skor tampil.
+func skor_tampil() -> bool:
+	return _strip_skor.visible
+
+
+## Teks angka skor, combo, dan koin yang tampil (untuk tes).
+func teks_skor() -> String:
+	return _angka_skor.text
+
+
+func teks_combo() -> String:
+	return _angka_combo.text
+
+
+func teks_koin() -> String:
+	return _angka_koin.text
+
+
+## True bila label PUTUS tampil (untuk tes).
+func putus_tampil() -> bool:
+	return _label_putus.visible
+
+
+## Frame tombol bel dari jari yang menahan tombol (`ditekan`) dan sisa jeda bel (`Bel.sisa_jeda_pecahan`).
+func tampilkan_bel(ditekan: bool, pecahan_jeda: float) -> void:
+	_tombol_bel.atur_frame(Bel.frame_tombol(ditekan, pecahan_jeda))
+
+
+## Frame tombol bel yang digambar (untuk tes).
+func frame_bel() -> int:
+	return _tombol_bel.frame()
+
+
+## Persegi tombol bel dalam koordinat viewport game.
+func rect_tombol_bel() -> Rect2:
+	return _tombol_bel.get_global_rect()
+
+
+## Persegi panel skor dalam koordinat viewport game.
+func rect_panel_skor() -> Rect2:
+	return _panel_skor.get_global_rect()
 
 
 ## Menampilkan sisa koran: angka, deret ikon (terpakai redup), dan label `HUD_KORAN_HABIS` saat habis. Diperbarui hanya bila berubah.
@@ -154,6 +240,16 @@ func atur_kidal(nilai: bool) -> void:
 	_panel_bawah.add_theme_constant_override(&"margin_bottom", tepi)
 	_baris_bawah.size_flags_horizontal = Control.SIZE_SHRINK_END if nilai else Control.SIZE_SHRINK_BEGIN
 	_baris_bawah.move_child(_panel_koran, 0 if nilai else -1)
+	# Panel skor di strip atas sisi swipe: kanan, kidal kiri (dicerminkan).
+	_strip_skor.add_theme_constant_override(&"margin_left", Config.HUD_SKOR_GESER_PX if nilai else 0)
+	_strip_skor.add_theme_constant_override(&"margin_right", 0 if nilai else Config.HUD_SKOR_GESER_PX)
+	_panel_skor.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN if nilai else Control.SIZE_SHRINK_END
+	# Tombol bel: pojok bawah sisi swipe (StripBel lebar penuh di tepi bawah), pusat BEL_TOMBOL_PUSAT_TEPI_PX dari tepi samping dan bawah.
+	var tepi_bel: int = Config.BEL_TOMBOL_PUSAT_TEPI_PX - floori(float(Config.BEL_TOMBOL_UKURAN_PX) / 2)
+	_strip_bel.add_theme_constant_override(&"margin_left", tepi_bel if nilai else 0)
+	_strip_bel.add_theme_constant_override(&"margin_right", 0 if nilai else tepi_bel)
+	_strip_bel.add_theme_constant_override(&"margin_bottom", tepi_bel)
+	_tombol_bel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN if nilai else Control.SIZE_SHRINK_END
 
 
 ## Persegi tombol kidal dalam koordinat viewport game (untuk memeriksa tidak masuk zona kontrol).
@@ -208,5 +304,11 @@ func _terapkan_gaya() -> void:
 	_label_angka.add_theme_color_override(&"font_color", Palette.TEXT)
 	_label_stamina.add_theme_color_override(&"font_color", Palette.ACCENT)
 	_label_lelah.add_theme_color_override(&"font_color", Palette.FAIL)
+	_panel_skor.add_theme_stylebox_override(&"panel", GayaHud.kotak(Palette.HUD_PANEL, Palette.OUTLINE))
+	for label: Label in [_label_skor, _label_combo, _label_koin]:
+		label.add_theme_color_override(&"font_color", Palette.ACCENT)
+	for label: Label in [_angka_skor, _angka_combo, _angka_koin]:
+		label.add_theme_color_override(&"font_color", Palette.TEXT)
+	_label_putus.add_theme_color_override(&"font_color", Palette.FAIL)
 	GayaHud.terapkan_tombol(_tombol_kidal)
 	GayaHud.terapkan_tombol(_tombol_bantu)

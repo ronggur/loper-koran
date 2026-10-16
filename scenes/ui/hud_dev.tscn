@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud_dev.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/ui/bar_kecepatan.gd" id="2_bar"]
 [ext_resource type="Theme" path="res://assets/ui/theme.tres" id="3_theme"]
 [ext_resource type="Script" path="res://scripts/ui/tombol_jeda.gd" id="4_jeda"]
 [ext_resource type="Script" path="res://scripts/ui/deret_koran.gd" id="5_deret"]
+[ext_resource type="Script" path="res://scripts/ui/tombol_bel.gd" id="6_bel"]
 
 [node name="HudDev" type="CanvasLayer"]
 layer = 5
@@ -178,3 +179,107 @@ unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("5_deret")
+
+[node name="StripSkor" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+mouse_filter = 2
+theme = ExtResource("3_theme")
+
+[node name="PanelSkor" type="PanelContainer" parent="StripSkor"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+mouse_filter = 2
+
+[node name="IsiSkor" type="VBoxContainer" parent="StripSkor/PanelSkor"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="BarisSkor" type="HBoxContainer" parent="StripSkor/PanelSkor/IsiSkor"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="LabelSkor" type="Label" parent="StripSkor/PanelSkor/IsiSkor/BarisSkor"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_type_variation = &"HudLabel"
+text = "HUD_SKOR"
+
+[node name="AngkaSkor" type="Label" parent="StripSkor/PanelSkor/IsiSkor/BarisSkor"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HudLabel"
+horizontal_alignment = 2
+
+[node name="BarisCombo" type="HBoxContainer" parent="StripSkor/PanelSkor/IsiSkor"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="LabelCombo" type="Label" parent="StripSkor/PanelSkor/IsiSkor/BarisCombo"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_type_variation = &"HudLabel"
+text = "HUD_COMBO"
+
+[node name="LabelPutus" type="Label" parent="StripSkor/PanelSkor/IsiSkor/BarisCombo"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HudLabel"
+text = "HUD_COMBO_PUTUS"
+
+[node name="AngkaCombo" type="Label" parent="StripSkor/PanelSkor/IsiSkor/BarisCombo"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HudLabel"
+horizontal_alignment = 2
+
+[node name="BarisKoin" type="HBoxContainer" parent="StripSkor/PanelSkor/IsiSkor"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="LabelKoin" type="Label" parent="StripSkor/PanelSkor/IsiSkor/BarisKoin"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_type_variation = &"HudLabel"
+text = "HUD_KOIN"
+
+[node name="AngkaKoin" type="Label" parent="StripSkor/PanelSkor/IsiSkor/BarisKoin"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HudLabel"
+horizontal_alignment = 2
+
+[node name="StripBel" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme = ExtResource("3_theme")
+
+[node name="TombolBel" type="Control" parent="StripBel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+mouse_filter = 2
+script = ExtResource("6_bel")

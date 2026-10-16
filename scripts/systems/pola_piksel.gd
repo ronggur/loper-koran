@@ -32,6 +32,14 @@ const PENANDA_SETENGAH: Array[String] = ["...o...", "..owo..", ".owo.o.", "owwo.
 const PENANDA_BINTANG: Array[String] = ["....o....", "...owo...", "oooowoooo", "owwwwwwwo", ".owwwwwo.", "..owwwo..", ".owwowwo.", "owwo.owwo", "ooo...ooo"]
 ## Penanda tidak sah (meleset, bukan pelanggan, jendela penalti): silang kecil, bukan panel merah besar (DESIGN_SPEC 3.6).
 const PENANDA_SILANG: Array[String] = ["oo...oo", "owo.owo", ".owowo.", "..owo..", ".owowo.", "owo.owo", "oo...oo"]
+## Penanda antaran "tepat" (K-4 run fase3b-rintangan-skor, `w` = OK): sasaran berlapis 9x9, cincin dengan titik pusat; bentuk berbeda dari
+## centang, bintang, dan tanda "tidak ada sasaran" (cincin kosong, TEXT_2, di layar).
+const PENANDA_TEPAT: Array[String] = ["..ooooo..", ".owwwwwo.", "owooooowo", "owo.o.owo", "owoowoowo", "owo.o.owo", "owooooowo", ".owwwwwo.", "..ooooo.."]
+## Penanda netral (O-1: koran ke rumah yang sudah terantar, 0 skor dan 0 koin, combo tetap; `w` = TEXT_2): garis datar 7x4, bentuk
+## berbeda dari centang dan silang.
+const PENANDA_NETRAL: Array[String] = ["ooooooo", "owwwwwo", "owwwwwo", "ooooooo"]
+## Ikon kilatan tabrakan di atas pemain selama oleng (AC-8 run fase3b-rintangan-skor, `w` = WARN): letupan 9x9.
+const IKON_TABRAKAN: Array[String] = ["o...o...o", "owo.o.owo", ".owowowo.", "..owwwo..", "oowwwwwoo", "..owwwo..", ".owowowo.", "owo.o.owo", "o...o...o"]
 ## Penanda rumah bukan pelanggan di halaman (D-6): cakram `w` (RADAR_BUKAN) bergaris luar dengan garis miring, bentuk berbeda dari zona
 ## pelanggan.
 const TANDA_BUKAN_PELANGGAN: Array[String] = ["..ooooo..", ".owwwwoo.", "owwwwoowo", "owwwoowwo", "owwoowwwo", "owoowwwwo", ".oowwwwo.", "..ooooo.."]
@@ -50,6 +58,10 @@ static func pola_penanda(penanda: ZonaSasaran.Penanda) -> Array[String]:
 			return PENANDA_SETENGAH
 		ZonaSasaran.Penanda.BINTANG:
 			return PENANDA_BINTANG
+		ZonaSasaran.Penanda.TEPAT:
+			return PENANDA_TEPAT
+		ZonaSasaran.Penanda.NETRAL:
+			return PENANDA_NETRAL
 	return PENANDA_SILANG
 
 

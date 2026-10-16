@@ -6,8 +6,11 @@ extends RefCounted
 ## mencerminkan keduanya persis. Angka zona ada di `Config.ZONA_*` (diukur dari tepi layar sisi
 ## stick). Semua tepi zona INKLUSIF: titik tepat di tepi masuk zona, 1 px di luarnya tidak.
 ## Zona hanya menentukan jari mana yang diklaim saat jari turun (lihat `TouchRouter`).
+## Zona tap bel (DESIGN_SPEC 3.8, AC-15 run fase3b-rintangan-skor): lingkaran berjari-jari `BEL_ZONA_RADIUS_PX` (inklusif) berpusat di pusat
+## tombol bel, `BEL_TOMBOL_PUSAT_TEPI_PX` dari tepi bawah dan dari tepi layar sisi swipe (kidal: sisi lain). Bel diperiksa SEBELUM swipe,
+## jadi sentuhan yang dimulai di zona bel tidak pernah menjadi swipe; zona stick tidak pernah menyentuhnya.
 
-enum Zona { TIDAK_ADA, STICK, SWIPE }
+enum Zona { TIDAK_ADA, STICK, SWIPE, BEL }
 
 
 ## Persegi zona stick. `position` = pojok kiri atas, `end` = pojok kanan bawah (kedua tepi inklusif).
@@ -32,10 +35,26 @@ static func rect_swipe(lebar_viewport: int, kidal: bool) -> Rect2:
 	return _dari_tepi(x_dalam, y_atas, x_luar, y_bawah)
 
 
-## Zona tempat `titik` (koordinat viewport game) berada. Kedua zona tidak pernah bertumpuk.
+## Pusat tombol dan zona tap bel, koordinat viewport game: (lebar - 28, 332), kidal (28, 332).
+static func pusat_bel(lebar_viewport: int, kidal: bool) -> Vector2:
+	var tepi: float = float(Config.BEL_TOMBOL_PUSAT_TEPI_PX)
+	var y: float = float(Config.LAYAR_TINGGI_DASAR_PX) - tepi
+	return Vector2(tepi, y) if kidal else Vector2(float(lebar_viewport) - tepi, y)
+
+
+## True bila `titik` di zona tap bel (jarak ke pusat <= `BEL_ZONA_RADIUS_PX`, inklusif).
+static func di_bel(titik: Vector2, lebar_viewport: int, kidal: bool) -> bool:
+	if not titik.is_finite():
+		return false
+	return titik.distance_to(pusat_bel(lebar_viewport, kidal)) <= Config.BEL_ZONA_RADIUS_PX
+
+
+## Zona tempat `titik` (koordinat viewport game) berada. Zona stick dan swipe tidak pernah bertumpuk; zona bel menang atas swipe.
 static func zona_di(titik: Vector2, lebar_viewport: int, kidal: bool) -> Zona:
 	if di_dalam(titik, rect_stick(lebar_viewport, kidal)):
 		return Zona.STICK
+	if di_bel(titik, lebar_viewport, kidal):
+		return Zona.BEL
 	if di_dalam(titik, rect_swipe(lebar_viewport, kidal)):
 		return Zona.SWIPE
 	return Zona.TIDAK_ADA

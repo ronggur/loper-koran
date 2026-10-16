@@ -14,7 +14,11 @@ extends AdeganJalan
 ## - "Main lagi": seed + 1, rute baru, sepeda, sisa koran, dan koran terbang dikembalikan ke awal (`_kembalikan_awal`).
 ## - Area kotak surat (tindak lanjut uji HP 2026-10-16): `AreaKotakGambar` menggambar persegi zona kotak surat rumah pelanggan seberang di
 ##   tanah (jendela daur yang sama dengan rumah), supaya area yang dinilai terlihat.
-## Rintangan di data rute tidak digambar dan tidak berperilaku (Run 3B).
+## - Rintangan (run fase3b-rintangan-skor bagian B, AC-20): `RintanganRute.dari_rute` (kait `_rintangan_awal`, juga tiap "Main lagi"),
+##   perilaku dan tabrakan di `AdeganJalan`; digambar `RintanganDaur` (anak induk Y-sort rumah, jendela daur, penutup lewat penerap yang
+##   SAMA dengan rumah).
+## - Skor dan koin (AC-9 sampai AC-13): kait `_skor_aktif` true, `_rute_skor` = rute ini (pemberi tip); umpan balik melayang digambar
+##   `UmpanMelayangGambar` di atas objek.
 
 ## Sepeda mencapai garis akhir rute (tepat sekali per rute; diulang hanya sesudah "Main lagi").
 signal rute_selesai
@@ -35,10 +39,13 @@ var _selesai: bool = false
 @onready var _area_kotak: AreaKotakGambar = %AreaKotak
 @onready var _penerap: PenerapPenutup = %PenerapPenutup
 @onready var _panel_akhir: PanelAkhirRute = %PanelAkhir
+@onready var _rintangan_daur: RintanganDaur = %Rintangan
+@onready var _umpan_gambar: UmpanMelayangGambar = %UmpanMelayang
 
 
 func _siapkan_dunia() -> void:
 	_daur.penerap = _penerap
+	_rintangan_daur.penerap = _penerap
 	_panel_akhir.main_lagi_diminta.connect(main_lagi)
 	_susun(_benih)
 
@@ -46,6 +53,8 @@ func _siapkan_dunia() -> void:
 func _perbarui_dunia(jarak_ubin: float) -> void:
 	_daur.perbarui(jarak_ubin)
 	_area_kotak.perbarui(jarak_ubin)
+	_rintangan_daur.perbarui(_rintangan, jarak_ubin)
+	_umpan_gambar.tampilkan(_umpan)
 	_penerap.terapkan(_sepeda.posisi_dunia())
 	var status: AkhirRute.Status = AkhirRute.periksa(_selesai, jarak_ubin, _rute.panjang_ubin)
 	_selesai = status.selesai
@@ -58,6 +67,18 @@ func _perbarui_dunia(jarak_ubin: float) -> void:
 
 func _zona_bantu(maju_awal_ubin: float, maju_akhir_ubin: float) -> Array[ZonaSasaran.Zona]:
 	return ZonaSasaran.zona_rute_rentang(_rute.rumah, maju_awal_ubin, maju_akhir_ubin)
+
+
+func _skor_aktif() -> bool:
+	return true
+
+
+func _rute_skor() -> RouteBuilder.Rute:
+	return _rute
+
+
+func _rintangan_awal() -> RintanganRute.Keadaan:
+	return RintanganRute.dari_rute(_rute)
 
 
 func _vektor_stick() -> Vector2:
@@ -92,6 +113,7 @@ func _susun(benih: int) -> void:
 	_selesai = false
 	_daur.atur_rute(_rute)
 	_area_kotak.atur_rute(_rute)
+	_rintangan_daur.lepas_semua()
 	_penerap.terapkan(_sepeda.posisi_dunia())
 	_panel_akhir.tampilkan(false)
 	if gagal:
@@ -129,6 +151,16 @@ func rute_sudah_selesai() -> bool:
 ## Jendela daur rumah (untuk tes dan probe).
 func daur() -> RumahDaurRute:
 	return _daur
+
+
+## Gambar rintangan (untuk tes dan probe).
+func rintangan_daur() -> RintanganDaur:
+	return _rintangan_daur
+
+
+## Gambar umpan balik melayang (untuk tes dan probe).
+func umpan_gambar() -> UmpanMelayangGambar:
+	return _umpan_gambar
 
 
 ## Penerap penutup pemain (untuk tes dan probe).
