@@ -14,5 +14,7 @@ Contoh art lingkungan dari kanvas "Lingkungan Loper Koran", dirender dengan `too
 | `fase3_dua_sisi.png` | Usulan: distrik dengan pelanggan di dua sisi; rumah sisi dekat terlihat belakang, kotak surat di tepi lajur kanan |
 | `fase3_anjing.png`, `fase3_mobil_garasi.png`, `fase3_antena_tv.png` | Sheet rintangan dan lembar contoh antena. Sprite 1× yang dipakai Godot ada di `assets/sprites/` |
 | `kendaraan_perumahan.png` | Usulan (`kendaraan.py`): jalan perumahan siang dengan mobil tamu parkir (sein), lalu lintas dua arah, motor berpengendara, motor parkir, kucing misi dan kucing dekorasi. Sheet ada di `build/env_art/kendaraan/` |
+| `ubin_perumahan_susun.png` | Usulan (`ubin_perumahan.py`): potongan jalan yang disusun ulang dari 18 ubin 64x32 (aspal 2 ubin, trotoar 1 ubin, tata letak game), ×2 |
+| `lampu_pohon_siang.png`, `lampu_pohon_malam.png` | Usulan (`lampu_pohon.py`): jalan dari ubin baru dengan lampu jalan dan pohon, siang dan malam, ×2 |
 
 Render ulang: lihat `tools/env_art/README.md`.
