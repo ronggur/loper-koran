@@ -506,6 +506,6 @@ func _test_main_lagi_mengatur_ulang() -> void:
 			radar_awal.append(p.id_rumah)
 	check(not radar_awal.is_empty() and _ids(hud.radar_seberang().penanda_tampil()) == radar_awal, "radar diatur ulang ke awal rute baru (%s)" % [radar_awal])
 	var t: Tabrakan.Keadaan = akar.rintangan().tabrakan
-	check(t.jumlah == 0 and t.oleng_detik == 0.0 and t.kebal_detik == 0.0 and akar.bel().jumlah == 0 and _sepeda(akar).geser_sprite_px() == 0.0 and _sepeda(akar).alfa_sprite() == 1.0, "tabrakan, oleng, kebal, bel, visual oleng diatur ulang")
+	check(t.jumlah == 0 and t.jatuh_detik == 0.0 and t.kebal_detik == 0.0 and t.menempel.is_empty() and akar.bel().jumlah == 0 and not String(_sepeda(akar).nama_animasi()).begins_with("jatuh") and not String(_sepeda(akar).nama_animasi()).begins_with("terjerembab") and _sepeda(akar).alfa_sprite() == 1.0, "tabrakan, jatuh, kebal, bel, sprite jatuh dan kedip diatur ulang")
 	check(hud.visible and (_anak(akar, "KontrolTouch") as KontrolTouch).is_processing_input(), "HUD tampil lagi dan kontrol sentuh membaca sentuhan lagi")
 	_bersihkan(akar)
