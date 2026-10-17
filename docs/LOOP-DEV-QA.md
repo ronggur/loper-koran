@@ -644,6 +644,78 @@ IZIN HP: sama dengan Run 3A.
 RUN_ID: 20261018-fase3c-hud-hasil
 ```
 
+## 6e. Fase 4: perintah mulai run (tempel di sesi baru)
+
+Disimpan 2026-10-17, sesudah run 3C (PR #33) dan PR lanjutan #34 (mobil di celah samping rumah, kotak surat abu-abu), #35 (variasi kendaraan dan kucing, usulan), #36 (tabrakan = jatuh), #37 (ubin, lampu, pohon, usulan). Fase 4 dipecah dua run berurutan, satu PR per run:
+
+| Run | Isi | Prasyarat |
+|---|---|---|
+| 4A | Format misi dan headline + pemuat, `HeadlineManager`, layar halaman depan koran (Ambil/Lewati, Berangkat), alur satu hari Koran → Rute → Hasil → hari berikutnya, `SaveManager` v1 + migrasi, flag, headline hari 1–3 | PR #37 di-merge (semua PR Fase 3 sudah di `main`) |
+| 4B | Misi P1 Kucing Bu Ratmi (template Cari: tiga titik, petunjuk dari lemparan tepat, menepi, batas 12 rumah), HUD misi + banner, flag lanjutan → headline besok, rekap misi di layar hasil, tutorial terpandu (usulan) | PR 4A di-merge |
+
+Catatan untuk semua run Fase 4:
+- **Fase 3 belum tertutup.** Uji HP 8.6–8.8 (dan Fase 2 8.5) belum diisi pemilik saat bagian ini ditulis. Orchestrator menanyakan sekali apakah tetap mulai; Fase 3 dan M2 tidak dicentang sebelum uji HP.
+- **Aset kucing** ada sebagai usulan di `tools/env_art/kendaraan.py` (PR #35: `mission_kucing_sheet` belang tiga berkalung + kucing dekorasi), tetapi belum disalin ke `assets/`. Run 4B menyalinnya lewat skripnya (tambah `--salin` bila belum ada), bukan disalin tangan. Catat drift render di mesin ini (run 3A, PR #35/#37).
+- **Keputusan yang sudah ada, jangan ditanyakan ulang:** semua K-/O- run 3A, 3B, 3C; tabrakan = jatuh (pemilik 2026-10-17, PR #36); rumah sisi dekat = tembok rendah (K-5 run 3C); kotak surat abu-abu di rumah bukan pelanggan (pemilik 2026-10-17); CSV terjemahan; skala ×3.
+
+### Run 4A — halaman depan koran dan satu hari utuh
+
+```text
+Kamu adalah ORCHESTRATOR loop Dev↔QA untuk repo Loper Koran. Ikuti docs/LOOP-DEV-QA.md
+secara ketat (Bagian 1, Bagian 0c, Bagian 6e). Mulai dari main terbaru yang sudah memuat
+PR #33 sampai #37; kalau belum, berhenti dan minta saya merge dulu.
+
+SCOPE: Run 4A — Fase 4 bagian pertama: satu hari utuh tanpa misi kucing (DEV_PHASES Fase 4,
+  TECH_PLAN Fase 4 dan 3.1–3.3, GDD 3.1 dan 10.1–10.3, DATA_SCHEMA 1, 2, 4, CONTENT_GUIDE 2
+  dan 8, DESIGN_SPEC 4, STORY 6). Misi kucing, HUD misi, dan tutorial ada di Run 4B.
+  - Format misi dan headline JSON di assets/data/ (DATA_SCHEMA 1–2, rule content-data) dan
+    pemuatnya: field wajib, id permanen, rujukan flag, panjang headline maks 40 karakter;
+    kunci formatnya di DATA_SCHEMA dengan contoh dari berkas nyata (tetap usulan). Semua teks
+    pemain lewat kunci terjemahan (translations/, rule content-data).
+  - `HeadlineManager` murni di scripts/systems/: tiga headline per hari (berita utama, misi
+    sampingan, berita ringan) dari pool + flag, seed per hari (RNG berseed), lanjutan kemarin
+    diprioritaskan. Contoh headline hari 1–3 (CONTENT_GUIDE 8, standar konten aman semua umur).
+  - Layar halaman depan koran (DESIGN_SPEC 4: satu-satunya layar terang, krem; terbaca dalam
+    10 detik): tiga headline, misi sampingan dengan ringkasan satu baris + Ambil/Lewati,
+    tombol Berangkat; anchor + Container, target sentuh ≥ 42 px game, zona aman, 16:9–20:9.
+    Melewati misi tanpa penalti (GDD 10.3). Misi yang diambil di 4A cukup tercatat (efeknya 4B).
+  - Alur satu hari (TECH_PLAN 3.2, rule ui-scenes): Koran → Rute (scene rute yang ada) →
+    Hasil (layar hasil 3C) → hari berikutnya; tombol "Main lagi" layar hasil diganti/ditambah
+    "Hari berikutnya" sesuai alur (catat keputusan). Back Android wajar di tiap layar.
+    Struktur sesi dan game over TIDAK diputuskan (ROADMAP 5); alur hari berurutan ini
+    prototype yang tidak menguncinya — tulis itu di SPEC.
+  - `SaveManager` v1 (`user://save.json`, rule save-system): simpan hanya di akhir hari,
+    nomor versi + migrasi sejak awal, save rusak tidak ditimpa diam-diam, id permanen; flag
+    hari, koin dan tip kumulatif dari `SkorRute`/`HasilRute` (jangan dihitung ulang di UI).
+    Tes autoload tanpa scene tree (rule testing), tanpa menulis save sungguhan di tes.
+  - Seed rute per hari (rute hari N deterministik dari seed hari), tetap memakai RouteBuilder.
+  - Tes headless dengan mutan nyata dan oracle independen; smoke test layar koran (tekan
+    Ambil/Lewati/Berangkat lewat pressed.emit()); validasi semua data baru; save: tulis/baca,
+    migrasi, rusak, akhir hari saja.
+  - Perbarui checklist uji HP (docs/SETUP_ANDROID.md bagian baru) untuk alur satu hari.
+  Keputusan terbuka yang mungkin menghambat (tanyakan SEKALI, satu rekomendasi per
+  keputusan): nama koran dan nama perumahan (TECH_PLAN Fase 4 ❓, CONTENT_GUIDE 8); apakah
+  layar hasil menawarkan "Hari berikutnya" saja atau juga "Ulangi hari"; apa yang disimpan
+  bila app ditutup di tengah rute (rute diulang dari awal hari, usulan); misi lintas hari dan
+  misi aktif di save (DATA_SCHEMA 5, GDD 10.9) — boleh ditunda ke 4B bila tidak menghambat.
+  Struktur sesi, game over, target harian (ROADMAP 5, M2) JANGAN diputuskan.
+  Fase 4 dan M2 baru selesai setelah Run 4B dan uji HP pemilik; jangan dicentang sebelum itu.
+HASIL UJI HP FASE 3 (ISI: tempel catatan dari SETUP_ANDROID 8.6, 8.7, 8.8, dan 8.5 Fase 2;
+  kosongkan bila belum): ISI: ...
+DESIGN: docs/design/DESIGN_SPEC.md (token bagian 1, layar 4, teks 5); belum ada mockup layar
+  koran — Dev boleh mendesain layar koran mengikuti DESIGN_SPEC 4 (krem #F2E7C9 lewat
+  palette.gd) dan menandainya usulan.
+IZIN HP: boleh memasang APK ke vivo V2108 (adb 12d8c9da) setelah QA PASS; A54
+  (RRCWA05E2NN) hanya bila tersambung. Hanya orchestrator yang menyentuh HP; cek layar
+  menyala dan tidak sedang dipakai; tidak ada pm clear/uninstall/logcat -c. Save game
+  pertama kali ditulis di run ini: JANGAN menghapus data app (pm clear) untuk menguji save.
+RUN_ID: 20261018-fase4a-koran-hari
+```
+
+### Run 4B — misi kucing Bu Ratmi (ringkas; perintah lengkap ditulis sesudah 4A)
+
+Isi: `MissionManager` + template Cari (GDD 10.2–10.4, TECH_PLAN Fase 4): tiga titik kucing dari data misi, petunjuk dari lemparan **tepat** (inti kotak surat, K-4 run 3B), menepi dalam 2 ubin selama 1,5 detik (stick, tanpa tombol baru), batas 12 rumah (bukan detik), penanda visual ≥ 2 detik + isyarat suara; HUD misi ("Kucing 0/1 · 8 rumah") dan banner selesai/gagal 1,5 detik (DESIGN_SPEC 3.1, CONTENT_GUIDE 3); hasil misi → flag → headline lanjutan besok ("Kucing Bu Ratmi Belum Ditemukan"); rekap misi di layar hasil; gagal tidak mengurangi koin (prinsip 2); aset kucing dari `tools/env_art/kendaraan.py` lewat skrip; tutorial terpandu (usulan TECH_PLAN Fase 4). Keputusan yang mungkin ditanyakan: hadiah P1 (45 koin, GDD 14.1), efek Bu Ratmi jadi pelanggan setia (reputasi baru Fase 6), apakah mode bantu bisa menangkap kucing.
+
 ## 7. Batasan yang perlu diketahui
 
 - QA berbasis agent tidak menggantikan uji di HP nyata untuk rasa kontrol, performa, dan tampilan rasio layar. Fase gameplay selalu ditutup dengan uji manual (`DEV_PHASES.md`).
