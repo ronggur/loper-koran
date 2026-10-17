@@ -99,6 +99,8 @@ func _initialize() -> void:
 	radar.jalankan()
 	var hasil: TesHasil = TesHasil.new(check, _judul)
 	hasil.jalankan()
+	var hari: TesHari = TesHari.new(check, _judul)
+	hari.jalankan()
 	var sprite: TesSprite = TesSprite.new(check, _judul, self)
 	sprite.jalankan()
 	var ekspor: TesExport = TesExport.new(check, _judul)

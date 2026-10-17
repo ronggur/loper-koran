@@ -19,6 +19,7 @@ config/quit_on_go_back=false
 [autoload]
 
 Audio="*res://scripts/autoload/audio.gd"
+SaveManager="*res://scripts/autoload/save_manager.gd"
 
 [display]
 
