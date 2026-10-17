@@ -1,6 +1,6 @@
 # Karakter Loper Koran
 
-Indeks semua aset karakter di repo. Sumber visual: kanvas Design **"Karakter Loper Koran"**. Semua gambar di sini dibuat oleh script di `tools/loper_art/`, jadi bisa dirender ulang. Game memakai salinan sheet kayuh, melambat, lempar, meluncur, dan rem di `assets/sprites/loper/` dan satu `loper_agen_frames.tres` gabungan (48 animasi) yang dibangun `tools/loper_art/bangun_frames.py` dari lima JSON di sini.
+Indeks semua aset karakter di repo. Sumber visual: kanvas Design **"Karakter Loper Koran"**. Semua gambar di sini dibuat oleh script di `tools/loper_art/`, jadi bisa dirender ulang. Game memakai salinan sheet kayuh, melambat, lempar, meluncur, rem, dan jatuh (sejak 2026-10-17) di `assets/sprites/loper/` dan satu `loper_agen_frames.tres` gabungan (50 animasi) yang dibangun `tools/loper_art/bangun_frames.py` dari enam JSON di sini.
 
 ## Pemain: Fajar Sidik (Kemeja Agen)
 

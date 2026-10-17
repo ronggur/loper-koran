@@ -1,7 +1,7 @@
 class_name TesSprite
 extends RefCounted
 ## Tes sprite pemain run sprite-lempar-melambat: `SpriteFrames` gabungan (AC-2; 48 animasi sejak run fase1a-gerak D-9, dengan
-## meluncur dan rem), pemilih animasi melambat dan lempar (AC-3), `LoperSprite` (AC-4) termasuk pose meluncur dan rem. Wiring stick dan swipe di scene uji ada di `tests/tes_input_scene.gd` (AC-5).
+## meluncur dan rem; 50 sejak 2026-10-17 dengan jatuh_normal dan terjerembab_normal), pemilih animasi melambat dan lempar (AC-3), `LoperSprite` (AC-4) termasuk pose meluncur dan rem. Wiring stick dan swipe di scene uji ada di `tests/tes_input_scene.gd` (AC-5).
 ##
 ## Dipanggil dari `tests/run_tests.gd` (`TesSprite.new(check, judul, tree).jalankan()`), memakai `check` milik runner supaya
 ## hitungan lolos/gagal dan ringkasan tetap satu. Waktu selalu parameter: node dijalankan lewat `LoperSprite.maju(dt)` dengan `dt`
@@ -20,8 +20,13 @@ const SHEET: Array = [
 	{"tag": "meluncur", "json": "loper_agen_meluncur.json", "png": "loper_agen_meluncur.png", "sumber": "rem_meluncur/", "animasi": 5, "baris": 5},
 	{"tag": "rem", "json": "loper_agen_rem.json", "png": "loper_agen_rem.png", "sumber": "rem_meluncur/", "animasi": 5, "baris": 5},
 ]
-## Jumlah animasi di SpriteFrames gabungan: 15 kayuh + 5 melambat + 18 lempar + 5 meluncur + 5 rem.
-const JUMLAH_ANIMASI: int = 48
+## Jumlah animasi di SpriteFrames gabungan: 15 kayuh + 5 melambat + 18 lempar + 5 meluncur + 5 rem + 2 jatuh.
+const JUMLAH_ANIMASI: int = 50
+## Sheet jatuh (keputusan pemilik 2026-10-17): sel 114x68, 5 kolom, titik pijak (57, 51), offset sama dengan sheet kayuh. Harapan literal dari
+## README `docs/design/character/loper_agen/jatuh/`: [nama, frame sheet, fps, loop].
+const JATUH_JSON: String = "loper_agen_jatuh.json"
+const JATUH_PNG: String = "loper_agen_jatuh.png"
+const JATUH_ANIMASI: Array = [["jatuh_normal", [0, 1, 2, 3], 10.0, false], ["terjerembab_normal", [3, 4], 3.0, true]]
 const SEL: Vector2i = Vector2i(46, 58)
 const KOLOM: int = 4
 const DT: float = 1.0 / 60.0
@@ -64,7 +69,7 @@ func _baca_json(nama: String) -> Dictionary:
 	return hasil if hasil is Dictionary else {}
 
 
-# --- AC-2: aset tersalin byte-identik dan SpriteFrames gabungan (48 animasi sejak run fase1a-gerak) ---
+# --- AC-2: aset tersalin byte-identik dan SpriteFrames gabungan (50 animasi sejak 2026-10-17) ---
 
 func _test_aset_dan_frames() -> void:
 	_judul.call("Aset melambat, lempar, meluncur, rem, SpriteFrames gabungan (AC-2, AC-7 run fase1a-gerak)")
@@ -95,15 +100,18 @@ func _test_aset_dan_frames() -> void:
 		for entri: Dictionary in daftar:
 			nama_diharapkan.append(String(entri["name"]))
 		jumlah_json += daftar.size()
-	check(jumlah_json == JUMLAH_ANIMASI and nama_diharapkan.size() == JUMLAH_ANIMASI, "lima JSON sumber mendaftar 15 + 5 + 18 + 5 + 5 = 48 animasi, dapat %d" % jumlah_json)
+	for entri: Array in JATUH_ANIMASI:
+		nama_diharapkan.append(String(entri[0]))
+	jumlah_json += (_baca_json(JATUH_JSON).get("animations", []) as Array).size()
+	check(jumlah_json == JUMLAH_ANIMASI and nama_diharapkan.size() == JUMLAH_ANIMASI, "enam JSON sumber mendaftar 15 + 5 + 18 + 5 + 5 + 2 = 50 animasi, dapat %d" % jumlah_json)
 	var nama_di_berkas: Array[String] = _nama_urut_di_tres(FileAccess.get_file_as_string(BERKAS_FRAMES))
-	check(nama_di_berkas == nama_diharapkan, "urutan animasi di .tres = urutan JSON (kayuh, melambat, lempar, meluncur, rem); dapat %d nama" % nama_di_berkas.size())
+	check(nama_di_berkas == nama_diharapkan, "urutan animasi di .tres = urutan JSON (kayuh, melambat, lempar, meluncur, rem, jatuh); dapat %d nama" % nama_di_berkas.size())
 	var nama_frames: PackedStringArray = frames.get_animation_names()
-	check(nama_frames.size() == JUMLAH_ANIMASI, "SpriteFrames memuat tepat 48 animasi, dapat %d" % nama_frames.size())
+	check(nama_frames.size() == JUMLAH_ANIMASI, "SpriteFrames memuat tepat 50 animasi, dapat %d" % nama_frames.size())
 	var tanpa_ganda: Dictionary = {}
 	for nama: String in nama_frames:
 		tanpa_ganda[nama] = true
-	check(tanpa_ganda.size() == JUMLAH_ANIMASI, "48 nama animasi berbeda semua")
+	check(tanpa_ganda.size() == JUMLAH_ANIMASI, "50 nama animasi berbeda semua")
 
 	# Tiap animasi cocok dengan JSON-nya: 4 frame, region, atlas, fps, loop.
 	for sheet: Dictionary in SHEET:
@@ -150,6 +158,37 @@ func _test_aset_dan_frames() -> void:
 		check(baris_ke == int(sheet["animasi"]), "[%s] semua %d baris sheet terpakai" % [tag, sheet["animasi"]])
 	var json_lempar: Dictionary = _baca_json("loper_agen_lempar.json")
 	check(int(json_lempar.get("release_frame", -1)) == 2, "loper_agen_lempar.json: release_frame global = 2")
+	_test_aset_jatuh(frames)
+
+
+## Sheet jatuh (keputusan pemilik 2026-10-17): salinan byte-identik, impor, sel 114x68, titik pijak (57, 51) dengan offset (0, -17) sama dengan
+## sheet kayuh (jarak titik pijak ke tengah sel sama: 51 - 34 = 46 - 29 = 17), dan dua animasinya di SpriteFrames gabungan.
+func _test_aset_jatuh(frames: SpriteFrames) -> void:
+	for nama: String in [JATUH_PNG, JATUH_JSON]:
+		var aset: PackedByteArray = FileAccess.get_file_as_bytes(FOLDER_ASET + nama)
+		var sumber: PackedByteArray = FileAccess.get_file_as_bytes(FOLDER_SUMBER + "jatuh/" + nama)
+		check(aset.size() > 0 and aset == sumber, "%s: salinan di assets/sprites/loper byte-identik dengan sumber jatuh/ (%d byte)" % [nama, aset.size()])
+	var impor: ConfigFile = ConfigFile.new()
+	var galat: int = impor.load(FOLDER_ASET + JATUH_PNG + ".import")
+	check(galat == OK and int(impor.get_value("params", "compress/mode", -1)) == 0 and impor.get_value("params", "mipmaps/generate", true) == false, "%s: .import ter-commit, Lossless, tanpa mipmap" % JATUH_PNG)
+	var jalur: String = FOLDER_ASET + JATUH_PNG
+	var tekstur: Texture2D = load(jalur) as Texture2D
+	check(tekstur != null and tekstur.get_size() == Vector2(570, 68), "sheet jatuh 570x68 (5 kolom x sel 114x68), dapat %s" % (tekstur.get_size() if tekstur != null else "?"))
+	var json: Dictionary = _baca_json(JATUH_JSON)
+	check(_sama_angka(json.get("cell", []), [114.0, 68.0]) and int(json.get("columns", 0)) == 5 and int(json.get("rows", 0)) == 1, "JSON jatuh: sel 114x68, 5 kolom, 1 baris")
+	check(_sama_angka(json.get("ground_anchor", []), [57.0, 51.0]) and _sama_angka(json.get("godot_offset", []), [0.0, -17.0]), "JSON jatuh: titik pijak (57, 51), offset (0, -17) sama dengan kayuh")
+	check(57 * 2 == 114 and 51 - 68 / 2 == 46 - 58 / 2, "titik pijak jatuh di tengah sel mendatar dan 17 px di bawah tengah sel, sama dengan kayuh (23, 46) di sel 46x58")
+	for entri: Array in JATUH_ANIMASI:
+		var nama: StringName = StringName(entri[0])
+		var urutan: Array = entri[1]
+		check(frames.has_animation(nama), "animasi '%s' ada di SpriteFrames gabungan" % nama)
+		if not frames.has_animation(nama):
+			continue
+		check(frames.get_frame_count(nama) == urutan.size() and is_equal_approx(frames.get_animation_speed(nama), float(entri[2])) and frames.get_animation_loop(nama) == bool(entri[3]), "'%s': %d frame, %s fps, loop %s" % [nama, urutan.size(), entri[2], entri[3]])
+		for i: int in range(mini(urutan.size(), frames.get_frame_count(nama))):
+			var t: AtlasTexture = frames.get_frame_texture(nama, i) as AtlasTexture
+			var harapan: Rect2 = Rect2(int(urutan[i]) * 114, 0, 114, 68)
+			check(t != null and t.region == harapan and t.atlas != null and t.atlas.resource_path == jalur, "'%s' frame %d = region %s di sheet jatuh" % [nama, i, harapan])
 
 
 ## Nama animasi di teks `.tres` menurut urutan penulisan (`"name": &"..."`).

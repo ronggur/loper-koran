@@ -61,7 +61,7 @@ scripts/entities/      adegan_jalan (dasar bersama), rute_main, rumah_daur_rute,
 scripts/dev/           cek_render.gd (probe render Compatibility) (ada)
 scripts/ui/            palette, panel_akhir_rute, kontrol_touch, hud_dev, bar_kecepatan, deret_koran, gambar_piksel, garis_bidik, gaya_hud, tombol_jeda, tombol_sentuh, layar_jeda (ada); HUD final dan layar menyusul
 tests/                 run_tests.gd, tes_rute.gd, tes_rute_scene.gd, probe_rute_jendela.gd, tes_input_murni.gd, tes_input_scene.gd, tes_sprite.gd, tes_gerak.gd, tes_gerak_scene.gd, tes_jeda_scene.gd, tes_tata_letak.gd, tes_umpan_balik.gd, tes_bunyi.gd, tes_cek_render.gd, tes_lempar.gd, tes_koran_scene.gd, tes_export.gd, probe_layar.gd, probe_*_jendela.gd (ada)
-tools/loper_art/       Renderer sprite pemain (Python), lihat ART_DIRECTION bagian 4; bangun_frames.py membangun SpriteFrames gabungan 48 animasi (stdlib)
+tools/loper_art/       Renderer sprite pemain (Python), lihat ART_DIRECTION bagian 4; bangun_frames.py membangun SpriteFrames gabungan 50 animasi (stdlib)
 tools/env_art/         Renderer aset lingkungan, termasuk graybox.py (ada)
 tools/audio_art/       sintesis_sepeda.py: bunyi placeholder sepeda dari rumus (stdlib) (ada)
 tools/                 cek_keluaran_tes.py, cek_blok_piksel.py, ekspor_cek_render.py (build probe render), tests_cek/ (uji_pemeriksa, uji_bangun_frames, uji_sintesis_sepeda) (ada)

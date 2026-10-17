@@ -1,10 +1,11 @@
-[gd_resource type="SpriteFrames" load_steps=198 format=3]
+[gd_resource type="SpriteFrames" load_steps=205 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/loper/loper_agen.png" id="1_sheet"]
 [ext_resource type="Texture2D" path="res://assets/sprites/loper/loper_agen_melambat.png" id="2_melambat"]
 [ext_resource type="Texture2D" path="res://assets/sprites/loper/loper_agen_lempar.png" id="3_lempar"]
 [ext_resource type="Texture2D" path="res://assets/sprites/loper/loper_agen_meluncur.png" id="4_meluncur"]
 [ext_resource type="Texture2D" path="res://assets/sprites/loper/loper_agen_rem.png" id="5_rem"]
+[ext_resource type="Texture2D" path="res://assets/sprites/loper/loper_agen_jatuh.png" id="6_jatuh"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_1"]
 atlas = ExtResource("1_sheet")
@@ -773,6 +774,30 @@ region = Rect2(92, 232, 46, 58)
 [sub_resource type="AtlasTexture" id="AtlasTexture_192"]
 atlas = ExtResource("5_rem")
 region = Rect2(138, 232, 46, 58)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_193"]
+atlas = ExtResource("6_jatuh")
+region = Rect2(0, 0, 114, 68)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_194"]
+atlas = ExtResource("6_jatuh")
+region = Rect2(114, 0, 114, 68)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_195"]
+atlas = ExtResource("6_jatuh")
+region = Rect2(228, 0, 114, 68)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_196"]
+atlas = ExtResource("6_jatuh")
+region = Rect2(342, 0, 114, 68)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_197"]
+atlas = ExtResource("6_jatuh")
+region = Rect2(342, 0, 114, 68)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_198"]
+atlas = ExtResource("6_jatuh")
+region = Rect2(456, 0, 114, 68)
 
 [resource]
 animations = [{
@@ -1591,4 +1616,32 @@ animations = [{
 "loop": true,
 "name": &"rem_kiri",
 "speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_193")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_194")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_195")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_196")
+}],
+"loop": false,
+"name": &"jatuh_normal",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_197")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_198")
+}],
+"loop": true,
+"name": &"terjerembab_normal",
+"speed": 3.0
 }]
