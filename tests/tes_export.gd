@@ -25,6 +25,12 @@ const ARSITEKTUR_AKTIF: String = "architectures/arm64-v8a"
 const ARSITEKTUR_MATI: Array[String] = ["architectures/armeabi-v7a", "architectures/x86", "architectures/x86_64"]
 ## Folder yang tidak boleh ikut APK walau berisi skrip (tests/) atau berkas dev lain.
 const FILTER_DIKECUALIKAN: Array[String] = ["docs/*", "tests/*", "tools/*", "build/*", "builds/*"]
+## Berkas konten dan scene alur hari yang WAJIB ikut paket (run fase4a-koran-hari AC-28): data misi dan headline, terjemahan hasil impor, dan scene baru.
+const JALUR_WAJIB_IKUT: Array[String] = [
+	"assets/data/missions/perumahan.json", "assets/data/headlines/utama.json", "assets/data/headlines/ringan.json", "assets/data/headlines/lanjutan.json",
+	"translations/konten.id.translation", "translations/ui.id.translation", "scenes/hari/hari.tscn", "scenes/koran/halaman_koran.tscn", "scenes/rute/rute.tscn",
+	"scripts/autoload/save_manager.gd",
+]
 ## Berkas probe render (QA-004 run fase1b-umpan-balik, D-4 run fase1c-perapian): tidak ikut APK normal; build probe dibuat
 ## `tools/ekspor_cek_render.py` yang melepas pola ini sementara (`POLA_PROBE` di skrip itu harus sama persis).
 const FILTER_PROBE: Array[String] = ["scenes/dev/cek_render.tscn", "scripts/dev/cek_render.gd", "assets/shaders/warna_bayangan.gdshader"]
@@ -130,6 +136,9 @@ func _test_preset_contoh_buruk() -> void:
 		['keystore/debug_password=""', 'keystore/debug_password="android"', "keystore/debug_password", "kata sandi keystore debug terisi"],
 		['keystore/release=""', 'keystore/release="/Users/dev/kunci/rilis.keystore"', "keystore/release", "jalur keystore rilis terisi"],
 		['keystore/release_user=""', 'keystore/release_user="unggah"', "keystore/release_user", "nama kunci rilis terisi"],
+		['exclude_filter="docs/*, ', 'exclude_filter="assets/data/*, docs/*, ', "assets/data/missions/perumahan.json", "data misi dikecualikan dari paket"],
+		['exclude_filter="docs/*, ', 'exclude_filter="translations/*, docs/*, ', "translations/konten.id.translation", "terjemahan dikecualikan dari paket"],
+		['exclude_filter="docs/*, ', 'exclude_filter="scenes/hari/*, docs/*, ', "scenes/hari/hari.tscn", "scene hari dikecualikan dari paket"],
 		['name="Android"', 'name="Android uji"', "nama", "nama preset bukan Android"],
 		['runnable=true', 'runnable=false', "runnable", "runnable mati"],
 		['package/signed=true', 'package/signed=false', "package/signed", "APK tidak ditandatangani (tidak bisa dipasang)"],
@@ -179,6 +188,16 @@ func _test_preset_contoh_buruk() -> void:
 
 
 ## Semua pelanggaran AC-19 pada isi sebuah `export_presets.cfg`. Daftar kosong = bersih.
+## True bila `jalur` cocok dengan salah satu pola `kecuali` (pola `folder/*` = awalan folder, selain itu sama persis).
+func _dikecualikan(jalur: String, kecuali: Array[String]) -> bool:
+	for pola: String in kecuali:
+		if pola.ends_with("/*") and jalur.begins_with(pola.trim_suffix("*")):
+			return true
+		if pola == jalur:
+			return true
+	return false
+
+
 func _pelanggaran_preset(teks: String) -> Array[String]:
 	var hasil: Array[String] = []
 	var cfg: ConfigFile = ConfigFile.new()
@@ -217,6 +236,11 @@ func _pelanggaran_preset(teks: String) -> Array[String]:
 	for spike: String in FILTER_SPIKE:
 		if not kecuali.has(spike):
 			hasil.append("exclude_filter harus memuat %s (spike sisi dekat tidak ikut paket game, AC-14 run 3C)" % spike)
+	for wajib_ikut: String in JALUR_WAJIB_IKUT:
+		if _dikecualikan(wajib_ikut, kecuali):
+			hasil.append("%s harus ikut paket tetapi cocok dengan exclude_filter (konten dan scene alur hari, run fase4a-koran-hari)" % wajib_ikut)
+		if not FileAccess.file_exists("res://" + wajib_ikut):
+			hasil.append("%s harus ada di repo (ikut paket)" % wajib_ikut)
 	if str(cfg.get_value(kepala, "export_path", "")) != "":
 		hasil.append("export_path harus kosong (jalur ekspor lokal tidak di-commit)")
 	# Opsi Android.

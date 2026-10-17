@@ -753,3 +753,90 @@ const HASIL_BERHENTI_TOLERANSI_UD: float = 0.000001
 const HASIL_PANEL_LEBAR_PX: int = 300
 ## Panel layar hasil: jarak antar baris dan antar bagian, piksel game.
 const HASIL_JARAK_BARIS_PX: int = 2
+
+## --- Hari, seed, dan save (Fase 4 run 4A, DATA_SCHEMA 4, rule save-system; usulan, alur hari berurutan ini prototype yang tidak mengunci struktur sesi ROADMAP 5) ---
+
+## Hari pertama yang dimainkan (`hari` di save = hari yang akan dimainkan berikutnya, S-3).
+const HARI_AWAL: int = 1
+## Langkah seed antar hari: seed hari N = dasar + N x langkah (bilangan prima besar supaya seed hari berdekatan tidak mirip).
+const SEED_HARI_LANGKAH: int = 1000003
+## Seed dasar rute harian (`SeedHari.rute`); rute dev tetap `RUTE_SEED_DEV`.
+const SEED_RUTE_DASAR: int = 20261100
+## Seed dasar headline harian (`SeedHari.headline`, `HeadlineManager`).
+const SEED_HEADLINE_DASAR: int = 31415926
+## Selisih seed antar slot halaman koran (utama, misi, ringan) supaya tiap slot punya aliran acak sendiri.
+const SEED_HEADLINE_SLOT_LANGKAH: int = 7919
+## Versi format save (DATA_SCHEMA 4); naik bersama langkah migrasi di `DataSave.migrasi`.
+const SAVE_VERSI: int = 1
+## Berkas save (satu slot, rule save-system); ditulis atomik lewat berkas sementara di folder yang sama.
+const SAVE_BERKAS: String = "user://save.json"
+## Ekstensi berkas sementara penulisan atomik (`user://save.tmp`).
+const SAVE_SEMENTARA_EKSTENSI: String = "tmp"
+## Penanda nama salinan save rusak: `user://save.corrupt.<detik unix>.json`.
+const SAVE_RUSAK_PENANDA: String = ".corrupt."
+## Batas atas bilangan di save (hari, koin, skor, jeda): nilai lebih besar dijepit, bukan crash.
+const SAVE_ANGKA_MAKS: int = 2000000000
+## Volume suara dan musik bawaan dan batasnya (0 sampai 1); belum dipakai di 4A.
+const SAVE_VOLUME_BAWAAN: float = 1.0
+## Batas bawah volume di save.
+const SAVE_VOLUME_MIN: float = 0.0
+## Batas atas volume di save.
+const SAVE_VOLUME_MAKS: float = 1.0
+
+## --- Headline dan misi (DATA_SCHEMA 1 dan 2, CONTENT_GUIDE 2 dan 3; run 4A, usulan) ---
+
+## Panjang maksimal headline (berita utama, ringan, lanjutan, dan judul misi), karakter teks terjemahan.
+const HEADLINE_PANJANG_MAKS: int = 40
+## Panjang maksimal ringkasan misi satu baris di layar koran, karakter.
+const MISI_RINGKASAN_PANJANG_MAKS: int = 60
+## Panjang maksimal label HUD misi, karakter.
+const MISI_HUD_PANJANG_MAKS: int = 14
+## Panjang maksimal petunjuk dari pelanggan, karakter.
+const MISI_PETUNJUK_PANJANG_MAKS: int = 50
+## Kata penghubung yang boleh huruf kecil di tengah headline (CONTENT_GUIDE 2).
+const HEADLINE_KATA_PENGHUBUNG: Array[String] = ["di", "ke", "dari", "dan", "yang", "untuk", "pada"]
+## Bobot headline paling kecil (peluang relatif, bilangan bulat).
+const HEADLINE_BOBOT_MIN: int = 1
+## Dua tanda seru berturut-turut ditolak di headline (CONTENT_GUIDE 2).
+const HEADLINE_TANDA_SERU_BERUNTUN: String = "!!"
+## Kunci efek dunia berita utama (GDD 10.7); arti efek di kode (Fase 7), di 4A hanya dicatat (S-5).
+const EFEK_DUNIA_DIKENAL: Array[String] = ["hajatan", "hujan_deras", "air_pasang", "tujuh_belasan", "pasar_kaget", "jalan_diperbaiki", "panen_raya", "mati_lampu"]
+## Template misi (GDD 10.4).
+const MISI_TEMPLATE_DIKENAL: Array[String] = ["cari", "antar_khusus", "lempar_khusus", "kumpul", "kejar", "jaga"]
+## Tingkat hadiah misi (GDD 10.5).
+const MISI_TINGKAT_HADIAH: Array[String] = ["kecil", "sedang", "besar"]
+## Distrik yang dikenal data (GDD 9.2).
+const DISTRIK_DIKENAL: Array[String] = ["perumahan", "perkampungan", "ruko", "pasar", "desa", "sungai"]
+## Distrik yang dimainkan di 4A.
+const DISTRIK_AWAL: String = "perumahan"
+## Hari tutorial (STORY 6): slot misi hari ini selalu misi tutorial.
+const MISI_HARI_TUTORIAL: int = 1
+## Id misi tutorial (P1 Kucing Bu Ratmi, GDD 10.6).
+const MISI_ID_TUTORIAL: String = "p1_kucing"
+## Reputasi pemain di 4A (reputasi belum ada, Fase 6A): dipakai syarat `rep_min` misi.
+const REPUTASI_BAWAAN: int = 0
+
+## --- Layar halaman depan koran (DESIGN_SPEC 4, 1.2; rule ui-scenes; run 4A, usulan; dinilai lewat uji HP) ---
+
+## Tepi layar koran ke isi, piksel game (sebelum zona aman).
+const KORAN_MARGIN_PX: int = 12
+## Jarak antar blok di layar koran, piksel game.
+const KORAN_JARAK_PX: int = 8
+## Lebar kolom berita (nama, berita utama, berita ringan) dibanding kolom misi (misi, Berangkat): bobot regangan `size_flags_stretch_ratio`.
+const KORAN_KOLOM_BERITA_RASIO: float = 0.55
+## Bobot regangan kolom misi.
+const KORAN_KOLOM_MISI_RASIO: float = 0.45
+## Ukuran huruf teks tombol di layar koran, piksel game (lebih besar dari teks HUD supaya terbaca sekilas).
+const KORAN_TOMBOL_HURUF_PX: int = 10
+## Tombol Ambil dan Lewati: lebar, piksel game (tinggi `HUD_TOMBOL_TINGGI_PX`, >= 44 dp di A54).
+const KORAN_TOMBOL_PILIH_LEBAR_PX: int = 96
+## Tombol Berangkat: lebar, piksel game.
+const KORAN_TOMBOL_BERANGKAT_LEBAR_PX: int = 136
+## Tebal garis pemisah halaman koran, piksel game.
+const KORAN_GARIS_TEBAL_PX: int = 2
+## Tebal garis tombol terpilih dan panel misi, piksel game (tombol tidak terpilih 1 px: bentuk, bukan hanya warna).
+const KORAN_BINGKAI_TERPILIH_PX: int = 3
+## Kontras minimum teks terhadap latar di layar koran (rumus WCAG, rasio).
+const KORAN_KONTRAS_TEKS_MIN: float = 7.0
+## Kontras minimum garis tombol dan panel terhadap latar (komponen UI, WCAG 1.4.11).
+const KORAN_KONTRAS_GARIS_MIN: float = 3.0

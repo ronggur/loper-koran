@@ -1,0 +1,29 @@
+[
+	{
+		"id": "p1_kucing",
+		"aktif": true,
+		"template": "cari",
+		"headline": "MISI_P1_KUCING_HEADLINE",
+		"ringkasan": "MISI_P1_KUCING_RINGKASAN",
+		"hud": "MISI_P1_KUCING_HUD",
+		"distrik": "perumahan",
+		"rep_min": 0,
+		"syarat": {},
+		"target": { "objek": "kucing", "jumlah": 1, "sisi": "seberang" },
+		"langkah": [
+			{ "jenis": "lihat", "titik": "atap", "rumah_dari_mulai": [3, 4] },
+			{ "jenis": "lihat", "titik": "bawah_mobil_tamu", "rumah_dari_sebelumnya": [3, 4] },
+			{ "jenis": "tangkap", "titik": "balik_pot", "rumah_dari_sebelumnya": [3, 4], "radius_ubin": 2.0, "lama_berhenti_detik": 1.5 }
+		],
+		"petunjuk": {
+			"visual": ["kilau", "ekor"],
+			"suara": "meong",
+			"dari_pelanggan": "MISI_P1_KUCING_PETUNJUK"
+		},
+		"batas": { "rumah": 12 },
+		"hadiah": { "tingkat": "sedang", "tambahan": "pelanggan_setia", "tokoh": "bu_ratmi" },
+		"gagal": { "reputasi": 0 },
+		"flag_lanjut": { "selesai": "kucing_ketemu", "gagal": "kucing_belum" },
+		"jeda": 7
+	}
+]

@@ -24,7 +24,7 @@ Rujukan: `docs/DATA_SCHEMA.md` bagian 4, `docs/TECH_PLAN.md` 3.2 dan 3.3 (format
 
 ## Aturan data
 
-- **File save rusak tidak pernah ditimpa diam-diam**: salin dulu ke `user://save.corrupt.<waktu>.json`, lalu mulai dari state bawaan dan beri tahu pemain.
+- **File save rusak tidak pernah ditimpa diam-diam**: salin dulu ke `user://save.corrupt.<waktu>.json` (isi sama dengan salinan yang ada tidak disalin lagi), lalu mulai dari state bawaan dan beri tahu pemain. Berkas yang ada tetapi **tidak bisa dibaca**, atau salinan yang **gagal dibuat**, berarti berkas lama tidak boleh ditimpa: tahan `simpan` untuk sesi itu dan beri tahu pemain dengan teks jujur (jangan mengaku salinan tersimpan). `_ready` autoload hanya memuat, tidak pernah menulis.
 - **Progres yang sudah dicapai tidak turun**: distrik yang terbuka tetap terbuka, milestone yang tercapai tetap tercapai, kosmetik yang dimiliki tidak hilang. Koin dan tabungan boleh berkurang hanya lewat pengeluaran yang disengaja pemain (servis, upgrade, porsi setoran), tidak lewat hukuman otomatis.
 - `id` (misi, headline, segmen, pelanggan, tokoh) **permanen dan tidak pernah diganti** setelah dipakai di save. `id` yang sudah tidak ada di data diabaikan dengan aman, jangan dihapus paksa dari save.
 - Pelanggan dirujuk lewat id rumah tetap di distrik (`per_r014`), bukan indeks segmen yang diacak (DATA_SCHEMA 4). Cara pemetaannya diputuskan di Fase 3.

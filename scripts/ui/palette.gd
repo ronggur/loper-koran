@@ -43,3 +43,14 @@ const RADAR_BUKAN: Color = Color("#969AA0")
 ## Warna bayangan contoh (siang, dongker tua, ART_DIRECTION 2.5; usulan run fase1b-umpan-balik): pengganti piksel penanda bayangan
 ## `#000000` alpha 71 oleh shader warna bayangan (`assets/shaders/warna_bayangan.gdshader`), dipakai probe render Compatibility (`scenes/dev/`).
 const BAYANGAN_CONTOH: Color = Color("#2E3550")
+
+## Halaman depan koran (DESIGN_SPEC 1.1 dan 4, run fase4a-koran-hari; usulan): satu-satunya layar terang. Kertas krem.
+const KORAN_KERTAS: Color = Color("#F2E7C9")
+## Halaman depan koran: kertas kedua, panel misi sampingan sedikit lebih gelap dari kertas.
+const KORAN_KERTAS_2: Color = Color("#E6D8B1")
+## Halaman depan koran: teks utama dan garis tombol terpilih (kontras 14,8:1 terhadap kertas).
+const KORAN_TINTA: Color = Color("#1C130F")
+## Halaman depan koran: teks kedua (label, ringkasan; kontras 8,8:1 terhadap kertas, 7,7:1 terhadap kertas kedua).
+const KORAN_TINTA_2: Color = Color("#4A3A2C")
+## Halaman depan koran: garis pemisah dan bingkai tombol tidak terpilih (kontras 4,5:1 terhadap kertas, komponen UI).
+const KORAN_GARIS: Color = Color("#7A6642")

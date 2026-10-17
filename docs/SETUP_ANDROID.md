@@ -424,7 +424,7 @@ Keputusan pemilik: Fase 2 selesai ya / belum   M1 selesai ya / belum
 
 ### 8.6 Uji penutup 3A: rute perumahan dari segmen (run `20261016-fase3a-rute`, terpasang di vivo V2108 2026-10-16, belum diuji)
 
-Penguji: pemilik sendiri (rule `testing`). APK normal terbaru (bagian 4; scene utama sekarang `scenes/rute/rute.tscn`) di vivo V2108 (`12d8c9da`), atau A54 bila tersambung. Semua angka dan aset usulan: catat yang ingin diubah beserta alasannya, jangan diubah di sesi uji. Bukti desktop: tangkapan `docs/loop/20261016-fase3a-rute/shots/` (`tests/probe_rute_jendela.gd`, 2340x1080 dan 1600x720). Uji 8.5 (Fase 2 dan M1) tetap terpisah dan belum diisi.
+Penguji: pemilik sendiri (rule `testing`). APK normal terbaru (bagian 4; scene utama sejak run 4A `scenes/hari/hari.tscn`; rute dimulai lewat Berangkat) di vivo V2108 (`12d8c9da`), atau A54 bila tersambung. Semua angka dan aset usulan: catat yang ingin diubah beserta alasannya, jangan diubah di sesi uji. Bukti desktop: tangkapan `docs/loop/20261016-fase3a-rute/shots/` (`tests/probe_rute_jendela.gd`, 2340x1080 dan 1600x720). Uji 8.5 (Fase 2 dan M1) tetap terpisah dan belum diisi.
 
 1. [ ] **Rute dari awal sampai garis akhir tanpa patah.** Langkah: mainkan satu rute penuh (sekitar 236 ubin: sekitar 79 detik santai, sekitar 40 detik ngebut; BALANCING 6) santai, lalu satu kali ngebut. Diharapkan: 60 fps tanpa lonjakan atau patah saat rumah muncul, memuat di bawah 1 detik sejak game dibuka, rumah muncul tepat di tepi layar tanpa terlihat "muncul tiba-tiba" dekat sepeda. Hasil: mulus ya / tidak, memuat terasa cepat ya / tidak, di mana patah: ___
 2. [ ] **25 pelanggan terasa dan tidak dihafal.** Langkah: tekan "Main lagi" di akhir rute dan mainkan tiga rute berturut-turut (seed berbeda). Diharapkan: tiga susunan terasa berbeda (urutan segmen dan letak rumah pelanggan), jarak antar pelanggan terasa kira-kira 2 sampai 3 detik, ada kelompok rumah berurutan lalu sela panjang. Hasil: terasa berbeda ya / tidak, sudah mulai hafal setelah tiga ya / tidak, jarak antar pelanggan pas / terlalu rapat / terlalu jarang. Catatan: ___
@@ -538,4 +538,40 @@ Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build 
 16. Rumah sisi dekat: pendekatan 1 / 2 / 3 / tanggal keputusan ____
 17. Bel terjangkau: kanan ya / tidak   kidal ya / tidak   menghalangi swipe __ kali   tak sengaja __ kali   posisi pas / ke dalam / ke tepi / tinggi / rendah
 Angka, tata letak, dan aset yang ingin diubah dan alasannya: ____
+```
+
+### 8.9 Uji alur satu hari: koran, rute, hasil, hari berikutnya (run `20261018-fase4a-koran-hari`, belum diuji)
+
+Penguji: pemilik sendiri (rule `testing`). **Pasang tanpa menghapus apa pun:** `adb install -r builds/kring-kring-debug.apk` (ekspor APK debug: bagian 4; hanya setelah izin pemilik, HP dipakai bersama project lain). **Jangan `pm clear` dan jangan uninstall** (save di `user://save.json` ikut terhapus); mulai dari awal cukup dengan save yang sudah ada atau save baru. Menutup app = force stop (`adb shell am force-stop com.rmh.kring` atau geser dari recent), bukan hapus data. Fase 4 dan M2 baru boleh dicentang sesudah run 4B dan uji ini diisi. Nama koran "Warta Kring" dan "Perumahan Melati" adalah placeholder usulan. **Efek berita utama belum diterapkan** (S-5): headline "Pasar Kaget" atau "Jalan Sedang Diperbaiki" tidak mengubah rute.
+
+Urutan uji:
+
+1. [ ] **Layar koran terbaca dalam 10 detik di A54 dan vivo V2108.** Buka app. Diharapkan: halaman krem dengan "Warta Kring", "Hari 1 · Perumahan Melati", satu berita utama besar, berita ringan, panel misi "Kucing Bu Ratmi Hilang Sejak Semalam" dengan ringkasan satu baris, tombol Ambil, Lewati, Berangkat. Tidak ada paragraf; tidak ada teks terpotong; tidak tertutup lubang kamera. Hasil: terbaca dalam ___ detik, terpotong: ___
+2. [ ] **Krem terang tidak menyilaukan setelah layar gelap.** Buka koran dari layar gelap (hasil rute, atau app baru dibuka di ruang redup). Hasil: nyaman ya / silau.
+3. [ ] **Ambil, Lewati, Berangkat terasa pas.** Ketuk Ambil lalu Lewati lalu Ambil: tombol terpilih terisi gelap dengan bingkai tebal dan teks status berubah ("Misi diambil", "Misi dilewati", awal "Belum dipilih; berangkat = dilewati"). Berangkat di bawah jempol kanan. Hasil: target pas ya / tidak, salah ketuk ___ kali, status terbaca tanpa warna ya / tidak.
+4. [ ] **Rute hari 1 berjalan seperti 3A sampai 3C.** Berangkat tanpa misi atau dengan Ambil (misi tidak punya efek di rute di 4A). Hasil: rute normal ya / tidak (tombol jeda, radar, tenggat, layar hasil).
+5. [ ] **Layar hasil menawarkan "Hari berikutnya".** Sesudah garis akhir. Diharapkan: tombol "Hari berikutnya" (tidak ada "Main lagi"); angka sama dengan yang tampil; satu ketukan membuka koran hari 2. Ketuk cepat dua kali tidak melompati hari 3. Hasil: ya / tidak.
+6. [ ] **Koran hari 2 dan rute hari 2 berbeda.** Diharapkan: berita utama dan ringan berbeda dari hari 1; bila P1 diambil di hari 1 baris misi menampilkan "Tidak ada misi sampingan hari ini" tanpa tombol Ambil/Lewati (jeda 7 hari), bila dilewati P1 muncul lagi; rute (urutan rumah) terasa berbeda. Hasil: berbeda ya / tidak, misi: ___
+7. [ ] **Force stop di tengah rute lalu buka lagi.** Berangkat hari 2, kayuh sebentar, force stop. Diharapkan: app terbuka di koran hari 2 (BUKAN hari 3) dengan headline dan misi yang sama, koin dan hari kemarin utuh, Ambil/Lewati diulang dari awal. Hasil: koran sama ya / tidak, progres utuh ya / tidak.
+8. [ ] **Back Android.** Di koran: keluar app. Di rute: menjeda (back lagi melanjutkan). Di layar hasil: tidak terjadi apa pun. App ke background di koran lalu kembali: aman. Hasil: ya / tidak per layar.
+9. [ ] **Kidal dan Bantu bertahan.** Di jeda nyalakan Kidal atau Bantu, selesaikan hari, "Hari berikutnya", Berangkat: masih menyala; force stop lalu buka lagi: masih menyala. Hasil: ya / tidak.
+10. [ ] **Tanpa suara.** Layar koran tidak punya isyarat suara; semua status terbaca dari teks dan bentuk. Hasil: ya / tidak.
+11. [ ] **Jeda dan hasil tidak menyimpan.** Bukti mesin (tes alur hari): tepat satu simpan per hari. Di HP cukup: setelah force stop di hasil (sebelum "Hari berikutnya") app membuka hari yang sama. Hasil: ya / tidak.
+
+**Lembar hasil 8.9 (alur satu hari, run 4A):**
+
+```
+Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build (commit): ____
+1. Koran terbaca dalam 10 detik: ya / tidak (__ detik)   terpotong: ____   tertutup lubang kamera: ____
+2. Krem menyilaukan: ya / tidak
+3. Ambil/Lewati/Berangkat: pas ya / tidak   salah ketuk __ kali   status terbaca tanpa warna ya / tidak
+4. Rute hari 1 normal: ya / tidak
+5. Hari berikutnya: ya / tidak   lompat hari karena ketuk ganda: ya / tidak
+6. Hari 2 berbeda: ya / tidak   misi hari 2: ____
+7. Force stop di rute: koran sama ya / tidak   progres utuh ya / tidak
+8. Back: koran ya / tidak   rute ya / tidak   hasil ya / tidak   background ya / tidak
+9. Kidal dan Bantu bertahan: ya / tidak
+10. Tanpa suara terbaca: ya / tidak
+11. Force stop di hasil: hari sama ya / tidak
+Catatan (teks, tata letak, angka yang ingin diubah dan alasannya): ____
 ```

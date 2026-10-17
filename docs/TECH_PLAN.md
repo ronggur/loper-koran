@@ -79,11 +79,11 @@ Mengikuti struktur di `README.md`. Bagian ini hanya menambahkan yang dibutuhkan 
 | Modul | Tanggung jawab | Fase |
 |---|---|---|
 | `Config` (`scripts/config.gd`) | Semua angka tuning, termasuk parameter cerita | 0 |
-| `SaveManager` | Baca, tulis, dan migrasi `user://save.json` | 4 |
-| `DayManager` | Mesin hari: koran → adegan → rute → hasil → bengkel → simpan | 4 |
+| `SaveManager` | Baca, tulis, dan migrasi `user://save.json`. **Ada sejak run 4A** (`scripts/autoload/save_manager.gd`; format v1 di `DataSave`, tulis atomik, save rusak disalin dulu, simpan hanya di akhir hari) | 4 |
+| `DayManager` | Mesin hari: koran → adegan → rute → hasil → bengkel → simpan. **Di 4A bukan autoload** (S-1): `MesinHari` (logika murni, `scripts/systems/mesin_hari.gd`: Koran → Rute → Hasil → Koran hari + 1, back per keadaan) + scene `scenes/hari/hari.tscn` (`HariMain`, scene utama). Autoload baru hanya bila adegan dan bengkel (Fase 6B) menuntutnya. Alur hari berurutan ini prototype yang tidak mengunci struktur sesi (ROADMAP 5) | 4 |
 | `RouteBuilder` | Menyusun rute dari segmen dengan seed hari | 3 |
 | `MissionManager` | Pemilihan misi harian, template misi, flag lanjutan | 4 |
-| `HeadlineManager` | Memilih tiga headline per hari dari pool dan flag | 4 |
+| `HeadlineManager` | Memilih tiga headline per hari dari pool dan flag. **Ada sejak run 4A** (`scripts/systems/headline_manager.gd`, seed per hari dari `SeedHari`, lanjutan diprioritaskan, jeda, bobot) | 4 |
 | `ReputationManager` | Reputasi per distrik, pelanggan baru dan berhenti | 6A |
 | `BikeCondition` | Aus dan rusak per komponen, tanda peringatan | 6A |
 | `Economy` | Ongkos, tip, hadiah, harga bengkel, tiga saldo | 6A, 6B |
@@ -351,7 +351,7 @@ Setiap fase berisi: tujuan, kaitan cerita, sistem dan kode, aset, konten, uji, d
 
 **Sistem dan kode**
 
-- `HeadlineManager`: tiga headline per hari dari pool dan flag (`DATA_SCHEMA.md` 2).
+- `HeadlineManager`: tiga headline per hari dari pool dan flag (`DATA_SCHEMA.md` 2). **Status run 4A (2026-10-18):** selesai bersama format data (`DataMisi`, `DataHeadline`, `PemuatMisi`, `PemuatHeadline`), konten hari 1–3, layar koran (`HalamanKoran`), `SaveManager` v1, dan alur satu hari (`MesinHari` + `hari.tscn`) sebagai satu hari utuh tanpa misi kucing. Efek berita utama hanya dicatat (Fase 7). **Run 4B:** `MissionManager` dan template Cari, HUD misi, banner, flag hasil misi, rekap misi di layar hasil, tutorial, dan misi lintas hari (terbuka).
 - `MissionManager` dengan template **Cari** (misi P1 Kucing Bu Ratmi): tiga titik, petunjuk dari lemparan tepat, menepi dalam 2 ubin selama 1,5 detik, batas 12 rumah.
 - HUD misi, banner selesai dan gagal (`CONTENT_GUIDE.md` 3), flag lanjutan, headline hari berikutnya membaca flag.
 - `SaveManager` sederhana (`user://save.json`, versi 1; langsung dengan migrasi supaya versi 2 di Fase 6B tidak merusak).

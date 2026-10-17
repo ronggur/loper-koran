@@ -37,6 +37,8 @@ signal rute_selesai
 signal rute_disusun(rute: RouteBuilder.Rute)
 ## Layar hasil terbuka (tepat sekali per rute): angka yang ditampilkan.
 signal hasil_dibuka(angka: HasilRute.Angka)
+## Tombol "Hari berikutnya" layar hasil ditekan (hanya di mode hari, `atur_mode_hari`; run fase4a-koran-hari AC-17).
+signal hari_berikutnya_diminta
 
 ## Seed rute yang sedang dimainkan.
 var _benih: int = Config.RUTE_SEED_DEV
@@ -68,6 +70,7 @@ func _siapkan_dunia() -> void:
 	_rintangan_daur.penerap = _penerap
 	_panel_akhir.main_lagi_diminta.connect(main_lagi)
 	_layar_hasil.main_lagi_diminta.connect(main_lagi)
+	_layar_hasil.hari_berikutnya_diminta.connect(hari_berikutnya_diminta.emit)
 	_susun(_benih)
 
 
@@ -199,6 +202,20 @@ func _susun(benih: int) -> void:
 func main_lagi() -> void:
 	_susun(_benih + 1)
 	perbarui(0.0)
+
+
+## Mengatur seed rute awal (run fase4a-koran-hari AC-17: seed hari dari `SeedHari`). Dipanggil SEBELUM scene masuk pohon, jadi rute pertama
+## sudah disusun dari seed ini (tanpa `main_lagi`); sesudah siap, rute disusun ulang dengan seed itu.
+func atur_benih_awal(benih_baru: int) -> void:
+	_benih = benih_baru
+	if is_node_ready():
+		_susun(benih_baru)
+		perbarui(0.0)
+
+
+## Mode hari: tombol layar hasil menjadi "Hari berikutnya" (memancarkan `hari_berikutnya_diminta`), bukan "Main lagi". Bawaan mati (rute sendiri).
+func atur_mode_hari(nilai: bool) -> void:
+	_layar_hasil.atur_mode_hari(nilai)
 
 
 ## Seed rute yang sedang dimainkan.

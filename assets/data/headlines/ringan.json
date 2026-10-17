@@ -1,0 +1,10 @@
+[
+	{"id": "ringan_ayam_juara", "jenis": "ringan", "aktif": true, "teks": "KORAN_RINGAN_AYAM", "distrik": [], "syarat": {}, "bobot": 1, "jeda": 3},
+	{"id": "ringan_tukang_sayur", "jenis": "ringan", "aktif": true, "teks": "KORAN_RINGAN_TUKANG_SAYUR", "distrik": [], "syarat": {}, "bobot": 1, "jeda": 3},
+	{"id": "ringan_satpam_tts", "jenis": "ringan", "aktif": true, "teks": "KORAN_RINGAN_SATPAM", "distrik": [], "syarat": {}, "bobot": 1, "jeda": 3},
+	{"id": "ringan_mangga", "jenis": "ringan", "aktif": true, "teks": "KORAN_RINGAN_MANGGA", "distrik": [], "syarat": {}, "bobot": 1, "jeda": 3},
+	{"id": "ringan_warung_inah", "jenis": "ringan", "aktif": true, "teks": "KORAN_RINGAN_WARUNG", "distrik": [], "syarat": {}, "bobot": 1, "jeda": 3},
+	{"id": "ringan_balap_karung", "jenis": "ringan", "aktif": true, "teks": "KORAN_RINGAN_BALAP_KARUNG", "distrik": [], "syarat": {}, "bobot": 1, "jeda": 3},
+	{"id": "ringan_kue_tetangga", "jenis": "ringan", "aktif": true, "teks": "KORAN_RINGAN_KUE", "distrik": [], "syarat": {}, "bobot": 1, "jeda": 3},
+	{"id": "ringan_jemuran", "jenis": "ringan", "aktif": true, "teks": "KORAN_RINGAN_JEMURAN", "distrik": [], "syarat": {}, "bobot": 1, "jeda": 3}
+]

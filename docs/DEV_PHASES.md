@@ -21,7 +21,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 | 1 | Gerak sepeda & kecepatan (prototype 1) | M1 | ✅ run 1A (PR #20), 1B (PR #21), 1C (PR #23) lolos QA; uji HP oleh pemilik lolos | 2026-10-14 |
 | 2 | Lemparan koran (prototype 2) | M1 | 🟨 kode selesai: run 2A (PR #24), arah bebas (PR #25), 2B (PR #26) lolos QA; uji HP penutup (`SETUP_ANDROID.md` 8.5) menunggu pemilik | |
 | 3 | Satu rute perumahan (prototype 3) | M2 | 🟨 kode selesai: run 3A (PR #28), 3B (PR #32), 3C (PR #33: radar, HUD rute, tenggat, layar hasil, keputusan sisi dekat tembok rendah) lolos QA; uji HP penutup (`SETUP_ANDROID.md` 8.8, juga 8.6 dan 8.7) menunggu pemilik | |
-| 4 | Halaman depan koran & misi kucing (prototype 4) | M2 | ⬜ | |
+| 4 | Halaman depan koran & misi kucing (prototype 4) | M2 | 🟡 run 4A (satu hari utuh tanpa misi kucing: koran, format dan pemuat misi dan headline, `HeadlineManager`, save v1, alur hari) dikerjakan 2026-10-18; misi kucing, HUD misi, tutorial di run 4B; belum dicentang | |
 | 5 | Aset gelombang 1 *(paralel)* | M2–M3 | 🟡 sprite pemain selesai | |
 | 6 | Hari demi hari: reputasi, bengkel, ekonomi | M3 | ⬜ | |
 | 7 | Vertical slice perumahan & audio dasar | M3 | ⬜ | |
@@ -118,14 +118,16 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 
 **Tujuan:** satu hari utuh: baca koran, ambil misi, antar, lihat hasil.
 
-- [ ] Layar halaman depan: berita utama, misi sampingan (Ambil/Lewati), berita ringan (desain di DESIGN_SPEC 4)
-- [ ] Format misi dan headline (`DATA_SCHEMA.md` 1–2), contoh headline hari 1–3 (`CONTENT_GUIDE.md`)
+- [ ] Layar halaman depan: berita utama, misi sampingan (Ambil/Lewati), berita ringan (desain di DESIGN_SPEC 4) (run 4A: kode dan tes selesai, `HalamanKoran`; belum dicentang sebelum uji HP `SETUP_ANDROID.md` 8.9 dan QA)
+- [ ] Format misi dan headline (`DATA_SCHEMA.md` 1–2), contoh headline hari 1–3 (`CONTENT_GUIDE.md`) (run 4A: format dan pemuat, 8 berita utama, 8 ringan, 2 lanjutan, misi P1, tabel hari 1–3 di `CONTENT_GUIDE.md` 8; belum dicentang, QA dan keputusan orchestrator)
 - [ ] Template Cari dan misi P1 Kucing Bu Ratmi: tiga titik, petunjuk dari lemparan tepat, menepi 1,5 detik, batas 12 rumah
 - [ ] HUD misi ("Kucing 0/1", sisa rumah) dan banner selesai/gagal
-- [ ] Flag lanjutan disimpan; headline hari berikutnya membaca flag
-- [ ] Save sederhana (`user://save.json`)
+- [ ] Flag lanjutan disimpan; headline hari berikutnya membaca flag (run 4A: save menyimpan `flag` dan `HeadlineManager` membacanya dan memprioritaskan lanjutan; flag hasil misi ditulis di 4B)
+- [ ] Save sederhana (`user://save.json`) (run 4A: `SaveManager` v1, tulis atomik, simpan hanya di akhir hari, `DataSave.migrasi`; belum dicentang)
 
 **Selesai kalau:** satu hari bisa dimainkan dari koran sampai hasil, dan hari berikutnya menampilkan headline lanjutan sesuai hasil misi. **M2 selesai.**
+
+**Catatan run 4A (2026-10-18, usulan):** satu hari utuh Koran → Rute → Hasil → Hari berikutnya sudah ada dengan save, tanpa misi kucing. Alur hari berurutan ini **prototype yang tidak mengunci struktur sesi** (ROADMAP 5: hari terakhir, game over, target harian, misi lintas hari tetap terbuka). Efek berita utama hanya dicatat. Fase 4 dan M2 tidak dicentang sebelum run 4B dan uji HP.
 
 ---
 

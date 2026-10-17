@@ -16,11 +16,14 @@ const BERKAS_FRAMES: String = "res://assets/sprites/loper/loper_agen_frames.tres
 const BERKAS_JSON: String = "res://assets/sprites/loper/loper_agen.json"
 const BERKAS_CONFIG: String = "res://scripts/config.gd"
 const BERKAS_SCENE_PEMAIN: String = "res://scenes/entities/loper_agen.tscn"
-const BERKAS_SCENE_UTAMA: String = "res://scenes/rute/rute.tscn"
+const BERKAS_SCENE_UTAMA: String = "res://scenes/hari/hari.tscn"
 const BERKAS_SCENE_JALAN_UJI: String = "res://scenes/dev/jalan_uji.tscn"
 const BERKAS_SCENE_GRAYBOX: String = "res://scenes/dev/graybox.tscn"
 const BERKAS_TERJEMAHAN_CSV: String = "res://translations/ui.csv"
 const BERKAS_TERJEMAHAN: String = "res://translations/ui.id.translation"
+## Terjemahan teks berbasis data (headline, misi; run fase4a-koran-hari, S-2): format sama dengan ui.csv.
+const BERKAS_KONTEN_CSV: String = "res://translations/konten.csv"
+const BERKAS_KONTEN: String = "res://translations/konten.id.translation"
 const BERKAS_DESIGN_SPEC: String = "res://docs/design/DESIGN_SPEC.md"
 const BERKAS_ART_DIRECTION: String = "res://docs/ART_DIRECTION.md"
 const BERKAS_GPL: String = "res://assets/palette/loper_master.gpl"
@@ -52,6 +55,10 @@ var _gagal: int = 0
 
 
 func _initialize() -> void:
+	# Jejak `user://save.json` asli diambil sedini mungkin (sebelum tes pertama) dan dibandingkan di akhir: tidak ada tes, probe, maupun autoload
+	# `SaveManager` yang boleh membuat atau mengubahnya (QA-001). `_ready` autoload asli mungkin sudah berjalan sebelum baris ini, jadi
+	# `TesAlurHari` juga memeriksa langsung bahwa autoload asli belum pernah memanggil `simpan` (jumlah_simpan 0).
+	var save_asli_awal: Dictionary = _jejak_save_asli()
 	_test_config_parser()
 	_test_tingkat_sprite()
 	_test_arah_sprite()
@@ -99,6 +106,10 @@ func _initialize() -> void:
 	radar.jalankan()
 	var hasil: TesHasil = TesHasil.new(check, _judul)
 	hasil.jalankan()
+	var hari: TesHari = TesHari.new(check, _judul)
+	hari.jalankan()
+	var headline: TesHeadline = TesHeadline.new(check, _judul)
+	headline.jalankan()
 	var sprite: TesSprite = TesSprite.new(check, _judul, self)
 	sprite.jalankan()
 	var ekspor: TesExport = TesExport.new(check, _judul)
@@ -123,6 +134,10 @@ func _initialize() -> void:
 	await scene_rintangan.jalankan()
 	var scene_hud_rute: TesHudRuteScene = TesHudRuteScene.new(check, _judul, self)
 	await scene_hud_rute.jalankan()
+	var halaman_koran: TesHalamanKoran = TesHalamanKoran.new(check, _judul, self)
+	await halaman_koran.jalankan()
+	var alur_hari: TesAlurHari = TesAlurHari.new(check, _judul, self)
+	await alur_hari.jalankan()
 	var tata_letak: TesTataLetak = TesTataLetak.new(check, _judul, self)
 	await tata_letak.jalankan()
 	var bunyi: TesBunyi = TesBunyi.new(check, _judul, self)
@@ -134,6 +149,8 @@ func _initialize() -> void:
 	var cek_render: TesCekRender = TesCekRender.new(check, _judul, self)
 	await cek_render.jalankan()
 	root.size = ukuran_sebelum
+	var save_asli_akhir: Dictionary = _jejak_save_asli()
+	check(save_asli_awal == save_asli_akhir, "user://save.json asli tidak dibuat, diubah, atau dihapus oleh seluruh run tes (ada/ukuran/sha256: %s -> %s)" % [save_asli_awal, save_asli_akhir])
 	if audio != null:
 		audio.call(&"hentikan_sepeda")
 		audio.call(&"hentikan_lempar")
@@ -141,6 +158,12 @@ func _initialize() -> void:
 		await create_timer(0.25).timeout
 	print("%d lolos, %d gagal" % [_lolos, _gagal])
 	quit(1 if _gagal > 0 else 0)
+
+
+## Jejak `user://save.json` (ada, ukuran, sha256) untuk membuktikan tes tidak menyentuh save asli pemain.
+func _jejak_save_asli() -> Dictionary:
+	var ada: bool = FileAccess.file_exists("user://save.json")
+	return {"ada": ada, "ukuran": FileAccess.get_file_as_bytes("user://save.json").size() if ada else 0, "sha": FileAccess.get_sha256("user://save.json") if ada else ""}
 
 
 ## Mencatat satu pemeriksaan. Kegagalan dicetak sebagai `GAGAL: <label>`.
@@ -527,7 +550,7 @@ func _test_pengaturan_proyek() -> void:
 	check(bool(ProjectSettings.get_setting("rendering/2d/snap/snap_2d_transforms_to_pixel")), "snap_2d_transforms_to_pixel aktif")
 	check(int(ProjectSettings.get_setting("rendering/textures/canvas_textures/default_texture_filter")) == Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST, "filter tekstur bawaan 2D = Nearest")
 	var utama: String = str(ProjectSettings.get_setting("application/run/main_scene"))
-	check(utama == BERKAS_SCENE_UTAMA, "scene utama = %s (run fase3a-rute: rute dari segmen menggantikan jalan uji tanpa ujung sebagai scene utama), dapat '%s'" % [BERKAS_SCENE_UTAMA, utama])
+	check(utama == BERKAS_SCENE_UTAMA, "scene utama = %s (run fase4a-koran-hari: alur hari Koran -> Rute -> Hasil menggantikan rute.tscn, yang tetap dijalankan sendiri oleh probe dan tes, sebagai scene utama; sebelumnya run fase3a-rute memilih rute.tscn), dapat '%s'" % [BERKAS_SCENE_UTAMA, utama])
 	check(ResourceLoader.exists(BERKAS_SCENE_UTAMA) and ResourceLoader.exists(BERKAS_SCENE_JALAN_UJI) and ResourceLoader.exists(BERKAS_SCENE_GRAYBOX), "scene utama, jalan uji (scene dev), dan graybox lama (untuk probe layar) ada dan bisa dimuat")
 
 	var bawaan: Dictionary = ProjectSettings.get_setting("importer_defaults/texture", {})
@@ -624,7 +647,7 @@ func _test_palet() -> void:
 			if not cocok.get_string(3).is_empty():
 				alpha_persen = cocok.get_string(3).to_float()
 			tabel[cocok.get_string(1)] = {"hex": cocok.get_string(2).to_lower(), "alpha": alpha_persen / 100.0}
-	check(tabel.size() == 17, "tabel DESIGN_SPEC 1.1 memuat 17 token (11 warna + 5 radar + 1 dunia), terbaca %d" % tabel.size())
+	check(tabel.size() == 22, "tabel DESIGN_SPEC 1.1 memuat 22 token (11 warna + 5 radar + 1 dunia + 5 halaman koran), terbaca %d" % tabel.size())
 	var skrip_palet: GDScript = load("res://scripts/ui/palette.gd") as GDScript
 	var peta: Dictionary = skrip_palet.get_script_constant_map()
 	check(peta.size() == tabel.size(), "Palette memuat tepat %d token seperti tabel, dapat %d" % [tabel.size(), peta.size()])
@@ -823,28 +846,35 @@ func _baca_csv(jalur: String) -> Dictionary:
 
 
 func _test_terjemahan() -> void:
-	_judul("Terjemahan: translations/ui.csv (AC-16)")
+	_judul("Terjemahan: translations/ui.csv dan konten.csv (AC-16, AC-4 run fase4a-koran-hari)")
 	var isi: Dictionary = _baca_csv(BERKAS_TERJEMAHAN_CSV)
 	var header: PackedStringArray = isi["header"]
 	var baris: Array[PackedStringArray] = isi["baris"]
-	check(header == PackedStringArray(["keys", "id"]), "header CSV = keys,id, dapat %s" % [header])
+	check(header == PackedStringArray(["keys", "id"]), "header ui.csv = keys,id, dapat %s" % [header])
 	check(baris.size() >= 3, "CSV memuat kunci HUD sementara (%d baris)" % baris.size())
+	var isi_konten: Dictionary = _baca_csv(BERKAS_KONTEN_CSV)
+	var header_konten: PackedStringArray = isi_konten["header"]
+	var baris_konten: Array[PackedStringArray] = isi_konten["baris"]
+	check(header_konten == PackedStringArray(["keys", "id"]), "header konten.csv = keys,id, dapat %s" % [header_konten])
+	check(baris_konten.size() >= 20, "konten.csv memuat headline dan misi (%d baris)" % baris_konten.size())
+	var semua_baris: Array[PackedStringArray] = baris.duplicate()
+	semua_baris.append_array(baris_konten)
 	var kunci_sah: Array[String] = []
 	var rapi: bool = true
 	# Awalan layar atau fitur (rule `content-data`): HUD_ (run 0B), JEDA_ (layar jeda, run fase1b-umpan-balik), RUTE_ (scene rute, run fase3a-rute),
-	# HASIL_ (layar hasil, run fase3c-hud-hasil).
-	var re_kunci: RegEx = RegEx.create_from_string("^(?:HUD|JEDA|RUTE|HASIL)_[A-Z0-9]+(?:_[A-Z0-9]+)*$")
-	check(re_kunci.search("JEDA_LANJUT") != null and re_kunci.search("RUTE_SELESAI") != null and re_kunci.search("HASIL_JUDUL") != null and re_kunci.search("LANJUT") == null and re_kunci.search("MENU_X") == null and re_kunci.search("jeda_lanjut") == null, "pemeriksa kunci menerima awalan HUD_/JEDA_/RUTE_/HASIL_ dan menolak tanpa awalan, awalan lain, huruf kecil")
+	# HASIL_ (layar hasil, run fase3c-hud-hasil), KORAN_ dan MISI_ (layar koran, headline, dan misi, run fase4a-koran-hari).
+	var re_kunci: RegEx = RegEx.create_from_string("^(?:HUD|JEDA|RUTE|HASIL|KORAN|MISI)_[A-Z0-9]+(?:_[A-Z0-9]+)*$")
+	check(re_kunci.search("JEDA_LANJUT") != null and re_kunci.search("RUTE_SELESAI") != null and re_kunci.search("HASIL_JUDUL") != null and re_kunci.search("KORAN_NAMA") != null and re_kunci.search("MISI_P1_KUCING_HUD") != null and re_kunci.search("LANJUT") == null and re_kunci.search("MENU_X") == null and re_kunci.search("jeda_lanjut") == null, "pemeriksa kunci menerima awalan HUD_/JEDA_/RUTE_/HASIL_/KORAN_/MISI_ dan menolak tanpa awalan, awalan lain, huruf kecil")
 	var re_pengganti: RegEx = RegEx.create_from_string("\\{([^}]*)\\}")
-	for entri: PackedStringArray in baris:
+	for entri: PackedStringArray in semua_baris:
 		if entri.size() != 2:
 			rapi = false
 			check(false, "tiap baris CSV punya tepat dua kolom (keys,id): %s" % [entri])
 			continue
 		var kunci: String = entri[0]
 		var nilai: String = entri[1]
-		check(re_kunci.search(kunci) != null, "kunci %s UPPER_SNAKE_CASE berawalan HUD_, JEDA_, RUTE_, atau HASIL_" % kunci)
-		check(not kunci_sah.has(kunci), "kunci %s tidak duplikat" % kunci)
+		check(re_kunci.search(kunci) != null, "kunci %s UPPER_SNAKE_CASE berawalan HUD_, JEDA_, RUTE_, HASIL_, KORAN_, atau MISI_" % kunci)
+		check(not kunci_sah.has(kunci), "kunci %s tidak duplikat (di ui.csv dan konten.csv)" % kunci)
 		check(not nilai.strip_edges().is_empty(), "kunci %s punya nilai (tidak kosong)" % kunci)
 		for cocok: RegExMatch in re_pengganti.search_all(nilai):
 			check(RegEx.create_from_string("^[a-z][a-z0-9_]*$").search(cocok.get_string(1)) != null, "placeholder {%s} di kunci %s berupa nama huruf kecil" % [cocok.get_string(1), kunci])
@@ -853,15 +883,18 @@ func _test_terjemahan() -> void:
 	for kunci: String in ["HUD_KECEPATAN", "HUD_KECEPATAN_ANGKA", "HUD_KIDAL"]:
 		check(kunci_sah.has(kunci), "kunci %s ada (dipakai HUD sementara)" % kunci)
 	# Hasil impor: .csv.import dan .translation ter-commit, terdaftar di project.godot dengan fallback id.
-	check(FileAccess.file_exists(BERKAS_TERJEMAHAN_CSV + ".import"), "ui.csv.import ada (ter-commit)")
-	check(FileAccess.file_exists(BERKAS_TERJEMAHAN), "ui.id.translation hasil impor ada (ter-commit)")
 	var terdaftar: PackedStringArray = ProjectSettings.get_setting("internationalization/locale/translations", PackedStringArray())
-	check(terdaftar.has(BERKAS_TERJEMAHAN), "ui.id.translation terdaftar di internationalization/locale/translations, dapat %s" % [terdaftar])
+	for pasangan: Array in [[BERKAS_TERJEMAHAN_CSV, BERKAS_TERJEMAHAN], [BERKAS_KONTEN_CSV, BERKAS_KONTEN]]:
+		var sumber: String = pasangan[0]
+		var hasil_impor: String = pasangan[1]
+		check(FileAccess.file_exists(sumber + ".import"), "%s.import ada (ter-commit)" % sumber.get_file())
+		check(FileAccess.file_exists(hasil_impor), "%s hasil impor ada (ter-commit)" % hasil_impor.get_file())
+		check(terdaftar.has(hasil_impor), "%s terdaftar di internationalization/locale/translations, dapat %s" % [hasil_impor.get_file(), terdaftar])
+		var impor: ConfigFile = ConfigFile.new()
+		check(impor.load(sumber + ".import") == OK and str(impor.get_value("remap", "importer", "")) == "csv_translation", "%s diimpor oleh csv_translation" % sumber.get_file())
 	check(str(ProjectSettings.get_setting("internationalization/locale/fallback")) == "id", "locale fallback = id")
-	var impor: ConfigFile = ConfigFile.new()
-	check(impor.load(BERKAS_TERJEMAHAN_CSV + ".import") == OK and str(impor.get_value("remap", "importer", "")) == "csv_translation", "ui.csv diimpor oleh csv_translation")
 	# Tiap kunci menghasilkan teks (bukan kuncinya) dan sama dengan kolom id di CSV.
-	for entri: PackedStringArray in baris:
+	for entri: PackedStringArray in semua_baris:
 		if entri.size() != 2:
 			continue
 		var hasil_tr: String = tr(entri[0])
@@ -871,21 +904,38 @@ func _test_terjemahan() -> void:
 	# Penjaga rujukan kunci: skrip dan scene hanya boleh memakai kunci yang ada.
 	var jumlah_skrip: int = 0
 	var jumlah_kunci_dirujuk: int = 0
+	var teks_kode: String = ""
 	for berkas: String in _daftar_berkas("res://scripts", ["gd"]):
 		jumlah_skrip += 1
 		var teks: String = FileAccess.get_file_as_string(berkas)
+		teks_kode += teks
 		var rujukan: Array[String] = _kunci_tr_di_skrip(teks)
 		jumlah_kunci_dirujuk += rujukan.size()
 		for kunci: String in rujukan:
-			check(kunci_sah.has(kunci), "%s: tr(\"%s\") merujuk kunci yang ada di ui.csv" % [berkas, kunci])
+			check(kunci_sah.has(kunci), "%s: tr(\"%s\") merujuk kunci yang ada di CSV" % [berkas, kunci])
 		check(_teks_literal_di_skrip(teks, kunci_sah).is_empty(), "%s: tidak ada teks pemain tertanam (properti teks hanya dari tr() atau kunci): %s" % [berkas, "; ".join(_teks_literal_di_skrip(teks, kunci_sah))])
 	check(jumlah_kunci_dirujuk >= 1, "skrip memakai kunci tr() (%d rujukan di %d skrip)" % [jumlah_kunci_dirujuk, jumlah_skrip])
 	var jumlah_teks_scene: int = 0
 	for berkas: String in _daftar_berkas("res://scenes", ["tscn"]):
 		var teks: String = FileAccess.get_file_as_string(berkas)
+		teks_kode += teks
 		jumlah_teks_scene += _teks_di_scene(teks, []).size()
 		check(_teks_di_scene(teks, kunci_sah).is_empty(), "%s: setiap text/tooltip_text berisi kunci terjemahan yang ada: %s" % [berkas, "; ".join(_teks_di_scene(teks, kunci_sah))])
 	check(jumlah_teks_scene >= 2, "scene memuat properti teks berisi kunci (%d)" % jumlah_teks_scene)
+	# Kunci yatim di awalan baru (AC-4): kunci KORAN_/MISI_/HASIL_HARI_ di ui.csv harus dirujuk skrip atau scene; kunci di konten.csv harus
+	# dirujuk berkas data (assets/data/**.json). Kunci yang dirujuk dari data tapi tidak ada di CSV ditangkap pemeriksa data (tes_headline).
+	var teks_data: String = ""
+	for berkas: String in _daftar_berkas("res://assets/data", ["json"]):
+		teks_data += FileAccess.get_file_as_string(berkas)
+	var yatim: Array[String] = []
+	for entri: PackedStringArray in baris:
+		if entri.size() == 2 and (entri[0].begins_with("KORAN_") or entri[0].begins_with("MISI_") or entri[0].begins_with("HASIL_HARI_")) and not teks_kode.contains(entri[0]):
+			yatim.append(entri[0])
+	for entri: PackedStringArray in baris_konten:
+		if entri.size() == 2 and not teks_data.contains("\"" + entri[0] + "\""):
+			yatim.append(entri[0])
+	check(yatim.is_empty(), "tidak ada kunci CSV yatim di awalan baru (KORAN_, MISI_, HASIL_HARI_): %s" % [yatim])
+	check(teks_kode.contains("HUD_KECEPATAN") and teks_data.contains("MISI_P1_KUCING_HEADLINE"), "pemindai yatim melihat rujukan di skrip/scene dan di data")
 	# Penjaga harus menolak contoh buruk (bukan lolos kosong).
 	check(_kunci_tr_di_skrip("label.text = tr(\"HUD_KIDAL\")\nvar x: String = tr(&\"HUD_KECEPATAN\")") == ["HUD_KIDAL", "HUD_KECEPATAN"], "pemindai tr() mengenali tr(\"...\") dan tr(&\"...\")")
 	check(not kunci_sah.has("KUNCI_YANG_TIDAK_ADA") and _kunci_tr_di_skrip("x = tr(\"KUNCI_YANG_TIDAK_ADA\")") == ["KUNCI_YANG_TIDAK_ADA"], "kunci tr() yang tidak ada di CSV akan terdeteksi")
@@ -1012,7 +1062,7 @@ func _test_probe_keluar_bersih() -> void:
 			continue
 		var teks: String = FileAccess.get_file_as_string(berkas)
 		# Sejak run fase3a-rute scene utama = rute.tscn; probe yang menguji jalan uji memuat `jalan_uji.tscn` langsung.
-		if not teks.contains("application/run/main_scene") and not teks.contains("scenes/dev/jalan_uji.tscn") and not teks.contains("scenes/rute/rute.tscn"):
+		if not teks.contains("application/run/main_scene") and not teks.contains("scenes/dev/jalan_uji.tscn") and not teks.contains("scenes/rute/rute.tscn") and not teks.contains("scenes/koran/halaman_koran.tscn") and not teks.contains("scenes/hari/hari.tscn"):
 			continue
 		probe_scene += 1
 		var langsung: Array[String] = _quit_langsung(teks)

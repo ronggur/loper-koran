@@ -1,0 +1,10 @@
+[
+	{"id": "utama_hajatan", "jenis": "utama", "aktif": true, "teks": "KORAN_UTAMA_HAJATAN", "distrik": ["perumahan", "perkampungan"], "efek": "hajatan", "syarat": {}, "bobot": 2, "jeda": 4},
+	{"id": "utama_tujuh_belasan", "jenis": "utama", "aktif": true, "teks": "KORAN_UTAMA_TUJUH_BELASAN", "distrik": [], "efek": "tujuh_belasan", "syarat": {}, "bobot": 1, "jeda": 4},
+	{"id": "utama_pasar_kaget", "jenis": "utama", "aktif": true, "teks": "KORAN_UTAMA_PASAR_KAGET", "distrik": ["perumahan", "ruko"], "efek": "pasar_kaget", "syarat": {}, "bobot": 2, "jeda": 4},
+	{"id": "utama_jalan_diperbaiki", "jenis": "utama", "aktif": true, "teks": "KORAN_UTAMA_JALAN_DIPERBAIKI", "distrik": ["perumahan", "ruko"], "efek": "jalan_diperbaiki", "syarat": {}, "bobot": 2, "jeda": 4},
+	{"id": "utama_mati_lampu", "jenis": "utama", "aktif": true, "teks": "KORAN_UTAMA_MATI_LAMPU", "distrik": ["perumahan", "perkampungan"], "efek": "mati_lampu", "syarat": {}, "bobot": 2, "jeda": 4},
+	{"id": "utama_hujan_deras", "jenis": "utama", "aktif": false, "teks": "KORAN_UTAMA_HUJAN_DERAS", "distrik": ["desa", "sungai", "pasar"], "efek": "hujan_deras", "syarat": {}, "bobot": 2, "jeda": 4},
+	{"id": "utama_air_pasang", "jenis": "utama", "aktif": false, "teks": "KORAN_UTAMA_AIR_PASANG", "distrik": ["sungai"], "efek": "air_pasang", "syarat": {}, "bobot": 2, "jeda": 4},
+	{"id": "utama_panen_raya", "jenis": "utama", "aktif": false, "teks": "KORAN_UTAMA_PANEN_RAYA", "distrik": ["desa"], "efek": "panen_raya", "syarat": {}, "bobot": 2, "jeda": 4}
+]

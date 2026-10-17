@@ -1,0 +1,4 @@
+[
+	{"id": "lanjutan_kucing_belum", "jenis": "lanjutan", "aktif": true, "teks": "KORAN_LANJUT_KUCING_BELUM", "distrik": ["perumahan"], "syarat": {"flag": "kucing_belum"}, "slot": "misi", "misi_ditunda": true, "bobot": 1, "jeda": 30},
+	{"id": "lanjutan_kucing_ketemu", "jenis": "lanjutan", "aktif": true, "teks": "KORAN_LANJUT_KUCING_KETEMU", "distrik": ["perumahan"], "syarat": {"flag": "kucing_ketemu"}, "slot": "ringan", "bobot": 1, "jeda": 30}
+]
