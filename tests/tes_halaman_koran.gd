@@ -156,6 +156,8 @@ func _test_tata_letak_semua_ukuran() -> void:
 		var viewport: Rect2 = Rect2(Vector2.ZERO, _tree.root.get_visible_rect().size)
 		check(is_equal_approx(viewport.size.x, lebar) and is_equal_approx(viewport.size.y, TINGGI_VIEWPORT), "jendela %dx%d: viewport game %dx360 (skala bulat)" % [ukuran[0], ukuran[1], int(lebar)])
 		var aman: Rect2 = viewport.grow_individual(-float(Config.KORAN_MARGIN_PX), -float(Config.KORAN_MARGIN_PX), -float(Config.KORAN_MARGIN_PX), -float(Config.KORAN_MARGIN_PX))
+		for tombol: Button in [koran.tombol_ambil(), koran.tombol_lewati(), koran.tombol_berangkat()]:
+			check(tombol.custom_minimum_size.x >= TOMBOL_MIN_PX and tombol.custom_minimum_size.y >= TOMBOL_MIN_PX, "%dx%d: ukuran minimum tombol %s >= 42 px game dua sisi, tidak bergantung pada panjang teks: %s" % [ukuran[0], ukuran[1], tombol.name, tombol.custom_minimum_size])
 		var kasus: Dictionary = _kasus_halaman()
 		for nama: String in kasus:
 			koran.isi(kasus[nama], 12, "perumahan")
