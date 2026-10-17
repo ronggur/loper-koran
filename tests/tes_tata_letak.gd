@@ -15,6 +15,19 @@ const DT: float = 1.0 / 60.0
 const KASUS: Array = [[1920, 1080, 640], [2340, 1080, 780], [2400, 1080, 800]]
 ## Langkah sampai kecepatan dan geseran dorongan mantap (ngebut: 1 detik rampa + 3 detik penghalusan; rem: berhenti + penghalusan).
 const LANGKAH_MANTAP: int = 240
+## Pusat tombol dan zona tap bel yang diharapkan (masukan uji pemilik 2026-10-17, PR #33: pojok susah dijangkau jempol), koordinat
+## viewport game: [lebar, kidal, pusat tanpa inset, pusat dengan inset tiruan awal_x 10 / akhir_x 11 / bawah 20 (geser 6 / 7 / 12)].
+## Kanan (lebar - 64, 296), kidal (64, 296): kidal hanya dicerminkan mendatar. Dulu (lebar - 28, 332) / (28, 332), di pojok.
+const BEL_HARAPAN: Array = [
+	[640, false, Vector2(576, 296), Vector2(569, 284)],
+	[640, true, Vector2(64, 296), Vector2(70, 284)],
+	[780, false, Vector2(716, 296), Vector2(709, 284)],
+	[780, true, Vector2(64, 296), Vector2(70, 284)],
+	[800, false, Vector2(736, 296), Vector2(729, 284)],
+	[800, true, Vector2(64, 296), Vector2(70, 284)],
+]
+## Langkah `perbarui(DT)` supaya teks dan jeda bel (0,5 + 1,0 detik) habis sebelum ketukan bel berikutnya diharapkan berbunyi.
+const LANGKAH_BEL_REDA: int = 100
 
 var _cek: Callable
 var _judul: Callable
@@ -143,7 +156,7 @@ func _test_tata_letak(kasus: Array, kidal: bool) -> void:
 ## HUD rute final (run fase3c-hud-hasil AC-5, AC-8, AC-9; dulu tombol bel dan panel skor HUD dev run 3B). Harapan literal dari DESIGN_SPEC
 ## 3.1-3.5 dan 3.8: tombol jeda area sentuh (17, 4) 42x42; radar seberang (4, 10) 12x172 dan dekat (lebar - 16, 10) 12x172, tidak ditukar
 ## saat kidal; panel progres lebar 260 di tengah, y 8; panel skor berakhir 28 dari tepi kanan, y 8, panel koin 5 di kirinya; tombol bel
-## pusat (lebar - 64, 296), kidal (64, 296). Tidak ada tumpang tindih antar elemen (zona tap bel = kotak luar lingkaran radius 28), tidak
+## pusat dari `BEL_HARAPAN` ((lebar - 64, 296), kidal (64, 296)). Tidak ada tumpang tindih antar elemen (zona tap bel = kotak luar lingkaran radius 28), tidak
 ## ada yang masuk zona stick, panel atas dan radar tidak menutupi sprite pemain (diam dan dorongan maju penuh), panel progres di dalam
 ## 640 tengah, semua di dalam layar, tidak ada yang menerima sentuhan kecuali tombol jeda. Tanpa tombol dev Kidal, Bantu, Main lagi.
 func _test_tata_letak_rute(kasus: Array, kidal: bool) -> void:
@@ -168,9 +181,10 @@ func _test_tata_letak_rute(kasus: Array, kidal: bool) -> void:
 	check(_anak(akar, "TombolKidal") == null and _anak(akar, "TombolBantu") == null and _anak(akar, "PanelAkhir").find_child("TombolUlang", true, false) != null and not akar.panel_akhir().tombol_tampil(), "%s: tanpa tombol dev Kidal/Bantu di HUD; tombol banner hanya untuk galat" % tag)
 	var layar: Rect2 = Rect2(Vector2.ZERO, akar.get_viewport_rect().size)
 	var bel: Rect2 = hud.rect_tombol_bel()
-	var bel_harapan: Rect2 = Rect2(44, 276, 40, 40) if kidal else Rect2(lebar - 84, 276, 40, 40)
+	var harapan: Array = _bel_harapan(lebar, kidal)
+	var pusat: Vector2 = harapan[2]
+	var bel_harapan: Rect2 = Rect2(pusat - Vector2(20, 20), Vector2(40, 40))
 	check(bel == bel_harapan, "%s: tombol bel %s, dapat %s" % [tag, bel_harapan, bel])
-	var pusat: Vector2 = Vector2(64, 296) if kidal else Vector2(lebar - 64, 296)
 	check(TouchZones.pusat_bel(lebar, kidal) == pusat and bel.get_center() == pusat and akar.kontrol_router().geser_bel == Vector2.ZERO, "%s: pusat zona tap bel = pusat tombol %s, tanpa geseran zona aman" % [tag, pusat])
 	var zona_bel: Rect2 = Rect2(pusat - Vector2(28, 28), Vector2(56, 56))
 	check(hud.rect_tombol_jeda() == Rect2(17, 4, 42, 42), "%s: area sentuh tombol jeda (17, 4) 42x42 (tidak dicerminkan), dapat %s" % [tag, hud.rect_tombol_jeda()])
@@ -205,6 +219,7 @@ func _test_tata_letak_rute(kasus: Array, kidal: bool) -> void:
 		if c.mouse_filter != Control.MOUSE_FILTER_IGNORE and not (c is TombolJeda):
 			penangkap.append(String(c.name))
 	check(penangkap.is_empty(), "%s: elemen HUD rute selain tombol jeda tidak menerima sentuhan: %s" % [tag, penangkap])
+	await _test_bel_dijangkau(akar, hud, lebar, kidal, tag)
 	if lebar == 780 and not kidal:
 		await _test_zona_aman_tiruan(akar, hud, lebar)
 	_tree.root.remove_child(akar)
@@ -262,6 +277,100 @@ func _cek_jari_bel(akar: RuteMain, titik: Vector2, tag: String) -> void:
 	check(not router.bel_ditahan() and router.jumlah_swipe_selesai == swipe_selesai, "%s: jari diangkat tanpa swipe atau tap" % tag)
 
 
+## Baris `BEL_HARAPAN` untuk lebar dan mode tangan.
+func _bel_harapan(lebar: int, kidal: bool) -> Array:
+	for baris: Array in BEL_HARAPAN:
+		if baris[0] == lebar and baris[1] == kidal:
+			return baris
+	check(false, "BEL_HARAPAN tidak punya baris lebar %d kidal %s" % [lebar, kidal])
+	return [lebar, kidal, Vector2.ZERO, Vector2.ZERO]
+
+
+## Masukan review pemilik 2026-10-17 (PR #33): bel di posisi baru terjangkau jempol, tetap di dalam zona swipe sisi lempar, tidak menumpuk
+## dengan elemen HUD lain dan tidak masuk zona stick (juga dengan inset aman tiruan), sentuhan sungguhan yang dimulai di zona bel baru
+## membunyikan bel dan tidak memulai swipe (walau digeser), dan sentuhan di posisi bel LAMA di pojok kini swipe/tap biasa. Harapan literal.
+func _test_bel_dijangkau(akar: RuteMain, hud: HudRute, lebar: int, kidal: bool, tag: String) -> void:
+	var harapan: Array = _bel_harapan(lebar, kidal)
+	var pusat: Vector2 = harapan[2]
+	var router: TouchRouter = akar.kontrol_router()
+	_cek_bel_bebas(hud, lebar, kidal, pusat, "%s bel" % tag)
+	# Ketukan di pusat membunyikan bel adegan (bel reda dulu supaya tidak sedang jeda bel).
+	_langkah(akar, LANGKAH_BEL_REDA)
+	await _cek_jari_bel(akar, pusat, "%s bel baru" % tag)
+	# Tepi zona radius 28 inklusif: atas dan sisi dalam (ke arah tengah layar) masih bel; 1 px di luarnya swipe.
+	var ke_dalam: float = 1.0 if kidal else -1.0
+	_cek_klaim_bel(router, pusat + Vector2(0, -28), true, "%s tepi atas zona bel" % tag)
+	_cek_klaim_bel(router, pusat + Vector2(28 * ke_dalam, 0), true, "%s tepi dalam zona bel" % tag)
+	_cek_klaim_bel(router, pusat + Vector2(0, -29), false, "%s 1 px di atas zona bel" % tag)
+	_cek_klaim_bel(router, pusat + Vector2(29 * ke_dalam, 0), false, "%s 1 px di dalam (ke tengah) zona bel" % tag)
+	# Jari bel yang digeser jauh ke zona swipe tetap jari bel: tidak ada garis bidik, swipe, atau tap.
+	var swipe_awal: int = router.jumlah_swipe_selesai
+	var tap_awal: int = router.jumlah_tap_selesai
+	_sentuh_layar(8, pusat, true)
+	_geser_layar(8, pusat + Vector2(150 * ke_dalam, -120))
+	check(router.bel_ditahan() and not router.swipe_aktif(), "%s: jari bel digeser ke %s tetap jari bel, bukan swipe" % [tag, pusat + Vector2(150 * ke_dalam, -120)])
+	_sentuh_layar(8, pusat + Vector2(150 * ke_dalam, -120), false)
+	check(router.jumlah_swipe_selesai == swipe_awal and router.jumlah_tap_selesai == tap_awal, "%s: jari bel yang digeser lalu diangkat tidak menjadi swipe atau tap" % tag)
+	# Posisi bel lama (pojok) kini sentuhan swipe biasa: diklaim swipe, diangkat tanpa geser = tap; tidak membunyikan bel.
+	var lama: Vector2 = Vector2(28, 332) if kidal else Vector2(lebar - 28, 332)
+	var bel_awal: int = router.jumlah_bel
+	_sentuh_layar(9, lama, true)
+	check(router.swipe_aktif() and not router.bel_ditahan() and router.jumlah_bel == bel_awal, "%s: sentuhan di posisi bel lama %s kini swipe, bukan bel" % [tag, lama])
+	_sentuh_layar(9, lama, false)
+	check(router.jumlah_swipe_selesai == swipe_awal + 1 and router.jumlah_tap_selesai == tap_awal + 1 and router.jumlah_bel == bel_awal, "%s: sentuhan di posisi bel lama diangkat = swipe/tap biasa" % tag)
+	# Inset aman tiruan (awal_x 10, akhir_x 11, bawah 20): bel ikut bergeser ke pusat literal, tetap bebas dan tetap terklaim.
+	var inset: ZonaAman.Inset = ZonaAman.Inset.new()
+	inset.awal_x = 10
+	inset.akhir_x = 11
+	inset.bawah = 20
+	hud.atur_inset(inset)
+	await _tree.process_frame
+	await _tree.process_frame
+	akar.perbarui(0.0)
+	var pusat_inset: Vector2 = harapan[3]
+	check(hud.rect_tombol_bel() == Rect2(pusat_inset - Vector2(20, 20), Vector2(40, 40)) and TouchZones.pusat_bel(lebar, kidal, router.geser_bel) == pusat_inset, "%s inset tiruan: tombol dan zona bel berpusat di %s, dapat %s" % [tag, pusat_inset, hud.rect_tombol_bel()])
+	_cek_bel_bebas(hud, lebar, kidal, pusat_inset, "%s inset tiruan bel" % tag)
+	_cek_klaim_bel(router, pusat_inset, true, "%s inset tiruan pusat bel" % tag)
+	_cek_klaim_bel(router, pusat_inset + Vector2(0, -28), true, "%s inset tiruan tepi atas zona bel" % tag)
+	hud.atur_inset(null)
+	await _tree.process_frame
+	akar.perbarui(0.0)
+	check(hud.rect_tombol_bel().get_center() == pusat and router.geser_bel == Vector2.ZERO, "%s: inset kembali nol, bel kembali ke %s" % [tag, pusat])
+	_langkah(akar, LANGKAH_BEL_REDA)
+
+
+## Zona tap bel (kotak luar lingkaran radius 28 di `pusat`) dan tombolnya: di dalam zona swipe sisi lempar, di luar zona stick, tidak
+## menumpuk dengan tombol jeda, radar (y 10-182), panel atas, dan panel bawah.
+func _cek_bel_bebas(hud: HudRute, lebar: int, kidal: bool, pusat: Vector2, tag: String) -> void:
+	var zona_bel: Rect2 = Rect2(pusat - Vector2(28, 28), Vector2(56, 56))
+	check(zona_bel.encloses(hud.rect_tombol_bel()), "%s: tombol %s di dalam zona tap %s" % [tag, hud.rect_tombol_bel(), zona_bel])
+	check(TouchZones.rect_swipe(lebar, kidal).encloses(zona_bel), "%s: zona tap %s di dalam zona swipe sisi lempar %s" % [tag, zona_bel, TouchZones.rect_swipe(lebar, kidal)])
+	check(not zona_bel.intersects(TouchZones.rect_stick(lebar, kidal), true), "%s: zona tap %s tidak masuk zona stick" % [tag, zona_bel])
+	var lain: Array = [["tombol jeda", hud.rect_tombol_jeda()], ["radar seberang", hud.rect_radar_seberang()], ["radar dekat", hud.rect_radar_dekat()], ["panel progres", hud.rect_panel_progres()], ["panel koin", hud.rect_panel_koin()], ["panel skor", hud.rect_panel_skor()], ["panel kecepatan", hud.rect_panel_kecepatan()], ["panel koran", hud.rect_panel_koran()]]
+	for pasang: Array in lain:
+		check(not zona_bel.intersects(pasang[1], true), "%s: zona tap %s tidak menumpuk dengan %s %s" % [tag, zona_bel, pasang[0], pasang[1]])
+
+
+## Jari sungguhan turun di `titik` lalu diangkat: `bel` True = router mengklaimnya sebagai jari bel (bukan swipe/stick) dan diangkat tanpa
+## swipe atau tap; False = router mengklaimnya sebagai swipe, bukan bel.
+func _cek_klaim_bel(router: TouchRouter, titik: Vector2, bel: bool, tag: String) -> void:
+	var bel_awal: int = router.jumlah_bel
+	var swipe_awal: int = router.jumlah_swipe_selesai
+	_sentuh_layar(5, titik, true)
+	if bel:
+		check(router.jumlah_bel == bel_awal + 1 and router.bel_ditahan() and not router.swipe_aktif() and not router.stick_aktif(), "%s: jari di %s diklaim zona bel" % [tag, titik])
+	else:
+		check(router.jumlah_bel == bel_awal and router.swipe_aktif() and not router.bel_ditahan(), "%s: jari di %s menjadi swipe, bukan bel" % [tag, titik])
+	_sentuh_layar(5, titik, false)
+	if bel:
+		check(router.jumlah_swipe_selesai == swipe_awal, "%s: jari bel di %s diangkat tanpa swipe" % [tag, titik])
+
+
+func _langkah(akar: RuteMain, n: int) -> void:
+	for i: int in range(n):
+		akar.perbarui(DT)
+
+
 ## QA-003 iterasi 1: inset aman ATAS tiruan 15 px game (lain 0) -> geseran atas = max(4, 15) - 4 = 11 (acuan area sentuh jeda y 4). Semua
 ## elemen atas turun 11 sama besar; radar bawah tetap y 182; elemen bawah tidak berubah. Harapan literal.
 func _test_zona_aman_atas(akar: RuteMain, hud: HudRute, lebar: int) -> void:
@@ -294,5 +403,14 @@ func _sentuh_layar(index: int, posisi_viewport: Vector2, tekan: bool) -> void:
 	peristiwa.index = index
 	peristiwa.position = posisi_viewport * 3.0
 	peristiwa.pressed = tekan
+	Input.parse_input_event(peristiwa)
+	Input.flush_buffered_events()
+
+
+## Event geser layar (jendela x3) untuk jari `index` ke `posisi_viewport` (koordinat viewport game).
+func _geser_layar(index: int, posisi_viewport: Vector2) -> void:
+	var peristiwa: InputEventScreenDrag = InputEventScreenDrag.new()
+	peristiwa.index = index
+	peristiwa.position = posisi_viewport * 3.0
 	Input.parse_input_event(peristiwa)
 	Input.flush_buffered_events()
