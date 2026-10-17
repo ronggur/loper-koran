@@ -48,6 +48,7 @@ func jalankan() -> void:
 	_test_manager_semua_dalam_jeda()
 	_test_manager_tidak_mengubah_masukan()
 	_test_catat_jeda()
+	_test_contoh_hari_satu_tiga_di_dokumen()
 
 
 # --- Pembantu ---
@@ -815,3 +816,21 @@ func _test_catat_jeda() -> void:
 	m.flag = ["kucing_belum"]
 	var lanjutan: HeadlineManager.JedaBaru = HeadlineManager.catat_jeda(HeadlineManager.susun(m), "")
 	check(lanjutan.headline.get("lanjutan_kucing_belum") == 3 + 30, "headline lanjutan yang tampil dicatat hari + jeda (3 + 30)")
+
+
+func _test_contoh_hari_satu_tiga_di_dokumen() -> void:
+	_judul.call("CONTENT_GUIDE 8: tabel contoh headline hari 1-3 = keluaran HeadlineManager atas data nyata (AC-3, AC-27)")
+	var panduan: String = FileAccess.get_file_as_string("res://docs/CONTENT_GUIDE.md")
+	check(not panduan.is_empty() and panduan.contains("Warta Kring") and panduan.contains("Perumahan Melati"), "CONTENT_GUIDE memuat keputusan nama koran dan perumahan")
+	var jeda_headline: Dictionary = {}
+	var jeda_misi: Dictionary = {}
+	for hari: int in [1, 2, 3]:
+		var m: HeadlineManager.Masukan = _masukan_nyata(hari)
+		m.headline_jeda = jeda_headline.duplicate()
+		m.misi_jeda = jeda_misi.duplicate()
+		var h: HeadlineManager.Halaman = HeadlineManager.susun(m)
+		var baris_diharapkan: String = "| %d | %s | %s | %s |" % [hari, tr(h.utama.teks), tr(h.misi.teks) if h.misi != null else "(tidak ada misi)", tr(h.ringan.teks)]
+		check(panduan.contains(baris_diharapkan), "tabel hari %d di CONTENT_GUIDE = data nyata (P1 diambil di hari 1): %s" % [hari, baris_diharapkan])
+		var jeda: HeadlineManager.JedaBaru = HeadlineManager.catat_jeda(h, "p1_kucing" if hari == 1 else "")
+		jeda_headline.merge(jeda.headline, true)
+		jeda_misi.merge(jeda.misi, true)

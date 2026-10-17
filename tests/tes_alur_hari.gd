@@ -202,6 +202,8 @@ func _test_satu_hari_utuh() -> void:
 	check(s["misi_jeda"] == {"p1_kucing": 8}, "misi P1 diambil hari 1 jeda 7: boleh lagi hari 8; dapat %s" % [s["misi_jeda"]])
 	check(s["headline_jeda"].has(halaman1[0]) and s["headline_jeda"].has(halaman1[2]) and s["headline_jeda"].size() == 2, "jeda headline utama dan ringan hari 1 tercatat: %s" % [s["headline_jeda"]])
 	check(s["flag"] == [] and s["pengaturan"] == {"kidal": false, "mode_bantu": false, "suara": 1.0, "musik": 1.0}, "tanpa flag di 4A (misi belum punya hasil) dan pengaturan bawaan tersimpan")
+	var contoh: String = FileAccess.get_file_as_string("res://docs/DATA_SCHEMA.md")
+	check(contoh.contains(FileAccess.get_file_as_string(_jalur()).strip_edges()), "contoh save di DATA_SCHEMA 4 = isi berkas save nyata sesudah hari 1 (byte demi byte)")
 	check(hari.status().keadaan == MesinHari.Keadaan.KORAN and hari.status().hari == 2 and hari.koran().tampil() and hari.rute() == null, "kembali ke layar koran hari 2, rute dibuang")
 	check(hari.get_child_count() == 1 + (1 if m.get_parent() == hari else 0), "node rute dibuang dari scene hari (hanya koran yang tersisa)")
 	check(hari.koran().teks_tampil()[1] == "Hari 2 · Perumahan Melati", "layar koran hari 2: 'Hari 2 · Perumahan Melati'")

@@ -59,8 +59,8 @@ Ringkasan satu baris di bawah headline misi (GDD 10.3): maksimal 60 karakter, be
 
 ## 6. Proses menulis dan memeriksa
 
-1. Tulis teks langsung di file data (`assets/data/headlines/*.json`, `assets/data/missions/*.json`), bukan di kode.
-2. Cek panjang otomatis lewat tes (`tests/run_tests.gd`) dengan batas di bagian 2 dan 3.
+1. Tulis teks di `translations/konten.csv` (kolom `keys,id`) dan rujuk dengan kunci dari file data (`assets/data/headlines/*.json`, `assets/data/missions/*.json`: `KORAN_UTAMA_*`, `KORAN_RINGAN_*`, `KORAN_LANJUT_*`, `MISI_<ID>_*`), bukan di kode dan bukan kalimat jadi di JSON (rule `content-data`, S-2). Setelah mengubah CSV: `godot --headless --import`, dan commit `.translation` hasilnya.
+2. Cek panjang dan gaya otomatis lewat tes (`tests/run_tests.gd`, `PemuatMisi`/`PemuatHeadline`) dengan batas di bagian 2 dan 3, terhadap teks hasil terjemahan.
 3. Baca di HP pada layar koran asli. Teks yang terasa panjang di HP dipotong, walaupun lolos batas karakter.
 4. Satu orang selain penulis membaca semua headline sebelum dimasukkan, untuk memastikan humor tidak menyinggung.
 
@@ -76,9 +76,27 @@ Bahasa Inggris atau bahasa lain belum direncanakan. Kalau nanti ada, semua teks 
 | Pak Sarmin | Desa | Petani, punya kerbau | D1 |
 | Pak Ujang | Pinggir sungai | Pemilik perahu di dermaga | S1 |
 
-## 8. Yang perlu diputuskan
+## 8. Keputusan dan contoh headline
+
+**Diputuskan pemilik 2026-10-17 (run 4A, nama masih placeholder berlabel usulan):** nama koran **"Warta Kring"** dan nama perumahan **"Perumahan Melati"**. Keduanya hanya ada di `translations/ui.csv` (satu kunci per nama: `KORAN_NAMA`, `KORAN_DISTRIK_PERUMAHAN`) dan tampil di layar koran sebagai "Hari N · Perumahan Melati".
+
+**Efek berita utama belum diterapkan (S-5).** Di 4A berita utama hanya dicatat dan ditampilkan sebagai teks; efek dunianya (hujan, tenda hajatan, jalan menyempit) baru ada di Fase 7. Penguji tidak perlu menunggu hujan turun saat headline hujan tampil (headline hujan malah belum aktif di pool perumahan).
+
+**Contoh headline hari 1 sampai 3** (dari data nyata dengan `HeadlineManager`, tanpa flag; P1 diambil di hari 1 sehingga hari 2 dan 3 tanpa misi karena jeda 7 hari; dijaga `tests/tes_headline.gd`):
+
+| Hari | Berita utama | Misi sampingan | Berita ringan |
+|---|---|---|---|
+| 1 | Jalan Sedang Diperbaiki Hari Ini | Kucing Bu Ratmi Hilang Sejak Semalam | Pohon Mangga Depan Rumah Berbuah Lebat |
+| 2 | Hajatan Warga Digelar Hari Ini | (tidak ada misi) | Anak Blok B Gelar Lomba Balap Karung |
+| 3 | Mati Lampu Semalam, Pagi Masih Redup | (tidak ada misi) | Satpam Kompleks Juara Teka-Teki Silang |
+
+Bila P1 dilewati di hari 1, hari 2 dan 3 menampilkan lagi "Kucing Bu Ratmi Hilang Sejak Semalam" (melewati tidak memicu jeda; berita utama dan ringan sama dengan tabel di atas). Headline lanjutan ("Kucing Bu Ratmi Belum Ditemukan", "Kucing Bu Ratmi Sudah Pulang ke Rumah") baru muncul setelah misi bisa selesai atau gagal (4B).
+
+Isi data 4A: 8 berita utama (lima aktif di perumahan: hajatan, tujuh belasan, pasar kaget, jalan diperbaiki, mati lampu; tiga `aktif: false` untuk distrik lain), 8 berita ringan, 2 lanjutan, dan misi P1. **Ditandai untuk ditinjau pemilik:** "Warga Hias Jalan untuk Tujuh Belasan" dan "Hajatan Warga Digelar Hari Ini" (budaya, bagian 5: ditulis netral, tanpa lelucon); "Mati Lampu Semalam, Pagi Masih Redup" (efek mati lampu menurut GDD 10.7); nama "Warung Bu Inah" dan "Blok B" rekaan.
+
+## 9. Yang perlu diputuskan
 
 - Target usia, yang menentukan batas humor dan aturan iklan.
 - Nama pemain: punya nama tetap, bisa diganti, atau hanya "Loper".
-- Nama kota atau lingkungan tempat game berlangsung.
-- Contoh headline hari 1–3 untuk prototype 4.
+- ~~Nama kota atau lingkungan tempat game berlangsung.~~ Placeholder "Perumahan Melati" (usulan, bagian 8); nama final tetap terbuka.
+- ~~Contoh headline hari 1–3 untuk prototype 4.~~ Ada di bagian 8.
