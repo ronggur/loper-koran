@@ -943,4 +943,7 @@ func _test_tabrakan_tidak_menghentikan_rute() -> void:
 		check(h["kec_min"] == 0.0 and not h["nol_luar_jatuh"], "seed %d: kecepatan 0 hanya selama jatuh, tidak pernah di luar jatuh sebelum akhir (tidak terkunci)" % benih)
 		check(h["combo_putus_ok"], "seed %d: tiap tabrakan memutus combo" % benih)
 		check(h["okupansi_ok"] and h["separuh_ok"], "seed %d: bot penabrak pun tidak membuat rintangan menutup seluruh lebar jalan" % benih)
-		check(h["waktu"] < rute.panjang_ubin / Config.KECEPATAN_SANTAI_UD + 20.0, "seed %d: rute selesai dalam %.1f detik (santai murni %.1f + 20)" % [benih, h["waktu"], rute.panjang_ubin / Config.KECEPATAN_SANTAI_UD])
+		# Batas atas: santai murni + tiap tabrakan paling mahal jatuh 1,2 + akselerasi penuh 1,0 (sebenarnya tertinggal 0,5) + 5 detik rem dan
+		# belok. Hasil 2026-10-17: 98,2 detik untuk santai murni 78,7 dan 11 tabrakan (sekitar 1,7 detik per tabrakan).
+		var batas: float = rute.panjang_ubin / Config.KECEPATAN_SANTAI_UD + float(h["tabrak"]) * 2.2 + 5.0
+		check(h["waktu"] < batas, "seed %d: rute selesai dalam %.1f detik (< santai murni %.1f + %d tabrakan x 2,2 + 5 = %.1f)" % [benih, h["waktu"], rute.panjang_ubin / Config.KECEPATAN_SANTAI_UD, h["tabrak"], batas])
