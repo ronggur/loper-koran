@@ -5,10 +5,11 @@ extends RefCounted
 ## Rintangan dibangun dari `objek` segmen yang sudah ada di rute (`RouteBuilder.Rute.objek`: jenis, maju, jalur, tanda), tanpa field data
 ## baru (AC-5). Jenis dipetakan lewat `JENIS_DATA`; tiap rintangan memegang keadaan mesinnya sendiri (`AnjingPenjaga`, `MobilGarasi`; tanpa
 ## pewarisan, catatan D-14 run 3A). Satu langkah (`langkah`) adalah SATU-SATUNYA urutan dunia per langkah, dipakai scene dan simulasi tes:
-## 1. sepeda sudah digerakkan pemilik (`BikeMotion.langkah` dengan `tahan_naik = Tabrakan.oleng(keadaan.tabrakan)`);
+## 1. sepeda sudah digerakkan pemilik (`BikeMotion.langkah` dengan `beku_detik = keadaan.tabrakan.jatuh_detik`: diam selama jatuh);
 ## 2. tiap rintangan melangkah dengan posisi dan kecepatan sepeda baru (peristiwa tanda dicatat untuk bunyi dan visual);
-## 3. `Tabrakan.langkah` atas bentuk rintangan yang berbahaya; tabrakan baru membuat anjing penyebab berhenti mengejar.
-## Pemilik lalu menerapkan `hasil.tabrak`: `Tabrakan.terapkan_ke_sepeda`, `SkorRute.putus_combo`, bunyi dan visual tabrakan.
+## 3. `Tabrakan.langkah` atas bentuk rintangan yang berbahaya (tidak ada tabrakan baru selama jatuh dan kebal); tabrakan baru membuat
+##    anjing penyebab berhenti mengejar.
+## Pemilik lalu menerapkan `hasil.tabrak`: `Tabrakan.terapkan_ke_sepeda` (jatuh, kecepatan 0), `SkorRute.putus_combo`, bunyi dan visual.
 ## Bel (`terapkan_bel`) memakai tabel reaksi `Bel.REAKSI_JENIS`. `dt` 0 (jeda) = tidak ada yang berubah.
 
 enum Jenis { ANJING, MOBIL }

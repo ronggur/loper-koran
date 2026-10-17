@@ -2,12 +2,15 @@ class_name LoperAnim
 extends RefCounted
 ## Pemilih animasi sprite pemain, logika murni tanpa node (BALANCING 2, ART_DIRECTION 3.2).
 ##
-## Nama animasi di `loper_agen_frames.tres` (48 animasi, dibangun `tools/loper_art/bangun_frames.py`):
+## Nama animasi di `loper_agen_frames.tres` (50 animasi, dibangun `tools/loper_art/bangun_frames.py`):
 ## - kayuh `<tingkat>_<arah>` (15): tingkat 0 = santai, 1 = cepat, 2 = ngebut;
 ## - melambat `melambat_<arah>` (5): tingkat -1 (`TINGKAT_MELAMBAT`), kayuh 4 fps, gambarnya sama dengan santai;
 ## - lempar `lempar_<sisi>_<kecepatan>_<arah>` (18): sekali putar 12 fps, kecepatan santai/cepat/ngebut, arah normal dan dua serong;
 ## - meluncur `meluncur_<arah>` (5): pose `Pose.MELUNCUR`, kaki diam, 4 fps berulang (napas);
 ## - rem `rem_<arah>` (5): pose `Pose.REM`, kaki diam, badan mundur, 8 fps berulang (getar);
+## - jatuh (2, sejak 2026-10-17, keputusan pemilik: tabrakan = jatuh): `jatuh_normal` (4 frame, 10 fps, sekali) lalu
+##   `terjerembab_normal` (2 frame, 3 fps, berulang). Baru arah `normal` yang punya gambar, jadi semua arah memakai `normal`
+##   (`ARAH_JATUH`); empat arah lain dan animasi bangkit adalah pekerjaan aset Fase 5 (ART_DIRECTION 3.4);
 ## - arah -2 = kiri (90 derajat), -1 = serong_kiri, 0 = normal, 1 = serong_kanan, 2 = kanan.
 ##
 ## Pemilihan pose dari keadaan gerak (D-7 run fase1a-gerak, keputusan pemilik 2026-10-13 "ikuti fisika") dan laju kayuh
@@ -36,6 +39,11 @@ const NAMA_POSE: Dictionary = {
 	Pose.MELUNCUR: "meluncur",
 	Pose.REM: "rem",
 }
+## Awalan nama animasi jatuh (sekali putar) dan terjerembab (berulang sesudahnya).
+const NAMA_JATUH: String = "jatuh"
+const NAMA_TERJEREMBAB: String = "terjerembab"
+## Satu-satunya arah yang punya gambar jatuh dan terjerembab (0 = `normal`); dipakai untuk semua arah sampai aset Fase 5 ada.
+const ARAH_JATUH: int = 0
 ## Tingkat tertinggi selama lelah (stamina habis, BALANCING 3): cepat.
 const TINGKAT_CEPAT: int = 1
 const NAMA_ARAH: Dictionary = {
@@ -120,6 +128,46 @@ static func nama_animasi(tingkat: int, arah: int) -> StringName:
 	if jepitan == TINGKAT_MELAMBAT:
 		return StringName("%s_%s" % [NAMA_MELAMBAT, nama_arah])
 	return StringName("%s_%s" % [NAMA_TINGKAT[jepitan], nama_arah])
+
+
+## Nama animasi jatuh untuk `arah`. Arah diabaikan: semua arah memakai `jatuh_normal` (`ARAH_JATUH`, aset arah lain belum ada).
+static func nama_jatuh(_arah: int) -> StringName:
+	return StringName("%s_%s" % [NAMA_JATUH, NAMA_ARAH[ARAH_JATUH]])
+
+
+## Nama animasi terjerembab untuk `arah`. Arah diabaikan: semua arah memakai `terjerembab_normal` (`ARAH_JATUH`).
+static func nama_terjerembab(_arah: int) -> StringName:
+	return StringName("%s_%s" % [NAMA_TERJEREMBAB, NAMA_ARAH[ARAH_JATUH]])
+
+
+## Frame sprite jatuh pada satu saat: nama animasi, indeks frame, dan progres di dalam frame (0..1).
+class FrameJatuh extends RefCounted:
+	var nama: StringName = &""
+	var frame: int = 0
+	var progres: float = 0.0
+
+
+## Frame sprite `lewat_detik` sesudah tabrakan (keputusan pemilik 2026-10-17): `jatuh_<arah>` diputar sekali (`n_jatuh` frame pada
+## `fps_jatuh`), lalu `terjerembab_<arah>` berulang (`n_terjerembab` frame pada `fps_terjerembab`) sampai pemain bangun. Arah diabaikan
+## (`nama_jatuh`). Batas inklusif dengan toleransi `TABRAKAN_TOLERANSI_DETIK`: tepat `n_jatuh / fps_jatuh` detik = frame 0 terjerembab.
+## `lewat_detik` NaN atau negatif = 0; fps atau jumlah frame tidak sah = frame 0 animasi jatuh (aman, tanpa bagi nol).
+static func frame_jatuh(lewat_detik: float, arah: int, fps_jatuh: float, n_jatuh: int, fps_terjerembab: float, n_terjerembab: int) -> FrameJatuh:
+	var f: FrameJatuh = FrameJatuh.new()
+	f.nama = nama_jatuh(arah)
+	if not (fps_jatuh > 0.0 and n_jatuh > 0 and fps_terjerembab > 0.0 and n_terjerembab > 0):
+		return f
+	var t: float = lewat_detik if is_finite(lewat_detik) and lewat_detik > 0.0 else 0.0
+	var lama_jatuh: float = float(n_jatuh) / fps_jatuh
+	var posisi: float = 0.0
+	if t + Config.TABRAKAN_TOLERANSI_DETIK < lama_jatuh:
+		posisi = t * fps_jatuh
+		f.frame = mini(floori(posisi + Config.TABRAKAN_TOLERANSI_DETIK), n_jatuh - 1)
+	else:
+		f.nama = nama_terjerembab(arah)
+		posisi = maxf(t - lama_jatuh, 0.0) * fps_terjerembab
+		f.frame = posmod(floori(posisi + Config.TABRAKAN_TOLERANSI_DETIK), n_terjerembab)
+	f.progres = clampf(posisi - floorf(posisi + Config.TABRAKAN_TOLERANSI_DETIK), 0.0, 1.0)
+	return f
 
 
 ## Tingkat yang dipakai animasi lempar: tidak ada lempar melambat, jadi melambat memakai santai (D-3).

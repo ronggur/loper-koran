@@ -24,6 +24,12 @@ extends AnimatedSprite2D
 ## yang belum terjadi dipancarkan, lalu `lempar_selesai`, baru lempar baru dimulai dari frame 0. Jadi tiap lempar yang dimulai tetap
 ## memancarkan `koran_lepas` dan `lempar_selesai` tepat sekali, kecuali lempar yang ditutup `batalkan_lempar` (jeda game, D-11: hanya
 ## animasinya yang ditutup; koran yang sudah diterima tetap terbang lewat `KoranLempar`).
+##
+## Jatuh (`atur_jatuh`, keputusan pemilik 2026-10-17: tabrakan = jatuh): selama jatuh gambar diambil dari `LoperAnim.frame_jatuh` dengan lama
+## sejak tabrakan dari pemanggil (`Tabrakan.lewat_jatuh_detik`), sprite dijeda (bukan pemutar bawaan), jadi jeda game membekukannya dan tes
+## bisa memajukannya dengan `dt` tetap. Masuk jatuh menutup lempar yang berjalan (tanpa sinyal, seperti `batalkan_lempar`), lempar baru
+## ditolak, dan `pose`/`speed_level`/`steer` tetap tersimpan tanpa mengganti gambar. Bangun = langsung kembali ke animasi pose saat itu dan
+## diputar lagi (belum ada animasi bangkit; kedip kebal menutupinya, aset bangkit Fase 5).
 
 ## Koran lepas dari tangan: dipancarkan tepat sekali per lempar, saat frame `Config.LEMPAR_FRAME_LEPAS` (indeks 2) tampil (atau saat lempar
 ## yang belum sampai frame lepas disela lempar berikutnya). Koran terbang tidak bergantung pada sinyal ini (`KoranLempar` memakai jeda
@@ -53,6 +59,7 @@ var _sedang_melempar: bool = false
 var _sisi_lempar: LoperAnim.Sisi = LoperAnim.Sisi.TIDAK_ADA
 var _waktu_lempar: float = 0.0
 var _sudah_lepas: bool = false
+var _jatuh: bool = false
 
 
 func _init() -> void:
@@ -78,7 +85,7 @@ func sedang_melempar() -> bool:
 ## `sprite_frames` kosong. Animasi dipilih dari `pose`, `speed_level`, dan `steer` saat ini (`LoperAnim.nama_lempar`; dari meluncur dan
 ## rem memakai santai, `LoperAnim.tingkat_lempar`). Bila masih melempar, lempar lama ditutup dulu dengan sinyalnya (D-9, lihat atas).
 func lempar(sisi: LoperAnim.Sisi) -> bool:
-	if sprite_frames == null:
+	if sprite_frames == null or _jatuh:
 		return false
 	var nama: StringName = _nama_lempar(sisi)
 	if nama == &"":
@@ -139,6 +146,37 @@ func jeda_lepas(sisi: LoperAnim.Sisi) -> float:
 	return LemparWaktu.waktu_lepas(sprite_frames.get_animation_speed(nama), sprite_frames.get_frame_count(nama), Config.LEMPAR_FRAME_LEPAS)
 
 
+## True selama sprite menampilkan jatuh atau terjerembab.
+func sedang_jatuh() -> bool:
+	return _jatuh
+
+
+## Menampilkan jatuh (`aktif`) dengan lama `lewat_detik` sejak tabrakan, atau keluar dari jatuh (bangun). Lihat bagian Jatuh di atas.
+## Animasi dan fps dibaca dari `sprite_frames` (`jatuh_<arah>`, `terjerembab_<arah>`, arah dari `steer` tetapi diabaikan `LoperAnim`).
+func atur_jatuh(aktif: bool, lewat_detik: float) -> void:
+	if not aktif:
+		if _jatuh:
+			_jatuh = false
+			_terapkan_animasi()
+			_mainkan_bila_siap()
+		return
+	if _sedang_melempar:
+		_akhiri_lempar()
+	_jatuh = true
+	if sprite_frames == null:
+		return
+	var nama_j: StringName = LoperAnim.nama_jatuh(steer)
+	var nama_t: StringName = LoperAnim.nama_terjerembab(steer)
+	if not sprite_frames.has_animation(nama_j) or not sprite_frames.has_animation(nama_t):
+		push_warning("LoperSprite: animasi '%s' atau '%s' tidak ada di SpriteFrames" % [nama_j, nama_t])
+		return
+	var f: LoperAnim.FrameJatuh = LoperAnim.frame_jatuh(lewat_detik, steer, sprite_frames.get_animation_speed(nama_j), sprite_frames.get_frame_count(nama_j), sprite_frames.get_animation_speed(nama_t), sprite_frames.get_frame_count(nama_t))
+	if animation != f.nama:
+		animation = f.nama
+	set_frame_and_progress(f.frame, f.progres)
+	pause()
+
+
 func _nama_lempar(sisi: LoperAnim.Sisi) -> StringName:
 	return LoperAnim.nama_lempar(sisi, LoperAnim.tingkat_lempar(pose, speed_level), steer)
 
@@ -156,7 +194,7 @@ func _akhiri_lempar() -> void:
 ## Memasang animasi sesuai `pose`, `speed_level`, dan `steer`, menjaga fase (indeks frame) saat berganti. Tidak menyentuh gambar
 ## selama melempar.
 func _terapkan_animasi() -> void:
-	if sprite_frames == null or _sedang_melempar:
+	if sprite_frames == null or _sedang_melempar or _jatuh:
 		return
 	var nama: StringName = LoperAnim.nama_animasi_pose(pose, speed_level, steer)
 	if not sprite_frames.has_animation(nama):
@@ -172,7 +210,7 @@ func _terapkan_animasi() -> void:
 
 ## Menyalakan putaran animasi bila ada `sprite_frames` yang memuat animasi saat ini. Aman tanpa `sprite_frames` (Q-001).
 func _mainkan_bila_siap() -> void:
-	if _sedang_melempar or sprite_frames == null or not sprite_frames.has_animation(animation):
+	if _sedang_melempar or _jatuh or sprite_frames == null or not sprite_frames.has_animation(animation):
 		return
 	if not is_playing():
 		play(animation)

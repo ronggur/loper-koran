@@ -1,6 +1,6 @@
 class_name EfekSepeda
 extends Node2D
-## Efek di atas pemain (run fase3b-rintangan-skor bagian B, usulan): ikon kilatan tabrakan selama oleng (AC-8) dan teks "KRING!" /
+## Efek di atas pemain (run fase3b-rintangan-skor bagian B, usulan): ikon kilatan tabrakan selama jatuh (AC-8; oleng diganti jatuh 2026-10-17) dan teks "KRING!" /
 ## "KRING KRING!" bel (AC-16, DESIGN_SPEC 3.8). Anak `SepedaUji` sesudah sprite pemain, jadi digambar di atasnya; garis getar bel ada di
 ## node lain di BAWAH sprite (`GetarBel`, README bel: sprite pemain menutupi efek, bukan sebaliknya).
 ##
@@ -28,11 +28,11 @@ func _ready() -> void:
 	add_child(_teks)
 
 
-## Menyalakan atau mematikan ikon kilatan tabrakan (oleng). Gambar ulang hanya bila berubah.
-func tampilkan_tabrakan(oleng: bool) -> void:
-	if oleng == _ikon_tabrakan:
+## Menyalakan atau mematikan ikon kilatan tabrakan (selama jatuh). Gambar ulang hanya bila berubah.
+func tampilkan_tabrakan(tampil: bool) -> void:
+	if tampil == _ikon_tabrakan:
 		return
-	_ikon_tabrakan = oleng
+	_ikon_tabrakan = tampil
 	queue_redraw()
 
 
@@ -66,7 +66,7 @@ static func titik_bel() -> Vector2:
 	return Vector2(Config.BEL_TITIK_PX[0], Config.BEL_TITIK_PX[1])
 
 
-## Perintah gambar (`GambarPiksel`) ikon tabrakan: kosong bila tidak oleng.
+## Perintah gambar (`GambarPiksel`) ikon tabrakan: kosong bila tidak jatuh.
 func perintah_tabrakan() -> Array:
 	if not _ikon_tabrakan:
 		return []

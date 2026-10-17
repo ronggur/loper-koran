@@ -9,9 +9,10 @@ extends Node2D
 ## fase2a-lemparan), yang membaca keadaan sepeda di sini: posisi dunia, kecepatan maju, kecepatan lateral efektif langkah terakhir
 ## (`lateral_ud`, D-4), dan jeda lepas animasi (`jeda_lepas`). Umpan balik kecepatan (debu roda, garis kecepatan; `UmpanBalikSepeda`,
 ## run fase1b-umpan-balik) diisi tiap langkah dari kecepatan sebenarnya dan status rem.
-## Run fase3b-rintangan-skor bagian B: `gerak` meneruskan `tahan_naik` (oleng, `Tabrakan.oleng`) ke `BikeMotion.langkah`; `tabrak` menerapkan
-## `Tabrakan.terapkan_ke_sepeda` (kecepatan turun ke 1,0 u/d bila lebih tinggi). Umpan balik visual tabrakan (AC-8): sprite pemain bergeser
-## bolak-balik selama oleng (`Tabrakan.geser_oleng_px`) dan berkedip selama kebal (`Tabrakan.alfa_kebal`), ikon kilatan di atas kepala
+## Tabrakan = jatuh (keputusan pemilik 2026-10-17, menggantikan oleng run fase3b-rintangan-skor): `gerak` meneruskan `beku_detik` (sisa jatuh,
+## `Tabrakan.Keadaan.jatuh_detik`) ke `BikeMotion.langkah`; `tabrak` menerapkan `Tabrakan.terapkan_ke_sepeda` (kecepatan 0). Umpan balik
+## visual tabrakan (AC-8): sprite pemain memutar jatuh lalu terjerembab selama jatuh (`LoperSprite.atur_jatuh` dengan
+## `Tabrakan.lewat_jatuh_detik`), berkedip selama kebal sesudah bangun (`Tabrakan.alfa_kebal`), ikon kilatan di atas kepala selama jatuh
 ## (`EfekSepeda`). Efek bel (AC-16): garis getar `GetarBel` (di bawah sprite pemain) di titik bel dan teks "KRING!" (`EfekSepeda`, di atas).
 
 ## Keadaan gerak saat ini (kecepatan, lateral, stamina, rem, lelah). Diganti objek baru tiap langkah, tidak diubah di tempat.
@@ -54,10 +55,10 @@ func posisi_dunia() -> Vector2:
 	return Vector2(keadaan.lateral_ubin, -jarak_ubin)
 
 
-## Satu langkah gerak dari vektor stick (x: datar, y: atas) selama `dt` detik, lalu memperbarui sprite dan posisi. `tahan_naik` true
-## selama oleng sesudah tabrakan: kecepatan tidak bisa naik (`BikeMotion.langkah`).
-func gerak(stick: Vector2, dt: float, tahan_naik: bool = false) -> void:
-	var hasil: BikeMotion.Hasil = BikeMotion.langkah(keadaan, stick, dt, tahan_naik)
+## Satu langkah gerak dari vektor stick (x: datar, y: atas) selama `dt` detik, lalu memperbarui sprite dan posisi. `beku_detik` = sisa jatuh
+## sesudah tabrakan: selama itu sepeda diam dan stick diabaikan (`BikeMotion.langkah`).
+func gerak(stick: Vector2, dt: float, beku_detik: float = 0.0) -> void:
+	var hasil: BikeMotion.Hasil = BikeMotion.langkah(keadaan, stick, dt, beku_detik)
 	keadaan = hasil.keadaan
 	jarak_ubin += hasil.maju_ubin
 	lateral_ud = hasil.lateral_ud
@@ -87,17 +88,16 @@ func atur_ulang() -> void:
 	gerak(Vector2.ZERO, 0.0)
 
 
-## Tabrakan (AC-6): kecepatan langsung turun ke `TABRAKAN_KECEPATAN_UD` bila lebih tinggi (`Tabrakan.terapkan_ke_sepeda`); lateral,
-## stamina, dan jarak tetap.
+## Tabrakan = jatuh: kecepatan langsung 0 dan rem padam (`Tabrakan.terapkan_ke_sepeda`); lateral, stamina, dan jarak tetap.
 func tabrak() -> void:
 	keadaan = Tabrakan.terapkan_ke_sepeda(keadaan)
 
 
-## Umpan balik visual keadaan tabrakan `t`: geseran oleng dan kedip kebal pada sprite pemain, ikon kilatan selama oleng.
+## Umpan balik visual keadaan tabrakan `t`: sprite jatuh/terjerembab selama jatuh, kedip kebal sesudah bangun, ikon kilatan selama jatuh.
 func tampilkan_tabrakan(t: Tabrakan.Keadaan) -> void:
-	_sprite.position.x = float(Tabrakan.geser_oleng_px(t))
+	_sprite.atur_jatuh(Tabrakan.jatuh(t), Tabrakan.lewat_jatuh_detik(t))
 	_sprite.modulate.a = Tabrakan.alfa_kebal(t)
-	_efek.tampilkan_tabrakan(Tabrakan.oleng(t))
+	_efek.tampilkan_tabrakan(Tabrakan.jatuh(t))
 
 
 ## Efek bel dari keadaan `b`: garis getar (frame `Bel.frame_getar`, jangkar = titik bel) dan teks "KRING!" / "KRING KRING!".
@@ -120,9 +120,14 @@ func getar_bel() -> Sprite2D:
 	return _getar
 
 
-## Geseran mendatar sprite pemain saat ini (oleng), piksel game (untuk tes).
-func geser_sprite_px() -> float:
-	return _sprite.position.x
+## True selama sprite pemain menampilkan jatuh atau terjerembab (untuk tes dan probe).
+func sedang_jatuh() -> bool:
+	return _sprite.sedang_jatuh()
+
+
+## Indeks frame sprite pemain saat ini (untuk tes).
+func frame_sprite() -> int:
+	return _sprite.frame
 
 
 ## Alpha sprite pemain saat ini (kedip kebal; untuk tes).

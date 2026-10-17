@@ -101,7 +101,7 @@ Kolom **M2** menandai yang dibutuhkan untuk satu hari penuh di perumahan (ROADMA
 | Freewheel saat meluncur | ✅ | Pedal diam |
 | Rem dan decit | ✅ | Animasi rem, cincin stick bawah menyala |
 | Bel ("kring", dan "kring kring!" saat diketuk dua kali) — placeholder ada (bagian 3.3, dimajukan ke Fase 3) | ✅ | Garis getar dan teks "KRING!" / "KRING KRING!" di atas setang (`design/bel/`); ikon "!" di atas anjing yang mundur |
-| Tabrakan (lembut, "bruk" + kerincing) — placeholder `sfx/obstacle/sfx_obs_crash_01.wav` | ✅ | Sepeda oleng, kilatan atau bintang kecil, combo putus di HUD |
+| Tabrakan (lembut, "bruk" + kerincing) — placeholder `sfx/obstacle/sfx_obs_crash_01.wav` | ✅ | Pemain jatuh (animasi jatuh lalu terjerembab, sejak 2026-10-17), kilatan atau bintang kecil, combo putus di HUD |
 | Selip di genangan / kerikil | ⬜ | Percikan, sepeda bergeser |
 
 ### 4.2 Lemparan dan sasaran

@@ -1,7 +1,7 @@
 class_name TesRintangan
 extends RefCounted
 ## Tes logika murni rintangan dan tabrakan run fase3b-rintangan-skor: anjing penjaga (AC-1, AC-14 sisi anjing), mobil keluar garasi (AC-2),
-## rintangan dari objek rute (AC-5), tabrakan (AC-6), dan invarian prinsip desain lewat simulasi headless: tanda >= 1,5 detik pada ngebut
+## rintangan dari objek rute (AC-5), tabrakan = jatuh (AC-6, diubah keputusan pemilik 2026-10-17), dan invarian prinsip desain lewat simulasi headless: tanda >= 1,5 detik pada ngebut
 ## dari semua posisi lateral (AC-3, AC-23 c), jalan keluar selalu ada di 20 rute seed (AC-4), tabrakan tidak menghentikan rute (AC-7,
 ## AC-23 a), dan ngebut/santai punya harga (AC-23 b, sisi rintangan; sisi skor di `TesSkor`).
 ##
@@ -42,7 +42,9 @@ func jalankan() -> void:
 	_test_rintangan_dari_rute()
 	_test_tabrakan_bentuk()
 	_test_tabrakan_aturan()
-	_test_oleng_di_bike_motion()
+	_test_jatuh_di_bike_motion()
+	_test_frame_jatuh()
+	_test_jatuh_di_kotak_mobil_tidak_terkunci()
 	_test_rintangan_langkah_tabrak()
 	_test_anjing_berhenti_berbahaya()
 	_test_peristiwa_lompatan_diam_mengejar()
@@ -95,11 +97,14 @@ func _test_config() -> void:
 		"ANJING_BATAS_MAJU_UBIN": 3.0, "ANJING_BERHENTI_DETIK": 0.8, "ANJING_PULANG_UD": 2.0, "ANJING_KAGET_DETIK": 0.5,
 		"ANJING_MUNDUR_UD": 3.0, "MOBIL_PANJANG_UBIN": 1.5, "MOBIL_SETENGAH_LEBAR_UBIN": 0.375, "MOBIL_BELAKANG_AWAL_UBIN": 2.5,
 		"MOBIL_BELAKANG_AKHIR_UBIN": 0.0, "MOBIL_TANDA_DETIK": 1.5, "MOBIL_MUNDUR_UD": 1.0,
-		"TABRAKAN_KECEPATAN_UD": 1.0, "TABRAKAN_OLENG_DETIK": 0.6, "TABRAKAN_KEBAL_DETIK": 1.0,
+		"TABRAKAN_JATUH_DETIK": 1.2, "TABRAKAN_KEBAL_DETIK": 1.0,
 	}
 	var nilai: Dictionary = (load("res://scripts/config.gd") as GDScript).get_script_constant_map()
 	for nama: String in harapan:
 		check(nilai.has(nama) and is_equal_approx(float(nilai[nama]), float(harapan[nama])), "Config.%s = %s (BALANCING 6c)" % [nama, harapan[nama]])
+	# Satu aturan saja (keputusan pemilik 2026-10-17): oleng 0,6 dan turun ke 1,0 u/d dihapus, bukan dibiarkan tidak terpakai.
+	for lama: String in ["TABRAKAN_KECEPATAN_UD", "TABRAKAN_OLENG_DETIK", "TABRAKAN_OLENG_GESER_PX", "TABRAKAN_OLENG_PERIODE_DETIK"]:
+		check(not nilai.has(lama), "Config.%s sudah dihapus (oleng diganti jatuh)" % lama)
 	# Tepi bentuk di halaman (anjing duduk, mobil parkir) di luar jangkauan sepeda paling tepi (trotoar 2,0 + setengah lebar 0,25).
 	var jangkau_sepeda: float = BikeMotion.batas_lateral_ubin() + Config.TABRAKAN_SEPEDA_SETENGAH_LATERAL_UBIN
 	check(is_equal_approx(jangkau_sepeda, 2.25), "jangkauan lateral bentuk sepeda di tepi trotoar = 2,25 ubin")
@@ -359,77 +364,197 @@ func _test_tabrakan_bentuk() -> void:
 
 
 func _test_tabrakan_aturan() -> void:
-	_judul.call("Tabrakan (AC-6): kecepatan 1,0, oleng 0,6, kebal 1,0 dari saat tabrakan, tanpa tabrakan ganda")
+	_judul.call("Tabrakan = jatuh (AC-6, pemilik 2026-10-17): kecepatan 0, jatuh 1,2, kebal 1,0 sejak bangun, tanpa tabrakan ganda")
 	var sepeda: Rect2 = Tabrakan.kotak_sepeda(10.0, -1.0)
 	var c1: Array[Tabrakan.Kandidat] = [Tabrakan.kandidat(3, "anjing_penjaga", Rect2(-1.2, 9.9, 0.5, 0.5))]
+	var c2: Array[Tabrakan.Kandidat] = [Tabrakan.kandidat(5, "mobil_garasi", Rect2(-1.0, 9.8, 1.0, 0.5))]
+	var kosong: Array[Tabrakan.Kandidat] = []
 	var h: Tabrakan.Hasil = Tabrakan.langkah(Tabrakan.awal(), sepeda, c1, 0.1)
 	check(h.tabrak and h.id == 3 and h.jenis == "anjing_penjaga", "tabrakan membawa id dan jenis penyebab (AC-8)")
-	check(is_equal_approx(h.keadaan.oleng_detik, 0.6) and is_equal_approx(h.keadaan.kebal_detik, 1.0) and h.keadaan.jumlah == 1 and Tabrakan.oleng(h.keadaan) and Tabrakan.kebal(h.keadaan), "oleng 0,6, kebal 1,0, jumlah 1")
+	check(h.keadaan.jatuh_detik == 1.2 and h.keadaan.kebal_detik == 0.0 and h.keadaan.jumlah == 1, "langkah tabrakan: jatuh 1,2, kebal 0 (belum mulai), jumlah 1")
+	check(Tabrakan.jatuh(h.keadaan) and not Tabrakan.kebal(h.keadaan) and Tabrakan.terlindung(h.keadaan) and Tabrakan.lewat_jatuh_detik(h.keadaan) == 0.0, "jatuh, belum kebal, terlindung, lewat jatuh 0")
+	# Kecepatan langsung 0, rem padam; lateral dan stamina tetap; masukan tidak diubah.
 	var sp: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
 	sp.kecepatan_ud = 6.0
 	sp.lateral_ubin = -1.0
 	sp.stamina = 40.0
+	sp.rem_aktif = true
+	sp.tahan_rem_detik = 0.5
 	var sesudah: BikeMotion.Keadaan = Tabrakan.terapkan_ke_sepeda(sp)
-	check(is_equal_approx(sesudah.kecepatan_ud, 1.0) and is_equal_approx(sesudah.lateral_ubin, -1.0) and is_equal_approx(sesudah.stamina, 40.0) and is_equal_approx(sp.kecepatan_ud, 6.0), "6,0 -> 1,0; lateral dan stamina tetap (tanpa hukuman tambahan); masukan tidak diubah")
+	check(sesudah.kecepatan_ud == 0.0 and not sesudah.rem_aktif and sesudah.tahan_rem_detik == 0.0 and sesudah.lateral_ubin == -1.0 and sesudah.stamina == 40.0, "6,0 -> 0 (jatuh), rem padam, lateral -1,0 dan stamina 40 tetap (tanpa hukuman tambahan)")
+	check(sp.kecepatan_ud == 6.0 and sp.rem_aktif and sp.tahan_rem_detik == 0.5, "masukan terapkan_ke_sepeda tidak diubah")
 	sp.kecepatan_ud = 0.5
-	check(is_equal_approx(Tabrakan.terapkan_ke_sepeda(sp).kecepatan_ud, 0.5), "kecepatan di bawah 1,0 tidak dinaikkan")
-	# Rintangan lain selama kebal: tidak ada tabrakan; tepat 1,0 detik sesudahnya boleh.
+	check(Tabrakan.terapkan_ke_sepeda(sp).kecepatan_ud == 0.0, "kecepatan 0,5 juga jadi 0")
+	# Langkah 0,1: selama jatuh (12 langkah = 1,2 detik) rintangan lain yang menyentuh tidak menabrak; bangun tepat di langkah 12, kebal mulai.
 	var k: Tabrakan.Keadaan = h.keadaan
-	var c2: Array[Tabrakan.Kandidat] = [Tabrakan.kandidat(5, "mobil_garasi", Rect2(-1.0, 9.8, 1.0, 0.5))]
 	var tabrak_pada: int = -1
-	for i: int in range(1, 15):
+	var jatuh_per_langkah: Array[bool] = []
+	var kebal_per_langkah: Array[bool] = []
+	for i: int in range(1, 31):
 		var hh: Tabrakan.Hasil = Tabrakan.langkah(k, sepeda, c2, 0.1)
 		k = hh.keadaan
+		jatuh_per_langkah.append(Tabrakan.jatuh(k))
+		kebal_per_langkah.append(Tabrakan.kebal(k))
 		if hh.tabrak and tabrak_pada < 0:
 			tabrak_pada = i
-		if i == 6:
-			check(not Tabrakan.oleng(k), "oleng habis tepat 0,6 detik sesudah tabrakan")
-	# Rintangan 5 bersentuhan sejak langkah 1 selama kebal -> menempel -> tidak pernah menabrak walau kebal habis.
-	check(tabrak_pada == -1, "rintangan yang terus bersentuhan sejak masa kebal tidak menabrak lagi sesudah kebal habis (tanpa ganda)")
-	# Rintangan baru yang muncul sesudah kebal habis menabrak.
-	var k2: Tabrakan.Keadaan = h.keadaan
-	var kosong: Array[Tabrakan.Kandidat] = []
-	var langkah_ke: int = 0
-	for i: int in range(1, 10):
-		k2 = Tabrakan.langkah(k2, sepeda, kosong, 0.1).keadaan
-		langkah_ke = i
-	check(Tabrakan.kebal(k2) and langkah_ke == 9, "0,9 detik sesudah tabrakan: masih kebal")
-	var h9: Tabrakan.Hasil = Tabrakan.langkah(k2, sepeda, c2, 0.0999)
-	check(not h9.tabrak, "0,9999 detik: masih kebal, rintangan baru tidak menabrak")
-	var k3: Tabrakan.Keadaan = Tabrakan.langkah(k2, sepeda, kosong, 0.1).keadaan
-	var h10: Tabrakan.Hasil = Tabrakan.langkah(k3, sepeda, c2, 0.05)
-	check(not Tabrakan.kebal(k3) and h10.tabrak and h10.id == 5 and h10.keadaan.jumlah == 2, "sesudah 1,0 detik kebal habis: rintangan baru menabrak (jumlah 2)")
-	# Rintangan yang sama sesudah terpisah boleh menabrak lagi (sesudah kebal).
-	var k4: Tabrakan.Keadaan = h.keadaan
+	check(jatuh_per_langkah.slice(0, 11) == [true, true, true, true, true, true, true, true, true, true, true] and not jatuh_per_langkah[11], "langkah 0,1: jatuh sampai 1,1 detik, bangun di langkah 12 (1,2 detik)")
+	check(not kebal_per_langkah.slice(0, 11).has(true), "selama jatuh belum kebal (kebal dihitung dari bangun)")
+	check(not kebal_per_langkah.slice(11, 21).has(false) and not kebal_per_langkah[21], "kebal dari 1,2 sampai 2,1 detik, habis di langkah 22 (2,2 detik = bangun + 1,0)")
+	check(tabrak_pada == -1 and k.jumlah == 1 and k.menempel.has(5), "rintangan yang menyentuh sejak masa jatuh menempel: tidak menabrak selama jatuh, kebal, maupun sesudahnya (3,0 detik)")
+	# Tepi waktu eksplisit dengan satu langkah besar (tidak bergantung pembagian dt).
+	var t1: Tabrakan.Keadaan = Tabrakan.langkah(h.keadaan, sepeda, kosong, 1.1999).keadaan
+	check(Tabrakan.jatuh(t1) and is_equal_approx(t1.jatuh_detik, 0.0001) and t1.kebal_detik == 0.0, "1,1999 detik: masih jatuh (sisa 0,0001), belum kebal")
+	var t2: Tabrakan.Keadaan = Tabrakan.langkah(h.keadaan, sepeda, kosong, 1.2).keadaan
+	check(not Tabrakan.jatuh(t2) and t2.jatuh_detik == 0.0 and t2.kebal_detik == 1.0, "tepat 1,2 detik: bangun, jatuh 0, kebal 1,0 penuh")
+	var t3: Tabrakan.Keadaan = Tabrakan.langkah(h.keadaan, sepeda, kosong, 1.5).keadaan
+	check(not Tabrakan.jatuh(t3) and is_equal_approx(t3.kebal_detik, 0.7), "satu langkah 1,5 detik: bangun di 1,2, sisa 0,3 dipakai kebal -> kebal 0,7")
+	var t3b: Tabrakan.Keadaan = h.keadaan
 	for i: int in range(12):
+		t3b = Tabrakan.langkah(t3b, sepeda, kosong, 0.1).keadaan
+	t3b = Tabrakan.langkah(t3b, sepeda, kosong, 0.3).keadaan
+	check(is_equal_approx(t3b.kebal_detik, t3.kebal_detik) and not Tabrakan.jatuh(t3b), "12 x 0,1 lalu 0,3 = satu langkah 1,5 (kebal 0,7)")
+	# Rintangan BARU selama jatuh dan selama kebal tidak menabrak; tepat sesudah kebal habis menabrak.
+	check(not Tabrakan.langkah(h.keadaan, sepeda, c2, 0.6).tabrak, "0,6 detik sesudah tabrakan (jatuh): rintangan baru tidak menabrak")
+	check(not Tabrakan.langkah(t2, sepeda, c2, 0.9999).tabrak, "bangun + 0,9999 detik (kebal): rintangan baru tidak menabrak")
+	var t4: Tabrakan.Keadaan = Tabrakan.langkah(t2, sepeda, kosong, 1.0).keadaan
+	var h4: Tabrakan.Hasil = Tabrakan.langkah(t4, sepeda, c2, 0.05)
+	check(not Tabrakan.kebal(t4) and h4.tabrak and h4.id == 5 and h4.keadaan.jumlah == 2 and h4.keadaan.jatuh_detik == 1.2, "bangun + 1,0 detik: kebal habis, rintangan baru menabrak (jumlah 2, jatuh lagi 1,2)")
+	# Rintangan yang sama sesudah terpisah boleh menabrak lagi (sesudah jatuh dan kebal).
+	var k4: Tabrakan.Keadaan = h.keadaan
+	for i: int in range(25):
 		k4 = Tabrakan.langkah(k4, sepeda, c1, 0.1).keadaan
-	check(k4.jumlah == 1 and k4.menempel.has(3), "rintangan penyebab yang tetap bersentuhan 1,2 detik: satu tabrakan saja")
+	check(k4.jumlah == 1 and k4.menempel.has(3) and not Tabrakan.terlindung(k4), "rintangan penyebab yang tetap bersentuhan 2,5 detik: satu tabrakan saja")
 	k4 = Tabrakan.langkah(k4, Tabrakan.kotak_sepeda(20.0, -1.0), c1, 0.1).keadaan
 	check(k4.menempel.is_empty(), "sepeda terpisah: tidak menempel lagi")
-	check(Tabrakan.langkah(k4, sepeda, c1, 0.1).tabrak, "sesudah terpisah dan tidak kebal, rintangan yang sama bisa menabrak lagi")
-	# Jeda: dt 0 tidak mengurangi oleng/kebal dan tidak menabrak.
+	check(Tabrakan.langkah(k4, sepeda, c1, 0.1).tabrak, "sesudah terpisah dan tidak terlindung, rintangan yang sama bisa menabrak lagi")
+	# Jeda: dt 0 tidak memajukan jatuh atau kebal dan tidak menabrak.
 	var j: Tabrakan.Hasil = Tabrakan.langkah(h.keadaan, sepeda, c2, 0.0)
-	check(not j.tabrak and is_equal_approx(j.keadaan.kebal_detik, 1.0) and is_equal_approx(j.keadaan.oleng_detik, 0.6), "dt 0: oleng dan kebal membeku, tidak ada tabrakan")
+	check(not j.tabrak and j.keadaan.jatuh_detik == 1.2 and j.keadaan.kebal_detik == 0.0, "dt 0 saat jatuh: jatuh 1,2 membeku, tidak ada tabrakan")
+	var jk: Tabrakan.Hasil = Tabrakan.langkah(t2, sepeda, c2, 0.0)
+	check(not jk.tabrak and jk.keadaan.kebal_detik == 1.0, "dt 0 saat kebal: kebal 1,0 membeku")
 	check(not Tabrakan.langkah(Tabrakan.awal(), sepeda, c1, 0.0).tabrak, "dt 0 tanpa kebal: tetap tidak ada tabrakan baru selama jeda")
+	# Kedip kebal mengikuti waktu sejak bangun; selama jatuh sprite tampil penuh.
+	check(Tabrakan.alfa_kebal(h.keadaan) == 1.0 and Tabrakan.alfa_kebal(t2) == 1.0, "alfa 1,0 selama jatuh dan tepat saat bangun")
+	check(Tabrakan.alfa_kebal(Tabrakan.langkah(t2, sepeda, kosong, 0.15).keadaan) == 0.5, "bangun + 0,15 detik: fase kedip redup 0,5")
+	check(is_equal_approx(Tabrakan.lewat_jatuh_detik(Tabrakan.langkah(h.keadaan, sepeda, kosong, 0.45).keadaan), 0.45) and Tabrakan.lewat_jatuh_detik(t2) == 0.0, "lewat jatuh 0,45 sesudah 0,45 detik; 0 sesudah bangun")
 
 
-func _test_oleng_di_bike_motion() -> void:
-	_judul.call("Oleng: kecepatan tidak bisa naik, lateral tetap bisa; sesudah oleng naik lagi (AC-6)")
-	var s: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
-	s.kecepatan_ud = 1.0
-	for i: int in range(6):
-		var h: BikeMotion.Hasil = BikeMotion.langkah(s, Vector2(1.0, 1.0), 0.1, true)
-		s = h.keadaan
-	check(is_equal_approx(s.kecepatan_ud, 1.0), "stick penuh ke atas 0,6 detik saat oleng: kecepatan tetap 1,0")
-	check(is_equal_approx(s.lateral_ubin, 1.8), "lateral tetap bisa: 6 x 0,1 x 3,0 = 1,8 ubin")
-	var turun: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
-	turun.kecepatan_ud = 3.0
-	turun = BikeMotion.langkah(turun, Vector2(0.0, -0.5), 0.1, true).keadaan
-	check(turun.kecepatan_ud < 3.0, "oleng tidak mencegah melambat (stick bawah tetap menurunkan kecepatan)")
-	var lepas: BikeMotion.Keadaan = BikeMotion.langkah(s, Vector2(0.0, 1.0), 0.1, false).keadaan
-	check(is_equal_approx(lepas.kecepatan_ud, 1.3), "sesudah oleng: naik 3,0 u/d^2 -> 1,3")
+func _test_jatuh_di_bike_motion() -> void:
+	_judul.call("Jatuh di BikeMotion: kecepatan 0 dan stick diabaikan selama jatuh, sesudah bangun dikayuh lagi dari 0 (pemilik 2026-10-17)")
+	# Integrasi murni: Tabrakan memberi sisa jatuh sebagai beku_detik, stick penuh ke atas dan ke sisi dekat ditahan sepanjang jatuh.
+	var sepeda: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
+	sepeda.kecepatan_ud = 6.0
+	sepeda.lateral_ubin = -1.0
+	sepeda.stamina = 40.0
+	sepeda = Tabrakan.terapkan_ke_sepeda(sepeda)
+	var anjing: Array[Tabrakan.Kandidat] = [Tabrakan.kandidat(3, "anjing_penjaga", Rect2(-1.2, 9.9, 0.5, 0.5))]
+	var t: Tabrakan.Keadaan = Tabrakan.langkah(Tabrakan.awal(), Tabrakan.kotak_sepeda(10.0, -1.0), anjing, 0.1).keadaan
+	var kosong: Array[Tabrakan.Kandidat] = []
+	var jarak: float = 0.0
+	var diam: bool = true
+	for i: int in range(12):
+		var hb: BikeMotion.Hasil = BikeMotion.langkah(sepeda, Vector2(1.0, 1.0), 0.1, t.jatuh_detik)
+		sepeda = hb.keadaan
+		jarak += hb.maju_ubin
+		diam = diam and sepeda.kecepatan_ud == 0.0 and hb.maju_ubin == 0.0 and hb.lateral_ud == 0.0
+		t = Tabrakan.langkah(t, Tabrakan.kotak_sepeda(10.0, -1.0), kosong, 0.1).keadaan
+	check(diam and jarak == 0.0 and sepeda.lateral_ubin == -1.0, "12 langkah x 0,1 jatuh dengan stick penuh atas-dekat: kecepatan 0, jarak 0, lateral tetap -1,0")
+	check(sepeda.stamina == 40.0 and not sepeda.rem_aktif, "selama jatuh stamina tidak berubah (40) dan rem tidak aktif")
+	check(not Tabrakan.jatuh(t) and t.jatuh_detik == 0.0, "kontrol: sesudah 1,2 detik pemain bangun")
+	var hb1: BikeMotion.Hasil = BikeMotion.langkah(sepeda, Vector2(0.0, 1.0), 0.1, t.jatuh_detik)
+	check(is_equal_approx(hb1.keadaan.kecepatan_ud, 0.3) and is_equal_approx(hb1.maju_ubin, 0.015), "langkah pertama sesudah bangun: stick berlaku, naik 3,0 u/d^2 dari 0 -> 0,3, maju 0,015")
+	# Mode bantu dan stick netral: melanjutkan sendiri ke santai 3,0 dalam 1,0 detik sesudah bangun.
+	var santai: BikeMotion.Keadaan = sepeda
+	for i: int in range(10):
+		santai = BikeMotion.langkah(santai, Vector2.ZERO, 0.1, 0.0).keadaan
+	check(is_equal_approx(santai.kecepatan_ud, 3.0), "stick netral (juga mode bantu): 0 -> santai 3,0 tepat 1,0 detik sesudah bangun")
+	# Rem dan stamina tidak berubah karena stick ke bawah selama jatuh.
+	var rem: BikeMotion.Keadaan = Tabrakan.terapkan_ke_sepeda(BikeMotion.Keadaan.new())
+	rem.stamina = 50.0
+	for i: int in range(12):
+		rem = BikeMotion.langkah(rem, Vector2(0.0, -1.0), 0.1, 1.2 - 0.1 * i).keadaan
+	check(not rem.rem_aktif and rem.tahan_rem_detik == 0.0 and rem.stamina == 50.0, "stick bawah penuh 1,2 detik selama jatuh: rem tidak aktif, lama tahan 0, stamina 50 tetap (tanpa +15/d)")
+	var rem_menyala: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
+	rem_menyala.kecepatan_ud = 0.0
+	rem_menyala.rem_aktif = true
+	rem_menyala.tahan_rem_detik = 0.5
+	var padam: BikeMotion.Keadaan = BikeMotion.langkah(rem_menyala, Vector2(0.0, -1.0), 0.1, 1.0).keadaan
+	check(not padam.rem_aktif and padam.tahan_rem_detik == 0.0, "keadaan dengan rem menyala yang masuk jatuh: rem padam dan lama tahan 0 (BikeMotion sendiri, tidak bergantung pemanggil)")
+	# Langkah yang melewati akhir jatuh: 0,2 diam lalu 0,3 gerak biasa, sama dengan dua langkah terpisah.
+	var nol: BikeMotion.Keadaan = Tabrakan.terapkan_ke_sepeda(BikeMotion.Keadaan.new())
+	var gabung: BikeMotion.Hasil = BikeMotion.langkah(nol, Vector2(1.0, 1.0), 0.5, 0.2)
+	check(is_equal_approx(gabung.keadaan.kecepatan_ud, 0.9) and is_equal_approx(gabung.maju_ubin, 0.135) and is_equal_approx(gabung.keadaan.lateral_ubin, 0.9) and is_equal_approx(gabung.lateral_ud, 1.8), "dt 0,5 dengan sisa jatuh 0,2: 0,3 detik gerak -> kecepatan 0,9, maju 0,135, lateral 0,9 (lateral efektif 1,8 u/d atas 0,5 detik)")
+	var a: BikeMotion.Hasil = BikeMotion.langkah(nol, Vector2(1.0, 1.0), 0.2, 0.2)
+	var b: BikeMotion.Hasil = BikeMotion.langkah(a.keadaan, Vector2(1.0, 1.0), 0.3, 0.0)
+	check(is_equal_approx(b.keadaan.kecepatan_ud, gabung.keadaan.kecepatan_ud) and is_equal_approx(a.maju_ubin + b.maju_ubin, gabung.maju_ubin) and is_equal_approx(b.keadaan.lateral_ubin, gabung.keadaan.lateral_ubin), "0,2 jatuh + 0,3 gerak dalam dua langkah = satu langkah 0,5")
+	# Jeda (dt 0) saat jatuh: stick dianggap netral untuk pose dan tingkat sprite.
+	var beku: BikeMotion.Hasil = BikeMotion.langkah(nol, Vector2(0.0, 1.0), 0.0, 1.0)
+	check(beku.keadaan.kecepatan_ud == 0.0 and beku.stick_maju == 0.0 and beku.tingkat_sprite == 0, "dt 0 saat jatuh: kecepatan 0, stick maju 0, tingkat sprite santai (stick diabaikan)")
+	check(BikeMotion.langkah(nol, Vector2(0.0, 1.0), 0.1, NAN).keadaan.kecepatan_ud > 0.0 and BikeMotion.langkah(nol, Vector2(0.0, 1.0), 0.1, -1.0).keadaan.kecepatan_ud > 0.0, "beku NaN atau negatif = tidak jatuh")
 	var biasa: BikeMotion.Hasil = BikeMotion.langkah(BikeMotion.Keadaan.new(), Vector2(0.0, 1.0), 0.1)
-	check(is_equal_approx(biasa.keadaan.kecepatan_ud, 3.3), "tanpa argumen tahan_naik perilaku lama tetap (3,0 -> 3,3)")
+	check(is_equal_approx(biasa.keadaan.kecepatan_ud, 3.3), "tanpa argumen beku perilaku lama tetap (3,0 -> 3,3)")
+
+
+func _test_frame_jatuh() -> void:
+	_judul.call("Pemilihan frame jatuh: jatuh_normal 10 fps sekali lalu terjerembab_normal 3 fps berulang, semua arah (pemilik 2026-10-17)")
+	# [lewat detik, nama, frame] dengan fps dan jumlah frame dari README jatuh (4 frame 10 fps, 2 frame 3 fps), dihitung tangan.
+	var kasus: Array = [[0.0, &"jatuh_normal", 0], [0.05, &"jatuh_normal", 0], [0.1, &"jatuh_normal", 1], [0.25, &"jatuh_normal", 2],
+		[0.35, &"jatuh_normal", 3], [0.3999, &"jatuh_normal", 3], [0.4, &"terjerembab_normal", 0], [0.7, &"terjerembab_normal", 0],
+		[0.7334, &"terjerembab_normal", 1], [1.0, &"terjerembab_normal", 1], [1.0667, &"terjerembab_normal", 0], [1.2, &"terjerembab_normal", 0]]
+	var semua: bool = true
+	var beda: Array[String] = []
+	for arah: int in range(-2, 3):
+		for k: Array in kasus:
+			var f: LoperAnim.FrameJatuh = LoperAnim.frame_jatuh(k[0], arah, 10.0, 4, 3.0, 2)
+			if f.nama != k[1] or f.frame != k[2]:
+				semua = false
+				beda.append("arah %d t %.4f: %s f%d" % [arah, k[0], f.nama, f.frame])
+	check(semua, "12 saat x 5 arah: nama dan frame sesuai (tepat 0,4 = terjerembab frame 0); beda: %s" % [beda])
+	var tengah: LoperAnim.FrameJatuh = LoperAnim.frame_jatuh(0.05, 0, 10.0, 4, 3.0, 2)
+	check(is_equal_approx(tengah.progres, 0.5), "0,05 detik: progres frame 0,5")
+	check(LoperAnim.frame_jatuh(NAN, 1, 10.0, 4, 3.0, 2).nama == &"jatuh_normal" and LoperAnim.frame_jatuh(-1.0, 1, 10.0, 4, 3.0, 2).frame == 0, "NaN atau negatif = awal jatuh")
+	check(LoperAnim.frame_jatuh(0.9, 0, 0.0, 4, 3.0, 2).nama == &"jatuh_normal" and LoperAnim.frame_jatuh(0.9, 0, 10.0, 0, 3.0, 2).frame == 0, "fps atau jumlah frame tidak sah: frame 0 jatuh (tanpa bagi nol)")
+	check(LoperAnim.nama_jatuh(-2) == &"jatuh_normal" and LoperAnim.nama_terjerembab(2) == &"terjerembab_normal", "arah diabaikan: semua arah memakai normal (aset arah lain Fase 5)")
+
+
+## Pemain yang jatuh di dalam bentuk mobil yang sudah berhenti di garis tengah tidak terkunci (keputusan pemilik 2026-10-17): sesudah bangun
+## ia dikayuh lagi dan keluar dari bentuk mobil tanpa tabrakan kedua (menempel), lalu melaju normal. Simulasi murni dengan urutan langkah scene.
+func _test_jatuh_di_kotak_mobil_tidak_terkunci() -> void:
+	_judul.call("Jatuh di dalam bentuk mobil yang berhenti di garis tengah: tidak terkunci, keluar tanpa tabrakan kedua")
+	var dt: float = 1.0 / 60.0
+	var r: RintanganRute.Keadaan = _satu("mobil_garasi", 20.0, "seberang")
+	# Sepeda diam di maju 11 (masuk tanda 9) di separuh dekat sampai mobil berhenti: tanda 1,5 + mundur 2,5 = 4,0 detik.
+	for i: int in range(300):
+		r = RintanganRute.langkah(r, 11.0, 1.0, 0.0, dt).keadaan
+	check(r.daftar[0].mobil.status == MobilGarasi.Status.BERHENTI and _rect_sama(RintanganRute.kotak(r.daftar[0]), Rect2(-1.5, 19.625, 1.5, 0.75)), "kontrol: mobil berhenti, bentuk -1,5..0 x 19,625..20,375")
+	for kasus: Array in [["netral", 0.0, 0.0], ["kayuh keras", 1.0, 0.0], ["menyamping ke dekat", 0.0, 1.0]]:
+		var sepeda: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
+		sepeda.lateral_ubin = -0.75
+		var jarak: float = 18.0
+		var rr: RintanganRute.Keadaan = r
+		var tabrak: int = 0
+		var waktu_tabrak: float = -1.0
+		var waktu: float = 0.0
+		var keluar: float = -1.0
+		while waktu < 12.0:
+			waktu += dt
+			# Sebelum tabrakan stick netral (santai lurus ke mobil); sesudahnya stick kasus.
+			var stick: Vector2 = Vector2.ZERO if tabrak == 0 else Vector2(kasus[2], kasus[1])
+			var hb: BikeMotion.Hasil = BikeMotion.langkah(sepeda, stick, dt, rr.tabrakan.jatuh_detik)
+			sepeda = hb.keadaan
+			jarak += hb.maju_ubin
+			var hr: RintanganRute.Hasil = RintanganRute.langkah(rr, jarak, sepeda.lateral_ubin, sepeda.kecepatan_ud, dt)
+			rr = hr.keadaan
+			if hr.tabrak:
+				tabrak += 1
+				waktu_tabrak = waktu
+				sepeda = Tabrakan.terapkan_ke_sepeda(sepeda)
+			if tabrak > 0 and keluar < 0.0 and not Tabrakan.bertumpuk(Tabrakan.kotak_sepeda(jarak, sepeda.lateral_ubin), RintanganRute.kotak(rr.daftar[0])):
+				keluar = waktu
+		var nama: String = kasus[0]
+		check(tabrak == 1, "[%s] satu tabrakan saja (dapat %d)" % [nama, tabrak])
+		check(keluar > 0.0 and keluar - waktu_tabrak < 3.5, "[%s] keluar dari bentuk mobil %.2f detik sesudah tabrakan (< jatuh 1,2 + kebal 1,0 + 1,3)" % [nama, keluar - waktu_tabrak])
+		check(rr.tabrakan.menempel.is_empty() and sepeda.kecepatan_ud > 0.0, "[%s] sesudah keluar: tidak menempel lagi dan tetap melaju (%.2f u/d)" % [nama, sepeda.kecepatan_ud])
 
 
 func _test_rintangan_langkah_tabrak() -> void:
@@ -624,6 +749,8 @@ func _sim_rute(rute: RouteBuilder.Rute, bot: String, maju_stick: float, rem_deti
 	var combo_putus_ok: bool = true
 	var pulih_ok: bool = true
 	var detik_sejak_tabrak: float = -1.0
+	var pulih_maks: float = 0.0
+	var nol_luar_jatuh: bool = false
 	var separuh_ok: bool = true
 	var bucket: float = 0.25
 	var n_bucket: int = int(ceil(rute.panjang_ubin / bucket)) + 8
@@ -635,7 +762,7 @@ func _sim_rute(rute: RouteBuilder.Rute, bot: String, maju_stick: float, rem_deti
 	tepi_seb.fill(-100.0)
 	tepi_dek.fill(100.0)
 	var waktu: float = 0.0
-	var waktu_maks: float = rute.panjang_ubin / Config.TABRAKAN_KECEPATAN_UD + 60.0 + rem_detik
+	var waktu_maks: float = rute.panjang_ubin / Config.KECEPATAN_MELAMBAT_UD + 60.0 + rem_detik
 	var kec_min: float = INF
 	var tenggat: TenggatRute.Keadaan = TenggatRute.awal(rute.panjang_ubin)
 	while waktu < waktu_maks:
@@ -648,9 +775,12 @@ func _sim_rute(rute: RouteBuilder.Rute, bot: String, maju_stick: float, rem_deti
 		stick.x = clampf((sasaran - sepeda.lateral_ubin) / (Config.KECEPATAN_LATERAL_UD * dt), -1.0, 1.0)
 		if selesai:
 			stick = AkhirRute.stick_akhir()
-		var hb: BikeMotion.Hasil = BikeMotion.langkah(sepeda, stick, dt, Tabrakan.oleng(r.tabrakan))
+		var jatuh_awal: bool = Tabrakan.jatuh(r.tabrakan)
+		var hb: BikeMotion.Hasil = BikeMotion.langkah(sepeda, stick, dt, r.tabrakan.jatuh_detik)
 		sepeda = hb.keadaan
 		jarak += hb.maju_ubin
+		if not selesai and not jatuh_awal and sepeda.kecepatan_ud <= 0.0:
+			nol_luar_jatuh = true
 		var hr: RintanganRute.Hasil = RintanganRute.langkah(r, jarak, sepeda.lateral_ubin, sepeda.kecepatan_ud, dt)
 		r = hr.keadaan
 		if hr.tabrak:
@@ -664,6 +794,7 @@ func _sim_rute(rute: RouteBuilder.Rute, bot: String, maju_stick: float, rem_deti
 		elif detik_sejak_tabrak >= 0.0:
 			detik_sejak_tabrak += dt
 			if sepeda.kecepatan_ud >= Config.KECEPATAN_SANTAI_UD - 0.01:
+				pulih_maks = maxf(pulih_maks, detik_sejak_tabrak)
 				detik_sejak_tabrak = -1.0
 			elif detik_sejak_tabrak > 3.0 and not selesai:
 				pulih_ok = false
@@ -701,7 +832,7 @@ func _sim_rute(rute: RouteBuilder.Rute, bot: String, maju_stick: float, rem_deti
 				break
 		if not ada:
 			okupansi_ok = false
-	return {"tabrak": jumlah_tabrak, "id_tabrak": id_tabrak, "selesai": jumlah_selesai, "waktu": waktu, "okupansi_ok": okupansi_ok, "separuh_ok": separuh_ok, "pulih_ok": pulih_ok, "jarak": jarak, "kec_min": kec_min, "combo_putus_ok": combo_putus_ok, "berhenti": selesai and sepeda.kecepatan_ud <= 0.0, "tenggat": tenggat.tenggat_detik, "waktu_akhir": tenggat.waktu_detik, "tenggat_lewat": TenggatRute.lewat(tenggat)}
+	return {"tabrak": jumlah_tabrak, "id_tabrak": id_tabrak, "selesai": jumlah_selesai, "waktu": waktu, "okupansi_ok": okupansi_ok, "separuh_ok": separuh_ok, "pulih_ok": pulih_ok, "jarak": jarak, "kec_min": kec_min, "pulih_maks": pulih_maks, "nol_luar_jatuh": nol_luar_jatuh, "combo_putus_ok": combo_putus_ok, "berhenti": selesai and sepeda.kecepatan_ud <= 0.0, "tenggat": tenggat.tenggat_detik, "waktu_akhir": tenggat.waktu_detik, "tenggat_lewat": TenggatRute.lewat(tenggat)}
 
 
 ## Lateral sasaran bot. "bebas": rintangan relevan = titik rumah paling awal di [maju - 3,7, maju + 12]; sasaran sisi lawannya (+-0,5).
@@ -808,7 +939,11 @@ func _test_tabrakan_tidak_menghentikan_rute() -> void:
 		check(h["tabrak"] <= rute.objek.size() + 2, "seed %d: tanpa tabrakan beruntun berulang (%d tabrakan)" % [benih, h["tabrak"]])
 		check(h["selesai"] == 1 and h["jarak"] >= rute.panjang_ubin, "seed %d: garis akhir tercapai, rute_selesai tepat sekali" % benih)
 		check(h["berhenti"], "seed %d: sesudah garis akhir sepeda berhenti dengan rem biasa (tidak terkunci di tengah)" % benih)
-		check(h["pulih_ok"] and h["kec_min"] > 0.0, "seed %d: sesudah tiap tabrakan kecepatan kembali ke santai dalam 3 detik; tidak pernah 0 sebelum akhir (min %.2f)" % [benih, h["kec_min"]])
+		check(h["pulih_ok"] and h["pulih_maks"] <= 2.2 + 2.0 * DT_RUTE + TOL, "seed %d: sesudah tiap tabrakan kecepatan kembali ke santai dalam jatuh 1,2 + akselerasi 1,0 = 2,2 detik (terlama %.3f)" % [benih, h["pulih_maks"]])
+		check(h["kec_min"] == 0.0 and not h["nol_luar_jatuh"], "seed %d: kecepatan 0 hanya selama jatuh, tidak pernah di luar jatuh sebelum akhir (tidak terkunci)" % benih)
 		check(h["combo_putus_ok"], "seed %d: tiap tabrakan memutus combo" % benih)
 		check(h["okupansi_ok"] and h["separuh_ok"], "seed %d: bot penabrak pun tidak membuat rintangan menutup seluruh lebar jalan" % benih)
-		check(h["waktu"] < rute.panjang_ubin / Config.KECEPATAN_SANTAI_UD + 20.0, "seed %d: rute selesai dalam %.1f detik (santai murni %.1f + 20)" % [benih, h["waktu"], rute.panjang_ubin / Config.KECEPATAN_SANTAI_UD])
+		# Batas atas: santai murni + tiap tabrakan paling mahal jatuh 1,2 + akselerasi penuh 1,0 (sebenarnya tertinggal 0,5) + 5 detik rem dan
+		# belok. Hasil 2026-10-17: 98,2 detik untuk santai murni 78,7 dan 11 tabrakan (sekitar 1,7 detik per tabrakan).
+		var batas: float = rute.panjang_ubin / Config.KECEPATAN_SANTAI_UD + float(h["tabrak"]) * 2.2 + 5.0
+		check(h["waktu"] < batas, "seed %d: rute selesai dalam %.1f detik (< santai murni %.1f + %d tabrakan x 2,2 + 5 = %.1f)" % [benih, h["waktu"], rute.panjang_ubin / Config.KECEPATAN_SANTAI_UD, h["tabrak"], batas])

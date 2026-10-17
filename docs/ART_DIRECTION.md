@@ -208,7 +208,7 @@ Tujuh varian dari eksplorasi tetap ada di `tools/loper_art/loper.py` dan bisa di
 | Meluncur | Fase 1 | Pedal datar, kaki diam. **Usulan, dipasang di jalan uji sejak 2026-10-13** (`design/character/loper_agen/rem_meluncur/`, `meluncur_<arah>`, 5 arah, 4 fps): dipakai selama stick ke bawah dan kecepatan masih di atas tujuan (BALANCING 2). Pergeseran 1 px dan fps masih tebakan, dinilai di HP |
 | Rem | Fase 1 | Badan sedikit mundur. **Usulan, dipasang di jalan uji sejak 2026-10-13** (`rem_<arah>`, 5 arah, 8 fps): dipakai selama rem aktif, juga saat sudah berhenti. Pose "berhenti" (kaki turun) tetap Fase 4 |
 | Berhenti | Fase 4 (menangkap kucing) | Satu kaki turun ke tanah |
-| Tabrakan / oleng | Fase 3 | Tidak jatuh dramatis; kerusakan hanya menghambat |
+| Tabrakan = jatuh | Fase 3 | **Dipakai sejak 2026-10-17** (keputusan pemilik: tabrakan membuat pemain jatuh lalu tetap bisa melanjutkan; menggantikan "oleng, tidak jatuh dramatis"). Sheet usulan `design/character/loper_agen/jatuh/` (`jatuh.py`, sel 114×68, titik pijak 57,51, offset sama dengan kayuh): `jatuh_normal` 4 frame 10 fps sekali lalu `terjerembab_normal` 2 frame 3 fps berulang, masuk `loper_agen_frames.tres` lewat `bangun_frames.py`. Baru arah `normal`, dipakai untuk semua arah; bangun langsung ke kayuh dengan kedip kebal. **Fase 5:** empat arah lain (serong dan 90°) dan animasi bangkit |
 
 ### 3.5 Gambar skala besar (full body)
 
@@ -298,7 +298,7 @@ Kolom **M2** = dibutuhkan untuk satu hari penuh di perumahan (prototype 3–4). 
 | Lempar sisi seberang / dekat | ✅ | ✅ | Per arah normal dulu, arah lain menyusul |
 | Meluncur, rem | ✅ | ✅ | |
 | Berhenti (kaki turun) | ✅ | ✅ | Untuk menangkap kucing |
-| Tabrakan / oleng | ⬜ | ✅ | |
+| Tabrakan = jatuh (jatuh, terjerembab) | ✅ | ✅ | Arah `normal` dipakai sejak 2026-10-17 untuk semua arah (3.4); empat arah lain dan bangkit di Fase 5 |
 | Lampu sepeda menyala | ⬜ | ✅ | Untuk malam |
 
 ### 6.2 Koran dan barang misi
@@ -555,6 +555,8 @@ Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dib
 ---
 
 ## Changelog Keputusan
+
+- **2026-10-17** — **Tabrakan = jatuh** (keputusan pemilik; bagian 3.4, 6.1; BALANCING 6c). Animasi jatuh terjerembab yang sebelumnya usulan tak terpakai kini dipakai setiap tabrakan: `jatuh_normal` lalu `terjerembab_normal` selama 1,2 detik, lalu bangun langsung ke kayuh dengan kedip kebal. Baris lama "tidak jatuh dramatis" diganti: tabrakan kini terlihat jatuh, tetapi tetap hanya menghambat (pemain melanjutkan, tanpa game over). `loper_agen_frames.tres` kini 50 animasi, dibangun `tools/loper_art/bangun_frames.py` dari enam JSON sumber; PNG jatuh disalin byte demi byte, tidak diubah. Titik pijak (57, 51) di sel 114×68 berjarak sama dari tengah sel dengan kayuh, jadi offset (0, -17) sama (dites). Empat arah lain dan animasi bangkit tercatat sebagai pekerjaan aset Fase 5.
 
 - **2026-10-15** — **Aset Fase 3 perumahan dirender sebagai usulan** (6.4–6.6, 6.8): anjing penjaga, mobil keluar garasi, rumah pelanggan dan bukan pelanggan di dua sisi, enam jenis antena TV (`tools/env_art/fase3.py`), ikon HUD dan penanda radar (`tools/ui_art/hud_ikon.py`). Mock lama dari `perumahan.py` tidak berubah. Belum dipasang di game dan belum dikunci.
 - **2026-10-14** — **Ukuran ubin 64×32 px dikunci** (bagian 2.2, ROADMAP 4b), keputusan pemilik setelah graybox dan uji HP Fase 1. Persegi dunia tetap 32×32 unit; aset dunia gelombang 1 dibuat dengan ukuran ini.

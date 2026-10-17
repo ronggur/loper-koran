@@ -595,6 +595,9 @@ func _test_bantu_kisi(v: float) -> void:
 	var akar: RuteMain = await _siapkan()
 	var rute: RouteBuilder.Rute = _rute_oracle(SEED_DEV)
 	var semua_zona: Array[ZonaSasaran.Zona] = ZonaSasaran.zona_rute(rute.rumah)
+	# Rintangan dikosongkan: kisi ini menguji sasaran mode bantu, dan sejak tabrakan = jatuh (keputusan pemilik 2026-10-17) tabrakan dengan
+	# anjing atau mobil di sepanjang kisi menolak tap berikutnya. Penolakan lemparan selama jatuh dites di `TesRintanganScene`.
+	akar.set(&"_rintangan", RintanganRute.Keadaan.new())
 	var catatan: Dictionary = _catat(akar)
 	_nyalakan_bantu(akar)
 	var salah: Array[String] = []
