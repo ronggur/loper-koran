@@ -1,0 +1,12 @@
+{
+ "sprite": "prop_kotak_surat_bukan.png",
+ "size": [
+  28,
+  33
+ ],
+ "ground_anchor": [
+  9,
+  20
+ ],
+ "note": "Usulan, tools/env_art/fase3.py. Kotak surat rumah bukan pelanggan sisi seberang (BUKAN sasaran): lebih rendah dan lebih kecil dari prop_kotak_surat, tanpa celah surat, abu-abu logam (#969AA0 atas), skala 1x. Titik pijak = kaki tiang di tanah, dipasang di titik yang sama dengan kotak surat pelanggan. Bayangan = penanda #000000 alpha 28%."
+}

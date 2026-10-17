@@ -7,6 +7,7 @@ Memakai engine.py, lib.py, dan perumahan.py apa adanya (tidak mengubah mock lama
 - house_near_v(): rumah sisi dekat (terlihat belakang), varian pelanggan / bukan, toren dan jemuran
 - antena_v(): enam jenis antena TV
 - kotak_surat_oranye(): kotak surat berbentuk lib.kotak_surat() berwarna oranye graybox, sprite tunggal sasaran scene rute
+- kotak_surat_bukan(): kotak surat rumah bukan pelanggan sisi seberang, abu-abu logam, lebih rendah dan tanpa celah surat (bukan sasaran)
 
 Menjalankan (dari root repo):
     python3 tools/env_art/fase3.py            # render ke build/env_art/fase3/
@@ -764,6 +765,19 @@ def kotak_surat_oranye(s):
     kotak_surat(s, 0, 0, mat=KOTAK_SURAT_ORANYE)
 
 
+# Abu-abu logam palet induk (ART_DIRECTION 2.4: `#C4C0C8` · `#969AA0` · `#67636D`), nada atas = RADAR_BUKAN `#969AA0`: lebih redup
+# dari oranye sasaran supaya sekilas saat ngebut yang terbaca tetap kotak surat pelanggan.
+KOTAK_SURAT_BUKAN = Mat('#969AA0', '#67636D', '#5F5B66')
+
+
+def kotak_surat_bukan(s):
+    """Kotak surat rumah bukan pelanggan sisi seberang (bukan sasaran): bentuk dasar lib.kotak_surat() tetapi tiang lebih pendek
+    (8 lawan 12), badan lebih kecil (6 x 4 x 5 lawan 7 x 5 x 7), tanpa celah surat, dan abu-abu. Beda bentuk dan tinggi, bukan hanya
+    warna (rule ui-scenes). Titik pijak (0, 0, 0) = kaki tiang di tanah."""
+    s.add(box(-1, 1, -1, 1, 0, 8, P['metal_dk']))
+    s.add(box(-3, 3, -2, 2, 8, 13, KOTAK_SURAT_BUKAN))
+
+
 def _no_cast_antena(s, start):
     for p in s.prims[start:]:
         if p.tag == 'antena':
@@ -818,6 +832,11 @@ def ekspor_sprite():
             'Usulan, tools/env_art/fase3.py. Kotak surat sasaran scene rute: bentuk lib.kotak_surat() (tiang dan badan dengan '
             'celah surat) berwarna oranye graybox (placeholder sasaran), skala 1x. Titik pijak = kaki tiang di tanah, '
             'dipasang di pusat zona kotak surat. Bayangan = penanda #000000 alpha 28%.')
+    a, o, _, _ = render_sprite(kotak_surat_bukan, pad=4, extra_px=(10, 6))
+    _single(a, o, 'prop_kotak_surat_bukan',
+            'Usulan, tools/env_art/fase3.py. Kotak surat rumah bukan pelanggan sisi seberang (BUKAN sasaran): lebih rendah '
+            'dan lebih kecil dari prop_kotak_surat, tanpa celah surat, abu-abu logam (#969AA0 atas), skala 1x. Titik pijak = '
+            'kaki tiang di tanah, dipasang di titik yang sama dengan kotak surat pelanggan. Bayangan = penanda #000000 alpha 28%.')
     # lembar contoh antena di atas potongan atap (tanpa bayangan tanah)
     frames = []
     for k in ANT_KINDS:
@@ -838,7 +857,7 @@ def ekspor_layar():
 
 # ------------------------------------------------------------- salin ke repo ----
 SALIN_SPRITE = {
-    'assets/sprites/props': ['prop_kotak_surat'],
+    'assets/sprites/props': ['prop_kotak_surat', 'prop_kotak_surat_bukan'],
     'assets/sprites/obstacles': ['obs_anjing_sheet', 'obs_mobil_garasi_sheet'],
     'assets/sprites/houses/perumahan': ['house_perumahan_%s_%s' % (k, p) for k, *_ in RUMAH_SEBERANG
                                         for p in ('pelanggan', 'bukan')] +
