@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/tile_graybox_trotoar.png" id="6_trotoar"]
 [ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/tile_graybox_rumput.png" id="7_rumput"]
 [ext_resource type="PackedScene" path="res://scenes/entities/kotak_surat.tscn" id="9_kotak_surat"]
+[ext_resource type="PackedScene" path="res://scenes/entities/kotak_surat_bukan.tscn" id="23_kotak_bukan"]
 [ext_resource type="PackedScene" path="res://scenes/entities/sepeda_uji.tscn" id="10_sepeda"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud_rute.tscn" id="11_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/layar_jeda.tscn" id="12_jeda"]
@@ -51,6 +52,7 @@ y_sort_enabled = true
 texture_filter = 1
 script = ExtResource("3_daur")
 adegan_kotak_surat = ExtResource("9_kotak_surat")
+adegan_kotak_surat_bukan = ExtResource("23_kotak_bukan")
 
 [node name="Sepeda" parent="Objek" instance=ExtResource("10_sepeda")]
 unique_name_in_owner = true

@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/props/prop_kotak_surat_bukan.png" id="1_kotak_bukan"]
+
+[node name="KotakSuratBukan" type="Sprite2D"]
+texture_filter = 1
+texture = ExtResource("1_kotak_bukan")
+centered = false
+offset = Vector2(-9, -20)
