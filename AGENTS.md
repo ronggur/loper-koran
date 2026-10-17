@@ -100,4 +100,4 @@ tools/               cek_keluaran_tes.py (pemeriksa keluaran tes), tests_cek/ (c
 .cursor/rules/       Aturan agent (sumber tunggal)
 ```
 
-Belum ada: `android/` (template Gradle; baru dipasang saat plugin Android masuk, Fase 8 dan 14), autoload selain `Audio`, `assets/data/` selain segmen rute perumahan (`assets/data/routes/perumahan/per_*.json`, 9 segmen usulan), layar pengaturan (sakelar Kidal/Bantu sementara di layar jeda), keputusan rumah sisi dekat (spike 3C menunggu pemilik), file terjemahan bahasa Inggris, panel 9-slice di `assets/ui/theme.tres`. Struktur lengkap yang direncanakan ada di `docs/README.md`.
+Belum ada: `android/` (template Gradle; baru dipasang saat plugin Android masuk, Fase 8 dan 14), autoload selain `Audio`, `assets/data/` selain segmen rute perumahan (`assets/data/routes/perumahan/per_*.json`, 9 segmen usulan), layar pengaturan (sakelar Kidal/Bantu sementara di layar jeda), aset produksi rumah sisi dekat (tampilan diputuskan 2026-10-17: tembok/pagar belakang rendah, ROADMAP 4b; dibuat Fase 5/8), file terjemahan bahasa Inggris, panel 9-slice di `assets/ui/theme.tres`. Struktur lengkap yang direncanakan ada di `docs/README.md`.
