@@ -38,6 +38,13 @@ Variasi kendaraan dan kucing (usulan) dibuat oleh `kendaraan.py`, dari root repo
 python3 tools/env_art/kendaraan.py               # mobil 5 model, motor 4 model, kucing 5 warna, layar contoh
 ```
 
+Ubin jalan perumahan, lampu jalan, dan pohon (usulan), dari root repo. Belum disalin ke `assets/`:
+
+```
+python3 tools/env_art/ubin_perumahan.py          # 18 ubin 64x32 + polisi tidur ke build/env_art/ubin/ (cek sambungan: beda 0)
+python3 tools/env_art/lampu_pohon.py             # 7 lampu (mati/nyala), 11 pohon, layar contoh siang dan malam ke build/env_art/lampu_pohon/
+```
+
 Hasil masuk ke `build/env_art/` (tidak di-commit, bisa diganti lewat `ENV_ART_OUT`). Setelah dicek, salin yang dipakai ke `docs/design/environment/`.
 
 ## Cara kerja
@@ -60,6 +67,8 @@ Hasil masuk ke `build/env_art/` (tidak di-commit, bisa diganti lewat `ENV_ART_OU
 | `fase3.py` | Aset Fase 3 perumahan (usulan): anjing penjaga lima pose, mobil keluar garasi (sedan `lib.car()` diputar 90°, lampu mundur, cahaya di aspal, asap knalpot), rumah sisi seberang dan sisi dekat versi pelanggan dan bukan pelanggan (toren air, jemuran), enam jenis antena TV (`antena_v`), kotak surat sasaran oranye `prop_kotak_surat` (`kotak_surat_oranye`, sprite tunggal), kotak surat abu-abu bukan sasaran `prop_kotak_surat_bukan` (`kotak_surat_bukan`, sprite tunggal), layar contoh satu sisi dan dua sisi, ekspor sprite + JSON titik pijak. Memakai `engine.py`, `lib.py`, `perumahan.py` tanpa mengubahnya |
 | `spike_sisi_dekat.py` | Spike rumah sisi dekat (usulan): punggung rumah rendah dan kontras rendah (`house_near_rendah`, warna dicampur 40% ke rumput), tembok belakang rendah (`tembok_belakang`), punggung penuh tanpa kotak surat di sprite; JSON dengan tapak dan tinggi untuk aturan penutup. Memakai `fase3.py` tanpa mengubahnya |
 | `kendaraan.py` | Variasi kendaraan dan kucing (usulan): mobil sedan (bentuk `lib.car()`), hatchback, MPV, pikap bak, angkot (`lib.angkot`) dalam empat arah dengan lampu mati, jalan, rem, dan sein (skala ×1,3, sekitar 2×1 ubin); motor matic, bebek, sport, motor sayur, parkir miring di standar samping atau jalan dengan pengendara (skala ×1,7, helm setinggi kepala loper); kucing tujuh pose × empat arah, lima warna (belang tiga berkalung = kucing misi). Memakai `engine.py`, `lib.py`, `perumahan.py`, `fase3.py` tanpa mengubahnya |
+| `ubin_perumahan.py` | Ubin jalan perumahan (usulan) dengan tata letak game (`config.gd`: aspal 2 ubin, trotoar 1 ubin): aspal seberang/dekat dengan marka, trotoar dengan kerb dan lajur sepeda (biasa, simbol, jalan masuk), rumput, aspal dan rumput polos tiga varian, polisi tidur. Penampang dirender sekali sebagai adegan berulang tiap 1 ubin lalu dipotong per belah ketupat (64x32, 1.024 piksel, tanpa tumpang tindih), jadi kerb yang melewati batas ubin tetap menyambung |
+| `lampu_pohon.py` | Lampu jalan (usulan) tujuh jenis: lengan, lengkung, ganda, taman, tiang beton, bambu, tenaga surya; mati/nyala, lengan ke sisi seberang atau dekat. Pohon sebelas jenis sebagai sprite tunggal: rindang, glodokan, ketapang, kelapa, pisang (sudah ada) dan flamboyan, pucuk merah, palem raja, pepaya, bambu, beringin (baru). Layar contoh siang dan malam dari ubin baru |
 | `details.py` | Loop detail pinggir jalan |
 | `anim_hero.py` | Animasi adegan utama |
 | `graybox.py` | Ubin graybox 64x32 (aspal, trotoar, rumput), kotak rumah, dan kotak surat untuk `assets/sprites/_placeholder/` (hanya stdlib, bukan mock) |
