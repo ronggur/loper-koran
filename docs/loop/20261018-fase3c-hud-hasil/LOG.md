@@ -45,6 +45,7 @@ Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MAN
 - [ ] (QA 1) Kidal dimatikan lagi dari layar jeda (terkait QA-001): nyalakan Kidal, lanjut, jeda, matikan, lanjut. Diharapkan: stick kembali di kiri, swipe di kanan, panel bawah dan bel kembali ke sisi kanan, radar tidak berpindah.
 - [ ] (QA 1) Layar hasil di 2400×1080 dengan lubang kamera: panel tengah dan tombol "Main lagi" tidak tertutup; HUD final tidak menutupi lampu mundur mobil seberang di bawah panel koin/skor (tangkapan QA `shots/qa/` hanya desktop tanpa cutout).
 - [ ] (QA 2) Peralihan tenggat di HP (terkait QA-009): satu rute santai dengan berhenti sebentar sampai jam lewat; perhatikan detik terakhir. Diharapkan: "WAKTU 0:01" (atau 0:00) langsung berganti "LEWAT +0:01" oranye, tidak pernah "WAKTU 0:01" bertahan sesudah antaran pemberi tip sudah tanpa tip.
+- [ ] (Review pemilik 2026-10-17) Bel di posisi baru (pusat 64 px game dari tepi samping dan bawah) terjangkau jempol kanan dan kiri (kidal) tanpa menekuk dan tidak menghalangi swipe: `docs/SETUP_ANDROID.md` 8.8 butir 17.
 
 ## Keputusan & catatan
 - Keputusan pemilik 2026-10-17 (jawaban satu pesan orchestrator): K-1 tenggat = ceil(panjang / santai 3,0 × 1,15), tip hilang sesudah tenggat lewat (ongkos, skor, combo tetap); K-2 radar 30 ubin ke depan; K-3 jangkauan bel 1 ubin ke belakang dipertahankan (D-5/QA-008 run 3B selesai); K-4 mulai tanpa hasil uji HP 8.5–8.7.
@@ -277,3 +278,30 @@ Logika inti 3C (tenggat, tip sesudah tenggat, radar, progres, hasil, zona aman s
 **5. Validasi visual (dijalankan sendiri, jendela asli).** `tests/probe_hud_rute_jendela.gd` di 2340x1080 dan 1600x720 ke `shots/qa2/<resolusi>/`: keduanya exit 0, 0 ERROR/WARNING, "0 keadaan tidak sesuai", 20 PNG ukuran = resolusi. Dibandingkan piksel dengan tangkapan resmi Dev 1b: 19 dari 20 identik; `1600x720_hud_kidal` berbeda hanya di kotak 20x46 px layar pada sepeda (frame animasi kayuh, dicek dengan potongan berdampingan), bukan HUD. Dilihat sendiri: 2340 tenggat_lewat ("LEWAT +0:12" oranye, kotak ✓/×/▶/kosong, radar kiri, koin/skor, panel bawah, bel), 2340 hasil_meleset_lewat (Terkirim 13/25 ... Meleset abu-abu, "Lewat tenggat +0:13; ..." netral, "Main lagi"), 1600x720 kidal (bel dan panel bawah dicerminkan, radar tidak ditukar), 1600x720 jeda_sakelar ("Kidal: mati", "Bantu: nyala" berbingkai `ACCENT`). Tidak ada regresi tampilan. Hanya empat tangkapan yang dilihat itu yang di-commit di `shots/qa2/` (316 KB); 16 lainnya identik piksel dengan tangkapan resmi di `shots/` sehingga tidak disalin. Zona aman nyata (cutout) tetap NEEDS-MANUAL (desktop tanpa cutout).
 
 **Verdict QA iterasi 2: PASS.** Semua gerbang hijau; QA-001..QA-007 VERIFIED (2 Major, 4 Minor, 1 Nit); temuan baru 0 Blocker, 0 Major, 3 Minor (QA-008 dokumen K-5, QA-009 cache tenggat HUD, QA-010 format detik layar hasil), 2 Nit (QA-011, QA-012), semuanya OPEN dan tidak menghalangi PASS; disarankan QA-008 diperbaiki sebelum PR. Tes reproduksi tidak ditambah ke repo (kodenya benar; reproduksi QA-009 dijalankan dengan skrip sementara di klon). Fase 3 tetap tidak boleh dicentang sampai NEEDS-MANUAL (SETUP_ANDROID 8.8) diisi pemilik.
+
+### Masukan review pemilik: posisi bel (2026-10-17)
+
+Masukan pemilik di review PR #33: tombol bel terlalu di pojok bawah sehingga susah dijangkau jempol; mode kidal juga. Dikerjakan di `feat/fase3c-hud-hasil`, Godot 4.7.2.
+
+- **Angka (usulan).** `BEL_TOMBOL_PUSAT_TEPI_PX` 28 (dipakai untuk jarak samping dan bawah) dihapus, diganti dua konstanta satu baris literal: `BEL_TOMBOL_PUSAT_SAMPING_PX` **64** dan `BEL_TOMBOL_PUSAT_BAWAH_PX` **64**. Pusat bel (lebar −64, 296), kidal (64, 296): (576, 296) / (716, 296) / (736, 296) di lebar 640 / 780 / 800; tombol (lebar −84, 276) / kidal (44, 276) 40×40; sekitar 1,2 cm dari tepi di vivo V2108. Kidal hanya dicerminkan mendatar. Ukuran tombol 40 dan radius zona tap 28 tetap; zona tap tetap ikut inset zona aman (`geser_bel`). Pemakai: `TouchZones.pusat_bel`, margin `StripBel` di `HudDasar` (scene `hud_rute.tscn` dan `hud_dev.tscn` tidak menulis margin, jadi satu sumber), komentar `tombol_bel.gd`. Nilai 64/64 tidak menumpuk dengan apa pun di 640, 780, 800, kanan dan kidal, dengan dan tanpa inset tiruan (zona tap x lebar −92..lebar −36, y 268..324; panel koran berakhir x sekitar 517, panel kecepatan y 293..352 di x 210..380; radar y 10..182), jadi dipakai apa adanya.
+- **Tes.** `tests/tes_tata_letak.gd` `_test_bel_dijangkau` (tiap lebar 640/780/800 × kanan/kidal, harapan literal `BEL_HARAPAN`): zona tap di dalam zona swipe sisi lempar, di luar zona stick, tidak menumpuk dengan tombol jeda, radar, panel progres/koin/skor, panel kecepatan dan koran; event sentuh sungguhan di pusat (bel adegan berbunyi), tepi atas dan tepi dalam radius 28 (bel), 1 px di luarnya (swipe), jari bel digeser 150×120 px tetap bukan swipe/tap, posisi bel lama (lebar −28, 332) / (28, 332) kini swipe lalu tap; inset tiruan awal_x 10 / akhir_x 11 / bawah 20 -> pusat (lebar −71, 284) / kidal (70, 284) literal, tetap bebas dan terklaim. Harapan lama diperbarui ke posisi baru di `tes_rintangan_scene.gd`, `tes_hud_rute_scene.gd`, `tes_input_murni.gd` (pojok bawah zona swipe kembali swipe), dan `_test_zona_aman_tiruan`/`_test_zona_aman_atas`. `run_tests`: **10710 lolos, 0 gagal** (sebelumnya 10459); `cek_keluaran_tes.py` dan `--ketat` lolos; `--import` dan `--quit-after 2` exit 0 tanpa ERROR/WARNING.
+- **Mutan** (klon terpisah di scratchpad, `run_tests` penuh, berkas dikembalikan): 11 dicoba, 9 mati, 2 ekuivalen.
+
+| Mutan | Perubahan | Hasil |
+|---|---|---|
+| B01 | `pusat_bel` kidal tidak dicerminkan | mati, 10653 / 57 |
+| B02 | `StripBel` kidal tidak dicerminkan (selalu kanan) | mati, 10689 / 21 |
+| B03 | `pusat_bel` y memakai `BEL_TOMBOL_PUSAT_SAMPING_PX` | selamat, **ekuivalen** (64 = 64) |
+| B04 | margin bawah `StripBel` memakai konstanta samping | selamat, **ekuivalen** (64 = 64) |
+| B05 | zona tap kembali di pojok lama (28, 332) | mati, 10562 / 148 |
+| B06 | tombol HUD kembali di pojok lama (margin 8) | mati, 10666 / 44 |
+| B07 | kidal juga dicerminkan tegak | mati, 10652 / 58 |
+| B08 | margin bawah tanpa setengah tombol | mati, 10667 / 43 |
+| B09 | `StripBel` kidal tanpa geser zona aman | mati, 10706 / 4 (tes inset tiap lebar kidal) |
+| B10 | `BEL_TOMBOL_PUSAT_BAWAH_PX` 60 tanpa tes diubah | mati, 10635 / 75 |
+| B11 | zona bel diperiksa sesudah swipe | mati, 10600 / 110 |
+
+B03 dan B04 tidak bisa dibunuh selama kedua nilai sama; bila pemilik kelak menyetel samping dan bawah berbeda, tukar konstanta di salah satu sisi langsung gagal karena tes membandingkan `TouchZones.pusat_bel` dengan pusat tombol HUD (dua penerapan terpisah) dan keduanya dengan koordinat literal.
+- **Visual.** `probe_hud_rute_jendela.gd` di 2340×1080 dan 1920×1080 (ke `build/`): exit 0, "0 keadaan tidak sesuai", tanpa ERROR/WARNING. Dilihat sendiri (awal dan kidal di kedua resolusi): bel di posisi baru tidak menutupi panel koran/kecepatan, sepeda, radar, atau panel atas. Bukti: `shots/bel/2340x1080_bel_kanan.png`, `shots/bel/2340x1080_bel_kidal.png`. Tangkapan resmi `shots/*_hud_*.png` dan render `docs/design/bel/preview/penempatan_*.png` masih menunjukkan posisi pojok lama (probe tidak menimpa folder docs; tidak diperbarui).
+- **Dokumen.** `DESIGN_SPEC.md` 3.8 (posisi baru, usulan, alasan), `BALANCING.md` 6e dan 10, `GDD.md` 5.2 dan 5.4 (kata "pojok" diganti), `SETUP_ANDROID.md` 8.7 butir 9 dan 8.8 butir 17 baru + lembar hasil. DESIGN_SPEC 3.7 tidak menyebut posisi bel, tidak diubah.
+
