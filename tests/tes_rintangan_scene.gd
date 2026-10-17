@@ -54,6 +54,8 @@ func jalankan() -> void:
 	await _test_jeda_membekukan()
 	await _test_skor_di_scene()
 	await _test_bunyi_tip_di_scene()
+	await _test_tip_sesudah_tenggat_di_scene()
+	await _test_putus_antaran_tidak_sah_di_scene()
 	await _test_bel_input()
 	await _test_bel_anjing_mundur()
 	await _test_main_lagi()
@@ -92,8 +94,21 @@ func _sepeda(akar: Node) -> SepedaUji:
 	return _anak(akar, "Sepeda") as SepedaUji
 
 
-func _hud(akar: Node) -> HudDev:
-	return _anak(akar, "Hud") as HudDev
+## HUD rute final (run fase3c-hud-hasil; dulu `HudDev`). Jalan uji memakai `_anak(akar, "Hud") as HudDev`.
+func _hud(akar: Node) -> HudRute:
+	return _anak(akar, "Hud") as HudRute
+
+
+## Mode bantu dinyalakan lewat sakelar layar jeda (O-6; HUD rute tidak punya tombol dev).
+func _nyalakan_bantu(akar: AdeganJalan) -> void:
+	if not akar.mode_bantu():
+		(_anak(akar, "LayarJeda") as LayarJeda).sakelar_bantu().ditekan.emit()
+
+
+## Kidal dinyalakan lewat sakelar layar jeda (O-6).
+func _nyalakan_kidal(akar: AdeganJalan) -> void:
+	if not akar.kidal():
+		(_anak(akar, "LayarJeda") as LayarJeda).sakelar_kidal().ditekan.emit()
 
 
 func _kontrol(akar: Node) -> KontrolTouch:
@@ -193,33 +208,41 @@ func _test_murni() -> void:
 	check(daftar.size() == 2 and daftar[0].ongkos == 11 and daftar[1].ongkos == 12, "paling banyak dua sekaligus, yang lama hilang lebih dulu")
 	var setengah: Array[UmpanMelayang.Entri] = UmpanMelayang.langkah(daftar, 0.4)
 	check(setengah.size() == 2 and UmpanMelayang.naik_px(setengah[0]) == 6 and is_equal_approx(UmpanMelayang.alfa(setengah[0]), 0.5) and is_equal_approx(daftar[0].sisa_detik, 0.8), "0,4 detik: naik 6 px, alfa 0,5 (masukan tidak berubah)")
+	# QA-012 run 3B (AC-10 run fase3c-hud-hasil, mutan R07): arah naik dijaga oracle literal di awal dan akhir, bukan hanya titik tengah.
+	var e_naik: UmpanMelayang.Entri = UmpanMelayang.Entri.new()
+	var tabel_naik: Array = [[0.8, 0, 1.0], [0.6, 3, 0.75], [0.2, 9, 0.25], [0.0, 12, 0.0]]
+	for baris: Array in tabel_naik:
+		e_naik.sisa_detik = baris[0]
+		check(UmpanMelayang.naik_px(e_naik) == baris[1] and is_equal_approx(UmpanMelayang.alfa(e_naik), baris[2]), "umpan melayang sisa %s detik: naik %d px (dari titik muncul ke atas), alfa %s" % [baris[0], baris[1], baris[2]])
 	check(UmpanMelayang.langkah(daftar, 0.0).size() == 2 and UmpanMelayang.langkah(daftar, 0.81).is_empty(), "dt 0 membeku; sesudah 0,8 detik hilang")
 	# Zona bel.
-	for kasus: Array in [[640, false, Vector2(612, 332)], [780, false, Vector2(752, 332)], [800, false, Vector2(772, 332)], [800, true, Vector2(28, 332)]]:
+	# Masukan uji pemilik 2026-10-17 (PR #33): pusat 64 dari tepi samping dan 64 dari bawah (dulu 28 dan 28, di pojok); kidal dicerminkan mendatar.
+	check(Config.BEL_TOMBOL_PUSAT_SAMPING_PX == 64 and Config.BEL_TOMBOL_PUSAT_BAWAH_PX == 64 and Config.BEL_TOMBOL_UKURAN_PX == 40 and is_equal_approx(Config.BEL_ZONA_RADIUS_PX, 28.0), "Config bel: pusat 64 dari samping, 64 dari bawah, tombol 40, radius zona 28")
+	for kasus: Array in [[640, false, Vector2(576, 296)], [640, true, Vector2(64, 296)], [780, false, Vector2(716, 296)], [780, true, Vector2(64, 296)], [800, false, Vector2(736, 296)], [800, true, Vector2(64, 296)]]:
 		check(TouchZones.pusat_bel(kasus[0], kasus[1]) == kasus[2], "pusat bel lebar %d kidal %s = %s" % [kasus[0], kasus[1], kasus[2]])
-	check(TouchZones.zona_di(Vector2(752, 332), 780, false) == TouchZones.Zona.BEL and TouchZones.zona_di(Vector2(724, 332), 780, false) == TouchZones.Zona.BEL and TouchZones.zona_di(Vector2(723, 332), 780, false) == TouchZones.Zona.SWIPE, "zona bel radius 28 inklusif (x 724 bel, x 723 swipe)")
-	check(TouchZones.zona_di(Vector2(752, 304), 780, false) == TouchZones.Zona.BEL and TouchZones.zona_di(Vector2(752, 303), 780, false) == TouchZones.Zona.SWIPE, "tepi atas zona bel y 304 inklusif, y 303 swipe")
-	check(TouchZones.zona_di(Vector2(28, 332), 780, true) == TouchZones.Zona.BEL and TouchZones.zona_di(Vector2(752, 332), 780, true) == TouchZones.Zona.STICK, "kidal: bel di (28, 332); (752, 332) jadi zona stick")
+	check(TouchZones.zona_di(Vector2(716, 296), 780, false) == TouchZones.Zona.BEL and TouchZones.zona_di(Vector2(688, 296), 780, false) == TouchZones.Zona.BEL and TouchZones.zona_di(Vector2(687, 296), 780, false) == TouchZones.Zona.SWIPE, "zona bel radius 28 inklusif (x 688 bel, x 687 swipe)")
+	check(TouchZones.zona_di(Vector2(716, 268), 780, false) == TouchZones.Zona.BEL and TouchZones.zona_di(Vector2(716, 267), 780, false) == TouchZones.Zona.SWIPE, "tepi atas zona bel y 268 inklusif, y 267 swipe")
+	check(TouchZones.zona_di(Vector2(64, 296), 780, true) == TouchZones.Zona.BEL and TouchZones.zona_di(Vector2(716, 296), 780, true) == TouchZones.Zona.STICK, "kidal: bel di (64, 296); (716, 296) jadi zona stick")
 	# Pelacak jari bel.
 	var r: TouchRouter = TouchRouter.new()
 	r.lebar_viewport = 780
 	var bel: Array = [0]
 	r.bel_ditekan.connect(func(_p: Vector2) -> void: bel[0] = int(bel[0]) + 1)
 	r.tekan(0, TITIK_STICK, 0.0)
-	r.tekan(1, Vector2(752, 332), 0.0)
-	r.tekan(1, Vector2(752, 332), 0.0)
+	r.tekan(1, Vector2(716, 296), 0.0)
+	r.tekan(1, Vector2(716, 296), 0.0)
 	r.geser(1, Vector2(500, 200))
 	check(int(bel[0]) == 1 and r.bel_ditahan() and r.stick_aktif() and not r.swipe_aktif(), "stick + bel: bel berbunyi sekali (turun ganda index sama diabaikan), stick tetap; jari bel yang digeser ke zona swipe tidak jadi swipe")
 	r.lepas(1, Vector2(500, 200), 0.1)
 	check(not r.bel_ditahan() and r.jumlah_swipe_selesai == 0 and r.jumlah_tap_selesai == 0, "jari bel diangkat: bukan swipe dan bukan tap")
 	r.tekan(2, Vector2(600, 200), 0.2)
-	r.tekan(3, Vector2(752, 332), 0.2)
+	r.tekan(3, Vector2(716, 296), 0.2)
 	check(int(bel[0]) == 2 and r.swipe_aktif() and r.nomor_swipe == 1, "swipe + bel: swipe tetap jalan (nomor tetap), bel berbunyi")
-	r.lepas(3, Vector2(752, 332), 0.3)
-	r.geser(2, Vector2(752, 332))
-	r.lepas(2, Vector2(752, 332), 0.4)
+	r.lepas(3, Vector2(716, 296), 0.3)
+	r.geser(2, Vector2(716, 296))
+	r.lepas(2, Vector2(716, 296), 0.4)
 	check(int(bel[0]) == 2 and r.jumlah_swipe_selesai == 1, "swipe yang melewati dan berakhir di tombol bel tetap swipe, tidak membunyikan bel")
-	r.tekan(4, Vector2(752, 332), 0.5)
+	r.tekan(4, Vector2(716, 296), 0.5)
 	r.batal_semua()
 	check(not r.bel_ditahan(), "batal_semua melepas jari bel")
 
@@ -524,12 +547,12 @@ func _test_skor_di_scene() -> void:
 	_judul.call("Scene rute: koran mendarat dinilai SkorRute, penanda tepat/netral, HUD skor, umpan melayang, nada combo (AC-9 sampai AC-13)")
 	var akar: RuteMain = await _siapkan()
 	var audio: Node = _audio()
-	var hud: HudDev = _hud(akar)
+	var hud: HudRute = _hud(akar)
 	var mendarat: Array[KoranLempar.Koran] = []
 	var dinilai: Array[SkorRute.Hasil] = []
 	akar.koran_mendarat.connect(func(k: KoranLempar.Koran) -> void: mendarat.append(k))
 	akar.skor_dinilai.connect(func(h: SkorRute.Hasil) -> void: dinilai.append(h))
-	check(hud.skor_tampil() and hud.teks_skor() == "0" and hud.teks_combo() == "x1.0" and hud.teks_koin() == "0", "HUD skor tampil di scene rute: 0, x1.0, 0")
+	check(hud.visible and hud.teks_skor() == "0" and hud.teks_combo() == "x1.0" and hud.teks_koin() == "0", "HUD skor tampil di scene rute: 0, x1.0, 0")
 	var tepat_awal: int = int(audio.call(&"jumlah_bunyi_rute", BunyiRute.Bunyi.TEPAT)) if audio != null else 0
 	# 1. Lemparan biasa (bukan bantu) ke pusat kotak surat per_buka_01@6: tepat.
 	var k1: KoranLempar.Koran = await _lempar_ke(akar, 1.0, "per_buka_01@6", false, mendarat)
@@ -544,7 +567,7 @@ func _test_skor_di_scene() -> void:
 	check(k2 != null and KoranGambar.warna_penanda_koran(k2) == Palette.TEXT_2 and PolaPiksel.pola_penanda(ZonaSasaran.Penanda.NETRAL) == ["ooooooo", "owwwwwo", "owwwwwo", "ooooooo"], "penanda netral: garis datar TEXT_2")
 	check(akar.umpan_gambar().jumlah_tampil() <= 2, "umpan melayang paling banyak dua")
 	# 3. Tap mode bantu ke per_buka_01@10: centang (bantu tidak tepat, O-4), combo x1.1 -> 110.
-	(_anak(akar, "TombolBantu") as Button).button_pressed = true
+	_nyalakan_bantu(akar)
 	_taruh(akar, 3.0, 0.5, 8.5)
 	akar.koran = SisaKoran.awal(30)
 	_sentuh(1, akar.posisi_layar_sepeda() + Vector2(200, -150), true)
@@ -628,12 +651,60 @@ func _test_bunyi_tip_di_scene() -> void:
 	_bersihkan(akar)
 
 
+## Run fase3c-hud-hasil AC-2 (K-1): teras pemberi tip @18 sesudah tenggat lewat (jam tenggat diatur tes): ongkos 15, skor dan combo jalan,
+## tanpa tip, tanpa denting tip, umpan balik melayang tanpa baris "tip +5". Sebelum tenggat (kontrol) tetap +5.
+func _test_tip_sesudah_tenggat_di_scene() -> void:
+	_judul.call("Scene rute: tip hilang sesudah tenggat lewat; ongkos, skor, combo tetap; tanpa denting dan umpan tip (AC-2, K-1)")
+	var akar: RuteMain = await _siapkan()
+	var audio: Node = _audio()
+	var mendarat: Array[KoranLempar.Koran] = []
+	akar.koran_mendarat.connect(func(k: KoranLempar.Koran) -> void: mendarat.append(k))
+	var dinilai: Array[SkorRute.Hasil] = []
+	akar.skor_dinilai.connect(func(h: SkorRute.Hasil) -> void: dinilai.append(h))
+	# Kontrol sebelum tenggat: teras @10 (bukan pemberi tip) lalu teras @18 (pemberi tip): +15 lalu +20.
+	check(akar.tenggat().tenggat_detik == 91 and not TenggatRute.lewat(akar.tenggat()), "rute seed bawaan 236 ubin: tenggat 91 detik, belum lewat")
+	await _lempar_ke_titik(akar, 4.0, Vector2(-2.75, 10.5), mendarat)
+	var tip_awal: int = int(audio.call(&"jumlah_bunyi_rute", BunyiRute.Bunyi.TIP)) if audio != null else 0
+	# Tenggat dibuat lewat (jam 91,5 dari 91) tanpa menunggu 91 detik.
+	var k: TenggatRute.Keadaan = TenggatRute.langkah(TenggatRute.awal(akar.rute().panjang_ubin), 91.5)
+	akar.atur_tenggat(k)
+	check(TenggatRute.lewat(akar.tenggat()), "kontrol: tenggat lewat")
+	var k2: KoranLempar.Koran = await _lempar_ke_titik(akar, 12.0, Vector2(-2.75, 18.5), mendarat)
+	check(k2 != null and k2.hasil == ZonaSasaran.Hasil.TERAS and k2.id_rumah == "per_buka_01@18", "teras @18 (pemberi tip) sesudah tenggat lewat: antaran teras")
+	check(akar.skor().koin == 30 and akar.skor().jumlah_tip == 0 and akar.skor().koin_tip == 0, "koin 15 + 15 = 30 (tanpa tip 5), jumlah tip 0 (dapat koin %d)" % akar.skor().koin)
+	check(dinilai.size() == 2 and dinilai[1].status == SkorRute.Status.ANTAR and dinilai[1].tip == 0 and dinilai[1].skor_tambah == 110 and akar.skor().beruntun == 2, "sesudah tenggat: antaran sah, skor +110 (combo x1,1), combo naik ke 2, tip 0")
+	check(audio == null or int(audio.call(&"jumlah_bunyi_rute", BunyiRute.Bunyi.TIP)) == tip_awal, "sesudah tenggat: tidak ada denting tip")
+	check(akar.umpan_gambar().teks_tampil().size() >= 1 and (akar.umpan_gambar().teks_tampil().back() as String) == "+15", "umpan balik melayang sesudah tenggat: '+15' tanpa baris tip (dapat %s)" % [akar.umpan_gambar().teks_tampil()])
+	_bersihkan(akar)
+
+
+## QA-013 run 3B (AC-10 run fase3c-hud-hasil, mutan R13): antaran tidak sah (koran meleset di jalan) yang memutus rangkaian menampilkan label
+## PUTUS di HUD rute, pengali kembali x1.0, lalu label hilang sesudah 0,8 detik.
+func _test_putus_antaran_tidak_sah_di_scene() -> void:
+	_judul.call("Scene rute: koran meleset memutus combo dan menampilkan label PUTUS di HUD rute (QA-013 run 3B)")
+	var akar: RuteMain = await _siapkan()
+	var hud: HudRute = _hud(akar)
+	var mendarat: Array[KoranLempar.Koran] = []
+	akar.koran_mendarat.connect(func(k: KoranLempar.Koran) -> void: mendarat.append(k))
+	await _lempar_ke(akar, 1.0, "per_buka_01@6", false, mendarat)
+	check(akar.skor().beruntun == 1 and hud.teks_combo() == "x1.1" and not hud.putus_tampil(), "kontrol: rangkaian 1, HUD x1.1, tanpa PUTUS")
+	var k: KoranLempar.Koran = await _lempar_ke_titik(akar, 4.0, Vector2(-1.0, 9.0), mendarat)
+	check(k != null and k.hasil == ZonaSasaran.Hasil.MELESET, "koran mendarat di jalan (lateral -1,0): meleset")
+	check(akar.skor().beruntun == 0 and akar.putus_tampil() and hud.putus_tampil() and hud.teks_combo() == "x1.0", "meleset memutus rangkaian: label PUTUS tampil di HUD, pengali x1.0")
+	_langkah(akar, 60)
+	check(not akar.putus_tampil() and not hud.putus_tampil(), "label PUTUS hilang sesudah 0,8 detik")
+	# Meleset tanpa rangkaian (beruntun 0) tidak memunculkan PUTUS.
+	await _lempar_ke_titik(akar, 6.0, Vector2(-1.0, 11.0), mendarat)
+	check(not hud.putus_tampil(), "meleset tanpa rangkaian: tidak ada label PUTUS")
+	_bersihkan(akar)
+
+
 # --- Bel: input, visual (AC-14 sampai AC-17) ---
 
 func _test_bel_input() -> void:
 	_judul.call("Scene rute: tombol bel, zona tap, dua jari, kidal, mode bantu, visual (AC-15, AC-16)")
 	var akar: RuteMain = await _siapkan()
-	var hud: HudDev = _hud(akar)
+	var hud: HudRute = _hud(akar)
 	var router: TouchRouter = _kontrol(akar).router
 	var sepeda: SepedaUji = _sepeda(akar)
 	var bunyi: Array = []
@@ -641,66 +712,66 @@ func _test_bel_input() -> void:
 	_taruh(akar, 3.0, 0.5, 3.0)
 	var swipe_awal: int = router.jumlah_swipe_selesai
 	var tap_awal: int = router.jumlah_tap_selesai
-	_sentuh(1, Vector2(752, 332), true)
+	_sentuh(1, Vector2(716, 296), true)
 	akar.perbarui(0.0)
-	check(bunyi == [Bel.Bunyi.KRING] and hud.frame_bel() == Bel.FRAME_DITEKAN and not router.swipe_aktif(), "sentuhan di pusat bel (752, 332): KRING, tombol ditekan, bukan swipe")
+	check(bunyi == [Bel.Bunyi.KRING] and hud.frame_bel() == Bel.FRAME_DITEKAN and not router.swipe_aktif(), "sentuhan di pusat bel (716, 296): KRING, tombol ditekan, bukan swipe")
 	check(sepeda.efek().label_bel().visible and sepeda.efek().label_bel().text == "KRING!" and sepeda.getar_bel().visible and sepeda.getar_bel().frame == 0, "efek: teks 'KRING!' dan garis getar frame 0")
-	_sentuh(1, Vector2(752, 332), false)
+	_sentuh(1, Vector2(716, 296), false)
 	_langkah(akar, 6)
 	check(router.jumlah_swipe_selesai == swipe_awal and router.jumlah_tap_selesai == tap_awal and hud.frame_bel() == Bel.FRAME_DIAM, "jari bel diangkat: tidak ada swipe atau tap, tombol diam")
-	_sentuh(1, Vector2(730, 340), true)
-	_sentuh(1, Vector2(730, 340), false)
+	_sentuh(1, Vector2(694, 304), true)
+	_sentuh(1, Vector2(694, 304), false)
 	akar.perbarui(0.0)
 	check(bunyi == [Bel.Bunyi.KRING, Bel.Bunyi.KRING_KRING] and sepeda.efek().label_bel().text == "KRING KRING!" and hud.frame_bel() == Bel.FRAME_JEDA_PERTAMA, "ketukan kedua selama teks: KRING KRING!, tombol jeda cincin penuh")
 	_langkah(akar, 31)
 	check(hud.frame_bel() == 6, "sesudah 0,52 detik jeda: cincin separuh (frame 6)")
-	_tap(Vector2(752, 332), 2)
+	_tap(Vector2(716, 296), 2)
 	akar.perbarui(0.0)
 	check(bunyi.size() == 2 and akar.bel().jumlah == 2, "ketukan selama jeda bel ditolak tanpa bunyi")
 	_langkah(akar, 40)
 	# Sentuhan 1 px di luar zona bel = swipe.
-	_sentuh(3, Vector2(723, 332), true)
-	check(router.swipe_aktif() and akar.bel().jumlah == 2, "sentuhan di (723, 332), di luar radius 28: swipe, bukan bel")
-	_sentuh(3, Vector2(723, 332), false)
+	_sentuh(3, Vector2(687, 296), true)
+	check(router.swipe_aktif() and akar.bel().jumlah == 2, "sentuhan di (687, 296), di luar radius 28: swipe, bukan bel")
+	_sentuh(3, Vector2(687, 296), false)
 	# Swipe yang dimulai di luar lalu melewati tombol tetap swipe dan melempar.
 	var sisa: int = akar.koran.sisa
 	_sentuh(4, Vector2(560, 300), true)
-	_geser(4, Vector2(752, 332))
+	_geser(4, Vector2(716, 296))
 	akar.perbarui(DT)
-	_sentuh(4, Vector2(752, 332), false)
+	_sentuh(4, Vector2(716, 296), false)
 	check(akar.bel().jumlah == 2 and akar.koran.sisa == sisa - 1, "swipe dari luar yang berakhir di tombol bel: melempar koran, bel tidak berbunyi")
 	_langkah(akar, 30)
 	# Dua jari: stick + bel, swipe + bel.
 	_sentuh(5, TITIK_STICK, true)
-	_tap(Vector2(752, 332), 6)
+	_tap(Vector2(716, 296), 6)
 	check(router.stick_aktif() and akar.bel().jumlah == 3, "stick ditahan + ketuk bel: stick tetap, bel berbunyi")
 	_sentuh(5, TITIK_STICK, false)
 	_langkah(akar, 40)
 	_sentuh(5, Vector2(500, 200), true)
 	var nomor: int = router.nomor_swipe
-	_tap(Vector2(752, 332), 6)
+	_tap(Vector2(716, 296), 6)
 	check(router.swipe_aktif() and router.nomor_swipe == nomor and akar.bel().jumlah == 4, "swipe ditahan + ketuk bel: swipe tetap (nomor sama), bel berbunyi")
 	_sentuh(5, Vector2(500, 200), false)
 	_langkah(akar, 40)
 	# Mode bantu: ketukan bel tidak melempar.
-	(_anak(akar, "TombolBantu") as Button).button_pressed = true
+	_nyalakan_bantu(akar)
 	_taruh(akar, 3.0, 0.5, 3.0)
 	akar.koran = SisaKoran.awal(30)
-	_tap(Vector2(752, 332), 7)
+	_tap(Vector2(716, 296), 7)
 	_langkah(akar, 2)
 	check(akar.koran.sisa == 30 and akar.koran_terbang().is_empty() and akar.bel().jumlah == 5, "mode bantu: ketuk bel membunyikan bel, tidak memulai tap lempar")
 	_langkah(akar, 40)
 	# Kidal: bel di kiri bawah.
-	(_anak(akar, "TombolKidal") as Button).button_pressed = true
+	_nyalakan_kidal(akar)
 	await _tree.process_frame
 	await _tree.process_frame
 	akar.perbarui(0.0)
-	check(hud.rect_tombol_bel() == Rect2(8, 312, 40, 40), "kidal: tombol bel di (8, 312) 40x40, dapat %s" % hud.rect_tombol_bel())
-	_tap(Vector2(28, 332), 1)
-	check(akar.bel().jumlah == 6, "kidal: ketuk (28, 332) membunyikan bel")
-	_sentuh(2, Vector2(752, 332), true)
-	check(akar.bel().jumlah == 6 and router.stick_aktif(), "kidal: (752, 332) zona stick, bukan bel")
-	_sentuh(2, Vector2(752, 332), false)
+	check(hud.rect_tombol_bel() == Rect2(44, 276, 40, 40), "kidal: tombol bel di (44, 276) 40x40, dapat %s" % hud.rect_tombol_bel())
+	_tap(Vector2(64, 296), 1)
+	check(akar.bel().jumlah == 6, "kidal: ketuk (64, 296) membunyikan bel")
+	_sentuh(2, Vector2(716, 296), true)
+	check(akar.bel().jumlah == 6 and router.stick_aktif(), "kidal: (716, 296) zona stick, bukan bel")
+	_sentuh(2, Vector2(716, 296), false)
 	_bersihkan(akar)
 
 
@@ -772,7 +843,7 @@ func _test_main_lagi() -> void:
 	akar.ketuk_bel()
 	check(akar.skor().skor > 0 and not tabrak.is_empty() and akar.bel().jumlah == 1, "sebelum Main lagi: ada skor, tabrakan, dan bel")
 	akar.main_lagi()
-	var hud: HudDev = _hud(akar)
+	var hud: HudRute = _hud(akar)
 	var sepeda: SepedaUji = _sepeda(akar)
 	var semua_awal: bool = akar.rintangan().daftar.size() > 0
 	for item: RintanganRute.Item in akar.rintangan().daftar:
@@ -805,6 +876,6 @@ func _test_jalan_uji() -> void:
 	(_anak(akar, "KontrolTouch") as KontrolTouch).keyboard_aktif = false
 	_langkah(akar, 120)
 	check(akar.rintangan().daftar.is_empty() and akar.rintangan().tabrakan.jumlah == 0, "jalan uji: tanpa rintangan dan tabrakan")
-	check(not _hud(akar).skor_tampil(), "jalan uji: panel skor tersembunyi")
+	check(not (_anak(akar, "Hud") as HudDev).skor_tampil(), "jalan uji: panel skor tersembunyi")
 	check(akar.ketuk_bel() == Bel.Bunyi.KRING and _sepeda(akar).efek().label_bel().text == "KRING!", "jalan uji: bel berbunyi dan teks KRING! tampil")
 	_bersihkan(akar)

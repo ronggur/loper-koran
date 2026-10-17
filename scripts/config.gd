@@ -503,8 +503,6 @@ const RUTE_DAUR_MAJU_UBIN: int = 30
 const RUTE_AKHIR_STICK_Y: float = -1.0
 ## Jarak banner "Rute selesai" dari tepi atas layar, piksel game: di bawah strip atas HUD dan di luar zona stick dan swipe.
 const RUTE_BANNER_MARGIN_ATAS_PX: int = 64
-## Jarak tombol dev "Main lagi" dari tepi kanan layar, piksel game (strip atas HUD, bebas dari zona stick dan swipe).
-const RUTE_TOMBOL_ULANG_MARGIN_PX: int = 8
 ## Nama 12 sprite rumah perumahan (`assets/sprites/houses/perumahan/<nama>.png`), sejajar dengan `RUTE_RUMAH_PIJAK_PX`.
 const RUTE_RUMAH_SPRITE: Array[String] = ["house_perumahan_dekat_limasan_bukan", "house_perumahan_dekat_limasan_pelanggan", "house_perumahan_dekat_pelana_lintang_bukan", "house_perumahan_dekat_pelana_lintang_pelanggan", "house_perumahan_dekat_pelana_sejajar_bukan", "house_perumahan_dekat_pelana_sejajar_pelanggan", "house_perumahan_limasan_bukan", "house_perumahan_limasan_pelanggan", "house_perumahan_pelana_bukan", "house_perumahan_pelana_pelanggan", "house_perumahan_sayap_bukan", "house_perumahan_sayap_pelanggan"]
 ## Titik pijak tiap sprite rumah (`ground_anchor` di JSON aset, tengah tapak), piksel dari pojok kiri atas gambar: x lalu y, sejajar dengan `RUTE_RUMAH_SPRITE`. Tes membandingkannya dengan JSON aset.
@@ -655,8 +653,10 @@ const TABRAKAN_KEDIP_ALFA: float = 0.5
 const TABRAKAN_IKON_ATAS_PX: int = 50
 ## Tombol bel: sisi persegi gambar, piksel game (DESIGN_SPEC 3.8: 40x40).
 const BEL_TOMBOL_UKURAN_PX: int = 40
-## Pusat tombol dan zona tap bel dari tepi layar sisi tombol dan dari tepi bawah, piksel game: pusat (lebar - 28, 332), kidal (28, 332).
-const BEL_TOMBOL_PUSAT_TEPI_PX: int = 28
+## Pusat tombol dan zona tap bel dari tepi layar sisi tombol, piksel game: x lebar - 64, kidal x 64 (usulan; masukan uji pemilik 2026-10-17: pojok susah dijangkau jempol).
+const BEL_TOMBOL_PUSAT_SAMPING_PX: int = 64
+## Pusat tombol dan zona tap bel dari tepi bawah, piksel game: y 360 - 64 = 296, kanan dan kidal (usulan, sekitar 1,2 cm dari tepi di vivo V2108).
+const BEL_TOMBOL_PUSAT_BAWAH_PX: int = 64
 ## Jari-jari zona tap bel dari pusat tombol, piksel game (inklusif); sentuhan yang DIMULAI di sini membunyikan bel, bukan swipe.
 const BEL_ZONA_RADIUS_PX: float = 28.0
 ## Jumlah frame jeda tombol bel di `assets/sprites/ui/ui_bel_tombol.png` (cincin n/8 sampai 1/8, sesudah frame diam dan ditekan).
@@ -691,3 +691,71 @@ const UMPAN_MELAYANG_ATAS_PX: int = 18
 const HUD_TEKS_GARIS_PX: int = 2
 ## Panel skor HUD dev: lebar minimum, piksel game (angka skor dan koin berubah tanpa membuat panel melompat).
 const HUD_SKOR_LEBAR_PX: int = 72
+
+## --- Tenggat rute (BALANCING 6, GDD 5.1; K-1 run fase3c-hud-hasil; usulan, dinilai lewat uji HP) ---
+## Tenggat (detik) = ceil(panjang rute / `KECEPATAN_SANTAI_UD` x `TENGGAT_PENGALI`), dihitung dari rute (`TenggatRute`), bukan angka tetap.
+## Jam berjalan dengan dt efektif (beku saat jeda) dan berhenti di garis akhir. Sesudah tenggat lewat rute tetap berjalan; hanya tip hilang.
+
+## Pengali waktu tempuh santai untuk tenggat (BALANCING 6: santai terus masih sempat, berhenti lama terasa).
+const TENGGAT_PENGALI: float = 1.15
+## Toleransi derau float tenggat, detik: pembulatan ke atas (240 / 3,0 x 1,15 tetap 92) dan batas "lewat" (tepat di tenggat belum lewat).
+const TENGGAT_TOLERANSI_DETIK: float = 0.000001
+## Detik per menit untuk tampilan waktu "m:ss".
+const WAKTU_DETIK_PER_MENIT: int = 60
+## Jumlah angka per kelompok pemisah ribuan ("1.250", DESIGN_SPEC 3.3).
+const ANGKA_KELOMPOK_RIBUAN: int = 3
+
+## --- Radar (GDD 4.3, DESIGN_SPEC 3.4; K-2, O-9, O-10 run fase3c-hud-hasil; usulan, dinilai lewat uji HP) ---
+## Strip kiri = sisi `seberang`, strip kanan = sisi `dekat` (sisi dunia, kidal tidak menukar). Jarak rumah = jarak maju dari sepeda ke pusat
+## zona kotak suratnya. Atas strip = jauh (`RADAR_JANGKAUAN_UBIN` di depan), bawah = dekat sepeda.
+
+## Jangkauan radar ke depan, ubin (K-2; sama dengan jendela daur rumah, sekitar 5 detik ngebut dan 10 detik santai). Kelak bisa upgrade.
+const RADAR_JANGKAUAN_UBIN: float = 30.0
+## Strip radar: jarak tepi luar strip dari tepi layar kiri atau kanan, piksel game (DESIGN_SPEC 3.4: x 4).
+const RADAR_TEPI_PX: int = 4
+## Strip radar: lebar termasuk garis luar, piksel game (DESIGN_SPEC 3.4).
+const RADAR_LEBAR_PX: int = 12
+## Strip radar: tepi atas dari atas layar, piksel game (DESIGN_SPEC 3.4: y 10).
+const RADAR_Y_ATAS_PX: int = 10
+## Strip radar: tepi bawah dari atas layar, piksel game (DESIGN_SPEC 3.4: y 182; zona stick mulai y 186).
+const RADAR_Y_BAWAH_PX: int = 182
+## Strip radar: tebal bingkai 9-slice `ui_radar_strip_9slice.png` (fakta aset `tools/ui_art/hud_ikon.py`), piksel game.
+const RADAR_BINGKAI_PX: int = 2
+## Penanda radar biasa: lebar dan tinggi, piksel game (`ui_radar_<jenis>.png` 8x6).
+const RADAR_PENANDA_LEBAR_PX: int = 8
+## Lihat `RADAR_PENANDA_LEBAR_PX`.
+const RADAR_PENANDA_TINGGI_PX: int = 6
+## Penanda "masuk jangkauan lempar" membesar sekian piksel game (`ui_radar_<jenis>_jangkau.png` 10x8, garis luar `TEXT`, O-10).
+const RADAR_JANGKAU_TAMBAH_PX: int = 2
+
+## --- HUD rute final (DESIGN_SPEC 1.3, 3.2, 3.3; O-6 sampai O-8, O-12 run fase3c-hud-hasil; usulan, dinilai lewat uji HP) ---
+
+## Panel progres tengah atas: lebar, piksel game (DESIGN_SPEC 3.2).
+const HUD_PROGRES_LEBAR_PX: int = 260
+## Panel progres: sisi satu kotak pelanggan, piksel game (DESIGN_SPEC 3.2: 8x8 untuk 25 pelanggan).
+const HUD_PROGRES_KOTAK_PX: int = 8
+## Panel progres: jarak antar kotak, piksel game (25 kotak = 248 px).
+const HUD_PROGRES_JARAK_PX: int = 2
+## Panel progres: isi ke tepi kiri dan kanan, piksel game (6, bukan 7: 248 px kotak harus muat di panel 260).
+const HUD_PROGRES_PAD_X_PX: int = 6
+## Kotak pelanggan menjadi "terlewat" bila kotak suratnya LEBIH dari sekian ubin di belakang sepeda tanpa terantar (O-12; tepat 3,0 = belum).
+const HUD_PROGRES_TERLEWAT_UBIN: float = 3.0
+## Panel koin dan skor kanan atas: tepi kanan dari tepi layar, piksel game (DESIGN_SPEC 3.3: kanan 28, di luar strip radar).
+const HUD_KANAN_MARGIN_PX: int = 28
+## Jarak antar panel HUD, piksel game (DESIGN_SPEC 1.3).
+const HUD_PANEL_JARAK_PX: int = 5
+## Ikon HUD (koin), sisi persegi, piksel game (DESIGN_SPEC 1.3: 14x14).
+const HUD_IKON_PX: int = 14
+## Panel HUD 9-slice `ui_panel_hud_9slice.png`: tebal tepi 9-slice (fakta aset `tools/ui_art/hud_ikon.py`), piksel game.
+const HUD_PANEL_9SLICE_PX: int = 4
+## Zona aman (`ZonaAman`): toleransi derau float saat membulatkan inset layar ke piksel game ke atas, piksel game.
+const ZONA_AMAN_TOLERANSI_PX: float = 0.000001
+
+## --- Layar hasil (DESIGN_SPEC 4, rule ui-scenes; O-11, O-12 run fase3c-hud-hasil; usulan, sketsa) ---
+
+## Layar hasil terbuka sesudah garis akhir bila kecepatan sepeda paling tinggi sekian u/d (sudah berhenti) dan tidak ada koran terbang.
+const HASIL_BERHENTI_TOLERANSI_UD: float = 0.000001
+## Panel layar hasil: lebar minimum, piksel game (muat di 640 dengan teks Indonesia yang lebih panjang).
+const HASIL_PANEL_LEBAR_PX: int = 300
+## Panel layar hasil: jarak antar baris dan antar bagian, piksel game.
+const HASIL_JARAK_BARIS_PX: int = 2

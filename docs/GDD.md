@@ -94,6 +94,8 @@ Radar menandai rumah pelanggan yang akan datang di kiri dan kanan, supaya pemain
 
 Tampilan radar dan HUD lainnya: `design/DESIGN_SPEC.md` bagian 3 (radar di 3.4).
 
+**Diterapkan run 3C (usulan, 2026-10-17, run `20261018-fase3c-hud-hasil`; dinilai lewat uji HP):** jangkauan bawaan **30 ubin ke depan** (keputusan pemilik 2026-10-17, K-2; sekitar 5 detik ngebut, 10 detik santai; `RADAR_JANGKAUAN_UBIN`, kelak upgrade). "Berubah warna saat masuk jangkauan lempar" ditafsirkan sebagai penanda yang membesar 2 px dengan garis luar terang (warna jenis tetap) bila kotak surat pelanggan sudah dalam jarak lempar terjauh (5 ubin). Pemberi tip punya penanda sendiri (kotak hijau bertitik); sesudah tenggat rute lewat ia tampil sebagai pelanggan biasa karena tip sudah tidak ada (BALANCING 6). Rumah yang sudah terantar keluar dari radar. Strip mengikuti sisi dunia, jadi opsi kidal tidak menukarnya. Penanda target misi menunggu misi (Fase 4). Rincian: `design/DESIGN_SPEC.md` 3.4.
+
 ---
 
 ## 5. Kecepatan Sepeda dan Kontrol Mobile
@@ -115,7 +117,7 @@ Tiga tingkat kecepatan yang terlihat di sprite pemain: **santai** (stick netral)
 - **Jempol kiri** memegang stick analog melayang di zona kiri bawah. Stick muncul di tempat jempol menyentuh. Kiri-kanan memindah sisi (kiri sisi seberang, kanan sisi dekat, mengikuti arah pelempar, bukan arah layar). Atas untuk kayuh keras, netral kayuh santai, bawah untuk melambat dan meluncur. Diagonal bekerja bersamaan, misalnya atas-kiri untuk ngebut sambil belok.
 - **Rem tanpa tombol terpisah:** stick ditarik penuh ke bawah dan ditahan, sepeda berhenti perlahan. Jempol tidak perlu pindah, jadi kemudi tetap terjaga. Ambang rem dibuat di ujung bawah supaya sepeda tidak berhenti tanpa sengaja saat belok.
 - **Jempol kanan** melempar dengan swipe di mana saja di sisi kanan layar. **Arah bebas (keputusan pemilik 2026-10-15):** koran terbang ke arah swipe seperti yang terlihat di layar, misalnya swipe ke atas mengarah ke rumah seberang di depan, swipe ke kanan ke sisi dekat. Swipe panjang melempar kencang dan jauh, swipe pendek pelan dan dekat. Garis bidik putus-putus muncul selama jari ditahan, koran terlempar saat jari dilepas. Sebelumnya hanya swipe kiri (seberang) atau kanan (dekat); itu diganti karena di sudut isometrik rumah seberang di depan terlihat di atas sepeda, jadi swipe ke arahnya ditolak (uji HP pemilik di vivo V2108, 2026-10-14).
-- **Bel (usulan, 2026-10-09):** tombol bel bulat di pojok kanan bawah, di dalam zona swipe. Sentuhan yang dimulai di tombol dibaca sebagai bel, bukan swipe (bagian 5.4).
+- **Bel (usulan, 2026-10-09):** tombol bel bulat di kanan bawah, di dalam zona swipe, agak ke dalam dari pojok supaya terjangkau jempol tanpa menekuk (masukan uji pemilik 2026-10-17). Sentuhan yang dimulai di tombol dibaca sebagai bel, bukan swipe (bagian 5.4).
 - Alternatif yang tidak dipilih: 3 tingkat gigi lewat swipe naik-turun. Lebih sederhana, tapi kurang halus dibanding stick analog.
 
 Mock tampilan dan zona kontrol: kanvas "Loper Koran — Kamera dan Kontrol", papan Kontrol landscape.
@@ -131,17 +133,17 @@ Mock tampilan dan zona kontrol: kanvas "Loper Koran — Kamera dan Kontrol", pap
 - **Tap di zona lempar (K-2, D-1):** tap dihitung hanya di zona swipe (kanan, atau kiri bila kidal), jadi tidak bentrok dengan stick. Tap = sentuhan yang panjang swipenya tidak pernah mencapai ambang swipe 6% selama sentuhan; sentuhan yang pernah melewati ambang lalu ditarik kembali tetap batal. Swipe manual tetap melempar seperti biasa di mode bantu.
 - **Sisi dari garis jalan (K-2, D-3):** sisi ditentukan dari posisi tap terhadap garis searah jalan di layar yang melewati sepeda: di atas garis = sisi seberang, di bawah = sisi dekat, tepat di garis = dekat. Aturannya sama dengan sisi swipe arah bebas (bagian 5.2). Kidal tidak mengubahnya.
 - **Sasaran (K-3):** kotak surat rumah **pelanggan** terdekat di depan sepeda di sisi yang ditap, yang bisa dicapai lemparan. Lemparannya dihitung lintasan yang sama dengan swipe (warisan kecepatan, jeda lepas, lengkung, sisa koran, jeda antar lempar), diarahkan ke pusat kotak surat, jadi selalu kena. Kalau tidak ada sasaran, tidak ada lemparan: koran tidak berkurang dan muncul tanda kecil di titik tap.
-- Rumah bukan pelanggan tampil abu-abu di mode bantu (penanda radar `RADAR_BUKAN`, DESIGN_SPEC 3.4) **menunggu radar di Fase 3**. Efek kerusakan sepeda di mode bantu masih terbuka (`ROADMAP.md` bagian 5).
+- Rumah bukan pelanggan tampil abu-abu di mode bantu: penanda radar `RADAR_BUKAN` berlubang (DESIGN_SPEC 3.4), **diterapkan run 3C** (usulan, 2026-10-17); tidak tampil saat mode bantu mati, dan sakelar di tengah rute langsung berlaku. Sakelar mode bantu dan opsi kidal sementara ada di layar jeda (usulan O-6 run 3C) sampai layar pengaturan dibuat. Efek kerusakan sepeda di mode bantu masih terbuka (`ROADMAP.md` bagian 5).
 - Angka dan rumus di `BALANCING.md` 4b; tombol dan tanda di `design/DESIGN_SPEC.md` 3.7.
 
 ### 5.4 Bel: "Kring Kring!" (usulan, 2026-10-09)
 
 Bel memberi nama pada game. Pemain membunyikannya sebagai tanda "permisi, mau lewat", seperti loper sungguhan di gang. Semua angka di bawah usulan dan disetel lewat prototype.
 
-- **Kontrol:** tombol bel 40×40 piksel dasar di pojok kanan bawah (opsi kidal: kiri bawah). Zona tapnya lingkaran radius 28; sentuhan yang dimulai di zona ini membunyikan bel dan tidak memulai swipe. Ukuran dan posisi di `design/DESIGN_SPEC.md` 3.8.
+- **Kontrol:** tombol bel 40×40 piksel dasar di kanan bawah, agak ke dalam dari pojok (opsi kidal: kiri bawah; usulan 2026-10-17, masukan uji pemilik). Zona tapnya lingkaran radius 28; sentuhan yang dimulai di zona ini membunyikan bel dan tidak memulai swipe. Ukuran dan posisi di `design/DESIGN_SPEC.md` 3.8.
 - **Satu ketukan = "kring"** (sekitar 0,4 detik). **Ketuk lagi selama teks masih tampil = "kring kring!"**, bunyi dobel yang menjadi judul game. Setelah dua bunyi, bel jeda sekitar 1 detik; tombol menampilkan sisa jeda sebagai cincin. Jeda ini menjaga bel tidak dibunyikan terus-menerus, karena bunyinya akan didengar ribuan kali (`SOUND_DESIGN.md` 1).
 - **Efek ke dunia:** warga dan hewan yang bisa minggir dan berada dalam jangkauan di depan sepeda (sekitar 4 ubin) menampilkan ikon "!", lalu menepi ke pinggir jalan. Contoh: pejalan kaki, jogger, anak main bola, ayam, kucing. **Anjing penjaga yang sedang waspada atau mengejar juga bereaksi:** ikon "!", diam sebentar, lalu mundur ke halamannya dan tidak mengejar lagi untuk lintasan sepeda itu (keputusan pemilik 2026-10-16, run 3B K-3; menggantikan "anjing tidak terpengaruh"). Anjing yang masih duduk tidak bereaksi. **Kendaraan tetap tidak terpengaruh** (mobil keluar garasi tetap harus dihindari). Rintangan mana yang bereaksi diatur per jenis rintangan dalam satu tabel (bagian 9.3, `ROUTE_DESIGN.md` 4, `Bel.REAKSI_JENIS`).
-- **Jangkauan (usulan run 3B, D-5, perlu ditinjau pemilik):** dari 1 ubin di belakang sampai 4 ubin di depan sepeda, seluruh lebar jalan. Satu ubin ke belakang ditambahkan karena anjing yang mengejar berlari di samping atau sedikit di belakang sepeda; dengan jangkauan hanya ke depan bel tidak akan pernah mengenai anjing yang mengejar.
+- **Jangkauan (diputuskan pemilik 2026-10-17, run 3C K-3; tetap usulan sampai uji HP):** dari 1 ubin di belakang sampai 4 ubin di depan sepeda, seluruh lebar jalan (asal D-5 run 3B). Satu ubin ke belakang ditambahkan karena anjing yang mengejar berlari di samping atau sedikit di belakang sepeda; dengan jangkauan hanya ke depan bel tidak akan pernah mengenai anjing yang mengejar.
 - **Tanpa suara tetap terbaca:** setiap bunyi bel selalu disertai efek visual di atas setang (garis getar dan teks "KRING!"), karena banyak pemain HP bermain tanpa suara.
 - **Upgrade dan kosmetik:** upgrade bel menambah jangkauan (bagian 11). Bel kosmetik mengganti warna dan bunyi, tanpa mengubah fungsi (bagian 13, `SOUND_DESIGN.md` 3.3).
 - **Aset:** `design/bel/` (tombol, efek, ikon "!"), dibuat dengan `tools/ui_art/bel.py`. Mock di kanvas "Loper Koran — Kamera dan Kontrol", papan Bel · Kring Kring!.
@@ -518,7 +520,7 @@ Beberapa keputusan masih terbuka dan paling baik diputuskan lewat prototype kasa
 **Pertanyaan terbuka**
 
 - Cerita besar dan kondisi gagal (bagian 3.2).
-- Cara menampilkan rumah di sisi dekat, yang hanya terlihat belakangnya di isometrik (kanan bawah jalan).
+- ~~Cara menampilkan rumah di sisi dekat~~: diputuskan pemilik 2026-10-17, tembok atau pagar belakang rendah di kaki kavling dengan rumah penuh di belakangnya (pendekatan 2 spike run 3C; keputusan pemilik 2026-10-17) (`ROADMAP.md` 4b).
 - Kontrol landscape: apakah ambang rem di ujung bawah stick nyaman tanpa berhenti tak sengaja, dan apakah swipe pendek cukup teliti di layar kecil.
 - Bel: apakah tombol di pojok kanan bawah mudah dijangkau tanpa terpencet saat swipe, dan apakah bel dimajukan ke prototype awal karena sekarang menjadi ciri judul game (saat ini dijadwalkan Fase 6–7, `SOUND_DESIGN.md` 8).
 - Struktur sesi: rute harian berurutan, atau run roguelite dengan rute acak.

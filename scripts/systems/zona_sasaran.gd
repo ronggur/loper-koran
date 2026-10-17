@@ -215,6 +215,19 @@ static func zona_rumah(rumah: RouteBuilder.RumahRute) -> Array[Zona]:
 	return []
 
 
+## Jarak maju dari awal rute ke pusat zona kotak surat rumah `rumah` (geometri sama dengan `zona_rumah`, tanpa membuat zona; dipakai radar
+## dan progres per langkah, run fase3c-hud-hasil). Sisi `TIDAK_ADA` = awal kavling.
+static func maju_kotak_surat(rumah: RouteBuilder.RumahRute) -> float:
+	var data: Array[float] = []
+	if rumah.sisi == LoperAnim.Sisi.SEBERANG:
+		data = Config.JALAN_UJI_SEBERANG_KOTAK_SURAT_UBIN
+	elif rumah.sisi == LoperAnim.Sisi.DEKAT:
+		data = Config.JALAN_UJI_DEKAT_KOTAK_SURAT_UBIN
+	if data.is_empty():
+		return rumah.maju_ubin
+	return _persegi(data, rumah.maju_ubin).get_center().y
+
+
 ## Zona semua rumah di `daftar` (rumah rute, urut maju atau tidak).
 static func zona_rute(daftar: Array[RouteBuilder.RumahRute]) -> Array[Zona]:
 	var hasil: Array[Zona] = []

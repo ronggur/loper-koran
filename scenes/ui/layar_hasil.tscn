@@ -1,0 +1,156 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/layar_hasil.gd" id="1_script"]
+[ext_resource type="Theme" path="res://assets/ui/theme.tres" id="2_theme"]
+[ext_resource type="Script" path="res://scripts/ui/tombol_sentuh.gd" id="3_tombol"]
+
+[node name="LayarHasil" type="CanvasLayer"]
+layer = 15
+visible = false
+script = ExtResource("1_script")
+
+[node name="LatarHasil" type="ColorRect" parent="."]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+
+[node name="Tengah" type="CenterContainer" parent="LatarHasil"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PanelHasil" type="PanelContainer" parent="LatarHasil/Tengah"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="IsiHasil" type="VBoxContainer" parent="LatarHasil/Tengah/PanelHasil"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="JudulHasil" type="Label" parent="LatarHasil/Tengah/PanelHasil/IsiHasil"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"JudulLayar"
+text = "HASIL_JUDUL"
+horizontal_alignment = 1
+
+[node name="DaftarBerhasil" type="GridContainer" parent="LatarHasil/Tengah/PanelHasil/IsiHasil"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+columns = 2
+
+[node name="LabelTerkirim" type="Label" parent="LatarHasil/Tengah/PanelHasil/IsiHasil/DaftarBerhasil"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_type_variation = &"HudLabel"
+text = "HASIL_TERKIRIM"
+
+[node name="NilaiTerkirim" type="Label" parent="LatarHasil/Tengah/PanelHasil/IsiHasil/DaftarBerhasil"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudLabel"
+horizontal_alignment = 2
+autowrap_mode = 3
+
+[node name="LabelTip" type="Label" parent="LatarHasil/Tengah/PanelHasil/IsiHasil/DaftarBerhasil"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_type_variation = &"HudLabel"
+text = "HASIL_TIP"
+
+[node name="NilaiTip" type="Label" parent="LatarHasil/Tengah/PanelHasil/IsiHasil/DaftarBerhasil"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudLabel"
+horizontal_alignment = 2
+autowrap_mode = 3
+
+[node name="LabelKoin" type="Label" parent="LatarHasil/Tengah/PanelHasil/IsiHasil/DaftarBerhasil"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_type_variation = &"HudLabel"
+text = "HASIL_KOIN"
+
+[node name="NilaiKoin" type="Label" parent="LatarHasil/Tengah/PanelHasil/IsiHasil/DaftarBerhasil"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudLabel"
+horizontal_alignment = 2
+autowrap_mode = 3
+
+[node name="LabelSkor" type="Label" parent="LatarHasil/Tengah/PanelHasil/IsiHasil/DaftarBerhasil"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_type_variation = &"HudLabel"
+text = "HASIL_SKOR"
+
+[node name="NilaiSkor" type="Label" parent="LatarHasil/Tengah/PanelHasil/IsiHasil/DaftarBerhasil"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudLabel"
+horizontal_alignment = 2
+autowrap_mode = 3
+
+[node name="LabelTepat" type="Label" parent="LatarHasil/Tengah/PanelHasil/IsiHasil/DaftarBerhasil"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_type_variation = &"HudLabel"
+text = "HASIL_TEPAT"
+
+[node name="NilaiTepat" type="Label" parent="LatarHasil/Tengah/PanelHasil/IsiHasil/DaftarBerhasil"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudLabel"
+horizontal_alignment = 2
+autowrap_mode = 3
+
+[node name="DaftarNetral" type="GridContainer" parent="LatarHasil/Tengah/PanelHasil/IsiHasil"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+columns = 2
+
+[node name="LabelMeleset" type="Label" parent="LatarHasil/Tengah/PanelHasil/IsiHasil/DaftarNetral"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_type_variation = &"HudLabel"
+text = "HASIL_MELESET"
+
+[node name="NilaiMeleset" type="Label" parent="LatarHasil/Tengah/PanelHasil/IsiHasil/DaftarNetral"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudLabel"
+horizontal_alignment = 2
+autowrap_mode = 3
+
+[node name="TeksTenggat" type="Label" parent="LatarHasil/Tengah/PanelHasil/IsiHasil"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="TombolMainLagi" type="Button" parent="LatarHasil/Tengah/PanelHasil/IsiHasil"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+focus_mode = 0
+text = "RUTE_MAIN_LAGI"
+script = ExtResource("3_tombol")

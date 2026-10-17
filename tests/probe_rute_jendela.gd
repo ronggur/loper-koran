@@ -3,7 +3,7 @@ extends SceneTree
 ## memajukan simulasi, sprite, dan partikel dengan langkah tetap `perbarui(1/60)` (bukan waktu dinding), lalu menyimpan tangkapan
 ## layar: awal rute, tengah rute dengan rumah dan kotak surat, objek uji yang menutupi pemain (semi-transparan; rumah rute di tepi
 ## jalan praktis tidak pernah menutupi, D-8 run 3A, jadi probe menaruh satu rumah uji lebih dekat ke jalan), mode bantu (koran bantu ke
-## kotak surat pelanggan dan centang), akhir rute (banner dan tombol "Main lagi", sepeda berhenti), "Main lagi" (seed berikutnya), dan
+## kotak surat pelanggan dan centang), akhir rute (banner, sepeda berhenti, layar hasil sejak run 3C), "Main lagi" (seed berikutnya), dan
 ## kidal. Titik ketukan digambar sebagai titik 2 px game warna `ACCENT` di lapisan probe (bukan bagian game). Mencetak data tiap
 ## keadaan dan kotak teks HUD untuk `tools/cek_blok_piksel.py --kecualikan`. Tidak interaktif: keluar sendiri lewat `ProbeKeluar`.
 ##
@@ -29,7 +29,7 @@ var _folder: String = ""
 var _awalan: String = ""
 var _akar: RuteMain
 var _sepeda: SepedaUji
-var _hud: HudDev
+var _hud: HudRute
 var _kontrol: KontrolTouch
 var _sprite: LoperSprite
 var _debu: PancaranPiksel
@@ -57,7 +57,7 @@ func _initialize() -> void:
 	_skala = float(root.size.x) / terlihat.x
 	_awalan = "%dx%d" % [root.size.x, root.size.y]
 	_sepeda = _akar.find_child("Sepeda", true, false) as SepedaUji
-	_hud = _akar.find_child("Hud", true, false) as HudDev
+	_hud = _akar.hud_rute()
 	_kontrol = _akar.find_child("KontrolTouch", true, false) as KontrolTouch
 	_sprite = _akar.find_child("LoperAgen", true, false) as LoperSprite
 	_sprite.set_process(false)
@@ -69,7 +69,7 @@ func _initialize() -> void:
 	var rute: RouteBuilder.Rute = _akar.rute()
 	print("jendela %s: viewport terlihat %dx%d, skala x%s (driver %s, renderer %s)" % [root.size, int(terlihat.x), int(terlihat.y), _skala, DisplayServer.get_name(), RenderingServer.get_current_rendering_method()])
 	print("rute: seed %d, %d segmen, panjang %.0f ubin, %d rumah, %d pelanggan, koran awal %d, galat %s" % [_akar.benih(), rute.segmen.size(), rute.panjang_ubin, rute.rumah.size(), rute.pelanggan.size(), rute.koran_awal, _akar.galat_rute()])
-	_cetak_kecualikan("HUD", [_hud.rect_tombol_kidal(), _hud.rect_tombol_bantu(), _hud.rect_panel_kecepatan(), _hud.rect_panel_koran()])
+	_cetak_kecualikan("HUD", [_hud.rect_tombol_jeda(), _hud.rect_panel_progres(), _hud.rect_panel_kecepatan(), _hud.rect_panel_koran()])
 
 	# --- Awal rute ---
 	await _maju(0.5)
@@ -93,7 +93,7 @@ func _initialize() -> void:
 	await _maju(DT)
 
 	# --- Mode bantu: koran bantu ke kotak surat pelanggan seberang ---
-	(_akar.find_child("TombolBantu", true, false) as Button).button_pressed = true
+	_akar.atur_mode_bantu(true)
 	await _tunggu(3)
 	_sepeda.jarak_ubin = float(_akar.rute().pelanggan[8].maju_ubin) - 5.0
 	await _maju(Config.LEMPAR_JEDA_DETIK)
@@ -103,13 +103,14 @@ func _initialize() -> void:
 	_sepeda.jarak_ubin = _akar.rute().panjang_ubin - 1.0
 	await _maju(0.6)
 	print("akhir: selesai %s, banner tampil %s, kecepatan %.2f" % [_akar.rute_sudah_selesai(), _akar.panel_akhir().tampil(), _sepeda.kecepatan_ud])
-	_cetak_kecualikan("akhir", [_hud.rect_tombol_kidal(), _hud.rect_tombol_bantu(), _hud.rect_panel_kecepatan(), _hud.rect_panel_koran(), _akar.panel_akhir().rect_banner(), _akar.panel_akhir().rect_tombol()])
+	_cetak_kecualikan("akhir", [_hud.rect_tombol_jeda(), _hud.rect_panel_progres(), _hud.rect_panel_kecepatan(), _hud.rect_panel_koran(), _akar.panel_akhir().rect_banner()])
 	if not _akar.rute_sudah_selesai() or not _akar.panel_akhir().tampil():
 		_gagal += 1
 	await _foto("akhir_mengerem")
 	await _maju(3.0)
 	await _foto("akhir_berhenti")
-	if _sepeda.kecepatan_ud != 0.0:
+	print("akhir berhenti: layar hasil tampil %s" % _akar.hasil_tampil())
+	if _sepeda.kecepatan_ud != 0.0 or not _akar.hasil_tampil():
 		_gagal += 1
 
 	# --- Main lagi: seed berikutnya ---
@@ -121,12 +122,12 @@ func _initialize() -> void:
 	await _maju(0.5)
 	await _foto("main_lagi")
 
-	# --- Kidal: zona tertukar, banner dan tombol tetap ---
-	(_akar.find_child("TombolKidal", true, false) as Button).button_pressed = true
+	# --- Kidal: zona tertukar, banner tetap, lalu layar hasil ---
+	_akar.atur_kidal(true)
 	await _tunggu(3)
 	_sepeda.jarak_ubin = _akar.rute().panjang_ubin - 1.0
 	await _maju(2.0)
-	_cetak_kecualikan("kidal", [_hud.rect_tombol_kidal(), _hud.rect_tombol_bantu(), _hud.rect_panel_kecepatan(), _hud.rect_panel_koran(), _akar.panel_akhir().rect_banner(), _akar.panel_akhir().rect_tombol()])
+	_cetak_kecualikan("kidal", [_hud.rect_tombol_jeda(), _hud.rect_panel_progres(), _hud.rect_panel_kecepatan(), _hud.rect_panel_koran(), _akar.panel_akhir().rect_banner()])
 	await _foto("kidal_akhir")
 	print("probe selesai, %d keadaan tidak sesuai" % _gagal)
 	await ProbeKeluar.keluar(self, 0 if _gagal == 0 else 1)

@@ -48,6 +48,28 @@ const TANDA_BUKAN_PELANGGAN: Array[String] = ["..ooooo..", ".owwwwoo.", "owwwwoo
 ## di luar, bentuk berbeda dari silang meleset dan dari elips pendaratan; bukan teks dan bukan warna saja.
 const TANDA_TANPA_SASARAN: Array[String] = ["...ooo...", ".oowwwoo.", ".owooowo.", "owo...owo", "owo...owo", "owo...owo", ".owooowo.", ".oowwwoo.", "...ooo..."]
 
+## Kotak progres pelanggan 8x8 di panel HUD tengah atas (DESIGN_SPEC 3.2, AC-7 run fase3c-hud-hasil): `w` = warna status (`OK`, `FAIL`,
+## `ACCENT`, `UI_PANEL_RAISED`), simbolnya bentuk, bukan warna saja. Terkirim: centang garis luar.
+const PROGRES_TERKIRIM: Array[String] = ["oooooooo", "owwwwwwo", "owwwwwoo", "owwwwowo", "owowowwo", "owwowwwo", "owwwwwwo", "oooooooo"]
+## Terlewat (meleset): silang `TEXT`.
+const PROGRES_TERLEWAT: Array[String] = ["oooooooo", "owwwwwwo", "owtwwtwo", "owwttwwo", "owwttwwo", "owtwwtwo", "owwwwwwo", "oooooooo"]
+## Berikutnya: segitiga ke kanan (arah maju di layar) garis luar.
+const PROGRES_BERIKUTNYA: Array[String] = ["oooooooo", "owwwwwwo", "owowwwwo", "owoowwwo", "owooowwo", "owoowwwo", "owowwwwo", "oooooooo"]
+## Belum: kosong dengan garis putus-putus `TEXT_2`.
+const PROGRES_BELUM: Array[String] = ["ss.ss.ss", "swwwwwws", ".wwwwww.", "swwwwwws", "swwwwwws", ".wwwwww.", "swwwwwws", "ss.ss.ss"]
+
+
+## Pola kotak progres untuk status `status` (`ProgresRute.Status`).
+static func pola_progres(status: ProgresRute.Status) -> Array[String]:
+	match status:
+		ProgresRute.Status.TERKIRIM:
+			return PROGRES_TERKIRIM
+		ProgresRute.Status.TERLEWAT:
+			return PROGRES_TERLEWAT
+		ProgresRute.Status.BERIKUTNYA:
+			return PROGRES_BERIKUTNYA
+	return PROGRES_BELUM
+
 
 ## Pola penanda untuk bentuk `penanda` (`ZonaSasaran.Penanda`).
 static func pola_penanda(penanda: ZonaSasaran.Penanda) -> Array[String]:

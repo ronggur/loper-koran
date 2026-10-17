@@ -143,7 +143,7 @@ Contoh dari berkas nyata (`assets/data/routes/perumahan/per_tengah_02.json`):
 | Bidang | Nilai | Aset |
 |---|---|---|
 | `rumah.jenis` sisi `seberang` | `limasan`, `pelana`, `sayap` | `assets/sprites/houses/perumahan/house_perumahan_<jenis>_<pelanggan\|bukan>.png` |
-| `rumah.jenis` sisi `dekat` | `dekat_limasan`, `dekat_pelana_lintang`, `dekat_pelana_sejajar` | `house_perumahan_<jenis>_<pelanggan\|bukan>.png` (di distrik perumahan hanya varian `bukan` dipakai; cara menampilkan sisi dekat belum diputuskan, ROADMAP 5) |
+| `rumah.jenis` sisi `dekat` | `dekat_limasan`, `dekat_pelana_lintang`, `dekat_pelana_sejajar` | `house_perumahan_<jenis>_<pelanggan\|bukan>.png` (di distrik perumahan hanya varian `bukan` dipakai; tampilan sisi dekat diputuskan 2026-10-17: tembok/pagar belakang rendah, ROADMAP 4b; field data untuk tembok belum ada) |
 | `objek.jenis` | `anjing_penjaga`, `mobil_garasi` | `assets/sprites/obstacles/obs_anjing_sheet`, `obs_mobil_garasi_sheet` (perilaku di Run 3B; di 3A hanya tempatnya yang ditandai) |
 
 **Id rumah** di rute = `<id_segmen>@<pos>` (mis. `per_tengah_02@18`). Satu `pos` hanya boleh dipakai satu rumah per segmen (kedua sisi), supaya id unik tanpa sisi. Ini id sementara untuk rute dan penilaian zona; pemetaan ke id rumah tetap di save (`per_r014`, bagian 4) ditunda ke Fase 6 (bagian 5).

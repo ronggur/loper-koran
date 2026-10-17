@@ -29,6 +29,11 @@ const FILTER_DIKECUALIKAN: Array[String] = ["docs/*", "tests/*", "tools/*", "bui
 ## `tools/ekspor_cek_render.py` yang melepas pola ini sementara (`POLA_PROBE` di skrip itu harus sama persis).
 const FILTER_PROBE: Array[String] = ["scenes/dev/cek_render.tscn", "scripts/dev/cek_render.gd", "assets/shaders/warna_bayangan.gdshader"]
 const BERKAS_EKSPOR_PROBE: String = "res://tools/ekspor_cek_render.py"
+## Spike rumah sisi dekat (run fase3c-hud-hasil AC-14): scene, skrip, dan aset graybox dev tidak ikut paket game. Berbeda dari probe render,
+## tidak ada build khusus yang melepasnya (spike hanya dijalankan di editor/desktop).
+const FILTER_SPIKE: Array[String] = ["scenes/dev/spike_sisi_dekat.tscn", "scripts/dev/spike_sisi_dekat.gd", "assets/sprites/_spike/*"]
+## Potongan teks yang menandakan rujukan ke berkas spike dari berkas game.
+const RUJUKAN_SPIKE: Array[String] = ["spike_sisi_dekat", "sprites/_spike/", "SpikeSisiDekat"]
 ## Folder yang dipindai: tidak ada berkas game yang boleh memuat berkas probe (kalau ada, mengecualikannya merusak game).
 const FOLDER_GAME: Array[String] = ["res://scripts", "res://scenes", "res://assets"]
 ## Potongan nama kunci yang nilainya wajib kosong di preset (rahasia tidak boleh masuk repo).
@@ -69,6 +74,7 @@ func jalankan() -> void:
 	_test_preset_asli()
 	_test_preset_contoh_buruk()
 	_test_probe_tidak_ikut()
+	_test_spike_tidak_ikut()
 	_test_ikon_sementara()
 	_test_gitignore()
 	_test_berkas_dilacak()
@@ -132,7 +138,10 @@ func _test_preset_contoh_buruk() -> void:
 		['screen/immersive_mode=true', 'screen/immersive_mode=false', "imersif", "mode imersif mati"],
 		['user_data_backup/allow=false', 'user_data_backup/allow=true', "user_data_backup", "cadangan data pengguna menyala"],
 		['tests/*, ', '', "tests/*", "tests/ tidak dikecualikan dari APK"],
-		['exclude_filter="docs/*, tests/*, tools/*, build/*, builds/*, scenes/dev/cek_render.tscn, scripts/dev/cek_render.gd, assets/shaders/warna_bayangan.gdshader"', 'exclude_filter=""', "exclude_filter", "filter pengecualian kosong"],
+		['exclude_filter="docs/*, tests/*, tools/*, build/*, builds/*, scenes/dev/cek_render.tscn, scripts/dev/cek_render.gd, assets/shaders/warna_bayangan.gdshader, scenes/dev/spike_sisi_dekat.tscn, scripts/dev/spike_sisi_dekat.gd, assets/sprites/_spike/*"', 'exclude_filter=""', "exclude_filter", "filter pengecualian kosong"],
+		[', scenes/dev/spike_sisi_dekat.tscn', '', "scenes/dev/spike_sisi_dekat.tscn", "scene spike sisi dekat ikut paket game (AC-14 run 3C)"],
+		[', scripts/dev/spike_sisi_dekat.gd', '', "scripts/dev/spike_sisi_dekat.gd", "skrip spike sisi dekat ikut paket game"],
+		[', assets/sprites/_spike/*', '', "assets/sprites/_spike/*", "aset graybox spike ikut paket game"],
 		[', scenes/dev/cek_render.tscn', '', "scenes/dev/cek_render.tscn", "scene probe render ikut APK normal (QA-004)"],
 		[', scripts/dev/cek_render.gd', '', "scripts/dev/cek_render.gd", "skrip probe render ikut APK normal (QA-004)"],
 		[', assets/shaders/warna_bayangan.gdshader', '', "warna_bayangan.gdshader", "shader probe render ikut APK normal (QA-004)"],
@@ -205,6 +214,9 @@ func _pelanggaran_preset(teks: String) -> Array[String]:
 	for probe: String in FILTER_PROBE:
 		if not kecuali.has(probe):
 			hasil.append("exclude_filter harus memuat %s (probe render tidak ikut APK normal, QA-004)" % probe)
+	for spike: String in FILTER_SPIKE:
+		if not kecuali.has(spike):
+			hasil.append("exclude_filter harus memuat %s (spike sisi dekat tidak ikut paket game, AC-14 run 3C)" % spike)
 	if str(cfg.get_value(kepala, "export_path", "")) != "":
 		hasil.append("export_path harus kosong (jalur ekspor lokal tidak di-commit)")
 	# Opsi Android.
@@ -286,6 +298,46 @@ func _test_probe_tidak_ikut() -> void:
 	var pemakai: Array[String] = _pemakai_probe()
 	check(pemakai.is_empty(), "tidak ada scene, skrip, atau resource game yang memuat berkas probe (res://... atau uid://...): %s" % [pemakai])
 	_test_pemakai_uid()
+
+
+# --- AC-14 run fase3c-hud-hasil: spike sisi dekat tidak ikut paket game dan tidak dirujuk berkas game ---
+
+func _test_spike_tidak_ikut() -> void:
+	_judul.call("Spike rumah sisi dekat tidak ikut paket game dan tidak dirujuk berkas game (AC-14 run 3C)")
+	check(FileAccess.file_exists("res://" + FILTER_SPIKE[0]) and FileAccess.file_exists("res://" + FILTER_SPIKE[1]), "pola spike menunjuk scene dan skrip yang ada")
+	var aset: PackedStringArray = DirAccess.get_files_at("res://assets/sprites/_spike/sisi_dekat")
+	check(aset.size() >= 22, "aset graybox spike (PNG + JSON) ada di assets/sprites/_spike/sisi_dekat, dapat %d berkas" % aset.size())
+	var uid_skrip: String = FileAccess.get_file_as_string("res://scripts/dev/spike_sisi_dekat.gd.uid").strip_edges()
+	check(uid_skrip.begins_with("uid://"), "uid skrip spike terbaca: %s" % uid_skrip)
+	var teks: Dictionary = {}
+	for folder: String in FOLDER_GAME:
+		for berkas: String in _daftar_berkas(folder):
+			teks[berkas] = FileAccess.get_file_as_string(berkas)
+	var pemakai: Array[String] = _pemakai_spike(teks, uid_skrip)
+	check(teks.size() >= 50 and pemakai.is_empty(), "tidak ada scene, skrip, atau resource game (%d berkas) yang merujuk berkas spike: %s" % [teks.size(), pemakai])
+	var buruk: Dictionary = {
+		"res://scenes/rute/rute.tscn": "[ext_resource type=\"Texture2D\" path=\"res://assets/sprites/_spike/sisi_dekat/spike_dekat_tembok_bukan.png\" id=\"9\"]\n",
+		"res://scripts/entities/rute_main.gd": "var s: SpikeSisiDekat = null\n",
+		"res://scenes/ui/hud_rute.tscn": "[ext_resource type=\"Script\" uid=\"%s\" id=\"1\"]\n" % uid_skrip,
+	}
+	check(_pemakai_spike(buruk, uid_skrip).size() == 3, "contoh buruk: rujukan aset spike, kelas spike, dan uid skrip spike tertangkap: %s" % [_pemakai_spike(buruk, uid_skrip)])
+
+
+## Berkas game (selain berkas spike sendiri) yang merujuk berkas spike lewat jalur, nama kelas, atau uid skripnya.
+func _pemakai_spike(teks_per_berkas: Dictionary, uid_skrip: String) -> Array[String]:
+	var hasil: Array[String] = []
+	for berkas: String in teks_per_berkas:
+		var relatif: String = berkas.trim_prefix("res://")
+		if relatif.begins_with("assets/sprites/_spike/") or relatif.begins_with(FILTER_SPIKE[0]) or relatif.begins_with(FILTER_SPIKE[1]):
+			continue
+		var isi: String = teks_per_berkas[berkas]
+		for potongan: String in RUJUKAN_SPIKE:
+			if isi.contains(potongan):
+				hasil.append("%s -> %s" % [berkas, potongan])
+				break
+		if uid_skrip != "" and _memuat_uid(isi, uid_skrip):
+			hasil.append("%s -> %s" % [berkas, uid_skrip])
+	return hasil
 
 
 ## Isi daftar `POLA_PROBE = [...]` di teks skrip Python (string bertanda petik tunggal), atau kosong bila tidak ada.

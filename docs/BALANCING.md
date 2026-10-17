@@ -258,10 +258,10 @@ Logika di `scripts/systems/skor_rute.gd` (`SkorRute`), satu sumber untuk HUD, um
 | Angka | Usulan | Catatan |
 |---|---|---|
 | Lebar petak rumah | 4 ubin | Rumah 3 ubin + celah 1 ubin. `RUTE_PETAK_UBIN` |
-| Rute awal perumahan | 25 pelanggan di sisi seberang, panjang sekitar 250 ubin | Distrik pertama hanya satu sisi. Sela antar pelanggan diisi rumah bukan pelanggan, persimpangan, dan taman |
+| Rute awal perumahan | 25 pelanggan di sisi seberang, panjang 232 sampai 240 ubin (terukur dari 7 segmen data, bagian 6b; rencana awal sekitar 250) | Distrik pertama hanya satu sisi. Sela antar pelanggan diisi rumah bukan pelanggan, persimpangan, dan taman. Panjang satu rute = `RouteBuilder` (jumlah panjang segmen) |
 | Jarak rata-rata antar pelanggan | sekitar 9 ubin | Sekitar 2 detik pada kecepatan cepat, 3 detik pada santai |
-| Lama rute | sekitar 55 detik (cepat) sampai 85 detik (santai) | |
-| Tenggat | waktu tempuh rute pada kecepatan santai × 1,15 (sekitar 95 detik) | Santai terus masih sempat, tapi berhenti lama untuk misi butuh ngebut di bagian lain |
+| Lama rute | sekitar 39 sampai 40 detik (ngebut 6,0 u/d), 52 sampai 53 detik (cepat 4,5 u/d), 77 sampai 80 detik (santai 3,0 u/d) | Panjang 232 sampai 240 ubin dibagi kecepatan tetap, tanpa berhenti dan tanpa tabrakan |
+| Tenggat | waktu tempuh rute pada kecepatan santai × 1,15, dibulatkan ke atas: `ceil(panjang / 3,0 × 1,15)` = 89 / 91 / 92 detik untuk rute 232 / 236 / 240 ubin | Santai terus masih sempat (cadangan sekitar 12 detik: 89 − 77,3, 91 − 78,7, 92 − 80,0), tapi berhenti lama untuk misi butuh ngebut di bagian lain. Sesudah tenggat lewat hanya tip yang hilang (K-1 run fase3c-hud-hasil, bagian 6f) |
 | Tabrakan | kecepatan turun ke 1,0 u/d, oleng 0,6 detik, combo putus, lalu kebal 1,0 detik | Tidak menghentikan rute (K-1 run fase3b-rintangan-skor, bagian 6c) |
 
 Apakah ada game over atau batas tabrakan per hari masih terbuka (GDD 3.2, ROADMAP 5); run 3B tidak menguncinya (tanpa batas tabrakan per rute).
@@ -338,12 +338,34 @@ Angka tampilan dan input bagian B di `config.gd` (tidak mengubah aturan main di 
 | Oleng (visual) | sprite bergeser ±1 px tiap 0,05 detik | `TABRAKAN_OLENG_GESER_PX`, `TABRAKAN_OLENG_PERIODE_DETIK`; geser kecil supaya tidak berlebihan (rule `ui-scenes`) |
 | Kedip kebal | alpha 0,5 tiap fase 0,1 detik | `TABRAKAN_KEDIP_PERIODE_DETIK`, `TABRAKAN_KEDIP_ALFA` |
 | Ikon kilatan tabrakan | 50 px game di atas titik pijak | `TABRAKAN_IKON_ATAS_PX` |
-| Tombol bel | 40×40, pusat 28 dari tepi samping dan bawah, zona tap radius 28 inklusif | `BEL_TOMBOL_UKURAN_PX`, `BEL_TOMBOL_PUSAT_TEPI_PX`, `BEL_ZONA_RADIUS_PX`; 8 frame cincin jeda `BEL_TOMBOL_JEDA_LANGKAH` |
+| Tombol bel | 40×40, pusat 64 dari tepi samping dan 64 dari tepi bawah (pusat (lebar −64, 296), kidal (64, 296); dulu 28 dan 28 di pojok), zona tap radius 28 inklusif | `BEL_TOMBOL_UKURAN_PX`, `BEL_TOMBOL_PUSAT_SAMPING_PX`, `BEL_TOMBOL_PUSAT_BAWAH_PX`, `BEL_ZONA_RADIUS_PX`; 8 frame cincin jeda `BEL_TOMBOL_JEDA_LANGKAH`; posisi diubah 2026-10-17 (masukan uji pemilik, bagian 10) |
 | Efek bel | 12 fps, garis getar 4 frame (jangkar (3, 12)), titik bel (8, −29) dari titik pijak pemain, teks (11, −12) dari titik bel, naik paling banyak 4 px, redup 0,6 | `BEL_EFEK_FPS`, `BEL_GETAR_FRAME`, `BEL_GETAR_JANGKAR_PX`, `BEL_TITIK_PX`, `BEL_TEKS_GESER_PX`, `BEL_TEKS_NAIK_MAKS_PX`, `BEL_TEKS_REDUP_ALFA` |
 | Panel skor HUD dev | 112 px dari tepi sisi swipe, lebar minimum 72 | `HUD_SKOR_GESER_PX`, `HUD_SKOR_LEBAR_PX` |
 | Label PUTUS | 0,8 detik sesudah combo putus | `HUD_COMBO_PUTUS_DETIK` |
 | Umpan balik melayang | 0,8 detik, naik 12 px, paling banyak 2, kaki 18 px di atas titik mendarat | `UMPAN_MELAYANG_DETIK`, `UMPAN_MELAYANG_NAIK_PX`, `UMPAN_MELAYANG_MAKS`, `UMPAN_MELAYANG_ATAS_PX` (DESIGN_SPEC 3.6) |
 | Garis luar teks dunia | 2 px game | `HUD_TEKS_GARIS_PX` (teks KRING dan umpan balik melayang) |
+
+### 6f. Tenggat, radar, HUD rute, dan layar hasil (usulan run fase3c-hud-hasil 2026-10-17, dinilai lewat uji HP)
+
+Keputusan pemilik K-1 (tenggat, tip hilang sesudahnya) dan K-2 (radar 30 ubin), usulan orchestrator O-6 sampai O-12 (SPEC run). Logika murni di `scripts/systems/` (`TenggatRute`, `RadarRute`, `ProgresRute`, `HasilRute`, `ZonaAman`); tata letak di `docs/design/DESIGN_SPEC.md` 3 dan 4.
+
+- **Tenggat (K-1):** `TenggatRute.detik_tenggat` = `ceil(panjang_ubin / KECEPATAN_SANTAI_UD × TENGGAT_PENGALI - TENGGAT_TOLERANSI_DETIK)`, dari rute, satu tempat. Jam maju dengan dt efektif (beku saat jeda dan background), berhenti di garis akhir. **Lewat** = waktu lebih dari tenggat; tepat di tenggat (sisa 0) belum lewat. Tampilan dibulatkan ke atas ke detik bulat: "WAKTU 1:32" sebelum lewat, "LEWAT +0:12" sesudahnya.
+- **Tip sesudah tenggat (K-1):** antaran sah ke pemberi tip sesudah tenggat lewat tetap memberi ongkos 15 koin, skor, dan combo seperti biasa; tip 0, `jumlah_tip` tidak naik, tidak ada denting tip dan umpan "tip +5" (`SkorRute.nilai(..., tenggat_lewat)`). Status tenggat dibaca saat koran mendarat. Tanpa potong koin dan tanpa game over (prinsip 2); game over dan batas tabrakan tetap terbuka (ROADMAP 5).
+- **Radar (K-2, O-9, O-10):** penanda rumah dengan 0 ≤ jarak ≤ 30 ubin (kedua tepi inklusif), jarak = jarak maju dari sepeda ke pusat zona kotak surat. Posisi vertikal = 1 - jarak / 30 (atas jauh, bawah di samping sepeda). Pemberi tip tampil `tip` sampai tenggat lewat, lalu pelanggan biasa. Rumah terantar keluar dari radar. Rumah bukan pelanggan hanya tampil di mode bantu (abu-abu berlubang). "Masuk jangkauan lempar" = rumah pelanggan dengan 0 ≤ jarak ≤ 5,0 ubin (jarak lemparan terjauh).
+- **Kotak progres (O-12):** terkirim (✓), terlewat (×; kotak surat lebih dari 3,0 ubin di belakang sepeda tanpa terantar, atau rute selesai), berikutnya (▶; pelanggan belum terantar terdekat di depan, jarak ≥ 0), belum (kosong).
+- **Layar hasil (O-11, O-12):** terbuka sesudah garis akhir saat sepeda berhenti dan tidak ada koran terbang. Terkirim = pelanggan rute yang terantar, meleset = 25 - terkirim, koin/tip/skor/tepat dari `SkorRute`, tenggat lewat dan detiknya dari `TenggatRute`.
+
+| Angka | Usulan | Catatan |
+|---|---|---|
+| Pengali tenggat | ×1,15 waktu tempuh santai | `TENGGAT_PENGALI`; `TENGGAT_TOLERANSI_DETIK` 0,000001 hanya derau float; `WAKTU_DETIK_PER_MENIT` 60 |
+| Jangkauan radar | 30 ubin ke depan (sekitar 5 detik ngebut, 10 detik santai) | `RADAR_JANGKAUAN_UBIN` (K-2); kelak bisa upgrade (GDD 4.3) |
+| Strip radar | x 4 dari tepi, lebar 12, y 10 sampai 182, bingkai 9-slice 2; penanda 8×6, jangkau 10×8 | `RADAR_TEPI_PX`, `RADAR_LEBAR_PX`, `RADAR_Y_ATAS_PX`, `RADAR_Y_BAWAH_PX`, `RADAR_BINGKAI_PX`, `RADAR_PENANDA_*`, `RADAR_JANGKAU_TAMBAH_PX` (DESIGN_SPEC 3.4) |
+| Kotak progres | 25 kotak 8×8 jarak 2 di panel 260 (isi samping 6, bukan 7, supaya 248 px muat); terlewat sesudah 3,0 ubin | `HUD_PROGRES_*` (DESIGN_SPEC 3.2) |
+| Panel kanan atas | koin dan skor, tepi kanan 28 dari tepi layar, jarak antar panel 5, ikon 14, panel 9-slice 4 | `HUD_KANAN_MARGIN_PX`, `HUD_PANEL_JARAK_PX`, `HUD_IKON_PX`, `HUD_PANEL_9SLICE_PX`; pemisah ribuan tiap `ANGKA_KELOMPOK_RIBUAN` 3 angka |
+| Zona aman | margin tepi = max(margin DESIGN_SPEC, inset aman); inset layar dibulatkan ke atas ke piksel game | `ZONA_AMAN_TOLERANSI_PX` 0,000001 hanya derau float |
+| Layar hasil | panel lebar minimum 300, jarak baris 2; terbuka saat kecepatan ≤ 0,000001 u/d | `HASIL_PANEL_LEBAR_PX`, `HASIL_JARAK_BARIS_PX`, `HASIL_BERHENTI_TOLERANSI_UD` |
+
+Dites (invarian prinsip): bot santai tanpa berhenti di sisi bebas sampai garis akhir sebelum tenggat tanpa tabrakan di 20 seed (cadangan paling sedikit 10 detik); bot yang berhenti 100 detik melewati tenggat tetapi tetap sampai garis akhir tepat sekali; koin tidak pernah berkurang, juga sesudah tenggat.
 
 ---
 
@@ -402,6 +424,12 @@ Belum diisi. Diputuskan di Fase 6 bersama layar bengkel (GDD 12.5). Arah yang su
 ---
 
 ## 10. Catatan perubahan
+
+- **2026-10-17** — Masukan review pemilik PR #33 (run fase3c-hud-hasil; usulan, dinilai di HP): tombol bel terlalu di pojok bawah sehingga susah dijangkau jempol, juga di mode kidal. `BEL_TOMBOL_PUSAT_TEPI_PX` (28, dipakai untuk jarak samping dan bawah) dipecah menjadi `BEL_TOMBOL_PUSAT_SAMPING_PX` 64 dan `BEL_TOMBOL_PUSAT_BAWAH_PX` 64: pusat (lebar −64, 296), kidal (64, 296), sekitar 1,2 cm dari tepi di vivo V2108. Dua konstanta supaya jarak samping dan bawah bisa disetel terpisah sesudah uji HP. Ukuran tombol 40 dan radius zona tap 28 tetap. Di lebar 640, 780, dan 800, kanan dan kidal, dengan dan tanpa inset aman tiruan, zona tap tetap di dalam zona swipe dan tidak menumpuk dengan panel bawah, radar, tombol jeda, panel atas, atau zona stick (`tests/tes_tata_letak.gd`), jadi nilai usulan 64/64 dipakai apa adanya. Tata letak di `DESIGN_SPEC.md` 3.8.
+
+- **2026-10-17** — Run fase3c-hud-hasil iterasi 2 (QA-006, dokumen saja; tidak ada angka `config.gd` yang berubah): bagian 6 baris "Rute awal perumahan" dan "Lama rute" masih memakai panjang rencana 250 ubin ("sekitar 250 ubin", "55 detik cepat sampai 85 detik santai"), berselisih dengan baris tenggat di tabel yang sama dan dengan bagian 6b (232 sampai 240 ubin terukur dari data). Diperbaiki dari panjang terukur: lama rute 77 sampai 80 detik santai, 52 sampai 53 detik cepat, 39 sampai 40 detik ngebut; cadangan tenggat santai ditulis ulang sekitar 12 detik (dulu "sekitar 11"). `docs/SETUP_ANDROID.md` 8.6 butir 1 (checklist 3A yang belum diisi) yang menyalin angka lama ikut diperbaiki.
+
+- **2026-10-17** — Run fase3c-hud-hasil iterasi 1a (keputusan pemilik K-1 dan K-2, usulan orchestrator O-6 sampai O-12; semua angka usulan, belum diuji di HP): tenggat dihitung dari rute `ceil(panjang / 3,0 × 1,15)` (89 sampai 92 detik; dulu tertulis "sekitar 95 detik" dari panjang 250 lama) dan tip hilang sesudah tenggat lewat (ongkos, skor, combo tetap); radar 30 ubin dengan jangkau = jarak lempar terjauh 5,0; kotak progres terlewat sesudah 3,0 ubin; angka tampilan HUD rute final dan layar hasil (bagian 6f). Angka gerak, lemparan, skor, ekonomi, rintangan, dan bel tidak berubah. Alasan: kontrak SPEC run 3C (AC-1 sampai AC-13, AC-16).
 
 - **2026-10-16** — Run fase3b-rintangan-skor bagian B (scene; usulan, belum diuji di HP): angka tampilan dan input baru di bagian 6e (tinggi penutup rintangan, ikon "!", oleng ±1 px, kedip kebal, ikon kilatan, tombol dan zona bel, efek bel, panel skor HUD dev, label PUTUS, umpan balik melayang). Aturan main bagian 5b, 6c, 6d, 7 tidak berubah. Alasan: AC-8, AC-13, AC-15, AC-16, DESIGN_SPEC 3.6 dan 3.8; nilai dinilai lewat uji HP (`SETUP_ANDROID.md` 8.7). Anjing yang kaget karena bel kini memakai animasi `berhenti` (bukan `lari`) selama ikon "!" tampil, supaya terbaca kaget.
 

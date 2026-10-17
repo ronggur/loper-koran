@@ -93,6 +93,12 @@ func _initialize() -> void:
 	skor.jalankan()
 	var bel: TesBel = TesBel.new(check, _judul)
 	bel.jalankan()
+	var tenggat: TesTenggat = TesTenggat.new(check, _judul)
+	tenggat.jalankan()
+	var radar: TesRadar = TesRadar.new(check, _judul)
+	radar.jalankan()
+	var hasil: TesHasil = TesHasil.new(check, _judul)
+	hasil.jalankan()
 	var sprite: TesSprite = TesSprite.new(check, _judul, self)
 	sprite.jalankan()
 	var ekspor: TesExport = TesExport.new(check, _judul)
@@ -115,6 +121,8 @@ func _initialize() -> void:
 	await kotak_surat.jalankan()
 	var scene_rintangan: TesRintanganScene = TesRintanganScene.new(check, _judul, self)
 	await scene_rintangan.jalankan()
+	var scene_hud_rute: TesHudRuteScene = TesHudRuteScene.new(check, _judul, self)
+	await scene_hud_rute.jalankan()
 	var tata_letak: TesTataLetak = TesTataLetak.new(check, _judul, self)
 	await tata_letak.jalankan()
 	var bunyi: TesBunyi = TesBunyi.new(check, _judul, self)
@@ -820,9 +828,10 @@ func _test_terjemahan() -> void:
 	check(baris.size() >= 3, "CSV memuat kunci HUD sementara (%d baris)" % baris.size())
 	var kunci_sah: Array[String] = []
 	var rapi: bool = true
-	# Awalan layar atau fitur (rule `content-data`): HUD_ (run 0B), JEDA_ (layar jeda, run fase1b-umpan-balik), RUTE_ (scene rute, run fase3a-rute).
-	var re_kunci: RegEx = RegEx.create_from_string("^(?:HUD|JEDA|RUTE)_[A-Z0-9]+(?:_[A-Z0-9]+)*$")
-	check(re_kunci.search("JEDA_LANJUT") != null and re_kunci.search("RUTE_SELESAI") != null and re_kunci.search("LANJUT") == null and re_kunci.search("MENU_X") == null and re_kunci.search("jeda_lanjut") == null, "pemeriksa kunci menerima awalan HUD_/JEDA_/RUTE_ dan menolak tanpa awalan, awalan lain, huruf kecil")
+	# Awalan layar atau fitur (rule `content-data`): HUD_ (run 0B), JEDA_ (layar jeda, run fase1b-umpan-balik), RUTE_ (scene rute, run fase3a-rute),
+	# HASIL_ (layar hasil, run fase3c-hud-hasil).
+	var re_kunci: RegEx = RegEx.create_from_string("^(?:HUD|JEDA|RUTE|HASIL)_[A-Z0-9]+(?:_[A-Z0-9]+)*$")
+	check(re_kunci.search("JEDA_LANJUT") != null and re_kunci.search("RUTE_SELESAI") != null and re_kunci.search("HASIL_JUDUL") != null and re_kunci.search("LANJUT") == null and re_kunci.search("MENU_X") == null and re_kunci.search("jeda_lanjut") == null, "pemeriksa kunci menerima awalan HUD_/JEDA_/RUTE_/HASIL_ dan menolak tanpa awalan, awalan lain, huruf kecil")
 	var re_pengganti: RegEx = RegEx.create_from_string("\\{([^}]*)\\}")
 	for entri: PackedStringArray in baris:
 		if entri.size() != 2:
@@ -831,7 +840,7 @@ func _test_terjemahan() -> void:
 			continue
 		var kunci: String = entri[0]
 		var nilai: String = entri[1]
-		check(re_kunci.search(kunci) != null, "kunci %s UPPER_SNAKE_CASE berawalan HUD_, JEDA_, atau RUTE_" % kunci)
+		check(re_kunci.search(kunci) != null, "kunci %s UPPER_SNAKE_CASE berawalan HUD_, JEDA_, RUTE_, atau HASIL_" % kunci)
 		check(not kunci_sah.has(kunci), "kunci %s tidak duplikat" % kunci)
 		check(not nilai.strip_edges().is_empty(), "kunci %s punya nilai (tidak kosong)" % kunci)
 		for cocok: RegExMatch in re_pengganti.search_all(nilai):

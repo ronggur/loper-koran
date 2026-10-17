@@ -5,7 +5,8 @@ extends Control
 ##
 ## Hanya gambar: tidak menerima sentuhan (`MOUSE_FILTER_IGNORE`). Sentuhan bel dibaca `TouchRouter` dari zona tap bel (lingkaran radius
 ## `BEL_ZONA_RADIUS_PX` di pusat tombol, `TouchZones.pusat_bel`) supaya hanya sentuhan yang DIMULAI di sana yang membunyikan bel dan dua jari
-## dilacak lewat `index`. Letak (pojok kanan bawah, kidal kiri bawah) diatur `HudDev` lewat anchor. Frame dipilih `Bel.frame_tombol`.
+## dilacak lewat `index`. Letak (kanan bawah, kidal kiri bawah; pusat `BEL_TOMBOL_PUSAT_SAMPING_PX` dari tepi samping dan
+## `BEL_TOMBOL_PUSAT_BAWAH_PX` dari tepi bawah) diatur `HudDasar` lewat anchor dan margin `StripBel`. Frame dipilih `Bel.frame_tombol`.
 
 const TEKSTUR: Texture2D = preload("res://assets/sprites/ui/ui_bel_tombol.png")
 

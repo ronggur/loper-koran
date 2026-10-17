@@ -23,7 +23,7 @@ Bentuk JSON dan nama field di `DATA_SCHEMA.md` adalah **usulan** sampai dikunci 
 
 - Segmen buatan tangan, satu rute memakai 6 sampai 8 dari 8 sampai 10 segmen per distrik, disusun acak dengan seed (ROUTE_DESIGN, DEV_PHASES Fase 3).
 - Ikuti aturan adil di ROUTE_DESIGN: jalur utama selalu bersih, rintangan punya pola yang bisa dipelajari, tidak ada kombinasi yang tidak bisa dihindari. Tes memeriksa aturan yang bisa diperiksa mesin.
-- Distrik pertama (perumahan) hanya punya pelanggan di sisi `seberang`; sisi `dekat` baru dipakai setelah keputusan "cara menampilkan rumah sisi dekat" (ROADMAP 5).
+- Distrik pertama (perumahan) hanya punya pelanggan di sisi `seberang`; sisi `dekat` dipakai mulai distrik dua sisi (Bab 2); tampilannya diputuskan 2026-10-17: tembok/pagar belakang rendah (ROADMAP 4b).
 
 ## Headline dan misi
 

@@ -83,17 +83,16 @@ func _test_touch_zones() -> void:
 				check(TouchZones.zona_di(Vector2(tengah_x, y_min - 1), lebar, kidal) != peran, "%s %s: 1 px di atas zona %s (y = %s) bukan zona %s" % [tag, mode, nama, y_min - 1, nama])
 				check(TouchZones.zona_di(Vector2(tengah_x, y_maks), lebar, kidal) == peran, "%s %s: tepi bawah %s (y = %s) masuk zona" % [tag, mode, nama, y_maks])
 				check(TouchZones.zona_di(Vector2(tengah_x, y_maks + 1), lebar, kidal) != peran, "%s %s: 1 px di bawah zona %s (y = %s) bukan zona %s" % [tag, mode, nama, y_maks + 1, nama])
-				# Run fase3b-rintangan-skor (AC-15): pojok bawah zona swipe di tepi layar masuk zona tap bel (pusat (lebar - 28, 332), kidal (28,
-				# 332), radius 28; jarak pojok 21,5 px), dan bel menang atas swipe. Pojok bawah sisi luar swipe jadi BEL, tiga pojok lain tetap.
-				var pojok_bawah_luar: Vector2 = Vector2(x_min if kidal else x_maks, y_maks)
-				var pojok_lain: Array[Vector2] = [Vector2(x_min, y_min), Vector2(x_maks, y_min), Vector2(x_maks if kidal else x_min, y_maks)]
+				# Masukan uji pemilik 2026-10-17 (PR #33): bel pindah dari pojok (pusat (lebar - 28, 332), run 3B) ke (lebar - 64, 296), kidal
+				# (64, 296), jadi keempat pojok zona kembali milik zona itu sendiri (pojok bawah luar swipe 71,1 px dari pusat bel, radius 28).
 				var pojok_ok: bool = true
-				for pojok: Vector2 in pojok_lain + ([] if peran == TouchZones.Zona.SWIPE else [pojok_bawah_luar]):
+				for pojok: Vector2 in [Vector2(x_min, y_min), Vector2(x_maks, y_min), Vector2(x_min, y_maks), Vector2(x_maks, y_maks)]:
 					if TouchZones.zona_di(pojok, lebar, kidal) != peran:
 						pojok_ok = false
-				check(pojok_ok, "%s %s: pojok zona %s inklusif" % [tag, mode, nama])
+				check(pojok_ok, "%s %s: pojok zona %s inklusif (keempatnya)" % [tag, mode, nama])
 				if peran == TouchZones.Zona.SWIPE:
-					check(TouchZones.zona_di(pojok_bawah_luar, lebar, kidal) == TouchZones.Zona.BEL, "%s %s: pojok bawah sisi luar zona swipe %s masuk zona tap bel (bel menang atas swipe, AC-15)" % [tag, mode, pojok_bawah_luar])
+					var bel_lama: Vector2 = Vector2(28, 332) if kidal else Vector2(w - 28, 332)
+					check(TouchZones.zona_di(bel_lama, lebar, kidal) == TouchZones.Zona.SWIPE, "%s %s: pusat bel lama di pojok %s kini zona swipe, bukan bel" % [tag, mode, bel_lama])
 			# Titik di luar kedua zona.
 			var di_luar: Array[Vector2] = [Vector2(400, 10), Vector2(400, 47), Vector2(0, 0), Vector2(w - 1, 0), Vector2(w - 1, TINGGI - 1), Vector2(0, TINGGI - 1), Vector2(5, 300), Vector2(w - 5, 300)]
 			for titik: Vector2 in di_luar:
