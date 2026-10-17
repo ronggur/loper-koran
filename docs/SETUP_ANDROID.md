@@ -472,6 +472,7 @@ Penguji: pemilik sendiri (rule `testing`). APK normal terbaru (bagian 4) di vivo
 10. [ ] **Bel membuat anjing mundur (K-3, D-5).** Bunyikan bel saat anjing waspada atau mengejar di dekat sepeda (sampai 1 ubin di belakang). Diharapkan: "!" di atas anjing, anjing diam sebentar lalu lari pulang; mobil tidak bereaksi. Terasa adil (anjing tidak jadi tak berarti)? Jangkauan 1 ubin ke belakang perlu ditinjau.
 11. [ ] **Tanpa suara.** Matikan suara. Diharapkan: semua isyarat (tanda rintangan, tabrakan, bel, tepat, tip) tetap terbaca dari visual.
 12. [ ] **Jeda dan Main lagi.** Jeda di tengah anjing mengejar, sesudah tabrakan, dan sesudah bel: semua membeku, tanpa lanjut otomatis. "Main lagi" di akhir rute: skor, koin, combo, rintangan, bel kembali ke awal.
+13. [ ] **Mobil di celah dan kotak surat abu-abu (keputusan pemilik 2026-10-17).** Mobil garasi parkir di celah samping rumah dan tidak menembus dinding saat parkir maupun mundur. Rumah bukan pelanggan seberang punya kotak surat abu-abu yang lebih rendah. Diharapkan: saat ngebut, kotak surat abu-abu tidak terbaca sebagai sasaran (yang menarik mata tetap kotak surat oranye dan areanya). Tangkapan desktop: `docs/loop/20261017-fase3b-rintangan-skor/shots/fix_mobil_kotak_surat/`.
 
 **Lembar hasil 3B:**
 
@@ -489,6 +490,7 @@ Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build 
 10. Anjing mundur adil: ya / tidak   jangkauan belakang 1 ubin: perlu / tidak
 11. Tanpa suara terbaca: ya / tidak
 12. Jeda dan Main lagi: ya / tidak
+13. Mobil di celah wajar: ya / tidak   kotak surat abu-abu terbaca sebagai sasaran saat ngebut: ya / tidak
 Angka, bunyi, dan aset yang ingin diubah dan alasannya: ____
 ```
 
