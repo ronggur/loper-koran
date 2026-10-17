@@ -67,7 +67,7 @@ stick_ke_seberang={
 
 [internationalization]
 
-locale/translations=PackedStringArray("res://translations/ui.id.translation")
+locale/translations=PackedStringArray("res://translations/ui.id.translation", "res://translations/konten.id.translation")
 locale/fallback="id"
 
 [rendering]
