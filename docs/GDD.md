@@ -173,6 +173,8 @@ Rintangan tidak sebatas anjing dan mobil: tiap rintangan punya pola perilaku sen
 
 Pola perilaku rintangan per distrik ada di bagian 9.3; aturan menempatkannya di rute ada di `ROUTE_DESIGN.md`.
 
+> **KEPUTUSAN (2026-10-17): tabrakan dengan rintangan membuat pemain jatuh, lalu tetap bisa melanjutkan.** Pemain terjerembab sebentar (usulan 1,2 detik: kecepatan 0, tidak bisa menyetir atau melempar), lalu bangun dan mengayuh lagi dari diam, dengan jeda kebal singkat sesudah bangun supaya tidak langsung jatuh lagi. Tabrakan memutus combo. Efeknya memperlambat, tidak menghentikan rute (prinsip 2); tanpa batas tabrakan dan tanpa game over (game over tetap terbuka, ROADMAP 5). Menggantikan aturan oleng run 3B (kecepatan turun ke 1,0 u/d, oleng 0,6 detik). Angka dan rinciannya usulan di `BALANCING.md` 6c, dinilai lewat uji HP.
+
 ---
 
 ## 8. Pelanggan dan Reputasi Lingkungan

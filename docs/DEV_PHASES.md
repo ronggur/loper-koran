@@ -99,7 +99,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 - [x] Rute dari urutan segmen acak dengan seed (run 3A, PR #28: `RouteBuilder` berseed, 25 pelanggan, koran awal 30; tiap rute memakai semua 5 segmen tengah, variasi dinilai lewat uji HP, LOG D-1)
 - [x] Rumah pelanggan dan bukan pelanggan; distrik pertama hanya pelanggan di sisi seberang (run 3A, PR #28: rumah dan kotak surat dari data di `scenes/rute/rute.tscn`; rumah sisi dekat hanya placeholder `bukan`, cara tampilnya tetap terbuka)
 - [x] Dua rintangan perumahan dengan pola perilakunya: anjing penjaga dan mobil keluar garasi (GDD 9.3) (run 3B, PR #32: `AnjingPenjaga`, `MobilGarasi`, `RintanganRute`; tanda ≥ 1,5 detik pada ngebut dan jalan keluar selalu ada dites; rasa tanda dinilai lewat uji HP 8.7)
-- [x] Tabrakan: menghambat, tidak menghentikan rute (aturan pasti di BALANCING 6) (run 3B, PR #32: 1,0 u/d, oleng 0,6, kebal 1,0, combo putus, tanpa game over; keputusan pemilik K-1; rasa dinilai lewat uji HP 8.7)
+- [x] Tabrakan: menghambat, tidak menghentikan rute (aturan pasti di BALANCING 6) (run 3B, PR #32: 1,0 u/d, oleng 0,6, kebal 1,0, combo putus, tanpa game over; keputusan pemilik K-1; rasa dinilai lewat uji HP 8.7). Catatan 2026-10-17: keputusan pemilik mengganti oleng dengan **jatuh** 1,2 detik (kecepatan 0, animasi jatuh lalu terjerembab), bangun dan dikayuh lagi dari 0, kebal 1,0 sejak bangun; tetap tidak menghentikan rute (BALANCING 6c, branch `feat/tabrakan-jatuh`)
 - [x] Skor: nilai sasaran, combo, pengali kecepatan (BALANCING 5) (run 3B, PR #32: `SkorRute`, bonus tepat ×1,25, koin 15 + tip 5 dihitung terpisah dari skor, K-2 dan K-4; HUD dev sementara, HUD final di 3C)
 - [x] Bel "Kring Kring!": tombol bel, "kring" dan "kring kring!", efek visual di atas setang, bunyi placeholder (GDD 5.4, SOUND_DESIGN 3.3; dimajukan dari Fase 6-7 oleh pemilik 2026-10-16, dikerjakan di Run 3B) (run 3B, PR #32; dinilai lewat uji HP 8.7)
 - [x] Bunyi mendarat naik setengah nada tiap antaran beruntun sampai 5 tingkat, kembali ke nada dasar saat combo putus, dan denting tip sesudah bunyi mendarat (SOUND_DESIGN 3.1; ditunda dari Fase 2 run fase2b-bantu-audio karena skor dan combo belum ada; bunyi mendarat placeholder empat permukaan sudah ada, `BunyiLempar` + autoload `Audio`) (run 3B, PR #32; dinilai lewat uji HP 8.7)
@@ -134,7 +134,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 **Tujuan:** mengganti placeholder rute perumahan dengan aset final. Daftar dan ukuran ada di ART_DIRECTION 6.
 
 - [x] Sprite pemain Kemeja Agen: 5 arah × 3 kecepatan × 4 frame kayuh (2026-10-07)
-- [ ] Animasi pemain: lempar ke sisi seberang dan sisi dekat, meluncur, rem, berhenti dengan kaki turun, tabrakan/oleng (ART_DIRECTION 3.4)
+- [ ] Animasi pemain: lempar ke sisi seberang dan sisi dekat, meluncur, rem, berhenti dengan kaki turun, tabrakan = jatuh (ART_DIRECTION 3.4; sejak 2026-10-17 `jatuh_normal` dan `terjerembab_normal` arah normal dipakai untuk semua arah; sisa: empat arah lain dan animasi bangkit)
 - [ ] Koran: proyektil berputar, mendarat, terlipat di teras
 - [ ] Ubin perumahan: jalan, marka, trotoar, kerb, rumput, polisi tidur
 - [ ] Rumah modular perumahan (fasad sisi seberang, belakang sisi dekat, atap), kotak surat
