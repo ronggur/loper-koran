@@ -214,10 +214,12 @@ func _test_ambil_lewati() -> void:
 	var lewati_biasa: StyleBoxFlat = koran.gaya_tombol(koran.tombol_lewati())
 	check(koran.pilihan() == HalamanKoran.Pilihan.AMBIL and sinyal["ambil"] == 1 and sinyal["lewati"] == 0, "ketuk Ambil: terpilih AMBIL, sinyal sekali")
 	check(status_ambil == "Misi diambil" and status_ambil != status_belum, "teks status berubah: '%s'" % status_ambil)
-	check(ambil_terpilih.bg_color == Palette.KORAN_TINTA and ambil_terpilih.border_width_left == Config.KORAN_BINGKAI_TERPILIH_PX and lewati_biasa.bg_color == Palette.KORAN_KERTAS_2 and lewati_biasa.border_width_left == 1, "bentuk berubah: Ambil terisi gelap dengan bingkai 3 px, Lewati tetap garis tipis (bukan hanya warna)")
+	check(ambil_terpilih.bg_color == Palette.KORAN_KERTAS and ambil_terpilih.border_color == Palette.KORAN_TINTA and ambil_terpilih.border_width_left == Config.KORAN_BINGKAI_TERPILIH_PX and lewati_biasa.bg_color == Palette.KORAN_KERTAS_2 and lewati_biasa.border_width_left == 1, "bentuk berubah: Ambil berongga dengan bingkai tinta 3 px, Lewati tetap garis tipis (bukan hanya warna)")
+	var gaya_berangkat: StyleBoxFlat = koran.gaya_tombol(koran.tombol_berangkat())
+	check(gaya_berangkat.bg_color == Palette.KORAN_TINTA and ambil_terpilih.bg_color != gaya_berangkat.bg_color, "Ambil terpilih (berongga) berbeda bentuk dari Berangkat (terisi tinta penuh): pilihan tidak terbaca sebagai aksi utama kedua (QA-010)")
 	koran.tombol_lewati().ditekan.emit()
 	check(koran.pilihan() == HalamanKoran.Pilihan.LEWATI and koran.teks_status() == "Misi dilewati" and sinyal["lewati"] == 1, "dibolak-balik ke Lewati: status 'Misi dilewati'")
-	check(koran.gaya_tombol(koran.tombol_lewati()).bg_color == Palette.KORAN_TINTA and koran.gaya_tombol(koran.tombol_ambil()).bg_color == Palette.KORAN_KERTAS_2, "bentuk mengikuti: Lewati terisi, Ambil kembali garis tipis")
+	check(koran.gaya_tombol(koran.tombol_lewati()).bg_color == Palette.KORAN_KERTAS and koran.gaya_tombol(koran.tombol_lewati()).border_width_left == Config.KORAN_BINGKAI_TERPILIH_PX and koran.gaya_tombol(koran.tombol_ambil()).bg_color == Palette.KORAN_KERTAS_2 and koran.gaya_tombol(koran.tombol_ambil()).border_width_left == 1, "bentuk mengikuti: Lewati berongga bingkai tebal, Ambil kembali garis tipis")
 	for i: int in range(3):
 		koran.tombol_ambil().ditekan.emit()
 		koran.tombol_lewati().ditekan.emit()
@@ -257,16 +259,29 @@ func _test_notifikasi_dan_zona_aman() -> void:
 	koran.isi(HalamanUji.nyata(1), 1, "perumahan")
 	await _tree.process_frame
 	check(not koran.rect_label_tampil().is_empty(), "label tampil")
-	var tanpa: int = koran.teks_tampil().count("Data simpanan lama tidak terbaca; salinannya disimpan dan permainan mulai dari awal")
-	check(tanpa == 1, "teks notifikasi ada di daftar teks (satu kunci KORAN_SAVE_RUSAK)")
+	var teks_rusak: String = "Data simpanan lama tidak terbaca; salinannya disimpan dan permainan mulai dari awal"
+	check(koran.teks_tampil().count(teks_rusak) == 0, "tanpa notifikasi: teks save tidak ada di daftar teks")
 	var rect_notif: Array[Rect2] = koran.rect_label_tampil()
-	koran.tampilkan_notifikasi_rusak(true)
+	koran.tampilkan_notifikasi("KORAN_SAVE_RUSAK")
 	await _tree.process_frame
 	await _tree.process_frame
-	check(koran.rect_label_tampil().size() == rect_notif.size() + 1, "notifikasi save rusak menambah tepat satu baris teks")
+	check(koran.rect_label_tampil().size() == rect_notif.size() + 1 and koran.teks_tampil().count(teks_rusak) == 1, "notifikasi save rusak menambah tepat satu baris teks (kunci KORAN_SAVE_RUSAK)")
 	for ukur: Dictionary in koran.ukur_label():
 		check(float(ukur["dibutuhkan"]) <= float(ukur["tersedia"]) + 1.0, "dengan notifikasi: teks %s tidak terpotong" % ukur["nama"])
-	koran.tampilkan_notifikasi_rusak(false)
+	# Dua kunci notifikasi baru (QA-003, QA-004): terjemahan ada, satu baris, panjang tidak terpotong, dan jujur (tidak mengaku menyimpan salinan).
+	for kunci: String in ["KORAN_SAVE_TIDAK_TERBACA", "KORAN_SAVE_GAGAL"]:
+		koran.tampilkan_notifikasi(kunci)
+		await _tree.process_frame
+		await _tree.process_frame
+		var teks_notif: String = tr(kunci)
+		check(teks_notif != kunci and koran.teks_tampil().count(teks_notif) == 1 and koran.rect_label_tampil().size() == rect_notif.size() + 1, "%s: terjemahan ada dan tampil tepat satu baris" % kunci)
+		check(not teks_notif.to_lower().contains("salinannya disimpan"), "%s: tidak mengaku menyimpan salinan" % kunci)
+		for ukur: Dictionary in koran.ukur_label():
+			check(float(ukur["dibutuhkan"]) <= float(ukur["tersedia"]) + 1.0, "%s: teks %s tidak terpotong" % [kunci, ukur["nama"]])
+		var rect_berangkat: Rect2 = koran.rect_tombol_berangkat()
+		check(Rect2(Vector2.ZERO, _tree.root.get_visible_rect().size).encloses(rect_berangkat), "%s: Berangkat tetap di dalam layar" % kunci)
+	koran.tampilkan_notifikasi("")
+	check(koran.teks_tampil().count(teks_rusak) == 0 and not koran.find_child("Notifikasi", true, false).is_visible_in_tree(), "kunci kosong menyembunyikan baris notifikasi")
 	var inset: ZonaAman.Inset = ZonaAman.Inset.new()
 	inset.awal_x = 30
 	inset.akhir_x = 26

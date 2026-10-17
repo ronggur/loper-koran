@@ -32,134 +32,133 @@ unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Kiri" type="VBoxContainer" parent="Latar/Batas/Isi"]
+[node name="KolomBerita" type="VBoxContainer" parent="Latar/Batas/Isi"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="NamaKoran" type="Label" parent="Latar/Batas/Isi/Kiri"]
+[node name="NamaKoran" type="Label" parent="Latar/Batas/Isi/KolomBerita"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"JudulBesar"
 text = "KORAN_NAMA"
 
-[node name="TeksHari" type="Label" parent="Latar/Batas/Isi/Kiri"]
+[node name="TeksHari" type="Label" parent="Latar/Batas/Isi/KolomBerita"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudLabel"
 autowrap_mode = 3
 
-[node name="GarisAtas" type="ColorRect" parent="Latar/Batas/Isi/Kiri"]
+[node name="GarisAtas" type="ColorRect" parent="Latar/Batas/Isi/KolomBerita"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="LabelUtama" type="Label" parent="Latar/Batas/Isi/Kiri"]
+[node name="LabelUtama" type="Label" parent="Latar/Batas/Isi/KolomBerita"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudLabel"
 text = "KORAN_LABEL_UTAMA"
 
-[node name="TeksUtama" type="Label" parent="Latar/Batas/Isi/Kiri"]
+[node name="TeksUtama" type="Label" parent="Latar/Batas/Isi/KolomBerita"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"JudulBesar"
 autowrap_mode = 3
 
-[node name="GarisTengah" type="ColorRect" parent="Latar/Batas/Isi/Kiri"]
+[node name="GarisTengah" type="ColorRect" parent="Latar/Batas/Isi/KolomBerita"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="LabelRingan" type="Label" parent="Latar/Batas/Isi/Kiri"]
+[node name="LabelRingan" type="Label" parent="Latar/Batas/Isi/KolomBerita"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudLabel"
 text = "KORAN_LABEL_RINGAN"
 
-[node name="TeksRingan" type="Label" parent="Latar/Batas/Isi/Kiri"]
+[node name="TeksRingan" type="Label" parent="Latar/Batas/Isi/KolomBerita"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"JudulLayar"
 autowrap_mode = 3
 
-[node name="Pengisi" type="Control" parent="Latar/Batas/Isi/Kiri"]
+[node name="Pengisi" type="Control" parent="Latar/Batas/Isi/KolomBerita"]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="Notifikasi" type="Label" parent="Latar/Batas/Isi/Kiri"]
+[node name="Notifikasi" type="Label" parent="Latar/Batas/Isi/KolomBerita"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"TeksKecil"
-text = "KORAN_SAVE_RUSAK"
 autowrap_mode = 3
 
-[node name="Kanan" type="VBoxContainer" parent="Latar/Batas/Isi"]
+[node name="KolomMisi" type="VBoxContainer" parent="Latar/Batas/Isi"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="PanelMisi" type="PanelContainer" parent="Latar/Batas/Isi/Kanan"]
+[node name="PanelMisi" type="PanelContainer" parent="Latar/Batas/Isi/KolomMisi"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 
-[node name="IsiMisi" type="VBoxContainer" parent="Latar/Batas/Isi/Kanan/PanelMisi"]
+[node name="IsiMisi" type="VBoxContainer" parent="Latar/Batas/Isi/KolomMisi/PanelMisi"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 
-[node name="LabelMisi" type="Label" parent="Latar/Batas/Isi/Kanan/PanelMisi/IsiMisi"]
+[node name="LabelMisi" type="Label" parent="Latar/Batas/Isi/KolomMisi/PanelMisi/IsiMisi"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudLabel"
 text = "KORAN_LABEL_MISI"
 
-[node name="TeksMisi" type="Label" parent="Latar/Batas/Isi/Kanan/PanelMisi/IsiMisi"]
+[node name="TeksMisi" type="Label" parent="Latar/Batas/Isi/KolomMisi/PanelMisi/IsiMisi"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"JudulLayar"
 autowrap_mode = 3
 
-[node name="Ringkasan" type="Label" parent="Latar/Batas/Isi/Kanan/PanelMisi/IsiMisi"]
+[node name="Ringkasan" type="Label" parent="Latar/Batas/Isi/KolomMisi/PanelMisi/IsiMisi"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"HudTeks"
 autowrap_mode = 3
 
-[node name="BarisPilih" type="HBoxContainer" parent="Latar/Batas/Isi/Kanan/PanelMisi/IsiMisi"]
+[node name="BarisPilih" type="HBoxContainer" parent="Latar/Batas/Isi/KolomMisi/PanelMisi/IsiMisi"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 
-[node name="TombolAmbil" type="Button" parent="Latar/Batas/Isi/Kanan/PanelMisi/IsiMisi/BarisPilih"]
+[node name="TombolAmbil" type="Button" parent="Latar/Batas/Isi/KolomMisi/PanelMisi/IsiMisi/BarisPilih"]
 unique_name_in_owner = true
 layout_mode = 2
 focus_mode = 0
 text = "KORAN_AMBIL"
 script = ExtResource("3_tombol")
 
-[node name="TombolLewati" type="Button" parent="Latar/Batas/Isi/Kanan/PanelMisi/IsiMisi/BarisPilih"]
+[node name="TombolLewati" type="Button" parent="Latar/Batas/Isi/KolomMisi/PanelMisi/IsiMisi/BarisPilih"]
 unique_name_in_owner = true
 layout_mode = 2
 focus_mode = 0
 text = "KORAN_LEWATI"
 script = ExtResource("3_tombol")
 
-[node name="StatusMisi" type="Label" parent="Latar/Batas/Isi/Kanan/PanelMisi/IsiMisi"]
+[node name="StatusMisi" type="Label" parent="Latar/Batas/Isi/KolomMisi/PanelMisi/IsiMisi"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"TeksKecil"
 autowrap_mode = 3
 
-[node name="TanpaMisi" type="Label" parent="Latar/Batas/Isi/Kanan/PanelMisi/IsiMisi"]
+[node name="TanpaMisi" type="Label" parent="Latar/Batas/Isi/KolomMisi/PanelMisi/IsiMisi"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -167,12 +166,12 @@ theme_type_variation = &"HudTeks"
 text = "KORAN_TANPA_MISI"
 autowrap_mode = 3
 
-[node name="Pengisi" type="Control" parent="Latar/Batas/Isi/Kanan"]
+[node name="Pengisi" type="Control" parent="Latar/Batas/Isi/KolomMisi"]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="TombolBerangkat" type="Button" parent="Latar/Batas/Isi/Kanan"]
+[node name="TombolBerangkat" type="Button" parent="Latar/Batas/Isi/KolomMisi"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 8

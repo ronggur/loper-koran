@@ -51,9 +51,9 @@ func _initialize() -> void:
 	_koran.isi(HalamanUji.lanjutan_tanpa_misi(), 4, "perumahan")
 	await _foto("lanjutan")
 	_koran.isi(HalamanUji.nyata(1), 1, "perumahan")
-	_koran.tampilkan_notifikasi_rusak(true)
+	_koran.tampilkan_notifikasi("KORAN_SAVE_RUSAK")
 	await _foto("save_rusak")
-	_koran.tampilkan_notifikasi_rusak(false)
+	_koran.tampilkan_notifikasi("")
 	var inset: ZonaAman.Inset = ZonaAman.Inset.new()
 	inset.awal_x = 24
 	inset.akhir_x = 24

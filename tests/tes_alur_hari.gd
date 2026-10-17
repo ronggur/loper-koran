@@ -37,6 +37,9 @@ func jalankan() -> void:
 	await _test_back_dan_background()
 	await _test_ambil_sama_dengan_lewati()
 	await _test_save_rusak_diberitahukan()
+	await _test_ready_autoload_tidak_menulis()
+	await _test_berangkat_tanpa_memilih()
+	await _test_simpan_gagal_tidak_memblokir()
 	var sesudah: Dictionary = _jejak_save_asli()
 	check(sebelum == sesudah, "user://save.json tidak tersentuh oleh tes alur hari (%s -> %s)" % [sebelum, sesudah])
 
@@ -463,4 +466,140 @@ func _test_save_rusak_diberitahukan() -> void:
 	check(DataSave.dari_teks(FileAccess.get_file_as_string(_jalur())).status == DataSave.Status.SAH, "sesudah hari pertama berkas save sah lagi")
 	_bersihkan(hari)
 	_tutup_manajer(m)
+	_bersihkan_folder()
+
+
+# --- SaveManager._ready tidak menulis (QA-001, AC-8, AC-14) ---
+
+func _test_ready_autoload_tidak_menulis() -> void:
+	_judul.call("SaveManager di pohon: _ready (yang berjalan di autoload sungguhan) hanya memuat, tidak pernah menulis (QA-001, AC-14)")
+	_bersihkan_folder()
+	# Tanpa berkas: masuk pohon (memicu _ready) tidak membuat save.json atau save.tmp. Node yang masuk root baru mendapat _ready sesudah satu frame.
+	var m: Node = (load(SKRIP_SIMPAN) as GDScript).new()
+	m.set(&"jalur", _jalur())
+	m.set(&"lapor_ke_log", false)
+	_tree.root.add_child(m)
+	await _tree.process_frame
+	await _tree.process_frame
+	check(m.get(&"jumlah_simpan") == 0 and not FileAccess.file_exists(_jalur()) and not DirAccess.dir_exists_absolute(FOLDER_TES), "_ready tanpa berkas: jumlah_simpan 0, tidak ada save.json, tidak ada folder yang dibuat")
+	_tree.root.remove_child(m)
+	m.free()
+	# Berkas sah: _ready memuatnya (state dari berkas) dan berkas tidak berubah satu byte pun.
+	_tulis_save(_fixture(7, {"koin": 321}))
+	var bita: PackedByteArray = FileAccess.get_file_as_bytes(_jalur())
+	var m2: Node = (load(SKRIP_SIMPAN) as GDScript).new()
+	m2.set(&"jalur", _jalur())
+	m2.set(&"lapor_ke_log", false)
+	_tree.root.add_child(m2)
+	await _tree.process_frame
+	await _tree.process_frame
+	check(m2.call(&"hari") == 7 and m2.get(&"jumlah_simpan") == 0 and FileAccess.get_file_as_bytes(_jalur()) == bita, "_ready di atas save sah: hari 7 termuat, nol simpan, berkas identik byte demi byte")
+	_tree.root.remove_child(m2)
+	m2.free()
+	# Berkas rusak: _ready tidak menimpanya (hanya salinan yang boleh dibuat), nol simpan.
+	_tulis_save("{bukan json")
+	var m3: Node = (load(SKRIP_SIMPAN) as GDScript).new()
+	m3.set(&"jalur", _jalur())
+	m3.set(&"lapor_ke_log", false)
+	_tree.root.add_child(m3)
+	await _tree.process_frame
+	await _tree.process_frame
+	check(FileAccess.get_file_as_string(_jalur()) == "{bukan json" and m3.get(&"jumlah_simpan") == 0 and not FileAccess.file_exists(FOLDER_TES.path_join("save.tmp")), "_ready di atas save rusak: berkas tidak ditimpa, nol simpan, tidak ada berkas sementara")
+	check(m3.call(&"ambil_notifikasi") == "KORAN_SAVE_RUSAK", "_ready di atas save rusak: salinan dibuat dan notifikasi menunggu layar koran")
+	_tree.root.remove_child(m3)
+	m3.free()
+	# Autoload ASLI (terdaftar di project.godot, dibuat di setiap `godot --script`): nol simpan sejak dibuat.
+	var asli: Node = _tree.root.get_node_or_null(^"SaveManager")
+	check(asli != null and asli.get(&"jumlah_simpan") == 0, "autoload SaveManager asli ada dan belum pernah menyimpan (jumlah_simpan 0)")
+	_bersihkan_folder()
+
+
+# --- Berangkat tanpa memilih = Lewati (QA-002, S-7) ---
+
+func _test_berangkat_tanpa_memilih() -> void:
+	_judul.call("Alur hari: Berangkat tanpa menyentuh Ambil/Lewati = Lewati, misi tidak tercatat dan tidak ada jeda (QA-002, S-7)")
+	_bersihkan_folder()
+	var m: Node = _manajer()
+	var hari: HariMain = await _siapkan(m)
+	check(hari.halaman().misi != null and hari.koran().pilihan() == HalamanKoran.Pilihan.BELUM, "prasyarat: hari 1 punya misi dan belum ada pilihan")
+	var rute: RuteMain = await _berangkat(hari)
+	check(rute != null and hari.misi_diambil() == "", "Berangkat langsung dari belum memilih: misi_diambil kosong, dapat '%s'" % hari.misi_diambil())
+	await _selesaikan_rute(rute)
+	rute.layar_hasil().tombol_main_lagi().ditekan.emit()
+	var s: Dictionary = _baca_save()
+	check(s["terakhir"]["misi_diambil"] == "" and s["misi_jeda"] == {}, "save: terakhir.misi_diambil kosong dan misi_jeda kosong (tidak ada jeda 7 hari); dapat %s / %s" % [s["terakhir"].get("misi_diambil"), s["misi_jeda"]])
+	check(hari.halaman().misi != null and hari.halaman().misi.id == "p1_kucing", "hari 2: misi P1 masih boleh tampil (tidak tertahan jeda)")
+	_bersihkan(hari)
+	_tutup_manajer(m)
+	_bersihkan_folder()
+
+
+# --- Simpan akhir hari gagal tidak memblokir (QA-004, QA-003) ---
+
+func _notif(hari: HariMain) -> Label:
+	return hari.koran().find_child("Notifikasi", true, false) as Label
+
+
+func _test_simpan_gagal_tidak_memblokir() -> void:
+	_judul.call("Alur hari: simpan akhir hari gagal dicoba lagi sekali, tidak memblokir alur, dan diberitahukan satu baris netral (QA-004)")
+	var teks_gagal: String = "Kemajuan hari ini belum tersimpan; dicoba lagi di akhir hari berikutnya"
+	# (a) Gagal sekali (baca-balik pertama salah) lalu coba ulang berhasil: tersimpan, tanpa notifikasi.
+	_bersihkan_folder()
+	var m: Node = _manajer()
+	var panggilan: Array[int] = [0]
+	m.set(&"baca_balik", func(p: String) -> String:
+		panggilan[0] += 1
+		return "salah" if panggilan[0] == 1 else FileAccess.get_file_as_string(p))
+	var hari: HariMain = await _siapkan(m)
+	var rute: RuteMain = await _berangkat(hari)
+	await _selesaikan_rute(rute)
+	rute.layar_hasil().tombol_main_lagi().ditekan.emit()
+	check(m.get(&"jumlah_simpan") == 2 and FileAccess.file_exists(_jalur()) and int(_baca_save()["hari"]) == 2 and int(_baca_save()["koin"]) == 120, "simpan pertama gagal, percobaan ulang berhasil: dua panggilan, berkas hari 2 koin 120")
+	check(hari.status().hari == 2 and not _notif(hari).is_visible_in_tree(), "setelah percobaan ulang berhasil: koran hari 2 tanpa notifikasi")
+	_bersihkan(hari)
+	_tutup_manajer(m)
+	# (b) Gagal terus (berkas sementara terhalang): alur jalan, satu baris netral, simpan berikutnya yang berhasil menuliskan semuanya.
+	_bersihkan_folder()
+	var m2: Node = _manajer()
+	var hari2: HariMain = await _siapkan(m2)
+	DirAccess.make_dir_recursive_absolute(FOLDER_TES.path_join("save.tmp"))
+	var rute2: RuteMain = await _berangkat(hari2)
+	await _selesaikan_rute(rute2)
+	rute2.layar_hasil().tombol_main_lagi().ditekan.emit()
+	await _tree.process_frame
+	check(m2.get(&"jumlah_simpan") == 2 and not FileAccess.file_exists(_jalur()), "simpan gagal dua kali (awal + satu percobaan ulang), tidak ada berkas save")
+	check(hari2.status().hari == 2 and hari2.status().keadaan == MesinHari.Keadaan.KORAN and hari2.koran().tampil(), "alur tidak diblokir: koran hari 2 tampil")
+	check(_notif(hari2).is_visible_in_tree() and tr(_notif(hari2).text) == teks_gagal, "satu baris netral KORAN_SAVE_GAGAL tampil di koran hari 2: '%s'" % tr(_notif(hari2).text))
+	DirAccess.remove_absolute(FOLDER_TES.path_join("save.tmp"))
+	var rute3: RuteMain = await _berangkat(hari2)
+	await _selesaikan_rute(rute3)
+	rute3.layar_hasil().tombol_main_lagi().ditekan.emit()
+	await _tree.process_frame
+	var s: Dictionary = _baca_save()
+	check(int(s["hari"]) == 3 and int(s["koin"]) == 240 and int(s["tip_total"]) == 50, "hari 2 tersimpan sesudah penghalang hilang: kemajuan dua hari ikut tertulis (hari 3, koin 240, tip_total 50)")
+	check(hari2.status().hari == 3 and not _notif(hari2).is_visible_in_tree(), "setelah simpan berhasil: notifikasi hilang di koran hari 3")
+	_bersihkan(hari2)
+	_tutup_manajer(m2)
+	# (c) Save lama ada tetapi tidak terbaca (chmod 000): ditahan, teks jujur muncul di koran pertama dan tetap sesudah hari berakhir.
+	_bersihkan_folder()
+	var isi: String = _fixture(40, {"koin": 9999})
+	_tulis_save(isi)
+	var terkunci: bool = OS.execute("chmod", ["000", ProjectSettings.globalize_path(_jalur())]) == 0 and FileAccess.open(_jalur(), FileAccess.READ) == null
+	if terkunci:
+		var m3: Node = _manajer()
+		var hari3: HariMain = await _siapkan(m3)
+		check(_notif(hari3).is_visible_in_tree() and _notif(hari3).text == "KORAN_SAVE_TIDAK_TERBACA" and hari3.status().hari == 1, "save tidak terbaca: koran hari 1 dengan KORAN_SAVE_TIDAK_TERBACA (permainan mulai dari awal di memori)")
+		var rute4: RuteMain = await _berangkat(hari3)
+		await _selesaikan_rute(rute4)
+		rute4.layar_hasil().tombol_main_lagi().ditekan.emit()
+		await _tree.process_frame
+		check(hari3.status().hari == 2 and _notif(hari3).is_visible_in_tree() and _notif(hari3).text == "KORAN_SAVE_TIDAK_TERBACA", "sesudah hari berakhir: tetap diberi tahu bahwa kemajuan tidak disimpan")
+		check(m3.call(&"simpan_ditahan") and m3.get(&"jumlah_simpan") == 1, "simpan ditahan: tanpa percobaan ulang yang percuma (satu panggilan)")
+		OS.execute("chmod", ["644", ProjectSettings.globalize_path(_jalur())])
+		check(FileAccess.get_file_as_string(_jalur()) == isi and not FileAccess.file_exists(FOLDER_TES.path_join("save.tmp")), "save lama (hari 40, koin 9999) utuh byte demi byte, tidak ada berkas sementara")
+		_bersihkan(hari3)
+		_tutup_manajer(m3)
+	else:
+		check(true, "chmod tidak menghalangi baca (mis. berjalan sebagai root): kasus tidak terbaca di alur hari dilewati")
+		OS.execute("chmod", ["644", ProjectSettings.globalize_path(_jalur())])
 	_bersihkan_folder()

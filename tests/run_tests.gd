@@ -55,6 +55,10 @@ var _gagal: int = 0
 
 
 func _initialize() -> void:
+	# Jejak `user://save.json` asli diambil sedini mungkin (sebelum tes pertama) dan dibandingkan di akhir: tidak ada tes, probe, maupun autoload
+	# `SaveManager` yang boleh membuat atau mengubahnya (QA-001). `_ready` autoload asli mungkin sudah berjalan sebelum baris ini, jadi
+	# `TesAlurHari` juga memeriksa langsung bahwa autoload asli belum pernah memanggil `simpan` (jumlah_simpan 0).
+	var save_asli_awal: Dictionary = _jejak_save_asli()
 	_test_config_parser()
 	_test_tingkat_sprite()
 	_test_arah_sprite()
@@ -145,6 +149,8 @@ func _initialize() -> void:
 	var cek_render: TesCekRender = TesCekRender.new(check, _judul, self)
 	await cek_render.jalankan()
 	root.size = ukuran_sebelum
+	var save_asli_akhir: Dictionary = _jejak_save_asli()
+	check(save_asli_awal == save_asli_akhir, "user://save.json asli tidak dibuat, diubah, atau dihapus oleh seluruh run tes (ada/ukuran/sha256: %s -> %s)" % [save_asli_awal, save_asli_akhir])
 	if audio != null:
 		audio.call(&"hentikan_sepeda")
 		audio.call(&"hentikan_lempar")
@@ -152,6 +158,12 @@ func _initialize() -> void:
 		await create_timer(0.25).timeout
 	print("%d lolos, %d gagal" % [_lolos, _gagal])
 	quit(1 if _gagal > 0 else 0)
+
+
+## Jejak `user://save.json` (ada, ukuran, sha256) untuk membuktikan tes tidak menyentuh save asli pemain.
+func _jejak_save_asli() -> Dictionary:
+	var ada: bool = FileAccess.file_exists("user://save.json")
+	return {"ada": ada, "ukuran": FileAccess.get_file_as_bytes("user://save.json").size() if ada else 0, "sha": FileAccess.get_sha256("user://save.json") if ada else ""}
 
 
 ## Mencatat satu pemeriksaan. Kegagalan dicetak sebagai `GAGAL: <label>`.

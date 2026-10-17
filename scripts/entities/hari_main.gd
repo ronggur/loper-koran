@@ -13,6 +13,10 @@ extends Node
 ##   jeda, background, hasil terbuka, rute ditutup di tengah jalan): save terakhir tetap utuh dan hari yang sama diulang dari layar koran (AC-19).
 ## - Back Android (S-6): di layar koran keluar app (`keluar_diminta`, lalu `SceneTree.quit` kecuali `panggil_quit` dimatikan tes); di rute `AdeganJalan`
 ##   menjeda sendiri; di layar hasil diabaikan. App ke background di layar koran tidak melakukan apa pun.
+## - Simpan gagal (QA-004): `akhiri_hari` dicoba sekali lagi; bila tetap gagal (atau ditahan karena save lama tidak aman ditimpa, QA-003) hari tetap
+##   maju di memori, alur TIDAK diblokir, dan layar koran berikutnya menampilkan satu baris netral (`KORAN_SAVE_GAGAL`, atau
+##   `KORAN_SAVE_TIDAK_TERBACA` bila simpan ditahan) sampai satu simpan berhasil. Kemajuan menumpuk di memori, jadi simpan berikutnya
+##   yang berhasil menuliskan semuanya.
 ## Alur hari berurutan ini prototype yang tidak mengunci struktur sesi (ROADMAP 5): tanpa hari terakhir, game over, atau target harian.
 
 ## Skrip autoload `SaveManager`, hanya untuk tipe (autoload tidak diberi `class_name`, rule `gdscript`).
@@ -43,6 +47,8 @@ var _galat_data: Array[String] = []
 var _rute: RuteMain = null
 ## Id misi yang diambil hari ini ("" bila dilewati atau tidak ada).
 var _misi_diambil: String = ""
+## True bila simpan terakhir (akhir hari) gagal; layar koran berikutnya memberi tahu sampai satu simpan berhasil.
+var _simpan_gagal: bool = false
 
 @onready var _koran: HalamanKoran = %Koran
 
@@ -93,8 +99,16 @@ func _tampilkan_koran() -> void:
 	_halaman = HeadlineManager.susun(masukan)
 	_misi_diambil = ""
 	_koran.isi(_halaman, _mesin.hari, Config.DISTRIK_AWAL)
-	_koran.tampilkan_notifikasi_rusak(simpanan.ambil_notifikasi_rusak())
+	_koran.tampilkan_notifikasi(_kunci_notifikasi())
 	_koran.tampilkan(true)
+
+
+## Kunci satu baris notifikasi layar koran: masalah save saat muat (sekali), atau simpan akhir hari yang gagal ("" bila tidak ada).
+func _kunci_notifikasi() -> String:
+	var kunci: String = simpanan.ambil_notifikasi()
+	if kunci.is_empty() and _simpan_gagal:
+		kunci = SKRIP_SIMPAN.KUNCI_TIDAK_TERBACA if simpanan.simpan_ditahan() else "KORAN_SAVE_GAGAL"
+	return kunci
 
 
 ## Berangkat: rute hari ini dibuat tepat sekali.
@@ -139,7 +153,10 @@ func _saat_hari_berikutnya() -> void:
 	catatan.kidal = _rute.kidal()
 	catatan.mode_bantu = _rute.mode_bantu()
 	var hari_dimainkan: int = _mesin.hari
-	simpanan.akhiri_hari(catatan)
+	var tersimpan: bool = simpanan.akhiri_hari(catatan)
+	if not tersimpan and not simpanan.simpan_ditahan():
+		tersimpan = simpanan.simpan()
+	_simpan_gagal = not tersimpan
 	var rute_lama: RuteMain = _rute
 	_rute = null
 	remove_child(rute_lama)

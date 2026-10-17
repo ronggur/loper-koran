@@ -6,12 +6,12 @@ extends CanvasLayer
 ## `ambil_diminta`, `lewati_diminta`, dan `berangkat_diminta`. Tidak memilih headline dan tidak menyimpan apa pun.
 ##
 ## Tata letak (anchor + Container, tanpa posisi piksel absolut; teks sampai 40 / 60 karakter melar lewat autowrap): dua kolom di dalam zona
-## aman (`ZonaAman`, margin `KORAN_MARGIN_PX` atau inset perangkat bila lebih besar). Kiri: nama koran ("Warta Kring"), "Hari N · Perumahan
-## Melati", berita utama (paling besar, Lilita One 24), berita ringan, dan satu baris notifikasi save rusak (hanya bila ada). Kanan: panel misi
+## aman (`ZonaAman`, margin `KORAN_MARGIN_PX` atau inset perangkat bila lebih besar). Kolom berita: nama koran ("Warta Kring"), "Hari N · Perumahan
+## Melati", berita utama (paling besar, Lilita One 24), berita ringan, dan satu baris notifikasi save (hanya bila ada). Kolom misi: panel misi
 ## sampingan (headline, ringkasan satu baris, Ambil/Lewati, status pilihan) dan tombol Berangkat di zona jempol kanan. Tidak ada tombol jeda.
 ##
 ## Ambil/Lewati (S-7): awalnya tidak ada yang dipilih (sama dengan Lewati); bisa dibolak-balik sebelum Berangkat. Pilihan terbaca dari TEKS
-## status (`KORAN_STATUS_*`) dan BENTUK (tombol terpilih terisi gelap dengan bingkai tebal, tombol lain hanya garis tipis), bukan warna saja.
+## status (`KORAN_STATUS_*`) dan BENTUK (tombol terpilih berongga dengan bingkai tinta tebal, tombol lain hanya garis tipis; Berangkat terisi tinta penuh), bukan warna saja.
 ## Tanpa misi memenuhi syarat (S-8) tombol Ambil/Lewati tidak tampil dan baris misi memuat teks netral `KORAN_TANPA_MISI`; headline lanjutan
 ## tanpa misi (misi_ditunda) tampil sebagai teks tanpa tombol. Berangkat selalu aktif.
 ## Semua teks lewat kunci terjemahan (data headline membawa KUNCI, diterjemahkan di sini); warna dari `Palette`; font dari `assets/ui/theme.tres`.
@@ -36,8 +36,8 @@ var _inset: ZonaAman.Inset = ZonaAman.Inset.new()
 @onready var _latar: ColorRect = %Latar
 @onready var _batas: MarginContainer = %Batas
 @onready var _isi: HBoxContainer = %Isi
-@onready var _kiri: VBoxContainer = %Kiri
-@onready var _kanan: VBoxContainer = %Kanan
+@onready var _kolom_berita: VBoxContainer = %KolomBerita
+@onready var _kolom_misi: VBoxContainer = %KolomMisi
 @onready var _nama: Label = %NamaKoran
 @onready var _hari: Label = %TeksHari
 @onready var _garis_atas: ColorRect = %GarisAtas
@@ -63,10 +63,10 @@ var _inset: ZonaAman.Inset = ZonaAman.Inset.new()
 func _ready() -> void:
 	_latar.color = Palette.KORAN_KERTAS
 	_isi.add_theme_constant_override(&"separation", Config.KORAN_JARAK_PX)
-	for kolom: VBoxContainer in [_kiri, _kanan]:
+	for kolom: VBoxContainer in [_kolom_berita, _kolom_misi]:
 		kolom.add_theme_constant_override(&"separation", Config.KORAN_JARAK_PX)
-	_kiri.size_flags_stretch_ratio = Config.KORAN_KOLOM_KIRI_RASIO
-	_kanan.size_flags_stretch_ratio = Config.KORAN_KOLOM_KANAN_RASIO
+	_kolom_berita.size_flags_stretch_ratio = Config.KORAN_KOLOM_BERITA_RASIO
+	_kolom_misi.size_flags_stretch_ratio = Config.KORAN_KOLOM_MISI_RASIO
 	_isi_misi.add_theme_constant_override(&"separation", Config.KORAN_JARAK_PX)
 	_baris_pilih.add_theme_constant_override(&"separation", Config.HUD_TOMBOL_JARAK_PX)
 	for garis: ColorRect in [_garis_atas, _garis_tengah]:
@@ -90,7 +90,7 @@ func _ready() -> void:
 	_baca_zona_aman()
 	_terapkan_margin()
 	atur_pilihan(Pilihan.BELUM)
-	tampilkan_notifikasi_rusak(false)
+	tampilkan_notifikasi("")
 
 
 ## Mengisi layar dari `halaman` (hasil `HeadlineManager.susun`) untuk hari `hari` di distrik `distrik`. Pilihan misi diatur ulang ke "belum dipilih".
@@ -139,9 +139,11 @@ func ada_misi() -> bool:
 	return _ada_misi
 
 
-## Menampilkan atau menyembunyikan satu baris notifikasi save rusak (AC-9).
-func tampilkan_notifikasi_rusak(nilai: bool) -> void:
-	_notifikasi.visible = nilai
+## Menampilkan satu baris notifikasi save (AC-9) dari KUNCI terjemahan (`SaveManager.ambil_notifikasi`, atau `KORAN_SAVE_GAGAL` dari
+## `HariMain`); kunci kosong menyembunyikan baris.
+func tampilkan_notifikasi(kunci: String) -> void:
+	_notifikasi.text = kunci
+	_notifikasi.visible = not kunci.is_empty()
 
 
 ## Menampilkan atau menyembunyikan layar koran.
@@ -283,20 +285,21 @@ func _kotak(isi_warna: Color, garis: Color, lebar: int) -> StyleBoxFlat:
 	return kotak
 
 
-## Bentuk tombol pilihan: terpilih = terisi `KORAN_TINTA` dengan bingkai tebal dan teks kertas; tidak terpilih = hanya garis tipis di atas
-## kertas kedua dengan teks tinta. Bentuk ini (bukan hanya warna) ditambah teks status membedakan pilihan.
+## Bentuk tombol pilihan: terpilih = BERONGGA (kertas terang) dengan bingkai tinta tebal dan teks tinta; tidak terpilih = hanya garis tipis di atas
+## kertas kedua. Berangkat sebaliknya TERISI tinta penuh (`_gaya_berangkat`), jadi pilihan terbaca sebagai tanda pilihan, bukan aksi utama
+## kedua (QA-010). Bentuk (bingkai tebal vs tipis) ditambah teks status membedakan pilihan, bukan warna saja.
 func _gaya_pilih(tombol: TombolSentuh, terpilih: bool) -> void:
-	var isi_warna: Color = Palette.KORAN_TINTA if terpilih else Palette.KORAN_KERTAS_2
+	var isi_warna: Color = Palette.KORAN_KERTAS if terpilih else Palette.KORAN_KERTAS_2
 	var tebal: int = Config.KORAN_BINGKAI_TERPILIH_PX if terpilih else 1
-	var teks: Color = Palette.KORAN_KERTAS if terpilih else Palette.KORAN_TINTA
-	var normal: StyleBoxFlat = _kotak(isi_warna, Palette.KORAN_GARIS, tebal)
+	var garis: Color = Palette.KORAN_TINTA if terpilih else Palette.KORAN_GARIS
+	var normal: StyleBoxFlat = _kotak(isi_warna, garis, tebal)
 	var ditekan: StyleBoxFlat = _kotak(Palette.KORAN_TINTA_2, Palette.KORAN_GARIS, Config.KORAN_BINGKAI_TERPILIH_PX)
 	for nama: StringName in [&"normal", &"hover", &"focus"]:
 		tombol.add_theme_stylebox_override(nama, normal)
 	for nama: StringName in [&"pressed", &"hover_pressed"]:
 		tombol.add_theme_stylebox_override(nama, ditekan)
 	for nama: StringName in [&"font_color", &"font_hover_color", &"font_focus_color", &"font_pressed_color", &"font_hover_pressed_color"]:
-		tombol.add_theme_color_override(nama, Palette.KORAN_KERTAS if String(nama).contains("pressed") else teks)
+		tombol.add_theme_color_override(nama, Palette.KORAN_KERTAS if String(nama).contains("pressed") else Palette.KORAN_TINTA)
 
 
 ## Berangkat: tombol utama selalu terisi tinta dengan bingkai tebal.
