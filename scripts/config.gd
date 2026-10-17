@@ -653,8 +653,10 @@ const TABRAKAN_KEDIP_ALFA: float = 0.5
 const TABRAKAN_IKON_ATAS_PX: int = 50
 ## Tombol bel: sisi persegi gambar, piksel game (DESIGN_SPEC 3.8: 40x40).
 const BEL_TOMBOL_UKURAN_PX: int = 40
-## Pusat tombol dan zona tap bel dari tepi layar sisi tombol dan dari tepi bawah, piksel game: pusat (lebar - 28, 332), kidal (28, 332).
-const BEL_TOMBOL_PUSAT_TEPI_PX: int = 28
+## Pusat tombol dan zona tap bel dari tepi layar sisi tombol, piksel game: x lebar - 64, kidal x 64 (usulan; masukan uji pemilik 2026-10-17: pojok susah dijangkau jempol).
+const BEL_TOMBOL_PUSAT_SAMPING_PX: int = 64
+## Pusat tombol dan zona tap bel dari tepi bawah, piksel game: y 360 - 64 = 296, kanan dan kidal (usulan, sekitar 1,2 cm dari tepi di vivo V2108).
+const BEL_TOMBOL_PUSAT_BAWAH_PX: int = 64
 ## Jari-jari zona tap bel dari pusat tombol, piksel game (inklusif); sentuhan yang DIMULAI di sini membunyikan bel, bukan swipe.
 const BEL_ZONA_RADIUS_PX: float = 28.0
 ## Jumlah frame jeda tombol bel di `assets/sprites/ui/ui_bel_tombol.png` (cincin n/8 sampai 1/8, sesudah frame diam dan ditekan).

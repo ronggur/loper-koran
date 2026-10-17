@@ -7,8 +7,9 @@ extends RefCounted
 ## stick). Semua tepi zona INKLUSIF: titik tepat di tepi masuk zona, 1 px di luarnya tidak.
 ## Zona hanya menentukan jari mana yang diklaim saat jari turun (lihat `TouchRouter`).
 ## Zona tap bel (DESIGN_SPEC 3.8, AC-15 run fase3b-rintangan-skor): lingkaran berjari-jari `BEL_ZONA_RADIUS_PX` (inklusif) berpusat di pusat
-## tombol bel, `BEL_TOMBOL_PUSAT_TEPI_PX` dari tepi bawah dan dari tepi layar sisi swipe (kidal: sisi lain). Bel diperiksa SEBELUM swipe,
-## jadi sentuhan yang dimulai di zona bel tidak pernah menjadi swipe; zona stick tidak pernah menyentuhnya. Zona aman (AC-9 run
+## tombol bel, `BEL_TOMBOL_PUSAT_SAMPING_PX` dari tepi layar sisi swipe (kidal: sisi lain) dan `BEL_TOMBOL_PUSAT_BAWAH_PX` dari tepi bawah,
+## di dalam zona swipe (bukan di pojoknya, masukan uji pemilik 2026-10-17). Bel diperiksa SEBELUM swipe, jadi sentuhan yang dimulai di
+## zona bel tidak pernah menjadi swipe; zona stick tidak pernah menyentuhnya. Zona aman (AC-9 run
 ## fase3c-hud-hasil): pusat bel bisa digeser `geser_bel` (piksel game, dari HUD `HudDasar.geser_bel`) bersama tombolnya; bawaan nol.
 
 enum Zona { TIDAK_ADA, STICK, SWIPE, BEL }
@@ -36,11 +37,12 @@ static func rect_swipe(lebar_viewport: int, kidal: bool) -> Rect2:
 	return _dari_tepi(x_dalam, y_atas, x_luar, y_bawah)
 
 
-## Pusat tombol dan zona tap bel, koordinat viewport game: (lebar - 28, 332), kidal (28, 332), ditambah `geser_bel` (zona aman).
+## Pusat tombol dan zona tap bel, koordinat viewport game: (lebar - 64, 296), kidal (64, 296) (`BEL_TOMBOL_PUSAT_SAMPING_PX` dari tepi sisi
+## tombol, `BEL_TOMBOL_PUSAT_BAWAH_PX` dari tepi bawah; kidal dicerminkan mendatar saja), ditambah `geser_bel` (zona aman).
 static func pusat_bel(lebar_viewport: int, kidal: bool, geser_bel: Vector2 = Vector2.ZERO) -> Vector2:
-	var tepi: float = float(Config.BEL_TOMBOL_PUSAT_TEPI_PX)
-	var y: float = float(Config.LAYAR_TINGGI_DASAR_PX) - tepi
-	var pusat: Vector2 = Vector2(tepi, y) if kidal else Vector2(float(lebar_viewport) - tepi, y)
+	var samping: float = float(Config.BEL_TOMBOL_PUSAT_SAMPING_PX)
+	var y: float = float(Config.LAYAR_TINGGI_DASAR_PX - Config.BEL_TOMBOL_PUSAT_BAWAH_PX)
+	var pusat: Vector2 = Vector2(samping, y) if kidal else Vector2(float(lebar_viewport) - samping, y)
 	return pusat + (geser_bel if geser_bel.is_finite() else Vector2.ZERO)
 
 

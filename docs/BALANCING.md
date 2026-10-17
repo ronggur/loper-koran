@@ -338,7 +338,7 @@ Angka tampilan dan input bagian B di `config.gd` (tidak mengubah aturan main di 
 | Oleng (visual) | sprite bergeser ±1 px tiap 0,05 detik | `TABRAKAN_OLENG_GESER_PX`, `TABRAKAN_OLENG_PERIODE_DETIK`; geser kecil supaya tidak berlebihan (rule `ui-scenes`) |
 | Kedip kebal | alpha 0,5 tiap fase 0,1 detik | `TABRAKAN_KEDIP_PERIODE_DETIK`, `TABRAKAN_KEDIP_ALFA` |
 | Ikon kilatan tabrakan | 50 px game di atas titik pijak | `TABRAKAN_IKON_ATAS_PX` |
-| Tombol bel | 40×40, pusat 28 dari tepi samping dan bawah, zona tap radius 28 inklusif | `BEL_TOMBOL_UKURAN_PX`, `BEL_TOMBOL_PUSAT_TEPI_PX`, `BEL_ZONA_RADIUS_PX`; 8 frame cincin jeda `BEL_TOMBOL_JEDA_LANGKAH` |
+| Tombol bel | 40×40, pusat 64 dari tepi samping dan 64 dari tepi bawah (pusat (lebar −64, 296), kidal (64, 296); dulu 28 dan 28 di pojok), zona tap radius 28 inklusif | `BEL_TOMBOL_UKURAN_PX`, `BEL_TOMBOL_PUSAT_SAMPING_PX`, `BEL_TOMBOL_PUSAT_BAWAH_PX`, `BEL_ZONA_RADIUS_PX`; 8 frame cincin jeda `BEL_TOMBOL_JEDA_LANGKAH`; posisi diubah 2026-10-17 (masukan uji pemilik, bagian 10) |
 | Efek bel | 12 fps, garis getar 4 frame (jangkar (3, 12)), titik bel (8, −29) dari titik pijak pemain, teks (11, −12) dari titik bel, naik paling banyak 4 px, redup 0,6 | `BEL_EFEK_FPS`, `BEL_GETAR_FRAME`, `BEL_GETAR_JANGKAR_PX`, `BEL_TITIK_PX`, `BEL_TEKS_GESER_PX`, `BEL_TEKS_NAIK_MAKS_PX`, `BEL_TEKS_REDUP_ALFA` |
 | Panel skor HUD dev | 112 px dari tepi sisi swipe, lebar minimum 72 | `HUD_SKOR_GESER_PX`, `HUD_SKOR_LEBAR_PX` |
 | Label PUTUS | 0,8 detik sesudah combo putus | `HUD_COMBO_PUTUS_DETIK` |
@@ -424,6 +424,8 @@ Belum diisi. Diputuskan di Fase 6 bersama layar bengkel (GDD 12.5). Arah yang su
 ---
 
 ## 10. Catatan perubahan
+
+- **2026-10-17** — Masukan review pemilik PR #33 (run fase3c-hud-hasil; usulan, dinilai di HP): tombol bel terlalu di pojok bawah sehingga susah dijangkau jempol, juga di mode kidal. `BEL_TOMBOL_PUSAT_TEPI_PX` (28, dipakai untuk jarak samping dan bawah) dipecah menjadi `BEL_TOMBOL_PUSAT_SAMPING_PX` 64 dan `BEL_TOMBOL_PUSAT_BAWAH_PX` 64: pusat (lebar −64, 296), kidal (64, 296), sekitar 1,2 cm dari tepi di vivo V2108. Dua konstanta supaya jarak samping dan bawah bisa disetel terpisah sesudah uji HP. Ukuran tombol 40 dan radius zona tap 28 tetap. Di lebar 640, 780, dan 800, kanan dan kidal, dengan dan tanpa inset aman tiruan, zona tap tetap di dalam zona swipe dan tidak menumpuk dengan panel bawah, radar, tombol jeda, panel atas, atau zona stick (`tests/tes_tata_letak.gd`), jadi nilai usulan 64/64 dipakai apa adanya. Tata letak di `DESIGN_SPEC.md` 3.8.
 
 - **2026-10-17** — Run fase3c-hud-hasil iterasi 2 (QA-006, dokumen saja; tidak ada angka `config.gd` yang berubah): bagian 6 baris "Rute awal perumahan" dan "Lama rute" masih memakai panjang rencana 250 ubin ("sekitar 250 ubin", "55 detik cepat sampai 85 detik santai"), berselisih dengan baris tenggat di tabel yang sama dan dengan bagian 6b (232 sampai 240 ubin terukur dari data). Diperbaiki dari panjang terukur: lama rute 77 sampai 80 detik santai, 52 sampai 53 detik cepat, 39 sampai 40 detik ngebut; cadangan tenggat santai ditulis ulang sekitar 12 detik (dulu "sekitar 11"). `docs/SETUP_ANDROID.md` 8.6 butir 1 (checklist 3A yang belum diisi) yang menyalin angka lama ikut diperbaiki.
 

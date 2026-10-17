@@ -10,8 +10,8 @@ extends CanvasLayer
 ##   `HUD_LELAH` saat lelah dan `HUD_KORAN_HABIS` saat koran habis (penanda teks, bukan hanya warna). Panel tidak menerima sentuhan.
 ## - Tombol jeda (`TombolJeda`, DESIGN_SPEC 3.1): area sentuh `HUD_JEDA_SENTUH_PX` persegi dengan gambar 24x24 di x `HUD_JEDA_GAMBAR_X_PX`,
 ##   y `HUD_JEDA_GAMBAR_Y_PX`; tidak dicerminkan saat kidal. Menekannya memancarkan `jeda_diminta`.
-## - Tombol bel (`TombolBel`) 40x40 di pojok bawah sisi swipe (`StripBel` lebar penuh di tepi bawah), pusat `BEL_TOMBOL_PUSAT_TEPI_PX` dari
-##   tepi samping dan bawah; kidal dicerminkan. Hanya gambar: sentuhannya dibaca `TouchRouter`, frame dari `tampilkan_bel`.
+## - Tombol bel (`TombolBel`) 40x40 di bawah sisi swipe (`StripBel` lebar penuh di tepi bawah), pusat `BEL_TOMBOL_PUSAT_SAMPING_PX` dari
+##   tepi samping dan `BEL_TOMBOL_PUSAT_BAWAH_PX` dari tepi bawah (margin strip dari kode, bukan dari scene); kidal dicerminkan mendatar. Hanya gambar: sentuhannya dibaca `TouchRouter`, frame dari `tampilkan_bel`.
 ## - Zona aman (AC-9 run fase3c-hud-hasil, `ZonaAman`): `atur_inset` menggeser elemen tiap tepi SAMA BESAR, `ZonaAman.geser(acuan, inset)`
 ##   dengan acuan elemen terluar tepi itu (tepi x: strip radar `RADAR_TEPI_PX`; atas: area sentuh jeda `HUD_TOMBOL_MARGIN_ATAS_PX`; bawah:
 ##   `HUD_MARGIN_TEPI_PX`). Inset bawaan nol (jalan uji tidak memanggilnya, jadi tata letaknya tetap). Zona tap bel ikut digeser lewat
@@ -239,11 +239,14 @@ func _terapkan_tata_letak_dasar() -> void:
 	_panel_bawah.add_theme_constant_override(&"margin_bottom", tepi + geser_bawah())
 	_baris_bawah.size_flags_horizontal = Control.SIZE_SHRINK_END if _kidal else Control.SIZE_SHRINK_BEGIN
 	_baris_bawah.move_child(_panel_koran, 0 if _kidal else -1)
-	# Tombol bel: pojok bawah sisi swipe (StripBel lebar penuh di tepi bawah), pusat BEL_TOMBOL_PUSAT_TEPI_PX dari tepi samping dan bawah.
-	var tepi_bel: int = Config.BEL_TOMBOL_PUSAT_TEPI_PX - floori(float(Config.BEL_TOMBOL_UKURAN_PX) / 2)
-	_strip_bel.add_theme_constant_override(&"margin_left", tepi_bel + geser_awal_x() if _kidal else 0)
-	_strip_bel.add_theme_constant_override(&"margin_right", 0 if _kidal else tepi_bel + geser_akhir_x())
-	_strip_bel.add_theme_constant_override(&"margin_bottom", tepi_bel + geser_bawah())
+	# Tombol bel: bawah sisi swipe (StripBel lebar penuh di tepi bawah), pusat BEL_TOMBOL_PUSAT_SAMPING_PX dari tepi samping dan
+	# BEL_TOMBOL_PUSAT_BAWAH_PX dari tepi bawah (sama dengan TouchZones.pusat_bel). Kidal hanya menukar sisi samping.
+	var setengah_bel: int = floori(float(Config.BEL_TOMBOL_UKURAN_PX) / 2)
+	var samping_bel: int = Config.BEL_TOMBOL_PUSAT_SAMPING_PX - setengah_bel
+	var bawah_bel: int = Config.BEL_TOMBOL_PUSAT_BAWAH_PX - setengah_bel
+	_strip_bel.add_theme_constant_override(&"margin_left", samping_bel + geser_awal_x() if _kidal else 0)
+	_strip_bel.add_theme_constant_override(&"margin_right", 0 if _kidal else samping_bel + geser_akhir_x())
+	_strip_bel.add_theme_constant_override(&"margin_bottom", bawah_bel + geser_bawah())
 	_tombol_bel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN if _kidal else Control.SIZE_SHRINK_END
 
 
