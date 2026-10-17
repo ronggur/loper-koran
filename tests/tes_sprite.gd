@@ -54,6 +54,7 @@ func jalankan() -> void:
 	_test_lempar_waktu()
 	_test_loper_sprite_tingkat()
 	_test_loper_sprite_pose()
+	_test_loper_sprite_jatuh()
 	_test_loper_sprite_lempar()
 	_test_loper_sprite_lempar_menyela()
 	_test_loper_sprite_lempar_semua_kombinasi()
@@ -522,6 +523,41 @@ func _test_loper_sprite_tingkat() -> void:
 	check(pemain.animation == &"melambat_normal" and pemain.frame == 2 and is_equal_approx(pemain.frame_progress, 0.4), "santai -> melambat menjaga frame (2) dan progres (0,4) kayuh")
 	pemain.speed_level = 0
 	check(pemain.animation == &"santai_normal" and pemain.frame == 2 and is_equal_approx(pemain.frame_progress, 0.4), "melambat -> santai menjaga frame dan progres")
+	pemain.free()
+
+
+## Jatuh di `LoperSprite` (keputusan pemilik 2026-10-17): frame dari lama sejak tabrakan untuk semua arah, lempar ditolak dan lempar berjalan
+## ditutup, pose/tingkat/arah tersimpan tanpa mengganti gambar, bangun kembali ke animasi pose saat itu dan diputar lagi.
+func _test_loper_sprite_jatuh() -> void:
+	_judul.call("LoperSprite: jatuh lalu terjerembab untuk semua arah, kembali ke kayuh sesudahnya (pemilik 2026-10-17)")
+	var pemain: LoperSprite = _pemain_baru()
+	var kasus: Array = [[0.0, &"jatuh_normal", 0], [0.15, &"jatuh_normal", 1], [0.35, &"jatuh_normal", 3], [0.4, &"terjerembab_normal", 0], [0.8, &"terjerembab_normal", 1], [1.15, &"terjerembab_normal", 0]]
+	var semua: bool = true
+	for arah: int in range(-2, 3):
+		pemain.steer = arah
+		for k: Array in kasus:
+			pemain.atur_jatuh(true, k[0])
+			if pemain.animation != k[1] or pemain.frame != k[2] or pemain.is_playing() or not pemain.sedang_jatuh():
+				semua = false
+	check(semua, "5 arah x 6 saat: jatuh_normal/terjerembab_normal dengan frame dari waktu, sprite dijeda (bukan pemutar bawaan)")
+	pemain.atur_jatuh(true, 0.2)
+	pemain.speed_level = 2
+	pemain.steer = 1
+	pemain.pose = LoperAnim.Pose.REM
+	check(pemain.animation == &"jatuh_normal" and pemain.frame == 2, "selama jatuh mengubah pose, tingkat, dan arah tidak mengganti gambar")
+	check(not pemain.lempar(LoperAnim.Sisi.DEKAT) and not pemain.sedang_melempar(), "lempar ditolak selama jatuh")
+	pemain.pose = LoperAnim.Pose.KAYUH
+	pemain.atur_jatuh(false, 0.0)
+	check(not pemain.sedang_jatuh() and pemain.animation == &"ngebut_serong_kanan" and pemain.is_playing(), "bangun: langsung ke animasi kayuh pose saat itu (ngebut_serong_kanan) dan diputar, dapat %s" % pemain.animation)
+	pemain.atur_jatuh(false, 0.0)
+	check(pemain.animation == &"ngebut_serong_kanan", "atur_jatuh(false) saat tidak jatuh tidak mengubah apa pun")
+	# Lempar yang berjalan ditutup saat jatuh, tanpa sinyal.
+	var sinyal: Array[String] = []
+	pemain.koran_lepas.connect(func(_s: LoperAnim.Sisi) -> void: sinyal.append("lepas"))
+	pemain.lempar_selesai.connect(func() -> void: sinyal.append("selesai"))
+	check(pemain.lempar(LoperAnim.Sisi.SEBERANG), "kontrol: lempar dimulai sebelum jatuh")
+	pemain.atur_jatuh(true, 0.0)
+	check(not pemain.sedang_melempar() and pemain.animation == &"jatuh_normal" and sinyal.is_empty(), "jatuh menutup lempar yang berjalan tanpa koran_lepas/lempar_selesai")
 	pemain.free()
 
 

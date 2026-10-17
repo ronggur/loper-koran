@@ -63,18 +63,20 @@ extends Node2D
 ## `Audio.atur_jeda` (semua bunyi sepeda berhenti saat jeda, tanpa decit rem tertunda), dan keluar dari pohon menghentikannya.
 ##
 ## Rintangan, tabrakan, skor, dan bel (run fase3b-rintangan-skor bagian B; keadaan murni `RintanganRute`, `SkorRute`, `Bel`):
-## - Urutan satu langkah (sama dengan simulasi `TesRintangan._sim_rute`): sepeda digerakkan dengan `tahan_naik = Tabrakan.oleng`, lalu
-##   `RintanganRute.langkah` dengan posisi dan kecepatan sepeda baru; tiap peristiwa (waspada, mengejar, lampu mundur, mesin) ke
-##   `Audio.putar_peristiwa` (pasangan visualnya animasi sprite rintangan); tabrakan baru: `SepedaUji.tabrak` (1,0 u/d), combo putus,
-##   `Audio.putar_tabrakan`, sinyal `tabrakan(jenis)` dengan jenis data penyebabnya (AC-8), dan visual oleng/kedip/kilatan dari keadaan
-##   tabrakan tiap langkah. Rintangan dunia diisi kait `_rintangan_awal` (jalan uji: kosong, scene rute: dari data rute).
+## - Urutan satu langkah (sama dengan simulasi `TesRintangan._sim_rute`): sepeda digerakkan dengan `beku_detik = jatuh_detik` (diam selama
+##   jatuh), lalu `RintanganRute.langkah` dengan posisi dan kecepatan sepeda baru; tiap peristiwa (waspada, mengejar, lampu mundur, mesin)
+##   ke `Audio.putar_peristiwa` (pasangan visualnya animasi sprite rintangan); tabrakan baru = jatuh (keputusan pemilik 2026-10-17):
+##   `SepedaUji.tabrak` (kecepatan 0), combo putus, `Audio.putar_tabrakan`, sinyal `tabrakan(jenis)` dengan jenis data penyebabnya (AC-8),
+##   dan visual jatuh/terjerembab, kedip kebal sesudah bangun, dan kilatan dari keadaan tabrakan tiap langkah. Selama jatuh lemparan swipe
+##   dan tap mode bantu ditolak tanpa memakai koran (`_lempar_terbuka`) dan garis bidik tidak tampil; bel tetap boleh (paling sederhana:
+##   tidak ada aturan tambahan). Rintangan dunia diisi kait `_rintangan_awal` (jalan uji: kosong, scene rute: dari data rute).
 ## - Koran mendarat: di scene yang menilai skor (`_skor_aktif`, hanya rute) `SkorRute.nilai_koran` dulu, penanda koran ditimpa penanda skor
 ##   (tepat, netral), umpan balik melayang, lalu `koran_mendarat` dan bunyi: mendarat dengan nada combo (`BunyiLempar.pitch_mendarat`),
 ##   denting tip, kilau tepat. Jalan uji tidak menilai skor (zonanya tanpa id rumah) dan bunyinya tetap nada dasar.
 ## - Mode bantu: koran tap dibuat `KoranLempar.baru(lintasan, true)`, jadi tidak pernah tepat (O-4).
 ## - Bel: jari yang turun di zona bel (`TouchRouter.bel_ditekan`) -> `ketuk_bel`: `Bel.ketuk` (ditolak saat jeda game), bunyi bel, dan
 ##   `RintanganRute.terapkan_bel` (anjing waspada/mengejar dalam jangkauan mundur, ikon "!"). Tombol dan efek "KRING!" dari `Bel` tiap langkah.
-## - Semua waktu (rintangan, oleng, kebal, bel, label PUTUS, umpan balik melayang) ikut `dt` efektif: jeda membekukannya, tanpa lanjut
+## - Semua waktu (rintangan, jatuh, kebal, bel, label PUTUS, umpan balik melayang) ikut `dt` efektif: jeda membekukannya, tanpa lanjut
 ##   otomatis. `_kembalikan_awal` ("Main lagi") mengatur ulang rintangan, tabrakan, skor, combo, koin, status terantar, bel, dan bunyi rute.
 ##
 ## Run fase3c-hud-hasil (O-6, K-1, AC-9): HUD bertipe `HudDasar` (jalan uji `HudDev`, rute `HudRute`). Kidal dan mode bantu diubah dari
@@ -314,7 +316,7 @@ func lintasan_swipe(awal: Vector2, akhir: Vector2) -> ThrowSolver.Lintasan:
 func _saat_swipe_selesai(awal: Vector2, akhir: Vector2, _durasi_detik: float) -> void:
 	var bidik: ThrowSolver.Lintasan = lintasan_bidik_tampil(_kontrol.router.nomor_swipe)
 	_garis_bidik.sembunyikan()
-	if _jeda or not _lempar_diizinkan() or not SisaKoran.boleh_lempar(koran):
+	if not _lempar_terbuka() or not SisaKoran.boleh_lempar(koran):
 		return
 	if not ThrowSolver.cukup_panjang(ThrowSolver.panjang_swipe(awal, akhir), get_viewport_rect().size.x):
 		return
@@ -327,7 +329,7 @@ func _saat_swipe_selesai(awal: Vector2, akhir: Vector2, _durasi_detik: float) ->
 ## Satu tap di zona swipe selesai (D-1): di mode bantu, lempar otomatis ke kotak surat pelanggan terdekat di depan pada sisi tap (D-3 sampai
 ## D-6). Di luar mode bantu tidak melakukan apa pun. Gerbang sama dengan swipe; tanpa sasaran = tanda di titik tap, koran dan jeda tetap.
 func _saat_tap_selesai(posisi: Vector2, _durasi_detik: float) -> void:
-	if not _mode_bantu or _jeda or not _lempar_diizinkan() or not SisaKoran.boleh_lempar(koran):
+	if not _mode_bantu or not _lempar_terbuka() or not SisaKoran.boleh_lempar(koran):
 		return
 	var pilihan: BantuLempar.Pilihan = pilihan_bantu(BantuLempar.sisi_tap(posisi, posisi_layar_sepeda()))
 	if pilihan == null:
@@ -335,6 +337,12 @@ func _saat_tap_selesai(posisi: Vector2, _durasi_detik: float) -> void:
 		bantu_tanpa_sasaran.emit(posisi)
 		return
 	_lempar(pilihan.lintasan, true)
+
+
+## True bila lemparan (swipe dan tap mode bantu) boleh sekarang: tidak jeda, kait `_lempar_diizinkan` (mis. belum lewat akhir rute), dan
+## pemain tidak sedang jatuh sesudah tabrakan (keputusan pemilik 2026-10-17).
+func _lempar_terbuka() -> bool:
+	return not _jeda and _lempar_diizinkan() and not Tabrakan.jatuh(_rintangan.tabrakan)
 
 
 ## Gerbang terakhir dan langkah sesudahnya, sama untuk swipe dan tap (D-5): `SisaKoran.terima`; diterima = koran -1, koran terbang dengan
@@ -426,7 +434,7 @@ func perbarui(dt: float) -> void:
 	var langkah_dt: float = JedaSim.dt_efektif(_jeda, _baru_lanjut, dt)
 	if not _jeda:
 		_baru_lanjut = false
-	_sepeda.gerak(_vektor_stick(), langkah_dt, Tabrakan.oleng(_rintangan.tabrakan))
+	_sepeda.gerak(_vektor_stick(), langkah_dt, _rintangan.tabrakan.jatuh_detik)
 	_langkah_waktu(langkah_dt)
 	_langkah_rintangan(langkah_dt)
 	_bel = Bel.langkah(_bel, langkah_dt)
@@ -467,7 +475,7 @@ func _perbarui_lemparan(langkah_dt: float) -> void:
 	_koran_udara.tampilkan(_terbang)
 	_hud.tampilkan_koran(koran.sisa, koran.penuh)
 	var router: TouchRouter = _kontrol.router
-	if not _jeda and _lempar_diizinkan() and router.swipe_aktif() and SisaKoran.boleh_lempar(koran):
+	if _lempar_terbuka() and router.swipe_aktif() and SisaKoran.boleh_lempar(koran):
 		var lintasan: ThrowSolver.Lintasan = lintasan_swipe(router.awal_swipe(), router.posisi_swipe())
 		if lintasan != null:
 			_garis_bidik.tampilkan(lintasan, KoranLempar.bentuk_elips(lintasan, Config.JENDELA_KENA_BONUS, _medan), _medan)

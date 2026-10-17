@@ -10,7 +10,7 @@ extends RefCounted
 ##   `AUDIO_BEL_KEDUA_SETENGAH_NADA` setengah nada lebih tinggi. Ketukan yang ditolak tidak berbunyi.
 ## - Tip dan tepat (`TIP`, `TEPAT`): satu berkas masing-masing, diawali senyap di berkasnya supaya terdengar sesudah bunyi mendarat.
 ## Setiap bunyi punya pasangan visual (SOUND_DESIGN 4.3): geram = anjing berdiri, gonggong = anjing lari, bip = lampu mundur berkedip,
-## mesin = mobil bergerak, tabrakan = sepeda oleng + kilatan, bel = teks "KRING!" + garis getar, tip = "+tip" melayang, tepat = penanda tepat.
+## mesin = mobil bergerak, tabrakan = pemain jatuh + kilatan, bel = teks "KRING!" + garis getar, tip = "+tip" melayang, tepat = penanda tepat.
 
 ## Bunyi rute.
 enum Bunyi { ANJING_GERAM, ANJING_GONGGONG, MOBIL_BIP, MOBIL_MESIN, TABRAKAN, BEL, TIP, TEPAT }

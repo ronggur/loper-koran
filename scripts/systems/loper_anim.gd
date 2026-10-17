@@ -140,6 +140,36 @@ static func nama_terjerembab(_arah: int) -> StringName:
 	return StringName("%s_%s" % [NAMA_TERJEREMBAB, NAMA_ARAH[ARAH_JATUH]])
 
 
+## Frame sprite jatuh pada satu saat: nama animasi, indeks frame, dan progres di dalam frame (0..1).
+class FrameJatuh extends RefCounted:
+	var nama: StringName = &""
+	var frame: int = 0
+	var progres: float = 0.0
+
+
+## Frame sprite `lewat_detik` sesudah tabrakan (keputusan pemilik 2026-10-17): `jatuh_<arah>` diputar sekali (`n_jatuh` frame pada
+## `fps_jatuh`), lalu `terjerembab_<arah>` berulang (`n_terjerembab` frame pada `fps_terjerembab`) sampai pemain bangun. Arah diabaikan
+## (`nama_jatuh`). Batas inklusif dengan toleransi `TABRAKAN_TOLERANSI_DETIK`: tepat `n_jatuh / fps_jatuh` detik = frame 0 terjerembab.
+## `lewat_detik` NaN atau negatif = 0; fps atau jumlah frame tidak sah = frame 0 animasi jatuh (aman, tanpa bagi nol).
+static func frame_jatuh(lewat_detik: float, arah: int, fps_jatuh: float, n_jatuh: int, fps_terjerembab: float, n_terjerembab: int) -> FrameJatuh:
+	var f: FrameJatuh = FrameJatuh.new()
+	f.nama = nama_jatuh(arah)
+	if not (fps_jatuh > 0.0 and n_jatuh > 0 and fps_terjerembab > 0.0 and n_terjerembab > 0):
+		return f
+	var t: float = lewat_detik if is_finite(lewat_detik) and lewat_detik > 0.0 else 0.0
+	var lama_jatuh: float = float(n_jatuh) / fps_jatuh
+	var posisi: float = 0.0
+	if t + Config.TABRAKAN_TOLERANSI_DETIK < lama_jatuh:
+		posisi = t * fps_jatuh
+		f.frame = mini(floori(posisi + Config.TABRAKAN_TOLERANSI_DETIK), n_jatuh - 1)
+	else:
+		f.nama = nama_terjerembab(arah)
+		posisi = maxf(t - lama_jatuh, 0.0) * fps_terjerembab
+		f.frame = posmod(floori(posisi + Config.TABRAKAN_TOLERANSI_DETIK), n_terjerembab)
+	f.progres = clampf(posisi - floorf(posisi + Config.TABRAKAN_TOLERANSI_DETIK), 0.0, 1.0)
+	return f
+
+
 ## Tingkat yang dipakai animasi lempar: tidak ada lempar melambat, jadi melambat memakai santai (D-3).
 static func tingkat_untuk_lempar(tingkat: int) -> int:
 	return maxi(jepit_tingkat(tingkat), 0)

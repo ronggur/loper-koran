@@ -1,7 +1,8 @@
 class_name TesRintanganScene
 extends RefCounted
 ## Tes run fase3b-rintangan-skor bagian B: rintangan, tabrakan, skor, dan bel di scene rute sungguhan (`scenes/rute/rute.tscn`) plus
-## logika murni kecil bagian B (geser oleng, kedip kebal, frame bel, umpan balik melayang, zona bel, pelacak jari bel).
+## logika murni kecil bagian B (kedip kebal, frame bel, umpan balik melayang, zona bel, pelacak jari bel). Tabrakan = jatuh sejak keputusan
+## pemilik 2026-10-17 (oleng dihapus): sprite jatuh lalu terjerembab, kecepatan 0, stick dan lemparan diabaikan, kebal sejak bangun.
 ## Event sentuh sintetis lewat `Input.parse_input_event` (pola `tes_rute_scene.gd`), langkah `perbarui(dt)` dengan dt tetap.
 ## Harapan ditulis literal (QA-008 run 2A, QA-001 run 3A):
 ## - Rintangan rute seed bawaan 20261016 (ditulis dari data segmen): anjing seberang 36, mobil seberang 45, anjing dekat 56, mobil 73,
@@ -164,14 +165,9 @@ func _baca_json(jalur: String) -> Dictionary:
 # --- Murni bagian B ---
 
 func _test_murni() -> void:
-	_judul.call("Bagian B murni: geser oleng, kedip kebal, frame bel, umpan melayang, zona dan jari bel")
+	_judul.call("Bagian B murni: kedip kebal, frame bel, umpan melayang, zona dan jari bel")
 	var t: Tabrakan.Keadaan = Tabrakan.awal()
-	check(Tabrakan.geser_oleng_px(t) == 0 and Tabrakan.alfa_kebal(t) == 1.0, "tanpa tabrakan: geser 0, alfa 1,0")
-	var kasus_oleng: Array = [[0.6, 1], [0.57, 1], [0.53, -1], [0.47, 1], [0.43, -1], [0.01, -1], [0.0, 0]]
-	for k: Array in kasus_oleng:
-		t.oleng_detik = k[0]
-		check(Tabrakan.geser_oleng_px(t) == k[1], "oleng sisa %.2f detik: geser %d px (bolak-balik tiap 0,05 detik)" % [k[0], k[1]])
-	t.oleng_detik = 0.0
+	check(Tabrakan.alfa_kebal(t) == 1.0, "tanpa tabrakan: alfa 1,0")
 	var kasus_kebal: Array = [[1.0, 1.0], [0.95, 1.0], [0.85, 0.5], [0.75, 1.0], [0.65, 0.5], [0.05, 0.5], [0.0, 1.0]]
 	for k: Array in kasus_kebal:
 		t.kebal_detik = k[0]
@@ -367,14 +363,16 @@ func _test_penutup_rintangan() -> void:
 # --- Tabrakan dari scene (AC-6, AC-8) ---
 
 func _test_tabrakan_dari_scene() -> void:
-	_judul.call("Scene rute: tabrakan membawa jenis penyebab, kecepatan, oleng, kebal, combo putus, visual dan bunyi (AC-6, AC-8)")
+	_judul.call("Scene rute: tabrakan = jatuh, jenis penyebab, kecepatan 0, stick dan lemparan diabaikan, bangun, kebal, visual dan bunyi (AC-6, AC-8)")
 	var akar: RuteMain = await _siapkan()
 	var audio: Node = _audio()
 	var tabrak: Array[String] = []
 	var kecepatan_saat: Array[float] = []
+	var dilempar: Array[ThrowSolver.Lintasan] = []
 	akar.tabrakan.connect(func(jenis: String) -> void:
 		tabrak.append(jenis)
 		kecepatan_saat.append(_sepeda(akar).kecepatan_ud))
+	akar.koran_dilempar.connect(func(l: ThrowSolver.Lintasan) -> void: dilempar.append(l))
 	var skor: SkorRute.Keadaan = SkorRute.awal()
 	skor.beruntun = 3
 	akar.set(&"_skor", skor)
@@ -385,23 +383,60 @@ func _test_tabrakan_dari_scene() -> void:
 		akar.perbarui(DT)
 		langkah += 1
 	var sepeda: SepedaUji = _sepeda(akar)
+	var jarak_jatuh: float = sepeda.jarak_ubin
+	var lateral_jatuh: float = sepeda.lateral_ubin
+	var koran_awal: int = akar.koran.sisa
 	check(tabrak == ["anjing_penjaga"], "santai di sisi anjing (lateral -0,6): tabrakan pertama dari anjing_penjaga (sinyal membawa jenis), dapat %s" % [tabrak])
-	check(kecepatan_saat.size() == 1 and kecepatan_saat[0] == 1.0, "saat sinyal: kecepatan sudah turun ke 1,0 u/d")
+	check(kecepatan_saat.size() == 1 and kecepatan_saat[0] == 0.0, "saat sinyal: kecepatan sudah 0 (jatuh)")
 	check(akar.skor().beruntun == 0 and _hud(akar).teks_combo() == "x1.0" and _hud(akar).putus_tampil(), "combo putus: x1.0 dan label PUTUS di HUD")
 	check(audio == null or int(audio.call(&"jumlah_bunyi_rute", BunyiRute.Bunyi.TABRAKAN)) == bunyi_awal + 1, "satu bunyi tabrakan")
-	check(sepeda.geser_sprite_px() == 1.0 and sepeda.efek().ikon_tabrakan_tampil() and sepeda.alfa_sprite() == 1.0, "langkah tabrakan: sprite bergeser +1 px, ikon kilatan tampil")
+	check(sepeda.sedang_jatuh() and sepeda.nama_animasi() == &"jatuh_normal" and sepeda.frame_sprite() == 0 and sepeda.efek().ikon_tabrakan_tampil() and sepeda.alfa_sprite() == 1.0, "langkah tabrakan: sprite jatuh_normal frame 0, ikon kilatan tampil, alfa penuh; dapat %s f%d" % [sepeda.nama_animasi(), sepeda.frame_sprite()])
 	check(not sepeda.efek().perintah_tabrakan().is_empty(), "ikon kilatan menghasilkan perintah gambar")
-	_langkah(akar, 8)
-	check(sepeda.geser_sprite_px() == 1.0 and sepeda.alfa_sprite() == 0.5 and sepeda.kecepatan_ud == 1.0, "0,133 detik: fase oleng 2 (+1 px), kedip kebal redup 0,5, kecepatan tetap 1,0 (oleng)")
-	_langkah(akar, 20)
-	check(sepeda.kecepatan_ud == 1.0 and Tabrakan.oleng(akar.rintangan().tabrakan), "0,47 detik: masih oleng, kecepatan tidak naik")
-	_langkah(akar, 10)
-	check(not Tabrakan.oleng(akar.rintangan().tabrakan) and not sepeda.efek().ikon_tabrakan_tampil() and sepeda.geser_sprite_px() == 0.0, "0,63 detik: oleng habis, ikon hilang, geser 0")
-	_langkah(akar, 20)
+	# Stick ditahan penuh ke atas dan ke sisi dekat selama jatuh: diabaikan.
+	_sentuh(0, TITIK_STICK, true)
+	_geser(0, TITIK_STICK + Vector2(25, -35))
+	_langkah(akar, 6)
+	check(sepeda.nama_animasi() == &"jatuh_normal" and sepeda.frame_sprite() == 1, "0,1 detik: jatuh_normal frame 1 (10 fps), dapat %s f%d" % [sepeda.nama_animasi(), sepeda.frame_sprite()])
+	# Swipe dan tap mode bantu selama jatuh: ditolak, koran tidak berkurang, garis bidik tidak tampil.
+	_sentuh(1, Vector2(500, 220), true)
+	_geser(1, Vector2(500, 150))
+	_langkah(akar, 1)
+	check(not akar.garis_bidik().tampil(), "swipe ditahan selama jatuh: garis bidik tidak tampil")
+	_sentuh(1, Vector2(500, 150), false)
+	akar.atur_mode_bantu(true)
+	_sentuh(2, Vector2(600, 200), true)
+	_sentuh(2, Vector2(600, 200), false)
+	akar.atur_mode_bantu(false)
+	check(dilempar.is_empty() and akar.koran.sisa == koran_awal and not sepeda.sedang_melempar(), "swipe dan tap mode bantu selama jatuh ditolak: koran tetap %d, tanpa animasi lempar" % koran_awal)
+	_langkah(akar, 17)
+	check(sepeda.nama_animasi() == &"terjerembab_normal" and sepeda.frame_sprite() == 0, "0,4 detik: terjerembab_normal frame 0 (3 fps), dapat %s f%d" % [sepeda.nama_animasi(), sepeda.frame_sprite()])
+	_langkah(akar, 47)
+	check(Tabrakan.jatuh(akar.rintangan().tabrakan) and sepeda.sedang_jatuh() and sepeda.nama_animasi() == &"terjerembab_normal", "1,183 detik (71 langkah): masih jatuh, terjerembab")
+	check(sepeda.kecepatan_ud == 0.0 and sepeda.jarak_ubin == jarak_jatuh and sepeda.lateral_ubin == lateral_jatuh, "selama jatuh: kecepatan 0, jarak dan lateral tidak berubah walau stick penuh ditahan")
 	check(not _hud(akar).putus_tampil(), "label PUTUS hilang sesudah 0,8 detik")
-	check(tabrak.size() == 1, "kebal: tidak ada tabrakan kedua selama 1 detik")
+	_langkah(akar, 1)
+	var t: Tabrakan.Keadaan = akar.rintangan().tabrakan
+	check(not Tabrakan.jatuh(t) and Tabrakan.kebal(t) and not sepeda.sedang_jatuh() and not sepeda.efek().ikon_tabrakan_tampil(), "1,2 detik (72 langkah): bangun, kebal mulai, sprite keluar dari jatuh, ikon hilang")
+	check(not String(sepeda.nama_animasi()).begins_with("jatuh") and not String(sepeda.nama_animasi()).begins_with("terjerembab"), "sesudah bangun sprite kembali ke animasi kayuh, dapat %s" % sepeda.nama_animasi())
+	_langkah(akar, 1)
+	check(is_equal_approx(sepeda.kecepatan_ud, 0.05) and sepeda.lateral_ubin > lateral_jatuh and String(sepeda.nama_animasi()).begins_with("ngebut_"), "langkah sesudah bangun: stick berlaku lagi (kecepatan 0,05 = 3,0/60, lateral bergerak, ngebut), dapat %.4f %s" % [sepeda.kecepatan_ud, sepeda.nama_animasi()])
+	_langkah(akar, 6)
+	check(sepeda.alfa_sprite() == 0.5, "bangun + 0,117 detik: kedip kebal redup 0,5")
+	_langkah(akar, 52)
+	check(Tabrakan.kebal(akar.rintangan().tabrakan), "bangun + 0,983 detik (59 langkah): masih kebal")
+	_langkah(akar, 1)
+	check(not Tabrakan.kebal(akar.rintangan().tabrakan) and sepeda.alfa_sprite() == 1.0, "bangun + 1,0 detik (60 langkah): kebal habis, alfa 1,0")
+	check(tabrak.size() == 1, "tidak ada tabrakan kedua selama jatuh maupun kebal")
+	_sentuh(0, TITIK_STICK, false)
+	# Sesudah bangun lemparan diterima lagi.
+	akar.koran = SisaKoran.langkah(akar.koran, Config.LEMPAR_JEDA_DETIK)
+	_sentuh(1, Vector2(500, 220), true)
+	_geser(1, Vector2(500, 150))
+	_langkah(akar, 1)
+	_sentuh(1, Vector2(500, 150), false)
+	check(dilempar.size() == 1 and akar.koran.sisa == koran_awal - 1, "sesudah bangun swipe melempar lagi (koran %d -> %d)" % [koran_awal, akar.koran.sisa])
 	_langkah(akar, 600)
-	check(not sepeda.kecepatan_ud < 1.0, "tabrakan tidak menghentikan rute: sepeda tetap melaju (%.2f u/d)" % sepeda.kecepatan_ud)
+	check(sepeda.kecepatan_ud >= 3.0, "tabrakan tidak menghentikan rute: sepeda melaju lagi (%.2f u/d)" % sepeda.kecepatan_ud)
 	_bersihkan(akar)
 
 
@@ -435,7 +470,7 @@ func _test_tabrakan_mobil_dari_scene() -> void:
 		akar.perbarui(DT)
 		langkah += 1
 	check(tabrak == ["mobil_garasi"], "santai menabrak mobil yang berhenti di separuh seberang: sinyal membawa jenis mobil_garasi, dapat %s" % [tabrak])
-	check(langkah == 25 and akar.rintangan().tabrakan.jumlah == 1 and _sepeda(akar).kecepatan_ud == 1.0, "tabrakan di langkah 25 (depan sepeda 43,4 + 0,05 x 25 = 44,65 > 44,625), satu tabrakan, kecepatan 1,0 (dapat langkah %d)" % langkah)
+	check(langkah == 25 and akar.rintangan().tabrakan.jumlah == 1 and _sepeda(akar).kecepatan_ud == 0.0 and _sepeda(akar).nama_animasi() == &"jatuh_normal", "tabrakan di langkah 25 (depan sepeda 43,4 + 0,05 x 25 = 44,65 > 44,625), satu tabrakan, kecepatan 0, sprite jatuh_normal (dapat langkah %d)" % langkah)
 	check(int(audio.call(&"jumlah_bunyi_rute", BunyiRute.Bunyi.TABRAKAN)) == bunyi_awal + 1, "satu bunyi tabrakan untuk tabrakan mobil")
 	_bersihkan(akar)
 
@@ -494,7 +529,7 @@ func _test_bunyi_tanda_rintangan_di_scene() -> void:
 # --- Jeda (AC-21) ---
 
 func _test_jeda_membekukan() -> void:
-	_judul.call("Scene rute: jeda membekukan rintangan, oleng, kebal, combo, bel, umpan (AC-21)")
+	_judul.call("Scene rute: jeda membekukan rintangan, jatuh, kebal, combo, bel, umpan, frame sprite jatuh (AC-21)")
 	var akar: RuteMain = await _siapkan()
 	var tabrak: Array[String] = []
 	akar.tabrakan.connect(func(jenis: String) -> void: tabrak.append(jenis))
@@ -518,7 +553,7 @@ func _test_jeda_membekukan() -> void:
 	var sebelum: Array = _cuplik(akar)
 	akar.minta_jeda()
 	_langkah(akar, 60)
-	check(akar.sedang_jeda() and _cuplik(akar) == sebelum, "60 langkah selama jeda: rintangan, oleng, kebal, bel, sisa label PUTUS, umpan melayang tidak berubah")
+	check(akar.sedang_jeda() and _cuplik(akar) == sebelum, "60 langkah selama jeda: rintangan, jatuh, kebal, bel, sisa label PUTUS, umpan melayang, frame sprite jatuh tidak berubah")
 	check(akar.putus_tampil() and akar.umpan_melayang().size() == 1, "sesudah 1 detik jeda: label PUTUS dan umpan melayang masih tampil")
 	check(akar.ketuk_bel() == Bel.Bunyi.TOLAK and akar.bel().jumlah == 1, "bel tidak bisa dibunyikan saat jeda game")
 	akar.minta_lanjut()
@@ -535,7 +570,7 @@ func _cuplik(akar: AdeganJalan) -> Array:
 		hasil.append(RintanganRute.posisi(item))
 		hasil.append(item.anjing.status if item.anjing != null else item.mobil.status)
 	var t: Tabrakan.Keadaan = akar.rintangan().tabrakan
-	hasil.append_array([t.oleng_detik, t.kebal_detik, akar.bel().teks_detik, akar.bel().jeda_detik, akar.putus_tampil(), float(akar.get(&"_putus_detik")), _sepeda(akar).jarak_ubin])
+	hasil.append_array([t.jatuh_detik, t.kebal_detik, _sepeda(akar).nama_animasi(), _sepeda(akar).frame_sprite(), akar.bel().teks_detik, akar.bel().jeda_detik, akar.putus_tampil(), float(akar.get(&"_putus_detik")), _sepeda(akar).jarak_ubin])
 	hasil.append(akar.umpan_melayang().size())
 	for e: UmpanMelayang.Entri in akar.umpan_melayang():
 		hasil.append(e.sisa_detik)
@@ -854,13 +889,13 @@ func _test_main_lagi() -> void:
 			semua_awal = false
 	check(semua_awal, "rintangan rute baru semua di awal (anjing diam di rumah, mobil parkir)")
 	var t: Tabrakan.Keadaan = akar.rintangan().tabrakan
-	check(t.jumlah == 0 and t.oleng_detik == 0.0 and t.kebal_detik == 0.0 and t.menempel.is_empty(), "tabrakan, oleng, kebal diatur ulang")
+	check(t.jumlah == 0 and t.jatuh_detik == 0.0 and t.kebal_detik == 0.0 and t.menempel.is_empty(), "tabrakan, jatuh, kebal diatur ulang")
 	var s: SkorRute.Keadaan = akar.skor()
 	check(s.skor == 0 and s.koin == 0 and s.beruntun == 0 and s.terantar.is_empty(), "skor, koin, combo, rumah terantar diatur ulang")
 	check(akar.bel().jumlah == 0 and akar.bel().teks_detik == 0.0 and akar.bel().jeda_detik == 0.0 and not sepeda.efek().label_bel().visible, "bel dan teks KRING diatur ulang")
 	check(akar.umpan_melayang().is_empty() and not akar.putus_tampil(), "umpan melayang dan label PUTUS kosong")
 	check(hud.teks_skor() == "0" and hud.teks_combo() == "x1.0" and hud.teks_koin() == "0" and hud.frame_bel() == Bel.FRAME_DIAM, "HUD skor 0, x1.0, koin 0, tombol bel diam")
-	check(sepeda.geser_sprite_px() == 0.0 and sepeda.alfa_sprite() == 1.0 and not sepeda.efek().ikon_tabrakan_tampil(), "visual oleng dan kedip padam")
+	check(not sepeda.sedang_jatuh() and sepeda.nama_animasi() == &"santai_normal" and sepeda.alfa_sprite() == 1.0 and not sepeda.efek().ikon_tabrakan_tampil(), "Main lagi saat jatuh: sprite kembali santai_normal, kedip dan ikon padam, dapat %s" % sepeda.nama_animasi())
 	_bersihkan(akar)
 
 

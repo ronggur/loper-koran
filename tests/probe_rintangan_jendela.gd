@@ -1,8 +1,8 @@
 extends SceneTree
 ## Probe rintangan, tabrakan, skor, dan bel di jendela asli, non-headless (AC-26 run fase3b-rintangan-skor bagian B): memuat
 ## `scenes/rute/rute.tscn` (scene utama), memajukan simulasi, sprite, dan partikel dengan langkah tetap `perbarui(1/60)` (bukan waktu
-## dinding), lalu menyimpan tangkapan layar: anjing waspada, anjing mengejar, mobil tanda lampu mundur, mobil di jalan, tabrakan (oleng dan
-## kilatan), bel "KRING KRING!" + ikon "!" + anjing mundur, penanda tepat dan umpan balik melayang, HUD dev skor/combo/koin, dan kidal (tombol
+## dinding), lalu menyimpan tangkapan layar: anjing waspada, anjing mengejar, mobil tanda lampu mundur, mobil di jalan, tabrakan = jatuh (sejak keputusan
+## pemilik 2026-10-17: jatuh_normal + kilatan, terjerembab_normal, lalu bangun berkedip kebal), bel "KRING KRING!" + ikon "!" + anjing mundur, penanda tepat dan umpan balik melayang, HUD dev skor/combo/koin, dan kidal (tombol
 ## bel dan panel skor dicerminkan). Bel diketuk lewat event sentuh sungguhan di zona tap bel (`TouchZones.pusat_bel`). Lemparan "tepat"
 ## memakai lintasan ke pusat kotak surat (`BantuLempar.pilih`) yang dilempar sebagai lemparan biasa (bukan mode bantu, O-4). Mencetak data
 ## tiap keadaan dan jumlah keadaan yang tidak sesuai. Tidak interaktif: keluar sendiri lewat `ProbeKeluar`.
@@ -86,9 +86,17 @@ func _initialize() -> void:
 	_taruh(mobil.mobil.maju_ubin - 2.0, -0.6, Config.KECEPATAN_CEPAT_UD)
 	await _maju_sampai(func() -> bool: return not _tabrakan.is_empty(), 2.0)
 	await _maju(0.1)
-	_cek("tabrakan mobil (oleng, ikon)", _tabrakan == ["mobil_garasi"] and Tabrakan.oleng(_akar.rintangan().tabrakan) and _sepeda.efek().ikon_tabrakan_tampil())
-	print("tabrakan: %s, kecepatan %.2f, oleng %s, geser sprite %s, alfa %.2f, combo %s putus %s" % [_tabrakan, _sepeda.kecepatan_ud, Tabrakan.oleng(_akar.rintangan().tabrakan), _sepeda.geser_sprite_px(), _sepeda.alfa_sprite(), _hud.teks_combo(), _hud.putus_tampil()])
-	await _foto("tabrakan_oleng")
+	_cek("tabrakan mobil (jatuh_normal, ikon)", _tabrakan == ["mobil_garasi"] and Tabrakan.jatuh(_akar.rintangan().tabrakan) and _sepeda.nama_animasi() == &"jatuh_normal" and _sepeda.efek().ikon_tabrakan_tampil())
+	print("tabrakan: %s, kecepatan %.2f, jatuh %s, animasi %s frame %d, alfa %.2f, combo %s putus %s" % [_tabrakan, _sepeda.kecepatan_ud, Tabrakan.jatuh(_akar.rintangan().tabrakan), _sepeda.nama_animasi(), _sepeda.frame_sprite(), _sepeda.alfa_sprite(), _hud.teks_combo(), _hud.putus_tampil()])
+	await _foto("tabrakan_jatuh")
+	await _maju(0.5)
+	_cek("terjerembab (kecepatan 0)", Tabrakan.jatuh(_akar.rintangan().tabrakan) and _sepeda.nama_animasi() == &"terjerembab_normal" and _sepeda.kecepatan_ud == 0.0)
+	print("terjerembab: animasi %s frame %d, kecepatan %.2f" % [_sepeda.nama_animasi(), _sepeda.frame_sprite(), _sepeda.kecepatan_ud])
+	await _foto("tabrakan_terjerembab")
+	await _maju(0.75)
+	_cek("bangun berkedip (kebal, kayuh lagi)", not Tabrakan.jatuh(_akar.rintangan().tabrakan) and Tabrakan.kebal(_akar.rintangan().tabrakan) and not _sepeda.sedang_jatuh() and _sepeda.alfa_sprite() == Config.TABRAKAN_KEDIP_ALFA and _tabrakan.size() == 1)
+	print("bangun: animasi %s, kecepatan %.2f, alfa %.2f, kebal sisa %.3f" % [_sepeda.nama_animasi(), _sepeda.kecepatan_ud, _sepeda.alfa_sprite(), _akar.rintangan().tabrakan.kebal_detik])
+	await _foto("tabrakan_bangun_kedip")
 	await _maju(1.5)
 
 	# --- Bel: anjing kedua yang mengejar, dua ketukan di zona bel -> KRING KRING!, ikon "!", lalu anjing mundur ---

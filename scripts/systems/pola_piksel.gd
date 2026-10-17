@@ -38,7 +38,7 @@ const PENANDA_TEPAT: Array[String] = ["..ooooo..", ".owwwwwo.", "owooooowo", "ow
 ## Penanda netral (O-1: koran ke rumah yang sudah terantar, 0 skor dan 0 koin, combo tetap; `w` = TEXT_2): garis datar 7x4, bentuk
 ## berbeda dari centang dan silang.
 const PENANDA_NETRAL: Array[String] = ["ooooooo", "owwwwwo", "owwwwwo", "ooooooo"]
-## Ikon kilatan tabrakan di atas pemain selama oleng (AC-8 run fase3b-rintangan-skor, `w` = WARN): letupan 9x9.
+## Ikon kilatan tabrakan di atas pemain selama jatuh (AC-8 run fase3b-rintangan-skor, `w` = WARN): letupan 9x9.
 const IKON_TABRAKAN: Array[String] = ["o...o...o", "owo.o.owo", ".owowowo.", "..owwwo..", "oowwwwwoo", "..owwwo..", ".owowowo.", "owo.o.owo", "o...o...o"]
 ## Penanda rumah bukan pelanggan di halaman (D-6): cakram `w` (RADAR_BUKAN) bergaris luar dengan garis miring, bentuk berbeda dari zona
 ## pelanggan.

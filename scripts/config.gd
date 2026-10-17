@@ -554,15 +554,13 @@ const MOBIL_TANDA_DETIK: float = 1.5
 ## Mobil: laju mundur ke jalan, u/d.
 const MOBIL_MUNDUR_UD: float = 1.0
 
-## --- Tabrakan (BALANCING 6, K-1 run fase3b-rintangan-skor; usulan, dinilai lewat uji HP) ---
+## --- Tabrakan = jatuh (BALANCING 6, keputusan pemilik 2026-10-17 menggantikan oleng K-1 run fase3b-rintangan-skor; usulan, dinilai lewat uji HP) ---
 
-## Kecepatan sepeda langsung turun ke sini saat tabrakan (bila lebih tinggi), u/d.
-const TABRAKAN_KECEPATAN_UD: float = 1.0
-## Lama oleng sesudah tabrakan, detik: kecepatan tidak bisa naik; lateral dan lemparan tetap bisa.
-const TABRAKAN_OLENG_DETIK: float = 0.6
-## Lama kebal dihitung dari saat tabrakan, detik: tidak ada tabrakan kedua dari rintangan mana pun.
+## Lama jatuh sejak tabrakan, detik: kecepatan 0, stick dan lemparan diabaikan, animasi jatuh lalu terjerembab; sesudahnya sepeda dikayuh lagi dari 0.
+const TABRAKAN_JATUH_DETIK: float = 1.2
+## Lama kebal dihitung dari saat BANGUN (akhir jatuh), detik: tidak ada tabrakan kedua dari rintangan mana pun.
 const TABRAKAN_KEBAL_DETIK: float = 1.0
-## Toleransi derau float untuk waktu rintangan, tabrakan, dan bel (sisa oleng, kebal, jeda bel, lama berhenti anjing, lama tanda mobil), detik.
+## Toleransi derau float untuk waktu rintangan, tabrakan, dan bel (sisa jatuh, kebal, jeda bel, lama berhenti anjing, lama tanda mobil), detik.
 const TABRAKAN_TOLERANSI_DETIK: float = 0.000001
 
 ## --- Bel "Kring Kring!" (GDD 5.4, DESIGN_SPEC 3.8, K-3 run fase3b-rintangan-skor; usulan, dinilai lewat uji HP) ---
@@ -641,15 +639,11 @@ const RINTANGAN_ANJING_TINGGI_UBIN: float = 0.8
 const RINTANGAN_MOBIL_TINGGI_UBIN: float = 1.0
 ## Titik jangkar ikon "!" di atas anjing yang bereaksi pada bel, piksel game di atas titik pijak anjing (kepala sekitar 26 piksel + 2).
 const RINTANGAN_SERU_ATAS_PX: int = 28
-## Oleng sesudah tabrakan (AC-8): sprite pemain bergeser mendatar sekian piksel game bolak-balik.
-const TABRAKAN_OLENG_GESER_PX: int = 1
-## Oleng: lama satu arah geseran, detik (bolak-balik tiap sekian detik selama `TABRAKAN_OLENG_DETIK`).
-const TABRAKAN_OLENG_PERIODE_DETIK: float = 0.05
-## Kebal sesudah tabrakan: sprite pemain berkedip, lama satu fase kedip, detik.
+## Kebal sesudah bangun dari jatuh: sprite pemain berkedip, lama satu fase kedip, detik.
 const TABRAKAN_KEDIP_PERIODE_DETIK: float = 0.1
 ## Alpha sprite pemain pada fase redup kedip kebal.
 const TABRAKAN_KEDIP_ALFA: float = 0.5
-## Kaki ikon kilatan tabrakan di atas titik pijak pemain selama oleng, piksel game (di atas kepala sprite 46x58, titik pijak y 46).
+## Kaki ikon kilatan tabrakan di atas titik pijak pemain selama jatuh, piksel game (di atas kepala sprite 46x58, titik pijak y 46).
 const TABRAKAN_IKON_ATAS_PX: int = 50
 ## Tombol bel: sisi persegi gambar, piksel game (DESIGN_SPEC 3.8: 40x40).
 const BEL_TOMBOL_UKURAN_PX: int = 40

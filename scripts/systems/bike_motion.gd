@@ -142,34 +142,46 @@ static func jeda(keadaan: Keadaan) -> Keadaan:
 
 ## Satu langkah selama `dt` detik dengan vektor `stick`. `dt` nol, negatif, NaN, atau tak hingga = keadaan tidak berubah
 ## (hanya dibersihkan: nilai NaN atau di luar jangkauan dikembalikan ke jangkauan sah). Stick NaN atau di luar +-1 aman
-## (tiap komponen dijepit, NaN = 0). Keadaan masukan tidak pernah diubah. `tahan_naik` (oleng sesudah tabrakan, `Tabrakan.oleng`,
-## run fase3b-rintangan-skor): kecepatan tujuan dijepit ke kecepatan awal langkah, jadi sepeda tidak bisa menambah kecepatan; turun, rem,
-## lateral, dan stamina tetap seperti biasa.
-static func langkah(keadaan: Keadaan, stick: Vector2, dt: float, tahan_naik: bool = false) -> Hasil:
+## (tiap komponen dijepit, NaN = 0). Keadaan masukan tidak pernah diubah.
+## `beku_detik` (jatuh sesudah tabrakan, `Tabrakan.Keadaan.jatuh_detik`; keputusan pemilik 2026-10-17): bagian awal langkah selama
+## `beku_detik` sepeda diam: kecepatan 0, lama tahan rem 0 dan rem padam, jarak, lateral, dan stamina tidak berubah, stick diabaikan. Bila
+## jatuh menutup seluruh langkah (termasuk `dt` 0 saat jeda), stick dianggap netral untuk pose dan tingkat sprite. Sisa langkah sesudah
+## bangun = gerak biasa dari kecepatan 0 dengan akselerasi biasa, jadi hasil tidak bergantung pada pembagian `dt`. NaN, negatif, atau 0 =
+## tidak jatuh.
+static func langkah(keadaan: Keadaan, stick: Vector2, dt: float, beku_detik: float = 0.0) -> Hasil:
 	var hasil: Hasil = Hasil.new()
 	var waktu: float = dt if is_finite(dt) and dt > 0.0 else 0.0
+	var beku: float = beku_detik if is_finite(beku_detik) and beku_detik > 0.0 else 0.0
 	var maju: float = _sumbu_bersih(stick.y)
 	var datar: float = _sumbu_bersih(stick.x)
 	var s: Keadaan = _bersihkan(keadaan)
+	var waktu_gerak: float = waktu
+	if beku > 0.0:
+		s.kecepatan_ud = 0.0
+		s.tahan_rem_detik = 0.0
+		s.rem_aktif = false
+		# Sisa langkah sesudah bangun yang hanya derau float (sisa jatuh = dt dengan toleransi) dihitung nol, sama dengan `Tabrakan`.
+		waktu_gerak = waktu - beku if waktu - beku > Config.TABRAKAN_TOLERANSI_DETIK else 0.0
+		if waktu_gerak <= 0.0:
+			maju = 0.0
+			datar = 0.0
 	var awal: Keadaan = s.salin()
 	hasil.stick_maju = maju
 	hasil.tujuan_ud = kecepatan_tujuan_ud(maju, s.lelah)
-	if tahan_naik:
-		hasil.tujuan_ud = minf(hasil.tujuan_ud, s.kecepatan_ud)
 
-	if waktu > 0.0:
+	if waktu_gerak > 0.0:
 		# Rem: lama tahan dan saat rem mulai di dalam langkah.
-		var waktu_biasa: float = waktu
+		var waktu_biasa: float = waktu_gerak
 		if syarat_rem_bawah(-maju):
 			var sisa: float = 0.0 if s.rem_aktif else maxf(Config.REM_TAHAN_DETIK - s.tahan_rem_detik, 0.0)
-			s.tahan_rem_detik += waktu
+			s.tahan_rem_detik += waktu_gerak
 			if s.rem_aktif or tahan_cukup(s.tahan_rem_detik):
 				s.rem_aktif = true
-				waktu_biasa = minf(sisa, waktu)
+				waktu_biasa = minf(sisa, waktu_gerak)
 		else:
 			s.tahan_rem_detik = 0.0
 			s.rem_aktif = false
-		var waktu_rem: float = waktu - waktu_biasa
+		var waktu_rem: float = waktu_gerak - waktu_biasa
 
 		# Bagian gerak biasa (termasuk meluncur sebelum rem aktif), lalu bagian pengereman.
 		var stamina_baru: float = s.stamina
@@ -191,7 +203,7 @@ static func langkah(keadaan: Keadaan, stick: Vector2, dt: float, tahan_naik: boo
 
 		# Lateral dengan batas tepi jalan resmi.
 		var batas: float = batas_lateral_ubin()
-		s.lateral_ubin = clampf(awal.lateral_ubin + datar * Config.KECEPATAN_LATERAL_UD * waktu, -batas, batas)
+		s.lateral_ubin = clampf(awal.lateral_ubin + datar * Config.KECEPATAN_LATERAL_UD * waktu_gerak, -batas, batas)
 		hasil.lateral_ud = (s.lateral_ubin - awal.lateral_ubin) / waktu
 
 	hasil.keadaan = s
