@@ -4,8 +4,9 @@ extends RefCounted
 ## logika murni kecil bagian B (geser oleng, kedip kebal, frame bel, umpan balik melayang, zona bel, pelacak jari bel).
 ## Event sentuh sintetis lewat `Input.parse_input_event` (pola `tes_rute_scene.gd`), langkah `perbarui(dt)` dengan dt tetap.
 ## Harapan ditulis literal (QA-008 run 2A, QA-001 run 3A):
-## - Rintangan rute seed bawaan 20261016 (ditulis dari data segmen): anjing seberang 36, mobil seberang 46, anjing dekat 56, mobil 74,
-##   anjing dekat 94, mobil 114, anjing dekat 124, mobil 132, anjing seberang 162, anjing dekat 190, mobil 202 (maju, ubin).
+## - Rintangan rute seed bawaan 20261016 (ditulis dari data segmen): anjing seberang 36, mobil seberang 45, anjing dekat 56, mobil 73,
+##   anjing dekat 94, mobil 113, anjing dekat 124, mobil 133, anjing seberang 162, anjing dekat 190, mobil 201 (maju, ubin). Mobil
+##   di celah samping rumah (keputusan pemilik 2026-10-17; dulu 46, 74, 114, 132, 202 menembus tapak rumah).
 ## - Letak layar dari rumus iso 2:1 ditulis ulang: layar = ((lateral + maju) x 32, (lateral - maju) x 16).
 ## - Skor: tepat santai 100 x 1,25 = 125, antaran kedua (combo x1,1) 110; koin 15 per antaran; nada combo ke-2 = 2^(1/12) = 1,059463.
 
@@ -21,10 +22,10 @@ const TOL: float = 0.000001
 const TITIK_STICK: Vector2 = Vector2(100, 260)
 ## [jenis data, maju, jalur] rintangan rute seed bawaan, urut id.
 const RINTANGAN_DEV: Array = [
-	["anjing_penjaga", 36.0, "seberang"], ["mobil_garasi", 46.0, "seberang"], ["anjing_penjaga", 56.0, "dekat"],
-	["mobil_garasi", 74.0, "seberang"], ["anjing_penjaga", 94.0, "dekat"], ["mobil_garasi", 114.0, "seberang"],
-	["anjing_penjaga", 124.0, "dekat"], ["mobil_garasi", 132.0, "seberang"], ["anjing_penjaga", 162.0, "seberang"],
-	["anjing_penjaga", 190.0, "dekat"], ["mobil_garasi", 202.0, "seberang"],
+	["anjing_penjaga", 36.0, "seberang"], ["mobil_garasi", 45.0, "seberang"], ["anjing_penjaga", 56.0, "dekat"],
+	["mobil_garasi", 73.0, "seberang"], ["anjing_penjaga", 94.0, "dekat"], ["mobil_garasi", 113.0, "seberang"],
+	["anjing_penjaga", 124.0, "dekat"], ["mobil_garasi", 133.0, "seberang"], ["anjing_penjaga", 162.0, "seberang"],
+	["anjing_penjaga", 190.0, "dekat"], ["mobil_garasi", 201.0, "seberang"],
 ]
 const PITCH_NADA_1: float = 1.059463
 
@@ -322,7 +323,7 @@ func _test_rintangan_digambar() -> void:
 	var mobil: AnimatedSprite2D = daur.sprite_rintangan(1)
 	var anjing_dekat: AnimatedSprite2D = daur.sprite_rintangan(2)
 	check(anjing != null and anjing.position == _layar(-2.75, 36.0) and anjing.position == Vector2(1064, -620) and anjing.animation == &"diam" and not anjing.flip_h, "anjing seberang diam di halaman: layar (1064, -620), animasi diam, tidak dicermin")
-	check(mobil != null and mobil.position == _layar(-3.25, 46.0) and mobil.position == Vector2(1368, -788) and mobil.animation == &"parkir", "mobil parkir: pusat tapak lateral -3,25 di layar (1368, -788), animasi parkir")
+	check(mobil != null and mobil.position == _layar(-3.25, 45.0) and mobil.position == Vector2(1336, -772) and mobil.animation == &"parkir", "mobil parkir: pusat tapak lateral -3,25 di layar (1336, -772), animasi parkir")
 	check(anjing_dekat != null and anjing_dekat.position == Vector2(1880, -852) and anjing_dekat.flip_h, "anjing dekat diam: layar (1880, -852), dicermin (menghadap sepeda yang datang)")
 	check(RintanganDaur.ikon_seru(anjing) != null and not RintanganDaur.ikon_seru(anjing).visible, "ikon ! anjing tersembunyi saat tidak kaget")
 	# Hidup: anjing waspada lalu mengejar, mobil tanda lalu mundur.
@@ -334,9 +335,9 @@ func _test_rintangan_digambar() -> void:
 	check(anjing.animation == &"lari" and not anjing.flip_h, "sepeda melewati anjing: animasi lari menghadap maju")
 	_taruh(akar, 3.0, 1.0, 38.0)
 	_langkah(akar, 1)
-	check(mobil.animation == &"tanda", "sepeda 8 ubin sebelum mobil: animasi tanda (lampu mundur berkedip)")
+	check(mobil.animation == &"tanda", "sepeda 7 ubin sebelum mobil 45 (tanda sejak 36): animasi tanda (lampu mundur berkedip)")
 	_langkah(akar, 100)
-	check(mobil.animation == &"mundur" and mobil.position != _layar(-3.25, 46.0), "1,7 detik kemudian: animasi mundur, mobil bergeser ke jalan")
+	check(mobil.animation == &"mundur" and mobil.position != _layar(-3.25, 45.0), "1,7 detik kemudian: animasi mundur, mobil bergeser ke jalan")
 	_bersihkan(akar)
 
 
@@ -347,18 +348,18 @@ func _test_penutup_rintangan() -> void:
 	var akar: RuteMain = await _siapkan()
 	var penerap: PenerapPenutup = akar.penerap_penutup()
 	check(akar.find_children("*", "PenerapPenutup", true, false).size() == 1, "hanya satu PenerapPenutup")
-	# Mobil 46 sampai berhenti di garis tengah: sepeda ditahan di maju 38,5 sisi dekat.
+	# Mobil 45 sampai berhenti di garis tengah: sepeda ditahan di maju 38,5 sisi dekat.
 	for i: int in range(400):
 		_taruh(akar, 0.0, 1.5, 38.5)
 		akar.perbarui(DT)
 	var mobil: RintanganRute.Item = akar.rintangan().daftar[1]
 	check(mobil.mobil.status == MobilGarasi.Status.BERHENTI, "mobil seberang berhenti di garis tengah")
 	var gambar: AnimatedSprite2D = akar.rintangan_daur().sprite_rintangan(1)
-	# Tapak mobil berhenti lateral -1,5..0, maju 45,625..46,375, tinggi 1,0. Kaki di (-2,0; 46,5): titik (+d, -d) untuk d 0,6 = (-1,4; 45,9) di
+	# Tapak mobil berhenti lateral -1,5..0, maju 44,625..45,375, tinggi 1,0. Kaki di (-2,0; 45,5): titik (+d, -d) untuk d 0,6 = (-1,4; 44,9) di
 	# tapak, z 0,6 <= 1,0 -> tertutup. Di lateral +1,0 tidak ada d >= 0 yang masuk tapak.
-	_taruh(akar, 0.0, -2.0, 46.5)
-	check(is_equal_approx(gambar.modulate.a, 0.45) and penerap.jumlah_menutupi() >= 1, "kaki pemain di balik mobil (-2,0; 46,5): mobil alfa 0,45, dapat %.2f" % gambar.modulate.a)
-	_taruh(akar, 0.0, 1.0, 46.5)
+	_taruh(akar, 0.0, -2.0, 45.5)
+	check(is_equal_approx(gambar.modulate.a, 0.45) and penerap.jumlah_menutupi() >= 1, "kaki pemain di balik mobil (-2,0; 45,5): mobil alfa 0,45, dapat %.2f" % gambar.modulate.a)
+	_taruh(akar, 0.0, 1.0, 45.5)
 	check(gambar.modulate.a == 1.0, "pemain di sisi dekat: mobil alfa 1,0")
 	_bersihkan(akar)
 
@@ -417,24 +418,24 @@ func _test_tabrakan_mobil_dari_scene() -> void:
 	var tabrak: Array[String] = []
 	akar.tabrakan.connect(func(jenis: String) -> void: tabrak.append(jenis))
 	# Sepeda ditahan di maju 40, separuh dekat (lateral 1,5), 5 detik: anjing seberang 36 mengejar sampai batas 39, berhenti, lalu pulang dan
-	# selesai; mobil seberang 46 (tanda 9: sepeda >= 37) tanda 1,5 detik lalu mundur 1,0 u/d sejauh 2,5 ubin dan berhenti di garis tengah.
+	# selesai; mobil seberang 45 (tanda 9: sepeda >= 36) tanda 1,5 detik lalu mundur 1,0 u/d sejauh 2,5 ubin dan berhenti di garis tengah.
 	for i: int in range(300):
 		_taruh(akar, 0.0, 1.5, 40.0)
 		akar.perbarui(DT)
 	var anjing: AnjingPenjaga.Keadaan = akar.rintangan().daftar[0].anjing
 	var mobil: MobilGarasi.Keadaan = akar.rintangan().daftar[1].mobil
-	check(tabrak.is_empty() and anjing.status == AnjingPenjaga.Status.DIAM and anjing.selesai and mobil.status == MobilGarasi.Status.BERHENTI, "kontrol: anjing 36 sudah pulang dan selesai, mobil 46 berhenti di jalan, belum ada tabrakan")
+	check(tabrak.is_empty() and anjing.status == AnjingPenjaga.Status.DIAM and anjing.selesai and mobil.status == MobilGarasi.Status.BERHENTI, "kontrol: anjing 36 sudah pulang dan selesai, mobil 45 berhenti di jalan, belum ada tabrakan")
 	var kotak: Rect2 = MobilGarasi.kotak(mobil)
-	check(kotak.position.is_equal_approx(Vector2(-1.5, 45.625)) and kotak.size.is_equal_approx(Vector2(1.5, 0.75)), "mobil berhenti: bentuk lateral -1,5..0 (separuh seberang), maju 45,625..46,375, dapat %s" % kotak)
+	check(kotak.position.is_equal_approx(Vector2(-1.5, 44.625)) and kotak.size.is_equal_approx(Vector2(1.5, 0.75)), "mobil berhenti: bentuk lateral -1,5..0 (separuh seberang), maju 44,625..45,375, dapat %s" % kotak)
 	var bunyi_awal: int = int(audio.call(&"jumlah_bunyi_rute", BunyiRute.Bunyi.TABRAKAN))
-	# Santai di lateral -0,6 dari maju 44: depan bentuk sepeda (maju + 0,4) melewati 45,625 pada langkah ke-25 (0,05 ubin per langkah).
-	_taruh(akar, 3.0, -0.6, 44.0)
+	# Santai di lateral -0,6 dari maju 43: depan bentuk sepeda (maju + 0,4) melewati 44,625 pada langkah ke-25 (0,05 ubin per langkah).
+	_taruh(akar, 3.0, -0.6, 43.0)
 	var langkah: int = 0
 	while tabrak.is_empty() and langkah < 120:
 		akar.perbarui(DT)
 		langkah += 1
 	check(tabrak == ["mobil_garasi"], "santai menabrak mobil yang berhenti di separuh seberang: sinyal membawa jenis mobil_garasi, dapat %s" % [tabrak])
-	check(langkah == 25 and akar.rintangan().tabrakan.jumlah == 1 and _sepeda(akar).kecepatan_ud == 1.0, "tabrakan di langkah 25 (depan sepeda 44,4 + 0,05 x 25 = 45,65 > 45,625), satu tabrakan, kecepatan 1,0 (dapat langkah %d)" % langkah)
+	check(langkah == 25 and akar.rintangan().tabrakan.jumlah == 1 and _sepeda(akar).kecepatan_ud == 1.0, "tabrakan di langkah 25 (depan sepeda 43,4 + 0,05 x 25 = 44,65 > 44,625), satu tabrakan, kecepatan 1,0 (dapat langkah %d)" % langkah)
 	check(int(audio.call(&"jumlah_bunyi_rute", BunyiRute.Bunyi.TABRAKAN)) == bunyi_awal + 1, "satu bunyi tabrakan untuk tabrakan mobil")
 	_bersihkan(akar)
 
@@ -467,7 +468,7 @@ func _test_bunyi_tanda_rintangan_di_scene() -> void:
 		return
 	var awal: Array[int] = _hitung_bunyi_tanda(audio)
 	# Sepeda di separuh dekat (lateral 1,5): anjing seberang 36 (tanda 9) waspada saat sepeda >= 27, mengejar saat >= 36; mobil seberang
-	# 46 (tanda 9) tanda saat sepeda >= 37, mundur 1,5 detik (90 langkah) sesudahnya. Tidak ada tabrakan di sisi dekat.
+	# 45 (tanda 9) tanda juga saat sepeda >= 36 (ambang sama), mundur 1,5 detik (90 langkah) sesudahnya. Tidak ada tabrakan di sisi dekat.
 	_taruh(akar, 3.0, 1.5, 26.0)
 	_langkah(akar, 1)
 	check(_selisih(_hitung_bunyi_tanda(audio), awal) == [0, 0, 0, 0], "maju 26,05 (di luar jarak tanda): belum ada bunyi rintangan")
@@ -476,12 +477,12 @@ func _test_bunyi_tanda_rintangan_di_scene() -> void:
 	check(_selisih(_hitung_bunyi_tanda(audio), awal) == [1, 0, 0, 0] and akar.rintangan().daftar[0].anjing.status == AnjingPenjaga.Status.WASPADA, "maju 27,05: anjing 36 waspada, satu geram, dapat %s" % [_selisih(_hitung_bunyi_tanda(audio), awal)])
 	_langkah(akar, 30)
 	check(_selisih(_hitung_bunyi_tanda(audio), awal) == [1, 0, 0, 0], "30 langkah waspada berikutnya: geram tetap satu kali")
+	_taruh(akar, 3.0, 1.5, 35.9)
+	_langkah(akar, 1)
+	check(_selisih(_hitung_bunyi_tanda(audio), awal) == [1, 0, 0, 0] and akar.rintangan().daftar[1].mobil.status == MobilGarasi.Status.DIAM, "maju 35,95: anjing belum mengejar, mobil 45 belum tanda, dapat %s" % [_selisih(_hitung_bunyi_tanda(audio), awal)])
 	_taruh(akar, 3.0, 1.5, 36.0)
 	_langkah(akar, 1)
-	check(_selisih(_hitung_bunyi_tanda(audio), awal) == [1, 1, 0, 0] and akar.rintangan().daftar[0].anjing.status == AnjingPenjaga.Status.MENGEJAR, "maju 36,05: anjing mengejar, satu gonggong, dapat %s" % [_selisih(_hitung_bunyi_tanda(audio), awal)])
-	_taruh(akar, 3.0, 1.5, 37.0)
-	_langkah(akar, 1)
-	check(_selisih(_hitung_bunyi_tanda(audio), awal) == [1, 1, 1, 0] and akar.rintangan().daftar[1].mobil.status == MobilGarasi.Status.TANDA, "maju 37,05: mobil 46 tanda lampu mundur, satu bip, dapat %s" % [_selisih(_hitung_bunyi_tanda(audio), awal)])
+	check(_selisih(_hitung_bunyi_tanda(audio), awal) == [1, 1, 1, 0] and akar.rintangan().daftar[0].anjing.status == AnjingPenjaga.Status.MENGEJAR and akar.rintangan().daftar[1].mobil.status == MobilGarasi.Status.TANDA, "maju 36,05: anjing mengejar (satu gonggong) dan mobil 45 tanda lampu mundur (satu bip), dapat %s" % [_selisih(_hitung_bunyi_tanda(audio), awal)])
 	_langkah(akar, 80)
 	check(_selisih(_hitung_bunyi_tanda(audio), awal) == [1, 1, 1, 0] and akar.rintangan().daftar[1].mobil.status == MobilGarasi.Status.TANDA, "1,33 detik tanda: belum mundur, belum ada mesin (bip tetap satu)")
 	_langkah(akar, 20)

@@ -22,7 +22,7 @@
     { "pos": 38, "sisi": "seberang", "jenis": "limasan", "pelanggan_boleh": false }
   ],
   "objek": [
-    { "jenis": "mobil_garasi", "pos": 10, "jalur": "seberang", "tanda_ubin": 9 },
+    { "jenis": "mobil_garasi", "pos": 9, "jalur": "seberang", "tanda_ubin": 9 },
     { "jenis": "anjing_penjaga", "pos": 30, "jalur": "dekat", "tanda_ubin": 9 }
   ],
   "titik_misi": [

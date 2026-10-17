@@ -13,6 +13,9 @@ extends RefCounted
 ##   berjarak paling sedikit satu petak (`RUTE_PETAK_UBIN`), pelanggan hanya di sisi `seberang` untuk distrik satu sisi (GDD 9.1);
 ## - rintangan (aturan adil ROUTE_DESIGN 4): bukan di jalur `tengah` (jalur utama bersih), paling dekat `RUTE_RINTANGAN_TEPI_UBIN` dari
 ##   tepi, tanda paling sedikit `RUTE_TANDA_MIN_UBIN`, dan dalam jendela `RUTE_RINTANGAN_JENDELA_UBIN` ubin maksimal satu;
+## - rintangan tidak memotong tapak rumah mana pun di segmen (`rintangan_memotong_rumah`, ROUTE_DESIGN 4 aturan 7): mobil garasi di
+##   celah samping rumah sepanjang seluruh lintasannya (parkir sampai berhenti), anjing penjaga di posisi diamnya; tepi yang hanya
+##   bersentuhan boleh (`Tabrakan.bertumpuk`). Rumah segmen tetangga tidak terjangkau karena rintangan paling dekat 3 ubin ke tepi;
 ## - titik misi berdiri di rumah (pos dan sisi sama) dan di luar jendela rintangan (ROUTE_DESIGN 6).
 
 ## Tingkat keramaian segmen (tag `tingkat`).
@@ -140,6 +143,27 @@ static func memaksa_pindah(jenis_objek: String) -> bool:
 	return JENIS_OBJEK.has(jenis_objek)
 
 
+## Bentuk tanah rintangan `jenis` di titik `maju_ubin` jalur `sisi` yang tidak boleh memotong rumah (koordinat jalan, ubin): mobil garasi =
+## seluruh lintasannya (`MobilGarasi.lintasan`), anjing penjaga = bentuk diamnya di halaman (`AnjingPenjaga.kotak` saat `baru`). Jenis
+## atau sisi tidak dikenal = persegi kosong.
+static func bentuk_rintangan_diam(jenis: String, maju_ubin: float, sisi: LoperAnim.Sisi) -> Rect2:
+	if sisi == LoperAnim.Sisi.TIDAK_ADA:
+		return Rect2()
+	if jenis == "mobil_garasi":
+		return MobilGarasi.lintasan(maju_ubin, sisi)
+	if jenis == "anjing_penjaga":
+		return AnjingPenjaga.kotak(AnjingPenjaga.baru(maju_ubin, sisi, 0.0))
+	return Rect2()
+
+
+## True bila bentuk rintangan `jenis` di `pos_objek` jalur `sisi_objek` beririsan dengan tapak rumah sisi `sisi_rumah` di `pos_rumah`
+## (`PenutupPemain.tapak_rumah`; pos keduanya relatif ke awal segmen yang sama). Tepi yang hanya bersentuhan = false.
+static func rintangan_memotong_rumah(jenis: String, pos_objek: float, sisi_objek: LoperAnim.Sisi, pos_rumah: float, sisi_rumah: LoperAnim.Sisi) -> bool:
+	if sisi_rumah == LoperAnim.Sisi.TIDAK_ADA:
+		return false
+	return Tabrakan.bertumpuk(bentuk_rintangan_diam(jenis, pos_objek, sisi_objek), PenutupPemain.tapak_rumah(sisi_rumah, pos_rumah))
+
+
 # --- Pemeriksa bagian ---
 
 static func _parse_tag(data: Dictionary, segmen: SegmenRute, label: String, g: Array[String]) -> void:
@@ -245,6 +269,11 @@ static func _parse_objek(data: Dictionary, segmen: SegmenRute, label: String, ad
 			objek.tanda_ubin = float(d["tanda_ubin"])
 			if objek.tanda_ubin < Config.RUTE_TANDA_MIN_UBIN:
 				g.append("%s: tanda %.1f ubin kurang dari %.1f (1,5 detik pada ngebut, ROUTE_DESIGN 4)" % [nama, objek.tanda_ubin, Config.RUTE_TANDA_MIN_UBIN])
+		var sisi_objek: LoperAnim.Sisi = sisi_dari_nama(objek.jalur)
+		if ok_pos and JENIS_OBJEK.has(objek.jenis) and sisi_objek != LoperAnim.Sisi.TIDAK_ADA:
+			for rumah: Rumah in segmen.rumah:
+				if rintangan_memotong_rumah(objek.jenis, float(objek.pos), sisi_objek, float(rumah.pos), rumah.sisi):
+					g.append("%s: %s di pos %d (jalur %s) memotong tapak rumah %s di pos %d (mobil di celah samping rumah, ROUTE_DESIGN 4)" % [nama, objek.jenis, objek.pos, objek.jalur, NAMA_SISI[0] if rumah.sisi == LoperAnim.Sisi.SEBERANG else NAMA_SISI[1], rumah.pos])
 		if ok_pos:
 			for lain: Objek in segmen.objek:
 				if memaksa_pindah(lain.jenis) and memaksa_pindah(objek.jenis) and absi(lain.pos - objek.pos) < Config.RUTE_RINTANGAN_JENDELA_UBIN:

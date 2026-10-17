@@ -34,6 +34,16 @@ const BOLEH: Dictionary = {
 	"per_tengah_04": [6, 10, 22, 26, 30], "per_tengah_05": [6, 14, 18, 26, 30],
 	"per_tutup_01": [6, 14], "per_tutup_02": [6, 10, 18],
 }
+## `pos` mobil garasi per segmen (keputusan pemilik 2026-10-17: di celah samping rumah, pos rumah seberang - 1), urut.
+const MOBIL: Dictionary = {
+	"per_buka_01": [], "per_buka_02": [], "per_tengah_01": [], "per_tengah_02": [25], "per_tengah_03": [9],
+	"per_tengah_04": [17], "per_tengah_05": [9, 29], "per_tutup_01": [], "per_tutup_02": [],
+}
+## Data lama run 3B yang menembus rumah: [segmen, pos sekarang, pos lama, pos rumah seberang yang dipotong].
+const MOBIL_LAMA: Array = [
+	["per_tengah_02", 25, 26, 26], ["per_tengah_03", 9, 10, 10], ["per_tengah_04", 17, 18, 18],
+	["per_tengah_05", 9, 10, 10], ["per_tengah_05", 29, 28, 26],
+]
 
 var _cek: Callable
 var _judul: Callable
@@ -55,6 +65,8 @@ func jalankan() -> void:
 	_test_kumpulan()
 	_test_berkas_nyata()
 	_test_berkas_nyata_oracle_mentah()
+	_test_rintangan_rumah_literal()
+	_test_rintangan_rumah_data_lama()
 	_test_builder_deterministik()
 	_test_builder_struktur()
 	_test_builder_pelanggan()
@@ -157,6 +169,14 @@ func _mutasi(d: Dictionary, kode: String) -> void:
 		"titik_dekat_rintangan":
 			(titik[0] as Dictionary)["pos"] = 10
 		"titik_sisi_kiri": (titik[0] as Dictionary)["sisi"] = "kiri"
+		"mobil_menembus_rumah":
+			rumah.append({"pos": 22, "sisi": "seberang", "jenis": "limasan", "pelanggan_boleh": false})
+			(objek[1] as Dictionary)["jalur"] = "seberang"
+		"mobil_dekat_menembus_rumah": rumah.append({"pos": 22, "sisi": "dekat", "jenis": "dekat_limasan", "pelanggan_boleh": false})
+		"mobil_di_rumah_sebelah":
+			rumah.append({"pos": 18, "sisi": "seberang", "jenis": "limasan", "pelanggan_boleh": false})
+			(objek[1] as Dictionary)["jalur"] = "seberang"
+			(objek[1] as Dictionary)["pos"] = 20
 		# Mutan batas yang HARUS diterima (kode berawalan `ok_`).
 		"ok_panjang_24":
 			d["panjang"] = 24
@@ -170,6 +190,12 @@ func _mutasi(d: Dictionary, kode: String) -> void:
 		"ok_objek_rentang_6": (objek[1] as Dictionary)["pos"] = 20
 		"ok_tanda_9_bulat": (objek[0] as Dictionary)["tanda_ubin"] = 9
 		"ok_petak_4": rumah.append({"pos": 14, "sisi": "seberang", "jenis": "limasan", "pelanggan_boleh": true})
+		"ok_mobil_celah":
+			rumah.append({"pos": 18, "sisi": "seberang", "jenis": "limasan", "pelanggan_boleh": false})
+			rumah.append({"pos": 22, "sisi": "seberang", "jenis": "pelana", "pelanggan_boleh": false})
+			(objek[1] as Dictionary)["jalur"] = "seberang"
+			(objek[1] as Dictionary)["pos"] = 21
+		"ok_anjing_di_rumah": rumah.append({"pos": 14, "sisi": "seberang", "jenis": "limasan", "pelanggan_boleh": false})
 		"ok_pembuka_tenang":
 			tag["posisi"] = "pembuka"
 			tag["tingkat"] = "tenang"
@@ -254,6 +280,9 @@ func _test_segmen_sah_dan_mutan() -> void:
 		["objek_tanda_pendek", "kurang dari 9.0"], ["objek_tanpa_tanda", "field wajib 'tanda_ubin'"],
 		["titik_tanpa_rumah", "tidak ada rumah sisi dekat"], ["titik_dekat_rintangan", "bersama rintangan"],
 		["titik_sisi_kiri", "bukan seberang atau dekat"],
+		["mobil_menembus_rumah", "mobil_garasi di pos 22 (jalur seberang) memotong tapak rumah seberang di pos 22"],
+		["mobil_dekat_menembus_rumah", "mobil_garasi di pos 22 (jalur dekat) memotong tapak rumah dekat di pos 22"],
+		["mobil_di_rumah_sebelah", "mobil_garasi di pos 20 (jalur seberang) memotong tapak rumah seberang di pos 18"],
 	]
 	for kasus: Array in tolak:
 		var kode: String = kasus[0]
@@ -272,7 +301,7 @@ func _test_segmen_sah_dan_mutan() -> void:
 
 func _test_batas_nilai() -> void:
 	_judul.call("Segmen: nilai tepat di batas diterima (AC-2)")
-	for kode: String in ["ok_panjang_24", "ok_panjang_40", "ok_rumah_pos_akhir_min_2", "ok_objek_pos_3", "ok_objek_pos_akhir_min_3", "ok_objek_rentang_6", "ok_tanda_9_bulat", "ok_petak_4", "ok_pembuka_tenang"]:
+	for kode: String in ["ok_panjang_24", "ok_panjang_40", "ok_rumah_pos_akhir_min_2", "ok_objek_pos_3", "ok_objek_pos_akhir_min_3", "ok_objek_rentang_6", "ok_tanda_9_bulat", "ok_petak_4", "ok_pembuka_tenang", "ok_mobil_celah", "ok_anjing_di_rumah"]:
 		var d: Dictionary = _dasar()
 		_mutasi(d, kode)
 		var hasil: SegmenRute.Hasil = SegmenRute.parse(d)
@@ -430,14 +459,29 @@ func _test_berkas_nyata_oracle_mentah() -> void:
 			for i: int in range(1, daftar.size()):
 				check(daftar[i] - daftar[i - 1] >= 4, "%s: rumah sesisi berjarak paling sedikit 4 ubin (%d dan %d)" % [id, daftar[i - 1], daftar[i]])
 		var pos_objek: Array[int] = []
+		var pos_mobil: Array[int] = []
 		for o: Variant in d["objek"]:
 			var objek: Dictionary = o
 			var pos: int = int(objek["pos"])
 			total_objek += 1
 			pos_objek.append(pos)
+			# Rintangan tidak memotong tapak rumah (oracle literal, ROUTE_DESIGN 4 aturan 7): tapak rumah p = maju p - 0,5 sampai p + 2,5
+			# di lateral 3 sampai 6 sisinya; mobil = maju pos +- 0,375 di lateral 0 sampai 4 sisinya, jadi selalu beririsan lateral dengan
+			# rumah sesisi dan tidak pernah dengan rumah sisi lain. Anjing diam di lateral 2,5 sampai 3,0 hanya menyentuh tapak.
+			if objek["jenis"] == "mobil_garasi":
+				pos_mobil.append(pos)
+				var sesisi: Array[int] = posisi_seberang if objek["jalur"] == "seberang" else posisi_dekat
+				for p: int in sesisi:
+					var potong: bool = float(pos) + 0.375 > float(p) - 0.5 and float(pos) - 0.375 < float(p) + 2.5
+					check(not potong, "%s: mobil pos %d di celah samping rumah, tidak menembus tapak rumah %s pos %d (maju %.1f..%.1f)" % [id, pos, objek["jalur"], p, float(p) - 0.5, float(p) + 2.5])
 			check(objek["jalur"] == "seberang" or objek["jalur"] == "dekat", "%s: rintangan pos %d tidak di jalur tengah (jalur utama bersih)" % [id, pos])
 			check(pos >= 3 and pos <= panjang - 3, "%s: rintangan pos %d tidak di 2 ubin tepi (dan %d dari sambungan)" % [id, pos, 3])
 			check(float(objek["tanda_ubin"]) >= 9.0, "%s: tanda rintangan pos %d paling sedikit 9 ubin" % [id, pos])
+		pos_mobil.sort()
+		var harapan_mobil: Array[int] = []
+		for p: Variant in MOBIL[id]:
+			harapan_mobil.append(int(p))
+		check(pos_mobil == harapan_mobil, "%s: pos mobil garasi = harapan literal %s (dapat %s)" % [id, str(harapan_mobil), str(pos_mobil)])
 		pos_objek.sort()
 		for i: int in range(1, pos_objek.size()):
 			check(pos_objek[i] - pos_objek[i - 1] >= 6, "%s: dua rintangan berjarak paling sedikit 6 ubin (%d dan %d)" % [id, pos_objek[i - 1], pos_objek[i]])
@@ -448,6 +492,61 @@ func _test_berkas_nyata_oracle_mentah() -> void:
 	check(total_rumah == 109, "total rumah di 9 segmen = 109 (73 seberang: 7+8+9+8+10+9+9+6+7, 36 dekat: 3+4+5+4+6+5+4+2+3): %d" % total_rumah)
 	check(total_objek == 11, "total rintangan di 9 segmen = 11 (1 + 2 + 2 + 3 + 3): %d" % total_objek)
 	check(total_boleh == 3 + 3 + 5 + 5 + 6 + 5 + 5 + 2 + 3, "total rumah pelanggan_boleh = 37: %d" % total_boleh)
+
+
+## Rintangan dan tapak rumah: oracle literal (keputusan pemilik 2026-10-17). Tapak rumah seberang p: lateral -6..-3, maju p - 0,5 ..
+## p + 2,5; mobil di maju m: lintasan lateral -4..0 (parkir bagasi 2,5 + panjang 1,5, berhenti di garis tengah), maju m +- 0,375.
+func _test_rintangan_rumah_literal() -> void:
+	_judul.call("Rintangan dan rumah: mobil di celah samping rumah, anjing di halaman, oracle literal (ROUTE_DESIGN 4 aturan 7)")
+	var s: LoperAnim.Sisi = LoperAnim.Sisi.SEBERANG
+	var k: LoperAnim.Sisi = LoperAnim.Sisi.DEKAT
+	check(MobilGarasi.lintasan(25.0, s) == Rect2(-4.0, 24.625, 4.0, 0.75), "lintasan mobil seberang di 25 = lateral -4..0, maju 24,625..25,375 (dapat %s)" % MobilGarasi.lintasan(25.0, s))
+	check(MobilGarasi.lintasan(25.0, k) == Rect2(0.0, 24.625, 4.0, 0.75), "lintasan mobil dekat di 25 = lateral 0..4 (dapat %s)" % MobilGarasi.lintasan(25.0, k))
+	check(SegmenRute.bentuk_rintangan_diam("anjing_penjaga", 22.0, s) == Rect2(-3.0, 21.75, 0.5, 0.5), "anjing diam seberang di 22 = lateral -3,0..-2,5, maju 21,75..22,25")
+	var kasus: Array = [
+		# [jenis, pos objek, sisi objek, pos rumah, sisi rumah, memotong, label]
+		["mobil_garasi", 26.0, s, 26.0, s, true, "mobil 26 di samping rumah 26 (data lama per_tengah_02)"],
+		["mobil_garasi", 25.0, s, 26.0, s, false, "mobil 25 di celah sebelum rumah 26"],
+		["mobil_garasi", 25.0, s, 22.0, s, false, "mobil 25 di celah sesudah rumah 22"],
+		["mobil_garasi", 24.0, s, 22.0, s, true, "mobil 24 masuk tapak rumah 22 (berakhir 24,5)"],
+		["mobil_garasi", 27.0, s, 26.0, s, true, "mobil 27 di dalam tapak rumah 26"],
+		["mobil_garasi", 28.0, s, 26.0, s, true, "mobil 28 di ujung tapak rumah 26 (data lama per_tengah_05)"],
+		["mobil_garasi", 29.0, s, 26.0, s, false, "mobil 29 di celah sesudah rumah 26"],
+		["mobil_garasi", 29.0, s, 30.0, s, false, "mobil 29 di celah sebelum rumah 30"],
+		["mobil_garasi", 25.125, s, 26.0, s, false, "mobil 25,125: moncong maju 25,5 tepat menyentuh tepi tapak 25,5 (bersentuhan boleh)"],
+		["mobil_garasi", 25.2, s, 26.0, s, true, "mobil 25,2: 0,075 ubin masuk tapak"],
+		["mobil_garasi", 26.0, s, 26.0, k, false, "mobil seberang tidak menyentuh rumah dekat di pos sama"],
+		["mobil_garasi", 26.0, k, 26.0, k, true, "mobil dekat 26 di samping rumah dekat 26"],
+		["anjing_penjaga", 22.0, s, 22.0, s, false, "anjing seberang diam menyentuh tepi tapak rumah di lateral -3 (tidak memotong)"],
+		["anjing_penjaga", 22.0, k, 22.0, k, false, "anjing dekat diam menyentuh tepi tapak rumah di lateral 3 (tidak memotong)"],
+		["mobil_garasi", 26.0, s, 26.0, LoperAnim.Sisi.TIDAK_ADA, false, "rumah tanpa sisi tidak dipotong"],
+	]
+	for c: Array in kasus:
+		var hasil: bool = SegmenRute.rintangan_memotong_rumah(c[0], c[1], c[2], c[3], c[4])
+		check(hasil == c[5], "%s: memotong = %s" % [c[6], c[5]])
+
+
+## Mutan nyata: data mobil lama run 3B (menembus rumah) dimasukkan kembali ke berkas nyata dan HARUS ditolak validasi.
+func _test_rintangan_rumah_data_lama() -> void:
+	_judul.call("Rintangan dan rumah: posisi mobil lama run 3B di berkas nyata ditolak validasi (mutan nyata)")
+	for m: Array in MOBIL_LAMA:
+		var id: String = m[0]
+		var data: Variant = JSON.parse_string(FileAccess.get_file_as_string("%s/%s.json" % [FOLDER, id]))
+		if typeof(data) != TYPE_DICTIONARY:
+			check(false, "%s: JSON mentah terbaca" % id)
+			continue
+		var d: Dictionary = data
+		check(SegmenRute.parse(d).sah(), "%s: berkas nyata sah sebelum dimutasi" % id)
+		var ketemu: bool = false
+		for o: Variant in d["objek"]:
+			var objek: Dictionary = o
+			if objek["jenis"] == "mobil_garasi" and int(objek["pos"]) == int(m[1]):
+				objek["pos"] = m[2]
+				ketemu = true
+		check(ketemu, "%s: mobil di pos %d ada di berkas nyata" % [id, m[1]])
+		var hasil: SegmenRute.Hasil = SegmenRute.parse(d)
+		var potongan: String = "mobil_garasi di pos %d (jalur seberang) memotong tapak rumah seberang di pos %d" % [m[2], m[3]]
+		check(not hasil.sah() and _galat_berisi(hasil.galat, potongan), "%s: mobil kembali ke pos lama %d ditolak, galat memuat '%s' (galat: %s)" % [id, m[2], potongan, "; ".join(hasil.galat)])
 
 
 # --- AC-5 sampai AC-8: RouteBuilder ---

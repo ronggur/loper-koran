@@ -50,6 +50,7 @@ Aturan adil (GDD 2, prinsip 3):
 4. **Jangan menumpuk keputusan.** Dalam 6 ubin, maksimal satu rintangan yang memaksa pindah jalur. Rintangan kedua boleh ada kalau hanya memaksa melambat.
 5. **Jalur utama tidak tertutup objek tinggi.** Pohon, mobil, dan atap boleh menutupi pemandangan, tapi rintangan di jalur selalu terlihat. Objek yang menutupi pemain dibuat semi-transparan.
 6. **Rintangan tidak menutup satu-satunya kesempatan melempar.** Kalau mobil tamu menutupi kotak surat, teras tetap bisa dicapai.
+7. **Rintangan tidak menembus rumah (usulan, keputusan pemilik 2026-10-17).** Mobil garasi parkir di **celah samping rumah**, bukan di depan rumah: `pos` mobil = `pos` rumah sesisi − 1 (petak 4 ubin = rumah 3 ubin + celah 1 ubin, jadi celah antar rumah maju `pos − 1,5` sampai `pos − 0,5`). Seluruh lintasan mobil, dari parkir (bagasi 2,5 ubin dari garis tengah, moncong 4,0) sampai berhenti di garis tengah, tidak boleh beririsan dengan tapak rumah mana pun (seberang lateral −6 sampai −3, dekat 3 sampai 6, maju `pos − 0,5` sampai `pos + 2,5`); tepi yang hanya bersentuhan boleh. Anjing penjaga yang diam di halaman (lateral ±2,5 sampai ±3,0) hanya menyentuh kaki fasad.
 
 Rintangan prototype 3: **anjing penjaga** (mengejar sesuai kecepatan, berhenti di batas halaman) dan **mobil keluar garasi** (lampu mundur dulu, baru bergerak).
 
@@ -61,6 +62,7 @@ Rintangan prototype 3: **anjing penjaga** (mengejar sesuai kecepatan, berhenti d
 - **Bel (K-3, D-5).** Anjing yang waspada atau mengejar dalam jangkauan bel (1 ubin di belakang sampai 4 ubin di depan sepeda) menampilkan "!" lalu mundur ke halamannya; reaksi per jenis rintangan diatur di satu tabel (`Bel.REAKSI_JENIS`), jadi pejalan kaki nanti cukup ditambah di sana.
 - **Tabrakan (K-1, BALANCING 6c).** Kecepatan turun ke 1,0 u/d, oleng 0,6 detik, combo putus, kebal 1,0 detik; rute tidak berhenti. Di scene: sprite pemain bergeser bolak-balik, ikon kilatan di atas kepala, berkedip selama kebal, bunyi tabrakan lembut, label PUTUS di HUD dev.
 - **Data.** Tidak ada field baru: rintangan dibangun dari `objek` segmen yang sudah ada (`jenis`, `pos`, `jalur`, `tanda_ubin`; `DATA_SCHEMA.md` 3). Data perumahan saat ini hanya punya mobil di sisi `seberang` (sprite mobil hanya untuk sisi itu); anjing di kedua sisi.
+- **Celah samping rumah (aturan 7, 2026-10-17).** Mobil dipindah dari depan rumah ke celah sebelum rumah sesisi: `per_tengah_02` 26 → 25, `per_tengah_03` 10 → 9, `per_tengah_04` 18 → 17, `per_tengah_05` 10 → 9 dan 28 → 29 (28 ada di ujung rumah 26; celah 25 terlalu dekat anjing 20, jadi celah sebelum rumah 30). Aturan tanda, tepi segmen, dan jendela 6 ubin tetap terpenuhi. Divalidasi `SegmenRute.parse` (`SegmenRute.rintangan_memotong_rumah`, `MobilGarasi.lintasan`); posisi lama ditolak.
 - **Diperiksa mesin (tes headless):** tanda ≥ 1,5 detik sebelum bahaya di santai, cepat, dan ngebut untuk semua posisi lateral (aturan 2); di 20 rute uji selalu ada sisi bebas dan bot di sisi bebas tidak pernah tertabrak (aturan 1); tabrakan tidak menghentikan rute.
 
 ## 5. Ritme dan kesulitan

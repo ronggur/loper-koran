@@ -98,6 +98,16 @@ static func kotak(k: Keadaan) -> Rect2:
 	return Rect2(lateral_min, k.maju_ubin - setengah, lateral_maks - lateral_min, setengah + setengah)
 
 
+## Seluruh lintasan mobil di titik rumah `maju_ubin`, jalur `sisi`: gabungan bentuk parkir (bagasi `MOBIL_BELAKANG_AWAL_UBIN`) dan bentuk
+## berhenti (bagasi `MOBIL_BELAKANG_AKHIR_UBIN`). Mobil hanya bergerak lurus melintang di antara keduanya, jadi persegi ini memuat setiap
+## bentuk yang pernah dipakainya. Dipakai validasi segmen: mobil di celah samping rumah, tidak menembus tapak rumah (`SegmenRute`).
+static func lintasan(maju_ubin: float, sisi: LoperAnim.Sisi) -> Rect2:
+	var parkir: Keadaan = baru(maju_ubin, sisi, 0.0)
+	var berhenti: Keadaan = baru(maju_ubin, sisi, 0.0)
+	berhenti.belakang_ubin = Config.MOBIL_BELAKANG_AKHIR_UBIN
+	return kotak(parkir).merge(kotak(berhenti))
+
+
 ## Mobil selalu padat (bentuknya yang menentukan tabrakan).
 static func berbahaya(_k: Keadaan) -> bool:
 	return true

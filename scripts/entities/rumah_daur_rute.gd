@@ -5,12 +5,17 @@ extends Node2D
 ## Induk Y-sort seperti `ObjekDaur`: rumah, kotak surat, dan sepeda anak langsungnya, jadi urutan gambar ditentukan posisi tegak titik
 ## pijak (sama dengan jalan uji). Hanya rumah di jendela `JendelaRute.rentang_sekitar` (`Config.RUTE_DAUR_*`) yang punya node; sprite
 ## dan kotak surat dipakai ulang dari kolam, bukan diinstansiasi ulang tiap langkah. Sprite = `house_perumahan_<jenis>_<pelanggan|bukan>`
-## (`SpriteRumah.nama_rumah`), kotak surat sasaran hanya di rumah pelanggan, dan titik pijak sprite dihitung dari tapak rumah
+## (`SpriteRumah.nama_rumah`), kotak surat sasaran (oranye) hanya di rumah pelanggan seberang, kotak surat abu-abu (bukan sasaran) di rumah
+## bukan pelanggan seberang di titik yang sama (keputusan pemilik 2026-10-17; tanpa area di tanah, penilaian dan mode bantu tidak
+## berubah), rumah sisi dekat tanpa kotak surat, dan titik pijak sprite dihitung dari tapak rumah
 ## (`SpriteRumah.pusat_tapak_dunia`), bukan dari `maju_ubin`. Tanda rintangan di data tidak digambar. Alfa penutup pemain diurus satu
 ## penerap (`PenerapPenutup`), bukan node ini: tiap rumah yang muncul didaftarkan ke penerap dan dilepas saat dibuang.
 
 ## Scene kotak surat sasaran (rumah pelanggan): sprite berbentuk kotak surat, oranye placeholder (`scenes/entities/kotak_surat.tscn`).
 @export var adegan_kotak_surat: PackedScene
+## Scene kotak surat rumah bukan pelanggan sisi seberang: abu-abu, lebih rendah, tanpa celah surat (`scenes/entities/kotak_surat_bukan.tscn`).
+## Hanya hiasan: bukan sasaran, tidak punya zona atau area sendiri (rumah tetap dinilai `BUKAN_PELANGGAN`).
+@export var adegan_kotak_surat_bukan: PackedScene
 ## Penerap penutup pemain (opsional; diisi scene rute). Rumah yang muncul didaftarkan dengan kotak `PenutupPemain.dari_rumah`.
 var penerap: PenerapPenutup = null
 
@@ -20,8 +25,11 @@ var _tekstur: Dictionary = {}
 var _rumah: Dictionary = {}
 ## Indeks rumah -> kotak surat (hanya rumah pelanggan).
 var _kotak: Dictionary = {}
+## Indeks rumah -> kotak surat abu-abu (hanya rumah bukan pelanggan seberang).
+var _kotak_bukan: Dictionary = {}
 var _rumah_bebas: Array[Sprite2D] = []
 var _kotak_bebas: Array[Node2D] = []
+var _kotak_bukan_bebas: Array[Node2D] = []
 ## Rentang indeks `[awal, akhir)` yang sedang dipasang; (-1, -1) = belum ada.
 var _tampil: Vector2i = Vector2i(-1, -1)
 
@@ -89,6 +97,21 @@ func kotak_surat(indeks: int) -> Node2D:
 	return _kotak.get(indeks) as Node2D
 
 
+## Banyaknya kotak surat abu-abu (rumah bukan pelanggan seberang) yang sedang digambar.
+func jumlah_kotak_surat_bukan() -> int:
+	return _kotak_bukan.size()
+
+
+## Kotak surat abu-abu rumah bernomor `indeks`, atau null (pelanggan, sisi dekat, atau tidak sedang digambar).
+func kotak_surat_bukan(indeks: int) -> Node2D:
+	return _kotak_bukan.get(indeks) as Node2D
+
+
+## Banyaknya node kotak surat (oranye dan abu-abu) yang pernah dibuat (terpakai + kolam), untuk memeriksa tidak ada kebocoran node.
+func jumlah_node_kotak() -> int:
+	return _kotak.size() + _kotak_bebas.size() + _kotak_bukan.size() + _kotak_bukan_bebas.size()
+
+
 ## Banyaknya node sprite rumah yang pernah dibuat (terpakai + kolam), untuk memeriksa tidak ada kebocoran node.
 func jumlah_node_rumah() -> int:
 	return _rumah.size() + _rumah_bebas.size()
@@ -107,12 +130,23 @@ func _pasang(indeks: int) -> void:
 	_rumah[indeks] = sprite
 	if penerap != null:
 		penerap.daftarkan(sprite, PenutupPemain.dari_rumah(rumah))
-	if rumah.pelanggan and rumah.sisi == LoperAnim.Sisi.SEBERANG and adegan_kotak_surat != null:
-		var kotak: Node2D = _kotak_bebas.pop_back() if not _kotak_bebas.is_empty() else _buat_kotak()
-		kotak.position = Iso.posisi_gambar(SpriteRumah.titik_kotak_surat_dunia(rumah))
-		kotak.name = "Kotak_%s" % rumah.id.replace("@", "_")
-		kotak.visible = true
+	if rumah.sisi != LoperAnim.Sisi.SEBERANG:
+		return
+	if rumah.pelanggan and adegan_kotak_surat != null:
+		var kotak: Node2D = _kotak_bebas.pop_back() if not _kotak_bebas.is_empty() else _buat_kotak(adegan_kotak_surat)
+		_taruh_kotak(kotak, rumah, "Kotak_%s")
 		_kotak[indeks] = kotak
+	elif not rumah.pelanggan and adegan_kotak_surat_bukan != null:
+		var bukan: Node2D = _kotak_bukan_bebas.pop_back() if not _kotak_bukan_bebas.is_empty() else _buat_kotak(adegan_kotak_surat_bukan)
+		_taruh_kotak(bukan, rumah, "KotakBukan_%s")
+		_kotak_bukan[indeks] = bukan
+
+
+## Kotak surat (oranye atau abu-abu) di titik yang sama: pusat zona kotak surat rumah (`SpriteRumah.titik_kotak_surat_dunia`).
+func _taruh_kotak(kotak: Node2D, rumah: RouteBuilder.RumahRute, pola_nama: String) -> void:
+	kotak.position = Iso.posisi_gambar(SpriteRumah.titik_kotak_surat_dunia(rumah))
+	kotak.name = pola_nama % rumah.id.replace("@", "_")
+	kotak.visible = true
 
 
 func _lepas(indeks: int) -> void:
@@ -128,6 +162,11 @@ func _lepas(indeks: int) -> void:
 	if kotak != null:
 		kotak.visible = false
 		_kotak_bebas.append(kotak)
+	var bukan: Node2D = _kotak_bukan.get(indeks) as Node2D
+	_kotak_bukan.erase(indeks)
+	if bukan != null:
+		bukan.visible = false
+		_kotak_bukan_bebas.append(bukan)
 
 
 func _buat_sprite() -> Sprite2D:
@@ -137,8 +176,8 @@ func _buat_sprite() -> Sprite2D:
 	return sprite
 
 
-func _buat_kotak() -> Node2D:
-	var kotak: Node2D = adegan_kotak_surat.instantiate() as Node2D
+func _buat_kotak(adegan: PackedScene) -> Node2D:
+	var kotak: Node2D = adegan.instantiate() as Node2D
 	add_child(kotak)
 	return kotak
 

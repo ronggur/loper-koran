@@ -403,8 +403,9 @@ func _test_rumah_digambar() -> void:
 		if anak is CanvasItem and (anak as CanvasItem).visible:
 			anak_gambar += 1
 	# Run fase3b-rintangan-skor: rintangan kini digambar, tetapi di dalam satu node induk `Rintangan` (anak Y-sort Objek), jadi anak Objek =
-	# rumah + kotak surat + sepeda + node Rintangan (rintangan sendiri dites di `tes_rintangan_scene.gd`).
-	check(anak_gambar == akar.daur().jumlah_rumah() + akar.daur().jumlah_kotak_surat() + 2 and akar.rintangan_daur().get_parent() == objek, "tidak ada node lain yang digambar di Objek (rumah, kotak surat, sepeda, induk rintangan): %d" % anak_gambar)
+	# rumah + kotak surat (oranye pelanggan dan abu-abu bukan pelanggan seberang, 2026-10-17) + sepeda + node Rintangan (rintangan sendiri
+	# dites di `tes_rintangan_scene.gd`).
+	check(anak_gambar == akar.daur().jumlah_rumah() + akar.daur().jumlah_kotak_surat() + akar.daur().jumlah_kotak_surat_bukan() + 2 and akar.rintangan_daur().get_parent() == objek, "tidak ada node lain yang digambar di Objek (rumah, kotak surat oranye dan abu-abu, sepeda, induk rintangan): %d" % anak_gambar)
 	_bersihkan(akar)
 
 
