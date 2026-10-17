@@ -49,6 +49,8 @@ func jalankan() -> void:
 	_test_save_manager_tulis_baca()
 	_test_save_manager_atomik()
 	_test_save_manager_rusak()
+	_test_save_manager_tidak_terbaca()
+	_test_save_manager_baca_balik_dan_rename()
 	_test_save_manager_autoload()
 	var sesudah: Dictionary = _jejak_save_asli()
 	check(sebelum == sesudah, "user://save.json tidak tersentuh oleh tes (ada/ukuran/sha256 sama: %s -> %s) (AC-8)" % [sebelum, sesudah])
@@ -112,6 +114,19 @@ func _tulis(jalur: String, teks: String) -> void:
 	var berkas: FileAccess = FileAccess.open(jalur, FileAccess.WRITE)
 	berkas.store_string(teks)
 	berkas.close()
+
+
+## Nama berkas salinan rusak (`save.corrupt.*`) di folder tes, terurut.
+func _salinan_di_folder() -> Array[String]:
+	var hasil: Array[String] = []
+	var dir: DirAccess = DirAccess.open(FOLDER_TES)
+	if dir == null:
+		return hasil
+	for nama: String in dir.get_files():
+		if nama.begins_with("save.corrupt."):
+			hasil.append(nama)
+	hasil.sort()
+	return hasil
 
 
 func _manajer() -> Node:
@@ -438,7 +453,7 @@ func _test_save_manager_tulis_baca() -> void:
 	var m: Node = _manajer()
 	var jalur: String = FOLDER_TES.path_join("save.json")
 	m.call(&"muat")
-	check(m.get(&"status_muat") == DataSave.Status.BARU and m.get(&"state") == DataSave.templat() and not m.call(&"ambil_notifikasi_rusak"), "tanpa berkas: state bawaan, status BARU, tanpa notifikasi")
+	check(m.get(&"status_muat") == DataSave.Status.BARU and m.get(&"state") == DataSave.templat() and m.call(&"ambil_notifikasi") == "", "tanpa berkas: state bawaan, status BARU, tanpa notifikasi")
 	check(m.get(&"jumlah_simpan") == 0 and not FileAccess.file_exists(jalur), "muat tidak menulis apa pun")
 	var c: DataSave.CatatanHari = _catatan(1, _angka(20, 5, 330, 30, 2100), "p1_kucing")
 	c.kidal = true
@@ -500,18 +515,132 @@ func _test_save_manager_rusak() -> void:
 		check(m.get(&"state") == DataSave.templat(), "%s: mulai dari state bawaan" % nama)
 		check(m.get(&"jalur_salinan_rusak") == salinan and FileAccess.file_exists(salinan) and FileAccess.get_file_as_string(salinan) == kasus[nama], "%s: berkas lama disalin utuh ke save.corrupt.<detik>.json" % nama)
 		check(FileAccess.get_file_as_string(jalur) == kasus[nama], "%s: muat sendiri tidak menimpa berkas lama" % nama)
-		check(m.call(&"ambil_notifikasi_rusak") and not m.call(&"ambil_notifikasi_rusak"), "%s: notifikasi untuk layar koran tepat sekali" % nama)
+		check(m.call(&"ambil_notifikasi") == "KORAN_SAVE_RUSAK" and m.call(&"ambil_notifikasi") == "", "%s: notifikasi KORAN_SAVE_RUSAK untuk layar koran tepat sekali" % nama)
 		check(m.get(&"jumlah_simpan") == 0, "%s: muat tidak memanggil simpan" % nama)
+		# QA-008: peluncuran berulang dengan berkas rusak yang sama (belum ditimpa) memakai salinan yang ada, tidak membuat salinan baru.
+		m.call(&"muat", 1700000099)
+		var salinan_baru: Array[String] = _salinan_di_folder()
+		check(salinan_baru == [salinan.get_file()] and m.get(&"jalur_salinan_rusak") == salinan and m.call(&"ambil_notifikasi") == "KORAN_SAVE_RUSAK", "%s: muat ulang berkas rusak yang sama (detik berbeda) memakai salinan yang ada, tidak menumpuk: %s" % [nama, salinan_baru])
+		for i: int in range(5):
+			m.call(&"muat", 1700000100 + i)
+		check(_salinan_di_folder().size() == 1, "%s: enam peluncuran berturut-turut = tepat satu salinan (QA-008)" % nama)
+		# Isi berbeda di detik yang sama: salinan baru, salinan lama tidak ditimpa.
+		_tulis(jalur, kasus[nama] + " ")
 		m.call(&"muat", 1700000000)
 		var salinan2: String = FOLDER_TES.path_join("save.corrupt.1700000000_2.json")
-		check(FileAccess.file_exists(salinan) and FileAccess.file_exists(salinan2) and m.get(&"jalur_salinan_rusak") == salinan2, "%s: salinan kedua di detik yang sama tidak menimpa yang pertama" % nama)
+		check(FileAccess.file_exists(salinan) and FileAccess.file_exists(salinan2) and m.get(&"jalur_salinan_rusak") == salinan2 and FileAccess.get_file_as_string(salinan) == kasus[nama], "%s: isi berbeda di detik yang sama = salinan kedua, yang pertama tidak ditimpa" % nama)
+		m.call(&"muat", 1700000500)
+		check(_salinan_di_folder().size() == 2 and m.get(&"jalur_salinan_rusak") == salinan2, "%s: berkas kedua yang sama juga tidak digandakan" % nama)
 		m.free()
 	_bersihkan_folder_tes()
 	var bersih: Node = _manajer()
 	_tulis(FOLDER_TES.path_join("save.json"), DataSave.ke_teks(DataSave.templat()))
 	bersih.call(&"muat", 1700000000)
-	check(not bersih.call(&"ambil_notifikasi_rusak") and bersih.get(&"jalur_salinan_rusak") == "" and bersih.get(&"status_muat") == DataSave.Status.SAH, "save sah: tanpa notifikasi dan tanpa salinan")
+	check(bersih.call(&"ambil_notifikasi") == "" and bersih.get(&"jalur_salinan_rusak") == "" and bersih.get(&"status_muat") == DataSave.Status.SAH, "save sah: tanpa notifikasi dan tanpa salinan")
 	bersih.free()
+	_bersihkan_folder_tes()
+
+
+## Mengubah izin berkas atau folder lewat `chmod` (macOS dan Linux). True bila perintah berhasil.
+func _izin(jalur: String, mode: String) -> bool:
+	return OS.execute("chmod", [mode, ProjectSettings.globalize_path(jalur)]) == 0
+
+
+func _nama_di_folder() -> Array[String]:
+	var hasil: Array[String] = []
+	var dir: DirAccess = DirAccess.open(FOLDER_TES)
+	if dir != null:
+		for nama: String in dir.get_files():
+			hasil.append(nama)
+	hasil.sort()
+	return hasil
+
+
+func _test_save_manager_tidak_terbaca() -> void:
+	_judul.call("SaveManager: save yang tidak terbaca atau tidak bisa disalin TIDAK ditimpa, notifikasi jujur (AC-9, QA-003)")
+	_bersihkan_folder_tes()
+	var jalur: String = FOLDER_TES.path_join("save.json")
+	var isi: String = DataSave.ke_teks(DataSave.migrasi({"hari": 40, "koin": 9999}))
+	# Kasus 1: berkas save sah ADA tetapi tidak bisa dibuka (chmod 000) -> bukan "kosong". Jangan ditimpa, jangan dianggap rusak.
+	_tulis(jalur, isi)
+	var m: Node = _manajer()
+	var terkunci: bool = _izin(jalur, "000") and FileAccess.open(jalur, FileAccess.READ) == null
+	if terkunci:
+		m.call(&"muat", 1700000000)
+		check(m.get(&"status_muat") == DataSave.Status.TIDAK_TERBACA and m.get(&"state") == DataSave.templat(), "berkas ada tetapi tidak bisa dibuka: status TIDAK_TERBACA (bukan RUSAK), state bawaan di memori")
+		check(m.get(&"jalur_salinan_rusak") == "" and m.call(&"simpan_ditahan"), "tidak terbaca: tidak ada salinan, simpan ditahan")
+		check(m.call(&"ambil_notifikasi") == "KORAN_SAVE_TIDAK_TERBACA" and m.call(&"ambil_notifikasi") == "", "notifikasi jujur KORAN_SAVE_TIDAK_TERBACA (bukan 'salinannya disimpan'), tepat sekali")
+		var hari1: DataSave.CatatanHari = _catatan(1, _angka(3, 22, 120, 25, 1500))
+		check(not m.call(&"akhiri_hari", hari1) and not m.call(&"simpan") and m.get(&"jumlah_simpan") == 2, "akhiri_hari dan simpan ditolak (false) selama ditahan; panggilan tetap dihitung")
+		check(m.call(&"hari") == 2, "kemajuan tetap di memori (hari 2) walau tidak tersimpan")
+		_izin(jalur, "644")
+		check(FileAccess.get_file_as_string(jalur) == isi, "berkas lama utuh byte demi byte: progres hari 40, koin 9999 tidak hilang (rule save-system)")
+		check(_nama_di_folder() == ["save.json"], "tidak ada berkas sementara atau salinan yang dibuat: %s" % [_nama_di_folder()])
+		m.call(&"muat", 1700000001)
+		check(m.get(&"status_muat") == DataSave.Status.SAH and m.call(&"hari") == 40 and not m.call(&"simpan_ditahan") and m.call(&"ambil_notifikasi") == "", "izin pulih lalu muat lagi: save terbaca (hari 40), simpan tidak lagi ditahan")
+	else:
+		check(true, "chmod tidak menghalangi baca (mis. berjalan sebagai root): kasus tidak terbaca dilewati")
+		_izin(jalur, "644")
+	m.free()
+	# Kasus 2: berkas terbaca tetapi rusak DAN salinannya gagal dibuat (folder tanpa izin tulis) -> jangan ditimpa, notifikasi jujur.
+	_bersihkan_folder_tes()
+	_tulis(jalur, "{bukan json")
+	var m2: Node = _manajer()
+	var folder_terkunci: bool = _izin(FOLDER_TES, "555")
+	var bisa_tulis: bool = false
+	if folder_terkunci:
+		var coba: FileAccess = FileAccess.open(FOLDER_TES.path_join("coba.tmp"), FileAccess.WRITE)
+		bisa_tulis = coba != null
+		if coba != null:
+			coba.close()
+			DirAccess.remove_absolute(FOLDER_TES.path_join("coba.tmp"))
+	if folder_terkunci and not bisa_tulis:
+		m2.call(&"muat", 1700000000)
+		check(m2.get(&"status_muat") == DataSave.Status.RUSAK and m2.get(&"jalur_salinan_rusak") == "" and m2.call(&"simpan_ditahan"), "rusak dan salinan gagal: tidak ada salinan, simpan ditahan")
+		check(m2.call(&"ambil_notifikasi") == "KORAN_SAVE_TIDAK_TERBACA", "notifikasi KORAN_SAVE_TIDAK_TERBACA, bukan KORAN_SAVE_RUSAK yang mengaku salinan tersimpan")
+		_izin(FOLDER_TES, "755")
+		check(not m2.call(&"akhiri_hari", _catatan(1, _angka(1, 0, 10, 0, 100))), "folder sudah bisa ditulis lagi, tetapi simpan tetap ditahan sepanjang sesi (berkas rusak belum aman)")
+		check(FileAccess.get_file_as_string(jalur) == "{bukan json" and _nama_di_folder() == ["save.json"], "berkas rusak tidak ditimpa dan tidak ada berkas lain: %s" % [_nama_di_folder()])
+		m2.call(&"muat", 1700000000)
+		check(m2.get(&"jalur_salinan_rusak") != "" and not m2.call(&"simpan_ditahan") and m2.call(&"ambil_notifikasi") == "KORAN_SAVE_RUSAK", "buka lagi dengan folder bisa ditulis: salinan dibuat, notifikasi KORAN_SAVE_RUSAK, simpan terbuka")
+	else:
+		check(true, "folder tanpa izin tulis tidak menghalangi (mis. berjalan sebagai root): kasus salinan gagal dilewati")
+	_izin(FOLDER_TES, "755")
+	m2.free()
+	_bersihkan_folder_tes()
+
+
+func _test_save_manager_baca_balik_dan_rename() -> void:
+	_judul.call("SaveManager: baca-balik berkas sementara dan rename yang gagal membiarkan berkas lama utuh (AC-8, QA-006)")
+	_bersihkan_folder_tes()
+	var jalur: String = FOLDER_TES.path_join("save.json")
+	var sementara: String = FOLDER_TES.path_join("save.tmp")
+	var lama: String = DataSave.ke_teks(DataSave.migrasi({"hari": 9, "koin": 123}))
+	_tulis(jalur, lama)
+	var m: Node = _manajer()
+	m.call(&"muat")
+	var diminta: Array[String] = []
+	# Pembaca yang menyuntik isi berbeda (meniru tulisan terpotong): simpan harus gagal, berkas lama utuh, berkas sementara dibuang.
+	m.set(&"baca_balik", func(p: String) -> String:
+		diminta.append(p)
+		return "terpotong")
+	check(not m.call(&"simpan"), "baca-balik berbeda dari yang ditulis: simpan gagal (false)")
+	check(diminta == [sementara], "pemeriksaan baca-balik membaca berkas sementara %s, dapat %s" % [sementara, diminta])
+	check(FileAccess.get_file_as_string(jalur) == lama and not FileAccess.file_exists(sementara), "berkas save lama utuh byte demi byte dan berkas sementara dibuang")
+	# Pembaca yang mengembalikan isi benar: simpan berhasil lewat jalur yang sama.
+	m.set(&"baca_balik", func(p: String) -> String: return FileAccess.get_file_as_string(p))
+	check(m.call(&"simpan") and DataSave.dari_teks(FileAccess.get_file_as_string(jalur)).state == m.get(&"state"), "pembaca suntikan yang benar: simpan berhasil dan isi = state")
+	m.set(&"baca_balik", Callable())
+	# Rename gagal (jalur save ditempati folder berisi): simpan false, berkas sementara tidak tertinggal.
+	_bersihkan_folder_tes()
+	DirAccess.make_dir_recursive_absolute(jalur)
+	_tulis(jalur.path_join("isi.txt"), "x")
+	m.call(&"muat")
+	check(not m.call(&"simpan"), "rename gagal (jalur save ditempati folder): simpan false")
+	check(FileAccess.file_exists(jalur.path_join("isi.txt")) and not FileAccess.file_exists(sementara), "berkas sementara dibuang dan isi folder penghalang utuh")
+	DirAccess.remove_absolute(jalur.path_join("isi.txt"))
+	DirAccess.remove_absolute(jalur)
+	m.free()
 	_bersihkan_folder_tes()
 
 

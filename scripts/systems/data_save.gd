@@ -14,8 +14,9 @@ extends RefCounted
 ## Waktu dan RNG tidak dipakai. Field DATA_SCHEMA 4 yang belum dipakai (reputasi, pelanggan, sepeda, dst) tidak ditulis; bila ada di
 ## berkas (save masa depan) dibiarkan. Usulan, belum dikunci.
 
-## Hasil membaca teks save.
-enum Status { BARU, SAH, RUSAK, TERLALU_BARU }
+## Hasil membaca teks save. `TIDAK_TERBACA` tidak pernah dihasilkan `dari_teks` (yang menerima teks): `SaveManager` memakainya bila berkas ada tetapi
+## tidak bisa dibuka (izin, galat I/O), supaya dibedakan dari berkas yang terbaca tetapi kosong atau rusak.
+enum Status { BARU, SAH, RUSAK, TERLALU_BARU, TIDAK_TERBACA }
 
 ## Field tingkat atas dan tipenya; salah tipe = RUSAK (AC-9). `versi` diperiksa terpisah.
 const _TIPE_KUNCI: Dictionary = {
