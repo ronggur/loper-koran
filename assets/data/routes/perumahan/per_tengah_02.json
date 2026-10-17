@@ -19,7 +19,7 @@
   ],
   "objek": [
     { "jenis": "anjing_penjaga", "pos": 14, "jalur": "dekat", "tanda_ubin": 9 },
-    { "jenis": "mobil_garasi", "pos": 26, "jalur": "seberang", "tanda_ubin": 9 }
+    { "jenis": "mobil_garasi", "pos": 25, "jalur": "seberang", "tanda_ubin": 9 }
   ],
   "titik_misi": [
     { "nama": "atap", "pos": 6, "sisi": "seberang" }

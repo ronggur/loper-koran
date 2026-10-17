@@ -130,7 +130,7 @@ Contoh dari berkas nyata (`assets/data/routes/perumahan/per_tengah_02.json`):
   ],
   "objek": [
     { "jenis": "anjing_penjaga", "pos": 14, "jalur": "dekat", "tanda_ubin": 9 },
-    { "jenis": "mobil_garasi", "pos": 26, "jalur": "seberang", "tanda_ubin": 9 }
+    { "jenis": "mobil_garasi", "pos": 25, "jalur": "seberang", "tanda_ubin": 9 }
   ],
   "titik_misi": [
     { "nama": "atap", "pos": 6, "sisi": "seberang" }
@@ -152,7 +152,7 @@ Contoh dari berkas nyata (`assets/data/routes/perumahan/per_tengah_02.json`):
 
 **Rumah mana yang jadi pelanggan** ditentukan saat rute disusun (seed rute, `RouteBuilder`), bukan di segmen. Segmen hanya menyatakan rumah mana yang **boleh** jadi pelanggan. Distrik pertama: `pelanggan_boleh: true` hanya di sisi `seberang` (GDD 9.1).
 
-**Validasi** (`SegmenRute.parse`, `PemuatRute.periksa_kumpulan`; dijalankan tes pada semua berkas nyata): field wajib ada dan bertipe benar, field tidak dikenal ditolak, sisi hanya `seberang` atau `dekat`, id unik dan sama dengan nama berkas, panjang 24 sampai 40, tepi 2 ubin kosong, pelanggan hanya di seberang, rintangan tidak di jalur `tengah` (jalur utama bersih), tanda rintangan paling sedikit 9 ubin (1,5 detik pada ngebut), dalam jendela 6 ubin maksimal satu rintangan, titik misi di rumah dan di luar jendela rintangan, sekurangnya 2 segmen `pembuka`, 2 `penutup`, dan 5 `tengah` per distrik (satu rute memakai 7 segmen).
+**Validasi** (`SegmenRute.parse`, `PemuatRute.periksa_kumpulan`; dijalankan tes pada semua berkas nyata): field wajib ada dan bertipe benar, field tidak dikenal ditolak, sisi hanya `seberang` atau `dekat`, id unik dan sama dengan nama berkas, panjang 24 sampai 40, tepi 2 ubin kosong, pelanggan hanya di seberang, rintangan tidak di jalur `tengah` (jalur utama bersih), tanda rintangan paling sedikit 9 ubin (1,5 detik pada ngebut), dalam jendela 6 ubin maksimal satu rintangan, rintangan tidak memotong tapak rumah mana pun di segmen (mobil garasi seluruh lintasannya, jadi parkir di celah samping rumah: `pos` rumah sesisi − 1; anjing di posisi diamnya; tepi bersentuhan boleh; ROUTE_DESIGN 4 aturan 7, usulan), titik misi di rumah dan di luar jendela rintangan, sekurangnya 2 segmen `pembuka`, 2 `penutup`, dan 5 `tengah` per distrik (satu rute memakai 7 segmen).
 
 ## 4. Save
 
