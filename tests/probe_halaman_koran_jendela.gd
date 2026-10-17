@@ -1,7 +1,7 @@
 extends SceneTree
 ## Probe halaman depan koran di jendela asli, non-headless (AC-28 run fase4a-koran-hari): memuat `scenes/koran/halaman_koran.tscn` dan memotret
 ## keadaannya: hari 1 nyata (belum dipilih), Ambil, Lewati, teks terpanjang (headline 40, ringkasan 60 karakter huruf lebar), tanpa misi (S-8),
-## headline lanjutan tanpa misi, notifikasi save rusak, dan inset aman (cutout). Mencetak ukuran teks yang dibutuhkan dan tersedia tiap label
+## headline lanjutan tanpa misi, notifikasi save (rusak, tidak terbaca, simpan gagal), dan inset aman (cutout). Mencetak ukuran teks yang dibutuhkan dan tersedia tiap label
 ## dan jumlah keadaan yang tidak sesuai (teks terpotong, kontrol tumpang tindih atau di luar layar). Tidak interaktif: keluar lewat `ProbeKeluar`.
 ##
 ## Pakai (jendela harus muat di layar monitor):
@@ -53,6 +53,10 @@ func _initialize() -> void:
 	_koran.isi(HalamanUji.nyata(1), 1, "perumahan")
 	_koran.tampilkan_notifikasi("KORAN_SAVE_RUSAK")
 	await _foto("save_rusak")
+	_koran.tampilkan_notifikasi("KORAN_SAVE_TIDAK_TERBACA")
+	await _foto("save_tidak_terbaca")
+	_koran.tampilkan_notifikasi("KORAN_SAVE_GAGAL")
+	await _foto("save_gagal")
 	_koran.tampilkan_notifikasi("")
 	var inset: ZonaAman.Inset = ZonaAman.Inset.new()
 	inset.awal_x = 24
