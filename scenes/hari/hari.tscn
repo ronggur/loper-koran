@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/entities/hari_main.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/koran/halaman_koran.tscn" id="2_koran"]
+
+[node name="Hari" type="Node"]
+script = ExtResource("1_script")
+
+[node name="Koran" parent="." instance=ExtResource("2_koran")]
+unique_name_in_owner = true

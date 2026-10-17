@@ -10,8 +10,13 @@ extends CanvasLayer
 ## Latar menangkap sentuhan GUI (`MOUSE_FILTER_STOP`); HUD dan kontrol sentuh di bawahnya dimatikan adegan (`RuteMain`) selama layar ini
 ## tampil, karena keduanya membaca sentuhan lewat `_input`.
 
-## Tombol "Main lagi" ditekan.
+## Tombol "Main lagi" ditekan (mode rute sendiri, bawaan).
 signal main_lagi_diminta
+## Tombol "Hari berikutnya" ditekan (mode hari, `atur_mode_hari(true)`; run fase4a-koran-hari AC-17).
+signal hari_berikutnya_diminta
+
+## True bila tombol layar ini "Hari berikutnya" (di dalam alur hari), false bila "Main lagi" (rute dijalankan sendiri: probe, tes lama, dev).
+var _mode_hari: bool = false
 
 @onready var _latar: ColorRect = %LatarHasil
 @onready var _panel: PanelContainer = %PanelHasil
@@ -50,8 +55,26 @@ func _ready() -> void:
 	GayaHud.terapkan_tombol(_tombol)
 	_tombol.add_theme_stylebox_override(&"normal", GayaHud.kotak(Palette.UI_PANEL_RAISED, Palette.TEXT))
 	_tombol.add_theme_stylebox_override(&"hover", GayaHud.kotak(Palette.UI_PANEL_RAISED, Palette.TEXT))
-	_tombol.ditekan.connect(main_lagi_diminta.emit)
+	_tombol.ditekan.connect(_saat_tombol)
 	tampilkan(false)
+
+
+## Mengganti tombol layar ini: true = "Hari berikutnya" (alur hari), false = "Main lagi" (bawaan).
+func atur_mode_hari(nilai: bool) -> void:
+	_mode_hari = nilai
+	_tombol.text = "HASIL_HARI_BERIKUTNYA" if nilai else "RUTE_MAIN_LAGI"
+
+
+## True bila tombol layar ini "Hari berikutnya".
+func mode_hari() -> bool:
+	return _mode_hari
+
+
+func _saat_tombol() -> void:
+	if _mode_hari:
+		hari_berikutnya_diminta.emit()
+	else:
+		main_lagi_diminta.emit()
 
 
 ## Mengisi angka dari `angka` (`HasilRute.dari`). Tidak menghitung ulang apa pun.

@@ -2,7 +2,7 @@
 """Ekspor build probe render (`scenes/dev/cek_render.tscn` sebagai scene utama) tanpa mengubah repo (D-8 run fase1b-umpan-balik,
 D-4 run fase1c-perapian).
 
-Scene utama yang di-commit tetap `res://scenes/rute/rute.tscn`, dan preset `Android` di `export_presets.cfg` mengecualikan
+Scene utama yang di-commit tetap `res://scenes/hari/hari.tscn`, dan preset `Android` di `export_presets.cfg` mengecualikan
 berkas probe (`POLA_PROBE`) dari build normal lewat `exclude_filter` (QA-004 run fase1b-umpan-balik: APK normal tanpa probe).
 Skrip ini, HANYA selama satu perintah ekspor Godot (preset yang sama): mengganti baris `run/main_scene` di `project.godot` ke
 probe, dan melepas `POLA_PROBE` dari `exclude_filter` preset. Sesudahnya kedua berkas dipulihkan byte demi byte di `finally`
@@ -10,7 +10,7 @@ probe, dan melepas `POLA_PROBE` dari `exclude_filter` preset. Sesudahnya kedua b
 di dalamnya menunjuk ke probe, dan kedua berkas kembali persis seperti semula. Hanya pustaka standar.
 
 Kenapa bukan `override.cfg`: dicoba 2026-10-14, `override.cfg` di root tidak ikut ke paket (bukan resource) dan tidak
-digabung ke `project.binary` saat ekspor, jadi paket tetap membuka `rute.tscn`. Kenapa bukan argumen baris perintah di
+digabung ke `project.binary` saat ekspor, jadi paket tetap membuka scene utama (`hari.tscn`). Kenapa bukan argumen baris perintah di
 `JalanUji`: cara meneruskan argumen ke APK lewat `adb shell am start` belum bisa dibuktikan tanpa HP, dan menambah jalan dari
 game ke probe.
 
@@ -38,7 +38,7 @@ ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
 PROYEK = os.path.join(ROOT, 'project.godot')
 BERKAS_PRESET = os.path.join(ROOT, 'export_presets.cfg')
 PRESET = 'Android'
-SCENE_UTAMA = 'res://scenes/rute/rute.tscn'
+SCENE_UTAMA = 'res://scenes/hari/hari.tscn'
 SCENE_PROBE = 'res://scenes/dev/cek_render.tscn'
 BARIS_UTAMA = 'run/main_scene="%s"' % SCENE_UTAMA
 BARIS_PROBE = 'run/main_scene="%s"' % SCENE_PROBE

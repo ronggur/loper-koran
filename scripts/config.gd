@@ -822,10 +822,12 @@ const REPUTASI_BAWAAN: int = 0
 const KORAN_MARGIN_PX: int = 12
 ## Jarak antar blok di layar koran, piksel game.
 const KORAN_JARAK_PX: int = 8
-## Lebar kolom kiri (nama, berita utama, berita ringan) dibanding kolom kanan (misi, Berangkat): bobot regangan `size_flags_stretch_ratio` (x 100).
-const KORAN_KOLOM_KIRI_RASIO: int = 55
-## Bobot regangan kolom kanan (x 100).
-const KORAN_KOLOM_KANAN_RASIO: int = 45
+## Lebar kolom kiri (nama, berita utama, berita ringan) dibanding kolom kanan (misi, Berangkat): bobot regangan `size_flags_stretch_ratio`.
+const KORAN_KOLOM_KIRI_RASIO: float = 0.55
+## Bobot regangan kolom kanan.
+const KORAN_KOLOM_KANAN_RASIO: float = 0.45
+## Ukuran huruf teks tombol di layar koran, piksel game (lebih besar dari teks HUD supaya terbaca sekilas).
+const KORAN_TOMBOL_HURUF_PX: int = 10
 ## Tombol Ambil dan Lewati: lebar, piksel game (tinggi `HUD_TOMBOL_TINGGI_PX`, >= 44 dp di A54).
 const KORAN_TOMBOL_PILIH_LEBAR_PX: int = 96
 ## Tombol Berangkat: lebar, piksel game.

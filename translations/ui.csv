@@ -49,3 +49,18 @@ HASIL_MELESET,Meleset
 HASIL_MELESET_ANGKA,{n}
 HASIL_TENGGAT_SEMPAT,Sampai sebelum tenggat
 HASIL_TENGGAT_LEWAT,Lewat tenggat +{m}:{s}; tip sesudahnya tidak ada
+KORAN_NAMA,Warta Kring
+KORAN_DISTRIK_PERUMAHAN,Perumahan Melati
+KORAN_HARI_DISTRIK,Hari {n} · {distrik}
+KORAN_LABEL_UTAMA,BERITA UTAMA
+KORAN_LABEL_MISI,MISI SAMPINGAN
+KORAN_LABEL_RINGAN,BERITA RINGAN
+KORAN_AMBIL,Ambil
+KORAN_LEWATI,Lewati
+KORAN_BERANGKAT,Berangkat
+KORAN_STATUS_BELUM,Belum dipilih; berangkat = dilewati
+KORAN_STATUS_DIAMBIL,Misi diambil
+KORAN_STATUS_DILEWATI,Misi dilewati
+KORAN_TANPA_MISI,Tidak ada misi sampingan hari ini
+KORAN_SAVE_RUSAK,Data simpanan lama tidak terbaca; salinannya disimpan dan permainan mulai dari awal
+HASIL_HARI_BERIKUTNYA,Hari berikutnya

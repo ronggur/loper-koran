@@ -2,14 +2,14 @@ class_name TesCekRender
 extends RefCounted
 ## Tes probe render Compatibility (AC-8, D-8 run fase1b-umpan-balik): pembantu murni pembaca piksel, scene `cek_render.tscn` di
 ## headless (node fitur terpasang, satu baris `[cek_render]` per fitur + ringkasan, pembacaan piksel ditulis "tidak bisa dibaca
-## headless" dan TIDAK diklaim cocok), dan probe terisolasi dari game: scene utama tetap `rute.tscn` (sebelum run fase3a-rute `jalan_uji.tscn`), tidak ada skrip atau scene
+## headless" dan TIDAK diklaim cocok), dan probe terisolasi dari game: scene utama tetap `hari.tscn` (sebelum run fase4a-koran-hari `rute.tscn`, sebelum run fase3a-rute `jalan_uji.tscn`), tidak ada skrip atau scene
 ## lain yang merujuknya, tidak ada `override.cfg`. Hasil piksel sungguhan hanya bisa dilihat di jendela asli (LOG, shots/).
 
 const BERKAS_PROBE: String = "res://scenes/dev/cek_render.tscn"
 const BERKAS_SKRIP_PROBE: String = "res://scripts/dev/cek_render.gd"
 const BERKAS_SHADER: String = "res://assets/shaders/warna_bayangan.gdshader"
 const BERKAS_EKSPOR: String = "res://tools/ekspor_cek_render.py"
-const SCENE_UTAMA: String = "res://scenes/rute/rute.tscn"
+const SCENE_UTAMA: String = "res://scenes/hari/hari.tscn"
 const FITUR: Array[String] = ["light2d", "glow", "cpu_partikel", "gpu_partikel", "shader_bayangan"]
 
 var _cek: Callable
@@ -51,7 +51,7 @@ func _test_murni() -> void:
 
 func _test_isolasi() -> void:
 	_judul.call("Probe render terisolasi dari game: scene utama tetap rute (AC-8)")
-	check(ProjectSettings.get_setting("application/run/main_scene") == SCENE_UTAMA, "scene utama project.godot = rute.tscn (probe tidak menggantikannya)")
+	check(ProjectSettings.get_setting("application/run/main_scene") == SCENE_UTAMA, "scene utama project.godot = hari.tscn (probe tidak menggantikannya)")
 	check(not FileAccess.file_exists("res://override.cfg"), "tidak ada override.cfg di root repo")
 	check(FileAccess.get_file_as_string("res://.gitignore").split("\n").has("override.cfg"), ".gitignore menutup override.cfg")
 	var perujuk: Array[String] = []

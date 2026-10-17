@@ -16,7 +16,7 @@ const BERKAS_FRAMES: String = "res://assets/sprites/loper/loper_agen_frames.tres
 const BERKAS_JSON: String = "res://assets/sprites/loper/loper_agen.json"
 const BERKAS_CONFIG: String = "res://scripts/config.gd"
 const BERKAS_SCENE_PEMAIN: String = "res://scenes/entities/loper_agen.tscn"
-const BERKAS_SCENE_UTAMA: String = "res://scenes/rute/rute.tscn"
+const BERKAS_SCENE_UTAMA: String = "res://scenes/hari/hari.tscn"
 const BERKAS_SCENE_JALAN_UJI: String = "res://scenes/dev/jalan_uji.tscn"
 const BERKAS_SCENE_GRAYBOX: String = "res://scenes/dev/graybox.tscn"
 const BERKAS_TERJEMAHAN_CSV: String = "res://translations/ui.csv"
@@ -130,6 +130,8 @@ func _initialize() -> void:
 	await scene_rintangan.jalankan()
 	var scene_hud_rute: TesHudRuteScene = TesHudRuteScene.new(check, _judul, self)
 	await scene_hud_rute.jalankan()
+	var halaman_koran: TesHalamanKoran = TesHalamanKoran.new(check, _judul, self)
+	await halaman_koran.jalankan()
 	var tata_letak: TesTataLetak = TesTataLetak.new(check, _judul, self)
 	await tata_letak.jalankan()
 	var bunyi: TesBunyi = TesBunyi.new(check, _judul, self)
@@ -534,7 +536,7 @@ func _test_pengaturan_proyek() -> void:
 	check(bool(ProjectSettings.get_setting("rendering/2d/snap/snap_2d_transforms_to_pixel")), "snap_2d_transforms_to_pixel aktif")
 	check(int(ProjectSettings.get_setting("rendering/textures/canvas_textures/default_texture_filter")) == Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST, "filter tekstur bawaan 2D = Nearest")
 	var utama: String = str(ProjectSettings.get_setting("application/run/main_scene"))
-	check(utama == BERKAS_SCENE_UTAMA, "scene utama = %s (run fase3a-rute: rute dari segmen menggantikan jalan uji tanpa ujung sebagai scene utama), dapat '%s'" % [BERKAS_SCENE_UTAMA, utama])
+	check(utama == BERKAS_SCENE_UTAMA, "scene utama = %s (run fase4a-koran-hari: alur hari Koran -> Rute -> Hasil menggantikan rute.tscn, yang tetap dijalankan sendiri oleh probe dan tes, sebagai scene utama; sebelumnya run fase3a-rute memilih rute.tscn), dapat '%s'" % [BERKAS_SCENE_UTAMA, utama])
 	check(ResourceLoader.exists(BERKAS_SCENE_UTAMA) and ResourceLoader.exists(BERKAS_SCENE_JALAN_UJI) and ResourceLoader.exists(BERKAS_SCENE_GRAYBOX), "scene utama, jalan uji (scene dev), dan graybox lama (untuk probe layar) ada dan bisa dimuat")
 
 	var bawaan: Dictionary = ProjectSettings.get_setting("importer_defaults/texture", {})
@@ -631,7 +633,7 @@ func _test_palet() -> void:
 			if not cocok.get_string(3).is_empty():
 				alpha_persen = cocok.get_string(3).to_float()
 			tabel[cocok.get_string(1)] = {"hex": cocok.get_string(2).to_lower(), "alpha": alpha_persen / 100.0}
-	check(tabel.size() == 17, "tabel DESIGN_SPEC 1.1 memuat 17 token (11 warna + 5 radar + 1 dunia), terbaca %d" % tabel.size())
+	check(tabel.size() == 22, "tabel DESIGN_SPEC 1.1 memuat 22 token (11 warna + 5 radar + 1 dunia + 5 halaman koran), terbaca %d" % tabel.size())
 	var skrip_palet: GDScript = load("res://scripts/ui/palette.gd") as GDScript
 	var peta: Dictionary = skrip_palet.get_script_constant_map()
 	check(peta.size() == tabel.size(), "Palette memuat tepat %d token seperti tabel, dapat %d" % [tabel.size(), peta.size()])
@@ -1046,7 +1048,7 @@ func _test_probe_keluar_bersih() -> void:
 			continue
 		var teks: String = FileAccess.get_file_as_string(berkas)
 		# Sejak run fase3a-rute scene utama = rute.tscn; probe yang menguji jalan uji memuat `jalan_uji.tscn` langsung.
-		if not teks.contains("application/run/main_scene") and not teks.contains("scenes/dev/jalan_uji.tscn") and not teks.contains("scenes/rute/rute.tscn"):
+		if not teks.contains("application/run/main_scene") and not teks.contains("scenes/dev/jalan_uji.tscn") and not teks.contains("scenes/rute/rute.tscn") and not teks.contains("scenes/koran/halaman_koran.tscn") and not teks.contains("scenes/hari/hari.tscn"):
 			continue
 		probe_scene += 1
 		var langsung: Array[String] = _quit_langsung(teks)

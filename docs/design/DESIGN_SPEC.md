@@ -73,7 +73,19 @@ Dunia (usulan, run fase1b-umpan-balik 2026-10-14):
 |---|---|---|
 | `BAYANGAN_CONTOH` | `#2E3550` | Warna bayangan contoh (siang, ART_DIRECTION 2.5) untuk shader warna bayangan (ART_DIRECTION 2.1 no. 5, 2.3); sementara hanya dipakai probe render `scenes/dev/cek_render.tscn`. Warna bayangan per distrik dan waktu menggantikannya nanti |
 
-Warna ini sudah ada di palet induk (ART_DIRECTION 2.4), kecuali token UI yang berasal dari Brainy Dungeon dan `BAYANGAN_CONTOH` (dari tabel warna bayangan ART_DIRECTION 2.5). **Warna jangan jadi satu-satunya pembeda**: penanda radar dan kotak progres juga dibedakan bentuk atau simbol (bagian 3.2 dan 3.4).
+Halaman depan koran (usulan, run fase4a-koran-hari 2026-10-18; satu-satunya layar terang, bagian 4):
+
+| Token | Hex | Pemakaian |
+|---|---|---|
+| `KORAN_KERTAS` | `#F2E7C9` | Latar halaman depan koran (krem dari sketsa bagian 4) |
+| `KORAN_KERTAS_2` | `#E6D8B1` | Panel misi sampingan dan tombol tidak terpilih di atas kertas |
+| `KORAN_TINTA` | `#1C130F` | Teks utama, headline, garis dan isi tombol terpilih (kontras 14,8:1 terhadap kertas) |
+| `KORAN_TINTA_2` | `#4A3A2C` | Teks kedua: label, ringkasan, status (kontras 8,8:1 terhadap kertas, 7,7:1 terhadap kertas kedua) |
+| `KORAN_GARIS` | `#7A6642` | Garis pemisah dan bingkai tombol tidak terpilih (kontras 4,5:1 terhadap kertas; komponen UI, bukan teks) |
+
+Kontras teks terhadap latar di layar koran dijaga paling sedikit 7:1 dan garis komponen paling sedikit 3:1 (rumus WCAG), diuji `tests/tes_halaman_koran.gd`. Token koran bukan dari palet induk (usulan, belum diuji di HP: apakah krem terang menyilaukan setelah layar gelap).
+
+Warna ini sudah ada di palet induk (ART_DIRECTION 2.4), kecuali token UI yang berasal dari Brainy Dungeon, token halaman koran, dan `BAYANGAN_CONTOH` (dari tabel warna bayangan ART_DIRECTION 2.5). **Warna jangan jadi satu-satunya pembeda**: penanda radar dan kotak progres juga dibedakan bentuk atau simbol (bagian 3.2 dan 3.4).
 
 ### 1.2 Tipografi
 

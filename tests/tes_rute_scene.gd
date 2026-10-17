@@ -321,7 +321,7 @@ func _test_tabel_sprite() -> void:
 func _test_rute_dari_data() -> void:
 	_judul.call("Scene rute: rute seed bawaan dari data, koran awal 30, tombol Main lagi tersembunyi (AC-12, AC-13)")
 	var akar: RuteMain = await _siapkan()
-	check(ProjectSettings.get_setting("application/run/main_scene") == BERKAS_RUTE, "rute.tscn adalah run/main_scene")
+	check(ProjectSettings.get_setting("application/run/main_scene") == "res://scenes/hari/hari.tscn" and ResourceLoader.exists(BERKAS_RUTE), "hari.tscn adalah run/main_scene (run fase4a-koran-hari) dan rute.tscn tetap ada untuk dijalankan sendiri")
 	check(akar.galat_rute().is_empty(), "rute tersusun tanpa galat: %s" % [akar.galat_rute()])
 	check(Config.RUTE_SEED_DEV == SEED_DEV and akar.benih() == SEED_DEV, "seed bawaan = Config.RUTE_SEED_DEV = 20261016 (literal)")
 	var rute: RouteBuilder.Rute = akar.rute()

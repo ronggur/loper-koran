@@ -1,0 +1,181 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/halaman_koran.gd" id="1_script"]
+[ext_resource type="Theme" path="res://assets/ui/theme.tres" id="2_theme"]
+[ext_resource type="Script" path="res://scripts/ui/tombol_sentuh.gd" id="3_tombol"]
+
+[node name="HalamanKoran" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_script")
+
+[node name="Latar" type="ColorRect" parent="."]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+
+[node name="Batas" type="MarginContainer" parent="Latar"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Isi" type="HBoxContainer" parent="Latar/Batas"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Kiri" type="VBoxContainer" parent="Latar/Batas/Isi"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="NamaKoran" type="Label" parent="Latar/Batas/Isi/Kiri"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"JudulBesar"
+text = "KORAN_NAMA"
+
+[node name="TeksHari" type="Label" parent="Latar/Batas/Isi/Kiri"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+autowrap_mode = 3
+
+[node name="GarisAtas" type="ColorRect" parent="Latar/Batas/Isi/Kiri"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="LabelUtama" type="Label" parent="Latar/Batas/Isi/Kiri"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+text = "KORAN_LABEL_UTAMA"
+
+[node name="TeksUtama" type="Label" parent="Latar/Batas/Isi/Kiri"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"JudulBesar"
+autowrap_mode = 3
+
+[node name="GarisTengah" type="ColorRect" parent="Latar/Batas/Isi/Kiri"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="LabelRingan" type="Label" parent="Latar/Batas/Isi/Kiri"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+text = "KORAN_LABEL_RINGAN"
+
+[node name="TeksRingan" type="Label" parent="Latar/Batas/Isi/Kiri"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"JudulLayar"
+autowrap_mode = 3
+
+[node name="Pengisi" type="Control" parent="Latar/Batas/Isi/Kiri"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Notifikasi" type="Label" parent="Latar/Batas/Isi/Kiri"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"TeksKecil"
+text = "KORAN_SAVE_RUSAK"
+autowrap_mode = 3
+
+[node name="Kanan" type="VBoxContainer" parent="Latar/Batas/Isi"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="PanelMisi" type="PanelContainer" parent="Latar/Batas/Isi/Kanan"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="IsiMisi" type="VBoxContainer" parent="Latar/Batas/Isi/Kanan/PanelMisi"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="LabelMisi" type="Label" parent="Latar/Batas/Isi/Kanan/PanelMisi/IsiMisi"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudLabel"
+text = "KORAN_LABEL_MISI"
+
+[node name="TeksMisi" type="Label" parent="Latar/Batas/Isi/Kanan/PanelMisi/IsiMisi"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"JudulLayar"
+autowrap_mode = 3
+
+[node name="Ringkasan" type="Label" parent="Latar/Batas/Isi/Kanan/PanelMisi/IsiMisi"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudTeks"
+autowrap_mode = 3
+
+[node name="BarisPilih" type="HBoxContainer" parent="Latar/Batas/Isi/Kanan/PanelMisi/IsiMisi"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="TombolAmbil" type="Button" parent="Latar/Batas/Isi/Kanan/PanelMisi/IsiMisi/BarisPilih"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+text = "KORAN_AMBIL"
+script = ExtResource("3_tombol")
+
+[node name="TombolLewati" type="Button" parent="Latar/Batas/Isi/Kanan/PanelMisi/IsiMisi/BarisPilih"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+text = "KORAN_LEWATI"
+script = ExtResource("3_tombol")
+
+[node name="StatusMisi" type="Label" parent="Latar/Batas/Isi/Kanan/PanelMisi/IsiMisi"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"TeksKecil"
+autowrap_mode = 3
+
+[node name="TanpaMisi" type="Label" parent="Latar/Batas/Isi/Kanan/PanelMisi/IsiMisi"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudTeks"
+text = "KORAN_TANPA_MISI"
+autowrap_mode = 3
+
+[node name="Pengisi" type="Control" parent="Latar/Batas/Isi/Kanan"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="TombolBerangkat" type="Button" parent="Latar/Batas/Isi/Kanan"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+focus_mode = 0
+text = "KORAN_BERANGKAT"
+script = ExtResource("3_tombol")
