@@ -39,7 +39,8 @@ extends AdeganJalan
 ##   Peristiwa dipancarkan sebagai `misi_peristiwa` dan diteruskan ke bunyi (`Audio.putar_misi`).
 ## - Kucing digambar `KucingMisi` (anak `Objek`, Y-sort dengan rumah; lewat penerap penutup yang sama), HUD menampilkan kartu, banner, dan gelembung petunjuk.
 ## - Hadiah misi (K-1) ikut `koin` di HUD (`_koin_tambahan`) dan di `HasilRute.Angka` yang sama dengan layar hasil dan save; gagal tidak mengubah koin, tip, skor,
-##   atau tenggat. Misi yang masih aktif saat layar hasil terbuka dihentikan sebagai gagal (rute berakhir) supaya hasilnya selalu pasti.
+##   atau tenggat. Misi tidak pernah masih aktif saat layar hasil terbuka: `MissionManager` menggagalkan di garis akhir rute pada langkah yang sama dengan `AkhirRute`
+##   (iterasi 2, QA-004: cabang `_akhiri_misi_aktif` iterasi 1 tidak terjangkau dan dihapus; dijaga tes `tes_misi_scene`).
 ##
 ## - Tutorial hari 1 (M-9, `atur_tutorial`): `TutorialLangkah` (logika murni) dari kecepatan, jumlah lemparan, dan keadaan kucing/misi; `TutorialController` hanya
 ##   menampilkan dan tidak memblokir input. Rute yang dijalankan sendiri tidak punya tutorial. Hari tutorial yang berakhir ditulis `tutorial.selesai` oleh `HariMain`.
@@ -140,7 +141,6 @@ func _perbarui_hud_rute(jarak_ubin: float) -> void:
 ## Membuka layar hasil (tepat sekali per rute): angka dari `HasilRute`, banner dan HUD disembunyikan, kontrol sentuh berhenti membaca.
 func _buka_hasil() -> void:
 	_hasil_tampil = true
-	_akhiri_misi_aktif()
 	_angka_hasil = HasilRute.dari(_skor, _rute, _tenggat, _keadaan_misi)
 	_layar_hasil.isi(_angka_hasil, _misi if _keadaan_misi != null else null)
 	_layar_hasil.tampilkan(true)
@@ -344,21 +344,6 @@ func _tampilkan_misi() -> void:
 	var progres: float = _keadaan_misi.timer_detik / t.lama_berhenti_detik if t.jenis == "tangkap" and t.lama_berhenti_detik > 0.0 else 0.0
 	var visual: Array = _misi.petunjuk.get("visual", [])
 	_kucing.tampilkan(t, _sepeda.jarak_ubin, _detik_misi, progres, visual.has("kilau"), visual.has("ekor"))
-
-
-## Misi yang masih aktif saat layar hasil terbuka berakhir sebagai gagal (rute sudah berakhir): satu langkah dengan posisi di garis akhir.
-func _akhiri_misi_aktif() -> void:
-	if _keadaan_misi == null or _keadaan_misi.status != MissionManager.Status.AKTIF:
-		return
-	var m: MissionManager.Masukan = MissionManager.Masukan.new()
-	m.maju_ubin = maxf(_sepeda.jarak_ubin, _rute.panjang_ubin)
-	m.lateral_ubin = _sepeda.lateral_ubin
-	m.kecepatan_ud = _sepeda.kecepatan_ud
-	var hasil: MissionManager.Hasil = MissionManager.langkah(_keadaan_misi, m)
-	_keadaan_misi = hasil.keadaan
-	for k: MissionManager.Kejadian in hasil.kejadian:
-		misi_peristiwa.emit(k.jenis, k.langkah)
-	_tampilkan_misi()
 
 
 ## Tombol "Main lagi" layar hasil atau banner galat (juga dipanggil tes): seed berikutnya (seed + 1), rute baru dari awal.

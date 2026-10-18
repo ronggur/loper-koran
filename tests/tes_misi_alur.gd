@@ -187,6 +187,13 @@ func _test_tutorial_sekali() -> void:
 	var hari2: HariMain = await _a._siapkan(m2)
 	var rute2: RuteMain = await _a._berangkat(hari2)
 	check(rute2.keadaan_tutorial() == null and not rute2.tutorial_node().tampil(), "hari 2 walau tutorial.selesai false: tidak ada tutorial (hanya hari 1)")
+	# Hari tanpa tutorial yang dimainkan sampai akhir TIDAK menulis tutorial.selesai (QA-004, mutan `tutorial_selesai = true` selalu).
+	check(not rute2.tutorial_dimulai(), "hari 2: tutorial tidak pernah dimulai")
+	_a._taruh(rute2.find_child("Sepeda", true, false) as SepedaUji, 20.0, 0.5)
+	await _a._selesaikan_rute(rute2)
+	await _hari_berikutnya(rute2)
+	var sesudah_hari2: Dictionary = _a._baca_save()
+	check(sesudah_hari2["hari"] == 3 and sesudah_hari2["tutorial"] == {"selesai": false}, "hari 2 selesai tanpa tutorial: save hari 3 dan tutorial.selesai tetap false (%s)" % [sesudah_hari2["tutorial"]])
 	_a._bersihkan(hari2)
 	_a._tutup_manajer(m2)
 	_a._bersihkan_folder()

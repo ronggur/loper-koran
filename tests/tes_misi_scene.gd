@@ -35,7 +35,9 @@ func jalankan() -> void:
 	await _test_penutup_kucing()
 	await _test_hud_banner_dan_koin()
 	await _test_petunjuk_di_scene()
+	await _test_kotak_surat_bukan_inti()
 	await _test_tangkap_jeda_dan_jatuh()
+	await _test_jeda_membekukan_walau_dt_positif()
 	await _test_gagal_tidak_mengubah_apa_pun()
 	await _test_bunyi_misi()
 	await _test_mode_bantu()
@@ -391,6 +393,64 @@ func _test_petunjuk_di_scene() -> void:
 	_bersihkan(akar2)
 
 
+## Koran yang mendarat di zona kotak surat pelanggan tetapi di luar inti "tepat" TIDAK memberi petunjuk (K-3, AC-5b, QA-003): kena kotak surat bukan berarti tepat.
+## Satu-satunya tempat `SkorRute.Hasil.tepat` masuk misi adalah `RuteMain._koran_dinilai`; mutan `tepat or hasil == KOTAK_SURAT` harus merah di sini.
+func _test_kotak_surat_bukan_inti() -> void:
+	_judul.call("Petunjuk: koran kena kotak surat pelanggan di luar inti tepat tidak memberi petunjuk di scene; kontrol: tepat di inti memberi (K-3, QA-003)")
+	var akar: RuteMain = await _siapkan()
+	var t1: RencanaMisi.Titik = akar.rencana_misi().titik[0]
+	var rumah: RouteBuilder.RumahRute = _pelanggan_di(akar, 0.0, t1.petunjuk_akhir_ubin)
+	check(rumah != null, "ada pelanggan di jendela petunjuk titik 1")
+	if rumah == null:
+		_bersihkan(akar)
+		return
+	var zona: ZonaSasaran.Zona = null
+	for z: ZonaSasaran.Zona in ZonaSasaran.zona_rute(akar.rute().rumah):
+		if z.jenis == ZonaSasaran.Jenis.KOTAK_SURAT and z.pelanggan and z.id_rumah == rumah.id:
+			zona = z
+	check(zona != null and zona.inti.size.x > 0.0, "zona kotak surat pelanggan %s punya inti 'tepat'" % rumah.id)
+	if zona == null:
+		_bersihkan(akar)
+		return
+	# Titik di dalam persegi zona tetapi di luar inti (pojok dalam persegi).
+	var titik_luar: Vector2 = Vector2.INF
+	for geser: Vector2 in [Vector2(0.04, 0.04), Vector2(0.04, 0.0), Vector2(0.0, 0.04), Vector2(0.0, 0.0)]:
+		var calon: Vector2 = zona.persegi.position + geser
+		if zona.persegi.has_point(calon) and not zona.inti.has_point(calon):
+			titik_luar = calon
+			break
+	check(titik_luar != Vector2.INF, "ada titik di dalam persegi zona kotak surat dan di luar inti: %s" % [titik_luar])
+	var sepeda: SepedaUji = _sepeda(akar)
+	_taruh(akar, 3.0, 0.5, ZonaSasaran.maju_kotak_surat(rumah) - 2.0)
+	akar.perbarui(0.0)
+	akar.koran = SisaKoran.awal(30)
+	var mendarat: Array[KoranLempar.Koran] = []
+	akar.koran_mendarat.connect(func(k: KoranLempar.Koran) -> void: mendarat.append(k))
+	var tujuan: Vector2 = Vector2(titik_luar.x, -titik_luar.y)
+	var lepas: Vector2 = ThrowSolver.titik_lepas(sepeda.posisi_dunia(), sepeda.kecepatan_ud, sepeda.lateral_ud, sepeda.jeda_lepas(LoperAnim.Sisi.SEBERANG))
+	var u: float = BantuLempar.cari_kekuatan(tujuan, lepas, sepeda.kecepatan_ud)
+	check(u >= 0.0, "titik luar inti terjangkau dari posisi uji (kekuatan %.3f)" % u)
+	if u >= 0.0:
+		var lintasan: ThrowSolver.Lintasan = ThrowSolver.hitung(ThrowSolver.panjang_untuk_kekuatan(u, 780.0), 780.0, BantuLempar.arah_ke(tujuan, lepas, sepeda.kecepatan_ud, u), sepeda.posisi_dunia(), sepeda.kecepatan_ud, sepeda.lateral_ud, sepeda.jeda_lepas(LoperAnim.Sisi.SEBERANG))
+		akar.call(&"_lempar", lintasan, false)
+		for i: int in range(200):
+			akar.perbarui(DT)
+			if not mendarat.is_empty():
+				break
+		check(not mendarat.is_empty() and mendarat[0].hasil == ZonaSasaran.Hasil.KOTAK_SURAT and not mendarat[0].tepat and mendarat[0].id_rumah == rumah.id, "premis: koran mendarat di kotak surat pelanggan %s (hasil KOTAK_SURAT) tetapi bukan 'tepat'" % rumah.id)
+		check(not akar.hud_rute().petunjuk_tampil() and not akar.keadaan_misi().petunjuk[0] and akar.keadaan_misi().petunjuk_sisa == 0.0, "kena kotak surat di luar inti: tanpa gelembung dan tanpa petunjuk tercatat")
+		var peristiwa_petunjuk: int = 0
+		for p: bool in akar.keadaan_misi().petunjuk:
+			peristiwa_petunjuk += 1 if p else 0
+		check(peristiwa_petunjuk == 0, "tidak ada langkah yang mendapat petunjuk (%d)" % peristiwa_petunjuk)
+	_bersihkan(akar)
+	# Kontrol: lemparan tepat ke rumah yang sama memberi petunjuk (premis tes benar-benar membedakan).
+	var kontrol: RuteMain = await _siapkan()
+	var rumah_k: RouteBuilder.RumahRute = _pelanggan_di(kontrol, 0.0, kontrol.rencana_misi().titik[0].petunjuk_akhir_ubin)
+	check(_lempar_ke(kontrol, rumah_k, false) and kontrol.keadaan_misi().petunjuk[0] and kontrol.hud_rute().petunjuk_tampil(), "kontrol: lemparan tepat di inti ke rumah yang sama memberi petunjuk")
+	_bersihkan(kontrol)
+
+
 # --- Tangkap, jeda, jatuh (AC-5c di scene, AC-13) ---
 
 func _test_tangkap_jeda_dan_jatuh() -> void:
@@ -468,7 +528,15 @@ func _test_gagal_tidak_mengubah_apa_pun() -> void:
 		check(is_equal_approx(tenggat_awal, akar.tenggat().waktu_detik) or akar.tenggat().waktu_detik >= tenggat_awal, "tenggat tidak diubah oleh misi: jam hanya maju oleh waktu (waktu_detik %.3f >= %.3f)" % [akar.tenggat().waktu_detik, tenggat_awal])
 		if dengan_misi:
 			check(a.misi_hasil == "gagal" and a.koin_misi == 0 and akar.layar_hasil().teks_rekap_misi() == "Misi: Kucingnya lolos hari ini", "hasil: misi gagal, koin misi 0, rekap 'Misi: Kucingnya lolos hari ini'")
+			check(akar.hasil_tampil() and akar.keadaan_misi().status != MissionManager.Status.AKTIF, "layar hasil terbuka: misi tidak pernah masih aktif")
 		_bersihkan(akar)
+	# Langsung ke garis akhir dari awal rute (tanpa melewati rumah ke-12 lebih dulu di langkah terpisah): misi gagal di langkah yang sama dengan akhir rute, sebelum layar hasil (QA-004).
+	var loncat: RuteMain = await _siapkan()
+	_di(loncat, loncat.rute().panjang_ubin + 0.5)
+	check(loncat.keadaan_misi().status == MissionManager.Status.GAGAL, "loncat ke garis akhir: misi GAGAL pada langkah yang sama")
+	_langkah(loncat, 600)
+	check(loncat.hasil_tampil() and loncat.angka_hasil().misi_hasil == "gagal" and loncat.keadaan_misi().status == MissionManager.Status.GAGAL, "layar hasil terbuka dengan misi gagal (tanpa cabang penutup misi aktif di RuteMain)")
+	_bersihkan(loncat)
 	check(hasil_gagal[true] == hasil_gagal[false], "skor rute (koin, tip, skor, tepat, terantar) identik dengan dan tanpa misi gagal: %s vs %s" % [hasil_gagal[true], hasil_gagal[false]])
 	check(hasil_tanpa[true] == hasil_tanpa[false], "angka layar hasil (koin, tip, skor, terkirim, meleset, tepat) identik dengan dan tanpa misi gagal: %s vs %s" % [hasil_tanpa[true], hasil_tanpa[false]])
 
@@ -761,6 +829,23 @@ func _test_penanda_layar(kasus: Array, kidal: bool) -> void:
 						pelanggaran.append("menumpuk %s %s (lateral %.0f, jarak %.1f)" % [nama, r, lateral, jarak])
 	check(banyak > 0, "%s: ada penanda yang diukur (%d)" % [tag, banyak])
 	check(pelanggaran.is_empty(), "%s: penanda tidak keluar layar dan tidak menumpuk radar, bel, jeda, panel atas, panel bawah, kartu, gelembung, tutorial: %s" % [tag, pelanggaran.slice(0, 3)])
+	_bersihkan(akar)
+
+
+## Rute yang dijeda memberi `MissionManager` jeda = true walau dt langkah kebetulan positif (pertahanan berlapis, QA-004): gelembung petunjuk dan banner tidak berkurang.
+func _test_jeda_membekukan_walau_dt_positif() -> void:
+	_judul.call("Jeda game: gelembung petunjuk tidak berkurang walau dt langkah positif (RuteMain meneruskan jeda ke MissionManager, QA-004)")
+	var akar: RuteMain = await _siapkan()
+	var t1: RencanaMisi.Titik = akar.rencana_misi().titik[0]
+	var rumah: RouteBuilder.RumahRute = _pelanggan_di(akar, 0.0, t1.petunjuk_akhir_ubin)
+	check(_lempar_ke(akar, rumah, false) and akar.keadaan_misi().petunjuk_sisa > 0.0, "petunjuk aktif sebelum jeda")
+	var sisa: float = akar.keadaan_misi().petunjuk_sisa
+	akar.minta_jeda()
+	check(akar.sedang_jeda(), "rute dijeda")
+	akar.set(&"_dt_langkah", 1.0)
+	akar.call(&"_langkah_misi", _sepeda(akar).jarak_ubin)
+	check(is_equal_approx(akar.keadaan_misi().petunjuk_sisa, sisa), "jeda dengan dt langkah 1,0: sisa gelembung tetap %.3f (dapat %.3f)" % [sisa, akar.keadaan_misi().petunjuk_sisa])
+	akar.minta_lanjut()
 	_bersihkan(akar)
 
 

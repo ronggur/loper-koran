@@ -769,6 +769,11 @@ func _test_manager_tangkap_jatuh_jeda() -> void:
 	check(is_equal_approx(k3[0].timer_detik, 1.0) and k3[0].status == MissionManager.Status.AKTIF, "empat langkah saat jeda game: timer tetap 1,0 dan misi aktif")
 	_ulang(k3, 1, -2.0, 60.0, 0.0, 0.5)
 	check(k3[0].status == MissionManager.Status.SELESAI, "lanjut dari jeda: 1,0 + 0,5 menyelesaikan misi")
+	# Jeda game di luar radius dan terlalu cepat: timer tetap, tidak direset (QA-004: cabang `m.jeda` di `_tangkap` tidak redundan terhadap dt 0).
+	var k5: Array = _siap_tangkap()
+	_ulang(k5, 2, -2.0, 60.0, 0.0, 0.5)
+	_ulang(k5, 4, -2.0, 70.0, 5.0, 0.5, false, true)
+	check(is_equal_approx(k5[0].timer_detik, 1.0), "jeda game di luar radius dan terlalu cepat: timer tetap 1,0 (tidak direset)")
 	# dt 0 (jeda game memberi dt efektif 0) tidak memajukan timer walau syarat terpenuhi.
 	var k4: Array = _siap_tangkap()
 	_ulang(k4, 10, -2.0, 60.0, 0.0, 0.0)

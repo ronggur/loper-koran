@@ -141,18 +141,11 @@ static func migrasi(data: Dictionary) -> Dictionary:
 		versi = 1
 	if versi < 2:
 		# v1 -> v2 (run fase4b-misi-kucing): field baru bawaan; `flag` v1 dibiarkan apa adanya (satu-satunya flag v1 yang mungkin ada
-		# ditulis tes), `koin`, `hari`, `tip_total`, jeda, dan pengaturan dipertahankan. `terakhir` yang sah mendapat `misi_hasil` dan `koin_misi`.
+		# ditulis tes), `koin`, `hari`, `tip_total`, jeda, dan pengaturan dipertahankan. `terakhir` yang sah mendapat `misi_hasil` dan `koin_misi` bawaan dari `_normalisasi_terakhir` (satu-satunya tempat; QA-004).
 		var dasar2: Dictionary = templat()
 		for kunci: String in ["misi_hasil", "tutorial"]:
 			if not hasil.has(kunci):
 				hasil[kunci] = dasar2[kunci]
-		if hasil.has("terakhir") and typeof(hasil["terakhir"]) == TYPE_DICTIONARY:
-			var terakhir: Dictionary = hasil["terakhir"]
-			if not terakhir.is_empty():
-				if not terakhir.has("misi_hasil"):
-					terakhir["misi_hasil"] = ""
-				if not terakhir.has("koin_misi"):
-					terakhir["koin_misi"] = 0
 		versi = 2
 	hasil["versi"] = versi
 	return _normalisasi(hasil)
