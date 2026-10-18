@@ -71,7 +71,8 @@ static func badan_terlihat(kaki: Vector2, area_layar: Rect2) -> bool:
 	return area_layar.encloses(rect_badan(kaki))
 
 
-## Penanda tepi layar untuk kucing titik `titik` berkaki di `kaki`, sepeda di `sepeda_layar`: titik di garis sepeda -> kaki yang dijepit ke `area_penanda`.
+## Penanda tepi layar untuk kucing titik `titik` berkaki di `kaki`, sepeda di `sepeda_layar`: titik di garis sepeda -> kaki yang dijepit ke `area_penanda`; bila kaki
+## sendiri di dalam persegi itu, penanda `MISI_PENANDA_TURUN_PX` di bawah kaki (menunjuk ke kucing, tidak menutupi badannya).
 ## Selalu ada penanda (pemanggil memutuskan perlu atau tidaknya dengan `badan_terlihat`).
 static func penanda(titik: int, sepeda_layar: Vector2, kaki: Vector2, area_layar: Rect2, tinggi: float) -> Penanda:
 	var p: Penanda = Penanda.new()
@@ -88,7 +89,10 @@ static func penanda(titik: int, sepeda_layar: Vector2, kaki: Vector2, area_layar
 		t = minf(t, (kotak.end.y - awal.y) / selisih.y)
 	elif selisih.y < 0.0:
 		t = minf(t, (kotak.position.y - awal.y) / selisih.y)
-	p.pusat = (awal + selisih * clampf(t, 0.0, 1.0)).round()
+	var tujuan: Vector2 = awal + selisih * clampf(t, 0.0, 1.0)
+	if t >= 1.0:
+		tujuan = Vector2(clampf(kaki.x, kotak.position.x, kotak.end.x), clampf(kaki.y + float(Config.MISI_PENANDA_TURUN_PX), kotak.position.y, kotak.end.y))
+	p.pusat = tujuan.round()
 	p.arah = Arah.KANAN if p.pusat.y > kotak.position.y and p.pusat.x >= kotak.end.x else Arah.ATAS
 	return p
 

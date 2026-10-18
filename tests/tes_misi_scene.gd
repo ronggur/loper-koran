@@ -242,6 +242,17 @@ func _test_kucing_di_scene() -> void:
 	check(KucingHiasan.perintah(true, true, 0.0, 0.0) != KucingHiasan.perintah(true, true, 0.0, 0.41) and KucingHiasan.perintah(true, false, 0.0, 0.0).size() < KucingHiasan.perintah(true, true, 0.0, 0.0).size(), "perintah gambar: frame kilau berbeda tiap pergantian, ekor menambah perintah")
 	check(KucingHiasan.perintah(false, false, 0.0, 0.0).is_empty() and KucingHiasan.perintah(false, false, 0.5, 0.0).size() > 0, "tanpa kilau, ekor, dan progres: tidak ada gambar; progres menambah bar")
 	check(PolaPiksel.KILAU_KUCING_1 != PolaPiksel.KILAU_KUCING_2 and PolaPiksel.EKOR_KUCING_1 != PolaPiksel.EKOR_KUCING_2, "dua frame kilau dan ekor berbeda bentuk")
+	# QA-007: kilau dibesarkan (9x9 lalu 11x11, sebelumnya 7x7 dan 9x9), semua baris rata, frame kecil di tengah kotak 11x11 yang sama.
+	var rata: bool = true
+	for baris: String in PolaPiksel.KILAU_KUCING_1:
+		rata = rata and baris.length() == 9
+	for baris: String in PolaPiksel.KILAU_KUCING_2:
+		rata = rata and baris.length() == 11
+	check(rata and PolaPiksel.KILAU_KUCING_1.size() == 9 and PolaPiksel.KILAU_KUCING_2.size() == 11, "kilau: frame 1 berukuran 9x9 dan frame 2 berukuran 11x11 (dibesarkan dari 7x7 dan 9x9)")
+	check(Config.MISI_KILAU_POSISI_PX == [-5, -33], "kotak kilau 11x11 berpojok (-5, -33) dari titik pijak: tengah di atas kepala kucing")
+	var perintah_1: Array = KucingHiasan.perintah_kilau(0)
+	var perintah_2: Array = KucingHiasan.perintah_kilau(1)
+	check(perintah_1[0][1] == Vector2(-4.0, -32.0) and perintah_2[0][1] == Vector2(-5.0, -33.0), "frame 9x9 digambar di tengah kotak 11x11 (asal (-4, -32) lawan (-5, -33))")
 	# Tanpa PNG baru untuk kilau/ekor: hanya satu PNG kucing di assets/sprites/npc.
 	var png: Array[String] = []
 	for nama: String in DirAccess.get_files_at("res://assets/sprites/npc"):
@@ -618,7 +629,10 @@ func _test_tutorial_di_scene() -> void:
 	_di(akar, 3.0, 0.5, 5.0)
 	check(tut.teks() == "Tarik stick ke bawah untuk melambat" and tut.teks_langkah() == "PETUNJUK 2/4", "kecepatan 5,0 >= 4,5: langkah 2 (melambat)")
 	_di(akar, 4.0, 0.5, 1.8)
-	check(tut.teks() == "Usap layar di kanan untuk melempar koran", "kecepatan 1,8 <= 2,0: langkah 3 (lempar)")
+	check(tut.teks() == "Lempar koran ke kotak surat", "kecepatan 1,8 <= 2,0: langkah 3 (lempar)")
+	# QA-005: teks lempar netral terhadap kidal (zona swipe pindah sisi) dan mode bantu (melempar dengan ketuk): tanpa kata arah layar atau gerakan tertentu.
+	var teks_lempar: String = tut.teks().to_lower()
+	check(not teks_lempar.contains("kanan") and not teks_lempar.contains("kiri") and not teks_lempar.contains("usap") and not teks_lempar.contains("ketuk") and not teks_lempar.contains("geser"), "teks langkah lempar netral terhadap kidal dan mode bantu (tanpa kanan, kiri, usap, ketuk, geser): '%s'" % tut.teks())
 	var rumah: RouteBuilder.RumahRute = akar.rute().pelanggan[0]
 	_lempar_ke(akar, rumah, false)
 	check(akar.jumlah_lempar() == 1 and akar.keadaan_tutorial().langkah == TutorialLangkah.Langkah.MENEPI and not tut.tampil(), "satu lemparan diterima: langkah 4 (menepi) menunggu kucing tangkap terlihat (belum tampil)")

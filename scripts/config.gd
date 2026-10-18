@@ -912,8 +912,8 @@ const MISI_KUCING_BARIS_HADAP: int = 1
 const MISI_KUCING_KOLOM_DUDUK: int = 0
 ## Tinggi kotak penutup kucing, ubin (kucing kecil: hampir tidak pernah menutupi pemain; tetap lewat penerap penutup yang sama dengan rumah).
 const MISI_KUCING_TINGGI_UBIN: float = 0.5
-## Pojok kiri atas pola kilau 7x7 atau 9x9 (tengah di titik pijak) relatif titik pijak kucing, piksel (di atas kepala).
-const MISI_KILAU_POSISI_PX: Array[int] = [-4, -36]
+## Pojok kiri atas kotak kilau 11x11 (frame 9x9 di tengahnya; tengah di atas titik pijak) relatif titik pijak kucing, piksel (di atas kepala).
+const MISI_KILAU_POSISI_PX: Array[int] = [-5, -33]
 ## Pojok kiri atas pola ekor 5x4 relatif titik pijak kucing, piksel (di belakang badan).
 const MISI_EKOR_POSISI_PX: Array[int] = [9, -10]
 ## Bar progres tangkap di atas kucing: lebar dan tinggi piksel, jarak di atas titik pijak.
@@ -943,6 +943,8 @@ const MISI_PENANDA_TEPI_PX: int = 22
 const MISI_PENANDA_ATAS_PX: int = 84
 ## Batas bawah penanda dari tepi bawah layar, piksel game (di atas tombol bel dan panel bawah, yang mulai sekitar 84 px dari bawah).
 const MISI_PENANDA_BAWAH_PX: int = 100
+## Bila kaki kucing sendiri berada di dalam persegi pusat penanda, penanda ditaruh sekian piksel di bawah kaki (menunjuk ke atas ke kucing, tidak menutupi badan).
+const MISI_PENANDA_TURUN_PX: int = 14
 ## Penanda berganti warna tiap sekian detik (dua keadaan dari kode; bentuk panah tetap, jadi tidak hanya warna).
 const MISI_PENANDA_KEDIP_DETIK: float = 0.4
 

@@ -46,10 +46,10 @@ func _sepeda(lebar: float, geser: Vector2) -> Vector2:
 	return Vector2(lebar * 0.3333, TINGGI * 0.75) + geser
 
 
-## Badan kucing (sel 46x38 dengan titik pijak (18, 21)) disatukan dengan kilau 9x7 yang pojok kirinya (-4, -36) dari titik pijak.
+## Badan kucing (sel 46x38 dengan titik pijak (18, 21)) disatukan dengan kotak kilau 11x11 yang pojok kirinya (-5, -33) dari titik pijak.
 func _badan(kaki: Vector2) -> Rect2:
 	var sel: Rect2 = Rect2(kaki.x - 18.0, kaki.y - 21.0, 46.0, 38.0)
-	var kilau: Rect2 = Rect2(kaki.x - 4.0, kaki.y - 36.0, 9.0, 7.0)
+	var kilau: Rect2 = Rect2(kaki.x - 5.0, kaki.y - 33.0, 11.0, 11.0)
 	return sel.merge(kilau)
 
 
@@ -154,12 +154,12 @@ func _test_penanda_murni() -> void:
 	var p_tepi: TampilMisi.Penanda = TampilMisi.penanda(0, sepeda, Vector2(2000.0, 250.0), area_a, 360.0)
 	check(p_tepi.arah == TampilMisi.Arah.KANAN and p_tepi.pusat.x == 612.0 and kotak.grow(0.5).has_point(p_tepi.pusat), "kaki jauh di kanan: penanda di tepi kanan (x 612), panah kanan: %s" % [p_tepi.pusat])
 	var p_dalam: TampilMisi.Penanda = TampilMisi.penanda(0, sepeda, Vector2(300.0, 200.0), area_a, 360.0)
-	check(p_dalam.pusat == Vector2(300.0, 200.0), "kaki di dalam persegi pusat: penanda tepat di kaki")
+	check(p_dalam.pusat == Vector2(300.0, 214.0) and p_dalam.arah == TampilMisi.Arah.ATAS, "kaki di dalam persegi pusat: penanda 14 px di bawah kaki (tidak menutupi badan), panah atas")
 	var p_bawah: TampilMisi.Penanda = TampilMisi.penanda(0, Vector2(213.0, 330.0), Vector2(250.0, 345.0), area_a, 360.0)
 	check(kotak.grow(0.5).has_point(p_bawah.pusat), "sepeda di bawah persegi pusat: awal garis dijepit ke persegi, penanda tetap di dalamnya: %s" % [p_bawah.pusat])
 	# Persegi badan: sel penuh disatukan dengan kilau.
 	var badan: Rect2 = TampilMisi.rect_badan(Vector2(100.0, 100.0))
-	check(badan == Rect2(82.0, 64.0, 46.0, 53.0), "persegi badan + kilau berkaki di (100, 100): %s" % [badan])
+	check(badan == Rect2(82.0, 67.0, 46.0, 50.0), "persegi badan + kilau berkaki di (100, 100): %s" % [badan])
 	check(TampilMisi.badan_terlihat(Vector2(300.0, 200.0), area_a) and not TampilMisi.badan_terlihat(Vector2(300.0, 100.0), area_a) and not TampilMisi.badan_terlihat(Vector2(610.0, 200.0), area_a), "badan utuh di area: ya di (300, 200); tidak bila kilau menyentuh strip HUD atas (kaki y 100); tidak bila sel melewati tepi kanan area")
 	# penanda_aktif: dari keadaan MissionManager.
 	var r: RencanaMisi.Rencana = _rencana_uji()

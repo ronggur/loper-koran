@@ -73,7 +73,7 @@ HASIL_MISI_SELESAI,Misi: {teks} +{koin} koin
 HASIL_MISI_GAGAL,Misi: {teks}
 TUTORIAL_KAYUH,Dorong stick ke atas untuk ngebut
 TUTORIAL_MELAMBAT,Tarik stick ke bawah untuk melambat
-TUTORIAL_LEMPAR,Usap layar di kanan untuk melempar koran
+TUTORIAL_LEMPAR,Lempar koran ke kotak surat
 TUTORIAL_MENEPI,Menepi dan berhenti dekat kucing
 TUTORIAL_LANGKAH,PETUNJUK {n}/{total}
 TUTORIAL_LEWATI,Lewati

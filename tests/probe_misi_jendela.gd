@@ -67,7 +67,7 @@ func _jalankan_skenario(_nama: String) -> void:
 	_set_kecepatan(Config.TUTORIAL_MELAMBAT_KECEPATAN_UD - 0.5)
 	await _maju(DT)
 	await _foto("tutorial_lempar")
-	_harap("tutorial langkah 3 sesudah melambat", _akar.tutorial_node().teks() == "Usap layar di kanan untuk melempar koran", _akar.tutorial_node().teks())
+	_harap("tutorial langkah 3 sesudah melambat", _akar.tutorial_node().teks() == "Lempar koran ke kotak surat", _akar.tutorial_node().teks())
 
 	# --- 4. Petunjuk dari lemparan tepat sungguhan untuk titik 2 (jendela [rumah titik 1, rumah titik 2)); tutorial langkah 3 (lempar) ---
 	var t2: RencanaMisi.Titik = rencana.titik[1]
@@ -140,6 +140,24 @@ func _jalankan_skenario(_nama: String) -> void:
 	_harap("rekap gagal", _akar.layar_hasil().teks_rekap_misi() == "Misi: Kucingnya lolos hari ini", _akar.layar_hasil().teks_rekap_misi())
 	_cek_hasil("hasil_gagal")
 
+	# --- 8b. Penanda tepi layar (iterasi 2, M-2'): kucing terlihat ngebut tetapi badannya belum utuh di layar; lajur dekat, tengah, dan seberang ---
+	_akar.main_lagi()
+	await _maju(0.3)
+	var rencana3: RencanaMisi.Rencana = _akar.rencana_misi()
+	var t1_baru: RencanaMisi.Titik = rencana3.titik[0]
+	for kasus: Array in [["dekat", 2.0], ["tengah", 0.0], ["seberang", -2.0]]:
+		await _ngebut_di(maxf(t1_baru.maju_ubin - 13.0, 0.0), float(kasus[1]))
+		await _foto("penanda_" + str(kasus[0]))
+		_harap("penanda tepi layar tampil (%s)" % kasus[0], _hud.penanda_kucing().penanda_tampil().size() == 1 and _akar.keadaan_misi().tampil[0], "penanda %d" % _hud.penanda_kucing().penanda_tampil().size())
+		_cek_tumpang_tindih("penanda_" + str(kasus[0]))
+	_set_kecepatan(Config.KECEPATAN_SANTAI_UD)
+	for i: int in range(40):
+		_letakkan(maxf(t1_baru.maju_ubin - 6.0, 0.0), 0.0)
+		await _maju(DT, false)
+	await _maju(DT)
+	await _foto("penanda_hilang_badan_utuh")
+	_harap("kucing 6 ubin di depan: badan utuh di layar, penanda hilang", _hud.penanda_kucing().penanda_tampil().is_empty() and _akar.kucing().tampil(), "penanda %d" % _hud.penanda_kucing().penanda_tampil().size())
+
 	# --- 9. Kidal: kartu misi tidak berpindah, panel bawah dan bel dicerminkan ---
 	_akar.main_lagi()
 	await _maju(0.3)
@@ -194,6 +212,10 @@ func _cek_tumpang_tindih(keadaan: String) -> void:
 		elemen["banner"] = _hud.rect_banner()
 	if _hud.petunjuk_tampil():
 		elemen["petunjuk"] = _hud.rect_petunjuk()
+	var nomor_penanda: int = 0
+	for r_penanda: Rect2 in _hud.penanda_kucing().rect_penanda():
+		elemen["penanda%d" % nomor_penanda] = r_penanda
+		nomor_penanda += 1
 	var tut: TutorialController = _akar.tutorial_node()
 	if tut.tampil():
 		elemen["tutorial"] = tut.rect_panel()
@@ -294,6 +316,17 @@ func _lempar_tepat(rumah: RouteBuilder.RumahRute, maju_maks: float = INF) -> voi
 	while not _akar.skor().terantar.has(rumah.id) and batas < 200:
 		await _maju(DT, false)
 		batas += 1
+	await _maju(DT)
+
+
+## Sepeda ngebut di `maju`/`lateral` sampai dorongan kamera mantap (sepeda ditaruh ulang tiap langkah), lalu satu bingkai digambar.
+func _ngebut_di(maju: float, lateral: float) -> void:
+	_set_kecepatan(Config.KECEPATAN_NGEBUT_UD)
+	for i: int in range(45):
+		_letakkan(maju, lateral)
+		_set_kecepatan(Config.KECEPATAN_NGEBUT_UD)
+		await _maju(DT, false)
+	_letakkan(maju, lateral)
 	await _maju(DT)
 
 
