@@ -549,7 +549,7 @@ Urutan uji:
 1. [ ] **Layar koran terbaca dalam 10 detik di A54 dan vivo V2108.** Buka app. Diharapkan: halaman krem dengan "Warta Kring", "Hari 1 · Perumahan Melati", satu berita utama besar, berita ringan, panel misi "Kucing Bu Ratmi Hilang Sejak Semalam" dengan ringkasan satu baris, tombol Ambil, Lewati, Berangkat. Tidak ada paragraf; tidak ada teks terpotong; tidak tertutup lubang kamera. Hasil: terbaca dalam ___ detik, terpotong: ___
 2. [ ] **Krem terang tidak menyilaukan setelah layar gelap.** Buka koran dari layar gelap (hasil rute, atau app baru dibuka di ruang redup). Hasil: nyaman ya / silau.
 3. [ ] **Ambil, Lewati, Berangkat terasa pas.** Ketuk Ambil lalu Lewati lalu Ambil: tombol terpilih terisi gelap dengan bingkai tebal dan teks status berubah ("Misi diambil", "Misi dilewati", awal "Belum dipilih; berangkat = dilewati"). Berangkat di bawah jempol kanan. Hasil: target pas ya / tidak, salah ketuk ___ kali, status terbaca tanpa warna ya / tidak.
-4. [ ] **Rute hari 1 berjalan seperti 3A sampai 3C.** Berangkat tanpa misi atau dengan Ambil (misi tidak punya efek di rute di 4A). Hasil: rute normal ya / tidak (tombol jeda, radar, tenggat, layar hasil).
+4. [ ] **Rute hari 1 berjalan seperti 3A sampai 3C.** Berangkat tanpa misi atau dengan Ambil (di 4A misi tidak berefek di rute; sejak run 4B Ambil mengaktifkan kucing, lihat 8.10). Hasil: rute normal ya / tidak (tombol jeda, radar, tenggat, layar hasil).
 5. [ ] **Layar hasil menawarkan "Hari berikutnya".** Sesudah garis akhir. Diharapkan: tombol "Hari berikutnya" (tidak ada "Main lagi"); angka sama dengan yang tampil; satu ketukan membuka koran hari 2. Ketuk cepat dua kali tidak melompati hari 3. Hasil: ya / tidak.
 6. [ ] **Koran hari 2 dan rute hari 2 berbeda.** Diharapkan: berita utama dan ringan berbeda dari hari 1; bila P1 diambil di hari 1 baris misi menampilkan "Tidak ada misi sampingan hari ini" tanpa tombol Ambil/Lewati (jeda 7 hari), bila dilewati P1 muncul lagi; rute (urutan rumah) terasa berbeda. Hasil: berbeda ya / tidak, misi: ___
 7. [ ] **Force stop di tengah rute lalu buka lagi.** Berangkat hari 2, kayuh sebentar, force stop. Diharapkan: app terbuka di koran hari 2 (BUKAN hari 3) dengan headline dan misi yang sama, koin dan hari kemarin utuh, Ambil/Lewati diulang dari awal. Hasil: koran sama ya / tidak, progres utuh ya / tidak.
@@ -573,5 +573,40 @@ Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build 
 9. Kidal dan Bantu bertahan: ya / tidak
 10. Tanpa suara terbaca: ya / tidak
 11. Force stop di hasil: hari sama ya / tidak
+Catatan (teks, tata letak, angka yang ingin diubah dan alasannya): ____
+```
+
+
+### 8.10 Uji misi kucing P1 dan tutorial (run `20261018-fase4b-misi-kucing`, belum diuji)
+
+Penguji: pemilik sendiri (rule `testing`). Semua angka dan perilaku usulan (BALANCING 6g, GDD 10.3): catat angka yang ingin diubah beserta alasannya, jangan diubah di sesi uji. **Pasang tanpa menghapus apa pun** (`adb install -r builds/kring-kring-debug.apk`, hanya setelah izin pemilik; HP dipakai bersama project lain). **Jangan `pm clear` dan jangan uninstall.** Catatan penting: save dari run 4A di vivo V2108 sudah melewati hari 1 dan menahan P1 selama jeda 7 hari (P1 diambil hari 1 boleh muncul lagi mulai hari 8), jadi P1 dan tutorial TIDAK muncul di save itu. Pilihan (tanya pemilik dulu, jangan dilakukan sendiri): (a) uji di HP lain atau pasang sebagai app terpisah dengan nama paket lain; (b) pemilik sendiri menghapus data app hanya bila rela kehilangan save; (c) bermain sampai P1 muncul lagi (hari 8 atau hari lain tanpa P1 diambil); (d) bukti desktop di `docs/loop/20261018-fase4b-misi-kucing/shots/` (`tests/probe_misi_jendela.gd`). Save v1 dari 4A dimigrasi otomatis ke v2 tanpa kehilangan koin dan hari (dites dengan fixture save 4A asli).
+
+Urutan uji (dengan save yang memunculkan P1 dan tutorial hari 1):
+
+1. [ ] **Tutorial hari 1.** Berangkat dengan Ambil. Diharapkan: petunjuk "PETUNJUK 1/4" di kiri atas bawah kartu misi, berganti per langkah (ngebut, melambat, lempar, menepi), tombol "Lewati" di strip atas (bukan di zona lempar), tidak menghalangi stick atau swipe. Lewati: petunjuk hilang dan tidak muncul lagi. Hari 2 tidak ada tutorial. Hasil: terbaca ya / tidak, mengganggu ya / tidak.
+2. [ ] **Kartu misi dan kucing terlihat.** Diharapkan: kartu "Kucing 0/1 · N rumah" di kiri atas (di bawah tombol jeda), N turun tiap rumah seberang dilewati; kucing kecil dengan kilau kuning tampil sekitar 12 ubin sebelum titiknya. Hasil: kucing terbaca di skala x3 ya / tidak, kilau terlihat cukup lama (>= 2 detik pada ngebut) ya / tidak, kartu menutupi radar atau tombol ya / tidak.
+3. [ ] **Petunjuk dari lemparan tepat.** Lempar koran TEPAT (inti kotak surat) ke pelanggan sesudah kucing sebelumnya. Diharapkan: gelembung "Tadi ada kucing lewat ke arah warung" 2,5 detik, "meong", kucing berikutnya tampil lebih awal. Lemparan mode bantu tidak memberi petunjuk. Hasil: terasa berguna dan tidak wajib ya / tidak.
+4. [ ] **Menepi dan menangkap.** Dekati kucing ketiga, tarik stick bawah penuh sampai berhenti (rem) dalam 2 ubin dari kucing; tahan 1,5 detik. Diharapkan: bar hijau di atas kucing terisi, banner "Kucing ketemu! +75", koin HUD +75. Hasil: radius 2 ubin dan ambang 1,5 u/d adil ya / tidak (perlu lebih longgar?), perlu berapa percobaan: ___
+5. [ ] **Mode bantu.** Nyalakan Bantu di layar jeda: stick tetap bisa menepi dan menangkap; kecepatan otomatis tidak menangkap sendiri. Hasil: ya / tidak.
+6. [ ] **Gagal.** Lewati rumah seberang ke-12 tanpa menangkap. Diharapkan: banner "Kucingnya lolos hari ini" tanpa kata gagal, koin tidak berkurang, hari berjalan terus. Hasil: batas 12 rumah adil ya / tidak.
+7. [ ] **Layar hasil dan hari berikutnya.** Selesai: baris "Misi: Kucing ketemu! +75 koin" (hijau) dan koin sudah termasuk hadiah; gagal: "Misi: Kucingnya lolos hari ini" (netral). "Hari berikutnya": koran hari 2 menampilkan "Kucing Bu Ratmi Sudah Pulang ke Rumah" (selesai) atau "Kucing Bu Ratmi Belum Ditemukan" (gagal, tanpa tombol) sekali; hari 3 tidak lagi. Hasil: ya / tidak.
+8. [ ] **Lewati misi.** Lewati P1 di koran: rute tanpa kucing, tanpa kartu, tanpa baris rekap.
+9. [ ] **Force stop di tengah rute dengan misi aktif** (bukan hapus data): buka lagi = hari sama, misi dari awal, save kemarin utuh.
+10. [ ] **Bunyi.** Meong (petunjuk), mrik (kucing terlihat), nada selesai, dua nada turun lembut (gagal); semua ada pasangan visual. Hasil: terdengar jelas ya / tidak, mengganggu ya / tidak.
+
+**Lembar hasil 8.10 (misi kucing dan tutorial, run 4B):**
+
+```
+Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build (commit): ____   Save: baru / migrasi dari 4A
+1. Tutorial: terbaca ya / tidak   mengganggu ya / tidak   Lewati pas ya / tidak
+2. Kucing terbaca x3 ya / tidak   kilau cukup lama ya / tidak   kartu menutupi sesuatu ya / tidak
+3. Petunjuk berguna dan tidak wajib: ya / tidak
+4. Tangkap: radius 2 / 1,5 u/d / 1,5 detik adil ya / tidak   percobaan: ____   usul angka: ____
+5. Mode bantu: stick menangkap ya / tidak   auto-tangkap tidak terjadi ya / tidak
+6. Gagal: batas 12 rumah adil ya / tidak   banner tidak menyalahkan ya / tidak
+7. Hasil dan lanjutan besok benar: ya / tidak
+8. Lewati misi: ya / tidak
+9. Force stop: misi dari awal, save utuh ya / tidak
+10. Bunyi: ya / tidak
 Catatan (teks, tata letak, angka yang ingin diubah dan alasannya): ____
 ```

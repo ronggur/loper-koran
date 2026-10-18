@@ -367,6 +367,23 @@ Keputusan pemilik K-1 (tenggat, tip hilang sesudahnya) dan K-2 (radar 30 ubin), 
 
 Dites (invarian prinsip): bot santai tanpa berhenti di sisi bebas sampai garis akhir sebelum tenggat tanpa tabrakan di 20 seed (cadangan paling sedikit 10 detik); bot yang berhenti 100 detik melewati tenggat tetapi tetap sampai garis akhir tepat sekali; koin tidak pernah berkurang, juga sesudah tenggat.
 
+### 6g. Misi kucing P1 (usulan run fase4b-misi-kucing 2026-10-18, dinilai lewat uji HP)
+
+Keputusan pemilik K-1 (hadiah 75) sampai K-4 dan usulan orchestrator M-1 sampai M-12 (SPEC run). Logika murni: `RencanaMisi`, `MissionManager`, `TutorialLangkah`, `BunyiMisi`; tata letak di `docs/design/DESIGN_SPEC.md` 3.1. Semua angka di `scripts/config.gd` (`MISI_*`, `TUTORIAL_*`, `SEED_MISI_SELISIH`).
+
+| Angka | Usulan | Catatan |
+|---|---|---|
+| Hadiah per tingkat | 45 / 75 / 120 koin (kecil / sedang / besar); P1 = sedang = **75** | `MISI_HADIAH_KOIN` sejajar `MISI_TINGKAT_HADIAH`; GDD 10.5 dan 14.1; dibayar saat misi selesai, masuk `koin` hari itu lewat `HasilRute.Angka`; gagal 0 dan tidak mengurangi apa pun |
+| Letak titik kucing | rumah seberang ke-3 atau 4, lalu +3 atau +4, dan +3 atau +4 (paling jauh ke-12); benih = seed rute + 4093 | data misi `rumah_dari_*`; tidak dekat mobil garasi seberang (6,25 ubin termasuk goyangan) |
+| Letak di rumah | lateral -2,0 (goyangan +-0,25), maju awal kavling + 0,5 (+-0,25) | `MISI_KUCING_*`; kucing tidak menimpa zona kotak surat (zona mulai di maju 1,25) |
+| Jarak kucing mulai tampil | 12 ubin di depan (= 2,0 detik pada ngebut 6,0 u/d); dengan petunjuk 18 ubin | `MISI_TAMPIL_JARAK_UBIN`, `MISI_TAMPIL_PETUNJUK_JARAK_UBIN`, `MISI_TAMPIL_DETIK_MIN`; prinsip 3 (petunjuk misi minimal 2 detik). Catatan (hitung iso, belum diuji di HP): kucing 12 ubin di depan jatuh sekitar 250 sampai 385 px game di kanan sepeda, jadi di layar 640 lebar ia muncul tepat di tepi kanan (pada ngebut dengan sepeda di trotoar seberang bahkan beberapa piksel di luar) dan di layar lebih lebar terlihat lebih awal; apakah 2 detik terlihat cukup dinilai di HP (NEEDS-MANUAL) |
+| Syarat tangkap | dalam 2,0 ubin dari kucing, kecepatan paling tinggi 1,5 u/d, 1,5 detik berturut-turut | `radius_ubin`, `lama_berhenti_detik` (data), `MISI_TANGKAP_KECEPATAN_MAKS_UD` (= kecepatan melambat). Kecepatan ini hanya tercapai dengan rem sampai berhenti (stick bawah penuh): rem mulai 0,25 detik sesudah stick tepat di ujung bawah dan berhenti dalam sekitar 1,3 ubin dari 3,0 u/d. Timer tidak maju dan tidak direset saat jatuh dan saat jeda |
+| Gagal | rumah ke-12 terlewati (akhir kavling) atau garis akhir rute | tanpa efek pada koin, tip, skor, tenggat |
+| Petunjuk | lemparan TEPAT manual ke kotak surat pelanggan di jendela langkah (dari rumah titik sebelumnya sampai sebelum rumah titik ini), sekali per langkah; gelembung 2,5 detik | `MISI_PETUNJUK_DETIK`; lemparan mode bantu (tap) tidak memberi petunjuk (K-3) |
+| Banner | 1,5 detik | `MISI_BANNER_DETIK` |
+
+Dites: syarat tangkap di ambang (kecepatan 1,5 dan 1,51; jarak 2,0 dan 2,01; 1,5 detik dan 1,49), kelayakan dengan `BikeMotion` nyata dari lajur seberang di 30 rute (menepi ke lateral -1 lalu rem 2 ubin sebelum kucing; kecepatan otomatis mode bantu 3,0 tidak pernah menangkap), 60 hari rencana sah.
+
 ---
 
 ## 7. Ekonomi
@@ -424,6 +441,8 @@ Belum diisi. Diputuskan di Fase 6 bersama layar bengkel (GDD 12.5). Arah yang su
 ---
 
 ## 10. Catatan perubahan
+
+- **2026-10-18** — Run fase4b-misi-kucing (usulan, belum diuji di HP): bagian 6g (angka misi kucing P1, hadiah sedang 75 koin sesuai GDD 14.1 dan 10.5; prompt run menyebut 45 yang sebenarnya tingkat kecil, pemilik memilih 75 pada 2026-10-18). Angka baru di `scripts/config.gd` (`MISI_*`, `TUTORIAL_*`, `SEED_MISI_SELISIH`, `AUDIO_MISI_*`).
 
 - **2026-10-17** — **Tabrakan = jatuh** (keputusan pemilik 2026-10-17; rincian usulan orchestrator, bisa ditolak; belum diuji di HP): setiap tabrakan membuat pemain jatuh 1,2 detik (`TABRAKAN_JATUH_DETIK`; kecepatan 0, stick dan lemparan diabaikan, animasi jatuh lalu terjerembab), lalu bangun dan dikayuh lagi dari 0; kebal 1,0 detik kini dihitung dari saat bangun, bukan dari tabrakan. Oleng 0,6 detik, turun ke 1,0 u/d, dan geseran sprite ±1 px dihapus (`TABRAKAN_KECEPATAN_UD`, `TABRAKAN_OLENG_DETIK`, `TABRAKAN_OLENG_GESER_PX`, `TABRAKAN_OLENG_PERIODE_DETIK`): satu aturan saja. Alasan: pemilik ingin tabrakan terasa (memakai animasi jatuh yang sudah ada) tetapi tetap bisa melanjutkan; prinsip 2 tetap (memperlambat, tidak menghentikan rute, tanpa game over). Harga tabrakan pada santai naik dari sekitar 0,6 detik tertinggal (oleng: 0,6 detik di 1,0 u/d lalu naik lagi) ke sekitar 1,7 detik (jatuh 1,2 + akselerasi dari 0 yang tertinggal 1,5 ubin = 0,5 detik); invarian AC-7 dan AC-23 tetap lolos. Kebal dari bangun supaya pemain yang bangun di samping rintangan yang masih ada (mobil berhenti di garis tengah) tidak langsung jatuh lagi. Dinilai lewat uji HP (`SETUP_ANDROID.md` 8.7: adil, tidak menyebalkan, bisa dijelaskan).
 

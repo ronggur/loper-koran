@@ -82,7 +82,7 @@ Mengikuti struktur di `README.md`. Bagian ini hanya menambahkan yang dibutuhkan 
 | `SaveManager` | Baca, tulis, dan migrasi `user://save.json`. **Ada sejak run 4A** (`scripts/autoload/save_manager.gd`; format v1 di `DataSave`, tulis atomik, save rusak disalin dulu, simpan hanya di akhir hari) | 4 |
 | `DayManager` | Mesin hari: koran → adegan → rute → hasil → bengkel → simpan. **Di 4A bukan autoload** (S-1): `MesinHari` (logika murni, `scripts/systems/mesin_hari.gd`: Koran → Rute → Hasil → Koran hari + 1, back per keadaan) + scene `scenes/hari/hari.tscn` (`HariMain`, scene utama). Autoload baru hanya bila adegan dan bengkel (Fase 6B) menuntutnya. Alur hari berurutan ini prototype yang tidak mengunci struktur sesi (ROADMAP 5) | 4 |
 | `RouteBuilder` | Menyusun rute dari segmen dengan seed hari | 3 |
-| `MissionManager` | Pemilihan misi harian, template misi, flag lanjutan | 4 |
+| `MissionManager` | Keadaan misi selama rute (template **Cari**), flag lanjutan. **Ada sejak run 4B** (`scripts/systems/mission_manager.gd`, murni; rencana kucing di `rencana_misi.gd`, bunyi di `bunyi_misi.gd`, tutorial di `tutorial_langkah.gd`). Pemilihan misi harian tetap di `HeadlineManager`. Bukan autoload (kelas statis); autoload tidak boleh merujuknya | 4 |
 | `HeadlineManager` | Memilih tiga headline per hari dari pool dan flag. **Ada sejak run 4A** (`scripts/systems/headline_manager.gd`, seed per hari dari `SeedHari`, lanjutan diprioritaskan, jeda, bobot) | 4 |
 | `ReputationManager` | Reputasi per distrik, pelanggan baru dan berhenti | 6A |
 | `BikeCondition` | Aus dan rusak per komponen, tanda peringatan | 6A |
@@ -351,11 +351,11 @@ Setiap fase berisi: tujuan, kaitan cerita, sistem dan kode, aset, konten, uji, d
 
 **Sistem dan kode**
 
-- `HeadlineManager`: tiga headline per hari dari pool dan flag (`DATA_SCHEMA.md` 2). **Status run 4A (2026-10-18):** selesai bersama format data (`DataMisi`, `DataHeadline`, `PemuatMisi`, `PemuatHeadline`), konten hari 1–3, layar koran (`HalamanKoran`), `SaveManager` v1, dan alur satu hari (`MesinHari` + `hari.tscn`) sebagai satu hari utuh tanpa misi kucing. Efek berita utama hanya dicatat (Fase 7). **Run 4B:** `MissionManager` dan template Cari, HUD misi, banner, flag hasil misi, rekap misi di layar hasil, tutorial, dan misi lintas hari (terbuka).
-- `MissionManager` dengan template **Cari** (misi P1 Kucing Bu Ratmi): tiga titik, petunjuk dari lemparan tepat, menepi dalam 2 ubin selama 1,5 detik, batas 12 rumah.
+- `HeadlineManager`: tiga headline per hari dari pool dan flag (`DATA_SCHEMA.md` 2). **Status run 4A (2026-10-18):** selesai bersama format data (`DataMisi`, `DataHeadline`, `PemuatMisi`, `PemuatHeadline`), konten hari 1–3, layar koran (`HalamanKoran`), `SaveManager` v1, dan alur satu hari (`MesinHari` + `hari.tscn`) sebagai satu hari utuh tanpa misi kucing. Efek berita utama hanya dicatat (Fase 7). **Status run 4B (2026-10-18, usulan, belum diuji di HP):** `MissionManager` + `RencanaMisi` (template Cari, kucing di rumah seberang dari benih hari), HUD kartu misi, banner, gelembung petunjuk, kucing digambar `KucingMisi` (sheet hasil `tools/env_art/kendaraan.py --salin`), flag hasil misi yang dikonsumsi sesudah lanjutan tampil (save v2), rekap misi di layar hasil, hadiah 75 koin, bunyi misi (`tools/audio_art/sintesis_misi.py`), dan tutorial terpandu hari 1. Misi lintas hari tetap terbuka (tidak dikerjakan).
+- `MissionManager` dengan template **Cari** (misi P1 Kucing Bu Ratmi): tiga titik di rumah seberang (rumah ke-3 atau 4 dari awal rute, lalu 3 atau 4 rumah lagi, paling jauh rumah ke-12), petunjuk dari lemparan tepat (bukan bantu), menepi dalam 2 ubin dan kecepatan paling tinggi 1,5 u/d selama 1,5 detik berturut-turut. **Status run 4B:** selesai (M-1 sampai M-5, usulan; angka `MISI_*` di `scripts/config.gd`, BALANCING 6g).
 - HUD misi, banner selesai dan gagal (`CONTENT_GUIDE.md` 3), flag lanjutan, headline hari berikutnya membaca flag.
-- `SaveManager` sederhana (`user://save.json`, versi 1; langsung dengan migrasi supaya versi 2 di Fase 6B tidak merusak).
-- Tutorial terpandu (usulan): `tutorial_controller.gd` menampilkan satu petunjuk kontekstual per langkah (kayuh, melambat, lempar, menepi), bisa dilewati, tidak muncul lagi setelah selesai.
+- `SaveManager` sederhana (`user://save.json`; run 4A versi 1, **run 4B versi 2** dengan migrasi: `misi_hasil`, `tutorial`, flag yang dikonsumsi; langsung dengan migrasi supaya Fase 6B tidak merusak).
+- Tutorial terpandu (usulan): `tutorial_controller.gd` menampilkan satu petunjuk kontekstual per langkah (kayuh, melambat, lempar, menepi), bisa dilewati, tidak muncul lagi setelah selesai. **Status run 4B:** selesai; logika murni `tutorial_langkah.gd`, node tidak memblokir input, `tutorial.selesai` ditulis di akhir hari.
 - Semua teks melalui kunci terjemahan (lihat 3.4).
 
 **Aset**

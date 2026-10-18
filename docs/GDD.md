@@ -285,6 +285,8 @@ Semua angka di bagian 10.3–10.8 masih usulan dan disetel lewat prototype.
 4. Layar hasil harian merekap misi, hadiah, dan efeknya ke pelanggan.
 5. Konsekuensi disimpan sebagai flag. Headline hari berikutnya membaca flag itu.
 
+**Perilaku yang dipasang di prototype 4B (usulan, belum diuji di HP, tidak dikunci; BALANCING 6g, DATA_SCHEMA 1):** kucing P1 tampil sekilas di tiga titik di rumah sisi seberang; langkah "lihat" selalu bisa diselesaikan dengan melewati titik (kucing tampil sedikitnya 2 detik pada ngebut); lemparan tepat manual ke kotak surat pelanggan di jendela langkah memberi petunjuk (gelembung teks, meong, kucing tampil lebih awal), lemparan mode bantu tidak; langkah "tangkap" = menepi dalam 2 ubin dan berhenti (kecepatan paling tinggi 1,5 u/d) 1,5 detik berturut-turut, tanpa tombol baru dan tanpa tangkap otomatis walau mode bantu menyala; gagal bila rumah seberang ke-12 terlewati atau rute berakhir, tanpa pengaruh pada koin, tip, atau skor. Hadiah P1 75 koin (tingkat sedang). Flag hasil dibaca headline besok tepat sekali lalu dihapus; kucing yang gagal dicari tidak muncul lagi besok (hanya headline "Belum Ditemukan").
+
 ### 10.4 Enam template misi
 
 | Template | Intinya | Mekanik yang dipakai | Parameter utama |
