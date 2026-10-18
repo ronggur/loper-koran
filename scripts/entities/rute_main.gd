@@ -330,6 +330,11 @@ func _tampilkan_misi() -> void:
 	var hud: HudRute = _hud as HudRute
 	if hud != null:
 		hud.tampilkan_misi(_keadaan_misi, _misi)
+		var ukuran: Vector2 = get_viewport_rect().size
+		var penanda: Array[TampilMisi.Penanda] = []
+		if _keadaan_misi != null:
+			penanda = TampilMisi.penanda_aktif(_keadaan_misi, TampilMisi.sepeda_layar(ukuran, geser_dorongan()), _sepeda.lateral_ubin, _sepeda.jarak_ubin, hud.area_misi(), ukuran.y)
+		hud.tampilkan_penanda_kucing(penanda, _detik_misi)
 	if _kucing == null:
 		return
 	var t: RencanaMisi.Titik = MissionManager.titik_tampil(_keadaan_misi) if _keadaan_misi != null else null

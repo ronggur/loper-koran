@@ -36,6 +36,7 @@ func jalankan() -> void:
 	_test_rencana_menghindari_mobil()
 	_test_rencana_tidak_sah()
 	_test_manager_lihat_dan_jendela()
+	_test_manager_jendela_antar_titik()
 	_test_manager_petunjuk()
 	_test_manager_tangkap_ambang()
 	_test_manager_tangkap_jatuh_jeda()
@@ -169,7 +170,7 @@ func _tanpa_komentar_dan_ruang(teks: String) -> String:
 func _test_config() -> void:
 	_judul.call("Misi 4B: angka Config literal (AC-21, rule balancing)")
 	var harapan: Dictionary = {
-		"MISI_HADIAH_KOIN": [45, 75, 120], "MISI_TAMPIL_JARAK_UBIN": 12.0, "MISI_TAMPIL_PETUNJUK_JARAK_UBIN": 18.0, "MISI_TAMPIL_DETIK_MIN": 2.0,
+		"MISI_HADIAH_KOIN": [45, 75, 120], "MISI_TAMPIL_JARAK_UBIN": 14.0, "MISI_TAMPIL_PETUNJUK_JARAK_UBIN": 22.0, "MISI_TAMPIL_DETIK_MIN": 2.0, "MISI_PETUNJUK_TAMBAH_DETIK_MIN": 1.0, "MISI_TAMPIL_CADANGAN_DETIK": 0.25,
 		"MISI_TANGKAP_KECEPATAN_MAKS_UD": 1.5, "MISI_BANNER_DETIK": 1.5, "MISI_PETUNJUK_DETIK": 2.5, "MISI_BANNER_PANJANG_MAKS": 24,
 		"MISI_KUCING_LATERAL_UBIN": -2.0, "MISI_KUCING_MAJU_UBIN": 0.5, "MISI_KUCING_GOYANG_LATERAL_UBIN": 0.25, "MISI_KUCING_GOYANG_MAJU_UBIN": 0.25, "SEED_MISI_SELISIH": 4093, "MISI_KUCING_JAUH_MOBIL_UBIN": 6.0,
 		"MISI_TITIK_DIKENAL": ["atap", "bawah_mobil_tamu", "balik_pot"],
@@ -491,15 +492,49 @@ func _test_rencana_tidak_sah() -> void:
 	check(not kosong.sah(), "Rencana baru (kosong) tidak sah")
 
 
+# --- MissionManager: jendela terlihat tiap kucing tidak dipotong jarak antar titik (M-2', QA-001) ---
+
+## Tiga kucing `lihat` berjarak 11,5 ubin (jarak terpendek rencana nyata) disimulasikan pada ngebut dengan langkah waktu 1/30 detik (bingkai turun): lama
+## tiap kucing ditandai terlihat sebelum dilewati harus >= `MISI_TAMPIL_DETIK_MIN`. Bila kucing berikut baru ditandai setelah kucing sebelumnya dilewati (iterasi 1),
+## jendelanya hanya 11,5 / 6,0 = 1,92 detik dan tes ini merah.
+func _test_manager_jendela_antar_titik() -> void:
+	_judul.call("MissionManager: tiap kucing terlihat >= 2,0 detik pada ngebut walau jarak antar kucing hanya 11,5 ubin (M-2', bingkai 30 fps)")
+	var r: RencanaMisi.Rencana = _rencana()
+	r.titik[1].maju_ubin = 31.5
+	r.titik[2].maju_ubin = 43.0
+	r.titik[2].jenis = "lihat"
+	r.titik[2].radius_ubin = 0.0
+	r.titik[2].lama_berhenti_detik = 0.0
+	var k: Array = _keadaan(r)
+	var dt: float = 1.0 / 30.0
+	var maju: float = 0.0
+	var frame_terlihat: Array[int] = [-1, -1, -1]
+	var frame_lewat: Array[int] = [-1, -1, -1]
+	var frame: int = 0
+	while k[0].status == MissionManager.Status.AKTIF and frame < 3000:
+		maju += 6.0 * dt
+		var h: MissionManager.Hasil = _langkah(k, _masukan(maju, -2.0, 6.0, dt))
+		for kj: MissionManager.Kejadian in h.kejadian:
+			if kj.jenis == MissionManager.Peristiwa.TERLIHAT and frame_terlihat[kj.langkah] < 0:
+				frame_terlihat[kj.langkah] = frame
+			if kj.jenis == MissionManager.Peristiwa.LANGKAH_SELESAI and frame_lewat[kj.langkah] < 0:
+				frame_lewat[kj.langkah] = frame
+		frame += 1
+	for i: int in range(3):
+		var lama: float = float(frame_lewat[i] - frame_terlihat[i]) * dt
+		check(frame_terlihat[i] >= 0 and frame_lewat[i] > frame_terlihat[i] and lama >= Config.MISI_TAMPIL_DETIK_MIN, "kucing %d: terlihat %.3f detik sebelum dilewati pada ngebut 30 fps (>= %.1f detik)" % [i + 1, lama, Config.MISI_TAMPIL_DETIK_MIN])
+	check(frame_terlihat[1] < frame_lewat[0], "kucing 2 ditandai terlihat sebelum kucing 1 dilewati (jarak antar kucing 11,5 < jarak tampil 14)")
+
+
 # --- MissionManager: lihat dan jendela tampil (AC-5a) ---
 
 func _test_manager_lihat_dan_jendela() -> void:
 	_judul.call("MissionManager: lihat selesai bila kucing sudah tampil dan dilewati; jendela tampil >= 2,0 detik pada ngebut (AC-5a)")
 	var k: Array = _keadaan()
-	var h: MissionManager.Hasil = _langkah(k, _masukan(7.9))
-	check(h.kejadian.is_empty() and MissionManager.kucing_tampil(k[0]) == -1, "maju 7,9 (kucing di 20, jarak tampil 12): belum tampil, tanpa peristiwa")
-	h = _langkah(k, _masukan(8.0))
-	check(h.ada(MissionManager.Peristiwa.TERLIHAT) and h.jumlah(MissionManager.Peristiwa.TERLIHAT) == 1 and MissionManager.kucing_tampil(k[0]) == 0, "maju 8,0 tepat (inklusif): kucing titik 1 tampil, satu peristiwa TERLIHAT")
+	var h: MissionManager.Hasil = _langkah(k, _masukan(5.9))
+	check(h.kejadian.is_empty() and MissionManager.kucing_tampil(k[0]) == -1, "maju 5,9 (kucing di 20, jarak tampil 14): belum tampil, tanpa peristiwa")
+	h = _langkah(k, _masukan(6.0))
+	check(h.ada(MissionManager.Peristiwa.TERLIHAT) and h.jumlah(MissionManager.Peristiwa.TERLIHAT) == 1 and MissionManager.kucing_tampil(k[0]) == 0, "maju 6,0 tepat (inklusif): kucing titik 1 tampil, satu peristiwa TERLIHAT")
 	h = _langkah(k, _masukan(12.0))
 	check(h.kejadian.is_empty(), "TERLIHAT tidak berulang untuk kucing yang sama")
 	h = _langkah(k, _masukan(19.99))
@@ -527,8 +562,8 @@ func _test_manager_lihat_dan_jendela() -> void:
 		frame += 1
 	var lama: float = float(frame_lewat - frame_terlihat) * DT
 	check(frame_terlihat >= 0 and frame_lewat > frame_terlihat and lama >= 2.0 - DT, "ngebut 6,0 u/d: kucing terlihat %.3f detik sebelum dilewati (>= 2,0 detik, prinsip 3)" % lama)
-	check(MissionManager.detik_tampil_min() >= Config.MISI_TAMPIL_DETIK_MIN - 0.000001 and is_equal_approx(MissionManager.detik_tampil_min(), 12.0 / 6.0), "detik_tampil_min() = 12 / 6,0 = 2,0 dan >= MISI_TAMPIL_DETIK_MIN")
-	check(MissionManager.detik_tampil(3.0) == 4.0 and MissionManager.detik_tampil(0.0) == INF and MissionManager.detik_tampil(6.0, true) == 3.0, "detik_tampil: 12 / 3 = 4 detik, diam = tak hingga, dengan petunjuk 18 / 6 = 3 detik")
+	check(MissionManager.detik_tampil_min() >= Config.MISI_TAMPIL_DETIK_MIN - 0.000001 and is_equal_approx(MissionManager.detik_tampil_min(), 14.0 / 6.0), "detik_tampil_min() = 14 / 6,0 dan >= MISI_TAMPIL_DETIK_MIN")
+	check(is_equal_approx(MissionManager.detik_tampil(7.0), 2.0) and MissionManager.detik_tampil(0.0) == INF and is_equal_approx(MissionManager.detik_tampil(11.0, true), 2.0), "detik_tampil: 14 / 7 = 2 detik, diam = tak hingga, dengan petunjuk 22 / 11 = 2 detik")
 	# Kucing tidak pernah tampil bila misi tidak aktif lagi, dan keadaan tanpa rencana tidak crash.
 	var kosong: Array = [MissionManager.awal(null)]
 	var hk: MissionManager.Hasil = _langkah(kosong, _masukan(10.0))
@@ -578,16 +613,16 @@ func _test_manager_petunjuk() -> void:
 	ms.lemparan.append(_lemparan(10.0))
 	var hs: MissionManager.Hasil = _langkah(sudah, ms)
 	check(hs.jumlah(MissionManager.Peristiwa.PETUNJUK) == 1 and MissionManager.kucing_tampil(sudah[0]) == 0, "kucing langkah sudah tampil tapi belum dilewati: petunjuk tetap diberikan, kucing tetap tampil")
-	# Petunjuk membuat kucing tampil lebih awal (18 vs 12 ubin).
+	# Petunjuk membuat kucing terlihat lebih awal (22 vs 14 ubin): kucing langkah 2 di 40 (rumah 40), petunjuk saat langkah 1 aktif.
 	var awal: Array = _keadaan()
-	var mp: MissionManager.Masukan = _masukan(0.5)
-	mp.lemparan.append(_lemparan(10.0))
+	var mp: MissionManager.Masukan = _masukan(5.0)
+	mp.lemparan.append(_lemparan(30.0))
 	var hp: MissionManager.Hasil = _langkah(awal, mp)
-	check(hp.jumlah(MissionManager.Peristiwa.PETUNJUK) == 1 and MissionManager.kucing_tampil(awal[0]) == -1, "petunjuk di maju 0,5: kucing (20) belum tampil (batas 18 -> maju 2,0)")
-	_langkah(awal, _masukan(1.99))
-	check(MissionManager.kucing_tampil(awal[0]) == -1, "dengan petunjuk: maju 1,99 belum tampil")
-	var ht: MissionManager.Hasil = _langkah(awal, _masukan(2.0))
-	check(ht.ada(MissionManager.Peristiwa.TERLIHAT) and MissionManager.kucing_tampil(awal[0]) == 0, "dengan petunjuk: tampil tepat di maju 2,0 (20 - 18), lebih awal dari 8,0 tanpa petunjuk")
+	check(hp.jumlah(MissionManager.Peristiwa.PETUNJUK) == 1 and not awal[0].tampil[1], "petunjuk langkah 2 di maju 5,0: kucing 2 (40) belum terlihat (batas 22 -> maju 18,0)")
+	_langkah(awal, _masukan(17.99))
+	check(not awal[0].tampil[1], "dengan petunjuk: maju 17,99 kucing 2 belum terlihat")
+	var ht: MissionManager.Hasil = _langkah(awal, _masukan(18.0))
+	check(ht.ada(MissionManager.Peristiwa.TERLIHAT) and awal[0].tampil[1], "dengan petunjuk: kucing 2 terlihat tepat di maju 18,0 (40 - 22), lebih awal dari 26,0 tanpa petunjuk")
 	# Petunjuk untuk langkah berikut: lemparan tepat di jendela langkah 2 saat langkah 1 masih aktif memberi petunjuk langkah 2 (pelanggan menunjuk ke kucing berikutnya).
 	var dua: Array = _keadaan()
 	var md: MissionManager.Masukan = _masukan(5.0)

@@ -8,16 +8,17 @@ extends RefCounted
 ## datang apa adanya dari `SkorRute.Hasil` / `KoranLempar.Koran` (K-4 run fase3b-rintangan-skor); `ThrowSolver` dan `SkorRute` tetap sumber.
 ##
 ## Perilaku:
-## - `lihat` (M-2): kucing titik ke-i tampil sekilas (`terlihat`) saat langkah ke-i aktif dan pemain maju ke `MISI_TAMPIL_JARAK_UBIN` (atau
-##   `MISI_TAMPIL_PETUNJUK_JARAK_UBIN` bila ada petunjuk) sebelum kucing. Selesai bila pemain maju melewati titik kucing dengan kucing sudah tampil;
-##   langkah `lihat` selalu bisa diselesaikan tanpa keterampilan. Jendela tampil sedikitnya `MISI_TAMPIL_DETIK_MIN` pada `KECEPATAN_NGEBUT_UD`
-##   (`detik_tampil_min`, dibuktikan tes).
+## - `lihat` (M-2'): kucing titik ke-i ditandai terlihat (`tampil`, peristiwa `TERLIHAT`) begitu pemain maju ke `MISI_TAMPIL_JARAK_UBIN` (atau
+##   `MISI_TAMPIL_PETUNJUK_JARAK_UBIN` bila ada petunjuk) sebelum kucing, untuk SEMUA langkah yang belum selesai (tidak menunggu langkah sebelumnya selesai,
+##   supaya jarak antar kucing yang pendek tidak memotong jendela terlihat). "Terlihat" di layar = badan kucing utuh di area layar atau penanda tepi layar
+##   (`TampilMisi`, dibuktikan dari geometri layar nyata oleh tes). Langkah `lihat` selesai bila pemain maju melewati titik kucing; selalu bisa
+##   diselesaikan tanpa keterampilan. Waktu terlihat sedikitnya `MISI_TAMPIL_DETIK_MIN` (+ cadangan) pada `KECEPATAN_NGEBUT_UD`.
 ## - Petunjuk (M-3, K-3): lemparan tepat ke kotak surat pelanggan (`Lemparan.tepat` dari skor/koran, bukan lemparan bantu) ke rumah di jendela sebuah langkah
 ##   (`RencanaMisi.Titik.petunjuk_*`; jendela tiap langkah dari rumah titik sebelumnya sampai sebelum rumah titiknya, tidak bertumpuk) yang belum selesai
 ##   (langkah aktif atau yang berikutnya, jadi kucingnya belum dilewati), SEKALI per langkah. Pelanggan menunjuk ke arah kucing berikutnya, jadi lemparan ke rumah
 ##   sebelum kucing yang akan datang tetap berguna walau kucing sebelumnya belum dilewati. Memunculkan gelembung teks (`petunjuk_sisa`), isyarat suara, dan
-##   membuat kucing langkah itu tampil lebih awal (`MISI_TAMPIL_PETUNJUK_JARAK_UBIN`) bila belum tampil; bila sudah tampil hanya teks dan suara (jarak lempar 5
-##   ubin dan waktu terbang membuat petunjuk yang disyaratkan "kucing belum tampil" hampir mustahil didapat, jadi syarat itu tidak dipakai).
+##   membuat kucing langkah itu terlihat lebih awal (`MISI_TAMPIL_PETUNJUK_JARAK_UBIN`, M-3') bila belum ditandai terlihat; bila sudah, hanya teks dan suara.
+##   Tambahan waktu terlihat yang nyata hanya bila petunjuk datang sebelum pemain masuk jarak biasa (`MISI_TAMPIL_JARAK_UBIN`) dari kucing.
 ## - `tangkap` (M-4): pemain dalam `radius_ubin` dari kucing (tepi inklusif) dan kecepatan paling tinggi `MISI_TANGKAP_KECEPATAN_MAKS_UD` (inklusif)
 ##   selama `lama_berhenti_detik` BERTURUT-TURUT (timer maju hanya dengan dt efektif); keluar radius atau terlalu cepat mengembalikan timer ke 0; saat
 ##   jatuh (tabrakan) dan saat jeda timer tidak maju dan tidak direset. Tidak ada tombol baru dan tidak ada tangkap otomatis (K-3: mode bantu tidak
@@ -139,6 +140,7 @@ static func langkah(keadaan: Keadaan, masukan: Masukan) -> Hasil:
 	if k.status != Status.AKTIF or r == null or not r.sah() or not is_finite(masukan.maju_ubin):
 		return hasil
 	_terapkan_petunjuk(k, masukan, hasil)
+	_tandai_terlihat(k, masukan, hasil)
 	_majukan(k, masukan, dt, hasil)
 	if k.status == Status.AKTIF:
 		_cek_gagal(k, masukan, hasil)
@@ -168,6 +170,18 @@ static func kucing_tampil(k: Keadaan) -> int:
 	if k == null or k.status != Status.AKTIF or k.rencana == null or k.langkah >= k.rencana.titik.size():
 		return -1
 	return k.langkah if k.tampil[k.langkah] else -1
+
+
+## Indeks titik yang ditandai terlihat tetapi belum selesai (urut naik), selama misi aktif. Kucing langkah aktif ada di sini bila sudah ditandai; HUD
+## memasang penanda tepi layar untuk tiap indeks yang badannya belum utuh di layar (`TampilMisi`), dan hanya kucing langkah aktif yang digambar sebagai badan.
+static func indeks_terlihat(k: Keadaan) -> Array[int]:
+	var hasil: Array[int] = []
+	if k == null or k.status != Status.AKTIF or k.rencana == null:
+		return hasil
+	for i: int in range(k.langkah, k.rencana.titik.size()):
+		if k.tampil[i]:
+			hasil.append(i)
+	return hasil
 
 
 ## Titik kucing yang digambar saat ini, atau null.
@@ -254,17 +268,22 @@ static func _terapkan_petunjuk(k: Keadaan, m: Masukan, hasil: Hasil) -> void:
 			break
 
 
-## Memajukan langkah aktif (bisa beberapa langkah `lihat` sekaligus bila pemain meloncat jauh).
+## Menandai terlihat tiap langkah yang belum selesai bila pemain sudah masuk jaraknya (M-2'): tidak menunggu langkah sebelumnya selesai, jadi jarak antar
+## kucing yang pendek (sampai 11,5 ubin) tidak memotong jendela terlihat.
+static func _tandai_terlihat(k: Keadaan, m: Masukan, hasil: Hasil) -> void:
+	for i: int in range(k.langkah, k.rencana.titik.size()):
+		if not k.tampil[i] and m.maju_ubin >= k.rencana.titik[i].maju_ubin - jarak_tampil(k.petunjuk[i]):
+			k.tampil[i] = true
+			_catat(hasil, Peristiwa.TERLIHAT, i)
+
+
+## Memajukan langkah aktif (bisa beberapa langkah `lihat` sekaligus bila pemain meloncat jauh). Kucing langkah aktif sudah ditandai terlihat
+## (`_tandai_terlihat`): jarak tampil selalu lebih besar dari nol, jadi pemain yang tiba di titik kucing pasti sudah masuk jarak tampilnya.
 static func _majukan(k: Keadaan, m: Masukan, dt: float, hasil: Hasil) -> void:
 	var jumlah: int = k.rencana.titik.size()
 	while k.status == Status.AKTIF and k.langkah < jumlah:
 		var i: int = k.langkah
 		var t: RencanaMisi.Titik = k.rencana.titik[i]
-		if not k.tampil[i] and m.maju_ubin >= t.maju_ubin - jarak_tampil(k.petunjuk[i]):
-			k.tampil[i] = true
-			_catat(hasil, Peristiwa.TERLIHAT, i)
-		if not k.tampil[i]:
-			return
 		if t.jenis == "lihat":
 			if m.maju_ubin < t.maju_ubin:
 				return

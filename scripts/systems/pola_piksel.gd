@@ -205,3 +205,23 @@ const KILAU_KUCING_2: Array[String] = ["o...o...o", ".owo.owo.", "..owwwo..", ".
 const EKOR_KUCING_1: Array[String] = ["...oo", "..owo", ".owo.", "owo.."]
 ## Frame kedua ekor: terkulai ke samping.
 const EKOR_KUCING_2: Array[String] = ["oo...", "owoo.", ".owoo", "..oo."]
+
+## Panah penanda tepi layar kucing misi (run 4B iterasi 2, M-2' dan M-3'; `w` = warna penanda), menunjuk ke atas, 11x10. Menunjuk ke kanan lewat `putar_kanan`.
+const PANAH_KUCING_ATAS: Array[String] = [".....o.....", "....owo....", "...owwwo...", "..owwwwwo..", ".owwwwwwwo.", "oooowwwoooo", "...owwwo...", "...owwwo...", "...owwwo...", "...ooooo..."]
+
+
+## Pola `data` diputar 90 derajat searah jarum jam (baris jadi kolom). Semua baris harus sama panjang; pola kosong atau tidak persegi panjang = pola kosong.
+static func putar_kanan(data: Array[String]) -> Array[String]:
+	var hasil: Array[String] = []
+	if data.is_empty():
+		return hasil
+	var lebar: int = data[0].length()
+	for baris: String in data:
+		if baris.length() != lebar:
+			return hasil
+	for x: int in range(lebar):
+		var baru: String = ""
+		for y: int in range(data.size() - 1, -1, -1):
+			baru += data[y][x]
+		hasil.append(baru)
+	return hasil

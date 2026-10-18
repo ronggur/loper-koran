@@ -853,20 +853,26 @@ const MISI_TITIK_DIKENAL: Array[String] = ["atap", "bawah_mobil_tamu", "balik_po
 const MISI_LANGKAH_JENIS_DIKENAL: Array[String] = ["lihat", "tangkap"]
 ## Objek target misi Cari yang dikenal.
 const MISI_TARGET_OBJEK_DIKENAL: Array[String] = ["kucing"]
-## Sisi target misi (hanya `seberang` yang dipakai di perumahan).
-const MISI_SISI_DIKENAL: Array[String] = ["seberang", "dekat"]
+## Sisi target misi yang didukung `RencanaMisi`: hanya `seberang` (kucing selalu di rumah sisi seberang). `dekat` ditolak validasi sampai didukung (QA-006).
+const MISI_SISI_DIKENAL: Array[String] = ["seberang"]
 ## Penanda visual petunjuk misi yang dikenal.
 const MISI_PETUNJUK_VISUAL_DIKENAL: Array[String] = ["kilau", "ekor"]
 ## Isyarat suara petunjuk misi yang dikenal.
 const MISI_PETUNJUK_SUARA_DIKENAL: Array[String] = ["meong"]
 ## Koin hadiah per tingkat, sejajar dengan `MISI_TINGKAT_HADIAH` (kecil, sedang, besar; GDD 10.5 dan 14.1, 45 / 75 / 120). Dibayar saat misi selesai (K-1).
 const MISI_HADIAH_KOIN: Array[int] = [45, 75, 120]
-## Jarak maju kucing mulai tampil di depan pemain tanpa petunjuk, ubin (M-2): 12 ubin / `KECEPATAN_NGEBUT_UD` 6,0 = 2,0 detik terlihat.
-const MISI_TAMPIL_JARAK_UBIN: float = 12.0
-## Jarak maju kucing mulai tampil bila pemain mendapat petunjuk dari lemparan tepat, ubin (M-3; lebih awal dari `MISI_TAMPIL_JARAK_UBIN`).
-const MISI_TAMPIL_PETUNJUK_JARAK_UBIN: float = 18.0
-## Waktu tampil minimum kucing pada kecepatan ngebut, detik (prinsip 3: petunjuk misi punya penanda visual minimal 2 detik).
+## Jarak maju kucing mulai tampil (penanda tepi layar dan badan) di depan pemain tanpa petunjuk, ubin (M-2'): 14 ubin / `KECEPATAN_NGEBUT_UD` 6,0 = 2,33 detik, sedikitnya
+## `MISI_TAMPIL_DETIK_MIN` + `MISI_TAMPIL_CADANGAN_DETIK`. Iterasi 1 memakai 12 (tepat 2,0 detik di koordinat dunia, kurang dari itu di layar: QA-001).
+const MISI_TAMPIL_JARAK_UBIN: float = 14.0
+## Jarak maju kucing mulai tampil bila pemain mendapat petunjuk dari lemparan tepat, ubin (M-3'): 22 ubin, sedikitnya `MISI_PETUNJUK_TAMBAH_DETIK_MIN` +
+## `MISI_TAMPIL_CADANGAN_DETIK` lebih awal dari `MISI_TAMPIL_JARAK_UBIN` pada ngebut. Iterasi 1 memakai 18 (tambahan nyata di layar nyaris nol: QA-002).
+const MISI_TAMPIL_PETUNJUK_JARAK_UBIN: float = 22.0
+## Waktu terlihat minimum kucing (penanda tepi layar atau badan) pada kecepatan ngebut, detik (prinsip 3: petunjuk misi punya penanda visual minimal 2 detik).
 const MISI_TAMPIL_DETIK_MIN: float = 2.0
+## Tambahan waktu terlihat minimum karena petunjuk dari lemparan tepat pada kecepatan ngebut, detik (M-3', usulan).
+const MISI_PETUNJUK_TAMBAH_DETIK_MIN: float = 1.0
+## Cadangan di atas kedua minimum itu, detik: selisih satu langkah waktu lambat (bingkai turun ke 30 fps), kecepatan sesaat, dan bulat piksel (usulan).
+const MISI_TAMPIL_CADANGAN_DETIK: float = 0.25
 ## Kecepatan maju paling tinggi saat menangkap, u/d (M-4; sama dengan `KECEPATAN_MELAMBAT_UD`: tingkat meluncur, tanpa tombol baru).
 const MISI_TANGKAP_KECEPATAN_MAKS_UD: float = 1.5
 ## Toleransi presisi tunggal saat membandingkan kecepatan dan lama berhenti dengan ambangnya.
@@ -926,6 +932,19 @@ const MISI_KARTU_LEBAR_PX: int = 145
 const MISI_BANNER_Y_PX: int = 50
 ## Lebar minimum teks gelembung petunjuk dari pelanggan, piksel game (teks panjang membungkus).
 const MISI_PETUNJUK_LEBAR_PX: int = 170
+
+## --- Penanda tepi layar kucing misi (run 4B iterasi 2, M-2' dan M-3', QA-001 dan QA-002, usulan; dinilai lewat uji HP) ---
+
+## Sisi persegi penanda tepi layar (panah), piksel game. Non-interaktif, tanpa teks.
+const MISI_PENANDA_UKURAN_PX: int = 11
+## Jarak penanda dan badan kucing "terlihat" dari tepi layar kiri dan kanan, piksel game (strip radar berakhir 16 px dari tepi, sebelum zona aman).
+const MISI_PENANDA_TEPI_PX: int = 22
+## Batas atas penanda dan badan kucing "terlihat" dari tepi atas layar, piksel game (panel progres, koin, skor, dan kartu/banner/gelembung misi berakhir sebelum y 82).
+const MISI_PENANDA_ATAS_PX: int = 84
+## Batas bawah penanda dari tepi bawah layar, piksel game (di atas tombol bel dan panel bawah, yang mulai sekitar 84 px dari bawah).
+const MISI_PENANDA_BAWAH_PX: int = 100
+## Penanda berganti warna tiap sekian detik (dua keadaan dari kode; bentuk panah tetap, jadi tidak hanya warna).
+const MISI_PENANDA_KEDIP_DETIK: float = 0.4
 
 ## --- Bunyi misi (SOUND_DESIGN 3.1 dan 4, run 4B; WAV dari `tools/audio_art/sintesis_misi.py`, usulan) ---
 

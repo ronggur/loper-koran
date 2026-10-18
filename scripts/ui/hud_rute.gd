@@ -51,6 +51,7 @@ var _petunjuk_terakhir: String = ""
 @onready var _label_combo: Label = %LabelCombo
 @onready var _label_putus: Label = %LabelPutus
 @onready var _angka_combo: Label = %AngkaCombo
+@onready var _penanda_kucing: PenandaKucing = %PenandaKucing
 @onready var _strip_misi: MarginContainer = %StripMisi
 @onready var _panel_misi: PanelContainer = %PanelMisi
 @onready var _label_misi: Label = %LabelMisi
@@ -164,6 +165,22 @@ func tampilkan_misi(k: MissionManager.Keadaan, misi: DataMisi) -> void:
 		if kunci_petunjuk != _petunjuk_terakhir:
 			_petunjuk_terakhir = kunci_petunjuk
 			_teks_petunjuk.text = tr(kunci_petunjuk)
+
+
+## Area layar tempat badan kucing misi dan penanda tepi layar boleh berada (`TampilMisi.area`), dari ukuran viewport dan inset zona aman terpasang.
+func area_misi() -> Rect2:
+	var ukuran: Vector2 = get_viewport().get_visible_rect().size
+	return TampilMisi.area(ukuran.x, ukuran.y, geser_awal_x(), geser_atas(), geser_akhir_x())
+
+
+## Menampilkan penanda tepi layar kucing misi (`TampilMisi.penanda_aktif`; kosong = tidak ada) pada waktu animasi `detik`.
+func tampilkan_penanda_kucing(daftar: Array[TampilMisi.Penanda], detik: float) -> void:
+	_penanda_kucing.tampilkan(daftar, detik)
+
+
+## Penanda tepi layar kucing yang sedang tampil (untuk tes dan probe).
+func penanda_kucing() -> PenandaKucing:
+	return _penanda_kucing
 
 
 ## Teks kartu misi yang tampil ("" bila kartu tersembunyi).
