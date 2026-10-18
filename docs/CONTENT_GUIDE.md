@@ -90,7 +90,18 @@ Bahasa Inggris atau bahasa lain belum direncanakan. Kalau nanti ada, semua teks 
 | 2 | Hajatan Warga Digelar Hari Ini | (tidak ada misi) | Anak Blok B Gelar Lomba Balap Karung |
 | 3 | Mati Lampu Semalam, Pagi Masih Redup | (tidak ada misi) | Satpam Kompleks Juara Teka-Teki Silang |
 
-Bila P1 dilewati di hari 1, hari 2 dan 3 menampilkan lagi "Kucing Bu Ratmi Hilang Sejak Semalam" (melewati tidak memicu jeda; berita utama dan ringan sama dengan tabel di atas). Headline lanjutan ("Kucing Bu Ratmi Belum Ditemukan", "Kucing Bu Ratmi Sudah Pulang ke Rumah") baru muncul setelah misi bisa selesai atau gagal (4B).
+Bila P1 dilewati di hari 1, hari 2 dan 3 menampilkan lagi "Kucing Bu Ratmi Hilang Sejak Semalam" (melewati tidak memicu jeda; berita utama dan ringan sama dengan tabel di atas).
+
+**Lanjutan sesudah misi (run 4B, usulan; K-2, K-4, M-6, M-8).** Hasil P1 di hari 1 ditulis sebagai flag di akhir hari (`kucing_ketemu` bila selesai, `kucing_belum` bila gagal). Besoknya koran menampilkan headline lanjutan **tepat sekali**, lalu flag-nya dikonsumsi (dihapus dari save). Ketemu: "Kucing Bu Ratmi Sudah Pulang ke Rumah" di slot berita ringan. Gagal: "Kucing Bu Ratmi Belum Ditemukan" di slot misi, tanpa tombol Ambil/Lewati (kucing yang gagal dicari tidak muncul lagi besok; tidak ada misi lanjutan sungguhan). Jeda `jeda` pada headline lanjutan diabaikan: flag yang dikonsumsi adalah gerbangnya. Contoh dari data nyata dengan P1 diambil di hari 1 dan tanpa hasil lain (dijaga `tests/tes_misi_save.gd`):
+
+| Hari | Berita utama | Misi sampingan | Berita ringan |
+|---|---|---|---|
+| 2 (setelah ketemu) | Hajatan Warga Digelar Hari Ini | (tidak ada misi) | Kucing Bu Ratmi Sudah Pulang ke Rumah |
+| 3 (setelah ketemu) | Mati Lampu Semalam, Pagi Masih Redup | (tidak ada misi) | Anak Blok B Gelar Lomba Balap Karung |
+| 2 (setelah gagal) | Hajatan Warga Digelar Hari Ini | Kucing Bu Ratmi Belum Ditemukan | Anak Blok B Gelar Lomba Balap Karung |
+| 3 (setelah gagal) | Mati Lampu Semalam, Pagi Masih Redup | (tidak ada misi) | Satpam Kompleks Juara Teka-Teki Silang |
+
+P1 ditawarkan lagi setelah jeda 7 hari dihitung dari hari diambil (diambil hari 1: boleh lagi mulai hari 8, S-4); GDD 10.3 menyebut 7 hari, jadi ini bukan keputusan baru.
 
 Isi data 4A: 8 berita utama (lima aktif di perumahan: hajatan, tujuh belasan, pasar kaget, jalan diperbaiki, mati lampu; tiga `aktif: false` untuk distrik lain), 8 berita ringan, 2 lanjutan, dan misi P1. **Ditandai untuk ditinjau pemilik:** "Warga Hias Jalan untuk Tujuh Belasan" dan "Hajatan Warga Digelar Hari Ini" (budaya, bagian 5: ditulis netral, tanpa lelucon); "Mati Lampu Semalam, Pagi Masih Redup" (efek mati lampu menurut GDD 10.7); nama "Warung Bu Inah" dan "Blok B" rekaan.
 

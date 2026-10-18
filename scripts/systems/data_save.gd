@@ -202,7 +202,7 @@ static func _catat_misi_hasil(state: Dictionary, angka: HasilRute.Angka, hari: i
 		return
 	var riwayat: Dictionary = state["misi_hasil"]
 	var lama: Variant = riwayat.get(angka.misi_id)
-	if typeof(lama) == TYPE_DICTIONARY and (lama as Dictionary).get("hasil") == "selesai":
+	if typeof(lama) == TYPE_DICTIONARY and str((lama as Dictionary).get("hasil", "")) == "selesai":
 		return
 	riwayat[angka.misi_id] = {"hasil": angka.misi_hasil, "hari": clampi(hari, Config.HARI_AWAL, Config.SAVE_ANGKA_MAKS)}
 
@@ -220,7 +220,10 @@ static func daftar_flag(state: Dictionary) -> Array[String]:
 ## True bila tutorial sudah selesai atau dilewati (`tutorial.selesai`).
 static func tutorial_selesai(state: Dictionary) -> bool:
 	var tutorial: Variant = state.get("tutorial")
-	return typeof(tutorial) == TYPE_DICTIONARY and (tutorial as Dictionary).get("selesai") == true
+	if typeof(tutorial) != TYPE_DICTIONARY:
+		return false
+	var selesai: Variant = (tutorial as Dictionary).get("selesai")
+	return typeof(selesai) == TYPE_BOOL and selesai
 
 
 ## Jeda di state sebagai {id: int}. `kunci` = "misi_jeda" atau "headline_jeda".
@@ -283,7 +286,8 @@ static func _normalisasi_misi_hasil(riwayat: Dictionary) -> Dictionary:
 
 
 static func _normalisasi_tutorial(tutorial: Dictionary) -> Dictionary:
-	return {"selesai": tutorial.get("selesai") == true}
+	var selesai: Variant = tutorial.get("selesai")
+	return {"selesai": typeof(selesai) == TYPE_BOOL and selesai}
 
 
 static func _normalisasi_terakhir(terakhir: Dictionary) -> Dictionary:

@@ -112,6 +112,8 @@ func _initialize() -> void:
 	headline.jalankan()
 	var misi: TesMisi = TesMisi.new(check, _judul)
 	misi.jalankan()
+	var misi_save: TesMisiSave = TesMisiSave.new(check, _judul)
+	misi_save.jalankan()
 	var sprite: TesSprite = TesSprite.new(check, _judul, self)
 	sprite.jalankan()
 	var ekspor: TesExport = TesExport.new(check, _judul)

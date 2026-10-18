@@ -430,16 +430,17 @@ func _anggota(nilai: float, daftar: Array[float]) -> bool:
 func _test_rencana_menghindari_mobil() -> void:
 	_judul.call("RencanaMisi: titik menghindari mobil garasi seberang, rumah dekat tidak dihitung (AC-4)")
 	var misi: DataMisi = _misi_nyata()
-	# Rumah seberang di maju 2, 8, 14, ... (6 ubin sekali). Mobil di dekat rumah ke-4 (maju 20 + kucing 0,5): rumah ke-4 tidak boleh dipakai.
-	var rute: RouteBuilder.Rute = _rute_sintetis(14, [20.5])
+	# Rumah seberang di maju 2, 8, 14, ... (6 ubin sekali). Mobil di maju 26,5 (rumah ke-5): rumah ke-4, 5, 6 terlalu dekat (< 6,25 dari mobil), jadi
+	# titik pertama harus rumah ke-3 dan titik kedua rumah ke-7 (mundur dari pilihan acak yang terblokir).
+	var rute: RouteBuilder.Rute = _rute_sintetis(14, [26.5])
 	var dipakai_4: bool = false
 	var semua_sah: bool = true
 	for benih: int in range(60):
 		var r: RencanaMisi.Rencana = RencanaMisi.buat(misi, rute, benih)
 		semua_sah = semua_sah and r.sah()
 		for t: RencanaMisi.Titik in r.titik:
-			dipakai_4 = dipakai_4 or absf(t.maju_ubin - 20.5) < 6.0
-	check(semua_sah and not dipakai_4, "60 benih: rencana tetap sah dan tidak ada titik dalam 6 ubin dari mobil seberang di maju 20,5")
+			dipakai_4 = dipakai_4 or absf(t.maju_ubin - 26.5) < 6.0
+	check(semua_sah and not dipakai_4, "60 benih: rencana tetap sah (mundur dari pilihan terblokir) dan tidak ada titik dalam 6 ubin dari mobil seberang di maju 26,5")
 	# Rumah dekat tidak dihitung sebagai "rumah" misi: indeks mengacu rumah seberang saja.
 	var r_satu: RencanaMisi.Rencana = RencanaMisi.buat(misi, _rute_sintetis(14), 7)
 	var maju_seberang_sah: bool = true
@@ -462,7 +463,7 @@ func _test_rencana_menghindari_mobil() -> void:
 	# Rumah yang pasti terblokir (mobil di tiap rumah ke-3 dan ke-4): mundur ke pilihan lain atau rencana tidak sah, tidak pernah titik di dekat mobil.
 	var mobil_banyak: RouteBuilder.Rute = _rute_sintetis(14, [14.5, 20.5, 26.5, 32.5, 38.5])
 	var r_banyak: RencanaMisi.Rencana = RencanaMisi.buat(misi, mobil_banyak, 3)
-	var jauh: bool = true
+	var jauh: bool = r_banyak.sah() or r_banyak.titik.is_empty()
 	for t: RencanaMisi.Titik in r_banyak.titik:
 		for m: float in [14.5, 20.5, 26.5, 32.5, 38.5]:
 			jauh = jauh and absf(t.maju_ubin - m) >= 6.0
