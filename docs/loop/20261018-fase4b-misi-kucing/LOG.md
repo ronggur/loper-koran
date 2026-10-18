@@ -1,7 +1,7 @@
 # Loop Log — 20261018-fase4b-misi-kucing
 Scope: Run 4B — misi P1 Kucing Bu Ratmi (template Cari), HUD misi dan banner, flag → headline lanjutan, rekap hasil, tutorial hari 1, save v2  ·  Branch: feat/misi-kucing-4b  ·  Mulai: 2026-10-18  ·  Godot: 4.7.2.stable
 
-## Status: IN_PROGRESS   (iterasi saat ini: 2/2; QA iterasi 2 selesai: PASS; orchestrator menutup run)
+## Status: PASSED   (iterasi saat ini: 2/2; QA iterasi 1 = FAIL: 3 Major, 4 Minor, 2 Nit; QA iterasi 2 = PASS: QA-001..008 VERIFIED, QA-009 sampai QA-012 DEFERRED, 0 Blocker/Major/Minor OPEN)
 
 Baseline (main df57f88, sebelum perubahan, dari LOG 4A): `run_tests.gd` 13050 lolos, 0 gagal; `tools/cek_keluaran_tes.py` lolos. Dijalankan ulang oleh Dev di awal iterasi 1.
 
