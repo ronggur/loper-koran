@@ -142,6 +142,8 @@ func _initialize() -> void:
 	await halaman_koran.jalankan()
 	var alur_hari: TesAlurHari = TesAlurHari.new(check, _judul, self)
 	await alur_hari.jalankan()
+	var scene_misi: TesMisiScene = TesMisiScene.new(check, _judul, self)
+	await scene_misi.jalankan()
 	var tata_letak: TesTataLetak = TesTataLetak.new(check, _judul, self)
 	await tata_letak.jalankan()
 	var bunyi: TesBunyi = TesBunyi.new(check, _judul, self)

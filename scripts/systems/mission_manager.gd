@@ -12,9 +12,12 @@ extends RefCounted
 ##   `MISI_TAMPIL_PETUNJUK_JARAK_UBIN` bila ada petunjuk) sebelum kucing. Selesai bila pemain maju melewati titik kucing dengan kucing sudah tampil;
 ##   langkah `lihat` selalu bisa diselesaikan tanpa keterampilan. Jendela tampil sedikitnya `MISI_TAMPIL_DETIK_MIN` pada `KECEPATAN_NGEBUT_UD`
 ##   (`detik_tampil_min`, dibuktikan tes).
-## - Petunjuk (M-3, K-3): lemparan tepat ke kotak surat pelanggan (`Lemparan.tepat` dari skor/koran, bukan lemparan bantu) ke rumah di jendela langkah
-##   aktif (`RencanaMisi.Titik.petunjuk_*`), SEKALI per langkah dan hanya bila kucing langkah itu belum tampil. Memunculkan gelembung teks
-##   (`petunjuk_sisa`), isyarat suara, dan membuat kucing tampil lebih awal.
+## - Petunjuk (M-3, K-3): lemparan tepat ke kotak surat pelanggan (`Lemparan.tepat` dari skor/koran, bukan lemparan bantu) ke rumah di jendela sebuah langkah
+##   (`RencanaMisi.Titik.petunjuk_*`; jendela tiap langkah dari rumah titik sebelumnya sampai sebelum rumah titiknya, tidak bertumpuk) yang belum selesai
+##   (langkah aktif atau yang berikutnya, jadi kucingnya belum dilewati), SEKALI per langkah. Pelanggan menunjuk ke arah kucing berikutnya, jadi lemparan ke rumah
+##   sebelum kucing yang akan datang tetap berguna walau kucing sebelumnya belum dilewati. Memunculkan gelembung teks (`petunjuk_sisa`), isyarat suara, dan
+##   membuat kucing langkah itu tampil lebih awal (`MISI_TAMPIL_PETUNJUK_JARAK_UBIN`) bila belum tampil; bila sudah tampil hanya teks dan suara (jarak lempar 5
+##   ubin dan waktu terbang membuat petunjuk yang disyaratkan "kucing belum tampil" hampir mustahil didapat, jadi syarat itu tidak dipakai).
 ## - `tangkap` (M-4): pemain dalam `radius_ubin` dari kucing (tepi inklusif) dan kecepatan paling tinggi `MISI_TANGKAP_KECEPATAN_MAKS_UD` (inklusif)
 ##   selama `lama_berhenti_detik` BERTURUT-TURUT (timer maju hanya dengan dt efektif); keluar radius atau terlalu cepat mengembalikan timer ke 0; saat
 ##   jatuh (tabrakan) dan saat jeda timer tidak maju dan tidak direset. Tidak ada tombol baru dan tidak ada tangkap otomatis (K-3: mode bantu tidak
@@ -236,19 +239,19 @@ static func detik_tampil_min() -> float:
 # --- Dalam ---
 
 static func _terapkan_petunjuk(k: Keadaan, m: Masukan, hasil: Hasil) -> void:
-	var i: int = k.langkah
-	if i >= k.rencana.titik.size():
-		return
-	var t: RencanaMisi.Titik = k.rencana.titik[i]
 	for l: Lemparan in m.lemparan:
 		if not l.tepat or l.bantu or not l.kotak_pelanggan:
 			continue
-		if k.petunjuk[i] or k.tampil[i]:
-			continue
-		if l.maju_rumah_ubin >= t.petunjuk_awal_ubin and l.maju_rumah_ubin < t.petunjuk_akhir_ubin:
-			k.petunjuk[i] = true
-			k.petunjuk_sisa = Config.MISI_PETUNJUK_DETIK
-			_catat(hasil, Peristiwa.PETUNJUK, i)
+		for i: int in range(k.langkah, k.rencana.titik.size()):
+			var t: RencanaMisi.Titik = k.rencana.titik[i]
+			if l.maju_rumah_ubin < t.petunjuk_awal_ubin or l.maju_rumah_ubin >= t.petunjuk_akhir_ubin:
+				continue
+			# Jendela tiap langkah tidak bertumpuk, jadi satu rumah hanya milik satu langkah; langkah yang sudah lewat tidak dihitung.
+			if not k.petunjuk[i]:
+				k.petunjuk[i] = true
+				k.petunjuk_sisa = Config.MISI_PETUNJUK_DETIK
+				_catat(hasil, Peristiwa.PETUNJUK, i)
+			break
 
 
 ## Memajukan langkah aktif (bisa beberapa langkah `lihat` sekaligus bila pemain meloncat jauh).

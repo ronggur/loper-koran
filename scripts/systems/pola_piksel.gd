@@ -196,10 +196,11 @@ static func rentang_tepi(isi: Array[Vector3i]) -> Array[Vector3i]:
 			hasil.append(Vector3i(r.x, tepi_akhir_awal, r.z))
 	return hasil
 
-## Kilau kucing misi, dua frame bergantian (run fase4b-misi-kucing, M-10, petunjuk visual `kilau`; `w` = ACCENT): bintang kecil 5x5 lalu 7x5 di atas kepala kucing.
-const KILAU_KUCING_1: Array[String] = ["..o..", ".owo.", "owwwo", ".owo.", "..o.."]
-## Frame kedua kilau: bintang lebih besar, bentuknya tetap terbaca sebagai kilau.
-const KILAU_KUCING_2: Array[String] = ["..ooo..", ".owwwo.", "owwwwwo", ".owwwo.", "..ooo.."]
+## Kilau kucing misi, dua frame bergantian (run fase4b-misi-kucing, M-10, petunjuk visual `kilau`; `w` = ACCENT): bintang 7x7 lalu 9x9 di atas kepala kucing
+## (cukup besar supaya terbaca di skala x3 pada kecepatan ngebut).
+const KILAU_KUCING_1: Array[String] = ["...o...", "..owo..", "..owo..", "owwwwwo", "..owo..", "..owo..", "...o..."]
+## Frame kedua kilau: bintang lebih besar bersinar diagonal, bentuknya tetap terbaca sebagai kilau.
+const KILAU_KUCING_2: Array[String] = ["o...o...o", ".owo.owo.", "..owwwo..", ".owwwwwo.", "..owwwo..", ".owo.owo.", "o...o...o"]
 ## Ekor kucing misi, dua frame bergantian (petunjuk visual `ekor`; `w` = RADAR_MISI): melengkung ke atas, 5x4.
 const EKOR_KUCING_1: Array[String] = ["...oo", "..owo", ".owo.", "owo.."]
 ## Frame kedua ekor: terkulai ke samping.

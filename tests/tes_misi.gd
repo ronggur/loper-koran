@@ -558,8 +558,8 @@ func _test_manager_petunjuk() -> void:
 		["lemparan mode bantu (tap), walau tepat (K-3)", _lemparan(10.0, true, true)],
 		["bukan kotak surat pelanggan", _lemparan(10.0, true, false, false)],
 		["rumah sebelum jendela (maju -1)", _lemparan(-1.0)],
-		["rumah tepat di akhir jendela (eksklusif, 19,5)", _lemparan(19.5)],
-		["rumah sesudah jendela (30)", _lemparan(30.0)],
+		["rumah sesudah semua jendela (60, jendela terakhir berakhir eksklusif di 59,5)", _lemparan(60.0)],
+		["rumah negatif jauh di belakang rute (-50)", _lemparan(-50.0)],
 	]
 	for butir: Array in ditolak:
 		var kk: Array = _keadaan()
@@ -571,12 +571,13 @@ func _test_manager_petunjuk() -> void:
 	var mb: MissionManager.Masukan = _masukan(5.0)
 	mb.lemparan.append(_lemparan(0.0))
 	check(_langkah(batas_awal, mb).jumlah(MissionManager.Peristiwa.PETUNJUK) == 1, "rumah tepat di awal jendela (0,0, inklusif) memberi petunjuk")
-	# Kucing sudah tampil: petunjuk tidak diberikan lagi (kucing sudah terlihat).
+	# Kucing langkah sudah tampil tapi belum dilewati: petunjuk tetap diberikan (gelembung dan suara), tanpa mengubah jarak tampil yang sudah lewat.
 	var sudah: Array = _keadaan()
 	_langkah(sudah, _masukan(9.0))
 	var ms: MissionManager.Masukan = _masukan(9.5)
 	ms.lemparan.append(_lemparan(10.0))
-	check(_langkah(sudah, ms).jumlah(MissionManager.Peristiwa.PETUNJUK) == 0, "kucing langkah ini sudah tampil: tidak ada petunjuk")
+	var hs: MissionManager.Hasil = _langkah(sudah, ms)
+	check(hs.jumlah(MissionManager.Peristiwa.PETUNJUK) == 1 and MissionManager.kucing_tampil(sudah[0]) == 0, "kucing langkah sudah tampil tapi belum dilewati: petunjuk tetap diberikan, kucing tetap tampil")
 	# Petunjuk membuat kucing tampil lebih awal (18 vs 12 ubin).
 	var awal: Array = _keadaan()
 	var mp: MissionManager.Masukan = _masukan(0.5)
@@ -587,16 +588,29 @@ func _test_manager_petunjuk() -> void:
 	check(MissionManager.kucing_tampil(awal[0]) == -1, "dengan petunjuk: maju 1,99 belum tampil")
 	var ht: MissionManager.Hasil = _langkah(awal, _masukan(2.0))
 	check(ht.ada(MissionManager.Peristiwa.TERLIHAT) and MissionManager.kucing_tampil(awal[0]) == 0, "dengan petunjuk: tampil tepat di maju 2,0 (20 - 18), lebih awal dari 8,0 tanpa petunjuk")
-	# Petunjuk langkah berikut memakai jendela langkah itu; lemparan untuk jendela langkah 2 saat langkah 1 aktif tidak memberi petunjuk.
+	# Petunjuk untuk langkah berikut: lemparan tepat di jendela langkah 2 saat langkah 1 masih aktif memberi petunjuk langkah 2 (pelanggan menunjuk ke kucing berikutnya).
 	var dua: Array = _keadaan()
 	var md: MissionManager.Masukan = _masukan(5.0)
 	md.lemparan.append(_lemparan(30.0))
-	check(_langkah(dua, md).jumlah(MissionManager.Peristiwa.PETUNJUK) == 0 and not dua[0].petunjuk[1], "lemparan di jendela langkah 2 saat langkah 1 aktif: belum petunjuk (jendela = langkah aktif)")
-	_langkah(dua, _masukan(20.0))
-	var m3: MissionManager.Masukan = _masukan(21.0)
-	m3.lemparan.append(_lemparan(30.0))
-	var h3: MissionManager.Hasil = _langkah(dua, m3)
-	check(h3.jumlah(MissionManager.Peristiwa.PETUNJUK) == 1 and dua[0].petunjuk[1], "langkah 2 aktif: lemparan tepat di jendela [19,5, 39,5) memberi petunjuk langkah 2")
+	var hd: MissionManager.Hasil = _langkah(dua, md)
+	check(hd.jumlah(MissionManager.Peristiwa.PETUNJUK) == 1 and hd.kejadian[0].langkah == 1 and dua[0].petunjuk[1] and not dua[0].petunjuk[0], "lemparan tepat di jendela langkah 2 [19,5, 39,5) saat langkah 1 aktif: petunjuk untuk langkah 2 (indeks 1), bukan langkah 1")
+	var tiga: Array = _keadaan()
+	var mt: MissionManager.Masukan = _masukan(5.0)
+	mt.lemparan.append(_lemparan(50.0))
+	var ht3: MissionManager.Hasil = _langkah(tiga, mt)
+	check(ht3.jumlah(MissionManager.Peristiwa.PETUNJUK) == 1 and ht3.kejadian[0].langkah == 2 and tiga[0].petunjuk[2], "jendela langkah 3 [39,5, 59,5): petunjuk untuk langkah 3")
+	# Langkah yang sudah selesai tidak memberi petunjuk lagi: sesudah kucing 1 dilewati, lemparan di jendela langkah 1 tidak berguna.
+	var lewat: Array = _keadaan()
+	_langkah(lewat, _masukan(20.0))
+	var ml: MissionManager.Masukan = _masukan(21.0)
+	ml.lemparan.append(_lemparan(10.0))
+	check(_langkah(lewat, ml).jumlah(MissionManager.Peristiwa.PETUNJUK) == 0 and not lewat[0].petunjuk[0], "langkah 1 sudah selesai: lemparan tepat di jendelanya tidak memberi petunjuk")
+	# Satu lemparan hanya memberi petunjuk satu langkah; dua lemparan di dua jendela berbeda memberi dua petunjuk.
+	var ganda: Array = _keadaan()
+	var mg2: MissionManager.Masukan = _masukan(1.0)
+	mg2.lemparan.append(_lemparan(10.0))
+	mg2.lemparan.append(_lemparan(30.0))
+	check(_langkah(ganda, mg2).jumlah(MissionManager.Peristiwa.PETUNJUK) == 2 and ganda[0].petunjuk[0] and ganda[0].petunjuk[1], "dua lemparan tepat di dua jendela: dua petunjuk (satu per langkah)")
 	# Sesudah selesai atau gagal tidak ada petunjuk baru.
 	var selesai: Array = _keadaan(_rencana(30.0))
 	_langkah(selesai, _masukan(40.0))

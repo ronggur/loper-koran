@@ -906,8 +906,8 @@ const MISI_KUCING_BARIS_HADAP: int = 1
 const MISI_KUCING_KOLOM_DUDUK: int = 0
 ## Tinggi kotak penutup kucing, ubin (kucing kecil: hampir tidak pernah menutupi pemain; tetap lewat penerap penutup yang sama dengan rumah).
 const MISI_KUCING_TINGGI_UBIN: float = 0.5
-## Pojok kiri atas pola kilau 5x5 relatif titik pijak kucing, piksel (di atas kepala).
-const MISI_KILAU_POSISI_PX: Array[int] = [-3, -28]
+## Pojok kiri atas pola kilau 7x7 atau 9x9 (tengah di titik pijak) relatif titik pijak kucing, piksel (di atas kepala).
+const MISI_KILAU_POSISI_PX: Array[int] = [-4, -36]
 ## Pojok kiri atas pola ekor 5x4 relatif titik pijak kucing, piksel (di belakang badan).
 const MISI_EKOR_POSISI_PX: Array[int] = [9, -10]
 ## Bar progres tangkap di atas kucing: lebar dan tinggi piksel, jarak di atas titik pijak.
