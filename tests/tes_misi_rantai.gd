@@ -111,6 +111,7 @@ func _test_rencana_enam_ratus_hari() -> void:
 	var menimpa_zona: int = 0
 	var rute_berubah: int = 0
 	var jarak_min: float = 1000.0
+	var pertama_min: float = 1000.0
 	for hari: int in range(1, 601):
 		var rute: RouteBuilder.Rute = RouteBuilder.bangun(SeedHari.rute(hari), segmen).rute
 		var sebelum: String = _sidik(rute)
@@ -124,6 +125,8 @@ func _test_rencana_enam_ratus_hari() -> void:
 			var t: RencanaMisi.Titik = rencana.titik[i]
 			if t.indeks_rumah > rencana.batas_rumah:
 				melewati_batas += 1
+			if i == 0:
+				pertama_min = minf(pertama_min, t.maju_ubin)
 			if i > 0:
 				jarak_min = minf(jarak_min, t.maju_ubin - rencana.titik[i - 1].maju_ubin)
 				if t.indeks_rumah <= rencana.titik[i - 1].indeks_rumah:
@@ -135,6 +138,7 @@ func _test_rencana_enam_ratus_hari() -> void:
 	check(tidak_sah == 0, "600 hari: semua rencana sah (%d tidak sah)" % tidak_sah)
 	check(melewati_batas == 0 and tidak_berurutan == 0, "600 hari: titik terakhir <= rumah ke-12 dan titik berurutan (%d melewati, %d tidak berurutan)" % [melewati_batas, tidak_berurutan])
 	check(menimpa_zona == 0 and rute_berubah == 0, "600 hari: kucing tidak menimpa zona kotak surat pelanggan dan rute tidak berubah (%d menimpa, %d rute berubah)" % [menimpa_zona, rute_berubah])
+	check(pertama_min >= 10.0, "600 hari: kucing pertama paling dekat %.2f ubin dari awal rute (batas diketahui: pemain yang ngebut dari titik nol melihatnya sekitar 2 detik, bukan 2,25; dicatat di BALANCING 6g dan NEEDS-MANUAL)" % pertama_min)
 	check(jarak_min >= 11.0, "600 hari: jarak maju antar titik tidak kurang dari 11 ubin (terpendek %.2f); jendela terlihat kucing berikut tetap penuh karena ditandai tanpa menunggu kucing sebelumnya" % jarak_min)
 
 

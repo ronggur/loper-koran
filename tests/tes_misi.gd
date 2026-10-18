@@ -214,6 +214,7 @@ func _test_data_cari_ditolak() -> void:
 		["target.jumlah 0", func(d: Dictionary) -> void: d["target"]["jumlah"] = 0, "target.jumlah"],
 		["target.jumlah pecahan", func(d: Dictionary) -> void: d["target"]["jumlah"] = 1.5, "target.jumlah"],
 		["target.sisi tidak dikenal", func(d: Dictionary) -> void: d["target"]["sisi"] = "kiri", "target.sisi"],
+		["target.sisi dekat (belum didukung RencanaMisi)", func(d: Dictionary) -> void: d["target"]["sisi"] = "dekat", "target.sisi"],
 		["target.sisi hilang", func(d: Dictionary) -> void: d["target"].erase("sisi"), "target.sisi wajib"],
 		["target field asing", func(d: Dictionary) -> void: d["target"]["warna"] = "oren", "tidak dikenal"],
 		["langkah hanya satu", func(d: Dictionary) -> void: d["langkah"] = [d["langkah"][2]], "paling sedikit 2"],

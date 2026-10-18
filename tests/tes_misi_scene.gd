@@ -40,9 +40,11 @@ func jalankan() -> void:
 	await _test_bunyi_misi()
 	await _test_mode_bantu()
 	await _test_tutorial_di_scene()
+	await _test_penanda_dan_petunjuk_di_scene()
 	for kasus: Array in KASUS:
 		for kidal: bool in [false, true]:
 			await _test_tata_letak(kasus, kidal)
+			await _test_penanda_layar(kasus, kidal)
 
 
 # --- Pembantu ---
@@ -205,7 +207,7 @@ func _test_kucing_di_scene() -> void:
 	var kucing: KucingMisi = akar.kucing()
 	check(rencana != null and rencana.sah() and rencana.titik.size() == 3 and akar.keadaan_misi() != null, "rencana tiga titik dari seed hari 1 tersusun dan misi aktif")
 	var t_awal: RencanaMisi.Titik = rencana.titik[0]
-	check(kucing.tampil() == (0.0 >= t_awal.maju_ubin - Config.MISI_TAMPIL_JARAK_UBIN), "di awal rute kucing 1 tampil bila titiknya dalam 12 ubin (maju %.1f): %s" % [t_awal.maju_ubin, kucing.tampil()])
+	check(kucing.tampil() == (0.0 >= t_awal.maju_ubin - Config.MISI_TAMPIL_JARAK_UBIN), "di awal rute kucing 1 tampil bila titiknya dalam jarak tampil (maju %.1f): %s" % [t_awal.maju_ubin, kucing.tampil()])
 	var tekstur: Texture2D = load("res://assets/sprites/npc/mission_kucing_sheet.png") as Texture2D
 	var info: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/sprites/npc/mission_kucing_sheet.json"))
 	var sel: Array = info["cell"]
@@ -218,7 +220,7 @@ func _test_kucing_di_scene() -> void:
 	check(kucing.badan().frame == KucingMisi.frame_duduk() and kucing.badan().hframes == 7 and kucing.badan().vframes == 4 and kucing.badan().offset == Vector2(-18, -21) and not kucing.badan().centered, "sprite: frame duduk baris masuk (7), titik pijak (18, 21) di titik asal")
 	var t1: RencanaMisi.Titik = rencana.titik[0]
 	_di(akar, maxf(t1.maju_ubin - 11.9, 0.0))
-	check(kucing.tampil() and kucing.titik() == t1, "dalam 12 ubin sebelum kucing: kucing titik 1 tampil (MISI_TAMPIL_JARAK_UBIN)")
+	check(kucing.tampil() and kucing.titik() == t1, "dalam jarak tampil sebelum kucing: kucing titik 1 tampil (MISI_TAMPIL_JARAK_UBIN)")
 	check(kucing.position == Iso.posisi_gambar(Vector2(t1.lateral_ubin, -t1.maju_ubin)) and kucing.position == KucingMisi.posisi_gambar(t1), "posisi gambar = proyeksi iso titik kucing (lateral, -maju), dibulatkan ke piksel")
 	check(kucing.get_parent() == akar.daur() and (kucing.get_parent() as Node2D).y_sort_enabled, "kucing anak induk Y-sort rumah (urutan gambar mengikuti titik pijak)")
 	check(kucing.hiasan().get_parent() == kucing and kucing.visible, "hiasan kilau dan ekor menempel di kucing")
@@ -593,6 +595,173 @@ func _test_tutorial_di_scene() -> void:
 	_sentuh(3, bel, false)
 	check(TouchZones.zona_di(bel, 780, false) == TouchZones.Zona.BEL and d.bel().jumlah == kring_awal + 1, "ketukan di zona bel saat tutorial aktif tetap berbunyi (sentuhan tidak ditelan)")
 	_bersihkan(d)
+
+
+# --- Penanda tepi layar kucing (M-2', M-3', QA-001, QA-002) ---
+
+## Sepeda ngebut di `maju`/`lateral` sampai dorongan kamera mendekati mantap (langkah berulang di titik yang sama).
+func _ngebut_di(akar: RuteMain, maju: float, lateral: float) -> void:
+	for i: int in range(45):
+		_di(akar, maju, lateral, Config.KECEPATAN_NGEBUT_UD)
+
+
+## True bila ada penanda HUD untuk titik `titik`.
+func _titik_ada(penanda: PenandaKucing, titik: int) -> bool:
+	for p: TampilMisi.Penanda in penanda.penanda_tampil():
+		if p.titik == titik:
+			return true
+	return false
+
+
+## True bila badan kucing titik `t` utuh di area layar untuk keadaan sepeda sekarang.
+func _badan_utuh(akar: RuteMain, t: RencanaMisi.Titik) -> bool:
+	var sepeda: SepedaUji = _sepeda(akar)
+	return TampilMisi.badan_terlihat(TampilMisi.kaki_kucing(akar.posisi_layar_sepeda(), sepeda.lateral_ubin, sepeda.jarak_ubin, t.lateral_ubin, t.maju_ubin), akar.hud_rute().area_misi())
+
+
+## Penanda yang diharapkan HUD untuk keadaan scene sekarang (fungsi murni yang sama dengan `RuteMain`, masukan dibaca dari node nyata).
+func _penanda_diharapkan(akar: RuteMain) -> Array[TampilMisi.Penanda]:
+	var ukuran: Vector2 = akar.get_viewport_rect().size
+	var sepeda: SepedaUji = _sepeda(akar)
+	return TampilMisi.penanda_aktif(akar.keadaan_misi(), TampilMisi.sepeda_layar(ukuran, akar.geser_dorongan()), sepeda.lateral_ubin, sepeda.jarak_ubin, akar.hud_rute().area_misi(), ukuran.y)
+
+
+func _test_penanda_dan_petunjuk_di_scene() -> void:
+	_judul.call("Penanda tepi layar di scene: tampil bila kucing terlihat tetapi badan belum utuh; hilang saat utuh, dilewati, misi berakhir, atau tanpa misi (M-2')")
+	var akar: RuteMain = await _siapkan()
+	var hud: HudRute = akar.hud_rute()
+	var penanda: PenandaKucing = hud.penanda_kucing()
+	var rencana: RencanaMisi.Rencana = akar.rencana_misi()
+	var t1: RencanaMisi.Titik = rencana.titik[0]
+	check(penanda.mouse_filter == Control.MOUSE_FILTER_IGNORE and penanda.get_parent() == hud, "node penanda tepi layar non-interaktif (mouse_filter abaikan), anak HUD rute")
+	var t2_awal: RencanaMisi.Titik = rencana.titik[1]
+	_ngebut_di(akar, t2_awal.maju_ubin - Config.MISI_TAMPIL_JARAK_UBIN - 0.5, 0.0)
+	check(not akar.keadaan_misi().tampil[1] and _titik_ada(penanda, 1) == false, "kucing 2: 0,5 ubin sebelum jarak tampil (%.1f): belum terlihat dan tanpa penanda" % Config.MISI_TAMPIL_JARAK_UBIN)
+	_ngebut_di(akar, t2_awal.maju_ubin - Config.MISI_TAMPIL_JARAK_UBIN + 0.1, 0.0)
+	check(akar.keadaan_misi().tampil[1] and _titik_ada(penanda, 1), "kucing 2: tepat di dalam jarak tampil: terlihat dan satu penanda untuk titik 1")
+	_bersihkan(akar)
+	akar = await _siapkan()
+	hud = akar.hud_rute()
+	penanda = hud.penanda_kucing()
+	rencana = akar.rencana_misi()
+	t1 = rencana.titik[0]
+	_ngebut_di(akar, maxf(t1.maju_ubin - 13.0, 0.0), 2.0)
+	check(akar.keadaan_misi().tampil[0] and not _badan_utuh(akar, t1) and _titik_ada(penanda, 0), "kucing 1 13 ubin di depan dari lajur dekat (lateral +2): terlihat, badan belum utuh di layar, satu penanda untuk titik 0")
+	var rect: Rect2 = penanda.rect_penanda()[0]
+	var layar: Rect2 = Rect2(Vector2.ZERO, akar.get_viewport_rect().size)
+	check(layar.encloses(rect) and rect.position.y >= float(Config.MISI_PENANDA_ATAS_PX), "penanda utuh di layar dan di bawah strip HUD atas: %s" % [rect])
+	var pusat_diharapkan: Array[TampilMisi.Penanda] = _penanda_diharapkan(akar)
+	check(pusat_diharapkan.size() == 1 and pusat_diharapkan[0].titik == 0 and (pusat_diharapkan[0].pusat - penanda.penanda_tampil()[0].pusat).length() <= 2.0, "posisi penanda di HUD = TampilMisi.penanda_aktif dari keadaan nyata sepeda dan kamera (selisih <= 2 piksel: dorongan kamera masih bergeser sedikit tiap langkah)")
+	# Rumus kaki kucing sama dengan gambar nyata (kamera, dorongan, pembulatan piksel): selisih kurang dari 2 piksel.
+	_ngebut_di(akar, t1.maju_ubin - 8.0, 0.0)
+	var kucing: KucingMisi = akar.kucing()
+	var sepeda: SepedaUji = _sepeda(akar)
+	var sepeda_layar: Vector2 = akar.posisi_layar_sepeda()
+	check((TampilMisi.sepeda_layar(akar.get_viewport_rect().size, akar.geser_dorongan()) - sepeda_layar).length() < 2.0, "sepeda di layar menurut TampilMisi = posisi sepeda nyata (selisih %s)" % [TampilMisi.sepeda_layar(akar.get_viewport_rect().size, akar.geser_dorongan()) - sepeda_layar])
+	var kaki: Vector2 = TampilMisi.kaki_kucing(sepeda_layar, sepeda.lateral_ubin, sepeda.jarak_ubin, t1.lateral_ubin, t1.maju_ubin)
+	var kaki_nyata: Vector2 = kucing.global_position - sepeda.global_position + sepeda_layar
+	check(kucing.tampil() and (kaki_nyata - kaki).length() < 2.0, "kaki kucing menurut TampilMisi = titik pijak gambar nyata relatif sepeda (selisih %s)" % [kaki_nyata - kaki])
+	# Badan utuh di area: kucing aktif tanpa penanda.
+	_ngebut_di(akar, t1.maju_ubin - 4.0, t1.lateral_ubin)
+	check(TampilMisi.badan_terlihat(TampilMisi.kaki_kucing(akar.posisi_layar_sepeda(), _sepeda(akar).lateral_ubin, _sepeda(akar).jarak_ubin, t1.lateral_ubin, t1.maju_ubin), hud.area_misi()) and penanda.penanda_tampil().is_empty(), "4 ubin di depan dari lajur kucing: badan utuh di area, tanpa penanda")
+	# Kucing berikut terlihat sebelum kucing 1 dilewati bila jaraknya cukup dekat; penanda hanya untuk kucing yang bukan langkah aktif atau belum utuh.
+	var t2: RencanaMisi.Titik = rencana.titik[1]
+	_ngebut_di(akar, t2.maju_ubin - Config.MISI_TAMPIL_JARAK_UBIN + 0.1, 0.0)
+	var indeks: Array[int] = MissionManager.indeks_terlihat(akar.keadaan_misi())
+	check(indeks.has(1) or akar.keadaan_misi().langkah >= 1, "kucing 2 terlihat begitu pemain masuk jarak tampilnya (tanpa menunggu kucing 1 selesai)")
+	var ada_titik_1: bool = false
+	for p: TampilMisi.Penanda in penanda.penanda_tampil():
+		ada_titik_1 = ada_titik_1 or p.titik == 1
+	check(ada_titik_1, "penanda untuk kucing 2 tampil di HUD")
+	# Dilewati: kucing 1 selesai, penanda titik 0 tidak ada.
+	_di(akar, t1.maju_ubin + 0.3, 0.0, 3.0)
+	for p: TampilMisi.Penanda in penanda.penanda_tampil():
+		check(p.titik != 0, "kucing 1 dilewati: tidak ada penanda titik 0")
+	_bersihkan(akar)
+	# Misi berakhir (banner): tanpa penanda. Tanpa misi: tanpa penanda.
+	var akar2: RuteMain = await _siapkan()
+	_selesaikan_misi(akar2)
+	check(akar2.keadaan_misi().status == MissionManager.Status.SELESAI and akar2.hud_rute().penanda_kucing().penanda_tampil().is_empty(), "misi selesai: tidak ada penanda")
+	_bersihkan(akar2)
+	var akar3: RuteMain = await _siapkan(false)
+	_ngebut_di(akar3, 20.0, 0.0)
+	check(akar3.hud_rute().penanda_kucing().penanda_tampil().is_empty() and akar3.keadaan_misi() == null, "tanpa misi: tidak ada penanda")
+	_bersihkan(akar3)
+	# Petunjuk dari lemparan tepat: kucing 2 terlihat 22 ubin di depan (bukan 14), pemain di 20 ubin dari kucing 2.
+	var akar4: RuteMain = await _siapkan()
+	var t2b: RencanaMisi.Titik = akar4.rencana_misi().titik[1]
+	var rumah: RouteBuilder.RumahRute = _pelanggan_di(akar4, t2b.petunjuk_awal_ubin, t2b.petunjuk_akhir_ubin)
+	check(rumah != null, "ada pelanggan di jendela petunjuk titik 2")
+	if rumah != null:
+		check(_lempar_ke(akar4, rumah, false) and akar4.keadaan_misi().petunjuk[1], "lemparan tepat memberi petunjuk untuk langkah 2")
+		_ngebut_di(akar4, t2b.maju_ubin - (Config.MISI_TAMPIL_PETUNJUK_JARAK_UBIN - 0.5), 0.0)
+		var punya: bool = false
+		for p: TampilMisi.Penanda in akar4.hud_rute().penanda_kucing().penanda_tampil():
+			punya = punya or p.titik == 1
+		check(punya and akar4.keadaan_misi().tampil[1], "dengan petunjuk: kucing 2 dan penanda-nya tampil %.1f ubin di depan (lebih awal dari %.1f tanpa petunjuk)" % [Config.MISI_TAMPIL_PETUNJUK_JARAK_UBIN - 0.5, Config.MISI_TAMPIL_JARAK_UBIN])
+	_bersihkan(akar4)
+	var akar5: RuteMain = await _siapkan()
+	var t2c: RencanaMisi.Titik = akar5.rencana_misi().titik[1]
+	_ngebut_di(akar5, t2c.maju_ubin - (Config.MISI_TAMPIL_PETUNJUK_JARAK_UBIN - 0.5), 0.0)
+	check(not akar5.keadaan_misi().tampil[1], "tanpa petunjuk, pada jarak yang sama: kucing 2 belum terlihat")
+	_bersihkan(akar5)
+
+
+## Penanda tidak menumpuk HUD nyata, di lima ukuran dan kidal: sampel jarak dan lateral sepeda saat ngebut; batas konstanta cocok dengan HUD nyata.
+func _test_penanda_layar(kasus: Array, kidal: bool) -> void:
+	var lebar: int = kasus[2]
+	var tag: String = "%d %s" % [lebar, "kidal" if kidal else "kanan"]
+	_judul.call("Penanda tepi layar kucing %s: batas HUD atas dan radar cocok dengan HUD nyata, penanda tidak menumpuk HUD (M-2')" % tag)
+	var akar: RuteMain = await _siapkan(true, true, Vector2i(kasus[0], kasus[1]))
+	if kidal:
+		akar.atur_kidal(true)
+	await _tree.process_frame
+	await _tree.process_frame
+	var hud: HudRute = akar.hud_rute()
+	var tut: TutorialController = akar.tutorial_node()
+	var layar: Rect2 = Rect2(Vector2.ZERO, akar.get_viewport_rect().size)
+	var atas: float = float(Config.MISI_PENANDA_ATAS_PX)
+	var tepi: float = float(Config.MISI_PENANDA_TEPI_PX)
+	# Batas konstanta cocok dengan HUD nyata.
+	var strip_atas: Dictionary = {"panel_progres": hud.rect_panel_progres(), "panel_koin": hud.rect_panel_koin(), "panel_skor": hud.rect_panel_skor(), "tombol_jeda": hud.rect_tombol_jeda(), "kartu": hud.rect_kartu()}
+	for nama: String in strip_atas:
+		var r: Rect2 = strip_atas[nama]
+		check(r.end.y <= atas, "%s: %s berakhir di y %.1f <= batas atas penanda %.0f" % [tag, nama, r.end.y, atas])
+	check(hud.rect_radar_seberang().end.x <= tepi and hud.rect_radar_dekat().position.x >= layar.size.x - tepi, "%s: strip radar di luar tepi penanda (%.0f px dari tepi)" % [tag, tepi])
+	var bawah_batas: float = layar.size.y - float(Config.MISI_PENANDA_BAWAH_PX)
+	check(hud.rect_tombol_bel().position.y >= bawah_batas and hud.rect_panel_kecepatan().position.y >= bawah_batas and hud.rect_panel_koran().position.y >= bawah_batas, "%s: bel dan panel bawah di bawah batas bawah penanda (y %.0f)" % [tag, bawah_batas])
+	# Banner dan gelembung petunjuk: tampilkan lewat keadaan nyata lalu ukur.
+	var t1: RencanaMisi.Titik = akar.rencana_misi().titik[0]
+	var rumah: RouteBuilder.RumahRute = _pelanggan_di(akar, 0.0, t1.petunjuk_akhir_ubin)
+	_lempar_ke(akar, rumah, false)
+	check(hud.petunjuk_tampil() and hud.rect_petunjuk().end.y <= atas, "%s: gelembung petunjuk berakhir di y %.1f <= %.0f" % [tag, hud.rect_petunjuk().end.y, atas])
+	var stick: Rect2 = TouchZones.rect_stick(lebar, kidal)
+	var lain: Dictionary = {
+		"radar_seberang": hud.rect_radar_seberang(), "radar_dekat": hud.rect_radar_dekat(), "panel_progres": hud.rect_panel_progres(), "panel_koin": hud.rect_panel_koin(),
+		"panel_skor": hud.rect_panel_skor(), "tombol_jeda": hud.rect_tombol_jeda(), "tombol_bel": hud.rect_tombol_bel(), "panel_kecepatan": hud.rect_panel_kecepatan(), "panel_koran": hud.rect_panel_koran(),
+		"kartu": hud.rect_kartu(), "petunjuk": hud.rect_petunjuk(), "tutorial": tut.rect_panel(), "lewati": tut.rect_lewati(),
+	}
+	var banyak: int = 0
+	var pelanggaran: Array[String] = []
+	for lateral: float in [-2.0, -1.0, 0.0, 1.0, 2.0]:
+		for jarak: float in [Config.MISI_TAMPIL_JARAK_UBIN - 0.1, 12.0, 10.0, 8.0, 6.0]:
+			_ngebut_di(akar, t1.maju_ubin - jarak, lateral)
+			if akar.keadaan_misi().langkah != 0:
+				continue
+			for r: Rect2 in hud.penanda_kucing().rect_penanda():
+				banyak += 1
+				if not layar.encloses(r):
+					pelanggaran.append("di luar layar %s (lateral %.0f, jarak %.1f)" % [r, lateral, jarak])
+				if r.intersects(stick) and r.position.y > stick.position.y:
+					pelanggaran.append("menumpuk zona stick %s" % [r])
+				for nama: String in lain:
+					if (nama == "tutorial" or nama == "lewati") and not tut.tampil():
+						continue
+					if r.intersects(lain[nama]):
+						pelanggaran.append("menumpuk %s %s (lateral %.0f, jarak %.1f)" % [nama, r, lateral, jarak])
+	check(banyak > 0, "%s: ada penanda yang diukur (%d)" % [tag, banyak])
+	check(pelanggaran.is_empty(), "%s: penanda tidak keluar layar dan tidak menumpuk radar, bel, jeda, panel atas, panel bawah, kartu, gelembung, tutorial: %s" % [tag, pelanggaran.slice(0, 3)])
+	_bersihkan(akar)
 
 
 # --- Tata letak lima ukuran (AC-13, AC-18) ---
