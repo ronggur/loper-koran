@@ -27,6 +27,10 @@ extends HudDasar
 var _skor_terakhir: Array = []
 var _tenggat_terakhir: Vector2i = Vector2i(-1, -1)
 var _terkirim_terakhir: Vector2i = Vector2i(-1, -1)
+## Isi misi terakhir yang disusun (kartu, banner, petunjuk): teks hanya disusun ulang bila berubah (tanpa alokasi per frame).
+var _kartu_terakhir: Array = []
+var _banner_terakhir: Array = []
+var _petunjuk_terakhir: String = ""
 
 @onready var _radar_seberang: RadarStrip = %RadarSeberang
 @onready var _radar_dekat: RadarStrip = %RadarDekat
@@ -134,17 +138,32 @@ func tampilkan_misi(k: MissionManager.Keadaan, misi: DataMisi) -> void:
 	_strip_misi.visible = kartu
 	_panel_banner.visible = banner
 	_panel_petunjuk.visible = petunjuk
+	if not kartu:
+		_kartu_terakhir = []
+	if not banner:
+		_banner_terakhir = []
+	if not petunjuk:
+		_petunjuk_terakhir = ""
 	if kartu:
 		var ditemukan: Vector2i = MissionManager.ditemukan(k)
-		_isi_misi.text = tr("MISI_KARTU").format({"label": tr(misi.hud), "n": ditemukan.x, "total": ditemukan.y, "rumah": MissionManager.sisa_rumah(k)})
+		var kunci_kartu: Array = [ditemukan, MissionManager.sisa_rumah(k)]
+		if kunci_kartu != _kartu_terakhir:
+			_kartu_terakhir = kunci_kartu
+			_isi_misi.text = tr("MISI_KARTU").format({"label": tr(misi.hud), "n": ditemukan.x, "total": ditemukan.y, "rumah": MissionManager.sisa_rumah(k)})
 	if banner:
-		if k.status == MissionManager.Status.SELESAI:
-			_teks_banner.text = tr("MISI_BANNER_HADIAH").format({"teks": tr(misi.banner_selesai), "koin": MissionManager.koin_misi(k)})
-		else:
-			_teks_banner.text = tr(misi.banner_gagal)
-		_teks_banner.add_theme_color_override(&"font_color", Palette.OK if k.status == MissionManager.Status.SELESAI else Palette.TEXT)
+		var kunci_banner: Array = [k.status, MissionManager.koin_misi(k)]
+		if kunci_banner != _banner_terakhir:
+			_banner_terakhir = kunci_banner
+			if k.status == MissionManager.Status.SELESAI:
+				_teks_banner.text = tr("MISI_BANNER_HADIAH").format({"teks": tr(misi.banner_selesai), "koin": MissionManager.koin_misi(k)})
+			else:
+				_teks_banner.text = tr(misi.banner_gagal)
+			_teks_banner.add_theme_color_override(&"font_color", Palette.OK if k.status == MissionManager.Status.SELESAI else Palette.TEXT)
 	if petunjuk:
-		_teks_petunjuk.text = tr(str(misi.petunjuk.get("dari_pelanggan", "")))
+		var kunci_petunjuk: String = str(misi.petunjuk.get("dari_pelanggan", ""))
+		if kunci_petunjuk != _petunjuk_terakhir:
+			_petunjuk_terakhir = kunci_petunjuk
+			_teks_petunjuk.text = tr(kunci_petunjuk)
 
 
 ## Teks kartu misi yang tampil ("" bila kartu tersembunyi).
