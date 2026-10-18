@@ -891,3 +891,45 @@ const MISI_KILAU_DETIK: float = 0.4
 const MISI_EKOR_DETIK: float = 0.5
 ## Kucing tidak boleh ditaruh di rumah seberang yang jarak majunya dari mobil garasi seberang kurang dari ini, ubin (mobil mundur menutup separuh jalan).
 const MISI_KUCING_JAUH_MOBIL_UBIN: float = 6.0
+
+## --- Kucing misi di rute (run 4B, M-10; sheet `assets/sprites/npc/mission_kucing_sheet.png` dari `tools/env_art/kendaraan.py --salin`, usulan) ---
+
+## Ukuran satu sel sheet kucing misi, piksel (lebar, tinggi); sama dengan `cell` di `mission_kucing_sheet.json` (dijaga tes).
+const MISI_KUCING_SEL_PX: Array[int] = [46, 38]
+## Titik pijak kucing di dalam sel, piksel (sama dengan `ground_anchor` di JSON).
+const MISI_KUCING_PIJAK_PX: Array[int] = [18, 21]
+## Kolom dan baris sheet (7 pose x 4 arah moncong).
+const MISI_KUCING_KOLOM: int = 7
+const MISI_KUCING_BARIS: int = 4
+## Baris "masuk" (moncong kiri atas, menghadap rumah sisi seberang) dan kolom pose duduk: placeholder untuk semua titik (M-10: pose intip khusus ada di Fase 5).
+const MISI_KUCING_BARIS_HADAP: int = 1
+const MISI_KUCING_KOLOM_DUDUK: int = 0
+## Tinggi kotak penutup kucing, ubin (kucing kecil: hampir tidak pernah menutupi pemain; tetap lewat penerap penutup yang sama dengan rumah).
+const MISI_KUCING_TINGGI_UBIN: float = 0.5
+## Pojok kiri atas pola kilau 5x5 relatif titik pijak kucing, piksel (di atas kepala).
+const MISI_KILAU_POSISI_PX: Array[int] = [-3, -28]
+## Pojok kiri atas pola ekor 5x4 relatif titik pijak kucing, piksel (di belakang badan).
+const MISI_EKOR_POSISI_PX: Array[int] = [9, -10]
+## Bar progres tangkap di atas kucing: lebar dan tinggi piksel, jarak di atas titik pijak.
+const MISI_PROGRES_LEBAR_PX: int = 18
+const MISI_PROGRES_TINGGI_PX: int = 4
+const MISI_PROGRES_ATAS_PX: int = 20
+
+## --- HUD misi di rute (DESIGN_SPEC 3.1, run 4B, usulan; dinilai lewat uji HP) ---
+
+## Kartu misi: pojok kiri atas, piksel game dari tepi layar (sebelum zona aman). Di bawah area sentuh jeda (y 4 sampai 46), bukan di y 40 seperti sketsa.
+const MISI_KARTU_X_PX: int = 26
+const MISI_KARTU_Y_PX: int = 50
+## Lebar minimum kartu misi, piksel game (sketsa DESIGN_SPEC: 145).
+const MISI_KARTU_LEBAR_PX: int = 145
+## Banner dan gelembung petunjuk: jarak dari tepi atas layar (di bawah panel progres yang berakhir sekitar y 41), tengah mendatar.
+const MISI_BANNER_Y_PX: int = 50
+## Lebar minimum teks gelembung petunjuk dari pelanggan, piksel game (teks panjang membungkus).
+const MISI_PETUNJUK_LEBAR_PX: int = 170
+
+## --- Bunyi misi (SOUND_DESIGN 3.1 dan 4, run 4B; WAV dari `tools/audio_art/sintesis_misi.py`, usulan) ---
+
+## Volume bunyi misi (meong, terlihat, selesai), dB di bus SFX.
+const AUDIO_MISI_VOLUME_DB: float = -3.0
+## Volume bunyi misi gagal, dB (lebih pelan: gagal berbunyi lembut, SOUND_DESIGN 2).
+const AUDIO_MISI_GAGAL_VOLUME_DB: float = -5.0

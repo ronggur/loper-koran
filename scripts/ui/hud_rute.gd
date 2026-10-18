@@ -17,6 +17,11 @@ extends HudDasar
 ## - Zona aman (AC-9): di perangkat mobile inset dari `DisplayServer.get_display_safe_area()` dibaca saat siap dan saat ukuran viewport
 ##   berubah (`ZonaAman.inset_game`), lalu tiap tepi digeser sama besar (`HudDasar`). Di desktop/editor inset nol (persegi aman desktop
 ##   adalah layar monitor, bukan jendela game). Tes memberi inset tiruan lewat `atur_inset`.
+## - Kartu misi (DESIGN_SPEC 3.1, run fase4b-misi-kucing, usulan): kiri atas DI BAWAH area sentuh jeda (x `MISI_KARTU_X_PX`, y `MISI_KARTU_Y_PX`, bukan di y 40
+##   seperti sketsa karena area sentuh jeda berakhir di y 46): label `MISI_LABEL_KARTU` (`ACCENT`) dan "Kucing 0/1 · 8 rumah" (`MISI_KARTU`). Hanya ada
+##   selama misi aktif; saat selesai atau gagal berganti banner `MISI_BANNER_DETIK` (tengah atas di bawah panel progres; hadiah "+75" pada banner
+##   selesai) lalu hilang. Petunjuk dari pelanggan tampil sebagai gelembung teks di slot banner yang sama (tidak pernah bersamaan dengan banner).
+##   Semuanya hanya menampilkan keadaan `MissionManager`, tidak menerima sentuhan, dan ikut zona aman. Tidak dicerminkan saat kidal.
 ## Semua angka dari logika murni; HUD hanya menampilkan. Tidak menerima sentuhan kecuali tombol jeda.
 
 var _skor_terakhir: Array = []
@@ -42,6 +47,15 @@ var _terkirim_terakhir: Vector2i = Vector2i(-1, -1)
 @onready var _label_combo: Label = %LabelCombo
 @onready var _label_putus: Label = %LabelPutus
 @onready var _angka_combo: Label = %AngkaCombo
+@onready var _strip_misi: MarginContainer = %StripMisi
+@onready var _panel_misi: PanelContainer = %PanelMisi
+@onready var _label_misi: Label = %LabelMisi
+@onready var _isi_misi: Label = %IsiMisi
+@onready var _strip_banner: MarginContainer = %StripBanner
+@onready var _panel_banner: PanelContainer = %PanelBanner
+@onready var _teks_banner: Label = %TeksBanner
+@onready var _panel_petunjuk: PanelContainer = %PanelPetunjuk
+@onready var _teks_petunjuk: Label = %TeksPetunjuk
 
 
 func _ready() -> void:
@@ -51,6 +65,8 @@ func _ready() -> void:
 	_panel_skor.custom_minimum_size = Vector2(Config.HUD_SKOR_LEBAR_PX, 0)
 	_ikon_koin.custom_minimum_size = Vector2(Config.HUD_IKON_PX, Config.HUD_IKON_PX)
 	_baris_kanan.add_theme_constant_override(&"separation", Config.HUD_PANEL_JARAK_PX)
+	_panel_misi.custom_minimum_size = Vector2(Config.MISI_KARTU_LEBAR_PX, 0)
+	_teks_petunjuk.custom_minimum_size = Vector2(Config.MISI_PETUNJUK_LEBAR_PX, 0)
 	_terapkan_gaya()
 	super()
 	tampilkan_skor(0, 0, 0, false)
@@ -106,6 +122,69 @@ func tampilkan_progres(status: Array[ProgresRute.Status], terkirim: int, total: 
 func tampilkan_radar(daftar: Array[RadarRute.Penanda]) -> void:
 	_radar_seberang.tampilkan(daftar)
 	_radar_dekat.tampilkan(daftar)
+
+
+## Menampilkan misi dari keadaan `k` (`MissionManager`, null = tanpa misi: semuanya tersembunyi) dengan data `misi`: kartu "Kucing 0/1 · 8 rumah" selama aktif,
+## banner hasil sesudah selesai atau gagal, gelembung petunjuk dari pelanggan selama `petunjuk_sisa`.
+func tampilkan_misi(k: MissionManager.Keadaan, misi: DataMisi) -> void:
+	var ada: bool = k != null and misi != null
+	var kartu: bool = ada and MissionManager.kartu_tampil(k)
+	var banner: bool = ada and MissionManager.banner_tampil(k)
+	var petunjuk: bool = ada and MissionManager.petunjuk_tampil(k)
+	_strip_misi.visible = kartu
+	_panel_banner.visible = banner
+	_panel_petunjuk.visible = petunjuk
+	if kartu:
+		var ditemukan: Vector2i = MissionManager.ditemukan(k)
+		_isi_misi.text = tr("MISI_KARTU").format({"label": tr(misi.hud), "n": ditemukan.x, "total": ditemukan.y, "rumah": MissionManager.sisa_rumah(k)})
+	if banner:
+		if k.status == MissionManager.Status.SELESAI:
+			_teks_banner.text = tr("MISI_BANNER_HADIAH").format({"teks": tr(misi.banner_selesai), "koin": MissionManager.koin_misi(k)})
+		else:
+			_teks_banner.text = tr(misi.banner_gagal)
+		_teks_banner.add_theme_color_override(&"font_color", Palette.OK if k.status == MissionManager.Status.SELESAI else Palette.TEXT)
+	if petunjuk:
+		_teks_petunjuk.text = tr(str(misi.petunjuk.get("dari_pelanggan", "")))
+
+
+## Teks kartu misi yang tampil ("" bila kartu tersembunyi).
+func teks_kartu() -> String:
+	return _isi_misi.text if _strip_misi.visible else ""
+
+
+## Teks banner hasil misi ("" bila tersembunyi).
+func teks_banner() -> String:
+	return _teks_banner.text if _panel_banner.visible else ""
+
+
+## Teks gelembung petunjuk ("" bila tersembunyi).
+func teks_petunjuk() -> String:
+	return _teks_petunjuk.text if _panel_petunjuk.visible else ""
+
+
+func kartu_tampil() -> bool:
+	return _strip_misi.visible
+
+
+func banner_tampil() -> bool:
+	return _panel_banner.visible
+
+
+func petunjuk_tampil() -> bool:
+	return _panel_petunjuk.visible
+
+
+## Persegi kartu misi, banner, dan gelembung petunjuk dalam koordinat viewport game (tes tata letak).
+func rect_kartu() -> Rect2:
+	return _panel_misi.get_global_rect()
+
+
+func rect_banner() -> Rect2:
+	return _panel_banner.get_global_rect()
+
+
+func rect_petunjuk() -> Rect2:
+	return _panel_petunjuk.get_global_rect()
 
 
 ## Memindahkan panel bawah dan tombol bel ke sisi tangan yang dipakai; radar dan panel atas tidak berpindah.
@@ -185,6 +264,9 @@ func _terapkan_tata_letak_rute() -> void:
 	_strip_progres.add_theme_constant_override(&"margin_top", atas)
 	_strip_kanan.add_theme_constant_override(&"margin_top", atas)
 	_strip_kanan.add_theme_constant_override(&"margin_right", Config.HUD_KANAN_MARGIN_PX + geser_akhir_x())
+	_strip_misi.add_theme_constant_override(&"margin_left", Config.MISI_KARTU_X_PX + geser_awal_x())
+	_strip_misi.add_theme_constant_override(&"margin_top", Config.MISI_KARTU_Y_PX + geser_atas())
+	_strip_banner.add_theme_constant_override(&"margin_top", Config.MISI_BANNER_Y_PX + geser_atas())
 	var y_atas: float = float(Config.RADAR_Y_ATAS_PX + geser_atas())
 	var y_bawah: float = float(Config.RADAR_Y_BAWAH_PX)
 	var tepi_awal: float = float(Config.RADAR_TEPI_PX + geser_awal_x())
@@ -222,3 +304,9 @@ func _terapkan_gaya() -> void:
 	for label: Label in [_angka_skor, _angka_combo]:
 		label.add_theme_color_override(&"font_color", Palette.TEXT)
 	_label_putus.add_theme_color_override(&"font_color", Palette.FAIL)
+	_panel_misi.add_theme_stylebox_override(&"panel", GayaHud.panel_hud())
+	_panel_banner.add_theme_stylebox_override(&"panel", GayaHud.panel_hud())
+	_panel_petunjuk.add_theme_stylebox_override(&"panel", GayaHud.panel_hud())
+	_label_misi.add_theme_color_override(&"font_color", Palette.ACCENT)
+	_isi_misi.add_theme_color_override(&"font_color", Palette.TEXT)
+	_teks_petunjuk.add_theme_color_override(&"font_color", Palette.TEXT)

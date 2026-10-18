@@ -20,6 +20,9 @@ extends Node
 ## Keputusan di `BunyiRute`/`BunyiLempar` (logika murni). Jalur jeda sama: tidak ada bunyi baru selama jeda, dan jeda, background, kehilangan
 ## fokus, tutup jendela, atau `hentikan_lempar` menghentikan semua bunyi bus SFX (lempar, mendarat, dan rute) seketika.
 ##
+## Bunyi misi run 4B (AC-15 run fase4b-misi-kucing) juga di bus `SFX`, satu pemutar per berkas `BunyiMisi.BERKAS`: peristiwa misi (`putar_misi_peristiwa`:
+## meong petunjuk, kucing terlihat, misi selesai, misi gagal). Keputusan di `BunyiMisi` (logika murni); jalur jeda dan background sama dengan bunyi lain.
+##
 ## **Tidak merujuk autoload lain** (rule `gdscript`): semua data datang dari pemanggil sebagai argumen. Pemilik sepeda (`JalanUji`)
 ## memanggil `perbarui_sepeda` tiap langkah, menyambungkan sinyal `jeda_berubah` ke `atur_jeda`, dan memanggil `hentikan_sepeda`
 ## saat keluar dari pohon.
@@ -73,6 +76,10 @@ var _giliran_rute: Dictionary = {}
 var _jumlah_rute: Dictionary = {}
 var _rute_terakhir: String = ""
 var _pitch_rute_terakhir: float = 1.0
+## Pemutar bunyi misi per berkas (`BunyiMisi.BERKAS`): String jalur -> AudioStreamPlayer, jumlah keputusan putar per bunyi, dan berkas terakhir (untuk tes).
+var _pemutar_misi: Dictionary = {}
+var _jumlah_misi: Dictionary = {}
+var _misi_terakhir: String = ""
 
 
 func _init() -> void:
@@ -89,6 +96,10 @@ func _init() -> void:
 		for berkas: String in BunyiRute.BERKAS[b]:
 			var nama_rute: StringName = StringName("PemutarRute_" + berkas.get_file().get_basename())
 			_pemutar_rute[berkas] = _buat_pemutar(nama_rute, berkas, BunyiRute.volume_db(b), BUS_LEMPAR)
+	for b: BunyiMisi.Bunyi in BunyiMisi.BERKAS:
+		var berkas_misi: String = BunyiMisi.berkas(b)
+		var nama_misi: StringName = StringName("PemutarMisi_" + berkas_misi.get_file().get_basename())
+		_pemutar_misi[berkas_misi] = _buat_pemutar(nama_misi, berkas_misi, BunyiMisi.volume_db(b), BUS_LEMPAR)
 
 
 func _notification(what: int) -> void:
@@ -207,12 +218,55 @@ func putar_tepat() -> void:
 	putar_rute(BunyiRute.Bunyi.TEPAT)
 
 
+## Bunyi misi `b` (`BunyiMisi.Bunyi`). Tidak ada bunyi baru selama jeda.
+func putar_misi(b: BunyiMisi.Bunyi) -> void:
+	if _jeda:
+		return
+	_jumlah_misi[b] = int(_jumlah_misi.get(b, 0)) + 1
+	_misi_terakhir = BunyiMisi.berkas(b)
+	var pemutar: AudioStreamPlayer = _pemutar_misi[_misi_terakhir]
+	if _boleh_putar():
+		pemutar.play()
+
+
+## Peristiwa misi (nilai enum `MissionManager.Peristiwa`, diberikan sebagai bilangan bulat karena autoload tidak merujuk `MissionManager`): meong, terlihat,
+## selesai, atau gagal; peristiwa tanpa bunyi (langkah selesai) diabaikan.
+func putar_misi_peristiwa(peristiwa: int) -> void:
+	if BunyiMisi.berbunyi(peristiwa):
+		putar_misi(BunyiMisi.dari_peristiwa(peristiwa))
+
+
+## Berapa kali bunyi misi `b` diputuskan sejak autoload dibuat (untuk tes).
+func jumlah_bunyi_misi(b: BunyiMisi.Bunyi) -> int:
+	return int(_jumlah_misi.get(b, 0))
+
+
+## Jalur berkas bunyi misi terakhir ("" bila belum ada; untuk tes).
+func bunyi_misi_terakhir() -> String:
+	return _misi_terakhir
+
+
+## Pemutar bunyi misi untuk jalur `berkas` (`BunyiMisi.BERKAS`), atau null (untuk tes dan probe).
+func pemutar_misi(berkas: String) -> AudioStreamPlayer:
+	return _pemutar_misi.get(berkas, null) as AudioStreamPlayer
+
+
+## True bila salah satu bunyi misi sedang berbunyi.
+func ada_bunyi_misi() -> bool:
+	for pemutar: AudioStreamPlayer in _pemutar_misi.values():
+		if pemutar.playing:
+			return true
+	return false
+
+
 ## Mengembalikan pencacah dan giliran bunyi rute ke awal (untuk tes dan "Main lagi").
 func atur_ulang_rute() -> void:
 	_giliran_rute.clear()
 	_jumlah_rute.clear()
 	_rute_terakhir = ""
 	_pitch_rute_terakhir = 1.0
+	_jumlah_misi.clear()
+	_misi_terakhir = ""
 
 
 ## Berapa kali bunyi rute `b` diputuskan sejak autoload dibuat atau `atur_ulang_rute` (untuk tes).
@@ -372,4 +426,6 @@ func _hentikan_pemutar_lempar() -> void:
 	for pemutar: AudioStreamPlayer in _pemutar_mendarat.values():
 		pemutar.stop()
 	for pemutar: AudioStreamPlayer in _pemutar_rute.values():
+		pemutar.stop()
+	for pemutar: AudioStreamPlayer in _pemutar_misi.values():
 		pemutar.stop()

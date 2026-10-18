@@ -31,12 +31,24 @@ extends AdeganJalan
 ##     aktif. Back Android di layar hasil diabaikan (`_saring_jeda`; tidak memulai ulang diam-diam dan tidak membuka layar jeda di atasnya);
 ##     app ke background tetap menjeda seperti biasa.
 
+##
+## Run fase4b-misi-kucing (AC-11 sampai AC-14, M-1 sampai M-5, K-1 sampai K-4, usulan): misi sampingan hari ini lewat `atur_misi` (kosong = tanpa misi,
+## perilaku 3A sampai 4A tidak berubah; `rute.tscn` yang dijalankan sendiri tidak punya misi):
+## - `RencanaMisi.buat` (benih = seed rute + `SEED_MISI_SELISIH`, disusun tiap rute) lalu `MissionManager.langkah` tiap langkah dengan posisi, kecepatan, jatuh,
+##   jeda, dt efektif, dan lemparan yang baru dinilai (`_koran_dinilai`: `SkorRute.Hasil.tepat`, `Koran.bantu`, hasil kotak surat, rumah yang kena, apa adanya).
+##   Peristiwa dipancarkan sebagai `misi_peristiwa` dan diteruskan ke bunyi (`Audio.putar_misi`).
+## - Kucing digambar `KucingMisi` (anak `Objek`, Y-sort dengan rumah; lewat penerap penutup yang sama), HUD menampilkan kartu, banner, dan gelembung petunjuk.
+## - Hadiah misi (K-1) ikut `koin` di HUD (`_koin_tambahan`) dan di `HasilRute.Angka` yang sama dengan layar hasil dan save; gagal tidak mengubah koin, tip, skor,
+##   atau tenggat. Misi yang masih aktif saat layar hasil terbuka dihentikan sebagai gagal (rute berakhir) supaya hasilnya selalu pasti.
+##
 ## Sepeda mencapai garis akhir rute (tepat sekali per rute; diulang hanya sesudah "Main lagi").
 signal rute_selesai
 ## Rute baru disusun (saat scene siap dan tiap "Main lagi").
 signal rute_disusun(rute: RouteBuilder.Rute)
 ## Layar hasil terbuka (tepat sekali per rute): angka yang ditampilkan.
 signal hasil_dibuka(angka: HasilRute.Angka)
+## Peristiwa misi (`MissionManager.Peristiwa`) pada langkah ke-`langkah` (indeks titik); sebelum bunyi dan HUD dipasang.
+signal misi_peristiwa(jenis: MissionManager.Peristiwa, langkah: int)
 ## Tombol "Hari berikutnya" layar hasil ditekan (hanya di mode hari, `atur_mode_hari`; run fase4a-koran-hari AC-17).
 signal hari_berikutnya_diminta
 
@@ -55,6 +67,13 @@ var _tenggat: TenggatRute.Keadaan = TenggatRute.Keadaan.new()
 var _hasil_tampil: bool = false
 ## Angka layar hasil terakhir (null sebelum layar hasil terbuka).
 var _angka_hasil: HasilRute.Angka = null
+## Misi sampingan hari ini (null = tanpa misi), rencana dan keadaannya, lemparan yang menunggu langkah misi berikutnya, dt langkah terakhir, dan waktu animasi kucing.
+var _misi: DataMisi = null
+var _rencana_misi: RencanaMisi.Rencana = null
+var _keadaan_misi: MissionManager.Keadaan = null
+var _lemparan_misi: Array[MissionManager.Lemparan] = []
+var _dt_langkah: float = 0.0
+var _detik_misi: float = 0.0
 
 @onready var _daur: RumahDaurRute = %Objek
 @onready var _area_kotak: AreaKotakGambar = %AreaKotak
@@ -63,11 +82,13 @@ var _angka_hasil: HasilRute.Angka = null
 @onready var _rintangan_daur: RintanganDaur = %Rintangan
 @onready var _umpan_gambar: UmpanMelayangGambar = %UmpanMelayang
 @onready var _layar_hasil: LayarHasil = %LayarHasil
+@onready var _kucing: KucingMisi = %Kucing
 
 
 func _siapkan_dunia() -> void:
 	_daur.penerap = _penerap
 	_rintangan_daur.penerap = _penerap
+	_kucing.penerap = _penerap
 	_panel_akhir.main_lagi_diminta.connect(main_lagi)
 	_layar_hasil.main_lagi_diminta.connect(main_lagi)
 	_layar_hasil.hari_berikutnya_diminta.connect(hari_berikutnya_diminta.emit)
@@ -75,6 +96,7 @@ func _siapkan_dunia() -> void:
 
 
 func _perbarui_dunia(jarak_ubin: float) -> void:
+	_langkah_misi(jarak_ubin)
 	_daur.perbarui(jarak_ubin)
 	_area_kotak.perbarui(jarak_ubin)
 	_rintangan_daur.perbarui(_rintangan, jarak_ubin)
@@ -107,8 +129,9 @@ func _perbarui_hud_rute(jarak_ubin: float) -> void:
 ## Membuka layar hasil (tepat sekali per rute): angka dari `HasilRute`, banner dan HUD disembunyikan, kontrol sentuh berhenti membaca.
 func _buka_hasil() -> void:
 	_hasil_tampil = true
-	_angka_hasil = HasilRute.dari(_skor, _rute, _tenggat)
-	_layar_hasil.isi(_angka_hasil)
+	_akhiri_misi_aktif()
+	_angka_hasil = HasilRute.dari(_skor, _rute, _tenggat, _keadaan_misi)
+	_layar_hasil.isi(_angka_hasil, _misi if _keadaan_misi != null else null)
 	_layar_hasil.tampilkan(true)
 	_panel_akhir.tampilkan(false)
 	_hud.visible = false
@@ -118,6 +141,7 @@ func _buka_hasil() -> void:
 
 
 func _langkah_waktu(langkah_dt: float) -> void:
+	_dt_langkah = langkah_dt
 	if not _selesai:
 		_tenggat = TenggatRute.langkah(_tenggat, langkah_dt)
 
@@ -138,6 +162,24 @@ func _zona_bantu(maju_awal_ubin: float, maju_akhir_ubin: float) -> Array[ZonaSas
 
 func _skor_aktif() -> bool:
 	return true
+
+
+func _koin_tambahan() -> int:
+	return MissionManager.koin_misi(_keadaan_misi)
+
+
+func _koran_dinilai(k: KoranLempar.Koran, hasil_skor: SkorRute.Hasil) -> void:
+	if _keadaan_misi == null or hasil_skor == null:
+		return
+	var l: MissionManager.Lemparan = MissionManager.Lemparan.new()
+	l.tepat = hasil_skor.tepat
+	l.bantu = k.bantu
+	l.kotak_pelanggan = k.hasil == ZonaSasaran.Hasil.KOTAK_SURAT
+	for rumah: RouteBuilder.RumahRute in _rute.rumah:
+		if rumah.id == k.id_rumah:
+			l.maju_rumah_ubin = rumah.maju_ubin
+			break
+	_lemparan_misi.append(l)
 
 
 func _rute_skor() -> RouteBuilder.Rute:
@@ -194,8 +236,78 @@ func _susun(benih: int) -> void:
 		# Tanpa rute tidak ada yang bisa disetir atau dilempar; tombol banner galat ada di zona swipe, jadi kontrol sentuh tidak membaca
 		# sentuhan supaya ketukannya bukan tap atau swipe.
 		_kontrol.set_process_input(false)
+	_susun_misi()
 	_kembalikan_awal(_rute.koran_awal)
 	rute_disusun.emit(_rute)
+
+
+## Menyusun ulang rencana dan keadaan misi untuk rute yang sedang dimainkan (tiap rute disusun). Tanpa misi, atau rute gagal disusun, atau rencana tidak sah:
+## tidak ada misi (kartu, banner, dan kucing tersembunyi).
+func _susun_misi() -> void:
+	_lemparan_misi = []
+	_detik_misi = 0.0
+	_rencana_misi = null
+	_keadaan_misi = null
+	if _misi != null and not _rute.pelanggan.is_empty():
+		_rencana_misi = RencanaMisi.buat(_misi, _rute, _benih + Config.SEED_MISI_SELISIH)
+		if _rencana_misi.sah():
+			_keadaan_misi = MissionManager.awal(_rencana_misi)
+	_tampilkan_misi()
+
+
+## Satu langkah misi sesudah sepeda digerakkan dan lemparan dinilai (urutan `AdeganJalan.perbarui`): masukan dari keadaan sebenarnya, peristiwa ke sinyal dan bunyi.
+func _langkah_misi(jarak_ubin: float) -> void:
+	if _keadaan_misi == null:
+		return
+	var m: MissionManager.Masukan = MissionManager.Masukan.new()
+	m.maju_ubin = jarak_ubin
+	m.lateral_ubin = _sepeda.lateral_ubin
+	m.kecepatan_ud = _sepeda.kecepatan_ud
+	m.jatuh = Tabrakan.jatuh(_rintangan.tabrakan)
+	m.jeda = sedang_jeda()
+	m.dt = _dt_langkah
+	m.lemparan = _lemparan_misi
+	_lemparan_misi = []
+	if is_finite(_dt_langkah) and _dt_langkah > 0.0 and not m.jeda:
+		_detik_misi += _dt_langkah
+	var hasil: MissionManager.Hasil = MissionManager.langkah(_keadaan_misi, m)
+	_keadaan_misi = hasil.keadaan
+	for k: MissionManager.Kejadian in hasil.kejadian:
+		if _audio != null:
+			_audio.putar_misi_peristiwa(k.jenis)
+		misi_peristiwa.emit(k.jenis, k.langkah)
+	_tampilkan_misi()
+
+
+## HUD dan kucing dari keadaan misi.
+func _tampilkan_misi() -> void:
+	var hud: HudRute = _hud as HudRute
+	if hud != null:
+		hud.tampilkan_misi(_keadaan_misi, _misi)
+	if _kucing == null:
+		return
+	var t: RencanaMisi.Titik = MissionManager.titik_tampil(_keadaan_misi) if _keadaan_misi != null else null
+	if t == null:
+		_kucing.sembunyikan()
+		return
+	var progres: float = _keadaan_misi.timer_detik / t.lama_berhenti_detik if t.jenis == "tangkap" and t.lama_berhenti_detik > 0.0 else 0.0
+	var visual: Array = _misi.petunjuk.get("visual", [])
+	_kucing.tampilkan(t, _sepeda.jarak_ubin, _detik_misi, progres, visual.has("kilau"), visual.has("ekor"))
+
+
+## Misi yang masih aktif saat layar hasil terbuka berakhir sebagai gagal (rute sudah berakhir): satu langkah dengan posisi di garis akhir.
+func _akhiri_misi_aktif() -> void:
+	if _keadaan_misi == null or _keadaan_misi.status != MissionManager.Status.AKTIF:
+		return
+	var m: MissionManager.Masukan = MissionManager.Masukan.new()
+	m.maju_ubin = maxf(_sepeda.jarak_ubin, _rute.panjang_ubin)
+	m.lateral_ubin = _sepeda.lateral_ubin
+	m.kecepatan_ud = _sepeda.kecepatan_ud
+	var hasil: MissionManager.Hasil = MissionManager.langkah(_keadaan_misi, m)
+	_keadaan_misi = hasil.keadaan
+	for k: MissionManager.Kejadian in hasil.kejadian:
+		misi_peristiwa.emit(k.jenis, k.langkah)
+	_tampilkan_misi()
 
 
 ## Tombol "Main lagi" layar hasil atau banner galat (juga dipanggil tes): seed berikutnya (seed + 1), rute baru dari awal.
@@ -296,3 +408,32 @@ func hud_rute() -> HudRute:
 ## Medan sasaran koran rute yang sedang dimainkan (untuk tes).
 func medan() -> MedanKoran:
 	return _medan
+
+
+## Mengatur misi sampingan hari ini (null = tanpa misi). Dipanggil SEBELUM scene masuk pohon (`HariMain`), jadi rencana disusun saat rute disusun; bila sudah
+## siap, rencana disusun ulang untuk rute yang sedang dimainkan.
+func atur_misi(misi: DataMisi) -> void:
+	_misi = misi
+	if is_node_ready():
+		_susun_misi()
+		perbarui(0.0)
+
+
+## Misi sampingan hari ini (null = tanpa misi).
+func misi() -> DataMisi:
+	return _misi
+
+
+## Rencana misi rute ini (null = tanpa misi).
+func rencana_misi() -> RencanaMisi.Rencana:
+	return _rencana_misi
+
+
+## Keadaan misi (null = tanpa misi).
+func keadaan_misi() -> MissionManager.Keadaan:
+	return _keadaan_misi
+
+
+## Kucing misi (untuk tes dan probe).
+func kucing() -> KucingMisi:
+	return _kucing

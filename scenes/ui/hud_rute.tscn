@@ -189,6 +189,81 @@ mouse_filter = 2
 theme_type_variation = &"HudLabel"
 horizontal_alignment = 2
 
+[node name="StripMisi" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+mouse_filter = 2
+theme = ExtResource("3_theme")
+
+[node name="PanelMisi" type="PanelContainer" parent="StripMisi"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+mouse_filter = 2
+
+[node name="IsiMisiKartu" type="VBoxContainer" parent="StripMisi/PanelMisi"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 1
+
+[node name="LabelMisi" type="Label" parent="StripMisi/PanelMisi/IsiMisiKartu"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HudLabel"
+text = "MISI_LABEL_KARTU"
+
+[node name="IsiMisi" type="Label" parent="StripMisi/PanelMisi/IsiMisiKartu"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HudLabel"
+
+[node name="StripBanner" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+mouse_filter = 2
+theme = ExtResource("3_theme")
+
+[node name="IsiBanner" type="VBoxContainer" parent="StripBanner"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="PanelBanner" type="PanelContainer" parent="StripBanner/IsiBanner"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+
+[node name="TeksBanner" type="Label" parent="StripBanner/IsiBanner/PanelBanner"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"JudulLayar"
+horizontal_alignment = 1
+
+[node name="PanelPetunjuk" type="PanelContainer" parent="StripBanner/IsiBanner"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+
+[node name="TeksPetunjuk" type="Label" parent="StripBanner/IsiBanner/PanelPetunjuk"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HudLabel"
+horizontal_alignment = 1
+autowrap_mode = 3
+
 [node name="StripJeda" type="MarginContainer" parent="."]
 unique_name_in_owner = true
 mouse_filter = 2

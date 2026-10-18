@@ -31,6 +31,7 @@ var _mode_hari: bool = false
 @onready var _nilai_tepat: Label = %NilaiTepat
 @onready var _nilai_meleset: Label = %NilaiMeleset
 @onready var _teks_tenggat: Label = %TeksTenggat
+@onready var _rekap_misi: Label = %RekapMisi
 @onready var _tombol: TombolSentuh = %TombolMainLagi
 
 
@@ -49,6 +50,7 @@ func _ready() -> void:
 	for label: Node in _daftar_netral.get_children():
 		(label as Label).add_theme_color_override(&"font_color", Palette.TEXT_2)
 	_teks_tenggat.add_theme_color_override(&"font_color", Palette.TEXT_2)
+	_rekap_misi.custom_minimum_size = Vector2(Config.HASIL_PANEL_LEBAR_PX - 2 * Config.HUD_PANEL_PAD_X_PX, 0)
 	for nilai: Label in [_nilai_terkirim, _nilai_tip, _nilai_koin, _nilai_skor, _nilai_tepat]:
 		nilai.add_theme_color_override(&"font_color", Palette.ACCENT)
 	_tombol.custom_minimum_size = Vector2(Config.HUD_TOMBOL_LEBAR_PX, Config.HUD_TOMBOL_TINGGI_PX)
@@ -77,8 +79,9 @@ func _saat_tombol() -> void:
 		main_lagi_diminta.emit()
 
 
-## Mengisi angka dari `angka` (`HasilRute.dari`). Tidak menghitung ulang apa pun.
-func isi(angka: HasilRute.Angka) -> void:
+## Mengisi angka dari `angka` (`HasilRute.dari`). Tidak menghitung ulang apa pun. `misi` (data misi hari ini, null = tanpa misi) memberi teks banner untuk
+## baris rekap misi (run fase4b-misi-kucing, AC-16): satu baris bila `angka.misi_hasil` selesai atau gagal, tidak ada baris tanpa misi.
+func isi(angka: HasilRute.Angka, misi: DataMisi = null) -> void:
 	var pemisah: String = tr("HUD_PEMISAH_RIBUAN")
 	_nilai_terkirim.text = tr("HASIL_TERKIRIM_ANGKA").format({"n": angka.terkirim, "total": angka.pelanggan})
 	_nilai_tip.text = tr("HASIL_TIP_ANGKA").format({"koin": HasilRute.ribuan(angka.koin_tip, pemisah), "n": angka.jumlah_tip})
@@ -86,11 +89,40 @@ func isi(angka: HasilRute.Angka) -> void:
 	_nilai_skor.text = tr("HASIL_SKOR_ANGKA").format({"n": HasilRute.ribuan(angka.skor, pemisah)})
 	_nilai_tepat.text = tr("HASIL_TEPAT_ANGKA").format({"n": angka.jumlah_tepat})
 	_nilai_meleset.text = tr("HASIL_MELESET_ANGKA").format({"n": angka.meleset})
+	_isi_rekap_misi(angka, misi)
 	if angka.tenggat_lewat:
 		var md: Vector2i = TenggatRute.menit_detik(angka.detik_lewat)
 		_teks_tenggat.text = tr("HASIL_TENGGAT_LEWAT").format({"m": md.x, "s": "%02d" % md.y})
 	else:
 		_teks_tenggat.text = tr("HASIL_TENGGAT_SEMPAT")
+
+
+## Baris rekap misi (AC-16): "Misi: Kucing ketemu! +75 koin" (selesai, `OK`, di bawah daftar yang berhasil) atau "Misi: Kucingnya lolos hari ini" (gagal, netral
+## `TEXT_2`, di bawah daftar netral); tanpa misi (atau misi tanpa hasil) baris tersembunyi. Teks dari kunci banner misi dan `angka.koin_misi`, tanpa hitung ulang.
+func _isi_rekap_misi(angka: HasilRute.Angka, misi: DataMisi) -> void:
+	var selesai: bool = angka.misi_hasil == "selesai"
+	var gagal: bool = angka.misi_hasil == "gagal"
+	_rekap_misi.visible = (selesai or gagal) and misi != null
+	if not _rekap_misi.visible:
+		return
+	if selesai:
+		_rekap_misi.text = tr("HASIL_MISI_SELESAI").format({"teks": tr(misi.banner_selesai), "koin": HasilRute.ribuan(angka.koin_misi, tr("HUD_PEMISAH_RIBUAN"))})
+		_rekap_misi.add_theme_color_override(&"font_color", Palette.OK)
+		_isi.move_child(_rekap_misi, _daftar_berhasil.get_index() + 1)
+	else:
+		_rekap_misi.text = tr("HASIL_MISI_GAGAL").format({"teks": tr(misi.banner_gagal)})
+		_rekap_misi.add_theme_color_override(&"font_color", Palette.TEXT_2)
+		_isi.move_child(_rekap_misi, _daftar_netral.get_index() + 1)
+
+
+## Teks baris rekap misi ("" bila tersembunyi).
+func teks_rekap_misi() -> String:
+	return _rekap_misi.text if _rekap_misi.visible else ""
+
+
+## Persegi baris rekap misi dalam koordinat viewport game (tes tata letak).
+func rect_rekap_misi() -> Rect2:
+	return _rekap_misi.get_global_rect()
 
 
 ## Menampilkan atau menyembunyikan layar hasil.
@@ -110,6 +142,8 @@ func teks_tampil() -> Array[String]:
 		for label: Node in daftar.get_children():
 			hasil.append(tr((label as Label).text))
 	hasil.append(tr(_teks_tenggat.text))
+	if _rekap_misi.visible:
+		hasil.append(_rekap_misi.text)
 	return hasil
 
 
@@ -135,6 +169,8 @@ func rect_panel() -> Rect2:
 ## Persegi tiap label di panel (untuk tes tata letak: semuanya di dalam panel dan layar).
 func rect_label() -> Array[Rect2]:
 	var hasil: Array[Rect2] = [_judul.get_global_rect(), _teks_tenggat.get_global_rect()]
+	if _rekap_misi.visible:
+		hasil.append(_rekap_misi.get_global_rect())
 	for daftar: GridContainer in [_daftar_berhasil, _daftar_netral]:
 		for label: Node in daftar.get_children():
 			hasil.append((label as Label).get_global_rect())

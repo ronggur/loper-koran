@@ -35,6 +35,15 @@ Ke-10 berkas di bawah dibuat dari rumus oleh skrip project `tools/audio_art/sint
 | `sfx/ui/sfx_ui_tip_01.wav` | Denting koin tip, diawali 0,12 detik senyap (sesudah bunyi mendarat) | 0,35 detik | `tools/audio_art/sintesis_rute.py` | Milik project, tanpa atribusi pihak ketiga |
 | `sfx/ui/sfx_ui_tepat_01.wav` | Kilau antaran tepat: dua nada naik, diawali 0,05 detik senyap | 0,30 detik | `tools/audio_art/sintesis_rute.py` | Milik project, tanpa atribusi pihak ketiga |
 
+Ke-4 berkas di bawah dibuat dari rumus oleh skrip project `tools/audio_art/sintesis_misi.py` (hanya pustaka standar Python, benih acak tetap, deterministik), **tanpa rekaman, sampel, atau unduhan apa pun**. Placeholder Fase 4 (run fase4b-misi-kucing, 2026-10-18), usulan; diganti bunyi final di fase aset. Jangan diedit dengan tangan: ubah skripnya lalu jalankan ulang (`tools/tests_cek/uji_sintesis_misi.py` memeriksa berkas di repo sama dengan keluaran skrip). Tiap bunyi punya pasangan visual (SOUND_DESIGN 1): meong = gelembung petunjuk dan kilau, terlihat = kilau di atas kucing, selesai dan gagal = banner misi.
+
+| Berkas | Isi | Durasi | Dibuat oleh | Lisensi |
+|---|---|---|---|---|
+| `sfx/mission/sfx_mis_meong_01.wav` | "Meong" petunjuk dari pelanggan: nada naik lalu turun dengan getar dan forman "e-o" | 0,55 detik | `tools/audio_art/sintesis_misi.py` | Milik project, tanpa atribusi pihak ketiga |
+| `sfx/mission/sfx_mis_terlihat_01.wav` | "Mrik" kecil nada naik cepat saat kucing mulai terlihat | 0,28 detik | `tools/audio_art/sintesis_misi.py` | Milik project, tanpa atribusi pihak ketiga |
+| `sfx/mission/sfx_mis_selesai_01.wav` | Misi selesai: tiga nada naik lalu satu nada panjang hangat | 0,70 detik | `tools/audio_art/sintesis_misi.py` | Milik project, tanpa atribusi pihak ketiga |
+| `sfx/mission/sfx_mis_gagal_01.wav` | Misi gagal: dua nada turun lembut, lebih pelan (tidak menghakimi) | 0,50 detik | `tools/audio_art/sintesis_misi.py` | Milik project, tanpa atribusi pihak ketiga |
+
 ## Pihak ketiga
 
 Belum ada.
