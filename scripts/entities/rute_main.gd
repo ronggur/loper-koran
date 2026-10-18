@@ -41,6 +41,9 @@ extends AdeganJalan
 ## - Hadiah misi (K-1) ikut `koin` di HUD (`_koin_tambahan`) dan di `HasilRute.Angka` yang sama dengan layar hasil dan save; gagal tidak mengubah koin, tip, skor,
 ##   atau tenggat. Misi yang masih aktif saat layar hasil terbuka dihentikan sebagai gagal (rute berakhir) supaya hasilnya selalu pasti.
 ##
+## - Tutorial hari 1 (M-9, `atur_tutorial`): `TutorialLangkah` (logika murni) dari kecepatan, jumlah lemparan, dan keadaan kucing/misi; `TutorialController` hanya
+##   menampilkan dan tidak memblokir input. Rute yang dijalankan sendiri tidak punya tutorial. Hari tutorial yang berakhir ditulis `tutorial.selesai` oleh `HariMain`.
+##
 ## Sepeda mencapai garis akhir rute (tepat sekali per rute; diulang hanya sesudah "Main lagi").
 signal rute_selesai
 ## Rute baru disusun (saat scene siap dan tiap "Main lagi").
@@ -74,6 +77,10 @@ var _keadaan_misi: MissionManager.Keadaan = null
 var _lemparan_misi: Array[MissionManager.Lemparan] = []
 var _dt_langkah: float = 0.0
 var _detik_misi: float = 0.0
+## Tutorial hari 1: diminta `atur_tutorial` (HariMain), keadaannya (null = tanpa tutorial), dan jumlah lemparan yang diterima sejak rute dimulai.
+var _tutorial_diminta: bool = false
+var _tutorial: TutorialLangkah.Keadaan = null
+var _jumlah_lempar: int = 0
 
 @onready var _daur: RumahDaurRute = %Objek
 @onready var _area_kotak: AreaKotakGambar = %AreaKotak
@@ -83,12 +90,15 @@ var _detik_misi: float = 0.0
 @onready var _umpan_gambar: UmpanMelayangGambar = %UmpanMelayang
 @onready var _layar_hasil: LayarHasil = %LayarHasil
 @onready var _kucing: KucingMisi = %Kucing
+@onready var _tutorial_node: TutorialController = %Tutorial
 
 
 func _siapkan_dunia() -> void:
 	_daur.penerap = _penerap
 	_rintangan_daur.penerap = _penerap
 	_kucing.penerap = _penerap
+	_tutorial_node.lewati_diminta.connect(_saat_tutorial_dilewati)
+	koran_dilempar.connect(_saat_lempar_diterima)
 	_panel_akhir.main_lagi_diminta.connect(main_lagi)
 	_layar_hasil.main_lagi_diminta.connect(main_lagi)
 	_layar_hasil.hari_berikutnya_diminta.connect(hari_berikutnya_diminta.emit)
@@ -97,6 +107,7 @@ func _siapkan_dunia() -> void:
 
 func _perbarui_dunia(jarak_ubin: float) -> void:
 	_langkah_misi(jarak_ubin)
+	_langkah_tutorial()
 	_daur.perbarui(jarak_ubin)
 	_area_kotak.perbarui(jarak_ubin)
 	_rintangan_daur.perbarui(_rintangan, jarak_ubin)
@@ -135,6 +146,7 @@ func _buka_hasil() -> void:
 	_layar_hasil.tampilkan(true)
 	_panel_akhir.tampilkan(false)
 	_hud.visible = false
+	_tutorial_node.visible = false
 	_kontrol.lepas_semua()
 	_kontrol.set_process_input(false)
 	hasil_dibuka.emit(_angka_hasil)
@@ -225,6 +237,7 @@ func _susun(benih: int) -> void:
 	_angka_hasil = null
 	_layar_hasil.tampilkan(false)
 	_hud.visible = true
+	_tutorial_node.visible = true
 	_kontrol.set_process_input(true)
 	_daur.atur_rute(_rute)
 	_area_kotak.atur_rute(_rute)
@@ -237,6 +250,7 @@ func _susun(benih: int) -> void:
 		# sentuhan supaya ketukannya bukan tap atau swipe.
 		_kontrol.set_process_input(false)
 	_susun_misi()
+	_susun_tutorial()
 	_kembalikan_awal(_rute.koran_awal)
 	rute_disusun.emit(_rute)
 
@@ -277,6 +291,38 @@ func _langkah_misi(jarak_ubin: float) -> void:
 			_audio.putar_misi_peristiwa(k.jenis)
 		misi_peristiwa.emit(k.jenis, k.langkah)
 	_tampilkan_misi()
+
+
+## Menyusun ulang tutorial untuk rute yang sedang dimainkan: berjalan bila diminta; petunjuk menepi hanya bila ada misi aktif.
+func _susun_tutorial() -> void:
+	_jumlah_lempar = 0
+	_tutorial = TutorialLangkah.awal(_tutorial_diminta, _keadaan_misi != null) if _tutorial_diminta else null
+	_tutorial_node.tampilkan_langkah(_tutorial)
+
+
+## Satu langkah tutorial dari keadaan sebenarnya (kecepatan, lemparan, kucing tangkap, misi berakhir).
+func _langkah_tutorial() -> void:
+	if _tutorial == null:
+		return
+	var m: TutorialLangkah.Masukan = TutorialLangkah.Masukan.new()
+	m.kecepatan_ud = _sepeda.kecepatan_ud
+	m.jumlah_lempar = _jumlah_lempar
+	var t: RencanaMisi.Titik = MissionManager.titik_tampil(_keadaan_misi) if _keadaan_misi != null else null
+	m.kucing_tangkap_terlihat = t != null and t.jenis == "tangkap"
+	m.misi_berakhir = _keadaan_misi != null and _keadaan_misi.status != MissionManager.Status.AKTIF
+	_tutorial = TutorialLangkah.langkah(_tutorial, m)
+	_tutorial_node.tampilkan_langkah(_tutorial)
+
+
+func _saat_lempar_diterima(_lintasan: ThrowSolver.Lintasan) -> void:
+	_jumlah_lempar += 1
+
+
+func _saat_tutorial_dilewati() -> void:
+	if _tutorial == null:
+		return
+	_tutorial = TutorialLangkah.lewati(_tutorial)
+	_tutorial_node.tampilkan_langkah(_tutorial)
 
 
 ## HUD dan kucing dari keadaan misi.
@@ -437,3 +483,31 @@ func keadaan_misi() -> MissionManager.Keadaan:
 ## Kucing misi (untuk tes dan probe).
 func kucing() -> KucingMisi:
 	return _kucing
+
+
+## Menyalakan atau mematikan tutorial hari 1 (`HariMain`: hari pertama dan `tutorial.selesai` belum true). Dipanggil SEBELUM scene masuk pohon; bila sudah siap, tutorial
+## disusun ulang. Bawaan mati (`rute.tscn` sendiri tanpa tutorial).
+func atur_tutorial(aktif: bool) -> void:
+	_tutorial_diminta = aktif
+	if is_node_ready():
+		_susun_tutorial()
+
+
+## Keadaan tutorial (null = tanpa tutorial; untuk tes dan probe).
+func keadaan_tutorial() -> TutorialLangkah.Keadaan:
+	return _tutorial
+
+
+## True bila tutorial berjalan hari ini (diminta dan keadaan dibuat), selesai atau belum: hari tutorial yang berakhir menulis `tutorial.selesai` (M-9).
+func tutorial_dimulai() -> bool:
+	return _tutorial != null and _tutorial.aktif
+
+
+## Node tutorial (untuk tes dan probe).
+func tutorial_node() -> TutorialController:
+	return _tutorial_node
+
+
+## Jumlah lemparan yang diterima sejak rute dimulai (untuk tes).
+func jumlah_lempar() -> int:
+	return _jumlah_lempar

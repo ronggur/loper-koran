@@ -127,6 +127,7 @@ func _saat_berangkat() -> void:
 	_rute = ADEGAN_RUTE.instantiate() as RuteMain
 	_rute.atur_benih_awal(SeedHari.rute(_mesin.hari))
 	_rute.atur_misi(_data_misi(_misi_diambil))
+	_rute.atur_tutorial(TutorialLangkah.boleh_aktif(_mesin.hari, DataSave.tutorial_selesai(simpanan.state)))
 	_rute.hasil_dibuka.connect(_saat_hasil_dibuka)
 	_rute.hari_berikutnya_diminta.connect(_saat_hari_berikutnya)
 	add_child(_rute)
@@ -156,6 +157,7 @@ func _saat_hari_berikutnya() -> void:
 	if not flag_baru.is_empty():
 		catatan.flag_baru = [flag_baru]
 	catatan.flag_dikonsumsi = HeadlineManager.flag_terpakai(_halaman, _pustaka_headline)
+	catatan.tutorial_selesai = _rute.tutorial_dimulai()
 	catatan.headline_jeda = jeda.headline
 	catatan.misi_jeda = jeda.misi
 	catatan.kidal = _rute.kidal()

@@ -866,9 +866,9 @@ func _test_terjemahan() -> void:
 	var kunci_sah: Array[String] = []
 	var rapi: bool = true
 	# Awalan layar atau fitur (rule `content-data`): HUD_ (run 0B), JEDA_ (layar jeda, run fase1b-umpan-balik), RUTE_ (scene rute, run fase3a-rute),
-	# HASIL_ (layar hasil, run fase3c-hud-hasil), KORAN_ dan MISI_ (layar koran, headline, dan misi, run fase4a-koran-hari).
-	var re_kunci: RegEx = RegEx.create_from_string("^(?:HUD|JEDA|RUTE|HASIL|KORAN|MISI)_[A-Z0-9]+(?:_[A-Z0-9]+)*$")
-	check(re_kunci.search("JEDA_LANJUT") != null and re_kunci.search("RUTE_SELESAI") != null and re_kunci.search("HASIL_JUDUL") != null and re_kunci.search("KORAN_NAMA") != null and re_kunci.search("MISI_P1_KUCING_HUD") != null and re_kunci.search("LANJUT") == null and re_kunci.search("MENU_X") == null and re_kunci.search("jeda_lanjut") == null, "pemeriksa kunci menerima awalan HUD_/JEDA_/RUTE_/HASIL_/KORAN_/MISI_ dan menolak tanpa awalan, awalan lain, huruf kecil")
+	# HASIL_ (layar hasil, run fase3c-hud-hasil), KORAN_ dan MISI_ (layar koran, headline, dan misi, run fase4a-koran-hari), TUTORIAL_ (tutorial terpandu hari 1, run fase4b-misi-kucing).
+	var re_kunci: RegEx = RegEx.create_from_string("^(?:HUD|JEDA|RUTE|HASIL|KORAN|MISI|TUTORIAL)_[A-Z0-9]+(?:_[A-Z0-9]+)*$")
+	check(re_kunci.search("JEDA_LANJUT") != null and re_kunci.search("RUTE_SELESAI") != null and re_kunci.search("HASIL_JUDUL") != null and re_kunci.search("KORAN_NAMA") != null and re_kunci.search("MISI_P1_KUCING_HUD") != null and re_kunci.search("TUTORIAL_KAYUH") != null and re_kunci.search("LANJUT") == null and re_kunci.search("MENU_X") == null and re_kunci.search("jeda_lanjut") == null, "pemeriksa kunci menerima awalan HUD_/JEDA_/RUTE_/HASIL_/KORAN_/MISI_/TUTORIAL_ dan menolak tanpa awalan, awalan lain, huruf kecil")
 	var re_pengganti: RegEx = RegEx.create_from_string("\\{([^}]*)\\}")
 	for entri: PackedStringArray in semua_baris:
 		if entri.size() != 2:
@@ -877,7 +877,7 @@ func _test_terjemahan() -> void:
 			continue
 		var kunci: String = entri[0]
 		var nilai: String = entri[1]
-		check(re_kunci.search(kunci) != null, "kunci %s UPPER_SNAKE_CASE berawalan HUD_, JEDA_, RUTE_, HASIL_, KORAN_, atau MISI_" % kunci)
+		check(re_kunci.search(kunci) != null, "kunci %s UPPER_SNAKE_CASE berawalan HUD_, JEDA_, RUTE_, HASIL_, KORAN_, MISI_, atau TUTORIAL_" % kunci)
 		check(not kunci_sah.has(kunci), "kunci %s tidak duplikat (di ui.csv dan konten.csv)" % kunci)
 		check(not nilai.strip_edges().is_empty(), "kunci %s punya nilai (tidak kosong)" % kunci)
 		for cocok: RegExMatch in re_pengganti.search_all(nilai):
@@ -926,19 +926,19 @@ func _test_terjemahan() -> void:
 		jumlah_teks_scene += _teks_di_scene(teks, []).size()
 		check(_teks_di_scene(teks, kunci_sah).is_empty(), "%s: setiap text/tooltip_text berisi kunci terjemahan yang ada: %s" % [berkas, "; ".join(_teks_di_scene(teks, kunci_sah))])
 	check(jumlah_teks_scene >= 2, "scene memuat properti teks berisi kunci (%d)" % jumlah_teks_scene)
-	# Kunci yatim di awalan baru (AC-4): kunci KORAN_/MISI_/HASIL_HARI_ di ui.csv harus dirujuk skrip atau scene; kunci di konten.csv harus
+	# Kunci yatim di awalan baru (AC-4, AC-2 run fase4b-misi-kucing): kunci KORAN_/MISI_/HASIL_HARI_/HASIL_MISI_/TUTORIAL_ di ui.csv harus dirujuk skrip atau scene; kunci di konten.csv harus
 	# dirujuk berkas data (assets/data/**.json). Kunci yang dirujuk dari data tapi tidak ada di CSV ditangkap pemeriksa data (tes_headline).
 	var teks_data: String = ""
 	for berkas: String in _daftar_berkas("res://assets/data", ["json"]):
 		teks_data += FileAccess.get_file_as_string(berkas)
 	var yatim: Array[String] = []
 	for entri: PackedStringArray in baris:
-		if entri.size() == 2 and (entri[0].begins_with("KORAN_") or entri[0].begins_with("MISI_") or entri[0].begins_with("HASIL_HARI_")) and not teks_kode.contains(entri[0]):
+		if entri.size() == 2 and (entri[0].begins_with("KORAN_") or entri[0].begins_with("MISI_") or entri[0].begins_with("HASIL_HARI_") or entri[0].begins_with("HASIL_MISI_") or entri[0].begins_with("TUTORIAL_")) and not teks_kode.contains(entri[0]):
 			yatim.append(entri[0])
 	for entri: PackedStringArray in baris_konten:
 		if entri.size() == 2 and not teks_data.contains("\"" + entri[0] + "\""):
 			yatim.append(entri[0])
-	check(yatim.is_empty(), "tidak ada kunci CSV yatim di awalan baru (KORAN_, MISI_, HASIL_HARI_): %s" % [yatim])
+	check(yatim.is_empty(), "tidak ada kunci CSV yatim di awalan baru (KORAN_, MISI_, HASIL_HARI_, HASIL_MISI_, TUTORIAL_): %s" % [yatim])
 	check(teks_kode.contains("HUD_KECEPATAN") and teks_data.contains("MISI_P1_KUCING_HEADLINE"), "pemindai yatim melihat rujukan di skrip/scene dan di data")
 	# Penjaga harus menolak contoh buruk (bukan lolos kosong).
 	check(_kunci_tr_di_skrip("label.text = tr(\"HUD_KIDAL\")\nvar x: String = tr(&\"HUD_KECEPATAN\")") == ["HUD_KIDAL", "HUD_KECEPATAN"], "pemindai tr() mengenali tr(\"...\") dan tr(&\"...\")")

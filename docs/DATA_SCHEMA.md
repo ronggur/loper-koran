@@ -232,7 +232,7 @@ Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur
 	},
 	"tip_total": 25,
 	"tutorial": {
-		"selesai": false
+		"selesai": true
 	},
 	"versi": 2
 }

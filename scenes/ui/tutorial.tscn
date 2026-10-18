@@ -1,0 +1,55 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/tutorial_controller.gd" id="1_script"]
+[ext_resource type="Theme" path="res://assets/ui/theme.tres" id="2_theme"]
+[ext_resource type="Script" path="res://scripts/ui/tombol_sentuh.gd" id="3_tombol"]
+
+[node name="Tutorial" type="CanvasLayer"]
+layer = 6
+script = ExtResource("1_script")
+
+[node name="StripLewati" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+mouse_filter = 2
+theme = ExtResource("2_theme")
+
+[node name="TombolLewatiTutorial" type="Button" parent="StripLewati"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+focus_mode = 0
+text = "TUTORIAL_LEWATI"
+script = ExtResource("3_tombol")
+
+[node name="StripTeksTutorial" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+mouse_filter = 2
+theme = ExtResource("2_theme")
+
+[node name="PanelTutorial" type="PanelContainer" parent="StripTeksTutorial"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+mouse_filter = 2
+
+[node name="IsiTutorial" type="VBoxContainer" parent="StripTeksTutorial/PanelTutorial"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="LabelLangkahTutorial" type="Label" parent="StripTeksTutorial/PanelTutorial/IsiTutorial"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HudLabel"
+
+[node name="TeksTutorial" type="Label" parent="StripTeksTutorial/PanelTutorial/IsiTutorial"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HudLabel"
+autowrap_mode = 3

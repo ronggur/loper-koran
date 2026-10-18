@@ -933,3 +933,21 @@ const MISI_PETUNJUK_LEBAR_PX: int = 170
 const AUDIO_MISI_VOLUME_DB: float = -3.0
 ## Volume bunyi misi gagal, dB (lebih pelan: gagal berbunyi lembut, SOUND_DESIGN 2).
 const AUDIO_MISI_GAGAL_VOLUME_DB: float = -5.0
+
+## --- Tutorial terpandu hari 1 (M-9 run 4B, TECH_PLAN Fase 4, STORY 6; usulan, dinilai lewat uji HP) ---
+
+## Langkah kayuh selesai bila kecepatan maju paling sedikit ini, u/d (kecepatan cepat: pemain mendorong stick ke atas).
+const TUTORIAL_KAYUH_KECEPATAN_UD: float = 4.5
+## Langkah melambat selesai bila kecepatan maju paling banyak ini, u/d (pemain menarik stick ke bawah dari santai 3,0).
+const TUTORIAL_MELAMBAT_KECEPATAN_UD: float = 2.0
+## Jumlah petunjuk dengan menepi (empat bila ada misi) dan tanpa misi (tiga).
+const TUTORIAL_JUMLAH_LANGKAH_MISI: int = 4
+const TUTORIAL_JUMLAH_LANGKAH_TANPA_MISI: int = 3
+## Tombol Lewati: pojok kiri atas strip atas (di luar zona swipe, y < 48: tap di sini tidak pernah melempar di mode bantu), x dari tepi layar sebelum zona aman,
+## lebar piksel game (tinggi `HUD_TOMBOL_TINGGI_PX` 42, >= 44 dp di A54). Di kanan area sentuh jeda (berakhir x 59) dan di kiri panel progres (mulai sekitar x 190 di 640).
+const TUTORIAL_LEWATI_X_PX: int = 66
+const TUTORIAL_LEWATI_LEBAR_PX: int = 64
+## Panel petunjuk tutorial: pojok kiri atas dari tepi layar sebelum zona aman, di bawah kartu misi; lebar minimum teks piksel game.
+const TUTORIAL_PANEL_X_PX: int = 26
+const TUTORIAL_PANEL_Y_PX: int = 88
+const TUTORIAL_PANEL_LEBAR_PX: int = 150
