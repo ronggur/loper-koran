@@ -59,6 +59,14 @@ jobs:
       - name: Uji sintesis bunyi rute (10 WAV rintangan, tabrakan, bel, tip, tepat = hasil skrip, deterministik, tanpa klik)
         run: python3 tools/tests_cek/uji_sintesis_rute.py
 
+      - name: Uji sintesis bunyi misi (4 WAV petunjuk, terlihat, selesai, gagal = hasil skrip, deterministik, tanpa klik)
+        run: python3 tools/tests_cek/uji_sintesis_misi.py
+
+      - name: Uji aset kucing misi (sheet di assets/ = hasil tools/env_art/kendaraan.py, deterministik)
+        run: |
+          python3 -m pip install --quiet numpy pillow
+          python3 tools/tests_cek/uji_aset_kucing.py
+
       - name: Import project (tanpa error, tanpa berkas yang belum di-commit)
         run: |
           set -uo pipefail
