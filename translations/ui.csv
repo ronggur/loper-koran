@@ -66,3 +66,8 @@ KORAN_SAVE_RUSAK,Data simpanan lama tidak terbaca; salinannya disimpan dan perma
 KORAN_SAVE_TIDAK_TERBACA,Data simpanan lama tidak bisa dibuka atau diamankan; permainan mulai dari awal dan kemajuan baru tidak disimpan supaya data lama tidak tertimpa
 KORAN_SAVE_GAGAL,Kemajuan hari ini belum tersimpan; dicoba lagi di akhir hari berikutnya
 HASIL_HARI_BERIKUTNYA,Hari berikutnya
+MISI_LABEL_KARTU,MISI SAMPINGAN
+MISI_KARTU,{label} {n}/{total} · {rumah} rumah
+MISI_BANNER_HADIAH,{teks} +{koin}
+HASIL_MISI_SELESAI,Misi: {teks} +{koin} koin
+HASIL_MISI_GAGAL,Misi: {teks}

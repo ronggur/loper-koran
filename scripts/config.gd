@@ -762,12 +762,14 @@ const HARI_AWAL: int = 1
 const SEED_HARI_LANGKAH: int = 1000003
 ## Seed dasar rute harian (`SeedHari.rute`); rute dev tetap `RUTE_SEED_DEV`.
 const SEED_RUTE_DASAR: int = 20261100
+## Selisih seed misi dari seed rute hari itu (`SeedHari.misi`, `RencanaMisi`): rencana kucing punya aliran acak sendiri dan tidak mengubah rute.
+const SEED_MISI_SELISIH: int = 4093
 ## Seed dasar headline harian (`SeedHari.headline`, `HeadlineManager`).
 const SEED_HEADLINE_DASAR: int = 31415926
 ## Selisih seed antar slot halaman koran (utama, misi, ringan) supaya tiap slot punya aliran acak sendiri.
 const SEED_HEADLINE_SLOT_LANGKAH: int = 7919
-## Versi format save (DATA_SCHEMA 4); naik bersama langkah migrasi di `DataSave.migrasi`.
-const SAVE_VERSI: int = 1
+## Versi format save (DATA_SCHEMA 4); naik bersama langkah migrasi di `DataSave.migrasi`. v2 (run 4B): arti `flag` berubah (menunggu tampil, dikonsumsi), `misi_hasil`, `tutorial`.
+const SAVE_VERSI: int = 2
 ## Berkas save (satu slot, rule save-system); ditulis atomik lewat berkas sementara di folder yang sama.
 const SAVE_BERKAS: String = "user://save.json"
 ## Ekstensi berkas sementara penulisan atomik (`user://save.tmp`).
@@ -793,6 +795,8 @@ const MISI_RINGKASAN_PANJANG_MAKS: int = 60
 const MISI_HUD_PANJANG_MAKS: int = 14
 ## Panjang maksimal petunjuk dari pelanggan, karakter.
 const MISI_PETUNJUK_PANJANG_MAKS: int = 50
+## Panjang maksimal banner selesai dan banner gagal di rute, karakter teks terjemahan (CONTENT_GUIDE 3).
+const MISI_BANNER_PANJANG_MAKS: int = 24
 ## Kata penghubung yang boleh huruf kecil di tengah headline (CONTENT_GUIDE 2).
 const HEADLINE_KATA_PENGHUBUNG: Array[String] = ["di", "ke", "dari", "dan", "yang", "untuk", "pada"]
 ## Bobot headline paling kecil (peluang relatif, bilangan bulat).
@@ -840,3 +844,50 @@ const KORAN_BINGKAI_TERPILIH_PX: int = 3
 const KORAN_KONTRAS_TEKS_MIN: float = 7.0
 ## Kontras minimum garis tombol dan panel terhadap latar (komponen UI, WCAG 1.4.11).
 const KORAN_KONTRAS_GARIS_MIN: float = 3.0
+
+## --- Misi P1 kucing, template Cari (GDD 10.2 sampai 10.6, DATA_SCHEMA 1; run 4B, usulan, dinilai lewat uji HP) ---
+
+## Nama titik tempat kucing berada di data langkah misi Cari (tampilan placeholder sama untuk semuanya, M-10).
+const MISI_TITIK_DIKENAL: Array[String] = ["atap", "bawah_mobil_tamu", "balik_pot"]
+## Jenis langkah misi Cari: `lihat` selalu bisa diselesaikan, `tangkap` butuh menepi dan berhenti.
+const MISI_LANGKAH_JENIS_DIKENAL: Array[String] = ["lihat", "tangkap"]
+## Objek target misi Cari yang dikenal.
+const MISI_TARGET_OBJEK_DIKENAL: Array[String] = ["kucing"]
+## Sisi target misi (hanya `seberang` yang dipakai di perumahan).
+const MISI_SISI_DIKENAL: Array[String] = ["seberang", "dekat"]
+## Penanda visual petunjuk misi yang dikenal.
+const MISI_PETUNJUK_VISUAL_DIKENAL: Array[String] = ["kilau", "ekor"]
+## Isyarat suara petunjuk misi yang dikenal.
+const MISI_PETUNJUK_SUARA_DIKENAL: Array[String] = ["meong"]
+## Koin hadiah per tingkat, sejajar dengan `MISI_TINGKAT_HADIAH` (kecil, sedang, besar; GDD 10.5 dan 14.1, 45 / 75 / 120). Dibayar saat misi selesai (K-1).
+const MISI_HADIAH_KOIN: Array[int] = [45, 75, 120]
+## Jarak maju kucing mulai tampil di depan pemain tanpa petunjuk, ubin (M-2): 12 ubin / `KECEPATAN_NGEBUT_UD` 6,0 = 2,0 detik terlihat.
+const MISI_TAMPIL_JARAK_UBIN: float = 12.0
+## Jarak maju kucing mulai tampil bila pemain mendapat petunjuk dari lemparan tepat, ubin (M-3; lebih awal dari `MISI_TAMPIL_JARAK_UBIN`).
+const MISI_TAMPIL_PETUNJUK_JARAK_UBIN: float = 18.0
+## Waktu tampil minimum kucing pada kecepatan ngebut, detik (prinsip 3: petunjuk misi punya penanda visual minimal 2 detik).
+const MISI_TAMPIL_DETIK_MIN: float = 2.0
+## Kecepatan maju paling tinggi saat menangkap, u/d (M-4; sama dengan `KECEPATAN_MELAMBAT_UD`: tingkat meluncur, tanpa tombol baru).
+const MISI_TANGKAP_KECEPATAN_MAKS_UD: float = 1.5
+## Toleransi presisi tunggal saat membandingkan kecepatan dan lama berhenti dengan ambangnya.
+const MISI_TANGKAP_TOLERANSI: float = 0.000001
+## Lama banner selesai atau gagal tampil, detik (DESIGN_SPEC 3.1, CONTENT_GUIDE 3).
+const MISI_BANNER_DETIK: float = 1.5
+## Lama gelembung teks petunjuk dari pelanggan tampil, detik (prinsip 3: sedikitnya 2 detik).
+const MISI_PETUNJUK_DETIK: float = 2.5
+## Letak kucing di rumah titik: lateral dari garis tengah jalan (negatif = seberang), ubin (di trotoar, di depan pagar rumah).
+const MISI_KUCING_LATERAL_UBIN: float = -2.0
+## Letak kucing di rumah titik: jarak maju dari awal kavling rumah, ubin (sebelum zona kotak surat yang mulai di 1,25).
+const MISI_KUCING_MAJU_UBIN: float = 0.5
+## Goyangan acak berseed letak kucing: lateral +- sekian ubin (satu langkah ke tiap arah atau tidak sama sekali).
+const MISI_KUCING_GOYANG_LATERAL_UBIN: float = 0.25
+## Goyangan acak berseed letak kucing: maju +- sekian ubin. Tetap di kiri zona kotak surat (maju + 0,75 + setengah sisi < 1,25).
+const MISI_KUCING_GOYANG_MAJU_UBIN: float = 0.25
+## Sisi persegi kucing di tanah (untuk memeriksa tidak menimpa zona kotak surat), ubin.
+const MISI_KUCING_PERSEGI_UBIN: float = 0.75
+## Kilau di sekitar kucing berkedip tiap sekian detik (dua frame dari kode).
+const MISI_KILAU_DETIK: float = 0.4
+## Ekor kucing bergoyang tiap sekian detik (dua frame dari kode).
+const MISI_EKOR_DETIK: float = 0.5
+## Kucing tidak boleh ditaruh di rumah seberang yang jarak majunya dari mobil garasi seberang kurang dari ini, ubin (mobil mundur menutup separuh jalan).
+const MISI_KUCING_JAUH_MOBIL_UBIN: float = 6.0

@@ -24,6 +24,7 @@
 		"hadiah": { "tingkat": "sedang", "tambahan": "pelanggan_setia", "tokoh": "bu_ratmi" },
 		"gagal": { "reputasi": 0 },
 		"flag_lanjut": { "selesai": "kucing_ketemu", "gagal": "kucing_belum" },
+		"banner": { "selesai": "MISI_P1_KUCING_SELESAI", "gagal": "MISI_P1_KUCING_GAGAL" },
 		"jeda": 7
 	}
 ]

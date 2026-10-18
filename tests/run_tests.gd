@@ -110,6 +110,8 @@ func _initialize() -> void:
 	hari.jalankan()
 	var headline: TesHeadline = TesHeadline.new(check, _judul)
 	headline.jalankan()
+	var misi: TesMisi = TesMisi.new(check, _judul)
+	misi.jalankan()
 	var sprite: TesSprite = TesSprite.new(check, _judul, self)
 	sprite.jalankan()
 	var ekspor: TesExport = TesExport.new(check, _judul)

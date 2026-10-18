@@ -12,7 +12,10 @@ extends RefCounted
 ##   tidak dalam jeda: `headline_jeda[id]` / `misi_jeda[id]` = hari pertama boleh muncul lagi (S-4), kandidat boleh bila `hari` >= nilainya.
 ##   Misi memakai jeda sejak hari DIAMBIL, headline sejak hari DITAMPILKAN (`catat_jeda`).
 ## - Lanjutan diprioritaskan: headline `lanjutan` yang `syarat.flag`-nya ada di flag menempati slotnya (`misi` atau `ringan`) sebelum undian biasa.
-##   Flag yang tidak dikenal data diabaikan tanpa galat.
+##   Flag yang tidak dikenal data diabaikan tanpa galat. Flag berarti "lanjutan menunggu tampil" (M-6 run fase4b-misi-kucing): `flag_terpakai`
+##   mengembalikan flag yang lanjutannya tampil di halaman itu, dan `DataSave.catat_hari` menghapusnya di akhir hari, jadi lanjutan tampil tepat sekali.
+## - Jeda lanjutan (M-8 run fase4b-misi-kucing): `jeda` headline `lanjutan` DIABAIKAN saat memilih. Gerbangnya adalah flag yang dikonsumsi; kalau
+##   jeda 30 hari ikut menahan, misi yang muncul lagi (jeda misi 7 hari) menulis flag baru yang tidak pernah tampil.
 ## - Undian berbobot `bobot`. Bila SEMUA kandidat headline ada dalam jeda, dipilih yang jedanya paling cepat berakhir (nilai `*_jeda` terkecil;
 ##   seri: urutan pustaka), bukan galat. Slot misi tidak punya cadangan seperti itu: misi dalam jeda tidak dipilih, tanpa kandidat = slot kosong.
 ## - Hari `MISI_HARI_TUTORIAL`: slot misi = `MISI_ID_TUTORIAL` (tutorial STORY 6, P1 kucing Bu Ratmi) kecuali ada lanjutan yang memegang slot itu.
@@ -105,6 +108,21 @@ static func catat_jeda(halaman: Halaman, misi_diambil: String) -> JedaBaru:
 	return hasil
 
 
+## Flag yang lanjutannya tampil di `halaman` (urut utama, misi, ringan; tanpa pengulangan): flag yang harus dikonsumsi di akhir hari (M-6). Hanya
+## entri berjenis `lanjutan` yang punya `syarat.flag`; headline lain dan misi tidak mengonsumsi apa pun. Masukan tidak diubah.
+static func flag_terpakai(halaman: Halaman, pustaka: PemuatHeadline.Pustaka) -> Array[String]:
+	var hasil: Array[String] = []
+	if halaman == null or pustaka == null:
+		return hasil
+	for e: Entri in [halaman.utama, halaman.misi, halaman.ringan]:
+		if e == null or e.jenis != "lanjutan":
+			continue
+		for h: DataHeadline in pustaka.lanjutan:
+			if h.id == e.id and h.syarat.has("flag") and not hasil.has(str(h.syarat["flag"])):
+				hasil.append(str(h.syarat["flag"]))
+	return hasil
+
+
 # --- Slot ---
 
 static func _susun_utama(m: Masukan, pustaka: PemuatHeadline.Pustaka, rng: RandomNumberGenerator) -> Entri:
@@ -150,7 +168,7 @@ static func _susun_misi(m: Masukan, pustaka: PemuatHeadline.Pustaka, efek: Strin
 static func _pilih_lanjutan(m: Masukan, pustaka: PemuatHeadline.Pustaka, slot: String, efek: String, rng: RandomNumberGenerator) -> DataHeadline:
 	var kandidat: Array[DataHeadline] = []
 	for h: DataHeadline in pustaka.lanjutan:
-		if h.slot == slot and _headline_boleh(h, m, efek, false):
+		if h.slot == slot and _headline_boleh(h, m, efek, true):
 			kandidat.append(h)
 	return _undi(kandidat, rng)
 

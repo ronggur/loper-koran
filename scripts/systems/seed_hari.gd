@@ -18,3 +18,9 @@ static func rute(hari: int) -> int:
 ## Seed halaman koran hari `hari` (dasar bawaan `HeadlineManager`).
 static func headline(hari: int) -> int:
 	return campur(Config.SEED_HEADLINE_DASAR, hari)
+
+
+## Seed misi hari `hari` (rencana kucing, `RencanaMisi`): seed rute hari itu ditambah `SEED_MISI_SELISIH`, jadi aliran acaknya sendiri dan tidak
+## mengubah rute (run fase4b-misi-kucing, M-1). Rute yang dijalankan sendiri (tanpa hari) memakai `Rute.benih + SEED_MISI_SELISIH`, rumus yang sama.
+static func misi(hari: int) -> int:
+	return rute(hari) + Config.SEED_MISI_SELISIH

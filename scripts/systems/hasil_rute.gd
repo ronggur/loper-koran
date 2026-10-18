@@ -4,7 +4,8 @@ extends RefCounted
 ##
 ## - Terkirim = pelanggan rute yang terantar (`ProgresRute.jumlah_terkirim` dari `SkorRute.Keadaan.terantar`).
 ## - Meleset = pelanggan rute yang tidak terantar saat rute selesai = jumlah pelanggan - terkirim.
-## - Koin, koin tip, jumlah pemberi tip yang memberi tip, skor, dan jumlah tepat langsung dari `SkorRute.Keadaan`.
+## - Koin, koin tip, jumlah pemberi tip yang memberi tip, skor, dan jumlah tepat langsung dari `SkorRute.Keadaan`. Hadiah misi (`koin_misi`, hanya bila
+##   misi `selesai`, K-1 run fase4b-misi-kucing) ditambahkan ke `koin`; misi gagal tidak mengubah apa pun (prinsip 2). Satu sumber untuk HUD, layar hasil, dan save.
 ## - Tenggat lewat (bool) dan detik lewat (detik bulat tampilan, `TenggatRute.detik_tampil`; 0 bila tidak lewat) dari `TenggatRute`.
 ## - Layar hasil boleh terbuka (`siap_tampil`) sesudah garis akhir, saat sepeda sudah berhenti (kecepatan paling tinggi
 ##   `HASIL_BERHENTI_TOLERANSI_UD`) DAN tidak ada koran yang masih terbang (semua koran yang dilempar sudah mendarat dan dinilai).
@@ -27,10 +28,16 @@ class Angka extends RefCounted:
 	var tenggat_lewat: bool = false
 	## Detik bulat sesudah tenggat lewat (0 bila tidak lewat).
 	var detik_lewat: int = 0
+	## Misi sampingan hari ini (run fase4b-misi-kucing, AC-16): id misi aktif ("" bila tanpa misi), hasilnya ("" | `selesai` | `gagal`), dan
+	## koin hadiah yang dibayar (hanya `selesai`, K-1). `koin` SUDAH termasuk `koin_misi` (koin rute + tip + misi).
+	var misi_id: String = ""
+	var misi_hasil: String = ""
+	var koin_misi: int = 0
 
 
-## Angka hasil dari skor `skor`, rute `rute`, dan jam tenggat `tenggat`. Rute null = 0 pelanggan; tenggat null = tidak lewat.
-static func dari(skor: SkorRute.Keadaan, rute: RouteBuilder.Rute, tenggat: TenggatRute.Keadaan) -> Angka:
+## Angka hasil dari skor `skor`, rute `rute`, dan jam tenggat `tenggat`. Rute null = 0 pelanggan; tenggat null = tidak lewat. `misi` (keadaan
+## `MissionManager`, null = tanpa misi) menambah id, hasil, dan koin misi; hanya misi `selesai` menambah koin.
+static func dari(skor: SkorRute.Keadaan, rute: RouteBuilder.Rute, tenggat: TenggatRute.Keadaan, misi: MissionManager.Keadaan = null) -> Angka:
 	var a: Angka = Angka.new()
 	a.pelanggan = rute.pelanggan.size() if rute != null else 0
 	a.terkirim = ProgresRute.jumlah_terkirim(rute, skor.terantar)
@@ -43,6 +50,11 @@ static func dari(skor: SkorRute.Keadaan, rute: RouteBuilder.Rute, tenggat: Tengg
 	if tenggat != null and TenggatRute.lewat(tenggat):
 		a.tenggat_lewat = true
 		a.detik_lewat = TenggatRute.detik_tampil(tenggat)
+	if misi != null and misi.rencana != null and misi.rencana.sah():
+		a.misi_id = misi.rencana.id_misi
+		a.misi_hasil = MissionManager.nama_hasil(misi)
+		a.koin_misi = MissionManager.koin_misi(misi)
+		a.koin += a.koin_misi
 	return a
 
 
