@@ -32,6 +32,7 @@ func jalankan() -> void:
 	_test_satu_pembaca()
 	_test_efek_konsumen_terukur()
 	_test_tanpa_power_creep()
+	_test_efek_sejenis_dikali()
 
 
 ## Daftar upgrade nyata sebagai larik kamus (bisa diubah per kasus).
@@ -385,3 +386,36 @@ func _test_tanpa_power_creep() -> void:
 	var aus_dengan: float = 1.0 - float(dengan["rantai"])
 	check(aus_dengan > 0.0 and aus_dengan < aus_tanpa and aus_dengan >= aus_tanpa * 0.5 - TOLERANSI, "rantai hemat memperlambat aus rantai (%s < %s) tetapi tidak meniadakannya (>= separuh)" % [aus_dengan, aus_tanpa])
 	check(1.0 - float(dengan["ban"]) == 1.0 - float(tanpa["ban"]) and dengan["rem"] == 1.0, "komponen lain tidak berubah oleh upgrade rantai")
+
+
+## Upgrade fixture (bukan dari `upgrades.json`): satu komponen, satu level, satu efek.
+func _upgrade_uji(id: String, komponen: String, level: int, jenis: String, nilai: float) -> DataToko:
+	var u: DataToko = DataToko.new()
+	u.id = id
+	u.komponen = komponen
+	u.level = level
+	u.harga = 100
+	var e: DataToko.EfekUpgrade = DataToko.EfekUpgrade.new()
+	e.jenis = jenis
+	e.nilai = nilai
+	u.efek = [e]
+	return u
+
+
+## QA-006 (QM20): dua upgrade berjenis efek sama pada komponen yang sama (level 1 dan 2, yang akan ada di level 2) DIKALIKAN, tidak saling menimpa. Data uji di fixture,
+## `upgrades.json` 6A1 hanya punya satu upgrade per jenis (tidak terjangkau dari data nyata).
+func _test_efek_sejenis_dikali() -> void:
+	_judul.call("DataToko.pengali_efek dan pengali_aus: efek berjenis sama dari level yang dimiliki dikalikan, bukan ditimpa (QA-006, QM20)")
+	var daftar: Array[DataToko] = []
+	daftar.append(_upgrade_uji("rem_a", "rem", 1, "pengali_rem", 1.2))
+	daftar.append(_upgrade_uji("rem_b", "rem", 2, "pengali_rem", 1.1))
+	daftar.append(_upgrade_uji("rantai_a", "rantai", 1, "pengali_aus", 0.8))
+	daftar.append(_upgrade_uji("rantai_b", "rantai", 2, "pengali_aus", 0.9))
+	var dua: Dictionary = DataToko.pengali_efek(daftar, {"ban": 0, "rem": 2, "rantai": 2})
+	check(absf(float(dua["pengali_rem"]) - 1.32) < TOLERANSI, "rem level 2 memiliki 1,2 dan 1,1: pengali rem 1,2 x 1,1 = 1,32 (bukan 1,1 atau 1,2); dapat %s" % dua["pengali_rem"])
+	var satu: Dictionary = DataToko.pengali_efek(daftar, {"ban": 0, "rem": 1, "rantai": 1})
+	check(absf(float(satu["pengali_rem"]) - 1.2) < TOLERANSI, "rem level 1: hanya upgrade level 1 yang berlaku (1,2); dapat %s" % satu["pengali_rem"])
+	var aus: Dictionary = DataToko.pengali_aus(daftar, {"ban": 0, "rem": 0, "rantai": 2})
+	check(absf(float(aus["rantai"]) - 0.72) < TOLERANSI and aus["ban"] == 1.0 and aus["rem"] == 1.0, "rantai level 2 memiliki aus 0,8 dan 0,9: pengali aus 0,72 (dikali), komponen lain 1,0; dapat %s" % [aus])
+	var efek: EfekKondisi = BikeCondition.efek(BikeCondition.baru(), dua)
+	check(absf(efek.pengali_rem - 1.32) < TOLERANSI, "BikeCondition.efek memakai hasil kali yang sama untuk rem sehat: 1,32; dapat %s" % efek.pengali_rem)

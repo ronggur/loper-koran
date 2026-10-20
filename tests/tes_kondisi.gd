@@ -32,6 +32,7 @@ func jalankan() -> void:
 	_test_aus_titik_patah()
 	_test_aus_telemetri_nyata_vs_tangan()
 	_test_aus_urutan_dan_rem()
+	_test_kecepatan_awal_telemetri()
 	_test_tabrakan_komponen()
 	_test_tabrakan_satu_pengurangan()
 	_test_tabrakan_tidak_melompati_aus()
@@ -267,6 +268,30 @@ func _test_aus_urutan_dan_rem() -> void:
 	# Satu pengereman memakan: per pengereman + per detik (oracle tangan).
 	var satu: Dictionary = BikeCondition.aus(BikeCondition.baru(), _tele(1.0, 0.5, 4.0, true, true))
 	check(absf(float(satu["rem"]) - (1.0 - 0.006 - 0.01 * 0.5)) < TOLERANSI, "satu langkah rem mulai 0,5 detik: 1 - 0,006 - 0,01 x 0,5, dapat %s" % satu["rem"])
+
+
+func _test_kecepatan_awal_telemetri() -> void:
+	_judul.call("BikeMotion.Hasil.kecepatan_awal_ud adalah kecepatan SEBELUM langkah; aus rem per detik pada langkah pengereman yang berakhir di 0 tetap dihitung (QA-006, QM13)")
+	var s: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
+	s.kecepatan_ud = 4.5
+	var rusak_urutan: int = 0
+	var langkah_henti: BikeMotion.Hasil = null
+	var sebelum_henti: BikeMotion.Keadaan = null
+	for i: int in range(240):
+		var h: BikeMotion.Hasil = BikeMotion.langkah(s, Vector2(0.0, -1.0), DT)
+		if h.kecepatan_awal_ud != s.kecepatan_ud:
+			rusak_urutan += 1
+		if langkah_henti == null and h.keadaan.kecepatan_ud == 0.0 and s.kecepatan_ud > 0.0:
+			langkah_henti = h
+			sebelum_henti = s
+		s = h.keadaan
+	check(rusak_urutan == 0, "240 langkah tarik ke bawah dari 4,5 u/d: kecepatan_awal_ud tiap langkah = kecepatan keadaan sebelum langkah (bukan sesudahnya); langkah menyimpang %d" % rusak_urutan)
+	check(langkah_henti != null, "kontrol: pengereman dari 4,5 u/d berakhir di 0 dalam 4 detik")
+	if langkah_henti == null:
+		return
+	check(langkah_henti.kecepatan_awal_ud == sebelum_henti.kecepatan_ud and langkah_henti.kecepatan_awal_ud > 0.0 and langkah_henti.keadaan.rem_aktif, "langkah yang berakhir di 0: kecepatan awal %s > 0 dan rem aktif" % langkah_henti.kecepatan_awal_ud)
+	var aus: Dictionary = BikeCondition.aus(BikeCondition.baru(), BikeCondition.telemetri(langkah_henti, DT))
+	check(absf((1.0 - float(aus["rem"])) - Config.KONDISI_AUS_REM_PER_DETIK * DT) < TOLERANSI, "langkah pengereman yang berakhir di 0: rem aus tepat 0,01 x dt (%s), dapat %s" % [Config.KONDISI_AUS_REM_PER_DETIK * DT, 1.0 - float(aus["rem"])])
 
 
 # --- Tabrakan (AC-7) ---

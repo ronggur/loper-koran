@@ -30,8 +30,11 @@ func jalankan() -> void:
 	_test_tampil_kondisi_sapuan()
 	_test_tampil_kondisi_getar_dan_kunci()
 	_test_kondisi_rute_murni()
+	_test_efek_dihitung_ulang_murni()
+	_test_bunyi_kondisi_tidak_baru_saat_jeda()
 	await _test_aus_di_scene()
 	await _test_tabrakan_di_scene()
+	await _test_efek_dihitung_ulang_di_scene()
 	await _test_efek_dari_level()
 	await _test_peringatan_berpasangan()
 	await _test_peringatan_jeda_dan_background()
@@ -246,6 +249,80 @@ func _test_kondisi_rute_murni() -> void:
 	check(rusak_total.efek.pengali_kecepatan == 0.92 and rusak_total.efek.pengali_lateral == 0.6 and rusak_total.efek.pengali_rem == 0.4 and rusak_total.efek.pengali_akselerasi == 0.35 and rusak_total.efek.batas_puncak_ud == 3.6, "kondisi 0: efek terburuk (literal BALANCING 8.4) 0,92 / 0,6 / 0,4 / 0,35 / puncak 3,6")
 
 
+## Fraksi efek di bawah ambang PERLU_BENGKEL, dihitung tes dari ambang literal BALANCING 8 (0,35): kondisi / 0,35.
+func _pecahan(kondisi: float) -> float:
+	return minf(kondisi / 0.35, 1.0)
+
+
+func _sama(a: float, b: float, toleransi: float = 0.0001) -> bool:
+	return absf(a - b) < toleransi
+
+
+func _test_efek_dihitung_ulang_murni() -> void:
+	_judul.call("KondisiRute.langkah: efek dihitung ulang pada langkah yang sama dengan tabrakan dan dengan aus yang melintasi ambang 0,35 (QA-002, QM3)")
+	var dasar_hari_1: KondisiRute.Keadaan = KondisiRute.awal({"ban": 0.4, "rem": 0.4, "rantai": 0.4}, {}, 1, [] as Array[DataToko])
+	check(dasar_hari_1.efek.identitas(), "kontrol: tiga komponen 0,40 (AUS, di atas ambang efek) = efek identitas")
+	# Tabrakan: komponen terpilih turun 0,40 -> 0,10 (PERLU_BENGKEL) dan efek-nya berubah pada langkah tabrakan itu juga (literal: f = 0,10 / 0,35).
+	var f: float = _pecahan(0.1)
+	var terlihat: Dictionary = {}
+	for hari: int in range(1, 40):
+		var kom: String = BikeCondition.komponen_tabrakan(hari, 0)
+		if terlihat.has(kom):
+			continue
+		var dasar: KondisiRute.Keadaan = KondisiRute.awal({"ban": 0.4, "rem": 0.4, "rantai": 0.4}, {}, hari, [] as Array[DataToko])
+		var h: KondisiRute.Hasil = KondisiRute.langkah(dasar, _gerak(0.0, 0.0), DT, _tabrak(1), false)
+		var e: EfekKondisi = h.keadaan.efek
+		terlihat[kom] = true
+		check(dasar.efek.identitas() and not e.identitas(), "tabrakan hari %d menurunkan %s ke 0,10: efek awal identitas, efek pada langkah itu juga tidak lagi identitas" % [hari, kom])
+		match kom:
+			"ban":
+				check(_sama(e.pengali_kecepatan, 0.92 + 0.08 * f) and _sama(e.pengali_lateral, 0.6 + 0.4 * f) and e.pengali_rem == 1.0 and e.pengali_akselerasi == 1.0, "ban 0,10: kecepatan x%s, lateral x%s (literal 0,92 / 0,6 linear), rem dan rantai tetap; dapat %s / %s" % [0.92 + 0.08 * f, 0.6 + 0.4 * f, e.pengali_kecepatan, e.pengali_lateral])
+			"rem":
+				check(_sama(e.pengali_rem, 0.4 + 0.6 * f) and e.pengali_lateral == 1.0 and e.pengali_akselerasi == 1.0, "rem 0,10: perlambatan x%s (literal 0,4 linear), ban dan rantai tetap; dapat %s" % [0.4 + 0.6 * f, e.pengali_rem])
+			"rantai":
+				check(_sama(e.pengali_akselerasi, 0.35 + 0.65 * f) and _sama(e.batas_puncak_ud, 3.6 + 2.4 * f) and e.pengali_rem == 1.0, "rantai 0,10: akselerasi x%s, puncak %s u/d (literal 0,35 dan 3,6 linear), rem tetap; dapat %s / %s" % [0.35 + 0.65 * f, 3.6 + 2.4 * f, e.pengali_akselerasi, e.batas_puncak_ud])
+	check(terlihat.size() == 3, "kontrol: seed hari 1 sampai 39 memilih ban, rem, dan rantai sedikitnya sekali (dapat %s)" % [terlihat.keys()])
+	# Aus melintasi ambang: ban 0,3501 (BAIK-ke-efek masih identitas), 10 ubin santai = aus 0,0015 -> 0,3486 di bawah 0,35.
+	var tepi: KondisiRute.Keadaan = KondisiRute.awal({"ban": 0.3501, "rem": 1.0, "rantai": 1.0}, {}, 1, [] as Array[DataToko])
+	check(tepi.efek.identitas(), "kontrol: ban 0,3501 (tepat di atas ambang 0,35) = efek identitas")
+	var lintas: KondisiRute.Hasil = KondisiRute.langkah(tepi, _gerak(10.0, 3.0), 10.0 / 3.0, null, false)
+	var f_lintas: float = _pecahan(0.3486)
+	check(float(lintas.keadaan.kondisi["ban"]) < 0.35 and not lintas.keadaan.efek.identitas(), "aus 10 ubin menurunkan ban ke 0,3486 (< 0,35): efek berubah pada langkah aus itu juga")
+	check(_sama(lintas.keadaan.efek.pengali_lateral, 0.6 + 0.4 * f_lintas) and _sama(lintas.keadaan.efek.pengali_kecepatan, 0.92 + 0.08 * f_lintas), "ban 0,3486: lateral x%s dan kecepatan x%s tepat di bawah ambang (linear dari 1,0, tanpa lompatan); dapat %s / %s" % [0.6 + 0.4 * f_lintas, 0.92 + 0.08 * f_lintas, lintas.keadaan.efek.pengali_lateral, lintas.keadaan.efek.pengali_kecepatan])
+	# Efek selalu sama dengan efek dari kondisi saat itu (invarian di sepanjang 3000 langkah campuran aus dan tabrakan).
+	var k: KondisiRute.Keadaan = KondisiRute.awal({"ban": 0.9, "rem": 0.8, "rantai": 0.7}, {}, 3, [] as Array[DataToko])
+	var menyimpang: int = 0
+	for i: int in range(3000):
+		var tabrak: Tabrakan.Hasil = _tabrak(floori(float(i) / 1000.0) + 1) if i % 1000 == 500 else null
+		k = KondisiRute.langkah(k, _gerak(1.0, 3.0 + float(i % 4) * 0.5, i % 200 > 150, i % 200 == 151), DT, tabrak, false).keadaan
+		var oracle: EfekKondisi = BikeCondition.efek(k.kondisi, k.pengali_efek)
+		if not (k.efek.pengali_kecepatan == oracle.pengali_kecepatan and k.efek.pengali_lateral == oracle.pengali_lateral and k.efek.pengali_rem == oracle.pengali_rem and k.efek.pengali_akselerasi == oracle.pengali_akselerasi and k.efek.batas_puncak_ud == oracle.batas_puncak_ud):
+			menyimpang += 1
+	check(menyimpang == 0, "3000 langkah campuran (aus, rem, tiga tabrakan): efek tiap langkah = BikeCondition.efek(kondisi langkah itu); langkah menyimpang %d" % menyimpang)
+
+
+## QA-006 (QM10): `Audio.putar_kondisi` (dan servis, upgrade, peringatan yang lewat padanya) tidak menyalakan bunyi baru selama jeda game.
+func _test_bunyi_kondisi_tidak_baru_saat_jeda() -> void:
+	_judul.call("Audio: bunyi kondisi baru (peringatan, servis, upgrade) tidak berbunyi dan tidak dihitung selama jeda; sesudah lanjut berbunyi lagi (QA-006, QM10)")
+	var audio: Node = _audio()
+	check(audio != null, "kontrol: autoload Audio tersedia di runner")
+	if audio == null:
+		return
+	var servis: int = _jumlah_bunyi(BunyiKondisi.Bunyi.SERVIS)
+	var upgrade: int = _jumlah_bunyi(BunyiKondisi.Bunyi.UPGRADE)
+	var ban: int = _jumlah_bunyi(BunyiKondisi.peringatan(0))
+	audio.call(&"atur_jeda", true)
+	audio.call(&"putar_servis")
+	audio.call(&"putar_upgrade")
+	audio.call(&"putar_kondisi_peringatan", 0)
+	check(_jumlah_bunyi(BunyiKondisi.Bunyi.SERVIS) == servis and _jumlah_bunyi(BunyiKondisi.Bunyi.UPGRADE) == upgrade and _jumlah_bunyi(BunyiKondisi.peringatan(0)) == ban and not bool(audio.call(&"ada_bunyi_kondisi")), "selama jeda: servis, upgrade, dan peringatan ban tidak dihitung dan tidak berbunyi")
+	audio.call(&"atur_jeda", false)
+	audio.call(&"putar_servis")
+	check(_jumlah_bunyi(BunyiKondisi.Bunyi.SERVIS) == servis + 1, "sesudah lanjut: servis dihitung lagi (kontrol, jeda tidak mematikan bunyi selamanya)")
+	audio.call(&"atur_jeda", true)
+	audio.call(&"atur_jeda", false)
+
+
 # --- Scene: aus, mode bantu, tabrakan, efek ---
 
 func _test_aus_di_scene() -> void:
@@ -322,6 +399,43 @@ func _test_tabrakan_di_scene() -> void:
 	check(tabrak.size() == 1, "tidak ada tabrakan kedua selama jatuh dan kebal; kondisi komponen tidak berkurang lagi oleh jatuh yang berlanjut")
 	check(float(akar.kondisi().kondisi[kom]) > float(sesudah[kom]) - 0.01, "jatuh yang berlanjut tidak mengurangi lagi (kondisi %.4f)" % float(akar.kondisi().kondisi[kom]))
 	_bersihkan(akar)
+
+
+func _test_efek_dihitung_ulang_di_scene() -> void:
+	_judul.call("Scene rute: efek gerak dihitung ulang pada langkah tabrakan dan pada langkah aus melintasi ambang 0,35, bukan dibekukan di nilai awal rute (QA-002, QM3)")
+	var hari: int = 5
+	var akar: RuteMain = await _siapkan(_state(0.4, 0.4, 0.4), hari, false)
+	check(akar.kondisi().efek.identitas(), "kontrol: tiga komponen 0,40 = efek awal rute identitas")
+	var tabrak: Array[String] = []
+	akar.tabrakan.connect(func(jenis: String) -> void: tabrak.append(jenis))
+	_taruh(akar, 3.0, -0.6, 30.0)
+	var langkah: int = 0
+	var efek_sebelum: EfekKondisi = akar.kondisi().efek
+	while tabrak.is_empty() and langkah < 600:
+		efek_sebelum = akar.kondisi().efek
+		akar.perbarui(DT)
+		langkah += 1
+	check(tabrak == ["anjing_penjaga"], "kontrol: tabrakan nyata dengan anjing, dapat %s" % [tabrak])
+	var kom: String = BikeCondition.komponen_tabrakan(hari, 0)
+	var sesudah: EfekKondisi = akar.kondisi().efek
+	check(efek_sebelum.identitas() and not sesudah.identitas(), "pada langkah tabrakan itu juga efek berubah dari identitas (komponen %s kini PERLU_BENGKEL), tidak menunggu rute berikutnya" % kom)
+	var oracle: EfekKondisi = BikeCondition.efek(akar.kondisi().kondisi)
+	check(sesudah.pengali_kecepatan == oracle.pengali_kecepatan and sesudah.pengali_lateral == oracle.pengali_lateral and sesudah.pengali_rem == oracle.pengali_rem and sesudah.pengali_akselerasi == oracle.pengali_akselerasi and sesudah.batas_puncak_ud == oracle.batas_puncak_ud, "efek di scene = efek dari kondisi sesudah tabrakan (%s)" % [akar.kondisi().kondisi])
+	_bersihkan(akar)
+	# Aus nyata melintasi ambang: ban 0,3501, santai 3,0 u/d tanpa rintangan; efek identitas sampai langkah ban < 0,35, dan berubah tepat pada langkah itu.
+	var tepi: RuteMain = await _siapkan(_state(0.3501, 1.0, 1.0))
+	check(tepi.kondisi().efek.identitas(), "kontrol: ban 0,3501 = efek awal identitas")
+	var pertama: int = -1
+	var salah: int = 0
+	for i: int in range(80):
+		tepi.perbarui(DT)
+		var di_bawah: bool = float(tepi.kondisi().kondisi["ban"]) < 0.35
+		if di_bawah and pertama < 0:
+			pertama = i
+		if di_bawah == tepi.kondisi().efek.identitas():
+			salah += 1
+	check(pertama > 0 and salah == 0, "aus santai melintasi 0,35 pada langkah %d: efek berubah tepat pada langkah itu dan tidak sebelumnya; langkah dengan efek tidak sesuai kondisi %d" % [pertama, salah])
+	_bersihkan(tepi)
 
 
 func _test_efek_dari_level() -> void:

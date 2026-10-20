@@ -39,6 +39,7 @@ func jalankan() -> void:
 	await _test_upgrade()
 	await _test_hari_berikutnya_selalu_aktif()
 	await _test_sentuhan_sungguhan()
+	await _test_servis_saldo_tepat_harga()
 	await _test_galat_data_upgrade()
 	for kasus: Array in KASUS:
 		for inset_pakai: bool in [false, true]:
@@ -47,6 +48,8 @@ func jalankan() -> void:
 	await _test_alur_b_servis_dan_upgrade()
 	await _test_alur_c_saldo_kurang()
 	await _test_back_background_dan_tutup_di_bengkel()
+	await _test_background_di_bengkel_rute_beku()
+	await _test_kidal_tidak_mengubah_bengkel()
 	var sesudah: Dictionary = _a._jejak_save_asli()
 	check(sebelum == sesudah, "user://save.json tidak tersentuh oleh tes bengkel dan alur bengkel (%s -> %s)" % [sebelum, sesudah])
 
@@ -229,6 +232,20 @@ func _test_sentuhan_sungguhan() -> void:
 	_ketuk(pakem.get_center(), 2)
 	check(layar.state()["koin"] == 140 and Economy.level_dari(layar.state())["rem"] == 1, "ketukan jari di Beli rem_pakem (500): saldo 140, level rem 1")
 	_buang(layar)
+
+
+## QA-006 (QM5): saldo TEPAT sama dengan harga servis masih bisa membayar di layar (batas inklusif `>=`); satu koin kurang tidak.
+func _test_servis_saldo_tepat_harga() -> void:
+	_judul.call("Bengkel: saldo tepat sama dengan harga servis = tombol Servis aktif dan membayar sampai saldo 0; kurang 1 koin = nonaktif 'Koin kurang' (QA-006, QM5)")
+	var pas: LayarBengkel = await _bengkel(_state(84, 0.30, 1.0, 1.0))
+	var tombol: TombolSentuh = pas.tombol_servis("ban")
+	check(pas.kartu_servis("ban").harga.text == "84 koin" and tombol.visible and not tombol.disabled and tombol.text == "Servis", "ban 0,30 harga 84, saldo 84: tombol Servis aktif bertulis 'Servis', dapat disabled=%s teks '%s'" % [tombol.disabled, tombol.text])
+	_ketuk(tombol.get_global_rect().get_center())
+	check(pas.state()["koin"] == 0 and Economy.kondisi_dari(pas.state())["ban"] == 1.0 and pas.belanja_koin() == 84, "ketukan jari: dibayar 84, saldo 0, ban 1,0")
+	_buang(pas)
+	var kurang: LayarBengkel = await _bengkel(_state(83, 0.30, 1.0, 1.0))
+	check(kurang.tombol_servis("ban").disabled and kurang.tombol_servis("ban").text == "Koin kurang", "saldo 83 (kurang 1 koin): tombol nonaktif 'Koin kurang'")
+	_buang(kurang)
 
 
 func _test_galat_data_upgrade() -> void:
@@ -472,3 +489,122 @@ func _test_back_background_dan_tutup_di_bengkel() -> void:
 	_a._bersihkan(hari2)
 	_a._tutup_manajer(m2)
 	_a._bersihkan_folder()
+
+
+# --- Background dan sentuhan di bawah bengkel (QA-001, QA-005, QA-010) ---
+
+## Gesekan jari sungguhan dari `dari` ke `ke` (koordinat viewport game).
+func _geser(dari: Vector2, ke: Vector2, index: int = 0) -> void:
+	var tekan: InputEventScreenTouch = InputEventScreenTouch.new()
+	tekan.index = index
+	tekan.position = dari * 3.0
+	tekan.pressed = true
+	Input.parse_input_event(tekan)
+	Input.flush_buffered_events()
+	var seret: InputEventScreenDrag = InputEventScreenDrag.new()
+	seret.index = index
+	seret.position = ke * 3.0
+	seret.relative = (ke - dari) * 3.0
+	Input.parse_input_event(seret)
+	Input.flush_buffered_events()
+	var lepas: InputEventScreenTouch = InputEventScreenTouch.new()
+	lepas.index = index
+	lepas.position = ke * 3.0
+	lepas.pressed = false
+	Input.parse_input_event(lepas)
+	Input.flush_buffered_events()
+
+
+## Hari 1 sampai bengkel terbuka (koran dilewati, rute diselesaikan, "Ke bengkel"); `bantu` dan `kidal` diatur pada rute sebelum bengkel dibuka. Mengembalikan {"m": SaveManager uji, "hari": HariMain}.
+func _menuju_bengkel(bantu: bool = false, kidal: bool = false) -> Dictionary:
+	_a._bersihkan_folder()
+	var m: Node = _a._manajer()
+	var hari: HariMain = await _a._siapkan(m)
+	hari.koran().tombol_lewati().ditekan.emit()
+	var rute: RuteMain = await _a._berangkat(hari)
+	await _a._selesaikan_rute(rute)
+	rute.atur_mode_bantu(bantu)
+	rute.atur_kidal(kidal)
+	rute.layar_hasil().tombol_main_lagi().ditekan.emit()
+	return {"m": m, "hari": hari}
+
+
+func _selesai_bengkel(m: Node, hari: HariMain) -> void:
+	_lepas_jari()
+	_a._bersihkan(hari)
+	_a._tutup_manajer(m)
+	_a._bersihkan_folder()
+
+
+## QA-001: app di-background (PAUSED, FOCUS_OUT, lalu RESUMED, FOCUS_IN, dan back pada rute) saat bengkel terbuka tidak boleh menjeda rute yang tersembunyi: `SceneTree.paused` tetap false,
+## bengkel tetap menerima sentuhan (Servis, Beli, Hari berikutnya), tidak ada layar JEDA, nol simpan. QA-005: rute dibekukan (`process_mode` DISABLED) dan sentuhan di bengkel (ketukan dan
+## gesekan di zona swipe, juga dengan mode bantu) tidak melempar koran dan tidak membunyikan "wus". Perilaku jeda di rute dan di layar hasil tidak berubah.
+func _test_background_di_bengkel_rute_beku() -> void:
+	_judul.call("Bengkel: background tidak menjeda rute tersembunyi (tree tidak paused, tidak ada layar JEDA, bengkel tetap disentuh), rute dibeku sebagai DISABLED, sentuhan di bengkel tidak melempar koran (QA-001, QA-005)")
+	_a._bersihkan_folder()
+	var m: Node = _a._manajer()
+	var hari: HariMain = await _a._siapkan(m)
+	hari.koran().tombol_lewati().ditekan.emit()
+	var rute: RuteMain = await _a._berangkat(hari)
+	await _a._selesaikan_rute(rute)
+	var layar_jeda: LayarJeda = rute.find_child("LayarJeda", true, false) as LayarJeda
+	# Layar hasil (rute hidup di bawahnya): background tetap menjeda seperti biasa; lanjut hanya lewat tombol Lanjut.
+	check(rute.hasil_tampil() and not rute.sedang_jeda() and not _tree.paused and rute.process_mode == Node.PROCESS_MODE_INHERIT, "kontrol: layar hasil terbuka, rute hidup (INHERIT), belum dijeda")
+	rute.propagate_notification(Node.NOTIFICATION_APPLICATION_PAUSED)
+	check(rute.sedang_jeda() and _tree.paused and layar_jeda.visible, "layar hasil + background: rute dijeda, pohon paused, layar JEDA tampil (perilaku lama tidak berubah)")
+	rute.propagate_notification(Node.NOTIFICATION_APPLICATION_RESUMED)
+	check(rute.sedang_jeda(), "RESUMED tidak melanjutkan sendiri (tanpa lanjut otomatis)")
+	rute.minta_lanjut()
+	check(not rute.sedang_jeda() and not _tree.paused and not layar_jeda.visible, "Lanjut: jeda dan pohon paused dilepas")
+	rute.atur_mode_bantu(true)
+	rute.layar_hasil().tombol_main_lagi().ditekan.emit()
+	var bengkel: LayarBengkel = hari.bengkel()
+	check(bengkel != null and hari.status().keadaan == MesinHari.Keadaan.BENGKEL, "bengkel terbuka")
+	check(rute.process_mode == Node.PROCESS_MODE_DISABLED and not rute.can_process() and not rute.layar_hasil().visible, "rute dibekukan di bawah bengkel (process_mode DISABLED) dan layar hasilnya tersembunyi")
+	var audio: Node = _audio()
+	var wus_awal: int = int(audio.call(&"jumlah_wus")) if audio != null else 0
+	var koran_awal: int = rute.koran_terbang().size()
+	# Sentuhan di bengkel (ketukan dan gesekan di zona swipe, mode bantu menyala) tidak melempar koran dan tidak membunyikan "wus".
+	_ketuk(Vector2(390.0, 200.0))
+	_geser(Vector2(300.0, 150.0), Vector2(380.0, 150.0), 1)
+	_geser(Vector2(500.0, 220.0), Vector2(420.0, 120.0), 2)
+	await _tree.process_frame
+	var wus_sesudah: int = int(audio.call(&"jumlah_wus")) if audio != null else 0
+	check(rute.koran_terbang().size() == koran_awal and wus_sesudah == wus_awal, "ketukan dan gesekan di bengkel dengan mode bantu: tidak ada koran terbang baru (%d -> %d) dan tidak ada bunyi lempar (%d -> %d)" % [koran_awal, rute.koran_terbang().size(), wus_awal, wus_sesudah])
+	# Background lalu kembali: PAUSED / FOCUS_OUT / RESUMED / FOCUS_IN ke seluruh pohon, back ke rute.
+	for notifikasi: int in [Node.NOTIFICATION_APPLICATION_PAUSED, Node.NOTIFICATION_APPLICATION_FOCUS_OUT, Node.NOTIFICATION_APPLICATION_RESUMED, Node.NOTIFICATION_APPLICATION_FOCUS_IN]:
+		hari.propagate_notification(notifikasi)
+	rute.notification(Node.NOTIFICATION_WM_GO_BACK_REQUEST)
+	await _tree.process_frame
+	check(not _tree.paused and not rute.sedang_jeda() and not layar_jeda.visible, "sesudah PAUSED / FOCUS_OUT / RESUMED / FOCUS_IN dan back ke rute: pohon tidak paused, rute tidak dijeda, tidak ada layar JEDA")
+	check(bengkel.can_process() and hari.status().keadaan == MesinHari.Keadaan.BENGKEL and m.get(&"jumlah_simpan") == 0 and not FileAccess.file_exists(_a._jalur()), "bengkel masih memproses input, keadaan BENGKEL, nol simpan, tidak ada berkas save")
+	# Sentuhan sungguhan sesudah background: Servis dan Beli bekerja (state kerja diganti supaya ada yang diservis dan dibeli), lalu Hari berikutnya.
+	bengkel.isi(_state(700, 0.5, 1.0, 1.0), hari.toko())
+	await _tree.process_frame
+	await _tree.process_frame
+	_ketuk(bengkel.tombol_servis("ban").get_global_rect().get_center())
+	check(bengkel.state()["koin"] == 640 and Economy.kondisi_dari(bengkel.state())["ban"] == 1.0, "sesudah background: ketukan jari pada Servis ban membayar 60 (saldo 640)")
+	_ketuk(bengkel.tombol_beli("rem_pakem").get_global_rect().get_center(), 1)
+	check(bengkel.state()["koin"] == 140 and Economy.level_dari(bengkel.state())["rem"] == 1, "sesudah background: ketukan jari pada Beli rem_pakem membeli (saldo 140, level rem 1)")
+	check(m.get(&"jumlah_simpan") == 0, "servis dan beli tidak menyimpan (simpan hanya di Hari berikutnya)")
+	_ketuk(bengkel.tombol_hari_berikutnya().get_global_rect().get_center(), 2)
+	await _tree.process_frame
+	check(hari.status().keadaan == MesinHari.Keadaan.KORAN and hari.rute() == null and hari.bengkel() == null and m.get(&"jumlah_simpan") == 1, "ketukan jari pada Hari berikutnya sesudah background: koran hari berikutnya, rute dan bengkel dibuang, tepat satu simpan")
+	check(not _tree.paused, "sesudah alur: pohon tidak paused")
+	_selesai_bengkel(m, hari)
+
+
+## QA-010 (AC-25): mode kidal di rute tidak mengubah tata letak bengkel (layar tidak membaca kidal): semua rect elemen yang tampil dan tombol Hari berikutnya sama.
+func _test_kidal_tidak_mengubah_bengkel() -> void:
+	_judul.call("Bengkel: kidal diatur pada rute lalu bengkel dibuka = tata letak bengkel sama persis dengan mode biasa (AC-25, QA-010)")
+	var biasa: Dictionary = await _menuju_bengkel(false, false)
+	var b_biasa: LayarBengkel = (biasa["hari"] as HariMain).bengkel()
+	var rect_biasa: Array[Rect2] = b_biasa.rect_tampil()
+	var tombol_biasa: Rect2 = b_biasa.rect_tombol_hari()
+	_selesai_bengkel(biasa["m"], biasa["hari"])
+	var kidal: Dictionary = await _menuju_bengkel(false, true)
+	var hari_kidal: HariMain = kidal["hari"]
+	check(hari_kidal.rute().kidal(), "kontrol: mode kidal rute menyala saat bengkel dibuka")
+	var b_kidal: LayarBengkel = hari_kidal.bengkel()
+	check(rect_biasa.size() >= 10 and b_kidal.rect_tampil() == rect_biasa and b_kidal.rect_tombol_hari() == tombol_biasa, "kidal: %d rect elemen bengkel dan tombol 'Hari berikutnya' %s sama persis dengan mode biasa" % [rect_biasa.size(), b_kidal.rect_tombol_hari()])
+	_selesai_bengkel(kidal["m"], hari_kidal)

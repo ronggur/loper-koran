@@ -172,7 +172,12 @@ func _tenggat_lewat() -> bool:
 	return TenggatRute.lewat(_tenggat)
 
 
+## Rute yang dibekukan `HariMain` di bawah layar bengkel (`process_mode` DISABLED) mengabaikan semua peristiwa jeda: notifikasi aplikasi (PAUSED, FOCUS_OUT, GO_BACK) tetap
+## dikirim ke tiap node di pohon walau `process_mode` mati, dan menjeda rute tersembunyi memasang `SceneTree.paused` sehingga bengkel berhenti menerima sentuhan dan dialog JEDA muncul
+## di atasnya (QA-001 run fase6a1). Di rute dan layar hasil `process_mode` tetap bawaan, jadi jeda di sana tidak berubah.
 func _saring_jeda(peristiwa: JedaSim.Peristiwa) -> JedaSim.Peristiwa:
+	if process_mode == Node.PROCESS_MODE_DISABLED:
+		return JedaSim.Peristiwa.TIDAK_ADA
 	if _hasil_tampil and peristiwa == JedaSim.Peristiwa.BACK and not sedang_jeda():
 		return JedaSim.Peristiwa.TIDAK_ADA
 	return peristiwa
