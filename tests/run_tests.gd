@@ -954,19 +954,19 @@ func _test_terjemahan() -> void:
 		jumlah_teks_scene += _teks_di_scene(teks, []).size()
 		check(_teks_di_scene(teks, kunci_sah).is_empty(), "%s: setiap text/tooltip_text berisi kunci terjemahan yang ada: %s" % [berkas, "; ".join(_teks_di_scene(teks, kunci_sah))])
 	check(jumlah_teks_scene >= 2, "scene memuat properti teks berisi kunci (%d)" % jumlah_teks_scene)
-	# Kunci yatim di awalan baru (AC-4, AC-2 run fase4b-misi-kucing): kunci KORAN_/MISI_/HASIL_HARI_/HASIL_MISI_/TUTORIAL_ di ui.csv harus dirujuk skrip atau scene; kunci di konten.csv harus
+	# Kunci yatim di awalan baru (AC-4, AC-2 run fase4b-misi-kucing; BENGKEL_ dan KONDISI_ ditambah run fase6a1-bengkel-kondisi bagian B, AC-25): kunci KORAN_/MISI_/HASIL_HARI_/HASIL_MISI_/TUTORIAL_/BENGKEL_/KONDISI_ di ui.csv harus dirujuk skrip atau scene; kunci di konten.csv harus
 	# dirujuk berkas data (assets/data/**.json). Kunci yang dirujuk dari data tapi tidak ada di CSV ditangkap pemeriksa data (tes_headline).
 	var teks_data: String = ""
 	for berkas: String in _daftar_berkas("res://assets/data", ["json"]):
 		teks_data += FileAccess.get_file_as_string(berkas)
 	var yatim: Array[String] = []
 	for entri: PackedStringArray in baris:
-		if entri.size() == 2 and (entri[0].begins_with("KORAN_") or entri[0].begins_with("MISI_") or entri[0].begins_with("HASIL_HARI_") or entri[0].begins_with("HASIL_MISI_") or entri[0].begins_with("TUTORIAL_")) and not teks_kode.contains(entri[0]):
+		if entri.size() == 2 and (entri[0].begins_with("KORAN_") or entri[0].begins_with("MISI_") or entri[0].begins_with("HASIL_HARI_") or entri[0].begins_with("HASIL_MISI_") or entri[0].begins_with("TUTORIAL_") or entri[0].begins_with("BENGKEL_") or entri[0].begins_with("KONDISI_")) and not teks_kode.contains(entri[0]):
 			yatim.append(entri[0])
 	for entri: PackedStringArray in baris_konten:
 		if entri.size() == 2 and not teks_data.contains("\"" + entri[0] + "\""):
 			yatim.append(entri[0])
-	check(yatim.is_empty(), "tidak ada kunci CSV yatim di awalan baru (KORAN_, MISI_, HASIL_HARI_, HASIL_MISI_, TUTORIAL_): %s" % [yatim])
+	check(yatim.is_empty(), "tidak ada kunci CSV yatim di awalan baru (KORAN_, MISI_, HASIL_HARI_, HASIL_MISI_, TUTORIAL_, BENGKEL_, KONDISI_): %s" % [yatim])
 	check(teks_kode.contains("HUD_KECEPATAN") and teks_data.contains("MISI_P1_KUCING_HEADLINE"), "pemindai yatim melihat rujukan di skrip/scene dan di data")
 	# Penjaga harus menolak contoh buruk (bukan lolos kosong).
 	check(_kunci_tr_di_skrip("label.text = tr(\"HUD_KIDAL\")\nvar x: String = tr(&\"HUD_KECEPATAN\")") == ["HUD_KIDAL", "HUD_KECEPATAN"], "pemindai tr() mengenali tr(\"...\") dan tr(&\"...\")")
