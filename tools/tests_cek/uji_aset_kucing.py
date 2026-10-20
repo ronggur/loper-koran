@@ -39,6 +39,15 @@ def baca(jalur):
         return f.read()
 
 
+def piksel(jalur):
+    # Bandingkan piksel RGBA, bukan byte berkas: pengodean zlib di PNG berbeda antar platform dan versi pillow (macOS vs runner CI)
+    # padahal gambarnya sama.
+    from PIL import Image
+    with Image.open(jalur) as gambar:
+        gambar = gambar.convert('RGBA')
+        return gambar.size, gambar.tobytes()
+
+
 def jalankan(keluaran):
     lingkungan = dict(os.environ, ENV_ART_OUT=keluaran)
     hasil = subprocess.run([sys.executable, SKRIP], capture_output=True, text=True, env=lingkungan, cwd=ROOT)
@@ -66,7 +75,10 @@ def main():
                 continue
             periksa(baca(hasil_a) == baca(hasil_b), f'{NAMA}{ekstensi}: dua kali jalan menghasilkan byte yang sama (deterministik)')
             repo = os.path.join(HASIL_REPO, NAMA + ekstensi)
-            periksa(os.path.isfile(repo) and baca(repo) == baca(hasil_a), f'{NAMA}{ekstensi} di assets/sprites/npc/ byte-identik dengan keluaran skrip (bukan salinan tangan)')
+            if ekstensi == '.png':
+                periksa(os.path.isfile(repo) and piksel(repo) == piksel(hasil_a), f'{NAMA}{ekstensi} di assets/sprites/npc/ piksel-identik dengan keluaran skrip (bukan salinan tangan)')
+            else:
+                periksa(os.path.isfile(repo) and baca(repo) == baca(hasil_a), f'{NAMA}{ekstensi} di assets/sprites/npc/ byte-identik dengan keluaran skrip (bukan salinan tangan)')
     isi = sorted(os.listdir(HASIL_REPO)) if os.path.isdir(HASIL_REPO) else []
     berkas_aset = [n for n in isi if not n.endswith('.import') and not n.endswith('.uid')]
     periksa(berkas_aset == [NAMA + '.json', NAMA + '.png'], f'assets/sprites/npc hanya berisi sheet kucing misi (png + json), dapat {berkas_aset}')
