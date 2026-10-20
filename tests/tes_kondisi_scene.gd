@@ -495,7 +495,7 @@ func _test_hasil_baris_kondisi() -> void:
 		if bersih.hasil_tampil():
 			break
 		bersih.perbarui(DT)
-	check(bersih.hasil_tampil() and bersih.layar_hasil().teks_kondisi().is_empty() and bersih.layar_hasil().rect_kondisi().is_empty(), "sepeda baik: tidak ada baris kondisi sama sekali")
+	check(bersih.hasil_tampil() and bersih.layar_hasil().teks_kondisi().is_empty() and bersih.layar_hasil().rect_kondisi().is_empty() and not bersih.layar_hasil().kondisi_tampil() and akar.layar_hasil().kondisi_tampil(), "sepeda baik: tidak ada baris kondisi sama sekali dan blok kondisi tersembunyi (rusak: tampil)")
 	var angka_bersih: HasilRute.Angka = bersih.angka_hasil()
 	var sama: bool = true
 	for nama: StringName in [&"pelanggan", &"terkirim", &"meleset", &"koin", &"koin_tip", &"jumlah_tip", &"skor", &"jumlah_tepat", &"tenggat_lewat", &"detik_lewat", &"koin_misi", &"misi_hasil", &"misi_id"]:

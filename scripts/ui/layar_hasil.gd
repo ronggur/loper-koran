@@ -135,6 +135,11 @@ func _isi_kondisi(perlu_bengkel: Array[String]) -> void:
 	_kondisi.visible = not perlu_bengkel.is_empty()
 
 
+## True bila blok baris kondisi tampil (false bila tidak ada komponen PERLU_BENGKEL: blok kosong yang terlihat tetap menambah jarak di panel).
+func kondisi_tampil() -> bool:
+	return _kondisi.visible
+
+
 ## Teks baris kondisi yang tampil, urut (kosong bila tidak ada komponen rusak).
 func teks_kondisi() -> Array[String]:
 	var hasil: Array[String] = []
