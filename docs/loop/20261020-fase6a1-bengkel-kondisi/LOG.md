@@ -1,14 +1,14 @@
 # Loop Log — 20261020-fase6a1-bengkel-kondisi
 Scope: Run 6A1 — save v3 (koin = saldo, `koin_total`, `sepeda`), `BikeCondition`, kotak kondisi di HUD rute, layar bengkel (servis + upgrade dari `upgrades.json`), `Economy`, alur Hasil → Bengkel → Hari berikutnya  ·  Branch: feat/bengkel-kondisi-6a1  ·  Mulai: 2026-10-20  ·  Godot: 4.7.2.stable
 
-## Status: IN_PROGRESS   (iterasi saat ini: 1/2)
+## Status: IN_PROGRESS   (iterasi saat ini: 1/2; QA iterasi 1: FAIL)
 
 Baseline (main 337fae3, sebelum perubahan; dijalankan orchestrator 2026-10-20): `godot --headless --import` bersih; `run_tests.gd` **15133 lolos, 0 gagal**; `tools/cek_keluaran_tes.py` lolos (0 peringatan). HP: `adb devices` kosong saat run dimulai (vivo V2108 tidak tersambung); HP belum disentuh.
 
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
 |---|---|---|---|---|---|
-| 1 | Bagian A (kondisi, efek, save v3, ekonomi, toko, MesinHari, tes, mutan) dan bagian B (kondisi di scene rute, HUD kondisi, peringatan berpasangan, audio, layar hasil, layar bengkel, alur, tes, probe, mutan UI, dokumen) | import bersih; `run_tests.gd` **16686 lolos, 0 gagal**; pemeriksa keluaran lolos (0 peringatan); `--quit-after 2` bersih; semua `uji_*.py` lolos (termasuk `uji_sintesis_kondisi.py` 55); `--export-pack` dan `PemuatToko` dari paket lolos | FAIL (QA iterasi 1: gerbang hijau, 16687 lolos; 2 Major) | 10 (2 Major, 5 Minor, 3 Nit; NEEDS-MANUAL: QA-004, QA-007) | 0 |
+| 1 | Bagian A (kondisi, efek, save v3, ekonomi, toko, MesinHari, tes, mutan) dan bagian B (kondisi di scene rute, HUD kondisi, peringatan berpasangan, audio, layar hasil, layar bengkel, alur, tes, probe, mutan UI, dokumen) | import bersih; `run_tests.gd` **16686 lolos, 0 gagal**; pemeriksa keluaran lolos (0 peringatan); `--quit-after 2` bersih; semua `uji_*.py` lolos (termasuk `uji_sintesis_kondisi.py` 55); `--export-pack` dan `PemuatToko` dari paket lolos | FAIL (QA iterasi 1: gerbang hijau, 16687 lolos; 2 Major) | 10 (2 Major, 4 Minor, 4 Nit; NEEDS-MANUAL: QA-004, QA-007) | 0 |
 
 ## Temuan
 Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MANUAL | BLOCKED
@@ -197,7 +197,7 @@ sha256 sesudah seluruh pekerjaan: 37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdf
 
 ## Hasil QA iterasi 1 (verifikasi independen)
 
-**Verdict: FAIL** (2 Major, 5 Minor, 3 Nit; 2 NEEDS-MANUAL di antaranya). QA: agent independen, 2026-10-20, Godot 4.7.2, macOS, branch `feat/bengkel-kondisi-6a1` (tidak ada commit di `main`, tidak ada push).
+**Verdict: FAIL** (2 Major, 4 Minor, 4 Nit; 2 di antaranya NEEDS-MANUAL). QA: agent independen, 2026-10-20, Godot 4.7.2, macOS, branch `feat/bengkel-kondisi-6a1` (tidak ada commit di `main`, tidak ada push).
 
 **Gerbang objektif (dijalankan sendiri):**
 - `godot --headless --import` bersih. `run_tests.gd` run 1: **16686 lolos, 0 gagal**, `cek_keluaran_tes.py` lolos (0 peringatan, 0 `SCRIPT ERROR`/`ERROR:`/`WARNING:` di log); run 2: **16687 lolos, 0 gagal**, pemeriksa lolos (selisih satu: QA-009). Ditambah 3 run mutan tak dimutasi di repo asli (16687/0): tidak ada kegagalan sesekali, galat `previously freed`, atau jatuhan `tes_tata_letak` yang dilaporkan Dev; pola dibebaskan-lalu-dipakai di tes lain tidak ditemukan (pemindai heuristik saya terlalu berisik untuk menyimpulkan; tidak ada bukti kasus kedua).
