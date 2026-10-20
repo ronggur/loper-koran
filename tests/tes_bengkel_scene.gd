@@ -526,6 +526,8 @@ func _menuju_bengkel(bantu: bool = false, kidal: bool = false) -> Dictionary:
 	rute.atur_mode_bantu(bantu)
 	rute.atur_kidal(kidal)
 	rute.layar_hasil().tombol_main_lagi().ditekan.emit()
+	await _tree.process_frame
+	await _tree.process_frame
 	return {"m": m, "hari": hari}
 
 
@@ -574,9 +576,11 @@ func _test_background_di_bengkel_rute_beku() -> void:
 	# Background lalu kembali: PAUSED / FOCUS_OUT / RESUMED / FOCUS_IN ke seluruh pohon, back ke rute.
 	for notifikasi: int in [Node.NOTIFICATION_APPLICATION_PAUSED, Node.NOTIFICATION_APPLICATION_FOCUS_OUT, Node.NOTIFICATION_APPLICATION_RESUMED, Node.NOTIFICATION_APPLICATION_FOCUS_IN]:
 		hari.propagate_notification(notifikasi)
+	await _tree.process_frame
+	check(not _tree.paused and not rute.sedang_jeda() and not layar_jeda.visible, "sesudah PAUSED / FOCUS_OUT / RESUMED / FOCUS_IN: pohon tidak paused, rute tidak dijeda, tidak ada layar JEDA")
 	rute.notification(Node.NOTIFICATION_WM_GO_BACK_REQUEST)
 	await _tree.process_frame
-	check(not _tree.paused and not rute.sedang_jeda() and not layar_jeda.visible, "sesudah PAUSED / FOCUS_OUT / RESUMED / FOCUS_IN dan back ke rute: pohon tidak paused, rute tidak dijeda, tidak ada layar JEDA")
+	check(not _tree.paused and not rute.sedang_jeda() and not layar_jeda.visible, "back yang sampai ke rute tersembunyi juga diabaikan (tidak menjeda dan tidak membuka layar JEDA)")
 	check(bengkel.can_process() and hari.status().keadaan == MesinHari.Keadaan.BENGKEL and m.get(&"jumlah_simpan") == 0 and not FileAccess.file_exists(_a._jalur()), "bengkel masih memproses input, keadaan BENGKEL, nol simpan, tidak ada berkas save")
 	# Sentuhan sungguhan sesudah background: Servis dan Beli bekerja (state kerja diganti supaya ada yang diservis dan dibeli), lalu Hari berikutnya.
 	bengkel.isi(_state(700, 0.5, 1.0, 1.0), hari.toko())

@@ -282,7 +282,8 @@ const ZONA_STICK_Y_MAKS_PX: int = 352
 const ZONA_SWIPE_X_MIN_PX: int = 210
 ## Zona swipe: jarak tepi luar dari tepi layar sisi swipe, piksel game.
 const ZONA_SWIPE_TEPI_PX: int = 20
-## Zona swipe: batas atas, diukur dari atas layar, piksel game. Di atasnya strip HUD yang bebas dari kontrol.
+## Zona swipe: batas atas, diukur dari atas layar, piksel game. Di atasnya strip HUD (`HUD_STRIP_ATAS_TINGGI_PX`) yang bebas dari kontrol. Sejak run 6A1 strip atas rute memuat juga panel kondisi (baris 2, y 43 sampai 67) yang
+## memotong bagian paling atas zona swipe; panel itu tidak menangkap sentuhan, jadi swipe yang dimulai di atasnya tetap melempar (QA-003, usulan yang dinilai di HP: apakah jempol menutupi panel saat swipe).
 const ZONA_SWIPE_Y_MIN_PX: int = 48
 ## Zona swipe: batas bawah, diukur dari atas layar, piksel game.
 const ZONA_SWIPE_Y_MAKS_PX: int = 352
@@ -348,7 +349,7 @@ const WAKTU_MS_PER_DETIK: float = 1000.0
 
 ## --- HUD sementara (DESIGN_SPEC 1.3, 3.5, 3.7) ---
 
-## Tinggi strip atas HUD yang bebas dari zona kontrol, piksel game. Sama dengan `ZONA_SWIPE_Y_MIN_PX`.
+## Tinggi strip atas HUD yang bebas dari zona kontrol, piksel game. Sama dengan `ZONA_SWIPE_Y_MIN_PX`. Pengecualian run 6A1: panel kondisi rute melewati garis ini (berakhir y 67) tanpa menangkap sentuhan; zona swipe tetap mulai di sini.
 const HUD_STRIP_ATAS_TINGGI_PX: int = 48
 ## Jarak panel HUD dari tepi layar, piksel game.
 const HUD_MARGIN_TEPI_PX: int = 8
