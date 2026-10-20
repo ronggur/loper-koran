@@ -1,7 +1,7 @@
 # Loop Log — 20261020-fase6a1-bengkel-kondisi
 Scope: Run 6A1 — save v3 (koin = saldo, `koin_total`, `sepeda`), `BikeCondition`, kotak kondisi di HUD rute, layar bengkel (servis + upgrade dari `upgrades.json`), `Economy`, alur Hasil → Bengkel → Hari berikutnya  ·  Branch: feat/bengkel-kondisi-6a1  ·  Mulai: 2026-10-20  ·  Godot: 4.7.2.stable
 
-## Status: IN_PROGRESS   (iterasi saat ini: 2/2; QA iterasi 1: FAIL; QA iterasi 2: PASS, tanpa Blocker/Major terbuka; menunggu keputusan orchestrator)
+## Status: PASSED   (iterasi saat ini: 2/2; QA iterasi 1 = FAIL: 2 Major, 4 Minor, 4 Nit; QA iterasi 2 = PASS: QA-001/002/005/006/009/010 VERIFIED, QA-003 DEFERRED, QA-004/007 NEEDS-MANUAL, QA-008/011/012/013 catatan OPEN; 0 Blocker/Major terbuka; diputuskan orchestrator 2026-10-20)
 
 Baseline (main 337fae3, sebelum perubahan; dijalankan orchestrator 2026-10-20): `godot --headless --import` bersih; `run_tests.gd` **15133 lolos, 0 gagal**; `tools/cek_keluaran_tes.py` lolos (0 peringatan). HP: `adb devices` kosong saat run dimulai (vivo V2108 tidak tersambung); HP belum disentuh.
 
