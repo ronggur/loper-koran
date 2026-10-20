@@ -499,6 +499,11 @@ func _test_efek_sapuan() -> void:
 	# Nilai terburuk di kondisi 0 (oracle tangan dari BALANCING 8).
 	var nol: EfekKondisi = BikeCondition.efek(_kondisi_semua(0.0))
 	check(absf(nol.pengali_kecepatan - 0.92) < TOLERANSI and absf(nol.pengali_lateral - 0.6) < TOLERANSI and absf(nol.pengali_rem - 0.4) < TOLERANSI and absf(nol.pengali_akselerasi - 0.35) < TOLERANSI and absf(nol.batas_puncak_ud - 3.6) < TOLERANSI, "kondisi 0: kecepatan x0,92, lateral x0,60, rem x0,40, akselerasi x0,35, puncak 3,6 u/d")
+	# Pertengahan ramp (kondisi 0,175 = setengah ambang efek): linear dari 1,0 ke nilai terburuk (oracle tangan), tanpa lompatan di ambang.
+	var tengah: EfekKondisi = BikeCondition.efek(_kondisi_semua(0.175))
+	check(absf(tengah.pengali_kecepatan - 0.96) < TOLERANSI and absf(tengah.pengali_lateral - 0.8) < TOLERANSI and absf(tengah.pengali_rem - 0.7) < TOLERANSI and absf(tengah.pengali_akselerasi - 0.675) < TOLERANSI and absf(tengah.batas_puncak_ud - 4.8) < TOLERANSI, "kondisi 0,175: kecepatan x0,96, lateral x0,80, rem x0,70, akselerasi x0,675, puncak 4,8 u/d (setengah jalan, linear)")
+	var dekat_ambang: EfekKondisi = BikeCondition.efek(_kondisi_semua(0.34))
+	check(absf(dekat_ambang.pengali_kecepatan - (0.92 + 0.08 * 0.34 / 0.35)) < TOLERANSI and dekat_ambang.pengali_kecepatan > 0.99 and dekat_ambang.pengali_rem > 0.98, "kondisi 0,34 (tepat di bawah ambang efek 0,35): efek nyaris nol, tanpa lompatan (kecepatan %s)" % dekat_ambang.pengali_kecepatan)
 	# Komponen berdiri sendiri: hanya komponennya yang berefek.
 	var hanya_ban: EfekKondisi = BikeCondition.efek({"ban": 0.0, "rem": 1.0, "rantai": 1.0})
 	check(hanya_ban.pengali_kecepatan < 1.0 and hanya_ban.pengali_lateral < 1.0 and hanya_ban.pengali_rem == 1.0 and hanya_ban.pengali_akselerasi == 1.0 and hanya_ban.batas_puncak_ud == Config.KECEPATAN_NGEBUT_UD, "hanya ban rusak: kecepatan tujuan dan lateral turun, rem dan rantai utuh")
