@@ -145,8 +145,13 @@ func _saat_hasil_dibuka(_angka: HasilRute.Angka) -> void:
 
 ## "Hari berikutnya": catat dan simpan hari ini (satu kali), buang rute, tampilkan koran hari berikutnya.
 func _saat_hari_berikutnya() -> void:
-	var baru: MesinHari.Status = MesinHari.terapkan(_mesin, MesinHari.Peristiwa.HARI_BERIKUTNYA)
-	if not baru.diterima or _rute == null:
+	# Sementara (run fase6a1-bengkel-kondisi bagian A): layar bengkel belum ada, jadi tombol layar hasil melewati bengkel (BUKA_BENGKEL lalu HARI_BERIKUTNYA, K-4).
+	# Bagian B menggantikannya dengan layar bengkel sungguhan; urutan peristiwa MesinHari sudah benar dan ketukan ganda tetap ditolak.
+	var di_bengkel: MesinHari.Status = MesinHari.terapkan(_mesin, MesinHari.Peristiwa.BUKA_BENGKEL)
+	if not di_bengkel.diterima or _rute == null:
+		return
+	var baru: MesinHari.Status = MesinHari.terapkan(di_bengkel, MesinHari.Peristiwa.HARI_BERIKUTNYA)
+	if not baru.diterima:
 		return
 	var jeda: HeadlineManager.JedaBaru = HeadlineManager.catat_jeda(_halaman, _misi_diambil)
 	var catatan: DataSave.CatatanHari = DataSave.CatatanHari.new()
