@@ -158,6 +158,9 @@ func _test_tutup_di_tengah_rute_dengan_misi() -> void:
 	var rute: RuteMain = await _a._berangkat(hari)
 	_a._selesaikan_misi(rute)
 	check(rute.keadaan_misi().status == MissionManager.Status.SELESAI, "misi selesai di memori, belum disimpan")
+	# Titik pertama dibaca SEBELUM scene dibuang: `rute` ikut dibebaskan bersama `hari` dan memakainya sesudahnya adalah akses objek yang sudah dibebaskan (nilainya kadang masih terbaca dari
+	# memori lama, kadang SCRIPT ERROR "previously freed" yang menggagalkan fungsi tes dan meninggalkan scene berikutnya dalam keadaan setengah: penyebab galat sekali di bagian A).
+	var titik_awal: float = rute.rencana_misi().titik[0].maju_ubin
 	_a._bersihkan(hari)
 	_a._tutup_manajer(m)
 	check(not FileAccess.file_exists(_a._jalur()), "scene dibuang di tengah rute: tidak ada berkas save")
@@ -166,7 +169,7 @@ func _test_tutup_di_tengah_rute_dengan_misi() -> void:
 	check(hari2.status().hari == 1 and hari2.halaman().misi != null and hari2.halaman().misi.id == "p1_kucing", "buka lagi: hari 1 yang sama dengan misi P1 ditawarkan lagi")
 	hari2.koran().tombol_ambil().ditekan.emit()
 	var rute2: RuteMain = await _a._berangkat(hari2)
-	check(rute2.keadaan_misi().status == MissionManager.Status.AKTIF and rute2.keadaan_misi().langkah == 0 and rute2.rencana_misi().titik[0].maju_ubin == rute.rencana_misi().titik[0].maju_ubin, "misi diulang dari awal dengan rencana yang sama (seed hari sama)")
+	check(rute2.keadaan_misi().status == MissionManager.Status.AKTIF and rute2.keadaan_misi().langkah == 0 and rute2.rencana_misi().titik[0].maju_ubin == titik_awal, "misi diulang dari awal dengan rencana yang sama (seed hari sama)")
 	check(m2.get(&"jumlah_simpan") == 0, "tetap nol simpan")
 	_a._bersihkan(hari2)
 	_a._tutup_manajer(m2)

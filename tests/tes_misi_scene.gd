@@ -820,7 +820,7 @@ func _test_penanda_layar(kasus: Array, kidal: bool) -> void:
 	var stick: Rect2 = TouchZones.rect_stick(lebar, kidal)
 	var lain: Dictionary = {
 		"radar_seberang": hud.rect_radar_seberang(), "radar_dekat": hud.rect_radar_dekat(), "panel_progres": hud.rect_panel_progres(), "panel_koin": hud.rect_panel_koin(),
-		"panel_skor": hud.rect_panel_skor(), "tombol_jeda": hud.rect_tombol_jeda(), "tombol_bel": hud.rect_tombol_bel(), "panel_kecepatan": hud.rect_panel_kecepatan(), "panel_koran": hud.rect_panel_koran(),
+		"panel_skor": hud.rect_panel_skor(), "tombol_jeda": hud.rect_tombol_jeda(), "tombol_bel": hud.rect_tombol_bel(), "panel_kecepatan": hud.rect_panel_kecepatan(), "panel_koran": hud.rect_panel_koran(), "panel_kondisi": hud.rect_panel_kondisi(),
 		"kartu": hud.rect_kartu(), "petunjuk": hud.rect_petunjuk(), "tutorial": tut.rect_panel(), "lewati": tut.rect_lewati(),
 	}
 	var banyak: int = 0
@@ -882,7 +882,7 @@ func _test_tata_letak(kasus: Array, kidal: bool) -> void:
 	var t1: RencanaMisi.Titik = rencana.titik[0]
 	var lain: Dictionary = {
 		"radar_seberang": hud.rect_radar_seberang(), "radar_dekat": hud.rect_radar_dekat(), "panel_progres": hud.rect_panel_progres(), "panel_koin": hud.rect_panel_koin(),
-		"panel_skor": hud.rect_panel_skor(), "tombol_jeda": hud.rect_tombol_jeda(), "tombol_bel": hud.rect_tombol_bel(), "panel_kecepatan": hud.rect_panel_kecepatan(), "panel_koran": hud.rect_panel_koran(),
+		"panel_skor": hud.rect_panel_skor(), "tombol_jeda": hud.rect_tombol_jeda(), "tombol_bel": hud.rect_tombol_bel(), "panel_kecepatan": hud.rect_panel_kecepatan(), "panel_koran": hud.rect_panel_koran(), "panel_kondisi": hud.rect_panel_kondisi(),
 	}
 	var stick: Rect2 = TouchZones.rect_stick(lebar, kidal)
 	# Keadaan 1: kartu + tutorial awal.
@@ -896,6 +896,9 @@ func _test_tata_letak(kasus: Array, kidal: bool) -> void:
 	# Keadaan 2: petunjuk dari lemparan tepat (gelembung) + kartu + tutorial langkah menepi.
 	var rumah: RouteBuilder.RumahRute = _pelanggan_di(akar, 0.0, t1.petunjuk_akhir_ubin)
 	_lempar_ke(akar, rumah, false)
+	# Tata letak Container baru dihitung ulang di frame berikutnya: tanpa menunggu, gelembung yang baru tampil masih di posisi sementara (kiri di tengah layar).
+	await _tree.process_frame
+	await _tree.process_frame
 	var e2: Dictionary = {"kartu": hud.rect_kartu(), "petunjuk": hud.rect_petunjuk(), "tutorial": tut.rect_panel(), "lewati": tut.rect_lewati()}
 	check(hud.petunjuk_tampil(), "%s: gelembung petunjuk tampil" % tag)
 	if not tut.tampil():
@@ -905,6 +908,8 @@ func _test_tata_letak(kasus: Array, kidal: bool) -> void:
 	_periksa_teks_tidak_terpotong(tag + " petunjuk", [hud.get_node("%TeksPetunjuk") as Label])
 	# Keadaan 3: banner selesai.
 	_selesaikan_misi(akar)
+	await _tree.process_frame
+	await _tree.process_frame
 	var e3: Dictionary = {"banner": hud.rect_banner()}
 	check(hud.banner_tampil(), "%s: banner tampil" % tag)
 	_periksa_elemen(tag + " banner", e3, lain, layar, stick)
@@ -929,7 +934,7 @@ func _periksa_elemen(nama: String, elemen: Dictionary, lain: Dictionary, layar: 
 		var r: Rect2 = elemen[kunci]
 		check(layar.encloses(r) and r.size.x > 0.0, "%s: %s %s di dalam layar" % [nama, kunci, r])
 		for nama_lain: String in lain:
-			check(not r.intersects(lain[nama_lain]), "%s: %s tidak menumpuk %s" % [nama, kunci, nama_lain])
+			check(not r.intersects(lain[nama_lain]), "%s: %s %s tidak menumpuk %s %s" % [nama, kunci, r, nama_lain, lain[nama_lain]])
 		check(kunci == "banner" or kunci == "petunjuk" or not r.intersects(stick), "%s: %s tidak menumpuk zona stick" % [nama, kunci])
 		for kunci_lain: String in elemen:
 			if kunci_lain > kunci:

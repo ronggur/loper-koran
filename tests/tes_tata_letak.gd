@@ -26,6 +26,8 @@ const BEL_HARAPAN: Array = [
 	[800, false, Vector2(736, 296), Vector2(729, 284)],
 	[800, true, Vector2(64, 296), Vector2(70, 284)],
 ]
+## Jendela uji panel kondisi (run fase6a1-bengkel-kondisi bagian B, AC-22): lebar viewport 640, 667, 780, 800 (667 = 2001x1080).
+const KASUS_KONDISI: Array = [[1920, 1080, 640], [2001, 1080, 667], [2340, 1080, 780], [2400, 1080, 800]]
 ## Langkah `perbarui(DT)` supaya teks dan jeda bel (0,5 + 1,0 detik) habis sebelum ketukan bel berikutnya diharapkan berbunyi.
 const LANGKAH_BEL_REDA: int = 100
 
@@ -50,6 +52,10 @@ func jalankan() -> void:
 		for kidal: bool in [false, true]:
 			await _test_tata_letak(kasus, kidal)
 			await _test_tata_letak_rute(kasus, kidal)
+	for kasus_kondisi: Array in KASUS_KONDISI:
+		for kidal_kondisi: bool in [false, true]:
+			for inset_pakai: bool in [false, true]:
+				await _test_tata_letak_kondisi(kasus_kondisi, kidal_kondisi, inset_pakai)
 
 
 func _test_angka_paket() -> void:
@@ -198,7 +204,7 @@ func _test_tata_letak_rute(kasus: Array, kidal: bool) -> void:
 	var koin: Rect2 = hud.rect_panel_koin()
 	check(skor.end.x == float(lebar - 28) and skor.position.y == 8.0 and skor.size.x >= 72.0, "%s: panel skor berakhir 28 dari tepi kanan, y 8, lebar >= 72 (%s)" % [tag, skor])
 	check(koin.end.x + 5.0 == skor.position.x and koin.position.y == 8.0, "%s: panel koin 5 di kiri panel skor, y 8 (%s)" % [tag, koin])
-	var elemen: Array = [["tombol jeda", hud.rect_tombol_jeda()], ["radar seberang", hud.rect_radar_seberang()], ["radar dekat", hud.rect_radar_dekat()], ["panel progres", progres], ["panel koin", koin], ["panel skor", skor], ["zona bel", zona_bel], ["panel kecepatan", hud.rect_panel_kecepatan()], ["panel koran", hud.rect_panel_koran()]]
+	var elemen: Array = [["tombol jeda", hud.rect_tombol_jeda()], ["radar seberang", hud.rect_radar_seberang()], ["radar dekat", hud.rect_radar_dekat()], ["panel progres", progres], ["panel koin", koin], ["panel skor", skor], ["zona bel", zona_bel], ["panel kecepatan", hud.rect_panel_kecepatan()], ["panel koran", hud.rect_panel_koran()], ["panel kondisi", hud.rect_panel_kondisi()]]
 	var stick: Rect2 = TouchZones.rect_stick(lebar, kidal)
 	for i: int in range(elemen.size()):
 		var a: Rect2 = elemen[i][1]
@@ -222,6 +228,71 @@ func _test_tata_letak_rute(kasus: Array, kidal: bool) -> void:
 	await _test_bel_dijangkau(akar, hud, lebar, kidal, tag)
 	if lebar == 780 and not kidal:
 		await _test_zona_aman_tiruan(akar, hud, lebar)
+	_tree.root.remove_child(akar)
+	akar.free()
+
+
+## Panel kondisi sepeda (baris 2 kanan atas, DESIGN_SPEC 3.3, AC-22 run fase6a1-bengkel-kondisi bagian B) di lebar 640, 667, 780, 800 x kanan/kidal x tanpa/dengan inset aman tiruan (kiri 10, kanan 11,
+## atas 14, bawah 20 -> geseran 6, 7, 10, 12). Harapan literal: panel 5 px di bawah baris koin/skor dan rata kanan dengannya (kanan 28 + geser dari tepi, tidak dicerminkan saat kidal), tinggi 24 dan
+## lebar 3 x 38 + 2 x 6 + 14 = 140; di dalam layar dan di luar inset; tidak bertumpuk dengan radar kiri/kanan, zona tap bel, tombol jeda, panel progres, koin, skor, kecepatan, koran, dan zona
+## stick; tidak ada kontrolnya yang menerima sentuhan. Zona swipe (y >= 48) memang dilalui panel ini (baris 2 berakhir y 67) tetapi panel tidak menangkap sentuhan, seperti panel koran
+## (DESIGN_SPEC 3.5): jari yang turun di atasnya tetap swipe (dites dengan sentuhan sungguhan).
+func _test_tata_letak_kondisi(kasus: Array, kidal: bool, dengan_inset: bool) -> void:
+	var lebar: int = kasus[2]
+	var tag: String = "kondisi %d %s %s" % [lebar, "kidal" if kidal else "kanan", "inset" if dengan_inset else "tanpa inset"]
+	_judul.call("Tata letak %s: panel kondisi baris 2, tidak bertumpuk, di dalam zona aman (AC-22)" % tag)
+	_tree.root.size = Vector2i(kasus[0], kasus[1])
+	var akar: RuteMain = (load(BERKAS_RUTE) as PackedScene).instantiate() as RuteMain
+	_tree.root.add_child(akar)
+	await _tree.process_frame
+	await _tree.process_frame
+	akar.set_process(false)
+	var hud: HudRute = akar.hud_rute()
+	var inset: ZonaAman.Inset = ZonaAman.Inset.new()
+	if dengan_inset:
+		inset.awal_x = 10
+		inset.akhir_x = 11
+		inset.atas = 14
+		inset.bawah = 20
+	hud.atur_inset(inset)
+	akar.atur_kidal(kidal)
+	await _tree.process_frame
+	await _tree.process_frame
+	akar.perbarui(0.0)
+	var layar: Rect2 = Rect2(Vector2.ZERO, akar.get_viewport_rect().size)
+	var panel: Rect2 = hud.rect_panel_kondisi()
+	var koin: Rect2 = hud.rect_panel_koin()
+	var skor: Rect2 = hud.rect_panel_skor()
+	var geser_kanan: int = 7 if dengan_inset else 0
+	var geser_atas: int = 10 if dengan_inset else 0
+	check(hud.kondisi_tampil() and layar.size == Vector2(lebar, 360), "%s: panel kondisi tampil, viewport %dx360" % [tag, lebar])
+	check(panel.size == Vector2(140, 24), "%s: panel kondisi 140x24 (3 x 38 + 2 x 6 + 14, ikon 14 + 10), dapat %s" % [tag, panel.size])
+	check(panel.end.x == float(lebar - 28 - geser_kanan) and panel.position.y == skor.end.y + 5.0, "%s: panel rata kanan dengan baris 1 (kanan %d) dan 5 px di bawahnya (y %s), dapat %s" % [tag, 28 + geser_kanan, skor.end.y + 5.0, panel])
+	check(skor.position.y == float(8 + geser_atas) and skor.end.y == float(38 + geser_atas), "%s: baris 1 (koin dan skor) y %d sampai %d" % [tag, 8 + geser_atas, 38 + geser_atas])
+	check(layar.encloses(panel) and panel.end.x <= float(lebar - 11) and panel.position.y >= float(14 if dengan_inset else 0), "%s: panel kondisi di dalam layar dan di luar inset aman (%s)" % [tag, panel])
+	var pusat_bel: Vector2 = TouchZones.pusat_bel(lebar, kidal, akar.kontrol_router().geser_bel)
+	var elemen: Array = [["radar seberang", hud.rect_radar_seberang()], ["radar dekat", hud.rect_radar_dekat()], ["zona bel", Rect2(pusat_bel - Vector2(28, 28), Vector2(56, 56))], ["tombol bel", hud.rect_tombol_bel()],
+		["tombol jeda", hud.rect_tombol_jeda()], ["panel progres", hud.rect_panel_progres()], ["panel koin", koin], ["panel skor", skor], ["panel kecepatan", hud.rect_panel_kecepatan()], ["panel koran", hud.rect_panel_koran()],
+		["zona stick", TouchZones.rect_stick(lebar, kidal)]]
+	for e: Array in elemen:
+		check(not panel.intersects(e[1], true), "%s: panel kondisi %s tidak bertumpuk %s %s" % [tag, panel, e[0], e[1]])
+	var penangkap: Array[String] = []
+	for simpul: Node in hud.find_children("*", "Control", true, false):
+		var c: Control = simpul as Control
+		if c.mouse_filter != Control.MOUSE_FILTER_IGNORE and not (c is TombolJeda):
+			penangkap.append(String(c.name))
+	check(penangkap.is_empty(), "%s: tidak ada kontrol HUD (termasuk panel kondisi) yang menerima sentuhan: %s" % [tag, penangkap])
+	# Jari yang turun di tengah panel kondisi: kanan = zona swipe, jadi menjadi swipe (HUD tidak menangkapnya); kidal = di luar zona swipe sisi kiri atas.
+	var router: TouchRouter = akar.kontrol_router()
+	var titik: Vector2 = panel.get_center()
+	var swipe_awal: int = router.jumlah_swipe_selesai
+	_sentuh_layar(6, titik, true)
+	var di_swipe: bool = TouchZones.rect_swipe(lebar, kidal).has_point(titik)
+	check(router.swipe_aktif() == di_swipe, "%s: jari di tengah panel kondisi %s %s (zona swipe %s)" % [tag, titik, "menjadi swipe" if di_swipe else "tidak menjadi swipe", di_swipe])
+	_geser_layar(6, titik + Vector2(-60, -20))
+	_sentuh_layar(6, titik + Vector2(-60, -20), false)
+	check(router.jumlah_swipe_selesai == swipe_awal + (1 if di_swipe else 0), "%s: swipe yang dimulai di panel kondisi diselesaikan oleh router (HUD tidak menelan sentuhan)" % tag)
+	akar.perbarui(0.0)
 	_tree.root.remove_child(akar)
 	akar.free()
 
