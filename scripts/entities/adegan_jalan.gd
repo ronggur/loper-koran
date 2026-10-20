@@ -79,6 +79,9 @@ extends Node2D
 ## - Semua waktu (rintangan, jatuh, kebal, bel, label PUTUS, umpan balik melayang) ikut `dt` efektif: jeda membekukannya, tanpa lanjut
 ##   otomatis. `_kembalikan_awal` ("Main lagi") mengatur ulang rintangan, tabrakan, skor, combo, koin, status terantar, bel, dan bunyi rute.
 ##
+## Run fase4b-misi-kucing (AC-11 sampai AC-14): kait `_koran_dinilai` (koran yang baru dinilai skor, untuk petunjuk misi dari lemparan tepat) dan
+## `_koin_tambahan` (koin hadiah misi yang ikut tampil di HUD, supaya HUD, layar hasil, dan save memakai angka yang sama). Bawaan: tidak ada.
+##
 ## Run fase3c-hud-hasil (O-6, K-1, AC-9): HUD bertipe `HudDasar` (jalan uji `HudDev`, rute `HudRute`). Kidal dan mode bantu diubah dari
 ## sakelar layar jeda (`LayarJeda.kidal_diubah` / `bantu_diubah`) atau sakelar HUD dev jalan uji; keduanya lewat `atur_kidal` /
 ## `atur_mode_bantu`, yang menyamakan kontrol, HUD, dan layar jeda. Zona tap bel mengikuti geseran zona aman HUD (`HudDasar.geser_bel`)
@@ -294,6 +297,16 @@ func _tenggat_lewat() -> bool:
 	return false
 
 
+## Koran `k` baru dinilai (di scene yang menilai skor): hasil skornya `hasil_skor`. Bawaan tidak melakukan apa pun (rute memberi tahu `MissionManager`).
+func _koran_dinilai(_k: KoranLempar.Koran, _hasil_skor: SkorRute.Hasil) -> void:
+	pass
+
+
+## Koin tambahan di luar skor rute yang ikut tampil di HUD (hadiah misi, K-1). Bawaan 0.
+func _koin_tambahan() -> int:
+	return 0
+
+
 ## Peristiwa jeda sesudah disaring adegan turunan (mis. back diabaikan di layar hasil). Bawaan apa adanya.
 func _saring_jeda(peristiwa: JedaSim.Peristiwa) -> JedaSim.Peristiwa:
 	return peristiwa
@@ -449,7 +462,7 @@ func perbarui(dt: float) -> void:
 	_kontrol.atur_rem(_sepeda.rem_aktif())
 	_sepeda.tampilkan_tabrakan(_rintangan.tabrakan)
 	_sepeda.tampilkan_bel(_bel)
-	_hud.tampilkan_skor(_skor.skor, _skor.beruntun, _skor.koin, putus_tampil())
+	_hud.tampilkan_skor(_skor.skor, _skor.beruntun, _skor.koin + _koin_tambahan(), putus_tampil())
 	_hud.tampilkan_bel(_kontrol.router.bel_ditahan(), Bel.sisa_jeda_pecahan(_bel))
 	_kontrol.router.geser_bel = _hud.geser_bel()
 	if _audio != null:
@@ -522,6 +535,7 @@ func _saat_koran_mendarat(k: KoranLempar.Koran) -> void:
 	koran_mendarat.emit(k)
 	if hs != null:
 		skor_dinilai.emit(hs)
+	_koran_dinilai(k, hs)
 	_bunyi_mendarat(k, hs)
 
 
@@ -595,7 +609,7 @@ func _kembalikan_awal(koran_awal: int) -> void:
 	_hud.tampilkan_koran(koran.sisa, koran.penuh)
 	_sepeda.tampilkan_tabrakan(_rintangan.tabrakan)
 	_sepeda.tampilkan_bel(_bel)
-	_hud.tampilkan_skor(_skor.skor, _skor.beruntun, _skor.koin, false)
+	_hud.tampilkan_skor(_skor.skor, _skor.beruntun, _skor.koin + _koin_tambahan(), false)
 	_hud.tampilkan_bel(false, 0.0)
 
 

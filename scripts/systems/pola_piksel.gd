@@ -195,3 +195,33 @@ static func rentang_tepi(isi: Array[Vector3i]) -> Array[Vector3i]:
 		if tepi_akhir_awal < r.z:
 			hasil.append(Vector3i(r.x, tepi_akhir_awal, r.z))
 	return hasil
+
+## Kilau kucing misi, dua frame bergantian (run fase4b-misi-kucing, M-10, petunjuk visual `kilau`; `w` = ACCENT): bintang plus 9x9 lalu bintang 11x11 dengan sinar diagonal,
+## di atas kepala kucing (iterasi 2, QA-007: dibesarkan dari 7x7 dan 9x9 supaya terbaca di skala x3 pada kecepatan ngebut). Frame 9x9 digambar di tengah kotak 11x11.
+const KILAU_KUCING_1: Array[String] = ["....o....", "...owo...", "...owo...", ".ooowooo.", "owwwwwwwo", ".ooowooo.", "...owo...", "...owo...", "....o...."]
+## Frame kedua kilau: bintang 11x11 bersinar diagonal, bentuknya tetap terbaca sebagai kilau.
+const KILAU_KUCING_2: Array[String] = [".....o.....", "....owo....", "o...owo...o", ".o.owwwo.o.", "..owwwwwo..", "oowwwwwwwoo", "..owwwwwo..", ".o.owwwo.o.", "o...owo...o", "....owo....", ".....o....."]
+## Ekor kucing misi, dua frame bergantian (petunjuk visual `ekor`; `w` = RADAR_MISI): melengkung ke atas, 5x4.
+const EKOR_KUCING_1: Array[String] = ["...oo", "..owo", ".owo.", "owo.."]
+## Frame kedua ekor: terkulai ke samping.
+const EKOR_KUCING_2: Array[String] = ["oo...", "owoo.", ".owoo", "..oo."]
+
+## Panah penanda tepi layar kucing misi (run 4B iterasi 2, M-2' dan M-3'; `w` = warna penanda), menunjuk ke atas, 11x10. Menunjuk ke kanan lewat `putar_kanan`.
+const PANAH_KUCING_ATAS: Array[String] = [".....o.....", "....owo....", "...owwwo...", "..owwwwwo..", ".owwwwwwwo.", "oooowwwoooo", "...owwwo...", "...owwwo...", "...owwwo...", "...ooooo..."]
+
+
+## Pola `data` diputar 90 derajat searah jarum jam (baris jadi kolom). Semua baris harus sama panjang; pola kosong atau tidak persegi panjang = pola kosong.
+static func putar_kanan(data: Array[String]) -> Array[String]:
+	var hasil: Array[String] = []
+	if data.is_empty():
+		return hasil
+	var lebar: int = data[0].length()
+	for baris: String in data:
+		if baris.length() != lebar:
+			return hasil
+	for x: int in range(lebar):
+		var baru: String = ""
+		for y: int in range(data.size() - 1, -1, -1):
+			baru += data[y][x]
+		hasil.append(baru)
+	return hasil

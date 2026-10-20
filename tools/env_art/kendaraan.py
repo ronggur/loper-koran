@@ -10,6 +10,11 @@ Arah (dunia): searah = moncong ke -y (kanan atas, searah pemain, lajur kiri), la
 masuk = ke -x (kiri atas, moncong ke rumah sisi seberang), keluar = ke +x (kanan bawah).
 
     python3 tools/env_art/kendaraan.py          # sheet + layar contoh ke build/env_art/kendaraan/
+    python3 tools/env_art/kendaraan.py --salin  # juga menyalin sheet kucing misi (hanya mission_kucing_sheet) ke assets/sprites/npc/
+
+`--salin` (run fase4b-misi-kucing, M-10) menyalin PNG 1x dan JSON titik pijak kucing misi Bu Ratmi saja (belang tiga berkalung); mobil, motor, dan kucing
+dekorasi tetap hanya di build/ sampai dipakai. Hasil deterministik di mesin yang sama; render di mesin ini bisa beda sedikit dari mock PR #35
+(`docs/design/environment/kendaraan_perumahan.png`, selisih beberapa ratus piksel, drift numpy/pillow), sheet kucing tidak diperiksa terhadap mock itu.
 """
 import json
 import math
@@ -749,9 +754,28 @@ def render_layar(tname='siang', W=640, H=360, ox=427, oy=172, out='layar_kendara
     return im, pos
 
 
+# ----------------------------------------------------------------- salin ke repo ----
+SALIN_SPRITE = {
+    'assets/sprites/npc': ['mission_kucing_sheet'],
+}
+
+
+def salin():
+    import shutil
+    for folder, names in SALIN_SPRITE.items():
+        d = F3.ROOT / folder
+        d.mkdir(parents=True, exist_ok=True)
+        for n in names:
+            for ext in ('.png', '.json'):
+                shutil.copyfile(OUT_DIR / (n + ext), d / (n + ext))
+
+
 if __name__ == '__main__':
     ekspor_mobil()
     ekspor_motor()
     ekspor_kucing()
     render_layar()
     print('selesai ->', OUT_DIR)
+    if '--salin' in sys.argv[1:]:
+        salin()
+        print('disalin ke assets/sprites/npc/ (hanya mission_kucing_sheet)')

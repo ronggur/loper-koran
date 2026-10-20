@@ -7,9 +7,12 @@ extends Node
 ##   (hari, flag, jeda, pengaturan), lalu menampilkan koran hari itu.
 ## - Berangkat: `RuteMain` dibuat tepat sekali per hari (peristiwa ganda ditolak `MesinHari`), seed rute = `SeedHari.rute(hari)` disuntik SEBELUM
 ##   rute masuk pohon (tanpa `main_lagi`), mode hari (tombol layar hasil = "Hari berikutnya"), lalu kidal dan mode bantu dari save diterapkan.
-##   Misi yang diambil hanya tercatat (S-7), tanpa efek di rute (misi 4B).
+##   Misi yang diambil di koran (S-7) diaktifkan di rute (`RuteMain.atur_misi`, run fase4b-misi-kucing AC-11); dilewati atau Berangkat tanpa memilih
+##   = rute tanpa kucing dan tanpa HUD misi.
 ## - "Hari berikutnya": angka `HasilRute.Angka` yang sama dengan layar hasil + misi diambil + jeda + sakelar jeda dicatat dan DISIMPAN tepat satu
-##   kali (`SaveManager.akhiri_hari`), rute dibuang, koran hari + 1 tampil. Tidak ada simpan di tempat lain (layar koran, Ambil/Lewati, Berangkat,
+##   kali (`SaveManager.akhiri_hari`), rute dibuang, koran hari + 1 tampil. Run 4B: angka itu membawa hasil misi dan koin misi (satu sumber); flag baru
+##   dari hasil misi (`MissionManager.flag_hasil`) dan flag yang lanjutannya tampil hari ini (`HeadlineManager.flag_terpakai`, dikonsumsi) ikut dicatat;
+##   `tutorial.selesai` ditulis bila tutorial hari ini selesai atau dilewati. Tidak ada simpan di tempat lain (layar koran, Ambil/Lewati, Berangkat,
 ##   jeda, background, hasil terbuka, rute ditutup di tengah jalan): save terakhir tetap utuh dan hari yang sama diulang dari layar koran (AC-19).
 ## - Back Android (S-6): di layar koran keluar app (`keluar_diminta`, lalu `SceneTree.quit` kecuali `panggil_quit` dimatikan tes); di rute `AdeganJalan`
 ##   menjeda sendiri; di layar hasil diabaikan. App ke background di layar koran tidak melakukan apa pun.
@@ -123,6 +126,8 @@ func _saat_berangkat() -> void:
 	var pengaturan: Dictionary = simpanan.pengaturan()
 	_rute = ADEGAN_RUTE.instantiate() as RuteMain
 	_rute.atur_benih_awal(SeedHari.rute(_mesin.hari))
+	_rute.atur_misi(_data_misi(_misi_diambil))
+	_rute.atur_tutorial(TutorialLangkah.boleh_aktif(_mesin.hari, DataSave.tutorial_selesai(simpanan.state)))
 	_rute.hasil_dibuka.connect(_saat_hasil_dibuka)
 	_rute.hari_berikutnya_diminta.connect(_saat_hari_berikutnya)
 	add_child(_rute)
@@ -148,6 +153,11 @@ func _saat_hari_berikutnya() -> void:
 	catatan.hari = _mesin.hari
 	catatan.angka = _rute.angka_hasil()
 	catatan.misi_diambil = _misi_diambil
+	var flag_baru: String = MissionManager.flag_hasil(_data_misi(_misi_diambil), catatan.angka.misi_hasil)
+	if not flag_baru.is_empty():
+		catatan.flag_baru = [flag_baru]
+	catatan.flag_dikonsumsi = HeadlineManager.flag_terpakai(_halaman, _pustaka_headline)
+	catatan.tutorial_selesai = _rute.tutorial_dimulai()
 	catatan.headline_jeda = jeda.headline
 	catatan.misi_jeda = jeda.misi
 	catatan.kidal = _rute.kidal()
@@ -164,6 +174,16 @@ func _saat_hari_berikutnya() -> void:
 	_mesin = baru
 	_tampilkan_koran()
 	hari_selesai.emit(hari_dimainkan)
+
+
+## Data misi dengan id `id` dari pustaka, atau null ("" atau tidak ada).
+func _data_misi(id: String) -> DataMisi:
+	if id.is_empty():
+		return null
+	for misi: DataMisi in _pustaka_misi:
+		if misi.id == id:
+			return misi
+	return null
 
 
 # --- Untuk tes dan probe ---

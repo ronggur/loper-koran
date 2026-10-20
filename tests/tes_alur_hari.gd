@@ -162,6 +162,31 @@ func _selesaikan_rute(rute: RuteMain) -> void:
 		rute.perbarui(DT)
 
 
+## Menyelesaikan misi kucing hari ini lewat langkah nyata `RuteMain.perbarui`: tiap kucing lihat dilewati (sepeda diletakkan di depan lalu di sebelah kucing), kucing
+## tangkap didekati dan sepeda ditahan diam (kecepatan 0, lateral -1) 100 langkah (1,67 detik >= 1,5 detik). Pembantu tes: posisi dan kecepatan sepeda diatur
+## langsung, sisanya (rencana, MissionManager, banner, hadiah) lewat kode asli.
+func _selesaikan_misi(rute: RuteMain) -> void:
+	var sepeda: SepedaUji = rute.find_child("Sepeda", true, false) as SepedaUji
+	for t: RencanaMisi.Titik in rute.rencana_misi().titik:
+		_taruh(sepeda, t.maju_ubin - 13.0, 0.5)
+		rute.perbarui(DT)
+		if t.jenis == "lihat":
+			_taruh(sepeda, t.maju_ubin + 0.1, 0.5)
+			rute.perbarui(DT)
+		else:
+			for i: int in range(100):
+				_taruh(sepeda, t.maju_ubin - 0.5, 0.0)
+				rute.perbarui(DT)
+
+
+func _taruh(sepeda: SepedaUji, jarak: float, kecepatan: float) -> void:
+	var k: BikeMotion.Keadaan = sepeda.keadaan.salin()
+	k.kecepatan_ud = kecepatan
+	k.lateral_ubin = -1.0
+	sepeda.keadaan = k
+	sepeda.jarak_ubin = jarak
+
+
 func _baca_save() -> Dictionary:
 	return DataSave.dari_teks(FileAccess.get_file_as_string(_jalur())).state
 
@@ -188,11 +213,15 @@ func _test_satu_hari_utuh() -> void:
 	check(rute.galat_rute().is_empty() and rute.rute().pelanggan.size() == 25, "rute hari 1 tersusun sah dengan 25 pelanggan")
 	check(rute.layar_hasil().mode_hari() and hari.misi_diambil() == "p1_kucing", "mode hari menyala dan misi P1 tercatat diambil (tanpa efek di rute)")
 	var sidik_hari1: String = _sidik(rute.rute())
+	_selesaikan_misi(rute)
+	check(rute.keadaan_misi().status == MissionManager.Status.SELESAI and rute.hud_rute().teks_koin() == "75", "misi kucing diselesaikan (langkah nyata RuteMain): HUD koin 75 sebelum antaran (hadiah ikut HUD)")
 	await _selesaikan_rute(rute)
 	check(rute.hasil_tampil() and hari.status().keadaan == MesinHari.Keadaan.HASIL, "garis akhir terlewati: layar hasil terbuka dan status HASIL")
 	check(rute.layar_hasil().teks_tombol() == "Hari berikutnya" and rute.layar_hasil().rect_tombol().size.y >= 42.0, "tombol layar hasil 'Hari berikutnya' (>= 42 px game) menggantikan 'Main lagi'")
 	var angka: HasilRute.Angka = rute.angka_hasil()
-	check(angka.terkirim == 3 and angka.meleset == 22 and angka.koin == 120 and angka.koin_tip == 25 and angka.skor == 1500, "angka layar hasil (literal tes): terkirim 3, meleset 22, koin 120, tip 25, skor 1500")
+	check(angka.terkirim == 3 and angka.meleset == 22 and angka.koin == 195 and angka.koin_tip == 25 and angka.skor == 1500, "angka layar hasil (literal tes): terkirim 3, meleset 22, koin 120 + 75 hadiah misi = 195, tip 25, skor 1500")
+	check(angka.koin_misi == 75 and angka.misi_hasil == "selesai" and angka.misi_id == "p1_kucing", "angka hasil membawa misi P1 selesai dengan 75 koin")
+	check(rute.layar_hasil().teks_rekap_misi() == "Misi: Kucing ketemu! +75 koin", "layar hasil memuat baris rekap 'Misi: Kucing ketemu! +75 koin'")
 	check(m.get(&"jumlah_simpan") == 0 and not FileAccess.file_exists(_jalur()), "sampai layar hasil terbuka belum ada simpan sama sekali")
 	var disimpan: Array[int] = [0]
 	hari.hari_selesai.connect(func(h: int) -> void: disimpan[0] = h)
@@ -200,17 +229,19 @@ func _test_satu_hari_utuh() -> void:
 	await _tree.process_frame
 	check(m.get(&"jumlah_simpan") == 1 and disimpan[0] == 1, "'Hari berikutnya': tepat satu simpan, sinyal hari_selesai(1)")
 	var s: Dictionary = _baca_save()
-	check(s["hari"] == 2 and s["koin"] == 120 and s["tip_total"] == 25, "isi save: hari 2, koin 120, tip_total 25 (dari Angka yang sama)")
-	check(s["terakhir"] == {"hari": 1, "terkirim": 3, "meleset": 22, "koin": 120, "tip": 25, "skor": 1500, "misi_diambil": "p1_kucing"}, "terakhir = angka layar hasil + misi diambil; dapat %s" % [s["terakhir"]])
+	check(s["hari"] == 2 and s["koin"] == 195 and s["tip_total"] == 25, "isi save: hari 2, koin 195, tip_total 25 (dari Angka yang sama, termasuk hadiah misi)")
+	check(s["terakhir"] == {"hari": 1, "terkirim": 3, "meleset": 22, "koin": 195, "tip": 25, "skor": 1500, "koin_misi": 75, "misi_hasil": "selesai", "misi_diambil": "p1_kucing"}, "terakhir = angka layar hasil + misi diambil + hasil misi; dapat %s" % [s["terakhir"]])
+	check(s["misi_hasil"] == {"p1_kucing": {"hasil": "selesai", "hari": 1}} and s["tutorial"] == {"selesai": true}, "misi_hasil p1_kucing selesai di hari 1 (riwayat permanen); hari tutorial berakhir: tutorial.selesai true")
 	check(s["misi_jeda"] == {"p1_kucing": 8}, "misi P1 diambil hari 1 jeda 7: boleh lagi hari 8; dapat %s" % [s["misi_jeda"]])
 	check(s["headline_jeda"].has(halaman1[0]) and s["headline_jeda"].has(halaman1[2]) and s["headline_jeda"].size() == 2, "jeda headline utama dan ringan hari 1 tercatat: %s" % [s["headline_jeda"]])
-	check(s["flag"] == [] and s["pengaturan"] == {"kidal": false, "mode_bantu": false, "suara": 1.0, "musik": 1.0}, "tanpa flag di 4A (misi belum punya hasil) dan pengaturan bawaan tersimpan")
+	check(s["flag"] == ["kucing_ketemu"] and s["pengaturan"] == {"kidal": false, "mode_bantu": false, "suara": 1.0, "musik": 1.0}, "flag kucing_ketemu menunggu tampil besok (M-6) dan pengaturan bawaan tersimpan")
 	var contoh: String = FileAccess.get_file_as_string("res://docs/DATA_SCHEMA.md")
 	check(contoh.contains(FileAccess.get_file_as_string(_jalur()).strip_edges()), "contoh save di DATA_SCHEMA 4 = isi berkas save nyata sesudah hari 1 (byte demi byte)")
 	check(hari.status().keadaan == MesinHari.Keadaan.KORAN and hari.status().hari == 2 and hari.koran().tampil() and hari.rute() == null, "kembali ke layar koran hari 2, rute dibuang")
 	check(hari.get_child_count() == 1 + (1 if m.get_parent() == hari else 0), "node rute dibuang dari scene hari (hanya koran yang tersisa)")
 	check(hari.koran().teks_tampil()[1] == "Hari 2 · Perumahan Melati", "layar koran hari 2: 'Hari 2 · Perumahan Melati'")
 	check(hari.halaman().misi == null and not hari.koran().ada_misi() and hari.koran().teks_tampil()[11] == "Tidak ada misi sampingan hari ini", "hari 2: P1 masih jeda -> baris misi netral tanpa tombol (S-8)")
+	check(hari.halaman().ringan.id == "lanjutan_kucing_ketemu" and hari.koran().teks_tampil()[5] == "Kucing Bu Ratmi Sudah Pulang ke Rumah", "hari 2: koran menampilkan lanjutan 'Kucing Bu Ratmi Sudah Pulang ke Rumah' (hasil selesai hari 1)")
 	check(hari.halaman().utama.id != halaman1[0] and hari.halaman().ringan.id != halaman1[2], "headline hari 2 berbeda dari hari 1 (jeda headline dihormati)")
 	# Oracle halaman hari 2 dari save di berkas: HeadlineManager dengan masukan yang disusun tes dari berkas.
 	var masukan: HeadlineManager.Masukan = HeadlineManager.Masukan.new()
@@ -418,7 +449,7 @@ func _test_back_dan_background() -> void:
 # --- Lewati tanpa penalti (AC-20) ---
 
 func _test_ambil_sama_dengan_lewati() -> void:
-	_judul.call("Alur hari: Ambil dan Lewati menghasilkan save yang sama kecuali misi diambil dan jeda misinya (AC-20, prinsip 2)")
+	_judul.call("Alur hari: Ambil (misi gagal) dan Lewati: koin, tip, hari sama; beda hanya catatan misi, flag, dan jeda misi (AC-20, prinsip 2)")
 	var hasil: Array[Dictionary] = []
 	for ambil: bool in [true, false]:
 		_bersihkan_folder()
@@ -438,12 +469,16 @@ func _test_ambil_sama_dengan_lewati() -> void:
 	var diambil: Dictionary = hasil[0]
 	var dilewati: Dictionary = hasil[1]
 	check(diambil["terakhir"]["misi_diambil"] == "p1_kucing" and dilewati["terakhir"]["misi_diambil"] == "", "misi_diambil tercatat hanya bila Ambil")
-	check(diambil["koin"] == dilewati["koin"] and diambil["tip_total"] == dilewati["tip_total"] and diambil["hari"] == dilewati["hari"] and diambil["flag"] == dilewati["flag"] and diambil["headline_jeda"] == dilewati["headline_jeda"] and diambil["pengaturan"] == dilewati["pengaturan"], "koin, tip_total, hari, flag, jeda headline, dan pengaturan sama untuk Ambil dan Lewati")
+	check(diambil["koin"] == dilewati["koin"] and diambil["tip_total"] == dilewati["tip_total"] and diambil["hari"] == dilewati["hari"] and diambil["headline_jeda"] == dilewati["headline_jeda"] and diambil["pengaturan"] == dilewati["pengaturan"], "koin, tip_total, hari, jeda headline, dan pengaturan sama untuk Ambil (misi gagal karena sepeda diloncatkan) dan Lewati: gagal tidak mengurangi apa pun")
+	check(diambil["flag"] == ["kucing_belum"] and dilewati["flag"] == [] and diambil["misi_hasil"] == {"p1_kucing": {"hasil": "gagal", "hari": 1}} and dilewati["misi_hasil"] == {}, "Ambil + gagal menulis flag kucing_belum dan misi_hasil gagal; Lewati tidak menulis keduanya")
 	var a: Dictionary = diambil["terakhir"].duplicate()
 	var b: Dictionary = dilewati["terakhir"].duplicate()
+	check(a["misi_hasil"] == "gagal" and a["koin_misi"] == 0 and b["misi_hasil"] == "" and b["koin_misi"] == 0, "terakhir: Ambil gagal punya hasil 'gagal' dan koin_misi 0; Lewati hasil ''")
 	a.erase("misi_diambil")
 	b.erase("misi_diambil")
-	check(a == b, "terakhir sama kecuali misi_diambil")
+	a.erase("misi_hasil")
+	b.erase("misi_hasil")
+	check(a == b, "terakhir sama kecuali misi_diambil dan misi_hasil")
 	check(dilewati["misi_jeda"] == {} and diambil["misi_jeda"] == {"p1_kucing": 8}, "hanya misi yang diambil memicu jeda (S-4); Lewati tidak memicu apa pun")
 	check(dilewati["koin"] == 120 and dilewati["hari"] == 2, "Lewati: koin tidak berkurang dan hari tetap maju; tidak ada keadaan kalah")
 

@@ -1,0 +1,52 @@
+{
+ "sprite": "mission_kucing_sheet.png",
+ "cell": [
+  46,
+  38
+ ],
+ "columns": 7,
+ "rows": 4,
+ "ground_anchor": [
+  18,
+  21
+ ],
+ "frames": [
+  "duduk",
+  "tidur",
+  "jalan_1",
+  "jalan_2",
+  "lari_1",
+  "lari_2",
+  "kaget"
+ ],
+ "row_names": [
+  "searah",
+  "masuk",
+  "lawan",
+  "keluar"
+ ],
+ "note": "Usulan, tools/env_art/kendaraan.py. Baris = arah moncong (searah kanan atas, masuk kiri atas, lawan kiri bawah, keluar kanan bawah). Kucing misi Bu Ratmi: belang tiga, kalung merah, lonceng.",
+ "anim": {
+  "diam": [
+   "duduk"
+  ],
+  "tidur": [
+   "tidur"
+  ],
+  "jalan": [
+   "jalan_1",
+   "jalan_2"
+  ],
+  "lari": [
+   "lari_1",
+   "lari_2"
+  ],
+  "kaget": [
+   "kaget"
+  ]
+ },
+ "fps": {
+  "jalan": 6,
+  "lari": 10
+ }
+}

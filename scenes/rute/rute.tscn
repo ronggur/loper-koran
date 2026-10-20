@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3]
+[gd_scene load_steps=29 format=3]
 
 [ext_resource type="Script" path="res://scripts/entities/rute_main.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/entities/tanah_daur.gd" id="2_tanah"]
@@ -22,6 +22,8 @@
 [ext_resource type="PackedScene" path="res://scenes/entities/mobil_garasi.tscn" id="21_mobil"]
 [ext_resource type="Script" path="res://scripts/entities/umpan_melayang_gambar.gd" id="22_umpan"]
 [ext_resource type="PackedScene" path="res://scenes/ui/layar_hasil.tscn" id="23_hasil"]
+[ext_resource type="PackedScene" path="res://scenes/entities/kucing_misi.tscn" id="24_kucing"]
+[ext_resource type="PackedScene" path="res://scenes/ui/tutorial.tscn" id="25_tutorial"]
 
 [node name="Rute" type="Node2D"]
 script = ExtResource("1_script")
@@ -65,6 +67,9 @@ script = ExtResource("19_rintangan")
 adegan_anjing = ExtResource("20_anjing")
 adegan_mobil = ExtResource("21_mobil")
 
+[node name="Kucing" parent="Objek" instance=ExtResource("24_kucing")]
+unique_name_in_owner = true
+
 [node name="PenerapPenutup" type="Node" parent="."]
 unique_name_in_owner = true
 script = ExtResource("16_penerap")
@@ -83,6 +88,9 @@ unique_name_in_owner = true
 script = ExtResource("22_umpan")
 
 [node name="Hud" parent="." instance=ExtResource("11_hud")]
+unique_name_in_owner = true
+
+[node name="Tutorial" parent="." instance=ExtResource("25_tutorial")]
 unique_name_in_owner = true
 
 [node name="PanelAkhir" parent="." instance=ExtResource("17_akhir")]

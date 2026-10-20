@@ -88,12 +88,20 @@ func _csv_konten() -> Dictionary:
 func _misi_dasar() -> Dictionary:
 	return {
 		"id": "m_uji", "template": "cari", "headline": "H", "ringkasan": "R", "hud": "U", "distrik": "perumahan", "rep_min": 0, "syarat": {},
-		"target": {}, "langkah": [], "petunjuk": {}, "batas": {"rumah": 12}, "hadiah": {"tingkat": "kecil"}, "gagal": {}, "flag_lanjut": {"selesai": "a_ok", "gagal": "a_gagal"}, "jeda": 3,
+		"target": {"objek": "kucing", "jumlah": 1, "sisi": "seberang"},
+		"langkah": [
+			{"jenis": "lihat", "titik": "atap", "rumah_dari_mulai": [3, 4]},
+			{"jenis": "lihat", "titik": "bawah_mobil_tamu", "rumah_dari_sebelumnya": [3, 4]},
+			{"jenis": "tangkap", "titik": "balik_pot", "rumah_dari_sebelumnya": [3, 4], "radius_ubin": 2.0, "lama_berhenti_detik": 1.5},
+		],
+		"petunjuk": {"visual": ["kilau", "ekor"], "suara": "meong", "dari_pelanggan": "P"},
+		"batas": {"rumah": 12}, "hadiah": {"tingkat": "kecil"}, "gagal": {}, "flag_lanjut": {"selesai": "a_ok", "gagal": "a_gagal"}, "jeda": 3,
+		"banner": {"selesai": "BS", "gagal": "BG"},
 	}
 
 
 func _kamus_dasar() -> Dictionary:
-	return {"H": "Kucing Bu Ratmi Hilang", "R": "Cari kucing", "U": "Kucing"}
+	return {"H": "Kucing Bu Ratmi Hilang", "R": "Cari kucing", "U": "Kucing", "P": "Tadi ada kucing lewat", "BS": "Kucing ketemu!", "BG": "Kucingnya lolos hari ini"}
 
 
 func _headline_dasar(jenis: String) -> Dictionary:
@@ -276,7 +284,7 @@ func _test_misi_ditolak() -> void:
 	_judul.call("DataMisi: data tidak sah ditolak dengan galat yang menyebut sebabnya (AC-1)")
 	check(_galat_misi(_misi_dasar()) == "", "misi dasar sintetis sah (kontrol)")
 	check(DataMisi.parse(_misi_dasar(), _tl(_kamus_dasar())).sah(), "misi dasar menghasilkan objek DataMisi")
-	for wajib: String in ["id", "template", "headline", "ringkasan", "hud", "distrik", "rep_min", "syarat", "target", "langkah", "petunjuk", "batas", "hadiah", "gagal", "flag_lanjut", "jeda"]:
+	for wajib: String in ["id", "template", "headline", "ringkasan", "hud", "distrik", "rep_min", "syarat", "target", "langkah", "petunjuk", "batas", "hadiah", "gagal", "flag_lanjut", "jeda", "banner"]:
 		var d: Dictionary = _misi_dasar()
 		d.erase(wajib)
 		var g: String = _galat_misi(d)
@@ -587,7 +595,7 @@ func _test_manager_lanjutan() -> void:
 	var dalam_jeda: HeadlineManager.Masukan = _masukan_nyata(5)
 	dalam_jeda.flag = ["kucing_belum"]
 	dalam_jeda.headline_jeda = {"lanjutan_kucing_belum": 35}
-	check(HeadlineManager.susun(dalam_jeda).misi == null or HeadlineManager.susun(dalam_jeda).misi.id != "lanjutan_kucing_belum", "lanjutan yang masih dalam jeda tidak muncul lagi")
+	check(HeadlineManager.susun(dalam_jeda).misi != null and HeadlineManager.susun(dalam_jeda).misi.id == "lanjutan_kucing_belum", "lanjutan dengan flag aktif tetap muncul walau jeda headline-nya belum lewat (M-8 run 4B: flag yang dikonsumsi adalah gerbangnya, jeda lanjutan diabaikan)")
 	# Lanjutan dengan misi lanjutan yang ada: baris misi membawa misi itu.
 	var misi_anak: DataMisi = _ms("m_anak", 4)
 	misi_anak.lanjutan_dari = "m_induk"

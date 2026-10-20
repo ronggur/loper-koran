@@ -32,10 +32,11 @@ Graybox spike rumah sisi dekat (run fase3c-hud-hasil, usulan, TECH_PLAN Fase 3; 
 python3 tools/env_art/spike_sisi_dekat.py --salin  # tiga pendekatan: rendah + kontras rendah, tembok belakang, punggung penuh
 ```
 
-Variasi kendaraan dan kucing (usulan) dibuat oleh `kendaraan.py`, dari root repo, ke `build/env_art/kendaraan/` (sheet 1× + JSON titik pijak, lembar contoh warna, layar contoh). Belum disalin ke `assets/`:
+Variasi kendaraan dan kucing (usulan) dibuat oleh `kendaraan.py`, dari root repo, ke `build/env_art/kendaraan/` (sheet 1× + JSON titik pijak, lembar contoh warna, layar contoh). **`--salin` (run fase4b-misi-kucing) menyalin hanya `mission_kucing_sheet.{png,json}` ke `assets/sprites/npc/`** (kucing misi Bu Ratmi, dipakai `scenes/entities/kucing_misi.tscn`); mobil, motor, dan kucing dekorasi tetap hanya di `build/`. Hasil deterministik di mesin yang sama (`tools/tests_cek/uji_aset_kucing.py`); render di mesin run 4B berselisih beberapa ratus piksel dari mock PR #35 (`docs/design/environment/kendaraan_perumahan.png`, drift numpy/pillow), tanpa pengaruh pada game:
 
 ```
 python3 tools/env_art/kendaraan.py               # mobil 5 model, motor 4 model, kucing 5 warna, layar contoh
+python3 tools/env_art/kendaraan.py --salin       # juga salin sheet kucing misi ke assets/sprites/npc/
 ```
 
 Ubin jalan perumahan, lampu jalan, dan pohon (usulan), dari root repo. Belum disalin ke `assets/`:

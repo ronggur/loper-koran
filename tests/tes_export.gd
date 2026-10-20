@@ -30,6 +30,9 @@ const JALUR_WAJIB_IKUT: Array[String] = [
 	"assets/data/missions/perumahan.json", "assets/data/headlines/utama.json", "assets/data/headlines/ringan.json", "assets/data/headlines/lanjutan.json",
 	"translations/konten.id.translation", "translations/ui.id.translation", "scenes/hari/hari.tscn", "scenes/koran/halaman_koran.tscn", "scenes/rute/rute.tscn",
 	"scripts/autoload/save_manager.gd",
+	# Run fase4b-misi-kucing (AC-22): sheet kucing, scene kucing dan tutorial, bunyi misi, dan skrip misi.
+	"assets/sprites/npc/mission_kucing_sheet.png", "scenes/entities/kucing_misi.tscn", "scenes/ui/tutorial.tscn", "scripts/systems/mission_manager.gd", "scripts/systems/rencana_misi.gd",
+	"assets/audio/sfx/mission/sfx_mis_meong_01.wav", "assets/audio/sfx/mission/sfx_mis_terlihat_01.wav", "assets/audio/sfx/mission/sfx_mis_selesai_01.wav", "assets/audio/sfx/mission/sfx_mis_gagal_01.wav",
 ]
 ## Berkas probe render (QA-004 run fase1b-umpan-balik, D-4 run fase1c-perapian): tidak ikut APK normal; build probe dibuat
 ## `tools/ekspor_cek_render.py` yang melepas pola ini sementara (`POLA_PROBE` di skrip itu harus sama persis).
@@ -139,6 +142,9 @@ func _test_preset_contoh_buruk() -> void:
 		['exclude_filter="docs/*, ', 'exclude_filter="assets/data/*, docs/*, ', "assets/data/missions/perumahan.json", "data misi dikecualikan dari paket"],
 		['exclude_filter="docs/*, ', 'exclude_filter="translations/*, docs/*, ', "translations/konten.id.translation", "terjemahan dikecualikan dari paket"],
 		['exclude_filter="docs/*, ', 'exclude_filter="scenes/hari/*, docs/*, ', "scenes/hari/hari.tscn", "scene hari dikecualikan dari paket"],
+		['exclude_filter="docs/*, ', 'exclude_filter="assets/sprites/npc/*, docs/*, ', "assets/sprites/npc/mission_kucing_sheet.png", "sheet kucing dikecualikan dari paket"],
+		['exclude_filter="docs/*, ', 'exclude_filter="assets/audio/sfx/mission/*, docs/*, ', "assets/audio/sfx/mission/sfx_mis_meong_01.wav", "bunyi misi dikecualikan dari paket"],
+		['exclude_filter="docs/*, ', 'exclude_filter="scenes/ui/tutorial.tscn, docs/*, ', "scenes/ui/tutorial.tscn", "scene tutorial dikecualikan dari paket"],
 		['name="Android"', 'name="Android uji"', "nama", "nama preset bukan Android"],
 		['runnable=true', 'runnable=false', "runnable", "runnable mati"],
 		['package/signed=true', 'package/signed=false', "package/signed", "APK tidak ditandatangani (tidak bisa dipasang)"],

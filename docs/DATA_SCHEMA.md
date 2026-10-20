@@ -33,12 +33,13 @@ File: `assets/data/missions/<distrik>.json`, berisi array misi.
 | `batas` | Jumlah rumah atau bagian rute | `{"rumah": 12}` |
 | `hadiah` | Tingkat hadiah dan tambahan (GDD 10.5) | `{"tingkat": "sedang", "tambahan": "pelanggan_setia"}` |
 | `gagal` | Efek langsung saat gagal | `{"reputasi": 0}` |
-| `flag_lanjut` | Flag yang ditulis saat selesai dan saat gagal, dibaca headline besok | `{"selesai": "kucing_ketemu", "gagal": "kucing_belum"}` |
+| `flag_lanjut` | Flag yang ditulis saat selesai dan saat gagal, dibaca headline besok (flag dikonsumsi sesudah lanjutannya tampil, bagian 4) | `{"selesai": "kucing_ketemu", "gagal": "kucing_belum"}` |
+| `banner` | Kunci terjemahan banner di rute (run 4B): `selesai` dan `gagal`, masing-masing teks hasil terjemahan paling banyak 24 karakter (CONTENT_GUIDE 3; gagal tidak menyalahkan). Wajib untuk semua template | `{"selesai": "MISI_P1_KUCING_SELESAI", "gagal": "MISI_P1_KUCING_GAGAL"}` |
 | `jeda` | Hari sebelum boleh muncul lagi, dihitung dari hari misi DIAMBIL (S-4); misi yang dilewati tidak memicu jeda | `7` |
 | `aktif` | Opsional, bawaan `true`. Menonaktifkan misi = `false`, id tidak pernah dihapus atau dipakai ulang | `true` |
 | `lanjutan_dari` | Opsional: id misi asal bila ini misi lanjutan; misi lanjutan tidak ikut undian biasa, hanya lewat headline lanjutan | `p1_kucing` |
 
-**Validasi** (`DataMisi.parse`, `PemuatMisi`; dijalankan tes pada berkas nyata): field wajib ada dan bertipe benar, field tidak dikenal ditolak, `id` huruf kecil, angka, dan garis bawah (dimulai huruf) dan unik, `template` salah satu dari enam, `distrik` dikenal, `rep_min` dan `jeda` tidak negatif, `hadiah.tingkat` kecil/sedang/besar, `flag_lanjut.selesai` dan `.gagal` berupa id, kunci terjemahan harus ada, dan teks hasil terjemahan <= 40 (headline, juga Huruf Kapital di Awal Kata), 60, 14, 50 karakter. `target`, `langkah`, `petunjuk`, `batas` di 4A hanya diperiksa tipenya (aturan template Cari ditambah di 4B).
+**Validasi** (`DataMisi.parse`, `PemuatMisi`; dijalankan tes pada berkas nyata, dan satu data buruk per aturan Cari oleh `tests/tes_misi.gd`): field wajib ada dan bertipe benar, field tidak dikenal ditolak, `id` huruf kecil, angka, dan garis bawah (dimulai huruf) dan unik, `template` salah satu dari enam, `distrik` dikenal, `rep_min` dan `jeda` tidak negatif, `hadiah.tingkat` kecil/sedang/besar, `flag_lanjut.selesai` dan `.gagal` berupa id, kunci terjemahan harus ada, dan teks hasil terjemahan <= 40 (headline, juga Huruf Kapital di Awal Kata), 60, 14, 50 karakter. `banner.selesai` dan `banner.gagal` kunci yang ada dengan teks <= 24 karakter. `target`, `langkah`, `petunjuk`, `batas` diperiksa tipenya untuk semua template; **template `cari` diperiksa penuh (run 4B)**, lihat "Template Cari" di bawah.
 
 Contoh lengkap dari berkas nyata (`assets/data/missions/perumahan.json`, P1 dari GDD 10.6):
 
@@ -69,6 +70,7 @@ Contoh lengkap dari berkas nyata (`assets/data/missions/perumahan.json`, P1 dari
     "hadiah": { "tingkat": "sedang", "tambahan": "pelanggan_setia", "tokoh": "bu_ratmi" },
     "gagal": { "reputasi": 0 },
     "flag_lanjut": { "selesai": "kucing_ketemu", "gagal": "kucing_belum" },
+    "banner": { "selesai": "MISI_P1_KUCING_SELESAI", "gagal": "MISI_P1_KUCING_GAGAL" },
     "jeda": 7
   }
 ]
@@ -77,6 +79,14 @@ Contoh lengkap dari berkas nyata (`assets/data/missions/perumahan.json`, P1 dari
 Misi lanjutan memakai field yang sama dengan `lanjutan_dari` (id misi asal) dan `syarat` berisi flag, misalnya `{"flag": "kucing_belum"}`. Batasnya lebih longgar (GDD 10.7). Misi lanjutan P1 belum ada di data (4B); headline lanjutannya memakai `misi_ditunda` (bagian 2).
 
 `langkah` berbeda per template. Field yang dipakai tiap template ditulis di sini setelah template itu dibuat (Cari di Fase 4, Antar khusus dan Kejar untuk P2–P3 di Fase 7, sisanya di Fase 8).
+
+**Template Cari (run 4B, usulan; GDD 10.2 sampai 10.6, M-1 sampai M-5; `DataMisi._periksa_cari`, rencana di `RencanaMisi`, perilaku di `MissionManager`):**
+
+- `target`: `objek` salah satu dari `kucing`, `jumlah` bilangan bulat >= 1, `sisi` `seberang` atau `dekat`. Jumlah langkah `tangkap` harus sama dengan `jumlah`.
+- `target.sisi`: hanya `seberang` yang didukung `RencanaMisi`; `dekat` ditolak validasi sampai didukung (QA-006, run 4B iterasi 2).
+- `langkah`: daftar >= 2 langkah. Tiap langkah punya `jenis` (`lihat` atau `tangkap`) dan `titik` (`atap`, `bawah_mobil_tamu`, `balik_pot`; placeholder tampilan sama semua, M-10). Langkah pertama memakai `rumah_dari_mulai`, sisanya `rumah_dari_sebelumnya`, berupa rentang `[min, maks]` bilangan bulat dengan 1 <= min <= maks (jumlah rumah seberang dari rumah pertama rute atau dari titik sebelumnya). Langkah terakhir `tangkap`; langkah `tangkap` wajib punya `radius_ubin` > 0 dan `lama_berhenti_detik` > 0 (field itu ditolak di langkah `lihat`). Jumlah semua `maks` tidak boleh melebihi `batas.rumah`, jadi batas 12 rumah terpenuhi secara konstruksi.
+- `petunjuk`: `visual` (daftar tidak kosong dari `kilau`, `ekor`), `suara` (`meong`), `dari_pelanggan` (kunci terjemahan, teks <= 50 karakter). `batas`: hanya `rumah` (>= 1). `hadiah`: `tingkat` (`kecil` 45, `sedang` 75, `besar` 120 koin; `Config.MISI_HADIAH_KOIN`) dan boleh `tambahan`, `tokoh` (teks; tidak berefek di 4B, K-2).
+- "Rumah" = rumah sisi seberang (pelanggan atau bukan), urut maju. Rencana kucing dari benih hari: `SeedHari.misi(hari)` = seed rute + `SEED_MISI_SELISIH`.
 
 ---
 
@@ -180,19 +190,27 @@ Contoh dari berkas nyata (`assets/data/routes/perumahan/per_tengah_02.json`):
 
 ## 4. Save
 
-File: `user://save.json`. Satu slot dulu. Format v1 di bawah dibaca dan ditulis `SaveManager` (autoload) lewat `DataSave`; **alur hari berurutan yang memakai save ini adalah prototype yang tidak mengunci struktur sesi** (ROADMAP 5: hari terakhir, kalender 120 hari, game over, target harian belum diputuskan). Field DATA_SCHEMA lain yang belum dipakai (`distrik_terbuka`, `reputasi`, `pelanggan`, `sepeda`, `kosmetik`, `milestone`) belum ditulis; bila ada di berkas (save masa depan) dibiarkan.
+File: `user://save.json`. Satu slot dulu. Format v2 (run 4B; v1 dari run 4A dimigrasi, tidak dihapus) di bawah dibaca dan ditulis `SaveManager` (autoload) lewat `DataSave`; **alur hari berurutan yang memakai save ini adalah prototype yang tidak mengunci struktur sesi** (ROADMAP 5: hari terakhir, kalender 120 hari, game over, target harian belum diputuskan). Field DATA_SCHEMA lain yang belum dipakai (`distrik_terbuka`, `reputasi`, `pelanggan`, `sepeda`, `kosmetik`, `milestone`) belum ditulis; bila ada di berkas (save masa depan) dibiarkan.
 
-Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur_hari.gd`: P1 diambil, 3 dari 25 terantar, koin 120 termasuk tip 25, skor 1500):
+Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur_hari.gd`: P1 diambil dan selesai, 3 dari 25 terantar, koin 195 = rute 120 termasuk tip 25 + hadiah misi 75, skor 1500; flag `kucing_ketemu` menunggu tampil besok):
 
 ```json
 {
-	"flag": [],
+	"flag": [
+		"kucing_ketemu"
+	],
 	"hari": 2,
 	"headline_jeda": {
 		"ringan_mangga": 4,
 		"utama_jalan_diperbaiki": 5
 	},
-	"koin": 120,
+	"koin": 195,
+	"misi_hasil": {
+		"p1_kucing": {
+			"hari": 1,
+			"hasil": "selesai"
+		}
+	},
 	"misi_jeda": {
 		"p1_kucing": 8
 	},
@@ -204,15 +222,20 @@ Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur
 	},
 	"terakhir": {
 		"hari": 1,
-		"koin": 120,
+		"koin": 195,
+		"koin_misi": 75,
 		"meleset": 22,
 		"misi_diambil": "p1_kucing",
+		"misi_hasil": "selesai",
 		"skor": 1500,
 		"terkirim": 3,
 		"tip": 25
 	},
 	"tip_total": 25,
-	"versi": 1
+	"tutorial": {
+		"selesai": true
+	},
+	"versi": 2
 }
 ```
 
@@ -222,22 +245,25 @@ Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur
 |---|---|
 | `versi` | Naik setiap format berubah (`Config.SAVE_VERSI`); game memigrasi save lama lewat `if versi < N: ...; versi = N`, tidak menghapusnya. Save tanpa `versi` dianggap v0 dan digabung dengan templat |
 | `hari` | Hari yang AKAN dimainkan berikutnya, mulai 1 (S-3); naik 1 saat "Hari berikutnya" |
-| `koin` | Total koin; bertambah sebesar koin hari itu (sudah termasuk tip), tidak pernah berkurang oleh hukuman |
+| `koin` | Total koin; bertambah sebesar koin hari itu (sudah termasuk tip dan hadiah misi), tidak pernah berkurang oleh hukuman |
 | `tip_total` | Total koin dari tip (bagian dari `koin`) |
-| `flag` | Daftar flag aktif (id); hanya bertambah. Id yang tidak ada di data dibiarkan |
+| `flag` | Daftar flag "lanjutan menunggu tampil" (id). **Arti berubah di v2 (M-6):** bukan riwayat. Hasil misi menulis flag (`flag_lanjut`) di akhir hari; headline lanjutan yang `syarat.flag`-nya flag itu tampil besok tepat sekali, lalu flag dikonsumsi (dihapus) di akhir hari tampilnya. Urutan di `catat_hari`: konsumsi dulu, tambah flag baru sesudahnya (flag baru hari ini tidak ikut terhapus). Id yang tidak ada di data dibiarkan |
+| `misi_hasil` | Riwayat permanen hasil misi (M-7): id misi -> `{"hasil": "selesai" atau "gagal", "hari": n}`. `selesai` tidak pernah ditimpa `gagal` dan hari selesainya tidak bergeser; `gagal` boleh diganti `selesai` atau `gagal` yang lebih baru. Id yang tidak ada di data dibiarkan |
+| `tutorial` | `{"selesai": bool}`: tutorial terpandu hari 1 selesai atau dilewati (M-9), ditulis di akhir hari dan tidak pernah kembali false |
 | `misi_jeda` | Id misi -> hari pertama boleh muncul lagi (hari diambil + `jeda`). Hanya untuk misi yang DIAMBIL (S-4); misi yang dilewati tidak memicu jeda. Ini bukan penalti: koin, hari, `tip_total`, dan flag sama untuk Ambil dan Lewati, hanya baris misi hari-hari berikutnya yang kosong sementara (diputuskan orchestrator 2026-10-17, bisa ditolak di review PR) |
 | `headline_jeda` | Id headline -> hari pertama boleh muncul lagi (hari tampil + `jeda`) |
-| `terakhir` | Hasil hari terakhir dari `HasilRute.Angka` yang sama dengan layar hasil: `hari`, `terkirim`, `meleset`, `koin`, `tip` (bagian tip), `skor`, `misi_diambil` ("" bila dilewati) |
+| `terakhir` | Hasil hari terakhir dari `HasilRute.Angka` yang sama dengan layar hasil: `hari`, `terkirim`, `meleset`, `koin`, `tip` (bagian tip), `skor`, `misi_diambil` ("" bila dilewati), `misi_hasil` ("", `selesai`, `gagal`), `koin_misi` (hadiah yang dibayar, hanya `selesai`; sudah termasuk di `koin`) |
 | `pengaturan` | `kidal`, `mode_bantu` (sakelar layar jeda, disimpan di akhir hari dan dibaca sebelum layar koran), `suara`, `musik` (0 sampai 1, bawaan 1.0, belum dipakai) |
 
 Aturan:
 
 - Save ditulis di akhir hari (tombol "Hari berikutnya" di layar hasil), tepat satu kali per hari, bukan di tengah rute. Tutup app di tengah rute: save terakhir utuh, hari yang sama dimulai lagi dari layar koran dengan headline dan seed rute yang sama.
 - Penulisan atomik: ke `user://save.tmp`, diperiksa terbaca, lalu rename. Save rusak (bukan JSON, bukan objek, field kunci bertipe salah) atau `versi` lebih baru tidak ditimpa diam-diam: disalin dulu ke `user://save.corrupt.<detik unix>.json` (isi yang sama dengan salinan yang sudah ada tidak disalin lagi, jadi peluncuran berulang tidak menumpuk salinan), permainan mulai dari state bawaan, dan layar koran memberi tahu satu baris (`KORAN_SAVE_RUSAK`). Berkas yang ADA tetapi tidak bisa dibuka (izin, galat I/O), atau berkas rusak yang salinannya gagal dibuat, TIDAK PERNAH ditimpa: `simpan` ditahan sepanjang sesi (mengembalikan false, berkas lama utuh), permainan tetap jalan dari state bawaan di memori, dan layar koran memberi tahu satu baris jujur (`KORAN_SAVE_TIDAK_TERBACA`, tanpa mengaku menyimpan salinan). Simpan akhir hari yang gagal dicoba sekali lagi; bila tetap gagal alur tidak diblokir dan koran berikutnya menampilkan satu baris netral (`KORAN_SAVE_GAGAL`) sampai satu simpan berhasil (kemajuan menumpuk di memori, jadi simpan berikutnya menuliskan semuanya). Nilai tidak sah di dalam blok (negatif, tipe salah) dijepit atau diganti bawaan.
-- Progres tidak turun: `hari`, `koin`, `tip_total` hanya naik, flag hanya bertambah, jeda tidak mundur; hari dengan koin 0 tidak mengurangi apa pun.
+- Progres tidak turun: `hari`, `koin`, `tip_total` hanya naik, jeda tidak mundur; hari dengan koin 0 atau misi gagal tidak mengurangi apa pun (prinsip 2). (Invarian "flag hanya bertambah" run 4A diganti aturan konsumsi flag di v2.) Hadiah misi = `Config.MISI_HADIAH_KOIN` menurut `hadiah.tingkat` (75 untuk `sedang`, K-1), dibayar saat misi selesai dan dihitung sekali di `HasilRute.Angka`, bukan di UI.
 - Id pelanggan memakai rumah tetap di distrik (`per_r014`), supaya pelanggan yang sama tetap ada walau segmen diacak. Cara memetakan rumah tetap ke segmen yang diacak ditunda ke Fase 6 (bagian 5); di Fase 3 dan 4A rumah hanya punya id rute `<id_segmen>@<pos>` (bagian 3) dan tidak ada yang ditulis ke save.
 - `kosmetik.baju` (nanti) memakai nama varian baju dari `ART_DIRECTION.md` 3.3.
-- Misi aktif lintas hari tidak disimpan (misi lintas hari ditunda ke 4B dan masih terbuka, ROADMAP 5).
+- Misi aktif tidak disimpan: hidup hanya selama rute; app ditutup di tengah rute = hari yang sama diulang dari koran dan misi dari awal (konsisten dengan 4A). Misi lintas hari tidak dikerjakan di 4B dan masih terbuka (bagian 5, ROADMAP 5).
+- Migrasi v1 -> v2 (`DataSave.migrasi`, `if versi < 2`): `misi_hasil` kosong, `tutorial.selesai` false, `terakhir.misi_hasil` "" dan `terakhir.koin_misi` 0; `flag`, `koin`, `hari`, `tip_total`, jeda, dan pengaturan dipertahankan. Dites dengan fixture bentuk save 4A asli dan v0. Versi > 2 tidak ditimpa (disalin dulu).
 
 ---
 
@@ -245,5 +271,5 @@ Aturan:
 
 - ~~Segmen ditulis sebagai JSON atau scene Godot yang diekspor.~~ **Diputuskan 2026-10-16 (pemilik, K-1 run 3A): JSON buatan tangan** di `assets/data/routes/<distrik>/<id>.json` (bagian 3). Nilai `jenis`, parameter objek, dan aturan validasi tetap usulan sampai uji HP.
 - Cara memetakan pelanggan tetap ke rute yang diacak. **Masih terbuka, ditunda ke Fase 6** (K-3): run 3A memakai id rute `<id_segmen>@<pos>` dan tidak menulis save; id rumah tetap di save (`per_r014`) belum ada.
-- Misi lintas hari (GDD 10.9) memengaruhi save: misi aktif perlu disimpan atau tidak. **Masih terbuka, ditunda ke 4B** (run 4A tidak menyimpan misi aktif).
+- Misi lintas hari (GDD 10.9) memengaruhi save: misi aktif perlu disimpan atau tidak. **Masih terbuka** (run 4A dan 4B tidak menyimpan misi aktif; 4B tidak mengerjakan misi lintas hari).
 - Format data milestone dan bengkel (Fase 6).
