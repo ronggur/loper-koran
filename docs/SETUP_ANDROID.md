@@ -610,3 +610,37 @@ Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build 
 10. Bunyi: ya / tidak
 Catatan (teks, tata letak, angka yang ingin diubah dan alasannya): ____
 ```
+
+### 8.11 Uji kondisi sepeda, bengkel, dan koin sebagai saldo (run `20261020-fase6a1-bengkel-kondisi`, belum diuji)
+
+Penguji: pemilik sendiri (rule `testing`). Semua angka, tata letak, dan bunyi usulan (BALANCING 7 dan 8, DESIGN_SPEC 3.3 dan 4, SPEC run): catat angka yang ingin diubah beserta alasannya, jangan diubah di sesi uji. **Pasang tanpa menghapus apa pun** (`adb install -r builds/kring-kring-debug.apk`, hanya setelah izin pemilik; HP dipakai bersama project lain; izin pasang ke vivo V2108 sesudah QA PASS sudah tercatat). **Jangan uninstall.** Edit save lewat `run-as com.rmh.kring` lebih disukai daripada `pm clear` (izin pemilik 2026-10-18 untuk `pm clear` bila perlu): catat save mana yang dipakai. Save v2 dari 4B di vivo harus termigrasi otomatis ke v3 (butir 7). Bukti desktop: tangkapan `docs/loop/20261020-fase6a1-bengkel-kondisi/shots/iter1/` (`tests/probe_kondisi_jendela.gd`, `tests/probe_bengkel_jendela.gd`). Dari mesin: kondisi, aus, efek, harga, dan simpan sudah dites; yang dinilai di sini hanya rasa, keterbacaan, dan keadilan.
+
+1. [ ] **Kerusakan terasa menghambat, bukan memblokir.** Mainkan beberapa rute dengan sepeda yang sengaja dibiarkan rusak (edit save: ban 0,2, rem 0,2, rantai 0,2 lewat `run-as`, atau ngebut dan menabrak sampai rusak). Diharapkan: rantai rusak membuat akselerasi lambat dan puncak tertahan (sekitar 3,6 u/d), ban rusak membuat belok kurang lincah, rem blong membuat berhenti lebih jauh (sampai sekitar 2,5 kali jarak normal); rute tetap bisa diselesaikan sebelum tenggat dengan santai terus, tanpa kebuntuan. Hasil: terasa menghambat tetapi tidak menyebalkan ya / tidak; rem blong berbahaya tetapi tidak membuat rute mustahil ya / tidak.
+2. [ ] **Tanda peringatan terbaca.** Dengan komponen AUS (kondisi 0,35 sampai 0,69): rantai berisik dan ban mendesis saat melaju santai atau lebih cepat, rem berdecit saat mengerem; bersamaan ikon komponen di HUD bergetar dan kotak berwarna oranye (sekitar 1,2 detik). Diharapkan: peringatan muncul sebelum efek terasa, tidak lebih sering dari satu kali per 6 detik per komponen, dan bunyi lebih pelan dari bel dan tabrakan. Hasil: terbaca di HP ya / tidak; bunyi dan ikon berpasangan ya / tidak; terlalu sering atau mengganggu ya / tidak (perlu jeda lebih panjang? usul: ___); tanpa suara tetap terbaca dari ikon ya / tidak.
+3. [ ] **Kotak kondisi 5x5 dan ikon 14 px terbaca di x3.** Panel baris 2 kanan atas (di bawah koin dan skor): tiga komponen, tiga kotak masing-masing, "!" oranye bila perlu servis. Diharapkan: terbaca sekilas tanpa menutupi radar kanan, tombol bel, tombol jeda, atau kartu misi; kotak yang hilang berongga. Hasil di vivo V2108 / A54: kotak terbaca ya / tidak; "!" terbaca ya / tidak; panel mengganggu lempar (swipe dari area itu tetap melempar) ya / tidak.
+4. [ ] **Layar hasil menyebut komponen yang perlu servis.** Baris oranye "Rantai perlu servis" (satu per komponen, hanya yang PERLU_BENGKEL), tanpa baris bila semua baik; angka koin tidak berubah karenanya; tombol "Ke bengkel" (bukan "Hari berikutnya"). Hasil: ya / tidak.
+5. [ ] **Bengkel mudah dipakai dan mudah dilewati.** Saldo (koin hari itu ikut), tiga kartu servis (ikon, kotak, tingkat, harga, tombol "Servis" atau "Baik"), tiga upgrade (nama, deskripsi, harga, "Beli" atau "Dimiliki"), "Hari berikutnya" di kanan bawah selalu aktif; tombol yang tidak terjangkau berubah menjadi "Koin kurang" dan redup. Ketuk ganda cepat tidak membeli dua kali. Back Android di bengkel = "Hari berikutnya". Hasil: target sentuh nyaman ya / tidak; layar tidak membingungkan ya / tidak; "Hari berikutnya" mudah dijangkau jempol kanan ya / tidak; tidak ada iklan atau tempat iklan ya / tidak.
+6. [ ] **Harga terasa adil.** Servis kira-kira setengah hari kerja untuk komponen yang parah (hari rapi 300 sampai 375 koin), upgrade sekitar 1,5 sampai 2 hari; ongkos naik bila dua atau tiga komponen rusak (x1,25 dan x1,5, tertulis di bengkel) terasa wajar, bukan hukuman. Hasil: harga servis adil ya / tidak (usul: ___); harga upgrade adil ya / tidak (usul: ___); ongkos naik wajar ya / tidak; laju aus (santai terus tahan belasan rute, ngebut dan sering mengerem rusak dalam sekitar 5 rute) terasa pas ya / tidak.
+7. [ ] **Save v3: migrasi dari save 4B.** Buka app dengan save 4B di vivo (hari, koin, flag, `misi_hasil`, `tutorial` utuh). Diharapkan: koran hari yang sama, tanpa notifikasi save rusak; sesudah satu hari selesai, save v3 berisi `koin_total` = koin lama + pendapatan hari itu, `sepeda` dengan kondisi aus dari hari itu. Catat save yang dipakai (edit `run-as` atau save asli). Hasil: hari, koin, flag utuh ya / tidak; tidak ada kondisi atau upgrade gratis ya / tidak.
+8. [ ] **Seminggu hari berturut-turut tanpa kebuntuan.** Mainkan tujuh hari (boleh ngebut sebisa mungkin, boleh membiarkan semua komponen rusak, boleh saldo kecil): setiap hari tetap bisa diselesaikan dan "Hari berikutnya" selalu bisa ditekan. Hasil: ya / tidak; hari yang terasa buntu atau tidak adil: ___.
+9. [ ] **Bengkel dilewati.** Selesaikan beberapa hari hanya dengan "Ke bengkel" lalu "Hari berikutnya" tanpa membeli: sepeda tetap jalan dengan kondisi menurun, kondisi tersimpan ke hari berikutnya (HUD hari 2 melanjutkan dari kondisi kemarin). Hasil: ya / tidak.
+10. [ ] **Force stop di layar hasil atau bengkel (bukan hapus data).** Tutup app di layar hasil atau di bengkel (sebelum "Hari berikutnya"): buka lagi = hari yang sama dari koran dengan save lama (pendapatan dan belanja hari itu tidak tersimpan, sesuai aturan simpan akhir hari); tidak ada korupsi save. Hasil: ya / tidak. (Konsekuensi ini dicatat jujur: pemain yang menutup app di bengkel kehilangan belanja hari itu.)
+11. [ ] **Tidak ada penurunan performa.** HUD kondisi dan peringatan tidak membuat game tersendat di HP menengah (60 fps tetap). Hasil: ya / tidak.
+
+**Lembar hasil 8.11 (kondisi sepeda, bengkel, koin saldo, run 6A1):**
+
+```
+Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build (commit): ____   Save: baru / migrasi dari 4B / hasil edit run-as
+1. Kerusakan menghambat bukan memblokir ya / tidak   rem blong berbahaya tapi bisa ya / tidak
+2. Peringatan terbaca ya / tidak   bunyi + ikon berpasangan ya / tidak   terlalu sering ya / tidak   usul jeda: ____
+3. Kotak 5x5 dan ikon 14 px terbaca ya / tidak   "!" terbaca ya / tidak   menutupi sesuatu ya / tidak
+4. Baris kondisi di layar hasil benar: ya / tidak   "Ke bengkel" jelas ya / tidak
+5. Bengkel: sentuh nyaman ya / tidak   tidak membingungkan ya / tidak   tombol hari berikutnya terjangkau ya / tidak   ketuk ganda aman ya / tidak
+6. Harga servis adil ya / tidak (usul ____)   upgrade adil ya / tidak (usul ____)   ongkos naik wajar ya / tidak   laju aus pas ya / tidak
+7. Migrasi 4B -> v3: hari/koin/flag utuh ya / tidak   tanpa upgrade atau kondisi gratis ya / tidak
+8. Seminggu tanpa kebuntuan ya / tidak   hari bermasalah: ____
+9. Bengkel dilewati, kondisi berlanjut ya / tidak
+10. Force stop di hasil atau bengkel: hari diulang, save utuh ya / tidak
+11. 60 fps tetap ya / tidak
+Catatan (teks, tata letak, angka yang ingin diubah dan alasannya): ____
+```
