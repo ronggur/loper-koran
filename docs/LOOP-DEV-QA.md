@@ -795,7 +795,7 @@ RUN_ID: <YYYYMMDD>-fase4b-misi-kucing   (tanggal hari run dimulai)
 
 ## 6f. Fase 6A: perintah mulai run (tempel di sesi baru)
 
-Disimpan 2026-10-20, sesudah run 4B (PR #40). Fase 6A (TECH_PLAN Fase 6A, DEV_PHASES Fase 6) dipecah dua run berurutan, satu PR per run. Fase 5 (aset gelombang 1) berjalan paralel dan bukan bagian loop ini.
+Disimpan 2026-10-20, sesudah run 4B (PR #40). Fase 6A (TECH_PLAN Fase 6A, DEV_PHASES Fase 6) dipecah dua run berurutan, satu PR per run. Fase 5 (aset gelombang 1) berjalan paralel dan bukan bagian loop ini: pemilik melompat ke 6A dengan sadar (2026-10-20) dan Fase 5 belum selesai (hanya sprite pemain yang tercentang). Eksplorasi aset Fase 5 dijalankan di Claude Design lewat [`design/PROMPT_FASE5.md`](design/PROMPT_FASE5.md); hasilnya diporting ke `tools/env_art/` dan dipasang di run terpisah, tidak di run 6A.
 
 | Run | Isi | Prasyarat |
 |---|---|---|
