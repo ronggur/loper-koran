@@ -16,5 +16,9 @@ Contoh art lingkungan dari kanvas "Lingkungan Loper Koran", dirender dengan `too
 | `kendaraan_perumahan.png` | Usulan (`kendaraan.py`): jalan perumahan siang dengan mobil tamu parkir (sein), lalu lintas dua arah, motor berpengendara, motor parkir, kucing misi dan kucing dekorasi. Sheet ada di `build/env_art/kendaraan/` |
 | `ubin_perumahan_susun.png` | Usulan (`ubin_perumahan.py`): potongan jalan yang disusun ulang dari 18 ubin 64x32 (aspal 2 ubin, trotoar 1 ubin, tata letak game), ×2 |
 | `lampu_pohon_siang.png`, `lampu_pohon_malam.png` | Usulan (`lampu_pohon.py`): jalan dari ubin baru dengan lampu jalan dan pohon, siang dan malam, ×2 |
+| `gelombang1/komposisi_siang_x3.png`, `gelombang1/komposisi_sore_x3.png` | Usulan Fase 5 gelombang 1 (`gelombang1/render.py`): jalan perumahan siang dan sore ×3 dengan semua aset baru (koran terbang, di kotak surat, terlipat, di rumput; debu, garis kecepatan, bintang kena, koin tip, percikan; tong sampah, misi kucing, kilau; portal dan pos satpam; polisi tidur, zebra, genangan; tembok belakang rendah sisi dekat) |
+| `gelombang1/sisi_dekat_siang_x3.png` | Usulan: hanya aset lama + modul tembok sisi dekat, untuk menilai keterbacaan kotak surat dan jalur |
+| `gelombang1/tembok_rantai_x3.png`, `gelombang1/ubin_potongan_x3.png` | Usulan: delapan modul tembok disambung; potongan jalan dari ubin lama + ubin baru |
+| `gelombang1/lembar_{koran,vfx,properti,dekat,ubin}_x5.png` | Usulan: lembar kontak sprite ×5 per papan, titik pijak ditandai magenta (penanda presentasi, bukan warna game) |
 
 Render ulang: lihat `tools/env_art/README.md`.

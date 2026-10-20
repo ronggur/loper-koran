@@ -95,3 +95,11 @@ JANGAN
 - Memakai aset dari game lain atau menyalin gaya persis game tertentu.
 - Menambah palet baru bila palet induk sudah cukup.
 ```
+
+## Hasil (2026-10-20, usulan)
+
+- Kanvas Claude Design: "Aset Gelombang 1 (Fase 5) — Loper Koran" (enam papan: komposisi siang/sore, koran, VFX, properti dan misi, sisi dekat, ubin), digambar dengan kode tanpa gambar generatif.
+- Port renderer: `tools/env_art/gelombang1/` (lihat `tools/env_art/README.md`), 29 sprite 1× + JSON per sprite + `manifest.json` ke `build/env_art/gelombang1/sprites/`, mock di `docs/design/environment/gelombang1/`. Uji: `tools/tests_cek/uji_aset_gelombang1.py` (deterministik, palet induk, manifest, mock = hasil skrip), juga di CI.
+- Komposisi repo memakai geometri game, bukan geometri kanvas: tembok sisi dekat berpusat 100 unit dari garis tengah (`TEMBOK_X_UBIN` 3,125, `scripts/dev/spike_sisi_dekat.gd`), rumah dekat varian `bukan` mundur 40 unit, kotak surat seberang = `prop_kotak_surat` oranye dan `prop_kotak_surat_bukan`. Di kanvas kotak surat lama masih merah dan tembok jatuh di pojok layar.
+- Belum: salin ke `assets/sprites/{props,vfx,houses/perumahan,tiles/perumahan}/` dan pasang di rute menggantikan placeholder dari kode (`pola_piksel.gd`, `umpan_balik_sepeda.gd`, zona graybox), run Dev↔QA berikutnya.
+- Keraguan yang perlu diputuskan pemilik ada di ART_DIRECTION 11 ("Aset gelombang 1").
