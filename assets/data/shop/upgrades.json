@@ -1,0 +1,36 @@
+[
+	{
+		"id": "ban_anti_selip",
+		"komponen": "ban",
+		"level": 1,
+		"harga": 600,
+		"nama": "TOKO_BAN_ANTI_SELIP_NAMA",
+		"deskripsi": "TOKO_BAN_ANTI_SELIP_DESKRIPSI",
+		"efek": [
+			{"jenis": "pengali_lateral", "nilai": 1.15}
+		]
+	},
+	{
+		"id": "rem_pakem",
+		"komponen": "rem",
+		"level": 1,
+		"harga": 500,
+		"nama": "TOKO_REM_PAKEM_NAMA",
+		"deskripsi": "TOKO_REM_PAKEM_DESKRIPSI",
+		"efek": [
+			{"jenis": "pengali_rem", "nilai": 1.2}
+		]
+	},
+	{
+		"id": "rantai_hemat",
+		"komponen": "rantai",
+		"level": 1,
+		"harga": 700,
+		"nama": "TOKO_RANTAI_HEMAT_NAMA",
+		"deskripsi": "TOKO_RANTAI_HEMAT_DESKRIPSI",
+		"efek": [
+			{"jenis": "pengali_kuras_stamina", "nilai": 0.85},
+			{"jenis": "pengali_aus", "nilai": 0.8}
+		]
+	}
+]

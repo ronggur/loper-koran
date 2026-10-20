@@ -23,3 +23,9 @@ MISI_P1_KUCING_HUD,Kucing
 MISI_P1_KUCING_PETUNJUK,Tadi ada kucing lewat ke arah warung
 MISI_P1_KUCING_SELESAI,Kucing ketemu!
 MISI_P1_KUCING_GAGAL,Kucingnya lolos hari ini
+TOKO_BAN_ANTI_SELIP_NAMA,Ban Anti-Selip
+TOKO_BAN_ANTI_SELIP_DESKRIPSI,Belok lebih lincah (+15%)
+TOKO_REM_PAKEM_NAMA,Rem Pakem
+TOKO_REM_PAKEM_DESKRIPSI,Berhenti lebih cepat (+20%)
+TOKO_RANTAI_HEMAT_NAMA,Rantai Hemat
+TOKO_RANTAI_HEMAT_DESKRIPSI,Stamina awet dan rantai lebih tahan
