@@ -71,6 +71,11 @@ func tampilkan_skor(_skor: int, _beruntun: int, _koin: int, _putus: bool) -> voi
 	pass
 
 
+## Menampilkan kondisi sepeda rute (`KondisiRute.Keadaan`; null = tanpa kondisi, jalan uji): tiga komponen dengan kotak, tanda "!", dan getar peringatan (AC-22, AC-23).
+func tampilkan_kondisi(_kondisi: KondisiRute.Keadaan) -> void:
+	pass
+
+
 ## Menampilkan atau menyembunyikan panel skor (jalan uji menyembunyikannya).
 func atur_skor_tampil(_nilai: bool) -> void:
 	pass

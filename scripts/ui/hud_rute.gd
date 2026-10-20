@@ -17,6 +17,10 @@ extends HudDasar
 ## - Zona aman (AC-9): di perangkat mobile inset dari `DisplayServer.get_display_safe_area()` dibaca saat siap dan saat ukuran viewport
 ##   berubah (`ZonaAman.inset_game`), lalu tiap tepi digeser sama besar (`HudDasar`). Di desktop/editor inset nol (persegi aman desktop
 ##   adalah layar monitor, bukan jendela game). Tes memberi inset tiruan lewat `atur_inset`.
+## - Baris 2 kanan atas = kondisi sepeda (DESIGN_SPEC 3.3, run fase6a1-bengkel-kondisi bagian B, AC-22 dan AC-23, usulan): satu panel 5 px di bawah baris koin/skor (satu `VBoxContainer`
+##   bersama baris 1), berisi `KotakKondisi` ban, rem, rantai (ikon 14 px + tiga kotak 5x5 + tanda "!" `WARN` untuk PERLU_BENGKEL; ikon bergetar dan kotak terisi `WARN` selama peringatan).
+##   Hanya menampilkan `KondisiRute.Keadaan`; tidak menerima sentuhan; ikut zona aman bersama baris 1; tidak dicerminkan saat kidal. Panel ini berpotongan dengan zona swipe (y >= 48) tetapi
+##   tidak menangkap sentuhan (seperti panel koran, DESIGN_SPEC 3.5): swipe yang dimulai di atasnya tetap melempar.
 ## - Kartu misi (DESIGN_SPEC 3.1, run fase4b-misi-kucing, usulan): kiri atas DI BAWAH area sentuh jeda (x `MISI_KARTU_X_PX`, y `MISI_KARTU_Y_PX`, bukan di y 40
 ##   seperti sketsa karena area sentuh jeda berakhir di y 46): label `MISI_LABEL_KARTU` (`ACCENT`) dan "Kucing 0/1 · 8 rumah" (`MISI_KARTU`). Hanya ada
 ##   selama misi aktif; saat selesai atau gagal berganti banner `MISI_BANNER_DETIK` (tengah atas di bawah panel progres; hadiah "+75" pada banner
@@ -46,6 +50,8 @@ var _petunjuk_terakhir: String = ""
 @onready var _ikon_koin: TextureRect = %IkonKoin
 @onready var _angka_koin: Label = %AngkaKoin
 @onready var _panel_skor: PanelContainer = %PanelSkor
+@onready var _panel_kondisi: PanelContainer = %PanelKondisi
+@onready var _kotak_kondisi: Dictionary = {"ban": %KotakBan, "rem": %KotakRem, "rantai": %KotakRantai}
 @onready var _label_skor: Label = %LabelSkor
 @onready var _angka_skor: Label = %AngkaSkor
 @onready var _label_combo: Label = %LabelCombo
@@ -70,6 +76,8 @@ func _ready() -> void:
 	_panel_skor.custom_minimum_size = Vector2(Config.HUD_SKOR_LEBAR_PX, 0)
 	_ikon_koin.custom_minimum_size = Vector2(Config.HUD_IKON_PX, Config.HUD_IKON_PX)
 	_baris_kanan.add_theme_constant_override(&"separation", Config.HUD_PANEL_JARAK_PX)
+	(%KolomKanan as VBoxContainer).add_theme_constant_override(&"separation", Config.HUD_PANEL_JARAK_PX)
+	(%IsiKondisi as HBoxContainer).add_theme_constant_override(&"separation", Config.KONDISI_HUD_ANTAR_KOMPONEN_PX)
 	_panel_misi.custom_minimum_size = Vector2(Config.MISI_KARTU_LEBAR_PX, 0)
 	_teks_petunjuk.custom_minimum_size = Vector2(Config.MISI_PETUNJUK_LEBAR_PX, 0)
 	_terapkan_gaya()
@@ -95,6 +103,32 @@ func tampilkan_skor(skor: int, beruntun: int, koin: int, putus: bool) -> void:
 	_angka_koin.text = tr("HUD_KOIN_ANGKA").format({"n": HasilRute.ribuan(koin, pemisah)})
 	_label_putus.visible = putus
 	_label_combo.visible = not putus
+
+
+## Menampilkan kondisi sepeda (baris 2 kanan atas, DESIGN_SPEC 3.3; AC-22, AC-23): tiga komponen dengan kotak, tanda "!" untuk PERLU_BENGKEL, dan ikon bergetar selama peringatan. Null =
+## tanpa kondisi: panel tersembunyi.
+func tampilkan_kondisi(k: KondisiRute.Keadaan) -> void:
+	_panel_kondisi.visible = k != null
+	if k == null:
+		return
+	for id: String in Config.KONDISI_KOMPONEN:
+		var kotak: KotakKondisi = _kotak_kondisi[id]
+		kotak.tampilkan(float(k.kondisi.get(id, 1.0)), float(k.kedip.get(id, 0.0)))
+
+
+## Satu komponen di panel kondisi (untuk tes dan probe).
+func kotak_kondisi(komponen: String) -> KotakKondisi:
+	return _kotak_kondisi.get(komponen, null) as KotakKondisi
+
+
+## Persegi panel kondisi (baris 2 kanan atas) dalam koordinat viewport game (tes tata letak).
+func rect_panel_kondisi() -> Rect2:
+	return _panel_kondisi.get_global_rect()
+
+
+## True bila panel kondisi tampil.
+func kondisi_tampil() -> bool:
+	return _panel_kondisi.visible
 
 
 ## Menampilkan tenggat (O-8): sisa "WAKTU m:ss" sebelum lewat, "LEWAT +m:ss" berwarna `WARN` sesudahnya.
@@ -333,6 +367,7 @@ func _terapkan_gaya() -> void:
 	_panel_progres.add_theme_stylebox_override(&"panel", GayaHud.panel_hud(Config.HUD_PROGRES_PAD_X_PX))
 	_panel_koin.add_theme_stylebox_override(&"panel", GayaHud.panel_hud())
 	_panel_skor.add_theme_stylebox_override(&"panel", GayaHud.panel_hud())
+	_panel_kondisi.add_theme_stylebox_override(&"panel", GayaHud.panel_hud())
 	_angka_terkirim.add_theme_color_override(&"font_color", Palette.ACCENT)
 	_angka_koin.add_theme_color_override(&"font_color", Palette.TEXT)
 	for label: Label in [_label_skor, _label_combo]:

@@ -1068,3 +1068,43 @@ const TOKO_EFEK_MIN: Array[float] = [0.5, 1.0, 1.0, 0.5]
 const TOKO_EFEK_MAKS: Array[float] = [1.0, 1.5, 1.25, 1.0]
 ## Komponen yang boleh membawa jenis efek itu ("" = komponen mana pun).
 const TOKO_EFEK_KOMPONEN: Array[String] = ["", "rem", "ban", "rantai"]
+
+## --- HUD kondisi sepeda di rute, bunyi kondisi, dan layar bengkel (run 6A1 bagian B; DESIGN_SPEC 3.3 dan 4, AC-22 sampai AC-27; usulan; dinilai lewat uji HP) ---
+
+## Kotak kondisi di HUD (DESIGN_SPEC 3.3): sisi kotak, piksel game.
+const KONDISI_HUD_KOTAK_PX: int = 5
+## Jarak antar kotak kondisi, piksel game.
+const KONDISI_HUD_KOTAK_JARAK_PX: int = 1
+## Jarak ikon komponen ke kotak pertama, piksel game.
+const KONDISI_HUD_IKON_JARAK_PX: int = 2
+## Lebar tanda "!" (PERLU_BENGKEL) setelah kotak, piksel game. Ruangnya selalu disediakan supaya panel tidak melompat saat tanda muncul.
+const KONDISI_HUD_SERU_LEBAR_PX: int = 3
+## Jarak kotak terakhir ke tanda "!", piksel game.
+const KONDISI_HUD_SERU_JARAK_PX: int = 2
+## Jarak antar tiga komponen di panel kondisi, piksel game.
+const KONDISI_HUD_ANTAR_KOMPONEN_PX: int = 6
+## Lama visual peringatan (ikon bergetar, kotak terisi berwarna WARN) sesudah satu peristiwa peringatan, detik waktu game (beku saat jeda).
+const KONDISI_KEDIP_DETIK: float = 1.2
+## Periode getar ikon saat peringatan: ikon bergeser tiap setengah periode, detik.
+const KONDISI_GETAR_PERIODE_DETIK: float = 0.1
+## Besar geseran ikon saat bergetar, piksel game.
+const KONDISI_GETAR_PX: int = 1
+## Volume bunyi peringatan kondisi (rantai berisik, rem berdecit, ban mendesis), dB: lebih pelan dari bel dan tabrakan supaya tidak menutupinya.
+const AUDIO_KONDISI_PERINGATAN_VOLUME_DB: float = -8.0
+## Volume bunyi servis dan upgrade di bengkel, dB.
+const AUDIO_KONDISI_TRANSAKSI_VOLUME_DB: float = -3.0
+
+## Layar bengkel (DESIGN_SPEC 4): margin minimum dari tepi layar, piksel game (dipakai max dengan inset aman perangkat).
+const BENGKEL_MARGIN_PX: int = 12
+## Jarak antar elemen di layar bengkel, piksel game.
+const BENGKEL_JARAK_PX: int = 6
+## Lebar minimum tombol Servis dan Beli, piksel game (tinggi `HUD_TOMBOL_TINGGI_PX` 42, >= 44 dp di A54).
+const BENGKEL_TOMBOL_LEBAR_PX: int = 84
+## Lebar minimum tombol "Hari berikutnya" di bengkel, piksel game.
+const BENGKEL_HARI_LEBAR_PX: int = 140
+## Lebar minimum label harga, piksel game (tiga digit berpemisah ribuan tidak melompat).
+const BENGKEL_HARGA_LEBAR_PX: int = 40
+## Perbandingan lebar kolom servis (komponen) terhadap kolom upgrade di layar bengkel.
+const BENGKEL_KOLOM_SERVIS_RASIO: float = 1.0
+## Lihat `BENGKEL_KOLOM_SERVIS_RASIO`.
+const BENGKEL_KOLOM_UPGRADE_RASIO: float = 1.0

@@ -46,6 +46,12 @@ func jalankan() -> void:
 
 # --- Pembantu ---
 
+## Mengakhiri hari sejak layar hasil terbuka: "Ke bengkel" (`BUKA_BENGKEL`, run fase6a1-bengkel-kondisi bagian B) lalu "Hari berikutnya" di bengkel tanpa membeli apa pun (K-4: bengkel boleh
+## dilewati). Sinkron. Dulu tombol layar hasil mengakhiri hari langsung; sejak bengkel ada, simpan terjadi di bengkel.
+func _akhiri_hari(hari: HariMain) -> void:
+	hari.rute().layar_hasil().tombol_main_lagi().ditekan.emit()
+	hari.bengkel().tombol_hari_berikutnya().ditekan.emit()
+
 func _jejak_save_asli() -> Dictionary:
 	var ada: bool = FileAccess.file_exists(SAVE_ASLI)
 	return {"ada": ada, "ukuran": FileAccess.get_file_as_bytes(SAVE_ASLI).size() if ada else 0, "sha": FileAccess.get_sha256(SAVE_ASLI) if ada else ""}
@@ -217,7 +223,7 @@ func _test_satu_hari_utuh() -> void:
 	check(rute.keadaan_misi().status == MissionManager.Status.SELESAI and rute.hud_rute().teks_koin() == "75", "misi kucing diselesaikan (langkah nyata RuteMain): HUD koin 75 sebelum antaran (hadiah ikut HUD)")
 	await _selesaikan_rute(rute)
 	check(rute.hasil_tampil() and hari.status().keadaan == MesinHari.Keadaan.HASIL, "garis akhir terlewati: layar hasil terbuka dan status HASIL")
-	check(rute.layar_hasil().teks_tombol() == "Hari berikutnya" and rute.layar_hasil().rect_tombol().size.y >= 42.0, "tombol layar hasil 'Hari berikutnya' (>= 42 px game) menggantikan 'Main lagi'")
+	check(rute.layar_hasil().teks_tombol() == "Ke bengkel" and rute.layar_hasil().rect_tombol().size.y >= 42.0, "tombol layar hasil 'Ke bengkel' (>= 42 px game) menggantikan 'Main lagi'")
 	var angka: HasilRute.Angka = rute.angka_hasil()
 	check(angka.terkirim == 3 and angka.meleset == 22 and angka.koin == 195 and angka.koin_tip == 25 and angka.skor == 1500, "angka layar hasil (literal tes): terkirim 3, meleset 22, koin 120 + 75 hadiah misi = 195, tip 25, skor 1500")
 	check(angka.koin_misi == 75 and angka.misi_hasil == "selesai" and angka.misi_id == "p1_kucing", "angka hasil membawa misi P1 selesai dengan 75 koin")
@@ -225,7 +231,7 @@ func _test_satu_hari_utuh() -> void:
 	check(m.get(&"jumlah_simpan") == 0 and not FileAccess.file_exists(_jalur()), "sampai layar hasil terbuka belum ada simpan sama sekali")
 	var disimpan: Array[int] = [0]
 	hari.hari_selesai.connect(func(h: int) -> void: disimpan[0] = h)
-	rute.layar_hasil().tombol_main_lagi().ditekan.emit()
+	_akhiri_hari(hari)
 	await _tree.process_frame
 	check(m.get(&"jumlah_simpan") == 1 and disimpan[0] == 1, "'Hari berikutnya': tepat satu simpan, sinyal hari_selesai(1)")
 	var s: Dictionary = _baca_save()
@@ -296,13 +302,13 @@ func _test_simpan_hanya_akhir_hari() -> void:
 	rute.minta_lanjut()
 	await _selesaikan_rute(rute)
 	check(rute.hasil_tampil() and jumlah.call() == 0 and not FileAccess.file_exists(_jalur()), "hasil terbuka: nol simpan")
-	rute.layar_hasil().tombol_main_lagi().ditekan.emit()
+	_akhiri_hari(hari)
 	check(jumlah.call() == 1 and FileAccess.file_exists(_jalur()), "'Hari berikutnya': tepat satu simpan dan berkas ada")
 	hari.koran().tombol_lewati().ditekan.emit()
 	var rute2: RuteMain = await _berangkat(hari)
 	check(jumlah.call() == 1, "hari 2 dimulai: tetap satu simpan")
 	await _selesaikan_rute(rute2)
-	rute2.layar_hasil().tombol_main_lagi().ditekan.emit()
+	_akhiri_hari(hari)
 	check(jumlah.call() == 2, "satu simpan per hari: dua hari = dua simpan")
 	_bersihkan(hari)
 	_tutup_manajer(m)
@@ -325,10 +331,16 @@ func _test_ketukan_ganda() -> void:
 	var rute: RuteMain = hari.rute()
 	rute.set_process(false)
 	await _selesaikan_rute(rute)
+	# "Ke bengkel" tiga kali: satu bengkel; "Hari berikutnya" di bengkel tiga kali: satu simpan, hari naik sekali (ketukan ganda ditolak MesinHari).
 	for i: int in range(3):
 		rute.layar_hasil().tombol_main_lagi().ditekan.emit()
+	check(hari.status().keadaan == MesinHari.Keadaan.BENGKEL and hari.bengkel() != null and m.get(&"jumlah_simpan") == 0, "'Ke bengkel' diketuk tiga kali: satu bengkel terbuka, belum ada simpan")
+	var bengkel: LayarBengkel = hari.bengkel()
+	for i: int in range(3):
+		bengkel.tombol_hari_berikutnya().ditekan.emit()
+		bengkel.hari_berikutnya_diminta.emit()
 	await _tree.process_frame
-	check(m.get(&"jumlah_simpan") == 1 and hari.status().hari == 2 and int(_baca_save()["hari"]) == 2, "'Hari berikutnya' diketuk tiga kali: satu simpan dan hari 2 (bukan 3 atau 4)")
+	check(m.get(&"jumlah_simpan") == 1 and hari.status().hari == 2 and int(_baca_save()["hari"]) == 2, "'Hari berikutnya' di bengkel diketuk berkali-kali: satu simpan dan hari 2 (bukan 3 atau 4)")
 	_bersihkan(hari)
 	_tutup_manajer(m)
 	_bersihkan_folder()
@@ -388,7 +400,7 @@ func _test_pengaturan_bertahan() -> void:
 	check(rute.kidal() and rute.mode_bantu(), "sakelar jeda menyalakan kidal dan bantu")
 	rute.minta_lanjut()
 	await _selesaikan_rute(rute)
-	rute.layar_hasil().tombol_main_lagi().ditekan.emit()
+	_akhiri_hari(hari)
 	var s: Dictionary = _baca_save()
 	check(s["pengaturan"]["kidal"] == true and s["pengaturan"]["mode_bantu"] == true and s["pengaturan"]["suara"] == 1.0, "save berisi kidal dan mode_bantu nyala, suara 1.0 (bawaan)")
 	var rute2: RuteMain = await _berangkat(hari)
@@ -461,7 +473,7 @@ func _test_ambil_sama_dengan_lewati() -> void:
 			hari.koran().tombol_lewati().ditekan.emit()
 		var rute: RuteMain = await _berangkat(hari)
 		await _selesaikan_rute(rute)
-		rute.layar_hasil().tombol_main_lagi().ditekan.emit()
+		_akhiri_hari(hari)
 		hasil.append(_baca_save())
 		_bersihkan(hari)
 		_tutup_manajer(m)
@@ -496,7 +508,7 @@ func _test_save_rusak_diberitahukan() -> void:
 	check(FileAccess.file_exists(FOLDER_TES.path_join("save.corrupt.1700000000.json")) and FileAccess.get_file_as_string(_jalur()) == "{bukan json", "berkas lama disalin dan belum ditimpa")
 	var rute: RuteMain = await _berangkat(hari)
 	await _selesaikan_rute(rute)
-	rute.layar_hasil().tombol_main_lagi().ditekan.emit()
+	_akhiri_hari(hari)
 	check(not notif_tampil.call() and hari.status().hari == 2, "notifikasi hanya sekali: hilang di koran hari 2")
 	check(DataSave.dari_teks(FileAccess.get_file_as_string(_jalur())).status == DataSave.Status.SAH, "sesudah hari pertama berkas save sah lagi")
 	_bersihkan(hari)
@@ -560,7 +572,7 @@ func _test_berangkat_tanpa_memilih() -> void:
 	var rute: RuteMain = await _berangkat(hari)
 	check(rute != null and hari.misi_diambil() == "", "Berangkat langsung dari belum memilih: misi_diambil kosong, dapat '%s'" % hari.misi_diambil())
 	await _selesaikan_rute(rute)
-	rute.layar_hasil().tombol_main_lagi().ditekan.emit()
+	_akhiri_hari(hari)
 	var s: Dictionary = _baca_save()
 	check(s["terakhir"]["misi_diambil"] == "" and s["misi_jeda"] == {}, "save: terakhir.misi_diambil kosong dan misi_jeda kosong (tidak ada jeda 7 hari); dapat %s / %s" % [s["terakhir"].get("misi_diambil"), s["misi_jeda"]])
 	check(hari.halaman().misi != null and hari.halaman().misi.id == "p1_kucing", "hari 2: misi P1 masih boleh tampil (tidak tertahan jeda)")
@@ -588,7 +600,7 @@ func _test_simpan_gagal_tidak_memblokir() -> void:
 	var hari: HariMain = await _siapkan(m)
 	var rute: RuteMain = await _berangkat(hari)
 	await _selesaikan_rute(rute)
-	rute.layar_hasil().tombol_main_lagi().ditekan.emit()
+	_akhiri_hari(hari)
 	check(m.get(&"jumlah_simpan") == 2 and FileAccess.file_exists(_jalur()) and int(_baca_save()["hari"]) == 2 and int(_baca_save()["koin"]) == 120, "simpan pertama gagal, percobaan ulang berhasil: dua panggilan, berkas hari 2 koin 120")
 	check(hari.status().hari == 2 and not _notif(hari).is_visible_in_tree(), "setelah percobaan ulang berhasil: koran hari 2 tanpa notifikasi")
 	_bersihkan(hari)
@@ -600,7 +612,7 @@ func _test_simpan_gagal_tidak_memblokir() -> void:
 	DirAccess.make_dir_recursive_absolute(FOLDER_TES.path_join("save.tmp"))
 	var rute2: RuteMain = await _berangkat(hari2)
 	await _selesaikan_rute(rute2)
-	rute2.layar_hasil().tombol_main_lagi().ditekan.emit()
+	_akhiri_hari(hari2)
 	await _tree.process_frame
 	check(m2.get(&"jumlah_simpan") == 2 and not FileAccess.file_exists(_jalur()), "simpan gagal dua kali (awal + satu percobaan ulang), tidak ada berkas save")
 	check(hari2.status().hari == 2 and hari2.status().keadaan == MesinHari.Keadaan.KORAN and hari2.koran().tampil(), "alur tidak diblokir: koran hari 2 tampil")
@@ -608,7 +620,7 @@ func _test_simpan_gagal_tidak_memblokir() -> void:
 	DirAccess.remove_absolute(FOLDER_TES.path_join("save.tmp"))
 	var rute3: RuteMain = await _berangkat(hari2)
 	await _selesaikan_rute(rute3)
-	rute3.layar_hasil().tombol_main_lagi().ditekan.emit()
+	_akhiri_hari(hari2)
 	await _tree.process_frame
 	var s: Dictionary = _baca_save()
 	check(int(s["hari"]) == 3 and int(s["koin"]) == 240 and int(s["tip_total"]) == 50, "hari 2 tersimpan sesudah penghalang hilang: kemajuan dua hari ikut tertulis (hari 3, koin 240, tip_total 50)")
@@ -626,7 +638,7 @@ func _test_simpan_gagal_tidak_memblokir() -> void:
 		check(_notif(hari3).is_visible_in_tree() and _notif(hari3).text == "KORAN_SAVE_TIDAK_TERBACA" and hari3.status().hari == 1, "save tidak terbaca: koran hari 1 dengan KORAN_SAVE_TIDAK_TERBACA (permainan mulai dari awal di memori)")
 		var rute4: RuteMain = await _berangkat(hari3)
 		await _selesaikan_rute(rute4)
-		rute4.layar_hasil().tombol_main_lagi().ditekan.emit()
+		_akhiri_hari(hari3)
 		await _tree.process_frame
 		check(hari3.status().hari == 2 and _notif(hari3).is_visible_in_tree() and _notif(hari3).text == "KORAN_SAVE_TIDAK_TERBACA", "sesudah hari berakhir: tetap diberi tahu bahwa kemajuan tidak disimpan")
 		check(m3.call(&"simpan_ditahan") and m3.get(&"jumlah_simpan") == 1, "simpan ditahan: tanpa percobaan ulang yang percuma (satu panggilan)")

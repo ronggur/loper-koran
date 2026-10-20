@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud_rute.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/ui/bar_kecepatan.gd" id="2_bar"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://scripts/ui/kotak_progres.gd" id="8_kotak"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/ui_icon_koin.png" id="9_koin"]
 [ext_resource type="Script" path="res://scripts/ui/penanda_kucing.gd" id="10_penanda"]
+[ext_resource type="Script" path="res://scripts/ui/kotak_kondisi.gd" id="11_kondisi"]
 
 [node name="HudRute" type="CanvasLayer"]
 layer = 5
@@ -111,24 +112,31 @@ grow_horizontal = 2
 mouse_filter = 2
 theme = ExtResource("3_theme")
 
-[node name="BarisKanan" type="HBoxContainer" parent="StripKanan"]
+[node name="KolomKanan" type="VBoxContainer" parent="StripKanan"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 0
 mouse_filter = 2
 
-[node name="PanelKoin" type="PanelContainer" parent="StripKanan/BarisKanan"]
+[node name="BarisKanan" type="HBoxContainer" parent="StripKanan/KolomKanan"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+mouse_filter = 2
+
+[node name="PanelKoin" type="PanelContainer" parent="StripKanan/KolomKanan/BarisKanan"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
 mouse_filter = 2
 
-[node name="IsiKoin" type="HBoxContainer" parent="StripKanan/BarisKanan/PanelKoin"]
+[node name="IsiKoin" type="HBoxContainer" parent="StripKanan/KolomKanan/BarisKanan/PanelKoin"]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="IkonKoin" type="TextureRect" parent="StripKanan/BarisKanan/PanelKoin/IsiKoin"]
+[node name="IkonKoin" type="TextureRect" parent="StripKanan/KolomKanan/BarisKanan/PanelKoin/IsiKoin"]
 unique_name_in_owner = true
 texture_filter = 1
 layout_mode = 2
@@ -137,28 +145,28 @@ mouse_filter = 2
 texture = ExtResource("9_koin")
 stretch_mode = 2
 
-[node name="AngkaKoin" type="Label" parent="StripKanan/BarisKanan/PanelKoin/IsiKoin"]
+[node name="AngkaKoin" type="Label" parent="StripKanan/KolomKanan/BarisKanan/PanelKoin/IsiKoin"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"HudAngka"
 
-[node name="PanelSkor" type="PanelContainer" parent="StripKanan/BarisKanan"]
+[node name="PanelSkor" type="PanelContainer" parent="StripKanan/KolomKanan/BarisKanan"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
 mouse_filter = 2
 
-[node name="IsiSkor" type="VBoxContainer" parent="StripKanan/BarisKanan/PanelSkor"]
+[node name="IsiSkor" type="VBoxContainer" parent="StripKanan/KolomKanan/BarisKanan/PanelSkor"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 0
 
-[node name="BarisSkor" type="HBoxContainer" parent="StripKanan/BarisKanan/PanelSkor/IsiSkor"]
+[node name="BarisSkor" type="HBoxContainer" parent="StripKanan/KolomKanan/BarisKanan/PanelSkor/IsiSkor"]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="LabelSkor" type="Label" parent="StripKanan/BarisKanan/PanelSkor/IsiSkor/BarisSkor"]
+[node name="LabelSkor" type="Label" parent="StripKanan/KolomKanan/BarisKanan/PanelSkor/IsiSkor/BarisSkor"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -166,18 +174,18 @@ mouse_filter = 2
 theme_type_variation = &"HudLabel"
 text = "HUD_SKOR"
 
-[node name="AngkaSkor" type="Label" parent="StripKanan/BarisKanan/PanelSkor/IsiSkor/BarisSkor"]
+[node name="AngkaSkor" type="Label" parent="StripKanan/KolomKanan/BarisKanan/PanelSkor/IsiSkor/BarisSkor"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"HudLabel"
 horizontal_alignment = 2
 
-[node name="BarisCombo" type="HBoxContainer" parent="StripKanan/BarisKanan/PanelSkor/IsiSkor"]
+[node name="BarisCombo" type="HBoxContainer" parent="StripKanan/KolomKanan/BarisKanan/PanelSkor/IsiSkor"]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="LabelCombo" type="Label" parent="StripKanan/BarisKanan/PanelSkor/IsiSkor/BarisCombo"]
+[node name="LabelCombo" type="Label" parent="StripKanan/KolomKanan/BarisKanan/PanelSkor/IsiSkor/BarisCombo"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -185,7 +193,7 @@ mouse_filter = 2
 theme_type_variation = &"HudLabel"
 text = "HUD_COMBO"
 
-[node name="LabelPutus" type="Label" parent="StripKanan/BarisKanan/PanelSkor/IsiSkor/BarisCombo"]
+[node name="LabelPutus" type="Label" parent="StripKanan/KolomKanan/BarisKanan/PanelSkor/IsiSkor/BarisCombo"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -194,12 +202,44 @@ mouse_filter = 2
 theme_type_variation = &"HudLabel"
 text = "HUD_COMBO_PUTUS"
 
-[node name="AngkaCombo" type="Label" parent="StripKanan/BarisKanan/PanelSkor/IsiSkor/BarisCombo"]
+[node name="AngkaCombo" type="Label" parent="StripKanan/KolomKanan/BarisKanan/PanelSkor/IsiSkor/BarisCombo"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"HudLabel"
 horizontal_alignment = 2
+
+[node name="PanelKondisi" type="PanelContainer" parent="StripKanan/KolomKanan"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+mouse_filter = 2
+
+[node name="IsiKondisi" type="HBoxContainer" parent="StripKanan/KolomKanan/PanelKondisi"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="KotakBan" type="Control" parent="StripKanan/KolomKanan/PanelKondisi/IsiKondisi"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("11_kondisi")
+komponen = "ban"
+
+[node name="KotakRem" type="Control" parent="StripKanan/KolomKanan/PanelKondisi/IsiKondisi"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("11_kondisi")
+komponen = "rem"
+
+[node name="KotakRantai" type="Control" parent="StripKanan/KolomKanan/PanelKondisi/IsiKondisi"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("11_kondisi")
+komponen = "rantai"
 
 [node name="StripMisi" type="MarginContainer" parent="."]
 unique_name_in_owner = true

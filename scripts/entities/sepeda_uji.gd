@@ -56,9 +56,10 @@ func posisi_dunia() -> Vector2:
 
 
 ## Satu langkah gerak dari vektor stick (x: datar, y: atas) selama `dt` detik, lalu memperbarui sprite dan posisi. `beku_detik` = sisa jatuh
-## sesudah tabrakan: selama itu sepeda diam dan stick diabaikan (`BikeMotion.langkah`).
-func gerak(stick: Vector2, dt: float, beku_detik: float = 0.0) -> void:
-	var hasil: BikeMotion.Hasil = BikeMotion.langkah(keadaan, stick, dt, beku_detik)
+## sesudah tabrakan: selama itu sepeda diam dan stick diabaikan (`BikeMotion.langkah`). `efek` = efek kondisi sepeda (null = identitas, gerak tidak berubah). Mengembalikan hasil
+## langkah (telemetri aus `BikeCondition`, run fase6a1-bengkel-kondisi bagian B).
+func gerak(stick: Vector2, dt: float, beku_detik: float = 0.0, efek: EfekKondisi = null) -> BikeMotion.Hasil:
+	var hasil: BikeMotion.Hasil = BikeMotion.langkah(keadaan, stick, dt, beku_detik, efek)
 	keadaan = hasil.keadaan
 	jarak_ubin += hasil.maju_ubin
 	lateral_ud = hasil.lateral_ud
@@ -68,6 +69,7 @@ func gerak(stick: Vector2, dt: float, beku_detik: float = 0.0) -> void:
 	_sprite.pedal_rate = hasil.pedal_rate
 	_umpan.perbarui(keadaan.kecepatan_ud, keadaan.rem_aktif)
 	position = Iso.posisi_gambar(posisi_dunia())
+	return hasil
 
 
 ## App di-background atau kehilangan fokus (D-6): lama tahan rem kembali 0 dan rem padam (`BikeMotion.jeda`), lempar ditutup.

@@ -20,11 +20,18 @@ extends Node
 ##   maju di memori, alur TIDAK diblokir, dan layar koran berikutnya menampilkan satu baris netral (`KORAN_SAVE_GAGAL`, atau
 ##   `KORAN_SAVE_TIDAK_TERBACA` bila simpan ditahan) sampai satu simpan berhasil. Kemajuan menumpuk di memori, jadi simpan berikutnya
 ##   yang berhasil menuliskan semuanya.
+## Run fase6a1-bengkel-kondisi bagian B (M-8, K-1, K-4, AC-19 sampai AC-21, AC-26): Koran -> Rute -> Hasil -> Bengkel -> Koran hari + 1. Tombol layar hasil = "Ke bengkel" (`BUKA_BENGKEL`): bengkel
+##   (`scenes/bengkel/bengkel.tscn`, `LayarBengkel`) bekerja pada state kerja di memori (saldo = `koin` save + koin hari ini, kondisi sepeda = akhir rute, level dan `servis_total` dari save) dan
+##   menukar saldo lewat `Economy`. Save ditulis tepat SEKALI per hari, saat "Hari berikutnya" dari bengkel (juga lewat back Android di bengkel, `MesinHari.aksi_back`): kondisi akhir, servis,
+##   dan upgrade ikut tertulis (`CatatanHari.sepeda`) dan belanja mengurangi saldo (`CatatanHari.belanja_koin`). Tidak ada simpan di layar hasil, di bengkel, atau saat app di-background di sana:
+##   menutup app di layar hasil atau bengkel mengulang hari dari koran dengan save lama (juga pendapatan dan belanja hari itu), sama seperti aturan 4A.
+## Rute menerima sepeda dari save (`RuteMain.atur_sepeda`): aus melanjutkan dari kondisi tersimpan dan efek memakai level upgrade tersimpan.
 ## Alur hari berurutan ini prototype yang tidak mengunci struktur sesi (ROADMAP 5): tanpa hari terakhir, game over, atau target harian.
 
 ## Skrip autoload `SaveManager`, hanya untuk tipe (autoload tidak diberi `class_name`, rule `gdscript`).
 const SKRIP_SIMPAN := preload("res://scripts/autoload/save_manager.gd")
 const ADEGAN_RUTE: PackedScene = preload("res://scenes/rute/rute.tscn")
+const ADEGAN_BENGKEL: PackedScene = preload("res://scenes/bengkel/bengkel.tscn")
 
 ## Back di layar koran: aplikasi diminta keluar.
 signal keluar_diminta
@@ -47,6 +54,11 @@ var _halaman: HeadlineManager.Halaman = HeadlineManager.Halaman.new()
 var _pustaka_misi: Array[DataMisi] = []
 var _pustaka_headline: PemuatHeadline.Pustaka = PemuatHeadline.Pustaka.new()
 var _galat_data: Array[String] = []
+## Data upgrade bengkel (`PemuatToko`, satu-satunya pembaca berkas upgrade); dimuat sekali.
+var _toko: PemuatToko.Kumpulan = PemuatToko.Kumpulan.new()
+## Layar bengkel yang sedang terbuka (null di luar keadaan BENGKEL) dan saldo awalnya (koin save + koin hari ini), untuk menghitung belanja.
+var _bengkel: LayarBengkel = null
+var _saldo_awal_bengkel: int = 0
 var _rute: RuteMain = null
 ## Id misi yang diambil hari ini ("" bila dilewati atau tidak ada).
 var _misi_diambil: String = ""
@@ -71,10 +83,13 @@ func _ready() -> void:
 func _notification(what: int) -> void:
 	if what != NOTIFICATION_WM_GO_BACK_REQUEST or not is_node_ready():
 		return
-	if MesinHari.aksi_back(_mesin.keadaan) == MesinHari.AksiBack.KELUAR_APP:
+	var aksi: MesinHari.AksiBack = MesinHari.aksi_back(_mesin.keadaan)
+	if aksi == MesinHari.AksiBack.KELUAR_APP:
 		keluar_diminta.emit()
 		if panggil_quit:
 			get_tree().quit()
+	elif aksi == MesinHari.AksiBack.LEWATI_BENGKEL:
+		_saat_hari_berikutnya()
 
 
 ## Memuat data misi dan headline dan memeriksa aturan antar data; galat dicatat (bukan crash).
@@ -82,7 +97,9 @@ func _muat_data() -> void:
 	var misi: PemuatMisi.Kumpulan = PemuatMisi.muat_folder()
 	_pustaka_misi = misi.misi
 	_pustaka_headline = PemuatHeadline.muat_folder()
+	_toko = PemuatToko.muat()
 	_galat_data = []
+	_galat_data.append_array(_toko.galat)
 	_galat_data.append_array(misi.galat)
 	_galat_data.append_array(_pustaka_headline.galat)
 	_galat_data.append_array(PemuatHeadline.periksa_silang(_pustaka_headline, _pustaka_misi))
@@ -126,10 +143,11 @@ func _saat_berangkat() -> void:
 	var pengaturan: Dictionary = simpanan.pengaturan()
 	_rute = ADEGAN_RUTE.instantiate() as RuteMain
 	_rute.atur_benih_awal(SeedHari.rute(_mesin.hari))
+	_rute.atur_sepeda(simpanan.state, _mesin.hari, _toko.upgrade)
 	_rute.atur_misi(_data_misi(_misi_diambil))
 	_rute.atur_tutorial(TutorialLangkah.boleh_aktif(_mesin.hari, DataSave.tutorial_selesai(simpanan.state)))
 	_rute.hasil_dibuka.connect(_saat_hasil_dibuka)
-	_rute.hari_berikutnya_diminta.connect(_saat_hari_berikutnya)
+	_rute.bengkel_diminta.connect(_saat_bengkel_diminta)
 	add_child(_rute)
 	_rute.atur_mode_hari(true)
 	_rute.atur_kidal(bool(pengaturan["kidal"]))
@@ -143,16 +161,37 @@ func _saat_hasil_dibuka(_angka: HasilRute.Angka) -> void:
 	_mesin = MesinHari.terapkan(_mesin, MesinHari.Peristiwa.HASIL_TERBUKA)
 
 
-## "Hari berikutnya": catat dan simpan hari ini (satu kali), buang rute, tampilkan koran hari berikutnya.
+## "Ke bengkel" (layar hasil): `BUKA_BENGKEL` diterima sekali. Layar bengkel dibuka di atas rute yang dibekukan; state kerja = save + koin hari ini + kondisi akhir rute. Tidak ada simpan.
+func _saat_bengkel_diminta() -> void:
+	var baru: MesinHari.Status = MesinHari.terapkan(_mesin, MesinHari.Peristiwa.BUKA_BENGKEL)
+	if not baru.diterima or _rute == null or _rute.angka_hasil() == null:
+		return
+	_mesin = baru
+	var angka: HasilRute.Angka = _rute.angka_hasil()
+	var kerja: Dictionary = simpanan.state.duplicate(true)
+	_saldo_awal_bengkel = clampi(int(kerja["koin"]) + maxi(angka.koin, 0), 0, Config.SAVE_ANGKA_MAKS)
+	kerja["koin"] = _saldo_awal_bengkel
+	var sepeda: Dictionary = kerja["sepeda"]
+	var akhir: Dictionary = _rute.kondisi_akhir()
+	for id: String in Config.KONDISI_KOMPONEN:
+		var entri: Dictionary = sepeda[id]
+		entri["kondisi"] = akhir[id]
+	# Rute dibekukan di bawah bengkel: tidak diproses dan tidak menerima sentuhan, layar hasilnya disembunyikan (tombol "Ke bengkel" tidak boleh tertekan lagi dari bawah).
+	_rute.layar_hasil().tampilkan(false)
+	_rute.process_mode = Node.PROCESS_MODE_DISABLED
+	_bengkel = ADEGAN_BENGKEL.instantiate() as LayarBengkel
+	add_child(_bengkel)
+	_bengkel.isi(kerja, _toko)
+	_bengkel.hari_berikutnya_diminta.connect(_saat_hari_berikutnya)
+
+
+## "Hari berikutnya" dari bengkel (tombol atau back Android): catat dan simpan hari ini (satu kali) dengan kondisi sepeda, servis, upgrade, dan belanja dari bengkel, buang rute dan bengkel,
+## tampilkan koran hari berikutnya. Dari keadaan lain (mis. layar hasil) ditolak tanpa efek.
 func _saat_hari_berikutnya() -> void:
-	# Sementara (run fase6a1-bengkel-kondisi bagian A): layar bengkel belum ada, jadi tombol layar hasil melewati bengkel (BUKA_BENGKEL lalu HARI_BERIKUTNYA, K-4).
-	# Bagian B menggantikannya dengan layar bengkel sungguhan; urutan peristiwa MesinHari sudah benar dan ketukan ganda tetap ditolak.
-	var di_bengkel: MesinHari.Status = MesinHari.terapkan(_mesin, MesinHari.Peristiwa.BUKA_BENGKEL)
-	if not di_bengkel.diterima or _rute == null:
+	var baru: MesinHari.Status = MesinHari.terapkan(_mesin, MesinHari.Peristiwa.HARI_BERIKUTNYA)
+	if not baru.diterima or _rute == null or _bengkel == null:
 		return
-	var baru: MesinHari.Status = MesinHari.terapkan(di_bengkel, MesinHari.Peristiwa.HARI_BERIKUTNYA)
-	if not baru.diterima:
-		return
+	var kerja: Dictionary = _bengkel.state()
 	var jeda: HeadlineManager.JedaBaru = HeadlineManager.catat_jeda(_halaman, _misi_diambil)
 	var catatan: DataSave.CatatanHari = DataSave.CatatanHari.new()
 	catatan.hari = _mesin.hari
@@ -167,6 +206,8 @@ func _saat_hari_berikutnya() -> void:
 	catatan.misi_jeda = jeda.misi
 	catatan.kidal = _rute.kidal()
 	catatan.mode_bantu = _rute.mode_bantu()
+	catatan.sepeda = kerja["sepeda"]
+	catatan.belanja_koin = maxi(_saldo_awal_bengkel - Economy.saldo(kerja), 0)
 	var hari_dimainkan: int = _mesin.hari
 	var tersimpan: bool = simpanan.akhiri_hari(catatan)
 	if not tersimpan and not simpanan.simpan_ditahan():
@@ -176,6 +217,10 @@ func _saat_hari_berikutnya() -> void:
 	_rute = null
 	remove_child(rute_lama)
 	rute_lama.queue_free()
+	var bengkel_lama: LayarBengkel = _bengkel
+	_bengkel = null
+	remove_child(bengkel_lama)
+	bengkel_lama.queue_free()
 	_mesin = baru
 	_tampilkan_koran()
 	hari_selesai.emit(hari_dimainkan)
@@ -201,6 +246,16 @@ func koran() -> HalamanKoran:
 ## Rute hari ini (null di layar koran).
 func rute() -> RuteMain:
 	return _rute
+
+
+## Layar bengkel yang sedang terbuka (null di luar bengkel).
+func bengkel() -> LayarBengkel:
+	return _bengkel
+
+
+## Data upgrade bengkel yang dimuat.
+func toko() -> PemuatToko.Kumpulan:
+	return _toko
 
 
 ## Halaman koran hari ini.

@@ -129,6 +129,11 @@ static func servis_total(state: Dictionary) -> int:
 	return maxi(_bulat((sepeda as Dictionary).get("servis_total", 0)), 0)
 
 
+## True bila komponen berkondisi `kondisi` sudah penuh (1,0) sehingga tidak bisa diservis (layar bengkel menampilkan "Baik" alih-alih tombol Servis).
+static func penuh(kondisi: float) -> bool:
+	return _penuh(kondisi)
+
+
 static func _penuh(kondisi: float) -> bool:
 	return BikeCondition.jepit(kondisi) >= 1.0 - Config.KONDISI_TOLERANSI
 

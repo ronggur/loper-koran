@@ -82,6 +82,11 @@ extends Node2D
 ## Run fase4b-misi-kucing (AC-11 sampai AC-14): kait `_koran_dinilai` (koran yang baru dinilai skor, untuk petunjuk misi dari lemparan tepat) dan
 ## `_koin_tambahan` (koin hadiah misi yang ikut tampil di HUD, supaya HUD, layar hasil, dan save memakai angka yang sama). Bawaan: tidak ada.
 ##
+## Run fase6a1-bengkel-kondisi bagian B (AC-6, AC-8, AC-11, AC-23): kondisi sepeda (`KondisiRute`, logika murni) hanya ada bila adegan turunan menyediakannya (kait `_kondisi_awal`; rute
+## ya, jalan uji tidak). Tiap langkah: `SepedaUji.gerak` memakai `EfekKondisi` dari kondisi dan level upgrade tersimpan, lalu telemetri gerak dan tabrakan baru (tepi naik `Tabrakan`)
+## masuk `KondisiRute.langkah` (aus, kerusakan, peringatan). Peristiwa peringatan = bunyi (`Audio.putar_kondisi_peringatan`) dan visual (ikon bergetar, kotak WARN di HUD) pada langkah yang
+## sama. Tanpa cabang mode bantu (K-2). Waktu ikut `dt` efektif, jadi jeda dan background membekukan semuanya.
+##
 ## Run fase3c-hud-hasil (O-6, K-1, AC-9): HUD bertipe `HudDasar` (jalan uji `HudDev`, rute `HudRute`). Kidal dan mode bantu diubah dari
 ## sakelar layar jeda (`LayarJeda.kidal_diubah` / `bantu_diubah`) atau sakelar HUD dev jalan uji; keduanya lewat `atur_kidal` /
 ## `atur_mode_bantu`, yang menyamakan kontrol, HUD, dan layar jeda. Zona tap bel mengikuti geseran zona aman HUD (`HudDasar.geser_bel`)
@@ -103,6 +108,8 @@ signal tabrakan(jenis: String)
 signal skor_dinilai(hasil: SkorRute.Hasil)
 ## Ketukan bel berbunyi (`Bel.Bunyi.KRING` atau `KRING_KRING`); `bereaksi` = id rintangan yang mundur.
 signal bel_berbunyi(bunyi: Bel.Bunyi, bereaksi: Array[int])
+## Satu peristiwa tanda peringatan kondisi (rantai berisik, rem berdecit, ban mendesis): id komponen. Bunyi dan visual HUD sudah dipicu pada langkah yang sama.
+signal peringatan_kondisi(komponen: String)
 
 ## Skrip autoload `Audio`, hanya untuk tipe (`Audio` tidak merujuk autoload lain, rule `gdscript`).
 const SKRIP_AUDIO := preload("res://scripts/autoload/audio.gd")
@@ -134,6 +141,8 @@ var _bel: Bel.Keadaan = Bel.awal()
 var _putus_detik: float = 0.0
 ## Umpan balik melayang yang sedang tampil (`UmpanMelayang`).
 var _umpan: Array[UmpanMelayang.Entri] = []
+## Kondisi sepeda rute ini (`KondisiRute`); null di jalan uji (tanpa aus, tanpa efek).
+var _kondisi: KondisiRute.Keadaan = null
 
 ## Medan sasaran koran (zona penilaian dan kotak penutup): null = jalan uji, `MedanKoran.dari_rute` di scene rute. Dipakai penilaian koran dan garis
 ## bidik dengan fungsi yang sama (prediksi = hasil).
@@ -270,6 +279,16 @@ func _skor_aktif() -> bool:
 ## Rute untuk pemberi tip `SkorRute.nilai_koran` (bawaan: rute kosong, tanpa pemberi tip).
 func _rute_skor() -> RouteBuilder.Rute:
 	return null
+
+
+## Keadaan kondisi sepeda di awal rute (dan sesudah "Main lagi"). Bawaan null: jalan uji tidak punya aus, efek, atau HUD kondisi.
+func _kondisi_awal() -> KondisiRute.Keadaan:
+	return null
+
+
+## True bila sepeda sudah melewati garis akhir: aus, kerusakan, dan peringatan berhenti. Bawaan false (jalan uji tanpa ujung).
+func _kondisi_selesai() -> bool:
+	return false
 
 
 ## Rintangan dunia di awal (dan sesudah "Main lagi"). Bawaan kosong (jalan uji).
@@ -447,9 +466,10 @@ func perbarui(dt: float) -> void:
 	var langkah_dt: float = JedaSim.dt_efektif(_jeda, _baru_lanjut, dt)
 	if not _jeda:
 		_baru_lanjut = false
-	_sepeda.gerak(_vektor_stick(), langkah_dt, _rintangan.tabrakan.jatuh_detik)
+	var gerak: BikeMotion.Hasil = _sepeda.gerak(_vektor_stick(), langkah_dt, _rintangan.tabrakan.jatuh_detik, _kondisi.efek if _kondisi != null else null)
 	_langkah_waktu(langkah_dt)
-	_langkah_rintangan(langkah_dt)
+	var tabrak: Tabrakan.Hasil = _langkah_rintangan(langkah_dt)
+	_langkah_kondisi(gerak, langkah_dt, tabrak)
 	_bel = Bel.langkah(_bel, langkah_dt)
 	_putus_detik = maxf(_putus_detik - langkah_dt, 0.0) if is_finite(langkah_dt) and langkah_dt > 0.0 else _putus_detik
 	_umpan = UmpanMelayang.langkah(_umpan, langkah_dt)
@@ -463,6 +483,7 @@ func perbarui(dt: float) -> void:
 	_sepeda.tampilkan_tabrakan(_rintangan.tabrakan)
 	_sepeda.tampilkan_bel(_bel)
 	_hud.tampilkan_skor(_skor.skor, _skor.beruntun, _skor.koin + _koin_tambahan(), putus_tampil())
+	_hud.tampilkan_kondisi(_kondisi)
 	_hud.tampilkan_bel(_kontrol.router.bel_ditahan(), Bel.sisa_jeda_pecahan(_bel))
 	_kontrol.router.geser_bel = _hud.geser_bel()
 	if _audio != null:
@@ -498,20 +519,39 @@ func _perbarui_lemparan(langkah_dt: float) -> void:
 
 
 ## Satu langkah rintangan sesudah sepeda digerakkan (urutan di atas): peristiwa ke bunyi; tabrakan baru diterapkan ke sepeda, combo putus,
-## bunyi, dan sinyal `tabrakan`.
-func _langkah_rintangan(langkah_dt: float) -> void:
+## bunyi, dan sinyal `tabrakan`. Mengembalikan `Tabrakan.Hasil` langkah ini bila ada tabrakan baru (masukan kerusakan kondisi), selain itu null.
+func _langkah_rintangan(langkah_dt: float) -> Tabrakan.Hasil:
 	var hr: RintanganRute.Hasil = RintanganRute.langkah(_rintangan, _sepeda.jarak_ubin, _sepeda.lateral_ubin, _sepeda.kecepatan_ud, langkah_dt)
 	_rintangan = hr.keadaan
 	if _audio != null:
 		for k: RintanganRute.Kejadian in hr.kejadian:
 			_audio.putar_peristiwa(k.peristiwa)
 	if not hr.tabrak:
-		return
+		return null
 	_sepeda.tabrak()
 	_putus_combo()
 	if _audio != null:
 		_audio.putar_tabrakan()
 	tabrakan.emit(hr.jenis_tabrak)
+	var hasil: Tabrakan.Hasil = Tabrakan.Hasil.new()
+	hasil.keadaan = hr.keadaan.tabrakan
+	hasil.tabrak = true
+	hasil.id = hr.id_tabrak
+	hasil.jenis = hr.jenis_tabrak
+	return hasil
+
+
+## Satu langkah kondisi sepeda sesudah gerak dan tabrakan langkah ini (tidak melakukan apa pun di jalan uji): aus, kerusakan tabrakan, dan peringatan (`KondisiRute.langkah`). Setiap
+## peristiwa peringatan membunyikan `Audio.putar_kondisi_peringatan` dan memancarkan `peringatan_kondisi`; visualnya (ikon bergetar, kotak WARN) dari `KondisiRute.Keadaan.kedip` di HUD.
+func _langkah_kondisi(gerak: BikeMotion.Hasil, langkah_dt: float, tabrak: Tabrakan.Hasil) -> void:
+	if _kondisi == null:
+		return
+	var hasil: KondisiRute.Hasil = KondisiRute.langkah(_kondisi, gerak, langkah_dt, tabrak, _kondisi_selesai())
+	_kondisi = hasil.keadaan
+	for komponen: String in hasil.peringatan:
+		if _audio != null:
+			_audio.putar_kondisi_peringatan(Config.KONDISI_KOMPONEN.find(komponen))
+		peringatan_kondisi.emit(komponen)
 
 
 ## Combo putus (tabrakan atau antaran tidak sah): rangkaian kembali 0; label PUTUS tampil bila ada rangkaian yang putus.
@@ -565,6 +605,18 @@ func rintangan() -> RintanganRute.Keadaan:
 	return _rintangan
 
 
+## Keadaan kondisi sepeda saat ini (null di jalan uji; untuk tes, probe, dan layar hasil).
+func kondisi() -> KondisiRute.Keadaan:
+	return _kondisi
+
+
+## Mengganti keadaan kondisi sepeda (hanya untuk tes dan probe: mis. komponen hampir aus tanpa menjalankan belasan rute). HUD ikut diperbarui.
+func atur_kondisi(k: KondisiRute.Keadaan) -> void:
+	_kondisi = k
+	if is_node_ready():
+		_hud.tampilkan_kondisi(_kondisi)
+
+
 ## Keadaan skor saat ini (untuk tes dan probe).
 func skor() -> SkorRute.Keadaan:
 	return _skor
@@ -591,6 +643,7 @@ func putus_tampil() -> bool:
 func _kembalikan_awal(koran_awal: int) -> void:
 	_sepeda.atur_ulang()
 	_rintangan = _rintangan_awal()
+	_kondisi = _kondisi_awal()
 	_skor = SkorRute.awal()
 	_bel = Bel.awal()
 	_putus_detik = 0.0
@@ -610,6 +663,7 @@ func _kembalikan_awal(koran_awal: int) -> void:
 	_sepeda.tampilkan_tabrakan(_rintangan.tabrakan)
 	_sepeda.tampilkan_bel(_bel)
 	_hud.tampilkan_skor(_skor.skor, _skor.beruntun, _skor.koin + _koin_tambahan(), false)
+	_hud.tampilkan_kondisi(_kondisi)
 	_hud.tampilkan_bel(false, 0.0)
 
 

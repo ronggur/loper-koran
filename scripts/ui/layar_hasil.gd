@@ -7,15 +7,18 @@ extends CanvasLayer
 ## status tenggat dengan nada netral (`TEXT_2`, tanpa panel merah, tanpa kata "gagal", tanpa layar kalah; prinsip 2). Tombol `RUTE_MAIN_LAGI`
 ## (`TombolSentuh`, >= 42 px game) memancarkan `main_lagi_diminta`. Teks lewat kunci terjemahan; kolom nilai melar (autowrap) supaya teks
 ## Indonesia yang panjang tetap muat di 640, 780, dan 800.
+## Run fase6a1-bengkel-kondisi bagian B (AC-24, M-11, usulan): bila ada komponen sepeda PERLU_BENGKEL, satu baris per komponen (sampai tiga, `KONDISI_HASIL_PERLU` "Rantai perlu servis", `WARN`) tampil di
+## bawah daftar yang ada dan di atas tombol; tanpa komponen rusak tidak ada baris. Tidak menyentuh `HasilRute.Angka`, hadiah misi, atau rekap misi. Di alur hari tombolnya "Ke bengkel"
+## (`BENGKEL_BUKA`, memancarkan `bengkel_diminta`; hari berakhir di bengkel, bukan di sini); "Main lagi" hanya di rute yang dijalankan sendiri dan banner galat muat.
 ## Latar menangkap sentuhan GUI (`MOUSE_FILTER_STOP`); HUD dan kontrol sentuh di bawahnya dimatikan adegan (`RuteMain`) selama layar ini
 ## tampil, karena keduanya membaca sentuhan lewat `_input`.
 
 ## Tombol "Main lagi" ditekan (mode rute sendiri, bawaan).
 signal main_lagi_diminta
-## Tombol "Hari berikutnya" ditekan (mode hari, `atur_mode_hari(true)`; run fase4a-koran-hari AC-17).
-signal hari_berikutnya_diminta
+## Tombol "Ke bengkel" ditekan (mode hari, `atur_mode_hari(true)`; run fase4a-koran-hari AC-17, run fase6a1-bengkel-kondisi AC-24: dulu "Hari berikutnya").
+signal bengkel_diminta
 
-## True bila tombol layar ini "Hari berikutnya" (di dalam alur hari), false bila "Main lagi" (rute dijalankan sendiri: probe, tes lama, dev).
+## True bila tombol layar ini "Ke bengkel" (di dalam alur hari), false bila "Main lagi" (rute dijalankan sendiri: probe, tes lama, dev).
 var _mode_hari: bool = false
 
 @onready var _latar: ColorRect = %LatarHasil
@@ -33,6 +36,7 @@ var _mode_hari: bool = false
 @onready var _teks_tenggat: Label = %TeksTenggat
 @onready var _rekap_misi: Label = %RekapMisi
 @onready var _tombol: TombolSentuh = %TombolMainLagi
+@onready var _kondisi: VBoxContainer = %KondisiHasil
 
 
 func _ready() -> void:
@@ -51,6 +55,9 @@ func _ready() -> void:
 		(label as Label).add_theme_color_override(&"font_color", Palette.TEXT_2)
 	_teks_tenggat.add_theme_color_override(&"font_color", Palette.TEXT_2)
 	_rekap_misi.custom_minimum_size = Vector2(Config.HASIL_PANEL_LEBAR_PX - 2 * Config.HUD_PANEL_PAD_X_PX, 0)
+	for label: Node in _kondisi.get_children():
+		(label as Label).add_theme_color_override(&"font_color", Palette.WARN)
+	_kondisi.add_theme_constant_override(&"separation", Config.HASIL_JARAK_BARIS_PX)
 	for nilai: Label in [_nilai_terkirim, _nilai_tip, _nilai_koin, _nilai_skor, _nilai_tepat]:
 		nilai.add_theme_color_override(&"font_color", Palette.ACCENT)
 	_tombol.custom_minimum_size = Vector2(Config.HUD_TOMBOL_LEBAR_PX, Config.HUD_TOMBOL_TINGGI_PX)
@@ -61,10 +68,10 @@ func _ready() -> void:
 	tampilkan(false)
 
 
-## Mengganti tombol layar ini: true = "Hari berikutnya" (alur hari), false = "Main lagi" (bawaan).
+## Mengganti tombol layar ini: true = "Ke bengkel" (alur hari), false = "Main lagi" (bawaan).
 func atur_mode_hari(nilai: bool) -> void:
 	_mode_hari = nilai
-	_tombol.text = "HASIL_HARI_BERIKUTNYA" if nilai else "RUTE_MAIN_LAGI"
+	_tombol.text = "BENGKEL_BUKA" if nilai else "RUTE_MAIN_LAGI"
 
 
 ## True bila tombol layar ini "Hari berikutnya".
@@ -74,14 +81,15 @@ func mode_hari() -> bool:
 
 func _saat_tombol() -> void:
 	if _mode_hari:
-		hari_berikutnya_diminta.emit()
+		bengkel_diminta.emit()
 	else:
 		main_lagi_diminta.emit()
 
 
 ## Mengisi angka dari `angka` (`HasilRute.dari`). Tidak menghitung ulang apa pun. `misi` (data misi hari ini, null = tanpa misi) memberi teks banner untuk
-## baris rekap misi (run fase4b-misi-kucing, AC-16): satu baris bila `angka.misi_hasil` selesai atau gagal, tidak ada baris tanpa misi.
-func isi(angka: HasilRute.Angka, misi: DataMisi = null) -> void:
+## baris rekap misi (run fase4b-misi-kucing, AC-16): satu baris bila `angka.misi_hasil` selesai atau gagal, tidak ada baris tanpa misi. `perlu_bengkel` = id komponen sepeda PERLU_BENGKEL
+## (`BikeCondition.perlu_bengkel`): satu baris kondisi per komponen, tanpa komponen rusak tidak ada baris (AC-24).
+func isi(angka: HasilRute.Angka, misi: DataMisi = null, perlu_bengkel: Array[String] = []) -> void:
 	var pemisah: String = tr("HUD_PEMISAH_RIBUAN")
 	_nilai_terkirim.text = tr("HASIL_TERKIRIM_ANGKA").format({"n": angka.terkirim, "total": angka.pelanggan})
 	_nilai_tip.text = tr("HASIL_TIP_ANGKA").format({"koin": HasilRute.ribuan(angka.koin_tip, pemisah), "n": angka.jumlah_tip})
@@ -90,6 +98,7 @@ func isi(angka: HasilRute.Angka, misi: DataMisi = null) -> void:
 	_nilai_tepat.text = tr("HASIL_TEPAT_ANGKA").format({"n": angka.jumlah_tepat})
 	_nilai_meleset.text = tr("HASIL_MELESET_ANGKA").format({"n": angka.meleset})
 	_isi_rekap_misi(angka, misi)
+	_isi_kondisi(perlu_bengkel)
 	if angka.tenggat_lewat:
 		var md: Vector2i = TenggatRute.menit_detik(angka.detik_lewat)
 		_teks_tenggat.text = tr("HASIL_TENGGAT_LEWAT").format({"m": md.x, "s": "%02d" % md.y})
@@ -113,6 +122,39 @@ func _isi_rekap_misi(angka: HasilRute.Angka, misi: DataMisi) -> void:
 		_rekap_misi.text = tr("HASIL_MISI_GAGAL").format({"teks": tr(misi.banner_gagal)})
 		_rekap_misi.add_theme_color_override(&"font_color", Palette.TEXT_2)
 		_isi.move_child(_rekap_misi, _daftar_netral.get_index() + 1)
+
+
+## Baris kondisi sepeda: "Rantai perlu servis" per komponen PERLU_BENGKEL (sampai tiga), `WARN`; tanpa komponen rusak seluruh blok tersembunyi.
+func _isi_kondisi(perlu_bengkel: Array[String]) -> void:
+	var baris: Array[Node] = _kondisi.get_children()
+	for i: int in range(baris.size()):
+		var label: Label = baris[i] as Label
+		label.visible = i < perlu_bengkel.size()
+		if label.visible:
+			label.text = tr("KONDISI_HASIL_PERLU").format({"komponen": tr(TampilKondisi.kunci_nama(perlu_bengkel[i]))})
+	_kondisi.visible = not perlu_bengkel.is_empty()
+
+
+## Teks baris kondisi yang tampil, urut (kosong bila tidak ada komponen rusak).
+func teks_kondisi() -> Array[String]:
+	var hasil: Array[String] = []
+	if not _kondisi.visible:
+		return hasil
+	for label: Node in _kondisi.get_children():
+		if (label as Label).visible:
+			hasil.append((label as Label).text)
+	return hasil
+
+
+## Persegi tiap baris kondisi yang tampil dalam koordinat viewport game (tes tata letak).
+func rect_kondisi() -> Array[Rect2]:
+	var hasil: Array[Rect2] = []
+	if not _kondisi.visible:
+		return hasil
+	for label: Node in _kondisi.get_children():
+		if (label as Label).visible:
+			hasil.append((label as Label).get_global_rect())
+	return hasil
 
 
 ## Teks baris rekap misi ("" bila tersembunyi).
@@ -144,6 +186,7 @@ func teks_tampil() -> Array[String]:
 	hasil.append(tr(_teks_tenggat.text))
 	if _rekap_misi.visible:
 		hasil.append(_rekap_misi.text)
+	hasil.append_array(teks_kondisi())
 	return hasil
 
 
@@ -171,6 +214,7 @@ func rect_label() -> Array[Rect2]:
 	var hasil: Array[Rect2] = [_judul.get_global_rect(), _teks_tenggat.get_global_rect()]
 	if _rekap_misi.visible:
 		hasil.append(_rekap_misi.get_global_rect())
+	hasil.append_array(rect_kondisi())
 	for daftar: GridContainer in [_daftar_berhasil, _daftar_netral]:
 		for label: Node in daftar.get_children():
 			hasil.append((label as Label).get_global_rect())
