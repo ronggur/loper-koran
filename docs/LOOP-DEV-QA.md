@@ -793,6 +793,126 @@ IZIN HP: boleh memasang APK ke vivo V2108 (adb 12d8c9da) setelah QA PASS dengan
 RUN_ID: <YYYYMMDD>-fase4b-misi-kucing   (tanggal hari run dimulai)
 ```
 
+## 6f. Fase 6A: perintah mulai run (tempel di sesi baru)
+
+Disimpan 2026-10-20, sesudah run 4B (PR #40). Fase 6A (TECH_PLAN Fase 6A, DEV_PHASES Fase 6) dipecah dua run berurutan, satu PR per run. Fase 5 (aset gelombang 1) berjalan paralel dan bukan bagian loop ini: pemilik melompat ke 6A dengan sadar (2026-10-20) dan Fase 5 belum selesai (hanya sprite pemain yang tercentang). Eksplorasi aset Fase 5 dijalankan di Claude Design lewat [`design/PROMPT_FASE5.md`](design/PROMPT_FASE5.md); hasilnya diporting ke `tools/env_art/` dan dipasang di run terpisah, tidak di run 6A.
+
+| Run | Isi | Prasyarat |
+|---|---|---|
+| 6A1 | Koin jadi saldo (save v3), `BikeCondition` (aus, kerusakan, tanda peringatan, efek hanya menghambat lewat `BikeMotion`), kotak kondisi di HUD rute, layar bengkel (servis, upgrade, `upgrades.json`), alur Hasil → Bengkel → Hari berikutnya, `Economy` | PR #40 (run 4B) di-merge |
+| 6A2 | `ReputationManager` (0–100 per distrik, status pelanggan `aktif`/`setia`/`berhenti`, kepribadian), pemetaan pelanggan tetap ke rute yang diacak (K-3 run 3A), pelanggan baru dan berhenti, `MilestoneTracker` dasar, penutup 6A | 6A1 di-merge |
+
+Perintah di bawah hanya untuk **6A1**. 6A2 ditulis sesudah 6A1 di-merge, supaya memakai bentuk save dan layar bengkel yang nyata.
+
+Catatan untuk semua run Fase 6A:
+- **Fase 2, 3, dan 4 belum tertutup.** Uji HP 8.5 sampai 8.10 (`SETUP_ANDROID.md`) dikerjakan pemilik; Fase 3, Fase 4, dan M2 tidak dicentang tanpa catatan uji HP. Orchestrator menanyakan sekali apakah tetap mulai dan memakai hasil uji HP yang ditempel pemilik (bila ada) sebagai masukan.
+- **Fase 6B (mesin cerita) bukan scope.** Setoran tiga pos (keluarga 35%, bengkel 15%, tabungan 50%), kalender 120 hari, tenggat bab, dan akhir cerita datang di 6B. Di 6A1 bengkel dibayar langsung dari saldo koin pemain.
+- **Keputusan yang sudah ada, jangan ditanyakan ulang:** semua K-/O- run 3A sampai 4B; gagal misi tidak pernah mengurangi koin (prinsip 2) dan kerusakan sepeda hanya menghambat, tidak menghentikan permainan (GDD 12.1); tanda peringatan mendahului kerusakan; perbaikan hanya di bengkel setelah antaran (GDD 12.3); satu mata uang koin, tidak bisa dibeli dengan uang asli (GDD 14); tabrakan = jatuh; rumah sisi dekat = tembok rendah; skala ×3; CSV terjemahan; hadiah P1 75 koin.
+- **Save sudah v2** (`DataSave`, `user://save.json`). Run ini menambah v3 DENGAN migrasi v2 → v3 dan tes migrasi dengan fixture save 4B asli. Save hanya ditulis di akhir hari; belanja di bengkel ikut tertulis saat "Hari berikutnya". Bentuk save di `DATA_SCHEMA.md` 4.
+
+### Run 6A1 — kondisi sepeda, bengkel, dan koin sebagai saldo
+
+Prasyarat: **PR #40 (run 4B) sudah di-merge ke `main`** (`RUN_ID` `20261018-fase4b-misi-kucing`, PASSED). Kalau belum, berhenti dan minta pemilik merge dulu.
+
+Kondisi sesudah 4B (jangan dikerjakan ulang; baca `docs/loop/20261018-fase4b-misi-kucing/SPEC.md` dan `LOG.md`):
+- Sudah ada: `SaveManager` v2 dengan `koin` (hanya naik, sudah termasuk hadiah misi 75), `tip_total`, `terakhir`, `flag`, `misi_hasil`, `tutorial`, `pengaturan`; `MesinHari` (Koran → Rute → Hasil → Koran hari + 1); `HasilRute.Angka` (satu-satunya sumber angka hasil dan koin); `BikeMotion` (gerak, rem, stamina, lateral); `Tabrakan` (jatuh 1,2 detik, kebal sejak bangun); `SkorRute` (ongkos 15, tip 5); slot HUD kondisi sepeda dan reputasi di DESIGN_SPEC 3.3 yang belum terisi; ikon HUD di `tools/ui_art/hud_ikon.py` (periksa apakah ban, rem, rantai sudah ada).
+- `docs/BALANCING.md` 8 (keausan) **kosong**; harga bengkel di BALANCING 7 masih usulan (tambal ban 100–150, rem 80, rantai 150, upgrade tingkat 1 500–800).
+- Terbuka dari 4B (DEFERRED, tidak menuntut perubahan di run ini): QA-010 sampai QA-012 (keterbacaan kucing dan jendela petunjuk, dinilai di HP) dan P1 muncul lagi di hari 8.
+
+```text
+Kamu adalah ORCHESTRATOR loop Dev↔QA untuk repo Loper Koran. Ikuti docs/LOOP-DEV-QA.md
+secara ketat (Bagian 1, Bagian 0c, Bagian 6f). Mulai dari main terbaru yang sudah memuat
+PR #40 (run 4B: SaveManager v2, misi kucing, tutorial); kalau belum, berhenti dan minta
+saya merge dulu. Baca docs/loop/20261018-fase4b-misi-kucing/{SPEC,LOG}.md dan
+docs/loop/20261018-fase4a-koran-hari/{SPEC,LOG}.md dulu: keputusan yang sudah ada berlaku,
+jangan ditanyakan ulang. Perbarui teks "Fase aktif" dan baris Fase 4 di docs/DEV_PHASES.md
+bila masih mengatakan Fase 3 aktif atau 4B belum dikerjakan (commit terpisah, tanpa
+mencentang Fase 4 atau M2).
+
+SCOPE: Run 6A1 — Fase 6A bagian pertama: kondisi sepeda, bengkel, dan koin sebagai saldo
+  (DEV_PHASES Fase 6, TECH_PLAN Fase 6A, GDD 11–14 dan 14.1, BALANCING 7 dan 8, DESIGN_SPEC
+  3.3 dan layar Bengkel, DATA_SCHEMA 4, STORY 4 bagian setoran dan bengkel hanya sebagai
+  konteks).
+  - Save v2 -> v3 (`DataSave.migrasi`, `if versi < 3`, tes dengan fixture save 4B asli, v1,
+    dan v0): `koin` menjadi SALDO yang boleh turun karena belanja; tambah `koin_total`
+    (seumur hidup, hanya naik, awal = `koin` v2) untuk milestone nanti; tambah `sepeda`
+    (kondisi tiap komponen 0–1, level upgrade tiap komponen) dan `statistik_aus` seperlunya.
+    Invarian save-system tetap: `hari`, `koin_total`, `tip_total` hanya naik; save rusak
+    atau versi lebih baru tidak ditimpa; id komponen dan upgrade permanen; simpan hanya di
+    akhir hari (belanja bengkel ikut tertulis saat "Hari berikutnya"). Perbarui DATA_SCHEMA 4.
+  - `BikeCondition` murni di scripts/systems/ (ban, rem, rantai; setang dan lampu hanya bila
+    diperlukan, tulis alasannya di SPEC): kondisi 0–1; aus per rute dari ngebut dan sering
+    mengerem (ambil dari telemetri `BikeMotion`, jangan hitung ulang gerak); kerusakan
+    langsung dari tabrakan (`Tabrakan`); tanda peringatan lebih dulu (rantai berisik, rem
+    berdecit) sebelum rusak; efek HANYA menghambat dan lewat pengali di `Config`
+    (`BikeMotion` membaca pengali dari kondisi, tanpa angka literal); rute selalu bisa
+    diselesaikan dengan semua komponen rusak (invarian, tes dengan `BikeMotion`: waktu
+    tempuh rute <= tenggat untuk pemain yang santai terus). RNG berseed dari `SeedHari`.
+    Objek jalan baru (paku, pecahan kaca, genangan) BUKAN scope (menambah jenis objek di
+    DATA_SCHEMA 3); simpan sebagai usulan 6A2.
+  - Kondisi di rute: tiga kotak per komponen di HUD (DESIGN_SPEC 3.3: ikon 14 px + kotak 5x5,
+    tanda "!" WARN untuk perlu bengkel) lewat `HudDasar`/`HudRute`, tidak menutupi radar,
+    sasaran, tombol bel, atau kartu misi; zona aman; pasangan visual untuk setiap bunyi
+    peringatan. Bunyi peringatan dan servis lewat tools/audio_art/ (+ LICENSES.md,
+    deterministik, `uji_sintesis_kondisi.py` baru dan langkah di .github/workflows/tes.yml).
+    Ikon dan elemen UI baru lewat skrip (tools/ui_art/), bukan disalin tangan.
+  - Layar bengkel (scenes/bengkel/, `MesinHari` mendapat keadaan Bengkel: Hasil -> Bengkel ->
+    Hari berikutnya; Bengkel boleh dilewati satu tombol; back = keluar tanpa membeli lebih
+    lanjut): kartu komponen dengan kondisi, harga servis, tombol Servis, daftar upgrade dari
+    `assets/data/shop/upgrades.json` (komponen, level, harga, efek; TECH_PLAN 6A; pemuat
+    tunggal `PemuatToko` dengan validasi dan data buruk ditolak, sama pola `PemuatMisi`),
+    saldo koin, tombol hanya aktif bila saldo cukup, target sentuh >= 42 px. Upgrade yang
+    wajib ada sejak sekarang karena syarat distrik: servis pertama, satu upgrade umum, dan
+    ban anti-selip (TECH_PLAN 6A). Tombol iklan hadiah: disiapkan sebagai tempat kosong atau
+    tidak ada; TIDAK diaktifkan (menunggu Fase 14, rule privacy-ads).
+  - `Economy` murni: pembayaran servis dan upgrade, kenaikan ongkos servis bila banyak
+    komponen rusak (GDD 12.3), saldo tidak pernah negatif, belanja tidak bisa dibatalkan
+    sebagian (satu transaksi = satu perubahan state). Angka di `scripts/config.gd` dan
+    `docs/BALANCING.md` 7 dan 8 (isi bagian 8: laju aus, efek tiap kerusakan, harga), semua
+    ditandai usulan.
+  - Layar hasil: baris kondisi sepeda singkat ("Rantai perlu servis") bila ada yang perlu;
+    jangan mengubah angka koin yang sudah dihitung `HasilRute.Angka`.
+  - Tes headless dengan mutan nyata dan oracle independen: aus dan kerusakan deterministik
+    dari seed, efek hanya menghambat (invarian rute selesai), migrasi v2 -> v3, belanja tidak
+    membuat saldo negatif dan `koin_total` tidak turun, `PemuatToko`, `MesinHari` keadaan
+    Bengkel, smoke test layar Hasil -> Bengkel -> servis -> upgrade -> Hari berikutnya lewat
+    pressed.emit() (tes tidak boleh menulis save sungguhan: pasang SaveManager ke pohon dengan
+    jalur uji seperti 4A), probe jendela tangkapan layar HUD kondisi, tanda "!", layar
+    bengkel, dan layar hasil (2340x1080, 1920x1080, 2400x1080, 1600x720).
+  - Perbarui checklist uji HP (docs/SETUP_ANDROID.md 8.11: kerusakan terasa menghambat bukan
+    memblokir, tanda peringatan terbaca, harga adil, seminggu hari tanpa kebuntuan),
+    DATA_SCHEMA (save v3, upgrades.json), BALANCING 7 dan 8, DESIGN_SPEC (bengkel),
+    AGENTS.md (peta repo dan perintah), README docs.
+  Keputusan terbuka yang mungkin menghambat (tanyakan SEKALI, satu rekomendasi per
+  keputusan):
+  1. Koin menjadi saldo yang bisa turun (save v3) dan setoran tiga pos baru datang di 6B
+     (rekomendasi: ya, bengkel dibayar langsung dari saldo; `koin_total` untuk milestone).
+  2. Mode bantu dan keausan (GDD 12.5) (rekomendasi: mode bantu TIDAK mengubah keausan atau
+     kerusakan, supaya hanya ada satu ekonomi; kerusakan sudah hanya menghambat).
+  3. Kejadian di rute pada 6A1 (rekomendasi: hanya aus dan tabrakan; paku, kaca, genangan
+     ditunda ke 6A2 karena menambah jenis objek jalan).
+  4. Bengkel wajib dikunjungi atau boleh dilewati (rekomendasi: boleh dilewati; kondisi
+     buruk hanya menghambat, jadi tidak ada layar yang memaksa).
+  Reputasi, kepribadian pelanggan, pelanggan baru/berhenti, pemetaan pelanggan tetap,
+  milestone, setoran tiga pos, kalender cerita, game over, dan target harian JANGAN
+  dikerjakan atau diputuskan di run ini.
+  PENUTUP: DEV_PHASES Fase 6 tidak dicentang di run ini (6A2 menyusul); centang hanya butir
+  yang terbukti oleh tes dan bukan NEEDS-MANUAL, di commit terpisah sesudah PR dibuka.
+  Fase 2, 3, 4, dan M2 tidak dicentang tanpa catatan uji HP pemilik.
+HASIL UJI HP RUN 4A DAN 4B (ISI: tempel catatan dari SETUP_ANDROID 8.9 dan 8.10; kosongkan bila belum): ISI: ...
+DESIGN: docs/design/DESIGN_SPEC.md (token bagian 1, HUD 3.3, layar 4 "Bengkel", teks 5);
+  belum ada mockup layar bengkel dan kotak kondisi — Dev boleh mendesain mengikuti
+  DESIGN_SPEC dan menandainya usulan.
+IZIN HP: boleh memasang APK ke vivo V2108 (adb 12d8c9da) setelah QA PASS dengan
+  `adb install -r` (izin tetap pemilik 2026-10-17, tanpa bertanya lagi); A54 (RRCWA05E2NN)
+  hanya bila tersambung. Hanya orchestrator yang menyentuh HP; cek layar menyala dan tidak
+  sedang dipakai; tidak ada uninstall/logcat -c. Edit save.json lewat run-as lebih disukai
+  daripada pm clear, dan pm clear com.rmh.kring boleh bila perlu (izin pemilik 2026-10-18),
+  tetapi catat save yang dipakai di LOG. Push, PR, dan merge tetap menunggu konfirmasi
+  pemilik.
+RUN_ID: <YYYYMMDD>-fase6a1-bengkel-kondisi   (tanggal hari run dimulai)
+```
+
 ## 7. Batasan yang perlu diketahui
 
 - QA berbasis agent tidak menggantikan uji di HP nyata untuk rasa kontrol, performa, dan tampilan rasio layar. Fase gameplay selalu ditutup dengan uji manual (`DEV_PHASES.md`).
