@@ -142,7 +142,7 @@ func _manajer() -> Node:
 func _test_config() -> void:
 	_judul.call("Hari, seed, dan save: angka Config literal (AC-7, AC-15)")
 	var harapan: Dictionary = {
-		"HARI_AWAL": 1, "SEED_HARI_LANGKAH": LANGKAH, "SEED_RUTE_DASAR": DASAR_RUTE, "SEED_HEADLINE_DASAR": DASAR_HEADLINE, "SAVE_VERSI": 2,
+		"HARI_AWAL": 1, "SEED_HARI_LANGKAH": LANGKAH, "SEED_RUTE_DASAR": DASAR_RUTE, "SEED_HEADLINE_DASAR": DASAR_HEADLINE, "SAVE_VERSI": 3,
 		"SAVE_BERKAS": "user://save.json", "SAVE_SEMENTARA_EKSTENSI": "tmp", "SAVE_RUSAK_PENANDA": ".corrupt.", "SAVE_VOLUME_BAWAAN": 1.0,
 	}
 	var peta: Dictionary = (load("res://scripts/config.gd") as GDScript).get_script_constant_map()
@@ -190,11 +190,11 @@ func _test_seed_enam_puluh_hari() -> void:
 # --- MesinHari (AC-16) ---
 
 func _test_mesin_tabel() -> void:
-	_judul.call("MesinHari: tabel transisi (AC-16)")
-	# Oracle: sembilan pasangan (keadaan, peristiwa); hanya tiga yang sah.
-	var K: Dictionary = {"koran": MesinHari.Keadaan.KORAN, "rute": MesinHari.Keadaan.RUTE, "hasil": MesinHari.Keadaan.HASIL}
-	var P: Dictionary = {"berangkat": MesinHari.Peristiwa.BERANGKAT, "hasil": MesinHari.Peristiwa.HASIL_TERBUKA, "berikut": MesinHari.Peristiwa.HARI_BERIKUTNYA}
-	var sah: Dictionary = {"koran/berangkat": "rute", "rute/hasil": "hasil", "hasil/berikut": "koran"}
+	_judul.call("MesinHari: tabel transisi (AC-16, AC-19 run fase6a1-bengkel-kondisi)")
+	# Oracle: enam belas pasangan (keadaan, peristiwa); hanya empat yang sah. Sejak run 6A1 "Hari berikutnya" hanya sah dari bengkel (alasan perubahan tes lama: hasil/berikut kini ditolak).
+	var K: Dictionary = {"koran": MesinHari.Keadaan.KORAN, "rute": MesinHari.Keadaan.RUTE, "hasil": MesinHari.Keadaan.HASIL, "bengkel": MesinHari.Keadaan.BENGKEL}
+	var P: Dictionary = {"berangkat": MesinHari.Peristiwa.BERANGKAT, "hasil": MesinHari.Peristiwa.HASIL_TERBUKA, "berikut": MesinHari.Peristiwa.HARI_BERIKUTNYA, "bengkel": MesinHari.Peristiwa.BUKA_BENGKEL}
+	var sah: Dictionary = {"koran/berangkat": "rute", "rute/hasil": "hasil", "hasil/bengkel": "bengkel", "bengkel/berikut": "koran"}
 	for k: String in K:
 		for p: String in P:
 			var status: MesinHari.Status = MesinHari.awal(5)
@@ -209,27 +209,27 @@ func _test_mesin_tabel() -> void:
 				check(not MesinHari.boleh(K[k], P[p]), "boleh(%s) false" % kunci)
 	var awal: MesinHari.Status = MesinHari.awal(5)
 	var ke_hasil: MesinHari.Status = MesinHari.awal(5)
-	ke_hasil.keadaan = MesinHari.Keadaan.HASIL
+	ke_hasil.keadaan = MesinHari.Keadaan.BENGKEL
 	check(MesinHari.terapkan(ke_hasil, MesinHari.Peristiwa.HARI_BERIKUTNYA).hari == 6 and MesinHari.terapkan(awal, MesinHari.Peristiwa.BERANGKAT).hari == 5, "hari naik tepat 1 hanya pada HARI_BERIKUTNYA")
 	var salinan_awal: MesinHari.Status = MesinHari.terapkan(awal, MesinHari.Peristiwa.BERANGKAT)
 	check(awal.keadaan == MesinHari.Keadaan.KORAN and awal.diterima and salinan_awal != awal, "terapkan tidak mengubah status masukan")
 
 
 func _test_mesin_alur_dan_ganda() -> void:
-	_judul.call("MesinHari: satu hari utuh dan ketukan ganda tidak menggandakan (AC-16)")
+	_judul.call("MesinHari: satu hari utuh dan ketukan ganda tidak menggandakan (AC-16, AC-19)")
 	var s: MesinHari.Status = MesinHari.awal(3)
 	var diterima: int = 0
 	for p: MesinHari.Peristiwa in [MesinHari.Peristiwa.BERANGKAT, MesinHari.Peristiwa.BERANGKAT, MesinHari.Peristiwa.HASIL_TERBUKA, MesinHari.Peristiwa.HASIL_TERBUKA,
-			MesinHari.Peristiwa.HARI_BERIKUTNYA, MesinHari.Peristiwa.HARI_BERIKUTNYA, MesinHari.Peristiwa.HARI_BERIKUTNYA]:
+			MesinHari.Peristiwa.BUKA_BENGKEL, MesinHari.Peristiwa.BUKA_BENGKEL, MesinHari.Peristiwa.HARI_BERIKUTNYA, MesinHari.Peristiwa.HARI_BERIKUTNYA, MesinHari.Peristiwa.HARI_BERIKUTNYA]:
 		s = MesinHari.terapkan(s, p)
 		if s.diterima:
 			diterima += 1
-	check(diterima == 3, "dari tujuh peristiwa (tiap peristiwa diketuk dua kali, hari berikutnya tiga kali) hanya tiga yang diterima, dapat %d" % diterima)
+	check(diterima == 4, "dari sembilan peristiwa (tiap peristiwa diketuk dua kali, hari berikutnya tiga kali) hanya empat yang diterima, dapat %d" % diterima)
 	check(s.keadaan == MesinHari.Keadaan.KORAN and s.hari == 4, "satu hari utuh berakhir di KORAN hari 4 (hari naik sekali walau 'Hari berikutnya' diketuk tiga kali)")
 	var s2: MesinHari.Status = MesinHari.awal(1)
 	var jalan: Array[int] = []
 	for i: int in range(5):
-		s2 = MesinHari.terapkan(MesinHari.terapkan(MesinHari.terapkan(s2, MesinHari.Peristiwa.BERANGKAT), MesinHari.Peristiwa.HASIL_TERBUKA), MesinHari.Peristiwa.HARI_BERIKUTNYA)
+		s2 = MesinHari.terapkan(MesinHari.terapkan(MesinHari.terapkan(MesinHari.terapkan(s2, MesinHari.Peristiwa.BERANGKAT), MesinHari.Peristiwa.HASIL_TERBUKA), MesinHari.Peristiwa.BUKA_BENGKEL), MesinHari.Peristiwa.HARI_BERIKUTNYA)
 		jalan.append(s2.hari)
 	check(jalan == [2, 3, 4, 5, 6], "lima hari berturut-turut: hari 2, 3, 4, 5, 6, dapat %s" % [jalan])
 
@@ -239,23 +239,25 @@ func _test_mesin_back() -> void:
 	check(MesinHari.aksi_back(MesinHari.Keadaan.KORAN) == MesinHari.AksiBack.KELUAR_APP, "back di koran = keluar app")
 	check(MesinHari.aksi_back(MesinHari.Keadaan.RUTE) == MesinHari.AksiBack.JEDA_RUTE, "back di rute = jeda")
 	check(MesinHari.aksi_back(MesinHari.Keadaan.HASIL) == MesinHari.AksiBack.ABAIKAN, "back di layar hasil = diabaikan")
+	check(MesinHari.aksi_back(MesinHari.Keadaan.BENGKEL) == MesinHari.AksiBack.LEWATI_BENGKEL, "back di bengkel = lewati bengkel (sama dengan Hari berikutnya, M-8)")
 
 
 # --- DataSave (AC-7, AC-10) ---
 
 func _test_save_templat_dan_bulak_balik() -> void:
-	_judul.call("DataSave: templat v2 dan bulak-balik teks (AC-7)")
+	_judul.call("DataSave: templat v3 dan bulak-balik teks (AC-7, AC-1 run fase6a1-bengkel-kondisi)")
 	var t: Dictionary = DataSave.templat()
 	var harapan: Dictionary = {
-		"versi": 2, "hari": 1, "koin": 0, "tip_total": 0, "flag": [], "misi_jeda": {}, "headline_jeda": {}, "misi_hasil": {}, "tutorial": {"selesai": false}, "terakhir": {},
+		"versi": 3, "hari": 1, "koin": 0, "koin_total": 0, "sepeda": {"ban": {"kondisi": 1.0, "level": 0}, "rem": {"kondisi": 1.0, "level": 0}, "rantai": {"kondisi": 1.0, "level": 0}, "servis_total": 0}, "tip_total": 0, "flag": [], "misi_jeda": {}, "headline_jeda": {}, "misi_hasil": {}, "tutorial": {"selesai": false}, "terakhir": {},
 		"pengaturan": {"kidal": false, "mode_bantu": false, "suara": 1.0, "musik": 1.0},
 	}
-	check(t == harapan, "templat = save baru: versi 2, hari 1, koin 0, tanpa flag, pengaturan bawaan; dapat %s" % [t])
+	check(t == harapan, "templat = save baru: versi 3, hari 1, koin 0, tanpa flag, pengaturan bawaan; dapat %s" % [t])
 	var hasil: DataSave.Hasil = DataSave.dari_teks(DataSave.ke_teks(t))
 	check(hasil.status == DataSave.Status.SAH and hasil.state == t, "templat -> teks -> state bulak-balik sama (status SAH)")
 	var t2: Dictionary = DataSave.templat()
 	t2["hari"] = 12
 	t2["koin"] = 3400
+	t2["koin_total"] = 3400  # v3: koin_total tidak pernah di bawah saldo
 	t2["flag"] = ["kucing_belum"]
 	t2["pengaturan"]["kidal"] = true
 	var h2: DataSave.Hasil = DataSave.dari_teks(DataSave.ke_teks(t2))
@@ -265,13 +267,13 @@ func _test_save_templat_dan_bulak_balik() -> void:
 
 
 func _test_save_migrasi_v0() -> void:
-	_judul.call("DataSave: migrasi v0 -> v2 tanpa kehilangan data sah (AC-10)")
+	_judul.call("DataSave: migrasi v0 -> v3 tanpa kehilangan data sah (AC-10)")
 	# Fixture v0: save sebelum ada `versi`, hanya sebagian field.
 	var v0: String = '{"hari": 7, "koin": 1500, "flag": ["kucing_belum", "flag_lama"], "pengaturan": {"kidal": true, "mode_bantu": true}}'
 	var hasil: DataSave.Hasil = DataSave.dari_teks(v0)
 	var s: Dictionary = hasil.state
 	check(hasil.status == DataSave.Status.SAH, "fixture v0 terbaca SAH, bukan rusak")
-	check(s["versi"] == 2, "versi menjadi 2 (SAVE_VERSI)")
+	check(s["versi"] == 3, "versi menjadi 3 (SAVE_VERSI)")
 	check(s["hari"] == 7 and s["koin"] == 1500, "hari 7 dan koin 1500 dipertahankan")
 	check(s["flag"] == ["kucing_belum", "flag_lama"], "flag dipertahankan (termasuk yang tidak dikenal data)")
 	check(s["pengaturan"]["kidal"] == true and s["pengaturan"]["mode_bantu"] == true, "pengaturan kidal dan mode_bantu dipertahankan")
@@ -281,8 +283,8 @@ func _test_save_migrasi_v0() -> void:
 	var mentah: Dictionary = {"hari": 4, "flag": ["a"]}
 	var salinan: Dictionary = mentah.duplicate(true)
 	var m: Dictionary = DataSave.migrasi(mentah)
-	check(mentah == salinan and m["versi"] == 2 and m["hari"] == 4, "migrasi tidak mengubah masukan dan menaikkan versi")
-	check(DataSave.migrasi(m) == m, "migrasi save yang sudah v2 tidak mengubah apa pun (idempoten)")
+	check(mentah == salinan and m["versi"] == 3 and m["hari"] == 4, "migrasi tidak mengubah masukan dan menaikkan versi")
+	check(DataSave.migrasi(m) == m, "migrasi save yang sudah v3 tidak mengubah apa pun (idempoten)")
 
 
 func _test_save_id_tak_dikenal_dan_nilai_tak_sah() -> void:
@@ -318,9 +320,9 @@ func _test_save_rusak_dan_terlalu_baru() -> void:
 	for nama: String in rusak:
 		var h: DataSave.Hasil = DataSave.dari_teks(rusak[nama])
 		check(h.status == DataSave.Status.RUSAK and h.perlu_salinan() and h.state == DataSave.templat() and not h.alasan.is_empty(), "%s: RUSAK, perlu disalin, state bawaan, ada alasan" % nama)
-	var baru: DataSave.Hasil = DataSave.dari_teks('{"versi": 3, "koin": 777}')
-	check(baru.status == DataSave.Status.TERLALU_BARU and baru.perlu_salinan() and baru.state == DataSave.templat(), "versi 3 (lebih baru dari 2): TERLALU_BARU, perlu disalin, state bawaan")
-	check(DataSave.dari_teks('{"versi": 2.0, "hari": 3}').status == DataSave.Status.SAH, "versi 2.0 (float dari JSON) sama dengan 2: SAH")
+	var baru: DataSave.Hasil = DataSave.dari_teks('{"versi": 4, "koin": 777}')
+	check(baru.status == DataSave.Status.TERLALU_BARU and baru.perlu_salinan() and baru.state == DataSave.templat(), "versi 4 (lebih baru dari 3): TERLALU_BARU, perlu disalin, state bawaan")
+	check(DataSave.dari_teks('{"versi": 3.0, "hari": 3}').status == DataSave.Status.SAH, "versi 3.0 (float dari JSON) sama dengan 3: SAH")
 	check(DataSave.dari_teks('{"versi": 0, "hari": 3}').status == DataSave.Status.SAH, "versi 0 eksplisit: SAH (dimigrasi)")
 	check(not DataSave.dari_teks(DataSave.ke_teks(DataSave.templat())).perlu_salinan(), "save sah tidak perlu disalin")
 
@@ -352,7 +354,7 @@ func _test_catat_hari_dari_angka() -> void:
 	check(s["flag"] == ["lama", "baru"], "flag baru ditambahkan, flag lama tetap")
 	check(s["misi_jeda"] == {"p1_kucing": 11, "misi_baru": 5} and s["headline_jeda"] == {"utama_x": 9}, "jeda digabung (nilai terbesar menang)")
 	check(s["pengaturan"]["kidal"] == true and s["pengaturan"]["mode_bantu"] == true, "sakelar kidal dan bantu dari jeda ikut tersimpan (AC-13)")
-	check(s["versi"] == 2 and DataSave.dari_teks(DataSave.ke_teks(s)).state == s, "hasil catat_hari tetap save v2 yang sah dan bulak-balik")
+	check(s["versi"] == 3 and DataSave.dari_teks(DataSave.ke_teks(s)).state == s, "hasil catat_hari tetap save v3 yang sah dan bulak-balik")
 	var tanpa_angka: Dictionary = DataSave.catat_hari(DataSave.templat(), DataSave.CatatanHari.new())
 	check(tanpa_angka["hari"] == 2 and tanpa_angka["koin"] == 0, "catatan tanpa angka tidak crash dan tidak menambah koin")
 
@@ -438,12 +440,12 @@ func _test_lewati_tanpa_penalti() -> void:
 	check(ambil_tanpa == lewati_tanpa, "Ambil dan Lewati dengan Angka yang sama: seluruh save sama kecuali terakhir.misi_diambil")
 	check(ambil["terakhir"]["misi_diambil"] == "p1_kucing" and lewati["terakhir"]["misi_diambil"] == "", "misi_diambil tercatat hanya bila diambil")
 	check(lewati["koin"] == 300 + 330 and lewati["hari"] == 2, "Lewati tidak mengurangi koin dan hari tetap maju")
-	var sah: Array[String] = ["versi", "hari", "koin", "tip_total", "flag", "misi_jeda", "headline_jeda", "misi_hasil", "tutorial", "terakhir", "pengaturan"]
+	var sah: Array[String] = ["versi", "hari", "koin", "koin_total", "tip_total", "sepeda", "flag", "misi_jeda", "headline_jeda", "misi_hasil", "tutorial", "terakhir", "pengaturan"]
 	var asing: Array[String] = []
 	for kunci: Variant in lewati:
 		if not sah.has(str(kunci)):
 			asing.append(str(kunci))
-	check(asing.is_empty(), "save tidak punya field keadaan kalah, game over, atau hukuman (hanya field v2): %s" % [asing])
+	check(asing.is_empty(), "save tidak punya field keadaan kalah, game over, atau hukuman (hanya field v3): %s" % [asing])
 
 
 # --- SaveManager (AC-7, AC-8, AC-9, AC-14) ---

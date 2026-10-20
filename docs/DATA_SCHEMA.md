@@ -1,6 +1,6 @@
 # Skema Data — Loper Koran
 
-Format file data yang dibaca game: misi, headline, segmen rute, dan save. Kolom misi di bagian 1 berasal dari dokumen ide (GDD 10). Bentuk JSON, nama field, dan bagian 1, 2, dan 4 adalah **usulan** yang diterapkan di run `20261018-fase4a-koran-hari` (dibaca `DataMisi`/`PemuatMisi`, `DataHeadline`/`PemuatHeadline`, dan `DataSave`/`SaveManager`), belum dikunci sampai diuji di HP. **Alur hari berurutan yang memakai format ini adalah prototype yang tidak mengunci struktur sesi** (ROADMAP 5: hari terakhir, game over, dan target harian tetap terbuka).
+Format file data yang dibaca game: misi, headline, segmen rute, save, dan upgrade bengkel. Kolom misi di bagian 1 berasal dari dokumen ide (GDD 10). Bentuk JSON, nama field, dan bagian 1, 2, dan 4 adalah **usulan** yang diterapkan di run `20261018-fase4a-koran-hari` (dibaca `DataMisi`/`PemuatMisi`, `DataHeadline`/`PemuatHeadline`, dan `DataSave`/`SaveManager`), belum dikunci sampai diuji di HP. **Alur hari berurutan yang memakai format ini adalah prototype yang tidak mengunci struktur sesi** (ROADMAP 5: hari terakhir, game over, dan target harian tetap terbuka).
 
 Aturan umum:
 
@@ -190,9 +190,9 @@ Contoh dari berkas nyata (`assets/data/routes/perumahan/per_tengah_02.json`):
 
 ## 4. Save
 
-File: `user://save.json`. Satu slot dulu. Format v2 (run 4B; v1 dari run 4A dimigrasi, tidak dihapus) di bawah dibaca dan ditulis `SaveManager` (autoload) lewat `DataSave`; **alur hari berurutan yang memakai save ini adalah prototype yang tidak mengunci struktur sesi** (ROADMAP 5: hari terakhir, kalender 120 hari, game over, target harian belum diputuskan). Field DATA_SCHEMA lain yang belum dipakai (`distrik_terbuka`, `reputasi`, `pelanggan`, `sepeda`, `kosmetik`, `milestone`) belum ditulis; bila ada di berkas (save masa depan) dibiarkan.
+File: `user://save.json`. Satu slot dulu. Format v3 (run 6A1: `koin` menjadi saldo, `koin_total`, `sepeda`; v2 dari run 4B dan v1 dari run 4A dimigrasi, tidak dihapus) di bawah dibaca dan ditulis `SaveManager` (autoload) lewat `DataSave`; **alur hari berurutan yang memakai save ini adalah prototype yang tidak mengunci struktur sesi** (ROADMAP 5: hari terakhir, kalender 120 hari, game over, target harian belum diputuskan). Field DATA_SCHEMA lain yang belum dipakai (`distrik_terbuka`, `reputasi`, `pelanggan`, `kosmetik`, `milestone`) belum ditulis; bila ada di berkas (save masa depan) dibiarkan.
 
-Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur_hari.gd`: P1 diambil dan selesai, 3 dari 25 terantar, koin 195 = rute 120 termasuk tip 25 + hadiah misi 75, skor 1500; flag `kucing_ketemu` menunggu tampil besok):
+Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur_hari.gd`: P1 diambil dan selesai, 3 dari 25 terantar, koin 195 = rute 120 termasuk tip 25 + hadiah misi 75, skor 1500; flag `kucing_ketemu` menunggu tampil besok; tanpa belanja bengkel dan tanpa kerusakan, jadi `sepeda` masih baru):
 
 ```json
 {
@@ -205,6 +205,7 @@ Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur
 		"utama_jalan_diperbaiki": 5
 	},
 	"koin": 195,
+	"koin_total": 195,
 	"misi_hasil": {
 		"p1_kucing": {
 			"hari": 1,
@@ -219,6 +220,21 @@ Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur
 		"mode_bantu": false,
 		"musik": 1.0,
 		"suara": 1.0
+	},
+	"sepeda": {
+		"ban": {
+			"kondisi": 1.0,
+			"level": 0
+		},
+		"rantai": {
+			"kondisi": 1.0,
+			"level": 0
+		},
+		"rem": {
+			"kondisi": 1.0,
+			"level": 0
+		},
+		"servis_total": 0
 	},
 	"terakhir": {
 		"hari": 1,
@@ -235,7 +251,7 @@ Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur
 	"tutorial": {
 		"selesai": true
 	},
-	"versi": 2
+	"versi": 3
 }
 ```
 
@@ -245,8 +261,10 @@ Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur
 |---|---|
 | `versi` | Naik setiap format berubah (`Config.SAVE_VERSI`); game memigrasi save lama lewat `if versi < N: ...; versi = N`, tidak menghapusnya. Save tanpa `versi` dianggap v0 dan digabung dengan templat |
 | `hari` | Hari yang AKAN dimainkan berikutnya, mulai 1 (S-3); naik 1 saat "Hari berikutnya" |
-| `koin` | Total koin; bertambah sebesar koin hari itu (sudah termasuk tip dan hadiah misi), tidak pernah berkurang oleh hukuman |
-| `tip_total` | Total koin dari tip (bagian dari `koin`) |
+| `koin` | **Saldo** koin (v3, K-1 run 6A1): bertambah sebesar koin hari itu (sudah termasuk tip dan hadiah misi) dan berkurang HANYA oleh belanja bengkel yang disengaja (servis, upgrade); tidak pernah berkurang oleh hukuman dan tidak pernah negatif |
+| `koin_total` | Koin yang pernah didapat seumur hidup (v3): bertambah sebesar koin hari itu, tidak pernah berkurang (belanja tidak mengubahnya), tidak pernah di bawah saldo `koin`. Untuk milestone nanti. Awal (migrasi) = `koin` v2 |
+| `tip_total` | Total koin dari tip (bagian dari `koin_total`; belanja tidak mengubahnya) |
+| `sepeda` | Kondisi dan upgrade sepeda (v3, M-7): `ban`, `rem`, `rantai`, masing-masing `{"kondisi": 0.0 sampai 1.0, "level": n}`, ditambah `servis_total` (jumlah servis seumur hidup, bukti "servis pertama" untuk syarat distrik Ruko, TECH_PLAN 6A). `kondisi` 1.0 = baru, dibulatkan 4 desimal (teks save stabil byte demi byte), nilai di luar 0 sampai 1 atau bukan angka dijepit (bukan save rusak); `level` = tingkat upgrade yang dimiliki (0 = belum; jumlah upgrade dibaca dari sini); `level` dan `servis_total` hanya naik. Id komponen asing dibiarkan; `sepeda` atau komponen bukan objek, atau `servis_total` bukan angka = save rusak. `setang` dan `lampu` dicadangkan sebagai id (belum dipakai, tidak ditulis). `statistik_aus` tidak dibuat (tidak ada konsumen di 6A1) |
 | `flag` | Daftar flag "lanjutan menunggu tampil" (id). **Arti berubah di v2 (M-6):** bukan riwayat. Hasil misi menulis flag (`flag_lanjut`) di akhir hari; headline lanjutan yang `syarat.flag`-nya flag itu tampil besok tepat sekali, lalu flag dikonsumsi (dihapus) di akhir hari tampilnya. Urutan di `catat_hari`: konsumsi dulu, tambah flag baru sesudahnya (flag baru hari ini tidak ikut terhapus). Id yang tidak ada di data dibiarkan |
 | `misi_hasil` | Riwayat permanen hasil misi (M-7): id misi -> `{"hasil": "selesai" atau "gagal", "hari": n}`. `selesai` tidak pernah ditimpa `gagal` dan hari selesainya tidak bergeser; `gagal` boleh diganti `selesai` atau `gagal` yang lebih baru. Id yang tidak ada di data dibiarkan |
 | `tutorial` | `{"selesai": bool}`: tutorial terpandu hari 1 selesai atau dilewati (M-9), ditulis di akhir hari dan tidak pernah kembali false |
@@ -257,13 +275,15 @@ Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur
 
 Aturan:
 
-- Save ditulis di akhir hari (tombol "Hari berikutnya" di layar hasil), tepat satu kali per hari, bukan di tengah rute. Tutup app di tengah rute: save terakhir utuh, hari yang sama dimulai lagi dari layar koran dengan headline dan seed rute yang sama.
+- Save ditulis di akhir hari (tombol "Hari berikutnya" di bengkel, v3; sebelumnya di layar hasil), tepat satu kali per hari, bukan di tengah rute. Selama layar hasil dan bengkel, saldo, kondisi, dan belanja ada di memori; menutup app di sana mengulang hari dari koran dengan save lama (juga pendapatan hari itu dan belanja). Tutup app di tengah rute: save terakhir utuh, hari yang sama dimulai lagi dari layar koran dengan headline dan seed rute yang sama.
 - Penulisan atomik: ke `user://save.tmp`, diperiksa terbaca, lalu rename. Save rusak (bukan JSON, bukan objek, field kunci bertipe salah) atau `versi` lebih baru tidak ditimpa diam-diam: disalin dulu ke `user://save.corrupt.<detik unix>.json` (isi yang sama dengan salinan yang sudah ada tidak disalin lagi, jadi peluncuran berulang tidak menumpuk salinan), permainan mulai dari state bawaan, dan layar koran memberi tahu satu baris (`KORAN_SAVE_RUSAK`). Berkas yang ADA tetapi tidak bisa dibuka (izin, galat I/O), atau berkas rusak yang salinannya gagal dibuat, TIDAK PERNAH ditimpa: `simpan` ditahan sepanjang sesi (mengembalikan false, berkas lama utuh), permainan tetap jalan dari state bawaan di memori, dan layar koran memberi tahu satu baris jujur (`KORAN_SAVE_TIDAK_TERBACA`, tanpa mengaku menyimpan salinan). Simpan akhir hari yang gagal dicoba sekali lagi; bila tetap gagal alur tidak diblokir dan koran berikutnya menampilkan satu baris netral (`KORAN_SAVE_GAGAL`) sampai satu simpan berhasil (kemajuan menumpuk di memori, jadi simpan berikutnya menuliskan semuanya). Nilai tidak sah di dalam blok (negatif, tipe salah) dijepit atau diganti bawaan.
-- Progres tidak turun: `hari`, `koin`, `tip_total` hanya naik, jeda tidak mundur; hari dengan koin 0 atau misi gagal tidak mengurangi apa pun (prinsip 2). (Invarian "flag hanya bertambah" run 4A diganti aturan konsumsi flag di v2.) Hadiah misi = `Config.MISI_HADIAH_KOIN` menurut `hadiah.tingkat` (75 untuk `sedang`, K-1), dibayar saat misi selesai dan dihitung sekali di `HasilRute.Angka`, bukan di UI.
+- Progres tidak turun: `hari`, `koin_total`, `tip_total`, `servis_total`, dan `level` upgrade hanya naik, jeda tidak mundur; `koin` (saldo) turun hanya karena belanja bengkel; hari dengan koin 0 atau misi gagal tidak mengurangi apa pun (prinsip 2). (Invarian "flag hanya bertambah" run 4A diganti aturan konsumsi flag di v2.) Hadiah misi = `Config.MISI_HADIAH_KOIN` menurut `hadiah.tingkat` (75 untuk `sedang`, K-1), dibayar saat misi selesai dan dihitung sekali di `HasilRute.Angka`, bukan di UI.
 - Id pelanggan memakai rumah tetap di distrik (`per_r014`), supaya pelanggan yang sama tetap ada walau segmen diacak. Cara memetakan rumah tetap ke segmen yang diacak ditunda ke Fase 6 (bagian 5); di Fase 3 dan 4A rumah hanya punya id rute `<id_segmen>@<pos>` (bagian 3) dan tidak ada yang ditulis ke save.
 - `kosmetik.baju` (nanti) memakai nama varian baju dari `ART_DIRECTION.md` 3.3.
 - Misi aktif tidak disimpan: hidup hanya selama rute; app ditutup di tengah rute = hari yang sama diulang dari koran dan misi dari awal (konsisten dengan 4A). Misi lintas hari tidak dikerjakan di 4B dan masih terbuka (bagian 5, ROADMAP 5).
-- Migrasi v1 -> v2 (`DataSave.migrasi`, `if versi < 2`): `misi_hasil` kosong, `tutorial.selesai` false, `terakhir.misi_hasil` "" dan `terakhir.koin_misi` 0; `flag`, `koin`, `hari`, `tip_total`, jeda, dan pengaturan dipertahankan. Dites dengan fixture bentuk save 4A asli dan v0. Versi > 2 tidak ditimpa (disalin dulu).
+- Migrasi v1 -> v2 (`DataSave.migrasi`, `if versi < 2`): `misi_hasil` kosong, `tutorial.selesai` false, `terakhir.misi_hasil` "" dan `terakhir.koin_misi` 0; `flag`, `koin`, `hari`, `tip_total`, jeda, dan pengaturan dipertahankan. Dites dengan fixture bentuk save 4A asli dan v0.
+- Migrasi v2 -> v3 (`if versi < 3`): `koin_total` = `koin` lama, `sepeda` baru (semua kondisi 1.0, level 0, `servis_total` 0: tidak ada kerusakan atau upgrade gratis); semua field v2 dipertahankan nilainya. Dites dengan fixture bentuk save 4B asli (hari 2, koin 195, flag `kucing_ketemu`), save 4A (v1), dan v0. Versi > 3 tidak ditimpa (disalin dulu).
+- `catat_hari` (v3) menerima sepeda akhir rute dan belanja bengkel: `koin` = saldo lama + koin hari - belanja, `koin_total` = lama + koin hari (persis sekali), kondisi sepeda akhir (sesudah aus rute, servis, dan upgrade).
 
 ---
 
@@ -272,4 +292,39 @@ Aturan:
 - ~~Segmen ditulis sebagai JSON atau scene Godot yang diekspor.~~ **Diputuskan 2026-10-16 (pemilik, K-1 run 3A): JSON buatan tangan** di `assets/data/routes/<distrik>/<id>.json` (bagian 3). Nilai `jenis`, parameter objek, dan aturan validasi tetap usulan sampai uji HP.
 - Cara memetakan pelanggan tetap ke rute yang diacak. **Masih terbuka, ditunda ke Fase 6** (K-3): run 3A memakai id rute `<id_segmen>@<pos>` dan tidak menulis save; id rumah tetap di save (`per_r014`) belum ada.
 - Misi lintas hari (GDD 10.9) memengaruhi save: misi aktif perlu disimpan atau tidak. **Masih terbuka** (run 4A dan 4B tidak menyimpan misi aktif; 4B tidak mengerjakan misi lintas hari).
-- Format data milestone dan bengkel (Fase 6).
+- Format data milestone (Fase 6B). ~~Format data bengkel~~ **Diterapkan run 6A1 (usulan, bagian 6)**: `upgrades.json` dan kondisi sepeda di save v3 (bagian 4).
+- Bentuk struktur sesi (setoran tiga pos, kalender, tenggat bab) yang menentukan di mana koin saldo dibelanjakan: **masih terbuka** (ROADMAP 5, Fase 6B). Alur Koran -> Rute -> Hasil -> Bengkel -> hari berikutnya di 6A1 adalah prototype.
+- Setang dan lampu (komponen kelima dan keempat GDD 12.4): id `setang` dan `lampu` dicadangkan, belum dibuat.
+
+---
+
+## 6. Upgrade bengkel
+
+File: `assets/data/shop/upgrades.json` (run 6A1, usulan). Array objek, dibaca satu-satunya oleh `PemuatToko` (validasi `DataToko`); layar bengkel, `Economy`, dan `BikeCondition` hanya menerima `DataToko`. Tingkat 1 saja di 6A1; `level` > 1 untuk komponen yang sama boleh ditambah nanti (level harus berurutan 1, 2, 3, ...).
+
+Contoh nyata (isi `upgrades.json`, upgrade pertama; dua lainnya `rem_pakem` dan `rantai_hemat`):
+
+```json
+{
+	"id": "ban_anti_selip",
+	"komponen": "ban",
+	"level": 1,
+	"harga": 600,
+	"nama": "TOKO_BAN_ANTI_SELIP_NAMA",
+	"deskripsi": "TOKO_BAN_ANTI_SELIP_DESKRIPSI",
+	"efek": [
+		{"jenis": "pengali_lateral", "nilai": 1.15}
+	]
+}
+```
+
+| Field | Arti |
+|---|---|
+| `id` | Huruf kecil dan garis bawah, unik, **permanen**. Tiga id wajib (`Config.TOKO_ID_WAJIB`): `ban_anti_selip` (komponen `ban`; syarat distrik Desa), `rem_pakem` (`rem`), `rantai_hemat` (`rantai`). Ketiganya memenuhi "satu upgrade" untuk syarat distrik Ruko; tidak ada jenis ke-4 |
+| `komponen` | `ban`, `rem`, atau `rantai` (`Config.KONDISI_KOMPONEN`) |
+| `level` | Bilangan bulat >= 1. Level N hanya bisa dibeli bila level N - 1 komponen itu dimiliki; level tiap komponen berurutan tanpa lompatan atau kembar |
+| `harga` | Koin bulat >= 1, dibayar dari saldo `koin` (rentang tingkat 1: 500 sampai 800, BALANCING 7) |
+| `nama`, `deskripsi` | Kunci terjemahan di `translations/konten.csv` (awalan `TOKO_`); nama paling banyak 24 karakter, deskripsi paling banyak 48 (`Config.TOKO_NAMA_PANJANG_MAKS`, `TOKO_DESKRIPSI_PANJANG_MAKS`) |
+| `efek` | Daftar tidak kosong `{"jenis", "nilai"}` dari daftar tertutup `Config.TOKO_EFEK_JENIS`, nilai dalam rentang aman (`TOKO_EFEK_MIN`/`TOKO_EFEK_MAKS`) dan komponen yang sesuai (`TOKO_EFEK_KOMPONEN`): `pengali_aus` (0,5 sampai 1,0, semua komponen: aus komponen itu lebih lambat, tidak pernah ditiadakan), `pengali_rem` (1,0 sampai 1,5, `rem`: perlambatan rem), `pengali_lateral` (1,0 sampai 1,25, `ban`: kecepatan pindah sisi), `pengali_kuras_stamina` (0,5 sampai 1,0, `rantai`: laju stamina yang menguras). Semuanya dibaca kode; **tidak ada jenis yang menaikkan kecepatan puncak** (tanpa power creep) |
+
+Efek upgrade yang dimiliki (level komponen di save >= level upgrade) dikalikan; `DataToko.pengali_efek` dan `DataToko.pengali_aus` menghasilkan pengali untuk `BikeCondition.efek` dan `BikeCondition.aus`. Upgrade tidak mengubah kondisi, hanya laju aus dan gerak. Validasi menolak, tiap kasus dites: id ganda, komponen asing, level 0 atau negatif atau pecahan, urutan level tidak berurutan, harga <= 0 atau pecahan, jenis efek asing, nilai efek di luar rentang, efek untuk komponen yang salah, efek kosong, kunci teks hilang atau terlalu panjang, field asing, JSON rusak, dan berkas tidak ada (galat tanpa crash).
