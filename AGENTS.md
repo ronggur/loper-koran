@@ -68,6 +68,8 @@ godot --headless --path . --export-pack "Android" build/kring-uji.pck   # paket 
 godot --headless --path . --export-debug "Android" builds/kring-kring-debug.apk   # APK debug; butuh export templates 4.7.2 dan Java SDK Path di Editor Settings
 python3 tools/env_art/graybox.py                       # render ulang ubin dan kotak graybox (hanya stdlib)
 python3 tools/env_art/kendaraan.py --salin             # render mobil, motor, kucing ke build/ dan salin HANYA sheet kucing misi (mission_kucing_sheet) ke assets/sprites/npc/ (butuh numpy, pillow)
+python3 tools/env_art/gelombang1/render.py --mock      # aset gelombang 1 Fase 5 (usulan): 29 sprite 1x + JSON ke build/env_art/gelombang1/, mock ke docs/design/environment/gelombang1/ (butuh numpy, pillow; belum disalin ke assets/)
+python3 tools/tests_cek/uji_aset_gelombang1.py          # bukti renderer gelombang 1 deterministik, palet induk, manifest, mock docs = hasil skrip
 python3 tools/env_art/spike_sisi_dekat.py --salin      # aset graybox spike sisi dekat ke assets/sprites/_spike/sisi_dekat/ (butuh numpy, pillow; hanya scene dev spike)
 python3 tools/audio_art/sintesis_sepeda.py             # buat ulang tiga WAV placeholder sepeda di assets/audio/sfx/bike/ (hanya stdlib); lalu godot --headless --import
 python3 tools/audio_art/sintesis_lempar.py             # buat ulang 13 WAV placeholder lempar dan mendarat di assets/audio/sfx/throw/ (hanya stdlib); lalu godot --headless --import
@@ -100,7 +102,7 @@ assets/data/routes/perumahan/  9 segmen rute JSON buatan tangan (per_buka_*, per
 docs/                Dokumen desain (GDD, STORY, TECH_PLAN, ART_DIRECTION, BALANCING, DATA_SCHEMA, dst.), SETUP_ANDROID.md (export dan uji HP) + design/ + loop/
 docs/design/         Token desain, mock HUD, sprite produksi pemain (character/loper_agen/)
 tools/loper_art/     Renderer sprite pemain (Python) + bangun_frames.py (SpriteFrames gabungan, stdlib), lihat tools/loper_art/README.md
-tools/env_art/       Renderer aset lingkungan (usulan) + graybox.py (ubin graybox) + fase3.py (rintangan, rumah dua sisi, antena TV; --salin ke assets/) + spike_sisi_dekat.py (graybox spike sisi dekat; --salin ke assets/sprites/_spike/sisi_dekat/)
+tools/env_art/       Renderer aset lingkungan (usulan) + graybox.py (ubin graybox) + fase3.py (rintangan, rumah dua sisi, antena TV; --salin ke assets/) + spike_sisi_dekat.py (graybox spike sisi dekat; --salin ke assets/sprites/_spike/sisi_dekat/) + gelombang1/ (aset gelombang 1 Fase 5: koran, VFX, properti dan misi, tembok sisi dekat, ubin tambahan; usulan, belum di assets/)
 tools/ui_art/        bel.py (bel "Kring Kring!"; --salin ke assets/sprites/ui/ui_bel_*.png dan ui_ikon_seru.png) dan hud_ikon.py (ikon HUD, penanda radar, 9-slice; --salin ke assets/sprites/ui/), lihat tools/ui_art/README.md
 tools/audio_art/     sintesis_sepeda.py, sintesis_lempar.py, dan sintesis_rute.py: bunyi placeholder sepeda, lempar, mendarat, rintangan, tabrakan, bel, tip, dan tepat dari rumus (stdlib, deterministik), lihat tools/audio_art/README.md
 tools/               cek_keluaran_tes.py (pemeriksa keluaran tes), tests_cek/ (contoh log baik dan buruk, uji_bangun_frames.py, uji_sintesis_sepeda.py, uji_sintesis_lempar.py, uji_sintesis_rute.py), cek_blok_piksel.py (ketajaman tangkapan layar), ekspor_cek_render.py (build probe render terpisah; probe dikecualikan dari build normal oleh exclude_filter preset)

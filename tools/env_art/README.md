@@ -46,6 +46,14 @@ python3 tools/env_art/ubin_perumahan.py          # 18 ubin 64x32 + polisi tidur 
 python3 tools/env_art/lampu_pohon.py             # 7 lampu (mati/nyala), 11 pohon, layar contoh siang dan malam ke build/env_art/lampu_pohon/
 ```
 
+Aset gelombang 1 Fase 5 (usulan, 2026-10-20) dibuat oleh paket `gelombang1/`, port dari kanvas Claude Design "Aset Gelombang 1 (Fase 5) — Loper Koran" (`docs/design/PROMPT_FASE5.md`). Semua sprite digambar dengan kode: SDF (kotak, silinder, kapsul) yang di-raycast per piksel dengan proyeksi yang sama dengan `iso.py`, decal di bidang tanah, atau grid piksel eksplisit; palet induk ART_DIRECTION 2.4, garis luar `#0E0A1C`, bayangan penanda `#000000` alpha 71. Ubin alas, rumah, kotak surat, dan pemain diambil dari aset yang sudah ada tanpa diubah (`gelombang1/sumber.py`). Hasil ke `build/env_art/gelombang1/sprites/` (29 sprite 1×, frame berjajar kiri ke kanan, satu JSON per sprite: `cell`, `frames`, `fps`, `ground_anchor`, ditambah `manifest.json`) dan `board/` (pratinjau ×5, uji keterbacaan ×3 di aspal/trotoar/rumput, komposisi siang dan sore). **Belum disalin ke `assets/`**: pemasangan di rute adalah run berikutnya. Deterministik, dijaga `tools/tests_cek/uji_aset_gelombang1.py`:
+
+```
+python3 tools/env_art/gelombang1/render.py          # sprite + papan ke build/env_art/gelombang1/
+python3 tools/env_art/gelombang1/render.py --mock   # juga salin mock terpilih ke docs/design/environment/gelombang1/
+python3 tools/tests_cek/uji_aset_gelombang1.py      # deterministik, palet induk, manifest, mock docs = hasil skrip
+```
+
 Hasil masuk ke `build/env_art/` (tidak di-commit, bisa diganti lewat `ENV_ART_OUT`). Setelah dicek, salin yang dipakai ke `docs/design/environment/`.
 
 ## Cara kerja
@@ -70,6 +78,7 @@ Hasil masuk ke `build/env_art/` (tidak di-commit, bisa diganti lewat `ENV_ART_OU
 | `kendaraan.py` | Variasi kendaraan dan kucing (usulan): mobil sedan (bentuk `lib.car()`), hatchback, MPV, pikap bak, angkot (`lib.angkot`) dalam empat arah dengan lampu mati, jalan, rem, dan sein (skala ×1,3, sekitar 2×1 ubin); motor matic, bebek, sport, motor sayur, parkir miring di standar samping atau jalan dengan pengendara (skala ×1,7, helm setinggi kepala loper); kucing tujuh pose × empat arah, lima warna (belang tiga berkalung = kucing misi). Memakai `engine.py`, `lib.py`, `perumahan.py`, `fase3.py` tanpa mengubahnya |
 | `ubin_perumahan.py` | Ubin jalan perumahan (usulan) dengan tata letak game (`config.gd`: aspal 2 ubin, trotoar 1 ubin): aspal seberang/dekat dengan marka, trotoar dengan kerb dan lajur sepeda (biasa, simbol, jalan masuk), rumput, aspal dan rumput polos tiga varian, polisi tidur. Penampang dirender sekali sebagai adegan berulang tiap 1 ubin lalu dipotong per belah ketupat (64x32, 1.024 piksel, tanpa tumpang tindih), jadi kerb yang melewati batas ubin tetap menyambung |
 | `lampu_pohon.py` | Lampu jalan (usulan) tujuh jenis: lengan, lengkung, ganda, taman, tiang beton, bambu, tenaga surya; mati/nyala, lengan ke sisi seberang atau dekat. Pohon sebelas jenis sebagai sprite tunggal: rindang, glodokan, ketapang, kelapa, pisang (sudah ada) dan flamboyan, pucuk merah, palem raja, pepaya, bambu, beringin (baru). Layar contoh siang dan malam dari ubin baru |
+| `gelombang1/` | Aset gelombang 1 Fase 5 (usulan): `pxcore.py` (proyeksi, palet induk, SDF + raycast, garis luar, bayangan penanda, grid piksel), `koran.py` (koran gulung berputar, bayangan 3 ukuran, mendarat di teras/rumput/kotak surat, terlipat), `vfx.py` (debu roda, garis kecepatan 3 varian, bintang kena, koin tip "+5", percikan genangan), `properti.py` (tong sampah 2 warna, jejak kucing 2 varian, mangkuk, kilau misi, portal dan pos satpam), `tembok_ubin.py` (modul tembok belakang rendah sisi dekat 4 varian + tiang ujung, ubin polisi tidur, zebra, genangan), `sumber.py` (aset repo yang dipakai sebagai alas), `komposisi.py` (jalan perumahan 640×360 siang/sore dengan geometri game), `render.py` (ekspor sprite, JSON, papan, `--mock`) |
 | `details.py` | Loop detail pinggir jalan |
 | `anim_hero.py` | Animasi adegan utama |
 | `graybox.py` | Ubin graybox 64x32 (aspal, trotoar, rumput), kotak rumah, dan kotak surat untuk `assets/sprites/_placeholder/` (hanya stdlib, bukan mock) |

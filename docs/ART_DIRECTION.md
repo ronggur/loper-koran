@@ -311,6 +311,8 @@ Kolom **M2** = dibutuhkan untuk satu hari penuh di perumahan (prototype 3–4). 
 
 **Placeholder dari kode (usulan, run fase2a-lemparan 2026-10-14):** belum ada sheet koran di repo, jadi koran, bayangannya, penanda kena/meleset, elips garis bidik, ikon koran HUD, dan zona sasaran jalan uji digambar dari pola piksel di `scripts/systems/pola_piksel.gd` (baris teks berisi peran warna, bukan hex) oleh `scripts/entities/koran_gambar.gd`, `zona_gambar.gd`, dan `scripts/ui/garis_bidik.gd`, `deret_koran.gd`. Semua per piksel game (persegi bilangan bulat, tajam di ×3, lolos `tools/cek_blok_piksel.py 3`) dan hanya warna `Palette` (`OUTLINE`, `TEXT`, `TEXT_2`, `OK`, `FAIL`, `ACCENT`, `UI_PANEL_RAISED`, `RADAR_BUKAN`). Koran gulung 8×6, 4 langkah putar (mendatar, serong naik, tegak, serong turun) di 12 fps, di atas objek dunia; bayangan elips `OUTLINE` alpha 85% di lapisan tanah, 10 px di tanah mengecil 2 px per ubin tinggi sampai 6 px (dulu alpha 50%, 8 sampai 4 px; dinaikkan run fase2a-lemparan iterasi 2 karena nyaris tak terlihat di aspal, kontras di aspal graybox sekitar 3,2:1; usulan, dinilai di HP); koran yang mendarat tergeletak (frame mendatar) selama penandanya tampil. Zona jalan uji di bawah objek dunia: halaman bergaris tepi `TEXT` 70%, teras isi `UI_PANEL_RAISED`, strip jendela `TEXT_2` di kaki fasad, kotak surat datar sisi dekat `ACCENT`, rumah bukan pelanggan dengan garis dan teras `RADAR_BUKAN` plus tanda lingkaran bergaris miring di halaman. Sisi dekat hanya kavling datar (cara menampilkan rumah sisi dekat tetap terbuka, bagian 11). Sheet koran dari renderer menggantikannya nanti.
 
+**Usulan gelombang 1 (2026-10-20, `tools/env_art/gelombang1/`, belum dipasang):** `prop_koran_putar` (sel 10×10, 4 frame, 12 fps, pijak = pusat putar; gulungan krem kertas tiga nada dengan karet merah bata di tengah, sama dengan isi tas sepeda), `prop_koran_bayangan` (12×6, tiga ukuran 10/8/6 px dipilih dari tinggi, warna penanda), `prop_koran_teras` dan `prop_koran_rumput` (12×10, gulungan sejajar jalan; versi rumput ditutup dua jumput rumput), `prop_koran_kotak_surat` (8×7, tumpangan di atas kotak surat: pijak kotak surat = piksel (−3, 19) sel ini), `prop_koran_terlipat` (14×10, pose "terantar", lembar 6×9 unit setebal 1, kepala berita dongker). Mock `design/environment/gelombang1/lembar_koran_x5.png`.
+
 ### 6.3 Ubin dan jalan (perumahan)
 
 | Aset | M2 | M3 |
@@ -322,6 +324,8 @@ Kolom **M2** = dibutuhkan untuk satu hari penuh di perumahan (prototype 3–4). 
 | Polisi tidur | ⬜ | ✅ |
 | Persimpangan | ⬜ | ✅ |
 | Genangan (hujan) | ⬜ | ✅ |
+
+**Usulan gelombang 1 (2026-10-20, `tools/env_art/gelombang1/`, belum dipasang):** `tile_perumahan_polisi_tidur`, `tile_perumahan_zebra` (persimpangan, dipakai di kedua lajur aspal; jalan samping memakai aspal polos), `tile_perumahan_genangan`, masing-masing 64×32 pijak (32, 16) dengan alas aspal polos dari `ubin_perumahan.py`, tanpa garis luar. Polisi tidur belang krem/logam gelap (bukan kuning-hitam seperti `prop_polisi_tidur` di `ubin_perumahan.py`, supaya kuning tetap berarti sasaran; salah satunya perlu dipilih). Ubin ujung kerb dan sudut trotoar mulut simpang belum ada. Mock `design/environment/gelombang1/ubin_potongan_x3.png`.
 
 ### 6.4 Rumah
 
@@ -339,6 +343,8 @@ Kolom **M2** = dibutuhkan untuk satu hari penuh di perumahan (prototype 3–4). 
 - Antena TV ikut dirender bersama rumah (6.5).
 - **Kotak surat sasaran (usulan, run art-kotak-surat 2026-10-16):** `assets/sprites/props/prop_kotak_surat.png` + `.json` dari `tools/env_art/fase3.py`, sprite tunggal 30×39 px skala 1×, titik pijak = kaki tiang (10, 26). Bentuk `lib.kotak_surat` (tiang `metal_dk` dan badan dengan celah surat, bentuk yang disukai pemilik dari teras sprite rumah lama), berwarna **oranye placeholder sasaran** (tiga nada sama dengan kubus graybox: `#FFE08A` atas, `#FFC94A` samping, `#E98E3F` fasad). Dipasang di scene rute menggantikan kubus graybox, di pusat zona kotak surat; jalan uji tetap kubus graybox. Warna dan gambar final menunggu Fase 5.
 - **Kotak surat bukan pelanggan (usulan, keputusan pemilik 2026-10-17):** `assets/sprites/props/prop_kotak_surat_bukan.png` + `.json` dari `tools/env_art/fase3.py` (`kotak_surat_bukan`), sprite tunggal 28×33 px skala 1×, titik pijak = kaki tiang (9, 20). Rumah **bukan pelanggan sisi seberang** juga punya kotak surat supaya deretan rumah terasa hidup, tetapi jelas **bukan sasaran**: abu-abu logam palet induk (`#969AA0` atas = `RADAR_BUKAN`, `#67636D` samping), jauh lebih redup dari oranye, dan bentuknya juga beda (tiang 8 lawan 12, badan lebih kecil, tanpa celah surat; puncaknya 7 px lebih rendah: 16 lawan 23 px di atas titik pijak), jadi pembedanya bukan hanya warna. Digambar scene rute di titik yang sama dengan kotak surat pelanggan, **tanpa** area oranye di tanah; penilaian (`BUKAN_PELANGGAN`) dan mode bantu tidak berubah. Sisi dekat tetap tanpa kotak surat (K-5 tembok rendah untuk Bab 2, bukan perumahan).
+- **Tembok belakang rendah sisi dekat (usulan gelombang 1, 2026-10-20, `tools/env_art/gelombang1/tembok_ubin.py`):** modul 1 ubin, tinggi 14 unit (badan 13 + tutup), tebal 4, diawali tiang 6×4 setinggi 17 yang menutup sambungan; empat varian `house_tembok_polos` (plester krem kertas), `house_tembok_bata` (bata ekspos merah bata), `house_tembok_besi` (tembok pendek 5 unit + jeruji logam gelap), `house_tembok_pot` (plester hijau muda dengan dua pot semak), plus `house_tembok_tiang` penutup ujung. Sel 46×46, pijak (41, 25) = garis tengah tembok di awal modul; modul berikut digeser (−32, +16) px. Sisi yang menghadap kamera memakai nada dasar, bukan gelap, supaya tidak jadi pita gelap di tepi bawah layar (sedikit melonggarkan 2.1). Komposisi repo memakai geometri spike run 3C: tembok berpusat x = 3,125 ubin, rumah dekat mundur 1,25 ubin. Mock `design/environment/gelombang1/sisi_dekat_siang_x3.png`, `tembok_rantai_x3.png`.
+- **Pos satpam + portal (usulan gelombang 1, M3):** `prop_pos_satpam` (sel 64×64, pijak (32, 50); pos 20×24 unit, dinding krem pastel, atap dongker menjorok, jendela biru muda menghadap jalan samping, pintu kayu) dan `prop_portal_satpam` (sel 80×64, 2 frame: tertutup, terbuka; pijak (14, 48) = kaki tiang; palang 52 unit belang merah bata/krem tiap 6 unit, tiang logam gelap dengan pemberat).
 
 ### 6.5 Properti
 
@@ -352,6 +358,8 @@ Kolom **M2** = dibutuhkan untuk satu hari penuh di perumahan (prototype 3–4). 
 | Selang penyiram | ⬜ | ✅ |
 
 **Antena TV (usulan, 2026-10-15):** enam jenis di `tools/env_art/fase3.py` (`antena_v`): yagi (`lib.antena`), yagi di tiang bambu tinggi, dua yagi bertumpuk, parabola putih, parabola jaring besar, dan panel digital DVB-T2 dengan booster. Yagi dan panel menghadap arah pemancar yang sama (`ANT_DIR`), parabola menghadap langit ke arah satelit. Jenis per rumah dipilih dari seed. Lembar contoh `design/environment/fase3_antena_tv.png`.
+
+**Usulan gelombang 1 (2026-10-20, `tools/env_art/gelombang1/`, belum dipasang):** `prop_tong_sampah_hijau` dan `prop_tong_sampah_biru` (palette swap), tong plastik bulat bertutup, tapak r 7 unit (±¼ ubin), tinggi 18, sel 20×30 pijak (10, 25).
 
 ### 6.6 Rintangan dan warga
 
@@ -378,6 +386,8 @@ Kolom **M2** = dibutuhkan untuk satu hari penuh di perumahan (prototype 3–4). 
 | Jejak kaki, mangkuk | ✅ | ✅ |
 | Kilau petunjuk (2 frame) | ✅ | ✅ |
 | Pencuri sandal | ⬜ | ✅ |
+
+**Usulan gelombang 1 (2026-10-20, `tools/env_art/gelombang1/`, belum dipasang):** `mission_jejak_kucing_1` (lurus naik ke kanan atas) dan `_2` (berbelok ke halaman), decal tanah 40×20 tanpa garis luar, lumpur kayu gelap, telapak 5×3 px (jari digabung supaya tidak ada detail 1 px); `mission_mangkuk_kucing` (14×12, mangkuk pink berisi pelet); `mission_kilau` (9×9, 2 frame, 4 fps, kuning aksen hangat bergaris luar supaya terbaca di trotoar krem; dipasang 12–16 px di atas benda petunjuk).
 
 ### 6.8 HUD dan UI
 
@@ -407,6 +417,8 @@ Spesifikasi di `design/DESIGN_SPEC.md`.
 | Percikan genangan | ⬜ | ✅ |
 | Efek bel: garis getar dan teks "KRING!" / "KRING KRING!" (usulan, `design/bel/`) | ⬜ | ✅ |
 | Hujan | ⬜ | ✅ |
+
+**Usulan gelombang 1 (2026-10-20, `tools/env_art/gelombang1/`, belum dipasang):** `vfx_debu_roda` (18×10, 6 frame, 12 fps loop, pijak = roda belakang; kotak 2×2 lalu 1×1 krem mundur 2 px kiri 1 px turun per frame), `vfx_garis_kecepatan_a/b/c` (28×14, putih alpha 70%, anak tangga 2×1, tanpa garis luar), `vfx_bintang_kena` (15×15, 6 frame, 15 fps sekali; empat sinar utama + empat sinar pendek berputar 90° lalu pecah), `vfx_koin_tip` (16×26, 6 frame, 10 fps sekali; koin naik 16 px sambil berputar, "+5" huruf 3×5), `vfx_percikan_genangan` (24×16, 5 frame, 12 fps sekali, biru muda tanpa garis luar). Mock `design/environment/gelombang1/lembar_vfx_x5.png`.
 
 ### 6.10 Detail hidup di pinggir jalan (usulan)
 
@@ -549,6 +561,7 @@ Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dib
 - **Palet induk** (bagian 2.4): dikunci setelah aset gelombang 1.
 - **Warna bayangan per waktu dan distrik** (bagian 2.5): dikunci bersama palet induk, setelah shader-nya dicek di Fase 0 (shader jalan di Compatibility, dicek 2026-10-14 di vivo V2108; bagian 7).
 - **Cara menampilkan rumah di sisi dekat** (✅ diputuskan 2026-10-17: tembok/pagar belakang rendah, lihat akhir butir ini), yang hanya terlihat belakangnya. **Usulan lama (2026-10-15, digantikan keputusan 2026-10-17):** rumah sisi dekat dimundurkan ¾ ubin dan sasarannya kotak surat di tepi lajur (6.4). Ikut terbuka: kalau aturan warna pelanggan dipakai ketat, sisi tanpa pelanggan (seluruh sisi dekat di distrik pertama) jadi abu-abu; pilihan lain, sisi tanpa pelanggan tetap berwarna dan pembedanya hanya kotak surat. Mock `design/environment/fase3_perumahan.png` memakai pilihan kedua. **Spike run 3C (2026-10-17):** tiga pendekatan TECH_PLAN Fase 3 dibuat sebagai graybox dev oleh `tools/env_art/spike_sisi_dekat.py` (`assets/sprites/_spike/sisi_dekat/`, hanya untuk `scenes/dev/spike_sisi_dekat.tscn`, tidak ikut paket game): (1) punggung rumah rendah (dinding 18, atap 31 unit) dan kontras rendah (warna dicampur 40% ke rumput), (2) tembok belakang rendah 14 unit di kaki kavling dengan rumah penuh 1,25 ubin di belakangnya, (3) punggung rumah penuh yang semi-transparan lewat aturan penutup. Tangkapan dan catatan perbandingan: `docs/loop/20261018-fase3c-hud-hasil/`. **Diputuskan pemilik 2026-10-17: pendekatan (2), tembok/pagar belakang rendah** (`ROADMAP.md` 4b). Aset produksi sisi dekat (modul tembok/pagar per distrik + belakang rumah penuh) dibuat di Fase 5/8; tinggi tembok 14 unit dan mundur 1,25 ubin tetap usulan sampai uji HP Bab 2. Usulan warna sisi tanpa pelanggan di atas tetap terbuka.
+- **Aset gelombang 1 (2026-10-20, keraguan yang perlu diputuskan pemilik sebelum palet induk dikunci):** (a) bintang kena, koin tip, dan kilau misi memakai kuning aksen hangat seperti yang diminta, padahal kuning berarti sasaran kotak surat; di satu layar ada tiga titik kuning dengan arti berbeda, paling berisiko kilau misi di atas rumput (pilihan: kilau dua warna krem terang + kuning, atau ritme kedip berbeda); (b) polisi tidur dan portal sengaja tidak kuning-hitam, jadi berbeda dari `prop_polisi_tidur` lama; (c) tong hijau memakai hijau dasar, padahal hijau berarti misi selesai (pilihan: abu-abu logam); (d) koran gulung 8×6 nyaris hilang saat terbang di ×3, bayangannya lebih mudah terbaca; (e) debu dan garis kecepatan hampir hilang di trotoar krem distrik lain; (f) versi sore baru grading satu layar termasuk pemain, belum setengah grading pemain (2.6) dan belum bayangan panjang.
 - **Font HUD**: mock memakai Lexend + Lilita One (sama dengan Brainy Dungeon). Kunci atau pilih identitas sendiri.
 - **Apakah sprite pemain dipoles manual** sebelum rilis, terutama wajah dari arah depan.
 
@@ -556,6 +569,7 @@ Jumlah aset adalah penyebab paling umum game solo mangkrak. Penawarnya sudah dib
 
 ## Changelog Keputusan
 
+- **2026-10-20** — **Aset gelombang 1 Fase 5 dirender sebagai usulan** (6.2–6.5, 6.7, 6.9; keraguan di 11). Kanvas Claude Design "Aset Gelombang 1 (Fase 5)" (`design/PROMPT_FASE5.md`) digambar dengan kode tanpa gambar generatif, lalu diporting ke `tools/env_art/gelombang1/`: 29 sprite 1× + JSON (koran, VFX, tong sampah, misi kucing, gerbang satpam, tembok belakang rendah sisi dekat, tiga ubin), semuanya hanya memakai palet induk 2.4 (dites `tools/tests_cek/uji_aset_gelombang1.py`). Belum disalin ke `assets/` dan belum dipasang; tidak ada yang dikunci.
 - **2026-10-17** — **Tabrakan = jatuh** (keputusan pemilik; bagian 3.4, 6.1; BALANCING 6c). Animasi jatuh terjerembab yang sebelumnya usulan tak terpakai kini dipakai setiap tabrakan: `jatuh_normal` lalu `terjerembab_normal` selama 1,2 detik, lalu bangun langsung ke kayuh dengan kedip kebal. Baris lama "tidak jatuh dramatis" diganti: tabrakan kini terlihat jatuh, tetapi tetap hanya menghambat (pemain melanjutkan, tanpa game over). `loper_agen_frames.tres` kini 50 animasi, dibangun `tools/loper_art/bangun_frames.py` dari enam JSON sumber; PNG jatuh disalin byte demi byte, tidak diubah. Titik pijak (57, 51) di sel 114×68 berjarak sama dari tengah sel dengan kayuh, jadi offset (0, -17) sama (dites). Empat arah lain dan animasi bangkit tercatat sebagai pekerjaan aset Fase 5.
 
 - **2026-10-15** — **Aset Fase 3 perumahan dirender sebagai usulan** (6.4–6.6, 6.8): anjing penjaga, mobil keluar garasi, rumah pelanggan dan bukan pelanggan di dua sisi, enam jenis antena TV (`tools/env_art/fase3.py`), ikon HUD dan penanda radar (`tools/ui_art/hud_ikon.py`). Mock lama dari `perumahan.py` tidak berubah. Belum dipasang di game dan belum dikunci.

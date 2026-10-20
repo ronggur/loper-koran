@@ -22,7 +22,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 | 2 | Lemparan koran (prototype 2) | M1 | 🟨 kode selesai: run 2A (PR #24), arah bebas (PR #25), 2B (PR #26) lolos QA; uji HP penutup (`SETUP_ANDROID.md` 8.5) menunggu pemilik | |
 | 3 | Satu rute perumahan (prototype 3) | M2 | 🟨 kode selesai: run 3A (PR #28), 3B (PR #32), 3C (PR #33: radar, HUD rute, tenggat, layar hasil, keputusan sisi dekat tembok rendah) lolos QA; uji HP penutup (`SETUP_ANDROID.md` 8.8, juga 8.6 dan 8.7) menunggu pemilik | |
 | 4 | Halaman depan koran & misi kucing (prototype 4) | M2 | 🟡 run 4A (satu hari utuh tanpa misi kucing: koran, format dan pemuat misi dan headline, `HeadlineManager`, save v1, alur hari) dikerjakan 2026-10-18; misi kucing, HUD misi, tutorial di run 4B; belum dicentang | |
-| 5 | Aset gelombang 1 *(paralel)* | M2–M3 | 🟡 sprite pemain selesai | |
+| 5 | Aset gelombang 1 *(paralel)* | M2–M3 | 🟡 sprite pemain selesai; usulan gelombang 1 dirender 2026-10-20 (`tools/env_art/gelombang1/`, belum dipasang) | |
 | 6 | Hari demi hari: reputasi, bengkel, ekonomi | M3 | ⬜ | |
 | 7 | Vertical slice perumahan & audio dasar | M3 | ⬜ | |
 | 8 | Distrik berikutnya, iklan, rilis | M4 | ⬜ | |
@@ -147,6 +147,11 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 - [ ] Ikon HUD
 
 **Usulan dirender 2026-10-15 (belum dipasang, belum menggantikan placeholder):** rintangan anjing dan mobil garasi, rumah pelanggan dan bukan pelanggan di dua sisi, antena TV (`tools/env_art/fase3.py`), ikon HUD dan penanda radar (`tools/ui_art/hud_ikon.py`). Rincian di ART_DIRECTION 6.4–6.6 dan 6.8. Tugas di atas dicentang setelah asetnya dipasang di rute dan dinilai di HP.
+
+**Usulan gelombang 1 dirender 2026-10-20 (belum dipasang):** dari kanvas Claude Design "Aset Gelombang 1 (Fase 5)" (`docs/design/PROMPT_FASE5.md`), diporting ke `tools/env_art/gelombang1/`: koran (berputar, bayangan, mendarat di teras/rumput/kotak surat, terlipat), VFX (debu roda, garis kecepatan, bintang kena, koin tip, percikan), tong sampah, jejak kucing, mangkuk, kilau misi, portal dan pos satpam, modul tembok belakang rendah sisi dekat (4 varian + tiang), ubin polisi tidur, zebra, genangan. 29 sprite 1× + JSON di `build/`, mock di `docs/design/environment/gelombang1/`, uji `tools/tests_cek/uji_aset_gelombang1.py`. Rincian ART_DIRECTION 6.2–6.9.
+
+- [ ] Salin sprite gelombang 1 ke `assets/sprites/` (tambah opsi salin di `render.py`) dan pasang di rute: koran dan bayangan menggantikan `pola_piksel.gd`, debu dan garis kecepatan menggantikan `umpan_balik_sepeda.gd`, bintang kena dan koin tip di `umpan_melayang_gambar.gd`, kilau dan jejak di misi kucing, tembok sisi dekat di `rumah_daur_rute.gd`
+- [ ] Putuskan keraguan warna gelombang 1 (ART_DIRECTION 11) sebelum palet induk dikunci
 
 **Selesai kalau:** rute perumahan bisa dimainkan tanpa placeholder.
 
