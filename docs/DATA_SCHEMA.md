@@ -192,7 +192,7 @@ Contoh dari berkas nyata (`assets/data/routes/perumahan/per_tengah_02.json`):
 
 File: `user://save.json`. Satu slot dulu. Format v3 (run 6A1: `koin` menjadi saldo, `koin_total`, `sepeda`; v2 dari run 4B dan v1 dari run 4A dimigrasi, tidak dihapus) di bawah dibaca dan ditulis `SaveManager` (autoload) lewat `DataSave`; **alur hari berurutan yang memakai save ini adalah prototype yang tidak mengunci struktur sesi** (ROADMAP 5: hari terakhir, kalender 120 hari, game over, target harian belum diputuskan). Field DATA_SCHEMA lain yang belum dipakai (`distrik_terbuka`, `reputasi`, `pelanggan`, `kosmetik`, `milestone`) belum ditulis; bila ada di berkas (save masa depan) dibiarkan.
 
-Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur_hari.gd`: P1 diambil dan selesai, 3 dari 25 terantar, koin 195 = rute 120 termasuk tip 25 + hadiah misi 75, skor 1500; flag `kucing_ketemu` menunggu tampil besok; tanpa belanja bengkel dan tanpa kerusakan, jadi `sepeda` masih baru):
+Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur_hari.gd`: P1 diambil dan selesai, 3 dari 25 terantar, pendapatan hari itu 195 koin = rute 120 termasuk tip 25 + hadiah misi 75 (`terakhir.koin` dan `koin_total`), skor 1500; flag `kucing_ketemu` menunggu tampil besok; SATU belanja di bengkel: rantai yang aus 0,40 diservis seharga 90 koin (150 x 0,6), jadi saldo `koin` 105, `servis_total` 1, dan rantai kembali 1.0; `koin_total` tidak berkurang oleh belanja):
 
 ```json
 {
@@ -204,7 +204,7 @@ Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur
 		"ringan_mangga": 4,
 		"utama_jalan_diperbaiki": 5
 	},
-	"koin": 195,
+	"koin": 105,
 	"koin_total": 195,
 	"misi_hasil": {
 		"p1_kucing": {
@@ -234,7 +234,7 @@ Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur
 			"kondisi": 1.0,
 			"level": 0
 		},
-		"servis_total": 0
+		"servis_total": 1
 	},
 	"terakhir": {
 		"hari": 1,

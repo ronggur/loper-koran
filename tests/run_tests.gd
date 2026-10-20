@@ -164,6 +164,8 @@ func _initialize() -> void:
 	# Run fase6a1-bengkel-kondisi bagian B: kondisi sepeda di scene rute, HUD kondisi, peringatan berpasangan, layar hasil, layar bengkel, dan alur Hasil -> Bengkel -> Hari berikutnya.
 	var scene_kondisi: TesKondisiScene = TesKondisiScene.new(check, _judul, self)
 	await scene_kondisi.jalankan()
+	var scene_bengkel: TesBengkelScene = TesBengkelScene.new(check, _judul, self)
+	await scene_bengkel.jalankan()
 	var tata_letak: TesTataLetak = TesTataLetak.new(check, _judul, self)
 	await tata_letak.jalankan()
 	var bunyi: TesBunyi = TesBunyi.new(check, _judul, self)

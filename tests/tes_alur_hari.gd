@@ -219,6 +219,8 @@ func _test_satu_hari_utuh() -> void:
 	check(rute.galat_rute().is_empty() and rute.rute().pelanggan.size() == 25, "rute hari 1 tersusun sah dengan 25 pelanggan")
 	check(rute.layar_hasil().mode_hari() and hari.misi_diambil() == "p1_kucing", "mode hari menyala dan misi P1 tercatat diambil (tanpa efek di rute)")
 	var sidik_hari1: String = _sidik(rute.rute())
+	# Run fase6a1-bengkel-kondisi bagian B (AC-4): hari ini memuat SATU belanja supaya contoh save di DATA_SCHEMA 4 memuat servis: rantai aus 0,40 (AUS, belum PERLU_BENGKEL) diservis di bengkel.
+	rute.atur_kondisi(KondisiRute.awal({"ban": 1.0, "rem": 1.0, "rantai": 0.4}, {}, 1, hari.toko().upgrade))
 	_selesaikan_misi(rute)
 	check(rute.keadaan_misi().status == MissionManager.Status.SELESAI and rute.hud_rute().teks_koin() == "75", "misi kucing diselesaikan (langkah nyata RuteMain): HUD koin 75 sebelum antaran (hadiah ikut HUD)")
 	await _selesaikan_rute(rute)
@@ -231,11 +233,16 @@ func _test_satu_hari_utuh() -> void:
 	check(m.get(&"jumlah_simpan") == 0 and not FileAccess.file_exists(_jalur()), "sampai layar hasil terbuka belum ada simpan sama sekali")
 	var disimpan: Array[int] = [0]
 	hari.hari_selesai.connect(func(h: int) -> void: disimpan[0] = h)
-	_akhiri_hari(hari)
+	rute.layar_hasil().tombol_main_lagi().ditekan.emit()
+	check(hari.status().keadaan == MesinHari.Keadaan.BENGKEL and hari.bengkel() != null and m.get(&"jumlah_simpan") == 0 and hari.bengkel().teks_saldo() == "195", "'Ke bengkel': status BENGKEL, saldo 195 (koin hari ini termasuk hadiah misi), nol simpan")
+	hari.bengkel().tombol_servis("rantai").pressed.emit()
+	check(hari.bengkel().teks_saldo() == "105" and m.get(&"jumlah_simpan") == 0, "servis rantai 90 koin (150 x 0,6): saldo 105, masih nol simpan")
+	hari.bengkel().tombol_hari_berikutnya().ditekan.emit()
 	await _tree.process_frame
 	check(m.get(&"jumlah_simpan") == 1 and disimpan[0] == 1, "'Hari berikutnya': tepat satu simpan, sinyal hari_selesai(1)")
 	var s: Dictionary = _baca_save()
-	check(s["hari"] == 2 and s["koin"] == 195 and s["tip_total"] == 25, "isi save: hari 2, koin 195, tip_total 25 (dari Angka yang sama, termasuk hadiah misi)")
+	check(s["hari"] == 2 and s["koin"] == 105 and s["koin_total"] == 195 and s["tip_total"] == 25, "isi save: hari 2, koin 105 (195 - servis 90), koin_total 195, tip_total 25 (dari Angka yang sama, termasuk hadiah misi)")
+	check(s["sepeda"]["rantai"] == {"kondisi": 1.0, "level": 0} and s["sepeda"]["servis_total"] == 1 and s["sepeda"]["ban"]["kondisi"] > 0.999 and s["sepeda"]["rem"]["kondisi"] > 0.999, "sepeda: rantai diservis (1,0), servis_total 1, ban dan rem hampir utuh")
 	check(s["terakhir"] == {"hari": 1, "terkirim": 3, "meleset": 22, "koin": 195, "tip": 25, "skor": 1500, "koin_misi": 75, "misi_hasil": "selesai", "misi_diambil": "p1_kucing"}, "terakhir = angka layar hasil + misi diambil + hasil misi; dapat %s" % [s["terakhir"]])
 	check(s["misi_hasil"] == {"p1_kucing": {"hasil": "selesai", "hari": 1}} and s["tutorial"] == {"selesai": true}, "misi_hasil p1_kucing selesai di hari 1 (riwayat permanen); hari tutorial berakhir: tutorial.selesai true")
 	check(s["misi_jeda"] == {"p1_kucing": 8}, "misi P1 diambil hari 1 jeda 7: boleh lagi hari 8; dapat %s" % [s["misi_jeda"]])
