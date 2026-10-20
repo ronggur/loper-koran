@@ -70,6 +70,10 @@ class Hasil extends RefCounted:
 	var arah_sprite: int = 0
 	## Pengali laju kayuh (`LoperAnim.pedal_rate`, D-8).
 	var pedal_rate: float = 1.0
+	## Kecepatan di awal langkah sesudah `beku_detik` diterapkan, u/d. Telemetri `BikeCondition` (aus rem hanya selama sepeda masih bergerak).
+	var kecepatan_awal_ud: float = Config.KECEPATAN_SANTAI_UD
+	## True bila rem menjadi aktif di dalam langkah ini (tepi naik rem; telemetri `BikeCondition`, aus per pengereman).
+	var rem_mulai: bool = false
 
 
 ## Kecepatan tujuan (u/d) untuk komponen maju stick (-1 sampai 1, dijepit; NaN = netral). Netral = santai, atas penuh =
@@ -148,7 +152,11 @@ static func jeda(keadaan: Keadaan) -> Keadaan:
 ## jatuh menutup seluruh langkah (termasuk `dt` 0 saat jeda), stick dianggap netral untuk pose dan tingkat sprite. Sisa langkah sesudah
 ## bangun = gerak biasa dari kecepatan 0 dengan akselerasi biasa, jadi hasil tidak bergantung pada pembagian `dt`. NaN, negatif, atau 0 =
 ## tidak jatuh.
-static func langkah(keadaan: Keadaan, stick: Vector2, dt: float, beku_detik: float = 0.0) -> Hasil:
+## `efek` (run fase6a1-bengkel-kondisi, M-6, AC-9): pengali kondisi sepeda (`EfekKondisi`, dari `BikeCondition.efek`). Kosong (null) atau identitas = keluaran
+## identik bit-demi-bit dengan sebelum ada efek. Efek mengubah kecepatan tujuan (pengali dan batas puncak), akselerasi, perlambatan rem, kecepatan lateral, dan
+## laju stamina yang menguras; tidak ada angka pengali di berkas ini.
+static func langkah(keadaan: Keadaan, stick: Vector2, dt: float, beku_detik: float = 0.0, efek: EfekKondisi = null) -> Hasil:
+	var e: EfekKondisi = efek if efek != null else EfekKondisi.new()
 	var hasil: Hasil = Hasil.new()
 	var waktu: float = dt if is_finite(dt) and dt > 0.0 else 0.0
 	var beku: float = beku_detik if is_finite(beku_detik) and beku_detik > 0.0 else 0.0
@@ -167,7 +175,8 @@ static func langkah(keadaan: Keadaan, stick: Vector2, dt: float, beku_detik: flo
 			datar = 0.0
 	var awal: Keadaan = s.salin()
 	hasil.stick_maju = maju
-	hasil.tujuan_ud = kecepatan_tujuan_ud(maju, s.lelah)
+	hasil.kecepatan_awal_ud = awal.kecepatan_ud
+	hasil.tujuan_ud = tujuan_dengan_efek(kecepatan_tujuan_ud(maju, s.lelah), e)
 
 	if waktu_gerak > 0.0:
 		# Rem: lama tahan dan saat rem mulai di dalam langkah.
@@ -186,12 +195,12 @@ static func langkah(keadaan: Keadaan, stick: Vector2, dt: float, beku_detik: flo
 		# Bagian gerak biasa (termasuk meluncur sebelum rem aktif), lalu bagian pengereman.
 		var stamina_baru: float = s.stamina
 		if waktu_biasa > 0.0:
-			var biasa: Array[float] = _gerak_biasa(s.kecepatan_ud, hasil.tujuan_ud, maju, waktu_biasa)
+			var biasa: Array[float] = _gerak_biasa(s.kecepatan_ud, hasil.tujuan_ud, maju, waktu_biasa, e)
 			hasil.maju_ubin += biasa[0]
 			s.kecepatan_ud = biasa[1]
 			stamina_baru += biasa[2]
 		if waktu_rem > 0.0:
-			var rem: Array[float] = _gerak_rem(s.kecepatan_ud, waktu_rem)
+			var rem: Array[float] = _gerak_rem(s.kecepatan_ud, waktu_rem, e)
 			hasil.maju_ubin += rem[0]
 			s.kecepatan_ud = rem[1]
 			stamina_baru += Config.STAMINA_LAJU_MELUNCUR * waktu_rem
@@ -203,10 +212,11 @@ static func langkah(keadaan: Keadaan, stick: Vector2, dt: float, beku_detik: flo
 
 		# Lateral dengan batas tepi jalan resmi.
 		var batas: float = batas_lateral_ubin()
-		s.lateral_ubin = clampf(awal.lateral_ubin + datar * Config.KECEPATAN_LATERAL_UD * waktu_gerak, -batas, batas)
+		s.lateral_ubin = clampf(awal.lateral_ubin + datar * (Config.KECEPATAN_LATERAL_UD * e.pengali_lateral) * waktu_gerak, -batas, batas)
 		hasil.lateral_ud = (s.lateral_ubin - awal.lateral_ubin) / waktu
 
 	hasil.keadaan = s
+	hasil.rem_mulai = s.rem_aktif and not awal.rem_aktif
 	hasil.pose = LoperAnim.pose_dari_gerak(s.rem_aktif, maju, s.kecepatan_ud, hasil.tujuan_ud)
 	hasil.tingkat_sprite = LoperAnim.tingkat_sprite(maju, s.lelah)
 	hasil.arah_sprite = LoperAnim.arah_dari_gerak(s.kecepatan_ud, hasil.lateral_ud)
@@ -218,8 +228,8 @@ static func langkah(keadaan: Keadaan, stick: Vector2, dt: float, beku_detik: flo
 ## Rampa linear (naik `AKSELERASI_UD2`, turun `PERLAMBATAN_MELAMBAT_UD2`) sampai tujuan, lalu tetap. Jarak tepat. Stamina juga
 ## tepat: rampa dipotong di titik patah laju stamina (santai dan cepat), dan di tiap potongan laju linear terhadap waktu, jadi
 ## trapesium = integral.
-static func _gerak_biasa(v: float, tujuan: float, maju: float, t: float) -> Array[float]:
-	var laju_rampa: float = Config.AKSELERASI_UD2 if v < tujuan else Config.PERLAMBATAN_MELAMBAT_UD2
+static func _gerak_biasa(v: float, tujuan: float, maju: float, t: float, e: EfekKondisi) -> Array[float]:
+	var laju_rampa: float = Config.AKSELERASI_UD2 * e.pengali_akselerasi if v < tujuan else Config.PERLAMBATAN_MELAMBAT_UD2
 	var waktu_rampa: float = absf(tujuan - v) / laju_rampa
 	var t_rampa: float = minf(t, waktu_rampa)
 	var akhir_rampa: float = tujuan if t >= waktu_rampa else v + signf(tujuan - v) * laju_rampa * t_rampa
@@ -236,18 +246,29 @@ static func _gerak_biasa(v: float, tujuan: float, maju: float, t: float) -> Arra
 	var stamina: float = 0.0
 	for i: int in range(titik.size() - 1):
 		var lama: float = absf(titik[i + 1] - titik[i]) / laju_rampa
-		stamina += (laju_stamina(maju, false, titik[i]) + laju_stamina(maju, false, titik[i + 1])) / 2 * lama
-	stamina += laju_stamina(maju, false, akhir_rampa) * t_tetap
+		stamina += (_laju_dengan_efek(laju_stamina(maju, false, titik[i]), e) + _laju_dengan_efek(laju_stamina(maju, false, titik[i + 1]), e)) / 2 * lama
+	stamina += _laju_dengan_efek(laju_stamina(maju, false, akhir_rampa), e) * t_tetap
 	return [jarak, akhir_rampa, stamina]
 
 
 ## Pengereman selama `t` detik dari kecepatan `v`: [jarak ubin, kecepatan akhir]. Turun `REM_PERLAMBATAN_UD2` sampai 0, lalu diam.
-static func _gerak_rem(v: float, t: float) -> Array[float]:
-	var waktu_henti: float = v / Config.REM_PERLAMBATAN_UD2
+static func _gerak_rem(v: float, t: float, e: EfekKondisi) -> Array[float]:
+	var perlambatan: float = Config.REM_PERLAMBATAN_UD2 * e.pengali_rem
+	var waktu_henti: float = v / perlambatan
 	if t >= waktu_henti:
 		return [v / 2 * waktu_henti, 0.0]
-	var akhir: float = v - Config.REM_PERLAMBATAN_UD2 * t
+	var akhir: float = v - perlambatan * t
 	return [(v + akhir) / 2 * t, akhir]
+
+
+## Kecepatan tujuan `tujuan` (u/d) sesudah efek kondisi: dikali pengali kecepatan lalu dijepit ke batas puncak (`EfekKondisi`). Identitas = `tujuan` itu sendiri.
+static func tujuan_dengan_efek(tujuan: float, e: EfekKondisi) -> float:
+	return minf(tujuan * e.pengali_kecepatan, e.batas_puncak_ud)
+
+
+## Laju stamina `laju` per detik sesudah efek: hanya laju yang menguras (negatif) dikali pengali; laju pulih tidak berubah.
+static func _laju_dengan_efek(laju: float, e: EfekKondisi) -> float:
+	return laju * e.pengali_kuras_stamina if laju < 0.0 else laju
 
 
 ## Salinan keadaan dengan nilai yang dijepit ke jangkauan sah. NaN: kecepatan = santai, lateral = 0, stamina = maksimum,

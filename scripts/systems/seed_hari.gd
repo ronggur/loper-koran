@@ -24,3 +24,9 @@ static func headline(hari: int) -> int:
 ## mengubah rute (run fase4b-misi-kucing, M-1). Rute yang dijalankan sendiri (tanpa hari) memakai `Rute.benih + SEED_MISI_SELISIH`, rumus yang sama.
 static func misi(hari: int) -> int:
 	return rute(hari) + Config.SEED_MISI_SELISIH
+
+
+## Seed kerusakan tabrakan hari `hari` (`BikeCondition.komponen_tabrakan`, run fase6a1-bengkel-kondisi, M-4): aliran acaknya sendiri, jadi memilih komponen
+## yang rusak tidak mengubah rute, headline, atau misi. Seed tabrakan ke-n dalam rute = seed ini + n x `SEED_KONDISI_NOMOR_LANGKAH`.
+static func kondisi(hari: int) -> int:
+	return campur(Config.SEED_KONDISI_DASAR, hari)
