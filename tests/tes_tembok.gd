@@ -429,6 +429,7 @@ func _test_jendela_daur_dan_tekstur() -> void:
 	check(tembok_salah.is_empty(), "237 titik gulir: sprite tembok = 4 x rumah dekat di jendela daur (sapuan linear): %s" % [tembok_salah.slice(0, 3)])
 	check(puncak == 4 * puncak_oracle and puncak_oracle >= 5 and puncak_oracle < 30, "puncak sprite tembok %d = 4 x puncak rumah dekat %d (< 30 rumah dekat seluruh rute)" % [puncak, puncak_oracle])
 	check(daur.jumlah_node_tembok() == puncak, "node tembok yang pernah dibuat (%d) = puncak pemakaian (%d): kolam dipakai ulang, tidak ada node di luar jendela" % [daur.jumlah_node_tembok(), puncak])
+	check(daur.jumlah_muat_tembok() == 5, "PNG tembok dimuat dari disk tepat lima kali (satu per nama) selama seluruh gulir: %d" % daur.jumlah_muat_tembok())
 	check(node_naik >= 1 and daur.jumlah_tekstur_tembok() == 5, "tekstur tetap lima sesudah digulir seluruh rute (%d), node tumbuh hanya sampai puncak" % daur.jumlah_tekstur_tembok())
 	# Anak Objek bertembok: node di luar jendela tidak hidup; sesudah digulir ke ujung, hanya yang terpakai terlihat.
 	var terlihat: int = 0

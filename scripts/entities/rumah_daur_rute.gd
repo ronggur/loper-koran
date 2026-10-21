@@ -41,6 +41,8 @@ var _terantar: Dictionary = {}
 var _tembok: Dictionary = {}
 var _tembok_bebas: Array[Sprite2D] = []
 var _tekstur_tembok: Dictionary = {}
+## Berapa kali PNG tembok benar-benar dimuat dari disk (satu per nama sprite, tidak bertambah saat rute digulir).
+var _muat_tembok: int = 0
 var _kotak_bebas: Array[Node2D] = []
 var _kotak_bukan_bebas: Array[Node2D] = []
 ## Rentang indeks `[awal, akhir)` yang sedang dipasang; (-1, -1) = belum ada.
@@ -186,6 +188,11 @@ func jumlah_node_tembok() -> int:
 	return jumlah_tembok() + _tembok_bebas.size()
 
 
+## Banyaknya pemuatan PNG tembok sejak node dibuat (harus sama dengan jumlah nama berbeda yang dipakai).
+func jumlah_muat_tembok() -> int:
+	return _muat_tembok
+
+
 ## Banyaknya tekstur tembok yang sudah dimuat (nama sprite berbeda yang dipakai rute; dimuat di `atur_rute`).
 func jumlah_tekstur_tembok() -> int:
 	return _tekstur_tembok.size()
@@ -322,5 +329,6 @@ func _tekstur_untuk(nama: String) -> Texture2D:
 
 func _tekstur_tembok_untuk(nama: String) -> Texture2D:
 	if not _tekstur_tembok.has(nama):
+		_muat_tembok += 1
 		_tekstur_tembok[nama] = load(TembokDekat.jalur_png(nama)) as Texture2D
 	return _tekstur_tembok[nama]
