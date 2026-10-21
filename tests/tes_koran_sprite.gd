@@ -685,11 +685,16 @@ func _test_terlipat_di_scene() -> void:
 		var rumah_sprite: Sprite2D = daur.sprite_rumah(indeks_6)
 		check(terlipat.get_parent() == rumah_sprite.get_parent() and (terlipat.get_parent() as Node2D).y_sort_enabled and terlipat.position.y > rumah_sprite.position.y, "urutan gambar: satu induk Y-sort dengan sprite rumah, titik teras lebih bawah dari titik pijak rumah (digambar sesudah rumah)")
 		check(terlipat.get_parent() == daur and daur.get_children().filter(func(n: Node) -> bool: return n.name.begins_with("Terlipat_")).size() == 1, "tepat satu node terlipat di jendela daur (tidak ganda)")
+	# Beberapa langkah berikutnya (atur_terantar dipanggil tiap langkah): tetap satu node terlipat bergambar di jendela daur, tidak ada node bocor di luar kolam.
+	_langkah(akar, 10)
+	check(_hitung_node_terlipat(daur) == 1 and daur.jumlah_terlipat() == 1, "sesudah 10 langkah lagi: tepat satu node koran terlipat di induk daur (%d), tanpa kebocoran" % _hitung_node_terlipat(daur))
 	# Rumah lain (@10) belum terantar.
 	check(not daur.indeks_terlipat().has(indeks_10), "rumah @10 belum terantar: tanpa terlipat")
 	# Koran ulang ke rumah terantar (netral): tidak menggandakan.
 	await _lempar_ke_kotak(akar, 1.0, "per_buka_01@6", mendarat)
 	check(daur.jumlah_terlipat() == 1 and daur.jumlah_node_terlipat() == 1, "koran ulang ke rumah terantar: tetap satu terlipat, satu node")
+	_langkah(akar, 10)
+	check(_hitung_node_terlipat(daur) == 1, "koran ulang ke rumah terantar lalu 10 langkah: tetap satu node terlipat bergambar (%d)" % _hitung_node_terlipat(daur))
 	# Antaran sah kedua ke @10 (teras): dua terlipat.
 	await _lempar_ke_titik(akar, 4.0, Vector2(-2.75, 10.5), mendarat)
 	check(daur.jumlah_terlipat() == 2 and daur.indeks_terlipat() == [indeks_6, indeks_10], "rumah @10 terantar sesudah antaran teras: dua terlipat, satu per rumah")
@@ -714,6 +719,16 @@ func _test_terlipat_di_scene() -> void:
 	akar.main_lagi()
 	check(daur.jumlah_terlipat() == 0 and akar.skor().terantar.is_empty(), "Main lagi: skor dan rute baru, tidak ada terlipat")
 	_bersihkan(akar)
+
+
+## Banyaknya node Sprite2D bertekstur koran terlipat di induk `daur` (semua anak, termasuk yang tersembunyi di kolam).
+func _hitung_node_terlipat(daur: RumahDaurRute) -> int:
+	var jumlah: int = 0
+	for anak: Node in daur.get_children():
+		var sprite: Sprite2D = anak as Sprite2D
+		if sprite != null and sprite.texture != null and sprite.texture.resource_path.ends_with("prop_koran_terlipat.png") and sprite.visible:
+			jumlah += 1
+	return jumlah
 
 
 # --- Jalan uji tetap placeholder (D-7) ---
