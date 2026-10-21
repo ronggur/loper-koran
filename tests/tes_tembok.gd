@@ -486,11 +486,12 @@ func _varian_rute(benih: int, pustaka: Array[SegmenRute]) -> Array[String]:
 	return hasil
 
 
-## Banyaknya pohon dan lampu yang sedang digambar (hanya keduanya yang didaftarkan ke penerap, run fase5b B2).
+## Banyaknya pohon dan lampu yang sedang digambar (hanya keduanya di sisi dekat yang didaftarkan ke penerap, run fase5b B2 dan iterasi 2).
 func _jumlah_dekor_penutup(akar: RuteMain) -> int:
 	var jumlah: int = 0
 	for i: int in akar.dekor_daur().indeks_tampil():
-		if DekorRute.menutupi(akar.rute().dekor[i].jenis):
+		var butir: RouteBuilder.DekorItem = akar.rute().dekor[i]
+		if DekorRute.menutupi(butir.jenis, butir.varian, butir.sisi):
 			jumlah += 1
 	return jumlah
 

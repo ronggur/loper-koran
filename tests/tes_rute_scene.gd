@@ -999,8 +999,13 @@ func _test_penutup() -> void:
 			sepeda.keadaan = k
 			sepeda.jarak_ubin = float(maju)
 			akar.perbarui(0.0)
-			menutupi_nyata += penerap.jumlah_menutupi()
-	check(menutupi_nyata == 0, "rute nyata: tidak ada rumah yang menutupi pemain di lebar jalan resmi (0 kejadian dari 357 posisi), dapat %d" % menutupi_nyata)
+			# Pohon dan lampu sisi dekat memang semi-transparan di lajur bila tajuk atau lengannya menimpa pemain (iterasi 2 run fase5b, P-6; dibuktikan piksel di `TesDekorPiksel`); yang dihitung di sini rumah dan rintangan.
+			var dekor_menutupi: int = 0
+			for i: int in akar.dekor_daur().indeks_tampil():
+				if akar.dekor_daur().sprite_dekor(i).modulate.a < 1.0:
+					dekor_menutupi += 1
+			menutupi_nyata += penerap.jumlah_menutupi() - dekor_menutupi
+	check(menutupi_nyata == 0, "rute nyata: tidak ada rumah atau rintangan yang menutupi pemain di lebar jalan resmi (0 kejadian dari 357 posisi), dapat %d" % menutupi_nyata)
 	# Objek uji yang menutupi: tapak 3 x 6 mulai lateral 1,0 dan maju 3 di belakang sampai 3 di depan pemain, tinggi 2,0.
 	_taruh_sepeda(akar, 3.0, 0.5, 0.0, 100.0)
 	var gambar: Sprite2D = Sprite2D.new()
@@ -1059,10 +1064,11 @@ func _test_tata_letak_akhir(kasus: Array) -> void:
 	_bersihkan(akar)
 
 
-## Banyaknya pohon dan lampu dekor yang sedang digambar (hanya keduanya yang didaftarkan ke penerap penutup, run fase5b-tembok-dekor B2).
+## Banyaknya pohon dan lampu dekor yang sedang digambar (hanya keduanya di sisi dekat yang didaftarkan ke penerap penutup, run fase5b-tembok-dekor B2 dan iterasi 2).
 func _jumlah_dekor_penutup(akar: RuteMain) -> int:
 	var jumlah: int = 0
 	for i: int in akar.dekor_daur().indeks_tampil():
-		if DekorRute.menutupi(akar.rute().dekor[i].jenis):
+		var butir: RouteBuilder.DekorItem = akar.rute().dekor[i]
+		if DekorRute.menutupi(butir.jenis, butir.varian, butir.sisi):
 			jumlah += 1
 	return jumlah

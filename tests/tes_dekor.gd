@@ -8,6 +8,8 @@ extends RefCounted
 ## - Geometri: lateral, tapak, dan tinggi penutup ditulis literal; kena atau tidaknya penutup dihitung dengan penalaran garis pandang yang ditulis di komentar, bukan dengan memanggil aturan yang diuji.
 ## - Sasaran tidak tertutup: pecahan piksel opak dari `UkurDekor` (pola `UkurTembok`), dengan kontrol bahwa penempatan buruk memang terukur.
 ## - Isi sembilan segmen: jumlah per berkas dan per jenis ditulis literal, dihitung dari berkas data dengan skrip lain.
+## - Kotak penutup pohon dan lampu sisi dekat = sprite nyata (iterasi 2, QA-001, P-6): bukti pemain tidak pernah hilang di balik piksel opak ada di `TesDekorPiksel` (oracle piksel dari PNG);
+##   di sini hanya geometri kotak (murni) dan perilaku di scene.
 
 const BERKAS_RUTE: String = "res://scenes/rute/rute.tscn"
 const FOLDER_RUTE: String = "res://assets/data/routes/perumahan"
@@ -55,7 +57,6 @@ func jalankan() -> void:
 	_test_rute_identik()
 	_test_rute_dekor()
 	_test_penutup_murni()
-	_test_jalur_utama_bersih()
 	_test_isi_sembilan_segmen()
 	_test_sasaran_tidak_tertutup()
 	_test_medan_dan_penilaian_identik()
@@ -74,18 +75,19 @@ func _test_tabel_dan_geometri() -> void:
 	check(Config.RUTE_DEKOR_JENIS == (["tong_sampah", "pohon", "lampu_jalan"] as Array[String]), "jenis dekor: tong_sampah, pohon, lampu_jalan")
 	check(DekorRute.varian_sah("tong_sampah") == (["logam"] as Array[String]) and DekorRute.varian_sah("pohon") == (["rindang", "glodokan", "ketapang"] as Array[String]) and DekorRute.varian_sah("lampu_jalan") == (["lengan"] as Array[String]), "varian sah: tong logam; pohon rindang, glodokan, ketapang; lampu lengan (D-5)")
 	check(DekorRute.varian_sah("kursi").is_empty(), "jenis tidak dikenal: tanpa varian")
-	check(Config.RUTE_DEKOR_LATERAL_UBIN == ([2.5, 2.5, 2.25] as Array[float]) and Config.RUTE_DEKOR_SETENGAH_UBIN == ([0.25, 0.25, 0.125] as Array[float]) and Config.RUTE_DEKOR_TINGGI_PENUTUP_UBIN == ([0.0, 1.25, 1.0] as Array[float]), "tabel lateral 2,5/2,5/2,25, setengah tapak 0,25/0,25/0,125, tinggi penutup 0/1,25/1,0 (literal)")
+	check(Config.RUTE_DEKOR_LATERAL_UBIN == ([2.5, 2.5, 2.25] as Array[float]) and Config.RUTE_DEKOR_SETENGAH_UBIN == ([0.25, 0.25, 0.125] as Array[float]), "tabel lateral 2,5/2,5/2,25 dan setengah tapak kaki 0,25/0,25/0,125 (literal; tinggi dan tapak kotak penutup per sprite ada di TesDekorPiksel)")
 	check(Config.RUTE_DEKOR_LAJUR_UBIN == 2.0 and Config.RUTE_DEKOR_JARAK_MIN_UBIN == 1 and Config.RUTE_DEKOR_TEPI_UBIN == 1, "lajur sepeda sampai 2,0, jarak dekor sesisi >= 1 ubin, pos mulai 1")
-	check(DekorRute.lateral("pohon", LoperAnim.Sisi.SEBERANG) == -2.5 and DekorRute.lateral("pohon", LoperAnim.Sisi.DEKAT) == 2.5, "pohon: lateral -2,5 di seberang, +2,5 di dekat")
+	check(DekorRute.lateral("pohon", LoperAnim.Sisi.SEBERANG) == -2.75 and DekorRute.lateral("pohon", LoperAnim.Sisi.DEKAT) == 2.5, "pohon: lateral -2,75 di seberang (iterasi 2: tajuk tidak menimpa pemain di tepi seberang), +2,5 di dekat")
 	check(DekorRute.lateral("tong_sampah", LoperAnim.Sisi.SEBERANG) == -2.5 and DekorRute.lateral("tong_sampah", LoperAnim.Sisi.DEKAT) == 2.5, "tong sampah: lateral -2,5 dan +2,5")
-	check(DekorRute.lateral("lampu_jalan", LoperAnim.Sisi.SEBERANG) == -2.25 and DekorRute.lateral("lampu_jalan", LoperAnim.Sisi.DEKAT) == 2.25, "lampu jalan: lateral -2,25 dan +2,25")
+	check(DekorRute.lateral("lampu_jalan", LoperAnim.Sisi.SEBERANG) == -2.625 and DekorRute.lateral("lampu_jalan", LoperAnim.Sisi.DEKAT) == 2.25, "lampu jalan: lateral -2,625 di seberang (iterasi 2), +2,25 di dekat")
+	check(Config.RUTE_DEKOR_LATERAL_SEBERANG_UBIN == ([2.5, 2.75, 2.625] as Array[float]), "tabel lateral sisi seberang 2,5/2,75/2,625 (literal)")
 	check(DekorRute.lateral("kursi", LoperAnim.Sisi.DEKAT) == 0.0 and DekorRute.lateral("pohon", LoperAnim.Sisi.TIDAK_ADA) == 0.0, "jenis atau sisi tidak dikenal: lateral 0")
-	check(DekorRute.tapak("pohon", LoperAnim.Sisi.SEBERANG, 13.0) == Rect2(-2.75, 12.75, 0.5, 0.5), "tapak pohon seberang di maju 13: (-2,75; 12,75) 0,5 x 0,5")
+	check(DekorRute.tapak("pohon", LoperAnim.Sisi.SEBERANG, 13.0) == Rect2(-3.0, 12.75, 0.5, 0.5), "tapak pohon seberang di maju 13: (-3,0; 12,75) 0,5 x 0,5 (pusat -2,75; tepi luar tepat di kaki fasad)")
 	check(DekorRute.tapak("lampu_jalan", LoperAnim.Sisi.DEKAT, 21.0) == Rect2(2.125, 20.875, 0.25, 0.25), "tapak lampu dekat di maju 21: (2,125; 20,875) 0,25 x 0,25")
 	check(DekorRute.tapak("tong_sampah", LoperAnim.Sisi.DEKAT, 15.0) == Rect2(2.25, 14.75, 0.5, 0.5), "tapak tong sampah dekat di maju 15: (2,25; 14,75) 0,5 x 0,5")
 	check(DekorRute.tapak("pohon", LoperAnim.Sisi.TIDAK_ADA, 5.0) == Rect2() and DekorRute.tapak("kursi", LoperAnim.Sisi.DEKAT, 5.0) == Rect2(), "jenis atau sisi tidak dikenal: persegi kosong")
-	check(DekorRute.tinggi_penutup("tong_sampah") == 0.0 and DekorRute.tinggi_penutup("pohon") == 1.25 and DekorRute.tinggi_penutup("lampu_jalan") == 1.0 and DekorRute.tinggi_penutup("kursi") == 0.0, "tinggi penutup: tong 0, pohon 1,25, lampu 1,0")
-	check(not DekorRute.menutupi("tong_sampah") and DekorRute.menutupi("pohon") and DekorRute.menutupi("lampu_jalan"), "hanya pohon dan lampu menutupi (didaftarkan penerap); tong sampah tidak")
+	check(DekorRute.tinggi_penutup("tong_sampah", "logam", LoperAnim.Sisi.DEKAT) == 0.0 and DekorRute.tinggi_penutup("pohon", "glodokan", LoperAnim.Sisi.DEKAT) == 1.96875 and DekorRute.tinggi_penutup("lampu_jalan", "lengan", LoperAnim.Sisi.DEKAT) == 2.0 and DekorRute.tinggi_penutup("kursi", "x", LoperAnim.Sisi.DEKAT) == 0.0, "tinggi penutup sisi dekat: tong 0, pohon glodokan 1,96875, lampu 2,0 (tinggi sprite nyata)")
+	check(not DekorRute.menutupi("tong_sampah", "logam", LoperAnim.Sisi.DEKAT) and DekorRute.menutupi("pohon", "rindang", LoperAnim.Sisi.DEKAT) and DekorRute.menutupi("lampu_jalan", "lengan", LoperAnim.Sisi.DEKAT) and not DekorRute.menutupi("pohon", "rindang", LoperAnim.Sisi.SEBERANG), "hanya pohon dan lampu sisi dekat menutupi (didaftarkan penerap); tong sampah dan sisi seberang tidak")
 	check(DekorRute.titik_dunia("pohon", LoperAnim.Sisi.DEKAT, 13.0) == Vector2(2.5, -13.0), "titik dunia pohon dekat di maju 13 = (2,5; -13) (y dunia = -maju)")
 	var nama: Dictionary = {
 		["tong_sampah", "logam", 1]: "prop_tong_sampah_logam", ["tong_sampah", "logam", 2]: "prop_tong_sampah_logam",
@@ -250,7 +252,8 @@ func _test_validasi_parse() -> void:
 	check(_galat_memuat(_dengan([_butir("tong_sampah", 8, "seberang", "logam")]), "menimpa zona teras atau kotak surat rumah seberang di pos 6"), "tong seberang di maju 8 menimpa kotak surat rumah pos 6: ditolak")
 	check(_galat_memuat(_dengan([_butir("pohon", 11, "dekat", "rindang")]), "menimpa zona teras atau kotak surat rumah dekat di pos 10"), "pohon dekat di maju 11 menimpa teras rumah dekat pos 10: ditolak")
 	check(_galat_memuat(_dengan([_butir("pohon", 12, "dekat", "rindang")]), "menimpa zona teras atau kotak surat rumah dekat di pos 10"), "pohon dekat di maju 12 menimpa kotak surat dekat: ditolak")
-	check(_sah(_dengan([_butir("lampu_jalan", 7, "seberang", "lengan")])), "lampu seberang di maju 7 sah: tapak -2,375 sampai -2,125 tidak menyentuh teras (sampai -2,5) dan maju 6,875 sampai 7,125 di luar kotak surat (mulai 7,25)")
+	check(_galat_memuat(_dengan([_butir("lampu_jalan", 7, "seberang", "lengan")]), "menimpa zona teras atau kotak surat rumah seberang di pos 6"), "lampu seberang di maju 7 menimpa teras (lateral -3 sampai -2,5, maju 6 sampai 7,25): tapak -2,75 sampai -2,5 (iterasi 2: lampu seberang 2,625) ditolak")
+	check(_sah(_dengan([_butir("lampu_jalan", 9, "seberang", "lengan")])), "lampu seberang di maju 9 sah: celah sesudah rumah pos 6, tapak maju 8,875 sampai 9,125 di luar kotak surat (sampai 8,5)")
 	check(_galat_memuat(_dengan([_butir("tong_sampah", 24, "seberang", "logam")]), "menimpa tapak mobil_garasi di pos 24"), "tong seberang di pos mobil garasi: ditolak (seluruh lintasan)")
 	check(_galat_memuat(_dengan([_butir("pohon", 18, "dekat", "rindang")]), "menimpa tapak anjing_penjaga di pos 18"), "pohon dekat di pos anjing: ditolak (posisi diam)")
 	check(_sah(_dengan([_butir("pohon", 18, "seberang", "rindang")])), "pohon di seberang pada pos anjing dekat sah (sisi lain)")
@@ -334,8 +337,10 @@ func _test_rute_dekor() -> void:
 			var awal: float = rute.awal_segmen[_indeks_segmen(rute, b.id_segmen)]
 			var sisi_nama: String = "seberang" if b.sisi == LoperAnim.Sisi.SEBERANG else "dekat"
 			var lateral: float = -2.5 if b.sisi == LoperAnim.Sisi.SEBERANG else 2.5
+			if b.jenis == "pohon" and b.sisi == LoperAnim.Sisi.SEBERANG:
+				lateral = -2.75
 			if b.jenis == "lampu_jalan":
-				lateral = -2.25 if b.sisi == LoperAnim.Sisi.SEBERANG else 2.25
+				lateral = -2.625 if b.sisi == LoperAnim.Sisi.SEBERANG else 2.25
 			if b.maju_ubin != awal + float(b.pos) or b.lateral_ubin != lateral or b.id != "%s:%s@%d" % [b.id_segmen, sisi_nama, b.pos]:
 				salah.append("seed %d %s: maju %s lateral %s id %s" % [i, b.id, b.maju_ubin, b.lateral_ubin, b.id])
 			if id_terlihat.has(b.id):
@@ -419,36 +424,37 @@ func _fnv(teks: String) -> int:
 # --- Penutup dekor (AC-11) murni ---
 
 func _test_penutup_murni() -> void:
-	_judul.call("PenutupPemain.dari_dekor: kotak penutup pohon dan lampu, pemain di balik dekor sisi dekat tertutup, seberang tidak pernah (AC-11)")
+	_judul.call("PenutupPemain.dari_dekor: kotak penutup pohon dan lampu sisi dekat (tinggi sprite nyata, tapak lebih lebar dari tapak kaki), seberang tidak pernah (AC-11, P-6)")
 	var pohon: RouteBuilder.DekorItem = _item("pohon", LoperAnim.Sisi.DEKAT, 13.0)
 	var kotak: PenutupPemain.Objek = PenutupPemain.dari_dekor(pohon)
-	check(kotak.tapak == Rect2(2.25, 12.75, 0.5, 0.5) and kotak.tinggi_ubin == 1.25 and kotak.id == pohon.id, "kotak penutup pohon dekat maju 13 = tapak (2,25; 12,75) 0,5 x 0,5, tinggi 1,25, id dekor")
+	check(kotak.tapak == Rect2(1.625, 12.125, 1.75, 1.75) and kotak.tinggi_ubin == 1.375 and kotak.id == pohon.id, "kotak penutup pohon rindang dekat maju 13 = tapak (1,625; 12,125) 1,75 x 1,75 (pusat 2,5; 13), tinggi 1,375, id dekor")
 	var lampu: RouteBuilder.DekorItem = _item("lampu_jalan", LoperAnim.Sisi.DEKAT, 21.0)
-	check(PenutupPemain.dari_dekor(lampu).tapak == Rect2(2.125, 20.875, 0.25, 0.25) and PenutupPemain.dari_dekor(lampu).tinggi_ubin == 1.0, "kotak penutup lampu dekat maju 21 = tapak (2,125; 20,875) 0,25 x 0,25, tinggi 1,0")
+	check(PenutupPemain.dari_dekor(lampu).tapak == Rect2(1.5, 20.25, 1.5, 1.5) and PenutupPemain.dari_dekor(lampu).tinggi_ubin == 2.0, "kotak penutup lampu dekat maju 21 = tapak (1,5; 20,25) 1,5 x 1,5 (pusat 2,25; 21), tinggi 2,0")
 	# Garis pandang: titik (x, y) dan (x + d, y - d) (maju - d) tertutup bila (x + d, y - d) di dalam tapak dan tinggi d <= tinggi kotak.
-	# Pohon dekat (tapak lateral 2,25 sampai 2,75; maju 12,75 sampai 13,25; tinggi 1,25): pemain di lateral 2,0 dan maju 13,5: d = 0,5 memberi (2,5; 13,0) di dalam tapak, tinggi 0,5 <= 1,25.
+	# Pohon dekat (tapak lateral 1,625 sampai 3,375; maju 12,125 sampai 13,875; tinggi 1,375): pemain di lateral 2,0 dan maju 13,5: d = 0 sudah di dalam tapak (lateral 2,0; maju 13,5).
 	check(PenutupPemain.menutupi(Vector2(2.0, -13.5), kotak), "pemain di trotoar dekat (lateral 2,0; maju 13,5) tertutup pohon dekat")
-	check(PenutupPemain.menutupi(Vector2(2.0, -13.1), kotak) and PenutupPemain.menutupi(Vector2(2.0, -13.4), kotak), "pemain di lateral 2,0 di maju 13,1 dan 13,4 tertutup (garis pandang masuk tapak)")
-	check(not PenutupPemain.menutupi(Vector2(2.0, -13.0), kotak), "pemain di maju 13,0 tepat di tepi (garis pandang hanya menyentuh sudut tapak) tidak tertutup")
-	check(not PenutupPemain.menutupi(Vector2(2.0, -12.0), kotak), "pemain di maju 12,0 (di belakang pohon, garis pandang lewat ujung tapak tanpa masuk) tidak tertutup")
-	check(not PenutupPemain.menutupi(Vector2(2.0, -15.0), kotak), "pemain di maju 15,0 (terlalu jauh di depan: garis pandang ke tapak lebih tinggi dari 1,25) tidak tertutup")
-	check(not PenutupPemain.menutupi(Vector2(0.0, -13.5), kotak) and not PenutupPemain.menutupi(Vector2(0.0, -14.5), kotak), "pemain di tengah jalan tidak pernah tertutup pohon dekat")
-	# Lampu dekat (tapak 2,125 sampai 2,375; maju 20,875 sampai 21,125): pemain di lateral 2,0, maju 21,3: (2,2; 21,1) di dalam, tinggi 0,2.
+	check(PenutupPemain.menutupi(Vector2(2.0, -13.1), kotak) and PenutupPemain.menutupi(Vector2(2.0, -13.8), kotak), "pemain di lateral 2,0 di maju 13,1 dan 13,8 tertutup (di dalam tapak penutup)")
+	check(PenutupPemain.menutupi(Vector2(1.0, -13.3), kotak) and PenutupPemain.menutupi(Vector2(0.75, -13.6), kotak), "pemain di lajur dekat (lateral 1,0; maju 13,3) dan (0,75; maju 13,6) tertutup: garis pandang d = 0,625 .. 0,875 masuk tapak, tinggi di bawah 1,375 (tajuk menimpa lajur)")
+	check(not PenutupPemain.menutupi(Vector2(2.0, -12.125), kotak), "pemain di maju 12,125 tepat di tepi belakang tapak penutup tidak tertutup")
+	check(not PenutupPemain.menutupi(Vector2(2.0, -11.0), kotak), "pemain di maju 11,0 (di belakang pohon, garis pandang mundur keluar tapak) tidak tertutup")
+	check(not PenutupPemain.menutupi(Vector2(2.0, -16.0), kotak), "pemain di maju 16,0 (terlalu jauh di depan: garis pandang ke tapak lebih tinggi dari 1,375) tidak tertutup")
+	check(not PenutupPemain.menutupi(Vector2(0.0, -13.5), kotak) and not PenutupPemain.menutupi(Vector2(0.0, -14.5), kotak), "pemain di tengah jalan tidak tertutup pohon rindang dekat (garis pandang butuh d >= 1,625 > 1,375)")
+	# Lampu dekat (tapak 1,5 sampai 3,0; maju 20,25 sampai 21,75; tinggi 2,0).
 	check(PenutupPemain.menutupi(Vector2(2.0, -21.3), PenutupPemain.dari_dekor(lampu)), "pemain di (2,0; 21,3) tertutup lampu dekat")
-	# Seberang: tapak -2,75 sampai -2,25 (pohon), pemain paling jauh di lateral -2,0 sedangkan garis pandang menuju lateral lebih besar (+d): tidak pernah masuk.
+	check(PenutupPemain.menutupi(Vector2(0.5, -21.3), PenutupPemain.dari_dekor(lampu)) and not PenutupPemain.menutupi(Vector2(0.0, -21.3), PenutupPemain.dari_dekor(lampu)), "lengan lampu dekat menutupi lajur sampai lateral 0,5 (d = 1,0 .. 1,05) tetapi tidak tengah jalan (butuh d >= 1,5 pada maju 21,3 - d > 20,25)")
+	# Seberang: kotak tinggi 0, kamera melihat dari sisi dekat; tidak pernah menutupi di lateral -2,0 sampai 2,0.
 	var s_pohon: RouteBuilder.DekorItem = _item("pohon", LoperAnim.Sisi.SEBERANG, 13.0)
+	var s_lampu: RouteBuilder.DekorItem = _item("lampu_jalan", LoperAnim.Sisi.SEBERANG, 13.0)
+	check(PenutupPemain.dari_dekor(s_pohon).tinggi_ubin == 0.0 and PenutupPemain.dari_dekor(s_lampu).tinggi_ubin == 0.0, "kotak penutup dekor seberang bertinggi 0")
 	var tertutup_seberang: int = 0
 	for lateral: int in range(-8, 9):
 		for maju: int in range(0, 41):
-			if PenutupPemain.menutupi(Vector2(float(lateral) * 0.25, -(10.0 + float(maju) * 0.125)), PenutupPemain.dari_dekor(s_pohon)):
+			var titik: Vector2 = Vector2(float(lateral) * 0.25, -(10.0 + float(maju) * 0.125))
+			if PenutupPemain.menutupi(titik, PenutupPemain.dari_dekor(s_pohon)) or PenutupPemain.menutupi(titik, PenutupPemain.dari_dekor(s_lampu)):
 				tertutup_seberang += 1
-	check(tertutup_seberang == 0, "pohon seberang tidak pernah menutupi pemain di lateral -2,0 sampai 2,0 (kamera melihat dari sisi dekat): %d titik" % tertutup_seberang)
-	# Tinggi penutup tidak melebihi lateral - setengah - 1,0 (jalur utama bersih): ketaksamaan terhadap tabel.
-	var batas_ok: bool = true
-	for i: int in range(Config.RUTE_DEKOR_JENIS.size()):
-		if Config.RUTE_DEKOR_TINGGI_PENUTUP_UBIN[i] > Config.RUTE_DEKOR_LATERAL_UBIN[i] - Config.RUTE_DEKOR_SETENGAH_UBIN[i] - 1.0:
-			batas_ok = false
-	check(batas_ok, "tinggi penutup tiap jenis <= lateral - setengah tapak - 1,0 (batas supaya |lateral| <= 1,0 tidak pernah tertutup)")
+	check(tertutup_seberang == 0, "pohon dan lampu seberang tidak pernah menutupi pemain di lateral -2,0 sampai 2,0: %d titik" % tertutup_seberang)
+	# Tong sampah: tinggi 0 di kedua sisi.
+	check(PenutupPemain.dari_dekor(_item("tong_sampah", LoperAnim.Sisi.DEKAT, 13.0)).tinggi_ubin == 0.0, "tong sampah tidak punya kotak penutup bertinggi")
 
 
 func _item(jenis: String, sisi: LoperAnim.Sisi, maju: float) -> RouteBuilder.DekorItem:
@@ -463,46 +469,8 @@ func _item(jenis: String, sisi: LoperAnim.Sisi, maju: float) -> RouteBuilder.Dek
 	return b
 
 
-func _test_jalur_utama_bersih() -> void:
-	_judul.call("Jalur utama bersih: tidak ada dekor di sembilan segmen dan 60 rute yang menutupi pemain pada |lateral| <= 1,0 (AC-11, ROUTE_DESIGN aturan 5)")
-	var pustaka: Array[SegmenRute] = PemuatRute.muat_folder(FOLDER_RUTE).segmen
-	var diperiksa: int = 0
-	var menutupi_jalur: int = 0
-	var menutupi_trotoar: int = 0
-	# Sembilan segmen: tiap pohon dan lampu, pemain di lateral -1,0 sampai 1,0 (langkah 0,25) dan maju dari 6 ubin di belakang sampai 6 di depan (langkah 0,125).
-	for segmen: SegmenRute in pustaka:
-		for d: SegmenRute.Dekor in segmen.dekor:
-			if not DekorRute.menutupi(d.jenis):
-				continue
-			var item: RouteBuilder.DekorItem = _item(d.jenis, d.sisi, float(d.pos))
-			var kotak: PenutupPemain.Objek = PenutupPemain.dari_dekor(item)
-			for l: int in range(-4, 5):
-				for m: int in range(-48, 49):
-					diperiksa += 1
-					if PenutupPemain.menutupi(Vector2(float(l) * 0.25, -(float(d.pos) + float(m) * 0.125)), kotak):
-						menutupi_jalur += 1
-			# Kontrol: di lateral 2,0 (tepi trotoar) pohon dan lampu dekat memang bisa menutupi.
-			if d.sisi == LoperAnim.Sisi.DEKAT:
-				for m: int in range(-48, 49):
-					if PenutupPemain.menutupi(Vector2(2.0, -(float(d.pos) + float(m) * 0.125)), kotak):
-						menutupi_trotoar += 1
-	check(diperiksa > 20000 and menutupi_jalur == 0, "sembilan segmen: %d titik sapuan pemain, 0 yang tertutup pada |lateral| <= 1,0 (dapat %d)" % [diperiksa, menutupi_jalur])
-	check(menutupi_trotoar > 50, "kontrol: pohon dan lampu dekat memang menutupi pemain di lateral 2,0 (%d titik), sapuan mampu mendeteksi" % menutupi_trotoar)
-	# 60 rute nyata, sapuan lebih kasar (langkah 0,5 ubin).
-	var rute_diperiksa: int = 0
-	var rute_menutupi: int = 0
-	for i: int in range(60):
-		var rute: RouteBuilder.Rute = RouteBuilder.bangun(SEED_DEV + i * 7, pustaka).rute
-		for b: RouteBuilder.DekorItem in rute.dekor:
-			if not DekorRute.menutupi(b.jenis):
-				continue
-			var kotak: PenutupPemain.Objek = PenutupPemain.dari_dekor(b)
-			for l: int in range(-2, 3):
-				for m: int in range(-12, 13):
-					rute_diperiksa += 1
-					if PenutupPemain.menutupi(Vector2(float(l) * 0.5, -(b.maju_ubin + float(m) * 0.5)), kotak):
-						rute_menutupi += 1
-	check(rute_diperiksa > 100000 and rute_menutupi == 0, "60 rute nyata: %d titik sapuan, 0 yang tertutup pada |lateral| <= 1,0 (dapat %d)" % [rute_diperiksa, rute_menutupi])
+# `_test_jalur_utama_bersih` (sapuan kotak: dekor tidak menutupi |lateral| <= 1,0) dihapus di iterasi 2: ia menjaga model kotak lama (tinggi 1,25 / 1,0) yang dinilai QA-001 salah,
+# karena sprite jauh lebih tinggi dari kotak sehingga tajuk menimpa pemain dengan piksel opak. Penggantinya adalah tes piksel di `TesDekorPiksel` (P-6).
 
 
 # --- Isi sembilan segmen (AC-13) ---
@@ -582,12 +550,20 @@ func _test_sasaran_tidak_tertutup() -> void:
 	check(muat.segmen.size() == 9 and rumah_diukur >= 30 and dekor_diukur == 38, "kontrol: %d rumah seberang pelanggan_boleh dan %d dekor diukur di sembilan segmen" % [rumah_diukur, dekor_diukur])
 	check(maks["kotak_badan"] == 0.0 and maks["kotak_badan_geom"] == 0.0, "badan sprite kotak surat sasaran: 0%% tertimpa dekor (terburuk %.4f, tanpa urutan gambar %.4f)" % [maks["kotak_badan"], maks["kotak_badan_geom"]])
 	check(maks["zona_kotak"] == 0.0 and maks["zona_teras"] == 0.0, "zona kotak surat dan zona teras rumah pelanggan_boleh seberang: 0%% tertimpa dekor (terburuk %.4f dan %.4f)" % [maks["zona_kotak"], maks["zona_teras"]])
-	# Kontrol: penempatan buruk memang terukur (pohon rindang seberang di maju 5, rumah pelanggan di pos 6: tajuk menimpa teras).
-	var data: Dictionary = _dasar()
-	data["dekor"] = [_butir("pohon", 5, "seberang", "rindang")]
-	var buruk: SegmenRute.Hasil = SegmenRute.parse(data)
-	var terukur: Dictionary = UkurDekor.ukur(buruk.segmen, true)
-	check(buruk.sah() and float(terukur["zona_teras"]) > 0.05, "kontrol: pohon seberang di maju 5 dekat rumah pelanggan pos 6 menimpa zona teras %.1f%% (pengukur mampu mendeteksi)" % (float(terukur["zona_teras"]) * 100.0))
+	# Kontrol: penempatan buruk memang terukur (pohon rindang seberang yang sah menurut tapak kaki tetapi tajuknya menimpa teras rumah pelanggan pos 6: pos 1 sampai 27 dicoba, yang terburuk).
+	var terburuk: float = 0.0
+	var pos_terburuk: int = -1
+	for pos_coba: int in range(1, 28):
+		var data: Dictionary = _dasar()
+		data["dekor"] = [_butir("pohon", pos_coba, "seberang", "rindang")]
+		var coba: SegmenRute.Hasil = SegmenRute.parse(data)
+		if not coba.sah():
+			continue
+		var nilai: float = float(UkurDekor.ukur(coba.segmen, true)["zona_teras"])
+		if nilai > terburuk:
+			terburuk = nilai
+			pos_terburuk = pos_coba
+	check(pos_terburuk > 0 and terburuk > 0.0, "kontrol: pohon seberang yang sah menurut tapak kaki bisa menimpa zona teras (terburuk %.1f%% di pos %d; pengukur mampu mendeteksi)" % [terburuk * 100.0, pos_terburuk])
 	# Tong sampah seberang di semua posisi sah tidak pernah menimpa sasaran (sprite kecil).
 	var tong_buruk: float = 0.0
 	for pos: int in range(1, 28):
@@ -768,7 +744,7 @@ func _test_scene_dekor() -> void:
 			diperiksa += 1
 			var nama: String = _nama_oracle(b)
 			var pijak: Vector2 = _pijak_oracle(nama)
-			var lateral: float = (-1.0 if b.sisi == LoperAnim.Sisi.SEBERANG else 1.0) * (2.25 if b.jenis == "lampu_jalan" else 2.5)
+			var lateral: float = UkurPenutupPiksel.lateral_dekor(b)
 			if s.texture == null or s.texture.resource_path != "%s/%s.png" % [FOLDER_PROPS, nama]:
 				salah.append("%s: tekstur %s, harap %s" % [b.id, s.texture.resource_path if s.texture != null else "null", nama])
 			if s.position != _layar(lateral, b.maju_ubin) or s.offset != -pijak or s.centered or not s.visible or s.get_parent() != dekor:
@@ -811,11 +787,11 @@ func _test_penutup_scene() -> void:
 	var dicoba: int = 0
 	for k: int in range(rute.dekor.size()):
 		var b: RouteBuilder.DekorItem = rute.dekor[k]
-		if b.sisi != LoperAnim.Sisi.DEKAT or not DekorRute.menutupi(b.jenis) or jenis_diuji.has(b.jenis + b.varian):
+		if b.sisi != LoperAnim.Sisi.DEKAT or not DekorRute.menutupi(b.jenis, b.varian, b.sisi) or jenis_diuji.has(b.jenis + b.varian):
 			continue
 		jenis_diuji[b.jenis + b.varian] = true
 		dicoba += 1
-		# Pemain di lateral 2,0 dan maju 0,3 di depan dekor: garis pandang (x + d, maju - d) masuk tapak (lateral 2,125 sampai 2,75), tinggi d kurang dari 1,0.
+		# Pemain di lateral 2,0 dan maju 0,3 di depan dekor: titik itu ada di dalam tapak penutup (d = 0), tinggi kotak lebih dari 1,3.
 		var maju_pemain: float = b.maju_ubin + 0.3
 		_taruh_sepeda(akar, maju_pemain, 2.0)
 		var sprite: Sprite2D = dekor.sprite_dekor(k)
@@ -829,22 +805,53 @@ func _test_penutup_scene() -> void:
 		_taruh_sepeda(akar, maju_pemain, 0.0)
 		if sprite.modulate.a != 1.0:
 			salah.append("%s: alfa %.2f saat pemain di tengah jalan, harap 1,0" % [b.id, sprite.modulate.a])
-		_taruh_sepeda(akar, maju_pemain, 1.0)
-		if sprite.modulate.a != 1.0:
-			salah.append("%s: alfa %.2f saat pemain di lateral 1,0 (jalur utama), harap 1,0" % [b.id, sprite.modulate.a])
 		_taruh_sepeda(akar, maju_pemain, 2.0)
 		if not is_equal_approx(sprite.modulate.a, 0.45):
 			salah.append("%s: alfa %.2f saat pemain kembali ke baliknya, harap 0,45" % [b.id, sprite.modulate.a])
 		_taruh_sepeda(akar, maju_pemain + 6.0, 2.0)
 		if sprite.modulate.a != 1.0:
 			salah.append("%s: alfa %.2f saat pemain sudah 5,7 ubin di depannya, harap 1,0" % [b.id, sprite.modulate.a])
-	check(dicoba >= 3 and salah.is_empty(), "%d pohon dan lampu dekat (tiga varian pohon, lampu): alfa 0,45 di baliknya, 1,0 di tengah jalan dan lateral 1,0, kembali 0,45, 1,0 di depannya: %s" % [dicoba, salah.slice(0, 3)])
+	check(dicoba >= 3 and salah.is_empty(), "%d pohon dan lampu dekat (tiga varian pohon, lampu): alfa 0,45 di baliknya, 1,0 di tengah jalan, kembali 0,45, 1,0 di depannya: %s" % [dicoba, salah.slice(0, 3)])
+	# Lajur sepeda (iterasi 2, P-6): posisi pemain di lateral 0,25 sampai 1,0 yang oracle piksel (`UkurPenutupPiksel`) buktikan tertimpa piksel opak dekor => alfa objek 0,45, bukan 1,0; pindah ke tengah jalan atau jauh => 1,0.
+	var lajur_salah: Array[String] = []
+	var lajur_dicoba: int = 0
+	var jenis_lajur: Dictionary = {}
+	for k: int in range(rute.dekor.size()):
+		var b: RouteBuilder.DekorItem = rute.dekor[k]
+		if b.sisi != LoperAnim.Sisi.DEKAT or not DekorRute.menutupi(b.jenis, b.varian, b.sisi) or jenis_lajur.has(b.jenis + b.varian):
+			continue
+		jenis_lajur[b.jenis + b.varian] = true
+		var sapuan: Dictionary = UkurPenutupPiksel.sapu_pemain(b, 0.25, 1.0 / 16.0, 3.0)
+		for lateral_uji: float in [0.5, 0.75, 1.0]:
+			var terbaik: Vector3 = Vector3(-99.0, 0.0, 0.0)
+			for v: Vector3 in sapuan["posisi_tumpang"]:
+				if is_equal_approx(v.x, lateral_uji) and v.z > terbaik.z:
+					terbaik = v
+			if terbaik.z <= 0.0:
+				continue
+			lajur_dicoba += 1
+			_taruh_sepeda(akar, terbaik.y, terbaik.x)
+			var sepeda: Node2D = akar.find_child("Sepeda", true, false) as Node2D
+			var harapan: Vector2i = UkurPenutupPiksel.layar(terbaik.x, terbaik.y)
+			if absf(sepeda.position.x - float(harapan.x)) > 1.0 or absf(sepeda.position.y - float(harapan.y)) > 1.0:
+				lajur_salah.append("%s: posisi sepeda %s, oracle %s" % [b.id, sepeda.position, harapan])
+			var sprite_lajur: Sprite2D = dekor.sprite_dekor(k)
+			if sprite_lajur == null or not is_equal_approx(sprite_lajur.modulate.a, 0.45):
+				lajur_salah.append("%s: lateral %.2f maju %.4f (%d piksel opak di atas pemain): alfa %s, harap 0,45" % [b.id, terbaik.x, terbaik.y, int(terbaik.z), sprite_lajur.modulate.a if sprite_lajur != null else -1.0])
+				continue
+			_taruh_sepeda(akar, terbaik.y, -2.0)
+			if sprite_lajur.modulate.a != 1.0:
+				lajur_salah.append("%s: alfa %.2f saat pemain pindah ke tepi seberang, harap 1,0" % [b.id, sprite_lajur.modulate.a])
+			_taruh_sepeda(akar, terbaik.y + 6.0, terbaik.x)
+			if sprite_lajur.modulate.a != 1.0:
+				lajur_salah.append("%s: alfa %.2f saat pemain 6 ubin di depannya di lateral %.2f, harap 1,0" % [b.id, sprite_lajur.modulate.a, terbaik.x])
+	check(lajur_dicoba >= 9 and lajur_salah.is_empty(), "%d posisi di lajur sepeda (lateral 0,5 / 0,75 / 1,0) dengan piksel opak dekor di atas pemain: alfa objek 0,45, posisi sepeda = oracle, 1,0 di tepi seberang dan 6 ubin di depan: %s" % [lajur_dicoba, lajur_salah.slice(0, 3)])
 	# Pohon seberang tidak pernah semi-transparan (kamera dari sisi dekat), di semua lateral lajur.
 	var seberang_salah: int = 0
 	var seberang_dicek: int = 0
 	for k: int in range(rute.dekor.size()):
 		var b: RouteBuilder.DekorItem = rute.dekor[k]
-		if b.sisi != LoperAnim.Sisi.SEBERANG or not DekorRute.menutupi(b.jenis) or seberang_dicek >= 8:
+		if b.sisi != LoperAnim.Sisi.SEBERANG or b.jenis == "tong_sampah" or seberang_dicek >= 8:
 			continue
 		seberang_dicek += 1
 		for lateral: float in [-2.0, -1.0, 0.0, 1.0, 2.0]:
@@ -861,7 +868,7 @@ func _test_penutup_scene() -> void:
 		var s: Sprite2D = anak as Sprite2D
 		if s != null and not s.visible and s.modulate.a != 1.0:
 			di_kolam_salah += 1
-	check(di_kolam_salah == 0 and penerap.jumlah() == akar.daur().jumlah_rumah() + akar.rintangan_daur().jumlah_tampil() + _jumlah_penutup(akar), "sprite dekor yang keluar jendela dilepas dari penerap dan dikembalikan ke alfa 1,0 (kolam %d salah); terdaftar = rumah + rintangan + pohon dan lampu tampil" % di_kolam_salah)
+	check(di_kolam_salah == 0 and penerap.jumlah() == akar.daur().jumlah_rumah() + akar.rintangan_daur().jumlah_tampil() + _jumlah_penutup(akar), "sprite dekor yang keluar jendela dilepas dari penerap dan dikembalikan ke alfa 1,0 (kolam %d salah); terdaftar = rumah + rintangan + pohon dan lampu sisi dekat tampil" % di_kolam_salah)
 	_bersihkan(akar)
 
 
@@ -970,7 +977,8 @@ func _indeks_jendela(rute: RouteBuilder.Rute, jarak: float) -> Array[int]:
 func _jumlah_penutup(akar: RuteMain) -> int:
 	var jumlah: int = 0
 	for i: int in akar.dekor_daur().indeks_tampil():
-		if akar.rute().dekor[i].jenis != "tong_sampah":
+		var butir: RouteBuilder.DekorItem = akar.rute().dekor[i]
+		if DekorRute.menutupi(butir.jenis, butir.varian, butir.sisi):
 			jumlah += 1
 	return jumlah
 
