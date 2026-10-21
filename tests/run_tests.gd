@@ -159,6 +159,9 @@ func _initialize() -> void:
 	await koran_sprite.jalankan()
 	var vfx_sprite: TesVfxSprite = TesVfxSprite.new(check, _judul, self)
 	await vfx_sprite.jalankan()
+	# Run fase5b-tembok-dekor bagian B1: tembok sisi dekat (varian FNV-1a, modul, geometri tidak berubah, gambar scene, jendela daur, sasaran tidak tertutup).
+	var tembok: TesTembok = TesTembok.new(check, _judul, self)
+	await tembok.jalankan()
 	var scene_hud_rute: TesHudRuteScene = TesHudRuteScene.new(check, _judul, self)
 	await scene_hud_rute.jalankan()
 	var halaman_koran: TesHalamanKoran = TesHalamanKoran.new(check, _judul, self)

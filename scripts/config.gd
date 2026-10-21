@@ -1162,3 +1162,21 @@ const UMPAN_KOIN_TIP_FPS: float = 10.0
 const UMPAN_KOIN_TIP_SPRITE_NILAI: int = 5
 ## Kotak kilau kucing misi (lebar, tinggi) piksel game: sprite 9x9 di tengahnya, pojok kiri atas kotak = `MISI_KILAU_POSISI_PX`. Juga kotak terburuk untuk "terlihat di layar" (`TampilMisi`).
 const MISI_KILAU_KOTAK_PX: Array[int] = [11, 11]
+
+## --- Tembok sisi dekat (run fase5b-tembok-dekor bagian B1, D-2 dan D-3; usulan, tinggi dan mundur dinilai di HP) ---
+## Pusat tembok belakang melintang jalan, ubin dari garis tengah (positif = dekat): tebal 4 unit (0,125 ubin), jadi sisi jalannya tepat di `RUTE_RUMAH_DEKAT_X_UBIN` (3,0) dan selisih pusat 0,125 = setengah tebal.
+const RUTE_TEMBOK_X_UBIN: float = 3.125
+## Rumah sisi dekat DIGAMBAR sejauh ini lebih jauh dari jalan (ubin, arah lateral positif); tapak logika (`RUTE_RUMAH_DEKAT_X_UBIN`, penutup, zona) tidak berubah.
+const RUTE_RUMAH_DEKAT_MUNDUR_UBIN: float = 1.25
+## Panjang satu modul tembok sepanjang jalan, ubin (satu modul sudah membawa tiang di awalnya; tiang penutup menutup ujung rantai).
+const RUTE_TEMBOK_MODUL_UBIN: float = 1.0
+## Nama varian tembok, urut tetap (indeks hasil hash mod 4): sprite `house_tembok_<varian>` dan `house_tembok_tiang`.
+const RUTE_TEMBOK_VARIAN: Array[String] = ["polos", "bata", "besi", "pot"]
+## Sprite tembok (modul dan tiang sama): [lebar sel, tinggi sel, frame, pijak x, pijak y], piksel; pijak = garis tengah tembok di awal modul. Sama dengan JSON aset `assets/sprites/houses/perumahan/house_tembok_*.json`, dijaga tes.
+const SPRITE_TEMBOK: Array[int] = [46, 46, 1, 41, 25]
+## Geser layar antar modul tembok berurutan, piksel game: satu ubin mundur dari jalan = (-32, +16). Dijaga tes terhadap `Iso`.
+const SPRITE_TEMBOK_GESER_PX: Array[int] = [-32, 16]
+## Penghitung hash FNV-1a 32 bit (bukan angka tuning): nilai awal, pengali, dan masker 32 bit. Dipakai `VarianTembok` memilih varian dari id rumah tanpa `hash()` dan tanpa RNG.
+const HASH_FNV1A_AWAL: int = 2166136261
+const HASH_FNV1A_KALI: int = 16777619
+const HASH_FNV1A_MASKER: int = 4294967295

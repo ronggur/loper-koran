@@ -39,8 +39,9 @@ const SEL_SEBELUM: Array = [[640, 434, 7697851], [667, 450, 8215875], [780, 496,
 const TINGGI: int = 360
 const LEBAR_UJI: Array[int] = [640, 667, 780, 800]
 ## Tidak boleh ada nama ini di sumber (pemindai AC-17, bagian ubin). Disambung supaya berkas ini tidak cocok dengan dirinya sendiri.
+## Run fase5b-tembok-dekor bagian B1: `house_tembok_` TIDAK lagi terlarang (lima sprite tembok sisi dekat sah dirujuk `TembokDekat`); pemindai khusus tembok (hanya lima nama itu) ada di `tes_tembok.gd`.
 const TERLARANG: Array[String] = [
-	"house_" + "tembok_", "prop_" + "tong_sampah", "mission_" + "jejak", "mission_" + "mangkuk", "prop_" + "portal", "prop_" + "pos_",
+	"prop_" + "tong_sampah", "mission_" + "jejak", "mission_" + "mangkuk", "prop_" + "portal", "prop_" + "pos_",
 	"vfx_" + "percikan", "polisi_" + "tidur", "perumahan_" + "zebra", "perumahan_" + "genangan",
 ]
 

@@ -45,6 +45,15 @@ static func pusat_tapak_dunia(rumah: RouteBuilder.RumahRute) -> Vector2:
 	return Vector2(pusat.x, -pusat.y)
 
 
+## Titik pijak GAMBAR sprite rumah di dunia (ubin; y dunia = -maju): `pusat_tapak_dunia`, kecuali rumah sisi `dekat` digeser `RUTE_RUMAH_DEKAT_MUNDUR_UBIN`
+## menjauh dari jalan (run fase5b-tembok-dekor, D-2: rumah penuh di belakang tembok). Tapak logika (penutup, zona, validasi) tidak ikut bergeser.
+static func pusat_gambar_dunia(rumah: RouteBuilder.RumahRute) -> Vector2:
+	var pusat: Vector2 = pusat_tapak_dunia(rumah)
+	if rumah.sisi == LoperAnim.Sisi.DEKAT:
+		pusat.x += Config.RUTE_RUMAH_DEKAT_MUNDUR_UBIN
+	return pusat
+
+
 ## Titik pijak gambar kotak surat sasaran rumah pelanggan di dunia (ubin; y dunia = -maju): sama dengan kotak surat jalan uji
 ## (`JALAN_UJI_KOTAK_SURAT_*`, di tengah zona kotak surat), digeser ke awal kavling rumah.
 static func titik_kotak_surat_dunia(rumah: RouteBuilder.RumahRute) -> Vector2:
