@@ -1,0 +1,15 @@
+{
+ "sprite": "prop_pohon_glodokan.png",
+ "cell": [
+  121,
+  126
+ ],
+ "frames": 1,
+ "fps": 0,
+ "ground_anchor": [
+  25,
+  77
+ ],
+ "board": "dekor",
+ "note": "Usulan, tools/env_art/lampu_pohon.py --salin (run fase5b-tembok-dekor). Glodokan tiang: ramping dan tinggi. Titik pijak = pangkal batang."
+}

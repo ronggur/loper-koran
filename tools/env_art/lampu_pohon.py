@@ -5,10 +5,20 @@ dari sisi dekat (ke kiri atas). Pohon: lima jenis yang sudah ada di lib/kampung/
 tunggal, ditambah enam jenis baru. Layar contoh memakai ubin dari ubin_perumahan.py (tata letak game), siang
 dan malam.
 
-    python3 tools/env_art/lampu_pohon.py        # ke build/env_art/lampu_pohon/
+    python3 tools/env_art/lampu_pohon.py          # ke build/env_art/lampu_pohon/ (semua jenis, sheet lampu nyala dan mati, layar contoh)
+    python3 tools/env_art/lampu_pohon.py --salin  # juga salin HANYA sprite yang dipasang ke assets/sprites/props/
+
+`--salin` (run fase5b-tembok-dekor, D-1 dan D-5): `prop_pohon_{rindang,glodokan,ketapang}` (seed render 3, sama dengan keluaran lama) dan lampu
+jenis `lengan` bingkai MATI saja sebagai dua sprite tunggal: `prop_lampu_lengan_seberang` (lengan ke kanan bawah) dan `prop_lampu_lengan_dekat`
+(lengan ke kiri atas); titik pijak = kaki tiang, pohon = pangkal batang. Bingkai nyala, jenis lampu dan pohon lain TIDAK disalin (M3). JSON
+memakai bentuk JSON gelombang 1 (`cell`, `frames` 1, `fps` 0, `ground_anchor`). `ENV_ART_SALIN_KE` mengganti folder tujuan (langsung folder
+props, default assets/sprites/props; dipakai tools/tests_cek/uji_aset_pasang_5b.py). Hasilnya deterministik (seed tetap, tanpa RNG global).
 """
 import json
 import math
+import os
+import sys
+from pathlib import Path
 
 import numpy as np
 from PIL import Image
@@ -509,6 +519,46 @@ def ekspor_pohon():
     return out
 
 
+# ====================================================================== salin ====
+ROOT = Path(__file__).resolve().parents[2]
+SALIN_KE = Path(os.environ.get('ENV_ART_SALIN_KE', ROOT / 'assets' / 'sprites' / 'props'))
+SEED_POHON = 3                                       # sama dengan ekspor_pohon(): keluaran lama tidak berubah
+PASANG_POHON = ['rindang', 'glodokan', 'ketapang']   # D-5: tiga jenis lama (ART_DIRECTION 2.6)
+PASANG_LAMPU = [('lengan', 'seberang'), ('lengan', 'dekat')]    # D-5: satu jenis per sisi, bingkai MATI saja
+
+
+def _json_tunggal(nama, a, o, info):
+    """JSON satu sprite satu bingkai, bentuk JSON gelombang 1 (`cell`, `frames`, `fps`, `ground_anchor`)."""
+    return {'sprite': nama + '.png', 'cell': [int(a.shape[1]), int(a.shape[0])], 'frames': 1, 'fps': 0,
+            'ground_anchor': [int(o[0]), int(o[1])], 'board': 'dekor',
+            'note': 'Usulan, tools/env_art/lampu_pohon.py --salin (run fase5b-tembok-dekor). ' + info}
+
+
+def render_pasang():
+    """{nama: (rgba, pijak, info)} untuk HANYA sprite yang dipasang (PASANG_POHON, PASANG_LAMPU). Tanpa menulis berkas."""
+    hasil = {}
+    for nm in PASANG_POHON:
+        fn, info, _ = POHON[nm]
+        a, o, _, _ = F3.render_sprite(lambda s, fn=fn: fn(s, SEED_POHON), extra_px=(70, 34), pad=4)
+        hasil['prop_pohon_%s' % nm] = (a, o, info + '. Titik pijak = pangkal batang.')
+    for jenis, sisi in PASANG_LAMPU:
+        a, o, _, _ = F3.render_sprite(lambda s, jenis=jenis, sisi=sisi: lampu_v(s, jenis, 0, 0, sisi, False) and None,
+                                      extra_px=(54, 28), pad=4)
+        arah = 'lengan ke kanan bawah' if sisi == 'seberang' else 'lengan ke kiri atas'
+        hasil['prop_lampu_%s_%s' % (jenis, sisi)] = (a, o, '%s, bingkai mati (siang), %s. Titik pijak = kaki tiang.' % (LAMPU_INFO[jenis], arah))
+    return hasil
+
+
+def salin():
+    """Salin HANYA sprite yang dipasang (PNG + JSON) ke SALIN_KE."""
+    SALIN_KE.mkdir(parents=True, exist_ok=True)
+    hasil = render_pasang()
+    for nama, (a, o, info) in hasil.items():
+        Image.fromarray(a, 'RGBA').save(SALIN_KE / (nama + '.png'))
+        _json(SALIN_KE / (nama + '.json'), _json_tunggal(nama, a, o, info))
+    return hasil
+
+
 # =============================================================== layar contoh ====
 LAYAR_POHON = [(-150, -256, 'rindang', 1), (-150, -128, 'flamboyan', 2), (-150, 0, 'palem_raja', 3),
                (-150, 128, 'pucuk_merah', 4), (-150, 256, 'glodokan', 5),
@@ -555,3 +605,5 @@ if __name__ == '__main__':
     render_layar('siang', 'layar_lampu_pohon_siang.png')
     render_layar('malam', 'layar_lampu_pohon_malam.png')
     print('selesai ->', OUT_DIR)
+    if '--salin' in sys.argv[1:]:
+        print('disalin ke', SALIN_KE, '(hanya', len(salin()), 'sprite: pohon rindang, glodokan, ketapang; lampu lengan seberang dan dekat, bingkai mati)')

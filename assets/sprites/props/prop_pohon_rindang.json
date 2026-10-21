@@ -1,0 +1,15 @@
+{
+ "sprite": "prop_pohon_rindang.png",
+ "cell": [
+  151,
+  119
+ ],
+ "frames": 1,
+ "fps": 0,
+ "ground_anchor": [
+  41,
+  63
+ ],
+ "board": "dekor",
+ "note": "Usulan, tools/env_art/lampu_pohon.py --salin (run fase5b-tembok-dekor). Rindang (mangga, kersen): tajuk lebar bergumpal. Titik pijak = pangkal batang."
+}

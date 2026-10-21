@@ -8,7 +8,7 @@
   16
  ],
  "unit_dunia_per_ubin": 32,
- "note": "Usulan, tools/env_art/ubin_perumahan.py --salin (run fase5a-pasang-aset-gelombang1). Hanya ubin yang dipasang. Kolom mengikuti scripts/config.gd: aspal x -1..1 ubin (seberang, dekat), trotoar 1 ubin per sisi (kerb dalam, lajur sepeda, kerb luar), rumput di luar. Ubin sepanjang jalan berulang tiap 1 ubin. rumput_1: rumput polos untuk kolom rumput di luar kolom pertama (rumput_seberang membawa tepi kerb luar yang tidak boleh berulang).",
+ "note": "Usulan, tools/env_art/ubin_perumahan.py --salin (run fase5a-pasang-aset-gelombang1 dan fase5b-tembok-dekor). Hanya ubin yang dipasang. Kolom mengikuti scripts/config.gd: aspal x -1..1 ubin (seberang, dekat), trotoar 1 ubin per sisi (kerb dalam, lajur sepeda, kerb luar), rumput di luar. Ubin sepanjang jalan berulang tiap 1 ubin. rumput_1, rumput_2, rumput_3: rumput polos untuk kolom rumput di luar kolom pertama (rumput_seberang membawa tepi kerb luar yang tidak boleh berulang; 2 dan 3 variasi, 3 dengan bunga kecil). ubin_khusus: pengganti satu sel kolomnya (*_masuk: jalan masuk garasi beton di bawah mobil parkir, hanya sisi seberang; *_simbol: simbol sepeda dan panah di lajur sepeda trotoar).",
  "kolom_x_ubin": {
   "rumput_seberang": -2.5,
   "trotoar_seberang": -1.5,
@@ -18,15 +18,29 @@
   "rumput_dekat": 2.5
  },
  "ubin_polos_luar": [
-  "rumput_1"
+  "rumput_1",
+  "rumput_2",
+  "rumput_3"
+ ],
+ "ubin_khusus": [
+  "trotoar_seberang_masuk",
+  "rumput_seberang_masuk",
+  "trotoar_seberang_simbol",
+  "trotoar_dekat_simbol"
  ],
  "tiles": [
   "tile_perumahan_aspal_dekat.png",
   "tile_perumahan_aspal_seberang.png",
   "tile_perumahan_rumput_1.png",
+  "tile_perumahan_rumput_2.png",
+  "tile_perumahan_rumput_3.png",
   "tile_perumahan_rumput_dekat.png",
   "tile_perumahan_rumput_seberang.png",
+  "tile_perumahan_rumput_seberang_masuk.png",
   "tile_perumahan_trotoar_dekat.png",
-  "tile_perumahan_trotoar_seberang.png"
+  "tile_perumahan_trotoar_dekat_simbol.png",
+  "tile_perumahan_trotoar_seberang.png",
+  "tile_perumahan_trotoar_seberang_masuk.png",
+  "tile_perumahan_trotoar_seberang_simbol.png"
  ]
 }

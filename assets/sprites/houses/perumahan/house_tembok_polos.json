@@ -1,0 +1,15 @@
+{
+ "sprite": "house_tembok_polos.png",
+ "cell": [
+  46,
+  46
+ ],
+ "frames": 1,
+ "fps": 0,
+ "ground_anchor": [
+  41,
+  25
+ ],
+ "board": "dekat",
+ "note": "Usulan, tools/env_art/gelombang1 (Fase 5 gelombang 1). Frame berjajar kiri ke kanan. Modul 1 ubin, tinggi 14. Sambung: modul berikut digeser (-32, +16) px."
+}
