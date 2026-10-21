@@ -7,6 +7,9 @@ extends Node2D
 ## lewat `GambarPiksel` dan `GambarSprite`. Warna dari `Palette`.
 
 const SPRITE_KILAU: String = "mission_kilau"
+const LAPIS_EKOR: String = "ekor"
+const LAPIS_KILAU: String = "kilau"
+const LAPIS_PROGRES: String = "progres"
 
 ## Tekstur kilau yang dipegang node (dimuat di `_ready`, bukan di `_draw`; lihat `GambarSprite`).
 var _tekstur: Dictionary = {}
@@ -92,8 +95,18 @@ func item_sprite() -> Array[DefSprite.Item]:
 	return item_kilau(_kilau, _detik)
 
 
+## Urutan lapisan yang digambar `_draw`, dari bawah ke atas (D-6): ekor, kilau, bar progres.
+static func urutan_lapisan() -> Array[String]:
+	return [LAPIS_EKOR, LAPIS_KILAU, LAPIS_PROGRES] as Array[String]
+
+
 func _draw() -> void:
-	GambarPiksel.gambar(self, perintah_ekor(_ekor, _detik))
-	GambarSprite.gambar(self, item_kilau(_kilau, _detik), _tekstur)
-	if _progres > 0.0:
-		GambarPiksel.gambar(self, perintah_progres(_progres))
+	for lapis: String in urutan_lapisan():
+		match lapis:
+			LAPIS_EKOR:
+				GambarPiksel.gambar(self, perintah_ekor(_ekor, _detik))
+			LAPIS_KILAU:
+				GambarSprite.gambar(self, item_kilau(_kilau, _detik), _tekstur)
+			LAPIS_PROGRES:
+				if _progres > 0.0:
+					GambarPiksel.gambar(self, perintah_progres(_progres))

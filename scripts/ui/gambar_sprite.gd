@@ -26,11 +26,33 @@ static func muat(daftar_nama: Array[String]) -> Dictionary:
 	return hasil
 
 
-## Menggambar semua item (urut) ke `kanvas` dengan tekstur dari `muatan` (hasil `muat`). Item dengan nama yang tidak ada di `muatan` atau alpha 0 dilewati.
-static func gambar(kanvas: CanvasItem, daftar: Array, muatan: Dictionary) -> void:
+## Satu perintah gambar potongan sprite: tekstur, kotak tujuan (ruang `CanvasItem`), kotak sumber di sheet, dan warna modulasi (putih dengan alpha item).
+class Perintah extends RefCounted:
+	var tekstur: Texture2D = null
+	var tujuan: Rect2 = Rect2()
+	var sumber: Rect2 = Rect2()
+	var warna: Color = Color(1.0, 1.0, 1.0, 1.0)
+
+
+## Perintah gambar murni untuk `daftar` (urut) dengan tekstur dari `muatan` (hasil `muat`): item dengan nama yang tidak ada di `muatan`, alpha 0, atau bukan `DefSprite.Item` dilewati. Warna = putih dengan alpha item,
+## jadi kurangi-efek debu dan kekuatan garis sampai ke gambar. Tanpa `CanvasItem`, jadi bisa dites headless (alpha yang benar-benar dipakai `gambar` adalah `Perintah.warna`).
+static func perintah(daftar: Array, muatan: Dictionary) -> Array[Perintah]:
+	var hasil: Array[Perintah] = []
 	for lain: Variant in daftar:
 		var item: DefSprite.Item = lain as DefSprite.Item
 		if item == null or item.alfa <= 0.0 or not muatan.has(item.nama):
 			continue
 		var potongan: Rect2i = DefSprite.region(item.nama, item.frame)
-		kanvas.draw_texture_rect_region(muatan[item.nama] as Texture2D, Rect2(item.pojok, Vector2(potongan.size)), Rect2(potongan), Color(1.0, 1.0, 1.0, item.alfa))
+		var p: Perintah = Perintah.new()
+		p.tekstur = muatan[item.nama] as Texture2D
+		p.tujuan = Rect2(item.pojok, Vector2(potongan.size))
+		p.sumber = Rect2(potongan)
+		p.warna = Color(1.0, 1.0, 1.0, item.alfa)
+		hasil.append(p)
+	return hasil
+
+
+## Menggambar semua item (urut) ke `kanvas` dengan tekstur dari `muatan` (hasil `muat`) lewat `perintah`. Item dengan nama yang tidak ada di `muatan` atau alpha 0 dilewati.
+static func gambar(kanvas: CanvasItem, daftar: Array, muatan: Dictionary) -> void:
+	for p: Perintah in perintah(daftar, muatan):
+		kanvas.draw_texture_rect_region(p.tekstur, p.tujuan, p.sumber, p.warna)

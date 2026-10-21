@@ -334,6 +334,86 @@ func _test_node_vfx_sepeda() -> void:
 	check(node.item_sprite().is_empty(), "kecepatan 2,0 tanpa rem: tidak ada gambar")
 	node.free()
 	kedua.free()
+	_test_acak_garis_di_node()
+	_test_alfa_sampai_gambar()
+
+
+## QA-001: acak varian garis di NODE yang dipakai game (bukan hanya fungsi murni): ikuti 600 `maju(DT)`, urutan = urutan fungsi murni dari RNG berbenih `UMPAN_GARIS_SPRITE_BENIH`.
+func _test_acak_garis_di_node() -> void:
+	_judul.call("VfxSepedaGambar.maju: node mengacak varian dan geseran garis tiap 2 sampai 3 frame, urutan = fungsi murni berbenih UMPAN_GARIS_SPRITE_BENIH (AC-13, QA-001)")
+	var node: VfxSepedaGambar = VfxSepedaGambar.new()
+	node.atur(6.0, false, false)
+	var rng: RandomNumberGenerator = _rng(Config.UMPAN_GARIS_SPRITE_BENIH)
+	var acuan: VfxSepeda.GarisKeadaan = VfxSepeda.garis_awal(rng)
+	var awal_sama: bool = node.keadaan_garis().varian == acuan.varian and node.keadaan_garis().sisa_frame == acuan.sisa_frame and node.keadaan_garis().geser_px == acuan.geser_px
+	var urutan_sama: bool = true
+	var pernah: Dictionary = {}
+	var geser_beragam: Dictionary = {}
+	var jumlah_acak: int = 0
+	var interval_benar: bool = true
+	var jarak: int = 0
+	var sisa_saat_acak: int = acuan.sisa_frame
+	var item_sesuai: bool = true
+	for i: int in range(600):
+		var sebelum: VfxSepeda.GarisKeadaan = node.keadaan_garis().salin()
+		node.maju(DT)
+		acuan = VfxSepeda.garis_maju(acuan, rng)
+		var k: VfxSepeda.GarisKeadaan = node.keadaan_garis()
+		if k.varian != acuan.varian or k.sisa_frame != acuan.sisa_frame or k.geser_px != acuan.geser_px:
+			urutan_sama = false
+		jarak += 1
+		if sebelum.sisa_frame > 1:
+			if k.sisa_frame != sebelum.sisa_frame - 1 or k.varian != sebelum.varian or k.geser_px != sebelum.geser_px:
+				interval_benar = false
+		else:
+			if k.sisa_frame < 2 or k.sisa_frame > 3 or jarak != sisa_saat_acak:
+				interval_benar = false
+			jarak = 0
+			sisa_saat_acak = k.sisa_frame
+			jumlah_acak += 1
+			geser_beragam[roundi(k.geser_px)] = true
+		pernah[k.varian] = true
+		var garis: Array[DefSprite.Item] = node.item_sprite().slice(1)
+		if garis.size() != 1 or garis[0].nama != VfxSepeda.SPRITE_GARIS[k.varian]:
+			item_sesuai = false
+	check(awal_sama, "node baru: keadaan garis awal = garis_awal dari RNG berbenih UMPAN_GARIS_SPRITE_BENIH")
+	check(urutan_sama, "600 langkah maju(DT): varian, sisa frame, dan geseran node sama persis dengan fungsi murni berbenih")
+	check(pernah.size() == 3 and pernah.has(0) and pernah.has(1) and pernah.has(2), "ketiga varian garis muncul di node dalam 600 langkah: %s" % [pernah.keys()])
+	check(jumlah_acak > 150 and geser_beragam.size() > 10, "varian dan geseran berubah di node (%d kali diacak, %d nilai geseran)" % [jumlah_acak, geser_beragam.size()])
+	check(interval_benar, "node mengacak tepat tiap 2 atau 3 frame (sisa frame turun satu per langkah)")
+	check(item_sesuai, "item garis yang digambar node mengikuti varian terbaru tiap langkah")
+	node.free()
+
+
+## QA-002: alpha item sampai ke perintah gambar (`GambarSprite.perintah`, yang dijalankan `GambarSprite.gambar`): kurangi-efek debu, alpha garis = kekuatan, dan alpha 0 dilewati.
+func _test_alfa_sampai_gambar() -> void:
+	_judul.call("GambarSprite.perintah: alpha item sampai ke warna gambar; kurangi efek debu dan kekuatan garis (QA-002)")
+	var nama: Array[String] = [VfxSepeda.SPRITE_DEBU]
+	nama.append_array(VfxSepeda.SPRITE_GARIS)
+	var muatan: Dictionary = GambarSprite.muat(nama)
+	var garis: VfxSepeda.GarisKeadaan = VfxSepeda.GarisKeadaan.new()
+	var penuh: Array[DefSprite.Item] = VfxSepeda.item_debu(6.0, false, false, 0.0)
+	var kurang: Array[DefSprite.Item] = VfxSepeda.item_debu(6.0, false, true, 0.0)
+	var p_penuh: Array[GambarSprite.Perintah] = GambarSprite.perintah(penuh, muatan)
+	var p_kurang: Array[GambarSprite.Perintah] = GambarSprite.perintah(kurang, muatan)
+	check(p_penuh.size() == 1 and p_penuh[0].warna == Color(1.0, 1.0, 1.0, 1.0), "debu penuh: warna putih alpha 1,0")
+	check(p_kurang.size() == 1 and p_kurang[0].warna == Color(1.0, 1.0, 1.0, Config.UMPAN_KURANGI_DEBU_PENGALI) and p_kurang[0].warna.a < 1.0, "debu kurangi efek: alpha gambar = UMPAN_KURANGI_DEBU_PENGALI (%s)" % [Config.UMPAN_KURANGI_DEBU_PENGALI])
+	var cocok: bool = true
+	var beragam: Dictionary = {}
+	for v: float in [3.0, 4.0, 5.0, 6.0, 8.0]:
+		var item: Array[DefSprite.Item] = VfxSepeda.item_garis(v, false, garis)
+		if item.is_empty():
+			continue
+		var p: Array[GambarSprite.Perintah] = GambarSprite.perintah(item, muatan)
+		if p.size() != 1 or not is_equal_approx(p[0].warna.a, item[0].alfa) or not is_equal_approx(p[0].warna.a, VfxSepeda.garis_alfa(v, false)):
+			cocok = false
+		beragam[snappedf(item[0].alfa, 0.01)] = true
+	check(cocok and beragam.size() > 1, "alpha garis di gambar = kekuatan garis, beragam menurut kecepatan (%d nilai)" % [beragam.size()])
+	var nol: Array[DefSprite.Item] = [DefSprite.Item.buat(VfxSepeda.SPRITE_DEBU, 0, Vector2.ZERO, 0.0), DefSprite.Item.buat("tidak_ada", 0, Vector2.ZERO, 1.0)]
+	var setengah: Array[DefSprite.Item] = [DefSprite.Item.buat(VfxSepeda.SPRITE_DEBU, 1, Vector2(3, 4), 0.25)]
+	check(GambarSprite.perintah(nol, muatan).is_empty(), "alpha 0 dan nama tidak dikenal dilewati")
+	var ps: Array[GambarSprite.Perintah] = GambarSprite.perintah(setengah, muatan)
+	check(ps.size() == 1 and ps[0].warna == Color(1.0, 1.0, 1.0, 0.25) and ps[0].tujuan.position == Vector2(3, 4) and ps[0].sumber == Rect2(DefSprite.region(VfxSepeda.SPRITE_DEBU, 1)) and ps[0].tekstur == muatan[VfxSepeda.SPRITE_DEBU], "perintah memuat tekstur, tujuan, sumber frame, dan alpha 0,25 apa adanya")
 
 
 # --- Debu dan garis di scene (AC-13) ---
@@ -560,6 +640,8 @@ func _test_kilau_murni() -> void:
 	check(Config.MISI_KILAU_DETIK == 0.4 and Config.MISI_KILAU_POSISI_PX == [-5, -33] and Config.MISI_KILAU_KOTAK_PX == [11, 11], "konstanta ritme, posisi, dan kotak kilau tidak berubah")
 	check(f0[0].pojok == Vector2(-4, -32) and f1[0].pojok == Vector2(-4, -32), "pojok sprite (-4, -32) = pojok kotak (-5, -33) + geser tengah (1, 1)")
 	check(KucingHiasan.item_kilau(false, 0.0).is_empty() and KucingHiasan.item_kilau(false, 5.0).is_empty(), "tanpa petunjuk kilau: tidak ada item")
+	var urutan_benar: Array[String] = ["ekor", "kilau", "progres"]
+	check(KucingHiasan.urutan_lapisan() == urutan_benar, "urutan lapisan _draw: ekor, kilau, progres (kilau di atas ekor, di bawah bar progres; QA-003, D-6)")
 	check(KucingHiasan.frame_kilau(0.0) == 0 and KucingHiasan.frame_kilau(0.39) == 0 and KucingHiasan.frame_kilau(0.4) == 1 and KucingHiasan.frame_kilau(0.8) == 0 and KucingHiasan.frame_kilau(-1.0) == 0, "frame_kilau lama tidak berubah")
 
 
