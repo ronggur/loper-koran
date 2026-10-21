@@ -8,6 +8,11 @@ extends SceneTree
 ##   dekat: garis bidik (`_bidik`), koran terbang (`_terbang`), dan penanda sesudah mendarat (`_kena`).
 ## - `tembok_jalur_dekat` dan `tembok_trotoar_dekat`: sepeda di jalur dekat (lateral 0,5) dan trotoar dekat (lateral 1,75) di samping rumah pelanggan dekat bertembok.
 ## - `kidal`: tata letak kidal dengan tembok di layar.
+## Skenario bagian B2 (dekor pinggir jalan dari data segmen, rute nyata seed dev; kotak penutup rumah dekat digeser seperti gambarnya, P-4):
+## - `dekor_pohon_menutupi` dan `dekor_lampu_menutupi`: sepeda di trotoar dekat (lateral 2,0) tepat di balik pohon atau lampu sisi dekat: sprite semi-transparan (alfa 0,45).
+## - `dekor_pohon_seberang`, `dekor_lampu_seberang`, `dekor_tong`: sepeda di jalur tengah di dekat pohon, lampu, dan tong sampah sisi seberang dan dekat (tidak menutupi kotak surat, alfa 1,0).
+## - `dekor_jalur_utama`: sepeda di tengah jalan melewati dekor kedua sisi (tidak ada dekor yang menutupinya, alfa 1,0).
+## Keadaan tidak sesuai dicetak bila alfa dekor tidak sesuai harapan di keadaan itu.
 ## Mencetak data tiap keadaan, kotak teks HUD, pecahan piksel sasaran yang tertimpa tembok (`UkurTembok`), dan keadaan yang tidak sesuai harapan (nol bila baik). Tidak interaktif: keluar sendiri lewat
 ## `ProbeKeluar`. Tidak menulis `user://save.json`.
 ##
@@ -79,6 +84,9 @@ func _initialize() -> void:
 		await _maju(0.25)
 		await _foto("tembok_%s" % varian, rumah)
 		_periksa_tembok(rumah, varian)
+
+	# --- Dekor pinggir jalan (bagian B2) di rute nyata, rumah dekat tidak pudar lagi di trotoar dekat ---
+	await _foto_dekor_semua()
 
 	# --- Rute buatan dengan pelanggan di sisi dekat: ukur sasaran, jalur dekat, trotoar dekat, garis bidik, koran terbang, kena ---
 	_pasang_rute_buatan()
@@ -329,6 +337,76 @@ func _geser(index: int, posisi_viewport: Vector2) -> void:
 	Input.flush_buffered_events()
 
 
+## Dekor pinggir jalan di rute nyata (bagian B2): pohon dan lampu menutupi pemain di trotoar dekat, dekor seberang dan tong di jalur tengah, jalur utama bersih.
+func _foto_dekor_semua() -> void:
+	await _tunggu(3)
+	var rute: RouteBuilder.Rute = _akar.rute()
+	var dekor: DekorDaur = _akar.dekor_daur()
+	var pohon_dekat: int = _indeks_dekor("pohon", LoperAnim.Sisi.DEKAT, 40.0)
+	var lampu_dekat: int = _indeks_dekor("lampu_jalan", LoperAnim.Sisi.DEKAT, 40.0)
+	var pohon_seberang: int = _indeks_dekor("pohon", LoperAnim.Sisi.SEBERANG, 40.0)
+	var lampu_seberang: int = _indeks_dekor("lampu_jalan", LoperAnim.Sisi.SEBERANG, 40.0)
+	var tong: int = _indeks_dekor("tong_sampah", LoperAnim.Sisi.SEBERANG, 40.0)
+	_cek(pohon_dekat >= 0 and lampu_dekat >= 0 and pohon_seberang >= 0 and lampu_seberang >= 0 and tong >= 0, "rute nyata memuat pohon dan lampu di kedua sisi dan tong sampah")
+	if pohon_dekat < 0 or lampu_dekat < 0 or pohon_seberang < 0 or lampu_seberang < 0 or tong < 0:
+		return
+	# Menutupi: pemain di lateral 2,0, 0,3 ubin di depan dekor (garis pandang masuk tapak).
+	_taruh(3.0, 2.0, rute.dekor[pohon_dekat].maju_ubin + 0.3)
+	await _tunggu(3)
+	await _foto_dekor("dekor_pohon_menutupi", pohon_dekat, 0.45)
+	_taruh(3.0, 2.0, rute.dekor[lampu_dekat].maju_ubin + 0.3)
+	await _tunggu(3)
+	await _foto_dekor("dekor_lampu_menutupi", lampu_dekat, 0.45)
+	# Tidak menutupi: jalur tengah, dekor seberang dan tong sampah di depan pemain.
+	_taruh(3.0, 0.0, rute.dekor[pohon_seberang].maju_ubin - 3.0)
+	await _tunggu(3)
+	await _foto_dekor("dekor_pohon_seberang", pohon_seberang, 1.0)
+	_taruh(3.0, 0.0, rute.dekor[lampu_seberang].maju_ubin - 3.0)
+	await _tunggu(3)
+	await _foto_dekor("dekor_lampu_seberang", lampu_seberang, 1.0)
+	_taruh(3.0, 0.0, rute.dekor[tong].maju_ubin - 3.0)
+	await _tunggu(3)
+	await _foto_dekor("dekor_tong", tong, 1.0)
+	# Jalur utama: tengah jalan melewati dekor dekat dan seberang, tidak ada yang menutupi.
+	_taruh(3.0, 0.0, rute.dekor[pohon_dekat].maju_ubin - 3.0)
+	await _tunggu(3)
+	await _foto_dekor("dekor_jalur_utama", pohon_dekat, 1.0)
+	var menutupi: int = _akar.penerap_penutup().jumlah_menutupi()
+	_cek(menutupi == 0, "jalur utama: tidak ada gambar yang menutupi pemain di lateral 0,0 (%d)" % menutupi)
+	# Rumah dekat tidak pudar di trotoar dekat (P-4): lateral 1,75 di samping rumah dekat pertama di jendela.
+	for i: int in _akar.daur().indeks_tampil():
+		if rute.rumah[i].sisi == LoperAnim.Sisi.DEKAT:
+			_taruh(3.0, LATERAL_TROTOAR, rute.rumah[i].maju_ubin + 1.5)
+			await _tunggu(3)
+			var sprite: Sprite2D = _akar.daur().sprite_rumah(i)
+			_cek(sprite != null and sprite.modulate.a == 1.0, "P-4: rumah dekat %s tidak pudar saat pemain di trotoar dekat" % rute.rumah[i].id)
+			await _foto_dekor("dekor_rumah_dekat_trotoar", pohon_dekat, -1.0)
+			break
+	if dekor.jumlah_tampil() < 1:
+		_cek(false, "dekor digambar di jendela daur")
+
+
+## Indeks dekor pertama berjenis `jenis` di `sisi` dengan `maju_ubin` paling sedikit `dari_maju`; -1 bila tidak ada.
+func _indeks_dekor(jenis: String, sisi: LoperAnim.Sisi, dari_maju: float) -> int:
+	var rute: RouteBuilder.Rute = _akar.rute()
+	for i: int in range(rute.dekor.size()):
+		if rute.dekor[i].jenis == jenis and rute.dekor[i].sisi == sisi and rute.dekor[i].maju_ubin >= dari_maju:
+			return i
+	return -1
+
+
+## Tangkapan keadaan dekor `indeks`: mencetak alfa spritenya dan menandai keadaan tidak sesuai bila berbeda dari `alfa_harapan` (negatif = tidak diperiksa).
+func _foto_dekor(keadaan: String, indeks: int, alfa_harapan: float) -> void:
+	await _tunggu(3)
+	var sprite: Sprite2D = _akar.dekor_daur().sprite_dekor(indeks)
+	var item: RouteBuilder.DekorItem = _akar.rute().dekor[indeks]
+	var alfa: float = sprite.modulate.a if sprite != null else -1.0
+	print("%s: dekor %s (%s %s) alfa %.2f, dekor tampil %d, menutupi pemain %d" % [keadaan, item.id, item.jenis, item.varian, alfa, _akar.dekor_daur().jumlah_tampil(), _akar.penerap_penutup().jumlah_menutupi()])
+	if alfa_harapan >= 0.0:
+		_cek(sprite != null and is_equal_approx(sprite.modulate.a, alfa_harapan), "%s: alfa dekor %.2f, harap %.2f" % [keadaan, alfa, alfa_harapan])
+	_simpan(keadaan)
+
+
 func _foto(keadaan: String, rumah: RouteBuilder.RumahRute) -> void:
 	await _tunggu(3)
 	var indeks: int = _akar.rute().rumah.find(rumah)
@@ -336,6 +414,10 @@ func _foto(keadaan: String, rumah: RouteBuilder.RumahRute) -> void:
 	if indeks >= 0 and _akar.daur().sprite_rumah(indeks) != null:
 		alfa = ", alfa rumah foto %.2f, tembok %d" % [_akar.daur().sprite_rumah(indeks).modulate.a, _akar.daur().sprite_tembok(indeks).size()]
 	print("%s: kecepatan %.2f u/d, lateral %.2f, jarak %.2f ubin, kidal %s, koran terbang %d, rumah tampil %d, tembok tampil %d, menutupi pemain %d%s" % [keadaan, _sepeda.kecepatan_ud, _sepeda.lateral_ubin, _sepeda.jarak_ubin, _kontrol.router.kidal(), _akar.koran_terbang().size(), _akar.daur().jumlah_rumah(), _akar.daur().jumlah_tembok(), _akar.penerap_penutup().jumlah_menutupi(), alfa])
+	_simpan(keadaan)
+
+
+func _simpan(keadaan: String) -> void:
 	if _folder.is_empty():
 		return
 	var gambar: Image = root.get_texture().get_image()
