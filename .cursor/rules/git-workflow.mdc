@@ -52,7 +52,7 @@ git branch --show-current                 #    konfirmasi: harus feat/gerak-sepe
 
 ## Push & Pull Request
 
-Belum ada workflow GitHub Actions yang membuka PR otomatis, jadi PR dibuat manual dengan `gh`:
+Tidak ada workflow yang membuka PR otomatis (hanya PR rilis dari release-please), jadi PR dibuat manual dengan `gh`:
 
 ```bash
 git push -u origin <branch>
@@ -81,4 +81,10 @@ Setelah PR dibuka, commit lanjutan untuk perbaikan review di-push ke branch yang
 
 ## Rilis
 
-Belum ada otomasi rilis. Jangan mengubah nomor versi atau membuat tag/Release tanpa diminta user. Kalau nanti memakai release-please atau sejenisnya, tambahkan bagian rilis di sini.
+Versi, `CHANGELOG.md`, dan tag diurus **release-please** (`.github/workflows/release-please.yml`, `release-please-config.json`, `.release-please-manifest.json`, `version.txt`). Jangan mengedit berkas-berkas itu atau membuat tag/Release dengan tangan.
+
+- Setiap push ke `main` membuat atau memperbarui satu "PR rilis" (`chore(main): release loper-koran X.Y.Z`) berisi CHANGELOG dan kenaikan versi. Kenaikan dihitung dari judul PR yang di-squash: `feat` -> minor, `fix` dan `perf` -> patch, `!` -> minor selama versi masih 0.x (major sesudah 1.0.0). `docs`, `ci`, `art`, `tune`, `content`, `refactor` muncul di CHANGELOG tanpa menaikkan versi; `chore`, `test`, `build` tersembunyi.
+- Judul PR yang bukan Conventional Commits tidak masuk CHANGELOG, jadi aturan judul di atas wajib.
+- Merge PR rilis (oleh user) membuat tag `loper-koran-vX.Y.Z` dan GitHub Release; `build-apk.yml` lalu melampirkan APK uji (debug key) ke Release itu. Build APK uji juga jalan di setiap PR sebagai artifact (docs/SETUP_ANDROID.md bagian 4b).
+- Versi di `export_presets.cfg` (1 / 0.1.0) tidak diubah; CI menyuntikkan versi rilis hanya di salinan runner.
+- PR rilis dibuat dengan `GITHUB_TOKEN`, jadi workflow `tes` dan `build-apk` tidak jalan otomatis di PR itu (isinya hanya CHANGELOG dan versi).

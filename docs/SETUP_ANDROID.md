@@ -112,6 +112,22 @@ godot --headless --path . --export-pack "Android" build/kring-uji.pck 2>&1 | gre
 
 Hasil saat ditulis (2026-10-09, dengan `icon.svg`): 81 entri, 220 KB; tidak ada `tests/`, `tools/`, `docs/`, atau `build/`. Tanpa `exclude_filter` paket sebelum ikon berisi 90 entri (310 KB) dengan 12 entri `tests/*.gd` tambahan; jadi filter itu bekerja. Di APK, isi game tersimpan sebagai berkas terpisah di bawah `assets/` (83 entri) dengan `assets/assets.sparsepck` (7 KB) sebagai indeks.
 
+## 4b. APK uji dari CI (`build-apk.yml`) dan rilis (`release-please.yml`) (usulan, 2026-10-21)
+
+APK debug yang sama dengan bagian 4 bisa dibangun di GitHub Actions tanpa mesin pengembang:
+
+| Pemicu | Hasil |
+|---|---|
+| Setiap PR (`pull_request`) atau Actions > build-apk > Run workflow | Artifact `loper-koran-<versi rilis>-uji.<sha>-debug.apk` (14 hari) di halaman run |
+| PR rilis release-please di-merge (tag `loper-koran-vX.Y.Z` + GitHub Release) | `loper-koran-X.Y.Z-debug.apk` dilampirkan ke Release itu |
+| Run workflow dengan input `tag` | APK dibangun ulang dari tag itu dan menimpa lampiran Release-nya |
+
+- Godot 4.7.2, JDK 17 (Temurin), dan export template Android dipasang dengan checksum SHA-512 yang disematkan di workflow (nilai Godot sama dengan `tes.yml`). Hanya template Android yang di-cache.
+- Versi hanya disuntikkan di salinan kerja runner: `version/code` = MAJOR*10000 + MINOR*100 + PATCH, `version/name` = versi (atau `<versi>-uji.<sha>` untuk build PR). `export_presets.cfg` di repo tetap 1 / 0.1.0 (dijaga `tests/tes_export.gd`).
+- Tanda tangan memakai keystore debug tetap dari secret repo **`DEBUG_KEYSTORE_BASE64`** (alias `androiddebugkey`, kata sandi `android`, bawaan Godot; diambil dari `~/Library/Application Support/Godot/keystores/debug.keystore` mesin pemilik per 2026-10-21). Karena kuncinya sama, `adb install -r` APK dari CI menimpa build lokal tanpa uninstall. Workflow memeriksa sertifikat APK = sertifikat keystore itu, `package` = `com.rmh.kring`, `native-code` = `arm64-v8a` saja, dan tidak ada `assets/{docs,tests,tools,build,builds}/`. Tanpa secret (PR dari fork) Godot membuat keystore acak dan workflow memberi peringatan.
+- Ini APK uji (debuggable, debug key), **bukan** build rilis Play: keystore rilis dan AAB menunggu Fase 14. Tidak ada kredensial lain di CI.
+- Versi dan CHANGELOG diurus release-please (`release-please-config.json`, `.release-please-manifest.json`, `version.txt`, `CHANGELOG.md`); aturannya di `.cursor/rules/git-workflow.mdc` bagian Rilis. Setelan repo **Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests"** harus menyala supaya release-please bisa membuka PR rilis.
+
 ## 5. Memeriksa isi APK
 
 Setelah ekspor berhasil. `AAPT2` dan `APKSIGNER` ada di folder `build-tools` yang sama.

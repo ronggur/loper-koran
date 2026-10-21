@@ -1,0 +1,233 @@
+name: build-apk
+
+# APK uji (debug) dari preset `Android`, tanpa Gradle, arm64-v8a (docs/SETUP_ANDROID.md bagian 3 dan 4).
+# - pull_request dan jalan manual: APK jadi artifact run (14 hari), versi `<versi rilis>-uji.<sha>`.
+# - dipanggil release-please.yml atau dijalankan manual dengan `tag`: APK dibangun dari tag itu (versi = tag)
+#   dan dilampirkan ke GitHub Release yang sudah ada.
+# Versi hanya disuntikkan di salinan kerja runner (version/code = MAJOR*10000 + MINOR*100 + PATCH, version/name);
+# export_presets.cfg di repo tetap 1 / 0.1.0 karena dijaga tests/tes_export.gd.
+# Tanda tangan: keystore debug tetap dari secret DEBUG_KEYSTORE_BASE64 (alias androiddebugkey, kata sandi android =
+# bawaan Godot), supaya APK dari CI dan dari mesin pemilik saling menimpa di HP. Tanpa secret itu (misalnya PR dari
+# fork) Godot membuat keystore debug sendiri dan APK-nya tidak bisa menimpa build lain.
+# Godot di sini sama dengan tes.yml; mengganti versi berarti mengganti nilai env di kedua berkas.
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag rilis yang dibangun ulang dan dilampirkan ke Release-nya, misalnya loper-koran-v0.2.0 (kosong = APK uji sebagai artifact)"
+        required: false
+        default: ""
+        type: string
+  workflow_call:
+    inputs:
+      tag:
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-apk-${{ github.event_name }}-${{ inputs.tag || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GODOT_RILIS: 4.7.2-stable
+      GODOT_VERSI_DIHARAPKAN: 4.7.2.stable
+      GODOT_SHA512: 9aa00f7a605200940bce3027a567b782f49bd8e940dd06ae9e987bd65aee1b1467edd56ed84fcdcbdd44354bf613bdbb4e5d2913e925850368e150c59ed54c65
+      TEMPLATE_SHA512: ca4d71c4d7b81dfc15d1a98baa07534aa95b03fdda78a0075b06672e1648d2e5f40980c9adc28d23e1b92e732ee7bf3461997aa804af74ec2fcd7a93ccb84079
+      TAG: ${{ inputs.tag }}
+      SHA_UJI: ${{ github.event.pull_request.head.sha || github.sha }}
+    outputs:
+      apk: ${{ steps.versi.outputs.apk }}
+    steps:
+      - name: Ambil kode
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag }}
+
+      - name: Tentukan versi
+        id: versi
+        run: |
+          set -euo pipefail
+          if [ -n "$TAG" ]; then
+            [[ "$TAG" =~ ^loper-koran-v([0-9]+\.[0-9]+\.[0-9]+)$ ]] || { echo "Tag tidak dikenali: $TAG"; exit 1; }
+            DASAR="${BASH_REMATCH[1]}"
+            NAMA="$DASAR"
+          else
+            DASAR="$(python3 -c 'import json; print(json.load(open(".release-please-manifest.json"))["."])')"
+            NAMA="${DASAR}-uji.${SHA_UJI::7}"
+          fi
+          IFS=. read -r MAJOR MINOR PATCH <<< "$DASAR"
+          KODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
+          sed -i "s/^version\/code=.*/version\/code=${KODE}/; s/^version\/name=.*/version\/name=\"${NAMA}\"/" export_presets.cfg
+          grep '^version/' export_presets.cfg
+          APK="loper-koran-${NAMA}-debug.apk"
+          {
+            echo "kode=${KODE}"
+            echo "nama=${NAMA}"
+            echo "apk=${APK}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Pasang JDK 17
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Pasang Godot (rilis resmi, checksum SHA-512)
+        run: |
+          set -euo pipefail
+          berkas="Godot_v${GODOT_RILIS}_linux.x86_64"
+          curl -sSfL --retry 3 -o "$RUNNER_TEMP/godot.zip" \
+            "https://github.com/godotengine/godot-builds/releases/download/${GODOT_RILIS}/${berkas}.zip"
+          echo "${GODOT_SHA512}  $RUNNER_TEMP/godot.zip" | sha512sum -c -
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP/godot"
+          chmod +x "$RUNNER_TEMP/godot/${berkas}"
+          mkdir -p "$HOME/.local/bin"
+          ln -s "$RUNNER_TEMP/godot/${berkas}" "$HOME/.local/bin/godot"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          versi="$("$HOME/.local/bin/godot" --version)"
+          echo "Godot: ${versi}"
+          case "${versi}" in
+            "${GODOT_VERSI_DIHARAPKAN}"*) ;;
+            *) echo "Versi Godot tidak sesuai, diharapkan ${GODOT_VERSI_DIHARAPKAN}"; exit 1 ;;
+          esac
+
+      # Hanya template Android yang disimpan di cache (puluhan MB), bukan seluruh .tpz.
+      - name: Cache export template Android
+        id: cache-template
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.local/share/godot/export_templates/4.7.2.stable
+          key: godot-templates-android-${{ env.TEMPLATE_SHA512 }}
+
+      - name: Pasang export template Android (checksum SHA-512)
+        if: steps.cache-template.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          tujuan="$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          mkdir -p "$tujuan"
+          curl -sSfL --retry 3 -o "$RUNNER_TEMP/templates.tpz" \
+            "https://github.com/godotengine/godot-builds/releases/download/${GODOT_RILIS}/Godot_v${GODOT_RILIS}_export_templates.tpz"
+          echo "${TEMPLATE_SHA512}  $RUNNER_TEMP/templates.tpz" | sha512sum -c -
+          unzip -o -j -q "$RUNNER_TEMP/templates.tpz" "templates/android_*" "templates/version.txt" -d "$tujuan"
+          rm "$RUNNER_TEMP/templates.tpz"
+          ls -la "$tujuan"
+
+      - name: Periksa versi template
+        run: |
+          set -euo pipefail
+          test "$(cat "$HOME/.local/share/godot/export_templates/4.7.2.stable/version.txt")" = "4.7.2.stable"
+          test -s "$HOME/.local/share/godot/export_templates/4.7.2.stable/android_debug.apk"
+
+      # Godot 4.7.2 tidak mau mengekspor Android selama java_sdk_path kosong; JAVA_HOME saja tidak cukup.
+      - name: Siapkan Editor Settings Android
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.config/godot
+          {
+            echo '[gd_resource type="EditorSettings" format=3]'
+            echo
+            echo '[resource]'
+            echo "export/android/android_sdk_path = \"${ANDROID_HOME}\""
+            echo "export/android/java_sdk_path = \"${JAVA_HOME}\""
+          } > ~/.config/godot/editor_settings-4.7.tres
+
+      - name: Import project
+        run: |
+          set -uo pipefail
+          godot --headless --path . --import 2>&1 | tee "$RUNNER_TEMP/import.log"
+          if grep -E 'SCRIPT ERROR|ERROR:' "$RUNNER_TEMP/import.log"; then
+            echo "Import memuat error"; exit 1
+          fi
+
+      - name: Ekspor APK debug
+        env:
+          DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
+          APK: ${{ steps.versi.outputs.apk }}
+        run: |
+          set -euo pipefail
+          if [ -n "$DEBUG_KEYSTORE_BASE64" ]; then
+            printf '%s' "$DEBUG_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/debug.keystore"
+            export GODOT_ANDROID_KEYSTORE_DEBUG_PATH="$RUNNER_TEMP/debug.keystore"
+            export GODOT_ANDROID_KEYSTORE_DEBUG_USER="androiddebugkey"
+            export GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD="android"
+          else
+            echo "::warning::DEBUG_KEYSTORE_BASE64 kosong; APK memakai keystore debug acak dan tidak bisa menimpa build lain di HP"
+          fi
+          mkdir -p builds
+          godot --headless --path . --export-debug "Android" "builds/${APK}" 2>&1 | tee "$RUNNER_TEMP/ekspor.log"
+          if grep -E 'SCRIPT ERROR|ERROR:' "$RUNNER_TEMP/ekspor.log"; then
+            echo "Ekspor memuat error"; exit 1
+          fi
+          test -s "builds/${APK}"
+
+      - name: Periksa isi dan tanda tangan APK
+        env:
+          APK: ${{ steps.versi.outputs.apk }}
+          KODE: ${{ steps.versi.outputs.kode }}
+          NAMA: ${{ steps.versi.outputs.nama }}
+        run: |
+          set -euo pipefail
+          BT="$(printf '%s\n' "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)"
+          "$BT/aapt2" dump badging "builds/${APK}" > "$RUNNER_TEMP/badging.txt" 2>/dev/null
+          grep -E "^(package|native-code)" "$RUNNER_TEMP/badging.txt"
+          grep -q "^package: name='com.rmh.kring' versionCode='${KODE}' versionName='${NAMA}'" "$RUNNER_TEMP/badging.txt" \
+            || { echo "package, versionCode, atau versionName APK tidak sesuai"; exit 1; }
+          grep -q "^native-code: 'arm64-v8a'$" "$RUNNER_TEMP/badging.txt" \
+            || { echo "native-code harus arm64-v8a saja"; exit 1; }
+          unzip -l "builds/${APK}" > "$RUNNER_TEMP/isi.txt"
+          if grep -E " assets/(docs|tests|tools|build|builds)/" "$RUNNER_TEMP/isi.txt"; then
+            echo "APK memuat folder yang dikecualikan preset"; exit 1
+          fi
+          "$BT/apksigner" verify --print-certs "builds/${APK}" | tee "$RUNNER_TEMP/sertifikat.txt"
+          if [ -f "$RUNNER_TEMP/debug.keystore" ]; then
+            DIHARAPKAN="$(keytool -list -v -keystore "$RUNNER_TEMP/debug.keystore" -storepass android \
+              | sed -n 's/^[[:space:]]*SHA256: //p' | tr -d ':' | tr 'A-F' 'a-f')"
+            DIDAPAT="$(sed -n 's/^.*certificate SHA-256 digest: //p' "$RUNNER_TEMP/sertifikat.txt" | sort -u)"
+            [ -n "$DIHARAPKAN" ] && [ "$DIHARAPKAN" = "$DIDAPAT" ] \
+              || { echo "APK tidak ditandatangani keystore debug dari secret (${DIDAPAT} != ${DIHARAPKAN})"; exit 1; }
+          fi
+          rm -f "$RUNNER_TEMP/debug.keystore"
+          ls -la "builds/${APK}"
+
+      - name: Unggah APK sebagai artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ steps.versi.outputs.apk }}
+          path: builds/${{ steps.versi.outputs.apk }}
+          if-no-files-found: error
+          retention-days: 14
+
+  lampirkan:
+    needs: build
+    if: ${{ inputs.tag != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Unduh APK
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ${{ needs.build.outputs.apk }}
+          path: apk
+
+      - name: Lampirkan APK ke GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+          APK: ${{ needs.build.outputs.apk }}
+        run: |
+          set -euo pipefail
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null \
+            || { echo "Belum ada GitHub Release untuk $TAG"; exit 1; }
+          gh release upload "$TAG" "apk/${APK}" --repo "$GITHUB_REPOSITORY" --clobber

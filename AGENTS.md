@@ -110,7 +110,7 @@ tools/env_art/       Renderer aset lingkungan (usulan) + graybox.py (ubin graybo
 tools/ui_art/        bel.py (bel "Kring Kring!"; --salin ke assets/sprites/ui/ui_bel_*.png dan ui_ikon_seru.png) dan hud_ikon.py (ikon HUD, penanda radar, 9-slice; --salin ke assets/sprites/ui/), lihat tools/ui_art/README.md
 tools/audio_art/     sintesis_sepeda.py, sintesis_lempar.py, dan sintesis_rute.py: bunyi placeholder sepeda, lempar, mendarat, rintangan, tabrakan, bel, tip, dan tepat dari rumus (stdlib, deterministik), lihat tools/audio_art/README.md
 tools/               cek_keluaran_tes.py (pemeriksa keluaran tes), tests_cek/ (contoh log baik dan buruk, uji_bangun_frames.py, uji_sintesis_sepeda.py, uji_sintesis_lempar.py, uji_sintesis_rute.py), cek_blok_piksel.py (ketajaman tangkapan layar), ekspor_cek_render.py (build probe render terpisah; probe dikecualikan dari build normal oleh exclude_filter preset)
-.github/workflows/   tes.yml (CI: uji alat Python, import, tes, pemeriksa keluaran)
+.github/workflows/   tes.yml (CI: uji alat Python, import, tes, pemeriksa keluaran), build-apk.yml (APK uji debug di setiap PR; dilampirkan ke Release), release-please.yml (PR rilis, CHANGELOG, tag; lihat git-workflow bagian Rilis dan docs/SETUP_ANDROID.md 4b)
 .cursor/rules/       Aturan agent (sumber tunggal)
 ```
 

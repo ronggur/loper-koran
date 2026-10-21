@@ -65,7 +65,8 @@ const CONTOH_DIABAIKAN: Array[String] = [
 ## Jalur sumber yang TIDAK boleh diabaikan (kontrol negatif: pola yang terlalu lebar akan menyembunyikan sumber).
 const CONTOH_DILACAK: Array[String] = ["export_presets.cfg", "docs/SETUP_ANDROID.md", "scripts/config.gd", "tests/tes_export.gd", "project.godot"]
 ## Kata yang tidak boleh ada di panduan setup repo ini (nilai spesifik project lain atau plugin yang belum dipakai, AC-20).
-const KATA_TERLARANG_SETUP: Array[String] = ["brainydungeon", "startlights", "quicksplit", "firebase", "admob", "release-please", "godot-share", "shareplugin"]
+## release-please tidak lagi terlarang sejak CI rilis (docs/SETUP_ANDROID.md bagian 4b).
+const KATA_TERLARANG_SETUP: Array[String] = ["brainydungeon", "startlights", "quicksplit", "firebase", "admob", "godot-share", "shareplugin"]
 ## Isi minimum panduan setup (AC-20): perintah dan istilah yang dipakai tes lain dan orchestrator.
 const KATA_WAJIB_SETUP: Array[String] = [
 	"com.rmh.kring", "--export-debug", "--export-pack", "java_sdk_path", "adb install -r", "pm list packages", "pm clear",
@@ -640,14 +641,13 @@ func _test_panduan_setup() -> void:
 	check(FileAccess.file_exists(BERKAS_SETUP), "docs/SETUP_ANDROID.md ada")
 	var teks: String = FileAccess.get_file_as_string(BERKAS_SETUP)
 	var terlarang: Array[String] = _kata_terlarang(teks)
-	check(terlarang.is_empty(), "SETUP_ANDROID.md tidak memuat nilai project lain (package, plugin, keystore, release-please): %s" % [terlarang])
+	check(terlarang.is_empty(), "SETUP_ANDROID.md tidak memuat nilai project lain (package, plugin, keystore): %s" % [terlarang])
 	var hilang: Array[String] = _kata_hilang(teks)
 	check(hilang.is_empty(), "SETUP_ANDROID.md memuat perintah dan istilah wajib (AC-20); hilang: %s" % [hilang])
 	check(FileAccess.get_file_as_string(BERKAS_README_DOCS).contains("SETUP_ANDROID.md"), "docs/README.md mendaftarkan SETUP_ANDROID.md di tabel dokumen")
 	# Penjaga harus menangkap contoh buruk.
 	check(_kata_terlarang("package com.rmh.brainydungeon di HP").has("brainydungeon"), "package project lain (brainydungeon) ditolak")
 	check(_kata_terlarang("Plugin AdMob dan Firebase").size() == 2, "plugin iklan dan analytics yang belum dipakai ditolak (huruf besar tetap dikenali)")
-	check(_kata_terlarang("workflow release-please.yml").has("release-please"), "release-please ditolak")
 	check(_kata_terlarang("diadaptasi dari panduan Brainy Dungeon").is_empty(), "menyebut nama Brainy Dungeon sebagai sumber adaptasi (dengan spasi) diizinkan")
 	check(_kata_hilang("dokumen kosong").size() == KATA_WAJIB_SETUP.size(), "dokumen kosong kehilangan semua istilah wajib")
 	check(not _kata_hilang(teks.replace("pm clear", "")).is_empty(), "panduan tanpa peringatan pm clear ditolak (mutan)")
