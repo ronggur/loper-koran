@@ -44,6 +44,22 @@ const JALUR_WAJIB_IKUT: Array[String] = [
 	"assets/sprites/vfx/vfx_debu_roda.png", "assets/sprites/vfx/vfx_debu_roda.png.import", "assets/sprites/vfx/vfx_garis_kecepatan_a.png", "assets/sprites/vfx/vfx_garis_kecepatan_a.png.import", "assets/sprites/vfx/vfx_garis_kecepatan_b.png", "assets/sprites/vfx/vfx_garis_kecepatan_b.png.import", "assets/sprites/vfx/vfx_garis_kecepatan_c.png", "assets/sprites/vfx/vfx_garis_kecepatan_c.png.import", "assets/sprites/vfx/vfx_bintang_kena.png", "assets/sprites/vfx/vfx_bintang_kena.png.import", "assets/sprites/vfx/vfx_koin_tip.png", "assets/sprites/vfx/vfx_koin_tip.png.import", "assets/sprites/vfx/mission_kilau.png", "assets/sprites/vfx/mission_kilau.png.import",
 	"assets/sprites/tiles/perumahan/tile_perumahan_rumput_seberang.png", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_seberang.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_trotoar_seberang.png", "assets/sprites/tiles/perumahan/tile_perumahan_trotoar_seberang.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_aspal_seberang.png", "assets/sprites/tiles/perumahan/tile_perumahan_aspal_seberang.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_aspal_dekat.png", "assets/sprites/tiles/perumahan/tile_perumahan_aspal_dekat.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_trotoar_dekat.png", "assets/sprites/tiles/perumahan/tile_perumahan_trotoar_dekat.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_dekat.png", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_dekat.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_1.png", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_1.png.import",
 	"scripts/systems/def_sprite.gd", "scripts/systems/permukaan_koran.gd", "scripts/systems/sprite_koran.gd", "scripts/systems/vfx_sepeda.gd", "scripts/systems/vfx_antaran.gd", "scripts/ui/gambar_sprite.gd", "scripts/entities/vfx_sepeda_gambar.gd",
+	# Run fase5b-tembok-dekor bagian C (AC-17): tembok sisi dekat, dekor (tong sampah, pohon, lampu mati), enam ubin khusus beserta remap .import, skrip pemakainya, dan sembilan segmen rute.
+	"assets/sprites/houses/perumahan/house_tembok_polos.png", "assets/sprites/houses/perumahan/house_tembok_polos.png.import", "assets/sprites/houses/perumahan/house_tembok_bata.png", "assets/sprites/houses/perumahan/house_tembok_bata.png.import", "assets/sprites/houses/perumahan/house_tembok_besi.png", "assets/sprites/houses/perumahan/house_tembok_besi.png.import",
+	"assets/sprites/houses/perumahan/house_tembok_pot.png", "assets/sprites/houses/perumahan/house_tembok_pot.png.import", "assets/sprites/houses/perumahan/house_tembok_tiang.png", "assets/sprites/houses/perumahan/house_tembok_tiang.png.import", "assets/sprites/props/prop_tong_sampah_logam.png", "assets/sprites/props/prop_tong_sampah_logam.png.import",
+	"assets/sprites/props/prop_pohon_rindang.png", "assets/sprites/props/prop_pohon_rindang.png.import", "assets/sprites/props/prop_pohon_glodokan.png", "assets/sprites/props/prop_pohon_glodokan.png.import", "assets/sprites/props/prop_pohon_ketapang.png", "assets/sprites/props/prop_pohon_ketapang.png.import",
+	"assets/sprites/props/prop_lampu_lengan_seberang.png", "assets/sprites/props/prop_lampu_lengan_seberang.png.import", "assets/sprites/props/prop_lampu_lengan_dekat.png", "assets/sprites/props/prop_lampu_lengan_dekat.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_2.png", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_2.png.import",
+	"assets/sprites/tiles/perumahan/tile_perumahan_rumput_3.png", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_3.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_trotoar_seberang_masuk.png", "assets/sprites/tiles/perumahan/tile_perumahan_trotoar_seberang_masuk.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_seberang_masuk.png", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_seberang_masuk.png.import",
+	"assets/sprites/tiles/perumahan/tile_perumahan_trotoar_seberang_simbol.png", "assets/sprites/tiles/perumahan/tile_perumahan_trotoar_seberang_simbol.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_trotoar_dekat_simbol.png", "assets/sprites/tiles/perumahan/tile_perumahan_trotoar_dekat_simbol.png.import",
+	"scripts/systems/varian_tembok.gd", "scripts/systems/tembok_dekat.gd", "scripts/systems/dekor_rute.gd", "scripts/systems/ubin_khusus.gd", "scripts/entities/dekor_daur.gd", "scripts/entities/tanah_daur.gd", "scripts/entities/rumah_daur_rute.gd",
+	"assets/data/routes/perumahan/per_buka_01.json", "assets/data/routes/perumahan/per_buka_02.json", "assets/data/routes/perumahan/per_tengah_01.json", "assets/data/routes/perumahan/per_tengah_02.json", "assets/data/routes/perumahan/per_tengah_03.json", "assets/data/routes/perumahan/per_tengah_04.json", "assets/data/routes/perumahan/per_tengah_05.json", "assets/data/routes/perumahan/per_tutup_01.json", "assets/data/routes/perumahan/per_tutup_02.json",
+]
+## Aset yang TIDAK dipasang (D-1, D-4 run fase5b-tembok-dekor): tidak boleh ada di repo sehingga tidak ikut paket. Nama disambung supaya pemindai rujukan 5A tidak menandai berkas ini.
+const JALUR_TIDAK_ADA_5B: Array[String] = [
+	"assets/sprites/tiles/perumahan/tile_perumahan_" + "aspal_1.png", "assets/sprites/tiles/perumahan/tile_perumahan_" + "aspal_2.png", "assets/sprites/tiles/perumahan/tile_perumahan_" + "aspal_3.png",
+	"assets/sprites/tiles/perumahan/tile_perumahan_" + "trotoar_dekat_masuk.png", "assets/sprites/tiles/perumahan/tile_perumahan_" + "rumput_dekat_masuk.png",
+	"assets/sprites/props/prop_tong_sampah_" + "biru.png", "assets/sprites/props/prop_" + "pohon_beringin.png", "assets/sprites/props/prop_lampu_lengan_" + "seberang_nyala.png",
+	"assets/sprites/props/prop_lampu_lengan_" + "dekat_nyala.png", "assets/sprites/tiles/perumahan/tile_perumahan_polisi_" + "tidur.png", "assets/sprites/tiles/perumahan/tile_perumahan_" + "zebra.png",
 ]
 ## Berkas probe render (QA-004 run fase1b-umpan-balik, D-4 run fase1c-perapian): tidak ikut APK normal; build probe dibuat
 ## `tools/ekspor_cek_render.py` yang melepas pola ini sementara (`POLA_PROBE` di skrip itu harus sama persis).
@@ -94,6 +110,7 @@ func check(kondisi: bool, label: String) -> void:
 func jalankan() -> void:
 	_test_preset_asli()
 	_test_preset_contoh_buruk()
+	_test_aset_5b_ikut_paket()
 	_test_probe_tidak_ikut()
 	_test_spike_tidak_ikut()
 	_test_ikon_sementara()
@@ -318,6 +335,33 @@ func _pelanggaran_preset(teks: String) -> Array[String]:
 				if isi.contains(pola):
 					hasil.append("jalur lokal atau keystore di %s/%s" % [bagian, kunci])
 	return hasil
+
+
+# --- AC-17 run fase5b-tembok-dekor: aset 5B ikut paket (PNG + remap .import Lossless), aset tak dipasang tidak ada, dan tidak dikecualikan filter preset ---
+
+func _test_aset_5b_ikut_paket() -> void:
+	_judul.call("Aset 5B ikut paket dengan remap .import Lossless dan aset tak dipasang tidak ada (AC-17 run 5B)")
+	var cfg: ConfigFile = ConfigFile.new()
+	cfg.load(BERKAS_PRESET)
+	var kecuali: Array[String] = []
+	for bagian_filter: String in str(cfg.get_value("preset.0", "exclude_filter", "")).split(","):
+		kecuali.append(bagian_filter.strip_edges())
+	var png: int = 0
+	for jalur: String in JALUR_WAJIB_IKUT:
+		if not (jalur.begins_with("assets/sprites/") and jalur.ends_with(".png")):
+			continue
+		if not (jalur.contains("tembok") or jalur.contains("tong_sampah") or jalur.contains("pohon") or jalur.contains("lampu") or jalur.contains("_masuk") or jalur.contains("_simbol") or jalur.contains("rumput_2") or jalur.contains("rumput_3")):
+			continue
+		png += 1
+		var teks_import: String = _baca_jika_ada("res://" + jalur + ".import")
+		check(FileAccess.file_exists("res://" + jalur) and not teks_import.is_empty(), "%s dan remap .import ada (ikut paket)" % jalur)
+		check(teks_import.contains("compress/mode=0") and teks_import.contains("mipmaps/generate=false"), "%s: impor Lossless tanpa mipmap" % jalur)
+		check(not _dikecualikan(jalur, kecuali) and not _dikecualikan(jalur + ".import", kecuali), "%s tidak dikecualikan filter preset" % jalur)
+	check(png == 17, "17 PNG 5B dicek (5 tembok, tong sampah, 3 pohon, 2 lampu, 6 ubin), dapat %d" % png)
+	for jalur: String in JALUR_TIDAK_ADA_5B:
+		check(not FileAccess.file_exists("res://" + jalur), "aset tak dipasang tidak ada di repo (tidak ikut paket): %s" % jalur)
+	for nama: String in DirAccess.get_files_at("res://assets/sprites/tiles/perumahan"):
+		check(not nama.contains("aspal_1") and not nama.contains("aspal_2") and not nama.contains("aspal_3") and not nama.contains("_dekat_masuk"), "tiles/perumahan tanpa aspal_N dan *_dekat_masuk: %s" % nama)
 
 
 # --- QA-004: probe render tidak ikut APK normal, pola sama dengan tools/ekspor_cek_render.py ---
