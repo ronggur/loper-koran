@@ -17,7 +17,7 @@ enum Ubin { BAWAAN, MASUK, SIMBOL, RUMPUT_2, RUMPUT_3 }
 ## Baris ubin yang ditimpa jalan masuk garasi untuk mobil di maju `maju_ubin`: pembulatan maju ke baris terdekat, titik tepat di batas dua baris ke baris di belakang (maju lebih kecil).
 ## Mobil selebar 0,75 ubin di celah satu ubin antar rumah, jadi tepat satu baris.
 static func baris_masuk(maju_ubin: float) -> int:
-	return ceili(maju_ubin - 1.0 / 2)
+	return ceili(maju_ubin - Config.RUTE_BARIS_MASUK_GESER_UBIN)
 
 
 ## Himpunan baris `MASUK` (kunci = baris mutlak, nilai true) dari objek rute: hanya `mobil_garasi` dengan jalur `seberang`.

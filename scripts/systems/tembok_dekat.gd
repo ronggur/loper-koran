@@ -81,7 +81,7 @@ static func jalur_png(nama: String) -> String:
 
 ## Ukuran sel sprite tembok (modul dan tiang sama), piksel.
 static func sel() -> Vector2i:
-	return Vector2i(Config.SPRITE_TEMBOK[0], Config.SPRITE_TEMBOK[1])
+	return Vector2i(Config.SPRITE_TEMBOK[Config.SPRITE_INDEKS_LEBAR], Config.SPRITE_TEMBOK[Config.SPRITE_INDEKS_TINGGI])
 
 
 ## Titik pijak di dalam sel (garis tengah tembok di awal modul), piksel.

@@ -8,7 +8,7 @@ extends Node2D
 ## `DekorRute.nama_sprite` (PNG di `assets/sprites/props/`), titik pijak dan ukuran sel dari tabel `Config.RUTE_DEKOR_SPRITE*` (dijaga tes = JSON dan PNG). Semua PNG yang dipakai
 ## rute dimuat sekali di `atur_rute` (bukan di `_draw` atau saat dekor pertama muncul) dan dipegang node ini.
 ##
-## Pohon dan lampu didaftarkan ke SATU `PenerapPenutup` (`PenutupPemain.dari_dekor`, semi-transparan bila menutupi pemain) dan dilepas bersama sprite saat keluar jendela; tong sampah
+## Pohon dan lampu sisi `dekat` didaftarkan ke SATU `PenerapPenutup` (`PenutupPemain.dari_dekor`, semi-transparan bila menutupi pemain) dan dilepas bersama sprite saat keluar jendela; tong sampah dan dekor sisi `seberang`
 ## hanya gambar. Dekor bukan penghalang: tidak masuk `Tabrakan`, `RintanganRute`, `MedanKoran`, zona, atau penilaian lemparan.
 
 ## Penerap penutup pemain (diisi scene rute).
@@ -96,7 +96,7 @@ func _pasang(indeks: int) -> void:
 	sprite.modulate.a = PenutupPemain.alfa(false)
 	sprite.visible = true
 	_node[indeks] = sprite
-	if penerap != null and DekorRute.menutupi(butir.jenis):
+	if penerap != null and DekorRute.menutupi(butir.jenis, butir.varian, butir.sisi):
 		penerap.daftarkan(sprite, PenutupPemain.dari_dekor(butir))
 
 

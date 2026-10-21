@@ -1116,6 +1116,8 @@ const BENGKEL_KOLOM_UPGRADE_RASIO: float = 1.0
 ## Tiap sprite = [lebar sel, tinggi sel, jumlah frame, titik pijak x, titik pijak y], piksel; frame berjajar kiri ke kanan. Sama dengan `cell`, `frames`, dan `ground_anchor` di JSON
 ## aset (`assets/sprites/props/`, `assets/sprites/vfx/`); tes membandingkannya dengan JSON dan ukuran PNG. Pemilihan frame dan letak gambar ada di `DefSprite` dan turunannya.
 ## Indeks isi larik `SPRITE_*`: lebar sel 0, tinggi sel 1, jumlah frame 2, pijak x, pijak y; panjang larik.
+const SPRITE_INDEKS_LEBAR: int = 0
+const SPRITE_INDEKS_TINGGI: int = 1
 const SPRITE_INDEKS_PIJAK_X: int = 3
 const SPRITE_INDEKS_PIJAK_Y: int = 4
 const SPRITE_PANJANG: int = 5
@@ -1186,6 +1188,8 @@ const HASH_FNV1A_GESER_BIT: int = 8
 const HASH_FNV1A_MASKER_BYTE: int = 255
 
 ## --- Ubin khusus di tanah rute (run fase5b-tembok-dekor bagian C, D-7; usulan, dinilai di HP) ---
+## Baris ubin jalan masuk garasi = pembulatan (maju - ini) ke atas, ubin: ubin berpusat di maju bulat dan menutup maju - 0,5 sampai maju + 0,5, jadi titik tepat di batas dua baris jatuh ke baris di belakang.
+const RUTE_BARIS_MASUK_GESER_UBIN: float = 0.5
 ## Simbol sepeda di kedua kolom trotoar: satu baris tiap sekian baris ubin maju (baris mutlak dari awal rute), bergeser `RUTE_SIMBOL_SEPEDA_OFFSET_UBIN` (baris mutlak b: simbol bila b - offset kelipatan selang). Tidak di baris jalan masuk garasi.
 const RUTE_SIMBOL_SEPEDA_SELANG_UBIN: int = 12
 const RUTE_SIMBOL_SEPEDA_OFFSET_UBIN: int = 6
@@ -1201,12 +1205,16 @@ const RUTE_DEKOR_JENIS: Array[String] = ["tong_sampah", "pohon", "lampu_jalan"]
 const RUTE_DEKOR_VARIAN_TONG_SAMPAH: Array[String] = ["logam"]
 const RUTE_DEKOR_VARIAN_POHON: Array[String] = ["rindang", "glodokan", "ketapang"]
 const RUTE_DEKOR_VARIAN_LAMPU_JALAN: Array[String] = ["lengan"]
-## Lateral pusat dekor per jenis, ubin dari garis tengah jalan (besaran saja; tanda mengikuti sisi: seberang negatif, dekat positif). Pohon dan tong sampah di halaman (2,5), lampu di luar tepi trotoar (2,25).
+## Lateral pusat dekor sisi `dekat` per jenis, ubin dari garis tengah jalan (besaran saja; tanda positif). Pohon dan tong sampah di halaman (2,5), lampu di luar tepi trotoar (2,25).
 const RUTE_DEKOR_LATERAL_UBIN: Array[float] = [2.5, 2.5, 2.25]
-## Setengah sisi tapak kaki dekor per jenis, ubin (persegi di bidang tanah): tong sampah dan pohon 0,5 x 0,5, tiang lampu 0,25 x 0,25. Tapak tidak boleh menyentuh lajur sepeda (|lateral| kurang dari `RUTE_DEKOR_LAJUR_UBIN`).
+## Lateral pusat dekor sisi `seberang` per jenis, ubin (besaran saja; tanda negatif). Pohon 2,75 dan lampu 2,625 lebih jauh dari jalan daripada sisi dekat (iterasi 2 run fase5b, D-6): kamera melihat dari sisi dekat, jadi tajuk dan lengan lampu seberang yang digambar sesudah pemain (Y-sort) menimpa pemain di lateral -2,0 sampai -1,75 dengan piksel opak (terukur 272 dan 240 piksel di lateral 2,5 dan 2,25); pada angka ini terukur 0 piksel (tes). Tong sampah 2,5 tetap.
+const RUTE_DEKOR_LATERAL_SEBERANG_UBIN: Array[float] = [2.5, 2.75, 2.625]
+## Setengah sisi tapak kaki dekor per jenis, ubin (persegi di bidang tanah): tong sampah dan pohon 0,5 x 0,5, tiang lampu 0,25 x 0,25. Tapak tidak boleh menyentuh lajur sepeda (|lateral| kurang dari `RUTE_DEKOR_LAJUR_UBIN`). Dipakai validasi tempat dekor, BUKAN kotak penutup.
 const RUTE_DEKOR_SETENGAH_UBIN: Array[float] = [0.25, 0.25, 0.125]
-## Tinggi kotak penutup pemain per jenis, ubin (0 = tidak menutupi dan tidak didaftarkan ke penerap): tong sampah rendah, pohon 1,25 (tajuk), lampu 1,0. Batas atas supaya jalur utama bersih (|lateral| sampai 1,0): tinggi paling besar = lateral - setengah - 1,0.
-const RUTE_DEKOR_TINGGI_PENUTUP_UBIN: Array[float] = [0.0, 1.25, 1.0]
+## Kotak penutup pemain, sejajar `RUTE_DEKOR_SPRITE` (tong, pohon rindang, glodokan, ketapang, lampu seberang, lampu dekat). Tinggi = piksel opak sprite di atas titik pijaknya dibagi 32 piksel per ubin (rindang 44, glodokan 63, ketapang 53, lampu seberang 58, lampu dekat 64 piksel; 0 = tong sampah tidak menutupi). Hanya dekor sisi `dekat` memakai kotak ini; sisi `seberang` selalu tinggi 0 (run fase5b iterasi 2, P-6).
+const RUTE_DEKOR_TINGGI_PENUTUP_UBIN: Array[float] = [0.0, 1.375, 1.96875, 1.65625, 1.8125, 2.0]
+## Setengah sisi tapak kotak penutup, ubin (persegi di sekitar titik pijak, sejajar `RUTE_DEKOR_SPRITE`). Lebih besar dari tapak kaki karena tajuk dan lengan lampu melebar jauh dari batang; ukuran terkecil (kelipatan 0,125) yang membuat tidak ada piksel opak dekor di atas piksel pemain tanpa kotak menutupinya, lateral -2,0 sampai 2,0, semua pose berkendara (diukur tes dari PNG): rindang 0,875, glodokan 0,625, ketapang 0,75, lampu dekat 0,75 (lampu seberang tidak dipakai).
+const RUTE_DEKOR_SETENGAH_PENUTUP_UBIN: Array[float] = [0.0, 0.875, 0.625, 0.75, 0.75, 0.75]
 ## Batas lajur sepeda, ubin dari garis tengah: sepeda tidak pernah melewati lateral 2,0 (trotoar sampai tepi), dekor dan tapak kakinya harus di luar.
 const RUTE_DEKOR_LAJUR_UBIN: float = 2.0
 ## Jarak paling dekat antara dua dekor sesisi sepanjang jalan, ubin (`pos` bilangan bulat, jadi dua dekor tidak di ubin yang sama).

@@ -4,8 +4,9 @@ extends RefCounted
 ## (run fase5b-tembok-dekor bagian B2, D-5 dan D-6, AC-9 sampai AC-12; usulan).
 ##
 ## Dekor hanya hiasan di halaman dan tepi trotoar: tidak penghalang gerak, tidak masuk `Tabrakan`, `RintanganRute`, `MedanKoran`, zona, skor, atau
-## penilaian lemparan. Satu-satunya hubungannya dengan permainan adalah kotak penutup pohon dan lampu (`PenutupPemain.dari_dekor`, semi-transparan bila
-## menutupi pemain). Lateral, tapak kaki, tinggi penutup, dan sprite tiap jenis dari tabel `Config.RUTE_DEKOR_*` (sejajar `Config.RUTE_DEKOR_JENIS`).
+## penilaian lemparan. Satu-satunya hubungannya dengan permainan adalah kotak penutup pohon dan lampu sisi `dekat` (`PenutupPemain.dari_dekor`, semi-transparan bila
+## menutupi pemain). Lateral, tapak kaki, dan sprite tiap jenis dari tabel `Config.RUTE_DEKOR_*` (sejajar `Config.RUTE_DEKOR_JENIS`); tinggi dan tapak kotak penutup per sprite
+## (sejajar `Config.RUTE_DEKOR_SPRITE`): tinggi = tinggi sprite nyata, tapak lebih lebar dari tapak kaki supaya tajuk dan lengan lampu tercakup (run fase5b iterasi 2, P-6).
 ## Aturan tempat (dipakai `SegmenRute.parse`): di luar lajur sepeda, tidak menimpa zona teras atau kotak surat rumah mana pun, tapak rumah, atau tapak
 ## rintangan diam, dan dua dekor sesisi tidak lebih dekat dari `RUTE_DEKOR_JARAK_MIN_UBIN`. Koordinat jalan: x = lateral (negatif = `seberang`), y = maju.
 
@@ -31,13 +32,14 @@ static func varian_sah(jenis: String) -> Array[String]:
 	return kosong
 
 
-## Lateral pusat dekor `jenis` di `sisi` (negatif = `seberang`); 0 bila jenis atau sisi tidak dikenal.
+## Lateral pusat dekor `jenis` di `sisi` (negatif = `seberang`): `Config.RUTE_DEKOR_LATERAL_SEBERANG_UBIN` di seberang, `Config.RUTE_DEKOR_LATERAL_UBIN` di dekat; 0 bila jenis atau sisi tidak dikenal.
 static func lateral(jenis: String, sisi: LoperAnim.Sisi) -> float:
 	var i: int = indeks_jenis(jenis)
 	if i < 0 or sisi == LoperAnim.Sisi.TIDAK_ADA:
 		return 0.0
-	var besar: float = Config.RUTE_DEKOR_LATERAL_UBIN[i]
-	return -besar if sisi == LoperAnim.Sisi.SEBERANG else besar
+	if sisi == LoperAnim.Sisi.SEBERANG:
+		return -Config.RUTE_DEKOR_LATERAL_SEBERANG_UBIN[i]
+	return Config.RUTE_DEKOR_LATERAL_UBIN[i]
 
 
 ## Tapak kaki dekor `jenis` di `sisi` pada jarak maju `maju_ubin` (koordinat jalan, ubin); persegi kosong bila jenis atau sisi tidak dikenal.
@@ -49,15 +51,40 @@ static func tapak(jenis: String, sisi: LoperAnim.Sisi, maju_ubin: float) -> Rect
 	return Rect2(lateral(jenis, sisi) - setengah, maju_ubin - setengah, setengah + setengah, setengah + setengah)
 
 
-## Tinggi kotak penutup `jenis`, ubin; 0 bila jenis tidak dikenal atau tidak menutupi (tong sampah).
-static func tinggi_penutup(jenis: String) -> float:
-	var i: int = indeks_jenis(jenis)
-	return Config.RUTE_DEKOR_TINGGI_PENUTUP_UBIN[i] if i >= 0 else 0.0
+## Indeks sprite dekor (jenis, varian, sisi) di `Config.RUTE_DEKOR_SPRITE`; -1 bila tidak dikenal. Tabel kotak penutup sejajar dengan daftar itu.
+static func indeks_sprite(jenis: String, varian: String, sisi: LoperAnim.Sisi) -> int:
+	return Config.RUTE_DEKOR_SPRITE.find(nama_sprite(jenis, varian, sisi))
 
 
-## True bila `jenis` didaftarkan ke penerap penutup pemain (tingginya lebih dari nol): pohon dan lampu, bukan tong sampah.
-static func menutupi(jenis: String) -> bool:
-	return tinggi_penutup(jenis) > 0.0
+## Tinggi kotak penutup dekor, ubin: tinggi sprite nyata (`Config.RUTE_DEKOR_TINGGI_PENUTUP_UBIN`, dari piksel opak di atas pijak). 0 bila tidak menutupi: tong sampah, sisi `seberang`
+## (kamera melihat dari sisi dekat, dekor seberang tidak didaftarkan sebagai penutup), atau jenis/varian/sisi tidak dikenal.
+static func tinggi_penutup(jenis: String, varian: String, sisi: LoperAnim.Sisi) -> float:
+	var i: int = indeks_sprite(jenis, varian, sisi)
+	if sisi != LoperAnim.Sisi.DEKAT or i < 0:
+		return 0.0
+	return Config.RUTE_DEKOR_TINGGI_PENUTUP_UBIN[i]
+
+
+## Setengah sisi tapak kotak penutup dekor, ubin (`Config.RUTE_DEKOR_SETENGAH_PENUTUP_UBIN`); 0 bila tidak menutupi (lihat `tinggi_penutup`).
+static func setengah_penutup(jenis: String, varian: String, sisi: LoperAnim.Sisi) -> float:
+	var i: int = indeks_sprite(jenis, varian, sisi)
+	if sisi != LoperAnim.Sisi.DEKAT or i < 0:
+		return 0.0
+	return Config.RUTE_DEKOR_SETENGAH_PENUTUP_UBIN[i]
+
+
+## Tapak kotak penutup dekor di maju `maju_ubin` (koordinat jalan, ubin): persegi di sekitar pusat tapak kaki, lateral sama dengan `lateral`, setengah sisi `setengah_penutup`.
+## Persegi kosong bila dekor tidak menutupi.
+static func tapak_penutup(jenis: String, varian: String, sisi: LoperAnim.Sisi, maju_ubin: float) -> Rect2:
+	var setengah: float = setengah_penutup(jenis, varian, sisi)
+	if setengah <= 0.0:
+		return Rect2()
+	return Rect2(lateral(jenis, sisi) - setengah, maju_ubin - setengah, setengah + setengah, setengah + setengah)
+
+
+## True bila dekor didaftarkan ke penerap penutup pemain (tingginya lebih dari nol): pohon dan lampu di sisi `dekat`, bukan tong sampah dan bukan sisi `seberang`.
+static func menutupi(jenis: String, varian: String, sisi: LoperAnim.Sisi) -> bool:
+	return tinggi_penutup(jenis, varian, sisi) > 0.0
 
 
 ## Nama sprite dekor: tong `prop_tong_sampah_<varian>`, pohon `prop_pohon_<varian>`, lampu `prop_lampu_<varian>_<seberang|dekat>` (lengan menghadap jalan).
@@ -95,7 +122,7 @@ static func data_sprite(nama: String) -> Array[int]:
 ## Ukuran sel sprite `nama`, piksel; nol bila tidak dikenal.
 static func sel(nama: String) -> Vector2i:
 	var d: Array[int] = data_sprite(nama)
-	return Vector2i(d[0], d[1]) if d.size() == Config.SPRITE_PANJANG else Vector2i.ZERO
+	return Vector2i(d[Config.SPRITE_INDEKS_LEBAR], d[Config.SPRITE_INDEKS_TINGGI]) if d.size() == Config.SPRITE_PANJANG else Vector2i.ZERO
 
 
 ## Titik pijak sprite `nama` di dalam sel, piksel; nol bila tidak dikenal.

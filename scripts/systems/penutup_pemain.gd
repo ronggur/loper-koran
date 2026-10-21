@@ -88,6 +88,7 @@ static func dari_rumah_gambar(rumah: RouteBuilder.RumahRute) -> Objek:
 	return buat(tapak_rumah_gambar(rumah.sisi, rumah.maju_ubin), Config.RUTE_RUMAH_TINGGI_UBIN, rumah.id)
 
 
-## Objek penutup dekor rute (pohon dan lampu): tapak kaki dan tinggi dari `DekorRute` (`Config.RUTE_DEKOR_*`); id = id dekor.
+## Objek penutup dekor rute (pohon dan lampu sisi `dekat`): tapak dan tinggi dari `DekorRute.tapak_penutup` dan `DekorRute.tinggi_penutup` (`Config.RUTE_DEKOR_*`, tinggi = tinggi sprite nyata);
+## id = id dekor. Dekor sisi `seberang` dan tong sampah: tinggi 0, tidak pernah menutupi.
 static func dari_dekor(dekor: RouteBuilder.DekorItem) -> Objek:
-	return buat(DekorRute.tapak(dekor.jenis, dekor.sisi, dekor.maju_ubin), DekorRute.tinggi_penutup(dekor.jenis), dekor.id)
+	return buat(DekorRute.tapak_penutup(dekor.jenis, dekor.varian, dekor.sisi, dekor.maju_ubin), DekorRute.tinggi_penutup(dekor.jenis, dekor.varian, dekor.sisi), dekor.id)
