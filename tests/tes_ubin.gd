@@ -220,21 +220,14 @@ func _test_berkas_ubin() -> void:
 		check(opak == 1024, "%s: belah ketupat 1.024 piksel opak (dapat %d)" % [nama, opak])
 
 
-func _test_tanah_enam_tekstur() -> void:
-	_judul.call("Ubin enam kolom: TanahDaur memasang tekstur kolom yang benar (AC-5)")
-	var tanah: TanahDaur = _buat_tanah(true)
-	tanah.bangun(Config.LAYAR_LEBAR_MAKS_PX, Config.LAYAR_TINGGI_DASAR_PX)
-	tanah.perbarui(0.0)
-	check(tanah.mode_enam_kolom(), "enam tekstur terisi = mode enam kolom")
+## Hitung ubin di `tanah` yang memakai tekstur kolom yang benar menurut oracle literal per kolom pusat (setengah ganjil). Kembali [benar, total, contoh salah, per_nama].
+func _hitung_tekstur_benar(tanah: TanahDaur) -> Array:
 	var sprite: Array[Sprite2D] = _sprite_ubin(tanah)
 	var benar: int = 0
-	var bulat: int = 0
 	var salah_contoh: String = ""
 	var per_nama: Dictionary = {}
 	for ubin: Sprite2D in sprite:
-		var dunia: Vector2 = _dunia_dari_layar(ubin.position)
-		var x: float = dunia.x
-		# oracle literal per kolom pusat (setengah ganjil)
+		var x: float = _dunia_dari_layar(ubin.position).x
 		var harapan: String = UBIN_RUMPUT_LUAR
 		if x > -3.0 and x < -2.0:
 			harapan = UBIN_SEBERANG_RUMPUT
@@ -254,6 +247,22 @@ func _test_tanah_enam_tekstur() -> void:
 			benar += 1
 		elif salah_contoh.is_empty():
 			salah_contoh = "x %s tekstur %s harapan %s" % [x, jalur.get_file(), harapan]
+	return [benar, sprite.size(), salah_contoh, per_nama]
+
+
+func _test_tanah_enam_tekstur() -> void:
+	_judul.call("Ubin enam kolom: TanahDaur memasang tekstur kolom yang benar (AC-5)")
+	var tanah: TanahDaur = _buat_tanah(true)
+	tanah.bangun(Config.LAYAR_LEBAR_MAKS_PX, Config.LAYAR_TINGGI_DASAR_PX)
+	tanah.perbarui(0.0)
+	check(tanah.mode_enam_kolom(), "enam tekstur terisi = mode enam kolom")
+	var sprite: Array[Sprite2D] = _sprite_ubin(tanah)
+	var hitung: Array = _hitung_tekstur_benar(tanah)
+	var benar: int = hitung[0]
+	var salah_contoh: String = hitung[2]
+	var per_nama: Dictionary = hitung[3]
+	var bulat: int = 0
+	for ubin: Sprite2D in sprite:
 		if ubin.position == ubin.position.round():
 			bulat += 1
 	check(sprite.size() > 300 and benar == sprite.size(), "tiap ubin di kolom x memakai tekstur kolom itu: %d dari %d (%s)" % [benar, sprite.size(), salah_contoh])
@@ -331,6 +340,8 @@ func _test_scene_rute() -> void:
 			if jalur.begins_with(FOLDER_UBIN):
 				perumahan += 1
 		check(graybox == 0 and perumahan == sprite.size(), "scene rute: semua ubin dari tiles/perumahan, tidak ada graybox")
+		var hitung: Array = _hitung_tekstur_benar(tanah)
+		check(int(hitung[0]) == sprite.size() and (hitung[3] as Dictionary).size() == 7, "scene rute: tiap ubin memakai tekstur kolomnya, tujuh tekstur terpakai: %d dari %d (%s) %s" % [hitung[0], sprite.size(), hitung[2], (hitung[3] as Dictionary).keys()])
 	_tree.root.remove_child(akar)
 	akar.free()
 
