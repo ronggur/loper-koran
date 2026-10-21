@@ -923,7 +923,7 @@ Disimpan 2026-10-21, sesudah PR #42 (aset gelombang 1 dirender) dan PR #43 (run 
 | 5B | Tembok sisi dekat dan komposisi rumah dekat, jenis dekor di data segmen (tong sampah, pohon, lampu jalan; DATA_SCHEMA 3), ubin jalan masuk garasi dan simbol, polisi tidur, zebra, genangan | 5A di-merge |
 | 5C | Animasi pemain yang kurang (berhenti dengan kaki turun, bangkit, jatuh dan terjerembab empat arah lain) lewat `tools/loper_art`, pose kucing ditangkap, ubin ujung kerb dan sudut trotoar | 5A di-merge (boleh paralel dengan 5B) |
 
-Perintah di bawah hanya untuk **5A**. 5B dan 5C ditulis sesudah 5A di-merge, supaya memakai bentuk pemasangan yang nyata.
+Perintah di bawah hanya untuk **5A**. Perintah 5B ada di Bagian 6h (ditulis sesudah 5A di-merge, dengan usulan pengubahan cakupan); 5C ditulis sesudah 5B.
 
 Catatan untuk semua run Fase 5:
 - **Aset hanya lewat renderer.** Dilarang menyalin atau mengedit PNG dengan tangan (`art-assets.mdc`); salinan ke `assets/` lewat opsi `--salin` pada skrip dan dibuktikan uji deterministik di `tools/tests_cek/`.
@@ -1011,6 +1011,102 @@ IZIN HP: boleh memasang APK ke vivo V2108 (adb 12d8c9da) setelah QA PASS dengan 
   com.rmh.kring boleh bila perlu (izin pemilik 2026-10-18), tetapi catat save yang dipakai di LOG.
   Push, PR, dan merge tetap menunggu konfirmasi pemilik.
 RUN_ID: <YYYYMMDD>-fase5a-pasang-aset-gelombang1   (tanggal hari run dimulai)
+```
+
+## 6h. Fase 5: perintah Run 5B (tempel di sesi baru)
+
+Disimpan 2026-10-21, sesudah Run 5A di-merge (PR #45). Run 5A memasang ubin enam kolom, koran, VFX sepeda, dan kilau misi (`docs/loop/20261021-fase5a-pasang-aset-gelombang1/`). 5B memasang sisi dekat dan dekor di pinggir jalan. 5C (animasi pemain) menyusul sebagai run terpisah; tidak dijalankan paralel dengan 5B karena keduanya mengubah `DEV_PHASES.md`, `ART_DIRECTION.md`, dan `AGENTS.md`.
+
+**Usulan pengubahan cakupan 5B (bisa ditolak):** tabel 6g mencantumkan polisi tidur, zebra, dan genangan di 5B, tetapi daftar "di luar scope" run 5A menaruhnya di M3. Ketiganya menyiratkan perilaku gameplay (polisi tidur memperlambat, genangan licin) yang belum didesain, dan ubin hias yang tidak berefek menyesatkan pemain. Usulan: **5B tidak memasangnya** (tetap M3 bersama portal dan pos satpam, percikan); 5B memasang tembok sisi dekat, dekor di data segmen (tong sampah, pohon, lampu jalan), jalan masuk garasi, simbol sepeda, dan variasi ubin polos.
+
+### Run 5B — tembok sisi dekat, dekor di data segmen, variasi ubin
+
+Prasyarat: **PR #45 (Run 5A) sudah di-merge ke `main`.** Kalau belum, berhenti dan minta pemilik merge dulu.
+
+```text
+Kamu adalah ORCHESTRATOR loop Dev↔QA untuk repo Loper Koran. Ikuti docs/LOOP-DEV-QA.md
+secara ketat (Bagian 1, Bagian 0c, Bagian 6g dan 6h). Mulai dari main terbaru yang sudah memuat
+Run 5A (PR #45). Baca docs/loop/20261021-fase5a-pasang-aset-gelombang1/{SPEC,LOG}.md (pola --salin,
+uji deterministik, probe, mutan, pelajaran: tekstur dimuat di _init/_ready bukan di _draw, jangan
+menjalankan dua proses Godot sekaligus), docs/loop/20261018-fase3c-hud-hasil/ (spike sisi dekat),
+ROADMAP 4b, ART_DIRECTION 2, 6.2, 6.4 (butir tembok belakang rendah), 6.7, 11, DATA_SCHEMA 3,
+ROUTE_DESIGN, rule content-data dan art-assets dulu: keputusan yang sudah ada berlaku, jangan
+ditanyakan ulang.
+
+SCOPE: Run 5B — Fase 5, pasang tampilan sisi dekat dan dekor rute perumahan (DEV_PHASES Fase 5,
+  ART_DIRECTION 6.4, 6.7, rule art-assets dan content-data). Perubahan tampilan dan data dekor;
+  ThrowSolver, skor, zona, tenggat, gerak, tabrakan, rintangan, save, misi, dan kondisi sepeda tidak
+  berubah, dan semua tes lama lulus tanpa diubah angkanya.
+  - Salin lewat skrip, bukan tangan (`--salin`, pola run 5A; jangan menyalin PNG dengan tangan):
+    (1) tembok sisi dekat dari tools/env_art/gelombang1: house_tembok_polos, _bata, _besi, _pot,
+    _tiang + JSON titik pijak; (2) prop_tong_sampah_logam (abu-abu; versi biru TIDAK dipasang);
+    (3) pohon dan lampu jalan dari tools/env_art/lampu_pohon.py: pilih secukupnya untuk perumahan
+    (ART_DIRECTION 6.7: pohon rindang, glodokan tiang, ketapang kencana; lampu jalan versi MATI/siang,
+    satu jenis per sisi). Skrip itu belum punya --salin dan belum punya uji deterministik: tambahkan
+    keduanya (pola uji_aset_gelombang1.py / uji_aset_pasang_gelombang1.py) + langkah di
+    .github/workflows/tes.yml; sprite 5B yang disalin tidak boleh mengubah isi pasangan 5A;
+    (4) ubin tambahan dari ubin_perumahan.py: masuk garasi, simbol sepeda (trotoar_*_simbol), dan
+    aspal_N/rumput_2/rumput_3 polos. Aset yang belum dipasang TIDAK disalin. Impor Nearest,
+    Lossless, tanpa mipmap.
+  - Pasang di game:
+    a. Tembok sisi dekat di RumahDaurRute: tembok belakang rendah 14 unit di kaki kavling dengan
+       rumah dekat penuh di belakangnya (keputusan pemilik 2026-10-17, geometri spike run 3C: tembok
+       berpusat x = 3,125 ubin, rumah mundur 1,25 ubin; RUTE_RUMAH_DEKAT_X_UBIN sekarang 3.0, cocokkan
+       dan catat selisihnya di SPEC). Satu modul per ubin sepanjang kavling, tiang di ujung, varian
+       dipilih deterministik dari id rumah (tes seed sama = sama). Rumah dekat tetap tanpa kotak surat
+       dan tanpa zona; sasaran sisi dekat TIDAK boleh tertutup tembok (ukur dengan MedanKoran seperti
+       spike: badan kotak/zona 0%) dan tembok bukan penghalang gerak atau tabrakan.
+    b. Jenis dekor di data segmen (DATA_SCHEMA 3, usulan): bidang opsional `dekor` pada segmen,
+       daftar {jenis: tong_sampah|pohon|lampu_jalan, pos, sisi, varian}; validasi di SegmenRute
+       (jenis dikenal, sisi, pos dalam panjang segmen, tidak menimpa pintu rumah, kotak surat, objek
+       rintangan, atau lajur sepeda), berkas segmen lama tanpa `dekor` tetap sah. Gambar lewat satu
+       kelas daur baru bergaya RintanganDaur (jendela daur, Y-sort, terdaftar ke penerap penutup agar
+       pohon dan lampu menjadi semi-transparan di atas pemain; ROUTE_DESIGN aturan 5: jalur utama tidak
+       tertutup). Tulis `dekor` tangan di 9 segmen perumahan (content: seperlunya, tidak menyesakkan
+       jalur; pohon di rumput, lampu jalan di tepi trotoar, tong sampah di dekat kotak surat/gerbang).
+       Perbarui DATA_SCHEMA 3, ROUTE_DESIGN, dan tes data (tolak jenis salah, sisi salah, di luar
+       panjang, bertabrakan dengan rumah).
+    c. Ubin: jalan masuk garasi di bawah rumah dengan mobil_garasi (ubin *_masuk di titik objek),
+       simbol sepeda di lajur pada selang tetap (konstanta di config.gd), dan variasi polos
+       aspal_N/rumput_N dipilih deterministik. Posisi, batas jalan, dan sel_tanah tidak berubah;
+       sambungan tanpa celah (tes piksel seperti 5A).
+  - Di LUAR scope (jangan dikerjakan atau diputuskan): polisi tidur, zebra, genangan, percikan,
+    portal dan pos satpam, tong sampah biru (semua M3: perlu desain gameplay), jejak kaki dan mangkuk
+    kucing, animasi pemain (5C), ubin ujung kerb dan sudut trotoar (5C), aset M3 (hujan, jendela
+    menyala, lampu nyala/malam, mobil tamu), audio, perubahan ThrowSolver/skor/zona/rintangan, Fase 6A2.
+  - Tes: validasi dekor, pemilihan varian tembok dan tiang, geometri tembok vs rumah dekat, sasaran
+    sisi dekat tidak tertutup, penutup semi-transparan untuk pohon/lampu, ubin masuk/simbol di titik
+    yang benar, tanpa celah, impor sprite, tidak ada referensi ke aset yang belum dipasang, paket
+    --export-pack memuat sprite baru; mutan nyata; probe jendela di 2340x1080, 1920x1080, 2400x1080,
+    1600x720 (sisi dekat dengan tembok tiga varian, tembok dan sasaran dekat, pohon/lampu menutupi
+    pemain, tong sampah, garasi masuk, simbol sepeda, kidal) dengan tangkapan layar yang DILIHAT QA;
+    tes tidak boleh menulis save sungguhan.
+  - Dokumen: ART_DIRECTION (6.4, 6.7, 11, Changelog), DATA_SCHEMA 3, ROUTE_DESIGN, DEV_PHASES Fase 5
+    (JANGAN mencentang butir aset sebelum dinilai di HP; perbarui catatan pembagian 5B/5C bila usulan
+    pengubahan cakupan di Bagian 6h dipakai), LOOP-DEV-QA 6g (baris 5B), AGENTS.md, docs/README.md,
+    SETUP_ANDROID 8.13 (checklist HP: tembok terbaca bukan pita gelap, sasaran dekat jelas, pohon dan
+    lampu tidak membingungkan jalur, 60 fps).
+  Keputusan terbuka yang mungkin menghambat: tidak ada (tinggi tembok dan mundur 1,25 ubin usulan
+  sampai uji HP Bab 2). Jangan mengunci palet induk. Bila ada hal baru, tanyakan SEKALI dengan satu
+  rekomendasi.
+  Git: judul PR memakai Conventional Commits (feat:, art:, ...); release-please membacanya (git-workflow
+  bagian Rilis). Jangan mengedit CHANGELOG.md, .release-please-manifest.json, atau membuat tag.
+  PENUTUP: DEV_PHASES Fase 5 tidak dicentang penuh (5C menyusul); Fase 2, 3, 4, dan M2 tidak dicentang
+  tanpa catatan uji HP pemilik. Run berikutnya: 5C (animasi pemain, ubin ujung kerb dan sudut trotoar),
+  satu PR.
+HASIL UJI HP RUN 4A, 4B, 6A1, DAN 5A (ISI: tempel catatan dari SETUP_ANDROID 8.9, 8.10, 8.11, 8.12;
+  kosongkan bila belum): ISI: ...
+DESIGN: docs/design/DESIGN_SPEC.md (token bagian 1) dan docs/design/environment/gelombang1/ (mock
+  tembok: sisi_dekat_siang_x3.png, tembok_rantai_x3.png); tidak ada layar baru.
+IZIN HP: boleh memasang APK ke vivo V2108 (adb 12d8c9da) setelah QA PASS dengan `adb install -r`
+  (izin tetap pemilik 2026-10-17, tanpa bertanya lagi); A54 (RRCWA05E2NN) hanya bila tersambung.
+  Hanya orchestrator yang menyentuh HP; cek layar menyala dan tidak sedang dipakai; tidak ada
+  uninstall/logcat -c. Edit save.json lewat run-as lebih disukai daripada pm clear, dan pm clear
+  com.rmh.kring boleh bila perlu (izin pemilik 2026-10-18), tetapi catat save yang dipakai di LOG.
+  APK debug lokal dibangun dengan `godot --headless --export-debug "Android"`; CI juga membuat APK
+  uji di setiap PR (artifact build-apk, tanda tangan sama dengan keystore lokal, SETUP_ANDROID 4b).
+  Push, PR, dan merge tetap menunggu konfirmasi pemilik.
+RUN_ID: <YYYYMMDD>-fase5b-tembok-dekor   (tanggal hari run dimulai)
 ```
 
 ## 7. Batasan yang perlu diketahui
