@@ -73,8 +73,14 @@ jobs:
       - name: Uji aset gelombang 1 Fase 5 (renderer deterministik, palet induk, manifest, K-1, mock docs = hasil skrip)
         run: python3 tools/tests_cek/uji_aset_gelombang1.py
 
-      - name: Uji pemasangan aset gelombang 1 (isi assets/sprites/{props,vfx,tiles/perumahan} = keluaran --salin, hanya yang dipasang, impor Lossless)
+      - name: Uji pemasangan aset gelombang 1 (isi assets/sprites/{props,vfx,houses/perumahan,tiles/perumahan} = keluaran --salin, hanya yang dipasang, impor Lossless)
         run: python3 tools/tests_cek/uji_aset_pasang_gelombang1.py
+
+      - name: Uji renderer pohon dan lampu (lampu_pohon.py deterministik, keluaran lama tidak berubah, --salin hanya yang dipasang, tanpa bingkai nyala, warna)
+        run: python3 tools/tests_cek/uji_aset_lampu_pohon.py
+
+      - name: Uji pemasangan aset run 5B (tembok, tong sampah logam, pohon, lampu mati, ubin tambahan = keluaran --salin, golden 5A byte-identik, impor Lossless)
+        run: python3 tools/tests_cek/uji_aset_pasang_5b.py
 
       - name: Import project (tanpa error, tanpa berkas yang belum di-commit)
         run: |
