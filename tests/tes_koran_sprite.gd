@@ -524,6 +524,9 @@ func _test_koran_terbang_di_scene() -> void:
 	check(tanah.pakai_sprite and udara.pakai_sprite and tanah.lapisan == KoranGambar.Lapisan.TANAH and udara.lapisan == KoranGambar.Lapisan.UDARA, "KoranTanah dan KoranUdara memakai sprite di rute.tscn")
 	check(tanah.get_index() < objek.get_index() and udara.get_index() > objek.get_index(), "urutan gambar: koran tanah sebelum objek dunia, koran udara sesudah objek dunia (lapisan UDARA di atas objek)")
 	check(tanah.texture_filter == CanvasItem.TEXTURE_FILTER_NEAREST and udara.texture_filter == CanvasItem.TEXTURE_FILTER_NEAREST, "node koran memakai filter Nearest")
+	# Tekstur harus dimuat di luar _draw (tekstur yang baru dimuat di dalam _draw tergambar putih polos; ditemukan lewat probe jendela) dan dipegang node.
+	check(tanah.jumlah_tekstur() == 5 and udara.jumlah_tekstur() == 5, "node koran memegang lima tekstur (putar, bayangan, teras, rumput, kotak surat) sebelum menggambar")
+	check(GambarSprite.muat(["prop_koran_putar", "tidak_ada"] as Array[String]).size() == 1, "GambarSprite.muat melewati nama tidak dikenal")
 	var mendarat: Array[KoranLempar.Koran] = []
 	akar.koran_mendarat.connect(func(k: KoranLempar.Koran) -> void: mendarat.append(k))
 	_taruh(akar, 3.0, 0.5, 4.0)
@@ -725,7 +728,7 @@ func _test_jalan_uji_tetap_placeholder() -> void:
 	akar.set_process(false)
 	var tanah: KoranGambar = _anak(akar, "KoranTanah") as KoranGambar
 	var udara: KoranGambar = _anak(akar, "KoranUdara") as KoranGambar
-	check(not tanah.pakai_sprite and not udara.pakai_sprite and tanah.item_sprite().is_empty() and udara.item_sprite().is_empty(), "jalan_uji.tscn: KoranGambar tanpa mode sprite")
+	check(not tanah.pakai_sprite and not udara.pakai_sprite and tanah.item_sprite().is_empty() and udara.item_sprite().is_empty() and tanah.jumlah_tekstur() == 0, "jalan_uji.tscn: KoranGambar tanpa mode sprite dan tanpa tekstur")
 	check(not _sepeda(akar).umpan_balik().pakai_sprite() and _sepeda(akar).umpan_balik().sprite() == null, "jalan_uji.tscn: debu dan garis tetap partikel kode")
 	_tree.root.remove_child(akar)
 	akar.free()

@@ -13,11 +13,16 @@ var _detik: float = 0.0
 var _garis: VfxSepeda.GarisKeadaan = null
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _ada_gambar: bool = false
+## Tekstur debu dan tiga garis yang dipegang node (dimuat di `_init`, bukan di `_draw`; lihat `GambarSprite`).
+var _tekstur: Dictionary = {}
 
 
 func _init() -> void:
 	_rng.seed = Config.UMPAN_GARIS_SPRITE_BENIH
 	_garis = VfxSepeda.garis_awal(_rng)
+	var nama: Array[String] = [VfxSepeda.SPRITE_DEBU]
+	nama.append_array(VfxSepeda.SPRITE_GARIS)
+	_tekstur = GambarSprite.muat(nama)
 
 
 func _process(delta: float) -> void:
@@ -52,6 +57,11 @@ func item_sprite() -> Array[DefSprite.Item]:
 	return hasil
 
 
+## Banyaknya tekstur sprite yang dipegang node (untuk tes).
+func jumlah_tekstur() -> int:
+	return _tekstur.size()
+
+
 ## Waktu animasi debu sejauh ini, detik (untuk tes).
 func detik() -> float:
 	return _detik
@@ -65,4 +75,4 @@ func keadaan_garis() -> VfxSepeda.GarisKeadaan:
 func _draw() -> void:
 	var daftar: Array[DefSprite.Item] = item_sprite()
 	_ada_gambar = not daftar.is_empty()
-	GambarSprite.gambar(self, daftar)
+	GambarSprite.gambar(self, daftar, _tekstur)

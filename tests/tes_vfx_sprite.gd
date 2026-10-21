@@ -344,6 +344,7 @@ func _test_debu_garis_di_scene() -> void:
 	var sepeda: SepedaUji = _sepeda(akar)
 	var umpan: UmpanBalikSepeda = sepeda.umpan_balik()
 	var sprite: VfxSepedaGambar = umpan.sprite()
+	check(sprite != null and sprite.jumlah_tekstur() == 4, "node efek sepeda memegang empat tekstur (debu, tiga garis) sebelum menggambar (dimuat di luar _draw)")
 	check(umpan.pakai_sprite() and sprite != null and sprite.get_parent() == umpan and umpan.get_parent() == sepeda and sprite.position == Vector2.ZERO, "rute.tscn: UmpanBalikSepeda memakai sprite, node VfxSepedaGambar anak umpan balik di titik pijak sepeda")
 	check(umpan.get_index() < (_anak(akar, "LoperAgen") as Node).get_index(), "umpan balik digambar sebelum sprite pemain (di belakang pemain)")
 	var jumlah_pancaran: int = 0
@@ -452,7 +453,7 @@ func _test_bintang_dan_koin_di_scene() -> void:
 	var gambar: UmpanMelayangGambar = akar.umpan_gambar()
 	var mendarat: Array[KoranLempar.Koran] = []
 	akar.koran_mendarat.connect(func(k: KoranLempar.Koran) -> void: mendarat.append(k))
-	check(gambar.item_sprite().is_empty(), "awal: tidak ada bintang dan koin")
+	check(gambar.item_sprite().is_empty() and gambar.jumlah_tekstur() == 2, "awal: tidak ada bintang dan koin; dua tekstur dipegang node")
 	# 1. Antaran sah ke kotak surat @6 (tepat, tanpa tip).
 	var k1: KoranLempar.Koran = await _lempar_ke_kotak(akar, 1.0, "per_buka_01@6", mendarat)
 	var item: Array[DefSprite.Item] = gambar.item_sprite()
@@ -569,7 +570,7 @@ func _test_kilau_di_scene() -> void:
 	var t1: RencanaMisi.Titik = akar.rencana_misi().titik[0]
 	_taruh(akar, 3.0, 0.5, maxf(t1.maju_ubin - 11.0, 0.0))
 	akar.perbarui(DT)
-	check(kucing.tampil() and kucing.titik() == t1, "kontrol: kucing titik 1 tampil")
+	check(kucing.tampil() and kucing.titik() == t1 and kucing.hiasan().jumlah_tekstur() == 1, "kontrol: kucing titik 1 tampil, tekstur kilau dipegang hiasan")
 	var visual: Array = _misi.petunjuk.get("visual", [])
 	check(visual.has("kilau") and visual.has("ekor"), "kontrol: data misi p1_kucing memuat petunjuk visual kilau dan ekor")
 	var item: Array[DefSprite.Item] = kucing.hiasan().item_sprite()

@@ -11,6 +11,12 @@ const TEMA: Theme = preload("res://assets/ui/theme.tres")
 
 var _label: Array[Label] = []
 var _item: Array[DefSprite.Item] = []
+## Tekstur bintang dan koin yang dipegang node (dimuat di `_ready`, bukan di `_draw`; lihat `GambarSprite`).
+var _tekstur: Dictionary = {}
+
+
+func _ready() -> void:
+	_tekstur = GambarSprite.muat([VfxAntaran.SPRITE_BINTANG, VfxAntaran.SPRITE_KOIN] as Array[String])
 
 
 ## Menampilkan daftar entri (urut dari yang paling lama). Label dipakai ulang; yang tidak terpakai disembunyikan.
@@ -45,13 +51,18 @@ func teks(e: UmpanMelayang.Entri) -> String:
 	return "\n".join(bagian)
 
 
+## Banyaknya tekstur sprite yang dipegang node (untuk tes).
+func jumlah_tekstur() -> int:
+	return _tekstur.size()
+
+
 ## Item sprite (bintang, koin) yang sedang digambar (untuk tes dan probe).
 func item_sprite() -> Array[DefSprite.Item]:
 	return _item
 
 
 func _draw() -> void:
-	GambarSprite.gambar(self, _item)
+	GambarSprite.gambar(self, _item, _tekstur)
 
 
 ## Banyaknya label yang sedang tampil (untuk tes).

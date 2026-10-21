@@ -8,10 +8,21 @@ extends Node2D
 
 const SPRITE_KILAU: String = "mission_kilau"
 
+## Tekstur kilau yang dipegang node (dimuat di `_ready`, bukan di `_draw`; lihat `GambarSprite`).
+var _tekstur: Dictionary = {}
 var _kilau: bool = false
 var _ekor: bool = false
 var _progres: float = 0.0
 var _detik: float = 0.0
+
+
+func _ready() -> void:
+	_tekstur = GambarSprite.muat([SPRITE_KILAU] as Array[String])
+
+
+## Banyaknya tekstur sprite yang dipegang node (untuk tes).
+func jumlah_tekstur() -> int:
+	return _tekstur.size()
 
 
 ## Mengatur isi hiasan: `kilau` dan `ekor` dari petunjuk visual data misi, `progres` 0..1 (0 = bar tidak tampil), `detik` waktu bebas untuk animasi.
@@ -83,6 +94,6 @@ func item_sprite() -> Array[DefSprite.Item]:
 
 func _draw() -> void:
 	GambarPiksel.gambar(self, perintah_ekor(_ekor, _detik))
-	GambarSprite.gambar(self, item_kilau(_kilau, _detik))
+	GambarSprite.gambar(self, item_kilau(_kilau, _detik), _tekstur)
 	if _progres > 0.0:
 		GambarPiksel.gambar(self, perintah_progres(_progres))

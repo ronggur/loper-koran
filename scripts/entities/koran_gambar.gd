@@ -17,11 +17,21 @@ extends Node2D
 ## Lapisan gambar.
 enum Lapisan { TANAH, UDARA }
 
+## Sprite yang dipakai mode sprite.
+const SPRITE_PAKAI: Array[String] = ["prop_koran_putar", "prop_koran_bayangan", "prop_koran_teras", "prop_koran_rumput", "prop_koran_kotak_surat"]
+
 @export var lapisan: Lapisan = Lapisan.UDARA
 ## True: koran dan bayangan dari sprite gelombang 1 (scene rute); false: pola placeholder dari kode (jalan uji).
 @export var pakai_sprite: bool = false
 
 var _daftar: Array[KoranLempar.Koran] = []
+## Tekstur sprite yang dipegang node (dimuat di `_ready`, bukan di `_draw`; lihat `GambarSprite`).
+var _tekstur: Dictionary = {}
+
+
+func _ready() -> void:
+	if pakai_sprite:
+		_tekstur = GambarSprite.muat(SPRITE_PAKAI)
 
 
 ## Mengganti daftar koran yang digambar (dipanggil `JalanUji` tiap langkah). Gambar ulang hanya bila ada yang berubah atau tampil.
@@ -49,6 +59,11 @@ func perintah_tampil() -> Array:
 	return hasil
 
 
+## Banyaknya tekstur sprite yang dipegang node (untuk tes).
+func jumlah_tekstur() -> int:
+	return _tekstur.size()
+
+
 ## Item sprite semua koran yang sedang digambar lapisan ini (mode sprite; kosong bila `pakai_sprite` false). `_draw` menggambar ini dulu, lalu `perintah_tampil`.
 func item_sprite() -> Array[DefSprite.Item]:
 	var hasil: Array[DefSprite.Item] = []
@@ -60,7 +75,7 @@ func item_sprite() -> Array[DefSprite.Item]:
 
 
 func _draw() -> void:
-	GambarSprite.gambar(self, item_sprite())
+	GambarSprite.gambar(self, item_sprite(), _tekstur)
 	GambarPiksel.gambar(self, perintah_tampil())
 
 
