@@ -53,8 +53,10 @@ script = ExtResource("18_area")
 
 [node name="KoranTanah" type="Node2D" parent="."]
 unique_name_in_owner = true
+texture_filter = 1
 script = ExtResource("14_koran")
 lapisan = 0
+pakai_sprite = true
 
 [node name="Objek" type="Node2D" parent="."]
 unique_name_in_owner = true
@@ -84,8 +86,10 @@ script = ExtResource("16_penerap")
 
 [node name="KoranUdara" type="Node2D" parent="."]
 unique_name_in_owner = true
+texture_filter = 1
 script = ExtResource("14_koran")
 lapisan = 1
+pakai_sprite = true
 
 [node name="GarisBidik" type="Node2D" parent="."]
 unique_name_in_owner = true
@@ -93,6 +97,7 @@ script = ExtResource("15_bidik")
 
 [node name="UmpanMelayang" type="Node2D" parent="."]
 unique_name_in_owner = true
+texture_filter = 1
 script = ExtResource("22_umpan")
 
 [node name="Hud" parent="." instance=ExtResource("11_hud")]

@@ -1,9 +1,12 @@
 class_name KucingHiasan
 extends Node2D
-## Hiasan kucing misi yang digambar dari kode, tanpa PNG baru (M-10 run fase4b-misi-kucing, usulan): kilau (dua frame bergantian tiap `MISI_KILAU_DETIK`),
-## ekor (dua frame bergantian tiap `MISI_EKOR_DETIK`), dan bar progres tangkap di atas kucing. Pasangan visual petunjuk misi (prinsip 3, ui-scenes:
-## penanda tidak hanya warna). Titik asal node = titik pijak kucing. Perintah gambar disusun fungsi statis yang bisa dites headless; `_draw` hanya
-## menjalankannya lewat `GambarPiksel`. Warna dari `Palette`.
+## Hiasan kucing misi (M-10 run fase4b-misi-kucing, usulan): kilau (dua frame bergantian tiap `MISI_KILAU_DETIK`), ekor (dua frame bergantian tiap `MISI_EKOR_DETIK`), dan bar progres tangkap
+## di atas kucing. Pasangan visual petunjuk misi (prinsip 3, ui-scenes: penanda tidak hanya warna). Titik asal node = titik pijak kucing. Run fase5a bagian B (D-6): kilau dari sprite
+## `mission_kilau` (9x9, dua frame, krem dengan titik tengah kuning) di tengah kotak `MISI_KILAU_KOTAK_PX` yang pojoknya `MISI_KILAU_POSISI_PX`; ekor dan bar progres tetap dari kode. Urutan gambar:
+## ekor, kilau, bar progres (kilau di atas ekor, di bawah progres). Perintah gambar kode dan item sprite disusun fungsi statis yang bisa dites headless; `_draw` hanya menjalankannya
+## lewat `GambarPiksel` dan `GambarSprite`. Warna dari `Palette`.
+
+const SPRITE_KILAU: String = "mission_kilau"
 
 var _kilau: bool = false
 var _ekor: bool = false
@@ -34,26 +37,24 @@ static func frame_ekor(detik: float) -> int:
 	return posmod(floori(maxf(detik, 0.0) / Config.MISI_EKOR_DETIK), 2)
 
 
-## Perintah gambar hiasan (`GambarPiksel`): kilau, ekor, lalu bar progres bila `progres` > 0. Urut gambar dari belakang ke depan.
-static func perintah(kilau: bool, ekor: bool, progres: float, detik: float) -> Array:
-	var hasil: Array = []
-	if ekor:
-		var pola_ekor: Array[String] = PolaPiksel.EKOR_KUCING_1 if frame_ekor(detik) == 0 else PolaPiksel.EKOR_KUCING_2
-		hasil.append_array(GambarPiksel.perintah_pola(pola_ekor, Vector2(Config.MISI_EKOR_POSISI_PX[0], Config.MISI_EKOR_POSISI_PX[1]), Palette.RADAR_MISI))
-	if kilau:
-		hasil.append_array(perintah_kilau(frame_kilau(detik)))
-	if progres > 0.0:
-		hasil.append_array(perintah_progres(progres))
+## Perintah gambar ekor (`GambarPiksel`) pada waktu `detik`; kosong bila `ekor` false.
+static func perintah_ekor(ekor: bool, detik: float) -> Array:
+	if not ekor:
+		return []
+	var pola_ekor: Array[String] = PolaPiksel.EKOR_KUCING_1 if frame_ekor(detik) == 0 else PolaPiksel.EKOR_KUCING_2
+	return GambarPiksel.perintah_pola(pola_ekor, Vector2(Config.MISI_EKOR_POSISI_PX[0], Config.MISI_EKOR_POSISI_PX[1]), Palette.RADAR_MISI)
+
+
+## Item sprite kilau pada waktu `detik` (frame dari `frame_kilau`): sprite 9x9 di tengah kotak `MISI_KILAU_KOTAK_PX` yang pojoknya `MISI_KILAU_POSISI_PX`. Kosong bila `kilau` false.
+static func item_kilau(kilau: bool, detik: float) -> Array[DefSprite.Item]:
+	var hasil: Array[DefSprite.Item] = []
+	if not kilau:
+		return hasil
+	var sel: Vector2i = DefSprite.sel(SPRITE_KILAU)
+	var geser: Vector2 = Vector2((Config.MISI_KILAU_KOTAK_PX[0] - sel.x) / 2, (Config.MISI_KILAU_KOTAK_PX[1] - sel.y) / 2)
+	var pojok: Vector2 = Vector2(Config.MISI_KILAU_POSISI_PX[0], Config.MISI_KILAU_POSISI_PX[1]) + geser
+	hasil.append(DefSprite.Item.buat(SPRITE_KILAU, frame_kilau(detik), pojok))
 	return hasil
-
-
-## Perintah gambar kilau frame `frame` (0 = 9x9, 1 = 11x11): kotak `MISI_KILAU_POSISI_PX` berukuran frame terbesar, frame yang lebih kecil di tengahnya.
-static func perintah_kilau(frame: int) -> Array:
-	var pola_kilau: Array[String] = PolaPiksel.KILAU_KUCING_1 if frame == 0 else PolaPiksel.KILAU_KUCING_2
-	var kotak_lebar: int = PolaPiksel.KILAU_KUCING_2[0].length()
-	var kotak_tinggi: int = PolaPiksel.KILAU_KUCING_2.size()
-	var geser: Vector2 = Vector2((kotak_lebar - pola_kilau[0].length()) / 2, (kotak_tinggi - pola_kilau.size()) / 2)
-	return GambarPiksel.perintah_pola(pola_kilau, Vector2(Config.MISI_KILAU_POSISI_PX[0], Config.MISI_KILAU_POSISI_PX[1]) + geser, Palette.ACCENT)
 
 
 ## Bar progres tangkap: bingkai `OUTLINE` selebar `MISI_PROGRES_LEBAR_PX`, isi `OK` sebanyak `progres` (pecahan bulat piksel, minimal 1 px bila > 0).
@@ -75,5 +76,13 @@ static func perintah_progres(progres: float) -> Array:
 	return hasil
 
 
+## Item sprite hiasan yang sedang digambar (kilau; untuk tes dan probe).
+func item_sprite() -> Array[DefSprite.Item]:
+	return item_kilau(_kilau, _detik)
+
+
 func _draw() -> void:
-	GambarPiksel.gambar(self, perintah(_kilau, _ekor, _progres, _detik))
+	GambarPiksel.gambar(self, perintah_ekor(_ekor, _detik))
+	GambarSprite.gambar(self, item_kilau(_kilau, _detik))
+	if _progres > 0.0:
+		GambarPiksel.gambar(self, perintah_progres(_progres))

@@ -49,3 +49,12 @@ static func pusat_tapak_dunia(rumah: RouteBuilder.RumahRute) -> Vector2:
 ## (`JALAN_UJI_KOTAK_SURAT_*`, di tengah zona kotak surat), digeser ke awal kavling rumah.
 static func titik_kotak_surat_dunia(rumah: RouteBuilder.RumahRute) -> Vector2:
 	return Vector2(Config.JALAN_UJI_KOTAK_SURAT_X_UBIN, -(rumah.maju_ubin + Config.JALAN_UJI_KOTAK_SURAT_MAJU_UBIN))
+
+
+## Titik tengah zona teras rumah di dunia (ubin; y dunia = -maju): tempat koran terlipat rumah yang sudah terantar (run fase5a bagian B, D-3d). Tanpa zona teras (sisi `TIDAK_ADA`) = pusat tapak.
+static func titik_teras_dunia(rumah: RouteBuilder.RumahRute) -> Vector2:
+	for zona: ZonaSasaran.Zona in ZonaSasaran.zona_rumah(rumah):
+		if zona.jenis == ZonaSasaran.Jenis.TERAS:
+			var pusat: Vector2 = zona.persegi.get_center()
+			return Vector2(pusat.x, -pusat.y)
+	return pusat_tapak_dunia(rumah)

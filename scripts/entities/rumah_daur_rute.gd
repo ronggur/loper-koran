@@ -10,6 +10,8 @@ extends Node2D
 ## berubah), rumah sisi dekat tanpa kotak surat, dan titik pijak sprite dihitung dari tapak rumah
 ## (`SpriteRumah.pusat_tapak_dunia`), bukan dari `maju_ubin`. Tanda rintangan di data tidak digambar. Alfa penutup pemain diurus satu
 ## penerap (`PenerapPenutup`), bukan node ini: tiap rumah yang muncul didaftarkan ke penerap dan dilepas saat dibuang.
+## Run fase5a bagian B (D-3d, usulan): rumah pelanggan yang sudah terantar (`SkorRute.Keadaan.terantar`, hanya dibaca lewat `atur_terantar`) mendapat satu sprite `prop_koran_terlipat` di terasnya
+## (`SpriteRumah.titik_teras_dunia`), anak induk Y-sort ini sehingga digambar di atas sprite rumah (titik teras di depan tapak), dipakai ulang dari kolam, dan hilang bersama rumah di luar jendela daur.
 
 ## Scene kotak surat sasaran (rumah pelanggan): sprite berbentuk kotak surat, oranye placeholder (`scenes/entities/kotak_surat.tscn`).
 @export var adegan_kotak_surat: PackedScene
@@ -28,6 +30,10 @@ var _kotak: Dictionary = {}
 ## Indeks rumah -> kotak surat abu-abu (hanya rumah bukan pelanggan seberang).
 var _kotak_bukan: Dictionary = {}
 var _rumah_bebas: Array[Sprite2D] = []
+## Indeks rumah -> sprite koran terlipat (rumah pelanggan terantar yang sedang digambar), kolam sprite bebas, dan id rumah terantar terakhir.
+var _terlipat: Dictionary = {}
+var _terlipat_bebas: Array[Sprite2D] = []
+var _terantar: Dictionary = {}
 var _kotak_bebas: Array[Node2D] = []
 var _kotak_bukan_bebas: Array[Node2D] = []
 ## Rentang indeks `[awal, akhir)` yang sedang dipasang; (-1, -1) = belum ada.
@@ -39,6 +45,7 @@ func atur_rute(rute: RouteBuilder.Rute) -> void:
 	for indeks: int in _rumah.keys():
 		_lepas(indeks)
 	_rute = rute
+	_terantar = {}
 	# Semua PNG jenis rumah yang dipakai rute dimuat sekarang, bukan di tengah frame saat rumah pertama jenis itu muncul.
 	for r: RouteBuilder.RumahRute in rute.rumah:
 		_tekstur_untuk(SpriteRumah.nama_rumah(r))
@@ -61,6 +68,38 @@ func perbarui(jarak_ubin: float) -> void:
 	for indeks: int in range(rentang.x, rentang.y):
 		if not _rumah.has(indeks):
 			_pasang(indeks)
+
+
+## Memberi tahu daftar rumah terantar (id -> true, `SkorRute.Keadaan.terantar`; hanya dibaca): tiap rumah pelanggan di jendela daur yang terantar mendapat koran terlipat di terasnya, yang
+## tidak lagi terantar (atau bukan pelanggan) kehilangannya. Dipanggil tiap langkah; murah (hanya rumah di jendela daur).
+func atur_terantar(terantar: Dictionary) -> void:
+	_terantar = terantar
+	for indeks: int in _rumah.keys():
+		_sinkron_terlipat(indeks)
+
+
+## Banyaknya koran terlipat yang sedang digambar.
+func jumlah_terlipat() -> int:
+	return _terlipat.size()
+
+
+## Indeks rumah (di `Rute.rumah`) yang sedang menampilkan koran terlipat, urut.
+func indeks_terlipat() -> Array[int]:
+	var hasil: Array[int] = []
+	for indeks: int in _terlipat.keys():
+		hasil.append(indeks)
+	hasil.sort()
+	return hasil
+
+
+## Sprite koran terlipat rumah bernomor `indeks`, atau null.
+func sprite_terlipat(indeks: int) -> Sprite2D:
+	return _terlipat.get(indeks) as Sprite2D
+
+
+## Banyaknya node sprite koran terlipat yang pernah dibuat (terpakai + kolam), untuk memeriksa tidak ada kebocoran node.
+func jumlah_node_terlipat() -> int:
+	return _terlipat.size() + _terlipat_bebas.size()
 
 
 ## Banyaknya rumah yang sedang digambar.
@@ -130,6 +169,7 @@ func _pasang(indeks: int) -> void:
 	_rumah[indeks] = sprite
 	if penerap != null:
 		penerap.daftarkan(sprite, PenutupPemain.dari_rumah(rumah))
+	_sinkron_terlipat(indeks)
 	if rumah.sisi != LoperAnim.Sisi.SEBERANG:
 		return
 	if rumah.pelanggan and adegan_kotak_surat != null:
@@ -149,7 +189,40 @@ func _taruh_kotak(kotak: Node2D, rumah: RouteBuilder.RumahRute, pola_nama: Strin
 	kotak.visible = true
 
 
+## Memasang atau melepas koran terlipat rumah `indeks` (yang sedang digambar) sesuai status terantarnya: tepat satu bila rumah pelanggan dan terantar, selain itu tidak ada.
+func _sinkron_terlipat(indeks: int) -> void:
+	var rumah: RouteBuilder.RumahRute = _rute.rumah[indeks]
+	var perlu: bool = rumah.pelanggan and _terantar.has(rumah.id)
+	var ada: bool = _terlipat.has(indeks)
+	if perlu and not ada:
+		var sprite: Sprite2D = _terlipat_bebas.pop_back() if not _terlipat_bebas.is_empty() else _buat_terlipat()
+		sprite.position = Iso.posisi_gambar(SpriteRumah.titik_teras_dunia(rumah))
+		sprite.name = "Terlipat_%s" % rumah.id.replace("@", "_")
+		sprite.visible = true
+		_terlipat[indeks] = sprite
+	elif not perlu and ada:
+		_lepas_terlipat(indeks)
+
+
+func _lepas_terlipat(indeks: int) -> void:
+	var sprite: Sprite2D = _terlipat.get(indeks) as Sprite2D
+	_terlipat.erase(indeks)
+	if sprite != null:
+		sprite.visible = false
+		_terlipat_bebas.append(sprite)
+
+
+func _buat_terlipat() -> Sprite2D:
+	var sprite: Sprite2D = Sprite2D.new()
+	sprite.centered = false
+	sprite.texture = GambarSprite.tekstur(SpriteKoran.SPRITE_TERLIPAT)
+	sprite.offset = -Vector2(DefSprite.pijak(SpriteKoran.SPRITE_TERLIPAT))
+	add_child(sprite)
+	return sprite
+
+
 func _lepas(indeks: int) -> void:
+	_lepas_terlipat(indeks)
 	var sprite: Sprite2D = _rumah.get(indeks) as Sprite2D
 	_rumah.erase(indeks)
 	if sprite != null:

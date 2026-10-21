@@ -4,14 +4,21 @@ extends Node2D
 ## fase3b-rintangan-skor bagian B, versi minimal usulan): satu label per entri, kaki teks `UMPAN_MELAYANG_ATAS_PX` di atas titik mendarat,
 ## naik dan memudar. Teks dari kunci terjemahan: `RUTE_UMPAN_KOIN` ("+15"), lalu `RUTE_UMPAN_TIP` dan `RUTE_UMPAN_TEPAT` bila ada,
 ## satu per baris, rata tengah. Warna `OK` bergaris luar `OUTLINE`, font dari `assets/ui/theme.tres` (`HudLabel`).
+## Run fase5a bagian B (D-5, usulan): tiap entri juga memutar bintang kena (`vfx_bintang_kena`) di titik mendarat dan, bila tip sama dengan `UMPAN_KOIN_TIP_SPRITE_NILAI`, koin tip
+## (`vfx_koin_tip`, tulisan "+5" di sprite) yang naik dari titik mendarat; baris tip label tidak tampil bila sprite koin dipakai (`VfxAntaran`). Sprite digambar di bawah label (`_draw` induk lebih dulu dari anak).
 
 const TEMA: Theme = preload("res://assets/ui/theme.tres")
 
 var _label: Array[Label] = []
+var _item: Array[DefSprite.Item] = []
 
 
 ## Menampilkan daftar entri (urut dari yang paling lama). Label dipakai ulang; yang tidak terpakai disembunyikan.
 func tampilkan(daftar: Array[UmpanMelayang.Entri]) -> void:
+	var ada_sprite: bool = not _item.is_empty()
+	_item = VfxAntaran.item_semua(daftar)
+	if ada_sprite or not _item.is_empty():
+		queue_redraw()
 	while _label.size() < daftar.size():
 		_label.append(_buat_label())
 	for i: int in range(_label.size()):
@@ -28,14 +35,23 @@ func tampilkan(daftar: Array[UmpanMelayang.Entri]) -> void:
 		label.position = (kaki - Vector2(ukuran.x / 2, ukuran.y)).round()
 
 
-## Teks satu entri: "+<ongkos>", lalu tip dan "TEPAT" bila ada, satu per baris.
+## Teks satu entri: "+<ongkos>", lalu tip dan "TEPAT" bila ada, satu per baris. Tip tidak ditulis di label bila ditampilkan sprite koin (`VfxAntaran.koin_sprite`).
 func teks(e: UmpanMelayang.Entri) -> String:
 	var bagian: PackedStringArray = PackedStringArray([tr("RUTE_UMPAN_KOIN").format({"n": e.ongkos})])
-	if e.tip > 0:
+	if e.tip > 0 and not VfxAntaran.koin_sprite(e.tip):
 		bagian.append(tr("RUTE_UMPAN_TIP").format({"n": e.tip}))
 	if e.tepat:
 		bagian.append(tr("RUTE_UMPAN_TEPAT"))
 	return "\n".join(bagian)
+
+
+## Item sprite (bintang, koin) yang sedang digambar (untuk tes dan probe).
+func item_sprite() -> Array[DefSprite.Item]:
+	return _item
+
+
+func _draw() -> void:
+	GambarSprite.gambar(self, _item)
 
 
 ## Banyaknya label yang sedang tampil (untuk tes).

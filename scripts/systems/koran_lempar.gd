@@ -41,6 +41,10 @@ class Koran extends RefCounted:
 	var id_rumah: String = ""
 	## True bila mendarat di inti kotak surat rumah pelanggan dan bukan lemparan mode bantu (K-4, O-4; berlaku bila `mendarat`).
 	var tepat: bool = false
+	## Permukaan tempat koran tergeletak (turunan murni untuk gambar sprite, run fase5a; tidak ikut penilaian; berlaku bila `mendarat`).
+	var permukaan: PermukaanKoran.Permukaan = PermukaanKoran.Permukaan.TERAS
+	## Titik dunia (ubin) tempat titik pijak sprite koran tergeletak diletakkan: kaki kotak surat untuk `KOTAK_SURAT`, selain itu titik mendarat (berlaku bila `mendarat`).
+	var titik_diam: Vector2 = Vector2.ZERO
 
 	## Salinan bebas (lintasan dipakai bersama karena tidak pernah diubah).
 	func salin() -> Koran:
@@ -54,6 +58,8 @@ class Koran extends RefCounted:
 		baru.bantu = bantu
 		baru.id_rumah = id_rumah
 		baru.tepat = tepat
+		baru.permukaan = permukaan
+		baru.titik_diam = titik_diam
 		return baru
 
 
@@ -121,6 +127,8 @@ static func langkah(koran: Koran, dt: float, jendela_bonus: bool, medan: MedanKo
 		baru.tepat = baru.hasil == ZonaSasaran.Hasil.KOTAK_SURAT and not baru.bantu and ZonaSasaran.tepat(zona, baru.lintasan.titik_mendarat)
 		baru.antaran = ZonaSasaran.status_antaran(baru.hasil, jendela_bonus)
 		baru.penanda = ZonaSasaran.penanda(baru.antaran)
+		baru.permukaan = PermukaanKoran.dari_zona(zona, JalanDaur.kolom_di(baru.lintasan.titik_mendarat.x))
+		baru.titik_diam = PermukaanKoran.titik_diam(baru.permukaan, zona, baru.lintasan.titik_mendarat)
 	return baru
 
 
