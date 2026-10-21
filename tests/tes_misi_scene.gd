@@ -237,22 +237,18 @@ func _test_kucing_di_scene() -> void:
 	check(kucing.titik().maju_ubin >= jarak - float(Config.RUTE_DAUR_MUNDUR_UBIN) and kucing.titik().maju_ubin <= jarak + float(Config.RUTE_DAUR_MAJU_UBIN), "kucing yang digambar selalu di dalam jendela daur rumah (-20 .. +30 ubin)")
 	kucing.tampilkan(rencana.titik[2], 0.0, 0.0, 0.0, true, true)
 	check(not kucing.tampil(), "titik di luar jendela daur (sepeda jauh): tidak digambar (tidak bocor)")
-	# Hiasan: kilau dan ekor dari kode, dua frame; bar progres hanya bila progres > 0.
+	# Hiasan (run fase5a D-6): kilau dari sprite mission_kilau (dua frame), ekor dan bar progres dari kode; bar progres hanya bila progres > 0.
 	check(KucingHiasan.frame_kilau(0.0) == 0 and KucingHiasan.frame_kilau(0.41) == 1 and KucingHiasan.frame_kilau(0.81) == 0 and KucingHiasan.frame_ekor(0.49) == 0 and KucingHiasan.frame_ekor(0.51) == 1, "kilau berganti frame tiap 0,4 detik dan ekor tiap 0,5 detik (dua frame)")
-	check(KucingHiasan.perintah(true, true, 0.0, 0.0) != KucingHiasan.perintah(true, true, 0.0, 0.41) and KucingHiasan.perintah(true, false, 0.0, 0.0).size() < KucingHiasan.perintah(true, true, 0.0, 0.0).size(), "perintah gambar: frame kilau berbeda tiap pergantian, ekor menambah perintah")
-	check(KucingHiasan.perintah(false, false, 0.0, 0.0).is_empty() and KucingHiasan.perintah(false, false, 0.5, 0.0).size() > 0, "tanpa kilau, ekor, dan progres: tidak ada gambar; progres menambah bar")
-	check(PolaPiksel.KILAU_KUCING_1 != PolaPiksel.KILAU_KUCING_2 and PolaPiksel.EKOR_KUCING_1 != PolaPiksel.EKOR_KUCING_2, "dua frame kilau dan ekor berbeda bentuk")
-	# QA-007: kilau dibesarkan (9x9 lalu 11x11, sebelumnya 7x7 dan 9x9), semua baris rata, frame kecil di tengah kotak 11x11 yang sama.
-	var rata: bool = true
-	for baris: String in PolaPiksel.KILAU_KUCING_1:
-		rata = rata and baris.length() == 9
-	for baris: String in PolaPiksel.KILAU_KUCING_2:
-		rata = rata and baris.length() == 11
-	check(rata and PolaPiksel.KILAU_KUCING_1.size() == 9 and PolaPiksel.KILAU_KUCING_2.size() == 11, "kilau: frame 1 berukuran 9x9 dan frame 2 berukuran 11x11 (dibesarkan dari 7x7 dan 9x9)")
+	var kilau_0: Array[DefSprite.Item] = KucingHiasan.item_kilau(true, 0.0)
+	var kilau_1: Array[DefSprite.Item] = KucingHiasan.item_kilau(true, 0.41)
+	check(kilau_0.size() == 1 and kilau_1.size() == 1 and kilau_0[0].nama == "mission_kilau" and kilau_0[0].frame == 0 and kilau_1[0].frame == 1, "item sprite kilau: satu item mission_kilau, frame 0 lalu frame 1 tiap pergantian (pengganti 'perintah gambar frame kilau berbeda', D-7)")
+	check(KucingHiasan.perintah_ekor(true, 0.0) != KucingHiasan.perintah_ekor(true, 0.51) and KucingHiasan.perintah_ekor(false, 0.0).is_empty() and KucingHiasan.item_kilau(false, 0.0).is_empty(), "ekor: dua frame berbeda gambar; tanpa ekor dan tanpa kilau tidak ada gambar")
+	check(KucingHiasan.perintah_progres(0.5).size() > 0, "progres menambah bar")
+	check(PolaPiksel.EKOR_KUCING_1 != PolaPiksel.EKOR_KUCING_2, "dua frame ekor berbeda bentuk")
+	# Pengganti QA-007 (kilau dibesarkan): sprite 9x9 dua frame di tengah kotak 11x11 yang sama dengan pola lama (pojok kotak (-5, -33), jadi pojok sprite (-4, -32)).
+	check(DefSprite.sel("mission_kilau") == Vector2i(9, 9) and DefSprite.jumlah_frame("mission_kilau") == 2 and Config.MISI_KILAU_KOTAK_PX == [11, 11], "kilau: sprite 9x9 dua frame, kotak 11x11")
 	check(Config.MISI_KILAU_POSISI_PX == [-5, -33], "kotak kilau 11x11 berpojok (-5, -33) dari titik pijak: tengah di atas kepala kucing")
-	var perintah_1: Array = KucingHiasan.perintah_kilau(0)
-	var perintah_2: Array = KucingHiasan.perintah_kilau(1)
-	check(perintah_1[0][1] == Vector2(-4.0, -32.0) and perintah_2[0][1] == Vector2(-5.0, -33.0), "frame 9x9 digambar di tengah kotak 11x11 (asal (-4, -32) lawan (-5, -33))")
+	check(kilau_0[0].pojok == Vector2(-4.0, -32.0) and kilau_1[0].pojok == Vector2(-4.0, -32.0), "sprite 9x9 digambar di tengah kotak 11x11 (pojok (-4, -32))")
 	# Tanpa PNG baru untuk kilau/ekor: hanya satu PNG kucing di assets/sprites/npc.
 	var png: Array[String] = []
 	for nama: String in DirAccess.get_files_at("res://assets/sprites/npc"):
@@ -475,13 +471,12 @@ func _test_tangkap_jeda_dan_jatuh() -> void:
 	_di(akar, t2.maju_ubin + 0.1, 0.5, 0.5)
 	_di(akar, t3.maju_ubin - 8.0, 0.5, 0.5)
 	check(akar.kucing().tampil() and akar.kucing().titik() == t3 and akar.keadaan_misi().langkah == 2, "kucing tangkap tampil dan aktif")
-	var kilau_awal: int = KucingHiasan.perintah(true, true, 0.0, 0.0).size()
-	check(kilau_awal > 0, "kilau dan ekor menghasilkan perintah gambar")
+	check(KucingHiasan.perintah_ekor(true, 0.0).size() > 0 and KucingHiasan.item_kilau(true, 0.0).size() > 0, "kilau dan ekor menghasilkan gambar")
 	for i: int in range(45):
 		_di(akar, t3.maju_ubin - 0.5, -1.0, 0.0)
 	var timer: float = akar.keadaan_misi().timer_detik
 	check(absf(timer - 0.75) < 0.001, "45 langkah diam di radius: timer 0,75 detik (dihitung tes: 45 / 60), dapat %.3f" % timer)
-	check(KucingHiasan.perintah(true, true, timer / t3.lama_berhenti_detik, 0.0).size() > kilau_awal, "bar progres ikut digambar saat timer berjalan")
+	check(KucingHiasan.perintah_progres(timer / t3.lama_berhenti_detik).size() > 0, "bar progres ikut digambar saat timer berjalan")
 	# Jeda: timer dan banner membeku.
 	akar.minta_jeda()
 	_langkah(akar, 120)

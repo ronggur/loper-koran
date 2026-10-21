@@ -70,8 +70,11 @@ jobs:
           python3 -m pip install --quiet numpy pillow
           python3 tools/tests_cek/uji_aset_kucing.py
 
-      - name: Uji aset gelombang 1 Fase 5 (renderer deterministik, palet induk, manifest, mock docs = hasil skrip)
+      - name: Uji aset gelombang 1 Fase 5 (renderer deterministik, palet induk, manifest, K-1, mock docs = hasil skrip)
         run: python3 tools/tests_cek/uji_aset_gelombang1.py
+
+      - name: Uji pemasangan aset gelombang 1 (isi assets/sprites/{props,vfx,tiles/perumahan} = keluaran --salin, hanya yang dipasang, impor Lossless)
+        run: python3 tools/tests_cek/uji_aset_pasang_gelombang1.py
 
       - name: Import project (tanpa error, tanpa berkas yang belum di-commit)
         run: |

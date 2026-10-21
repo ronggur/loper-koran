@@ -1,4 +1,4 @@
-"""Ubin jalan perumahan (usulan): aspal, lajur sepeda di atas trotoar, kerb, rumput, jalan masuk garasi, polisi tidur.
+"""Ubin jalan perumahan (usulan): aspal, lajur sepeda di atas trotoar, kerb, rumput, jalan masuk garasi.
 
 Mengikuti tata letak game (scripts/config.gd): aspal JALAN_LEBAR_UBIN = 2 (x -1..1 ubin), trotoar
 JALAN_TROTOAR_UBIN = 1 per sisi, rumput di luarnya; 1 ubin = 32 unit dunia = belah ketupat 64x32 px.
@@ -9,10 +9,21 @@ bidang tanpa celah dan tumpang tindih, jadi menyusun ubin kembali menghasilkan g
 termasuk kerb yang tingginya melewati batas ubin. Tekstur memakai koordinat modulo 32, jadi ubin polos bisa
 diulang ke segala arah.
 
-    python3 tools/env_art/ubin_perumahan.py      # ke build/env_art/ubin/
+    python3 tools/env_art/ubin_perumahan.py              # ke build/env_art/ubin/ (semua ubin, termasuk yang belum dipasang)
+    python3 tools/env_art/ubin_perumahan.py --salin      # juga salin HANYA ubin yang dipasang ke assets/sprites/tiles/perumahan/
+
+`--salin` (run fase5a-pasang-aset-gelombang1, D-1 dan D-2): enam ubin kolom jalan (`PASANG`) ditambah satu ubin rumput polos
+(`PASANG_TAMBAHAN`: `rumput_1`, untuk kolom rumput di luar kolom pertama; ubin `rumput_seberang` membawa tepi kerb luar sehingga
+mengulangnya membuat pita tepi di tiap ubin), masing-masing PNG, ditambah `tile_perumahan.json` yang HANYA memuat ubin yang dipasang
+(dibuat skrip, bukan salinan JSON penuh di build/). Ubin lain (simbol, masuk garasi, aspal_N, rumput_2 dan 3) tetap hanya di build/.
+`ENV_ART_SALIN_KE` mengganti folder tujuan (dipakai tools/tests_cek/uji_aset_pasang_gelombang1.py). Polisi tidur kuning-hitam lama
+sudah dibuang dari ekspor (K-1 run 5A): satu-satunya polisi tidur adalah `tile_perumahan_polisi_tidur` di tools/env_art/gelombang1/.
 """
 import json
 import math
+import os
+import sys
+from pathlib import Path
 
 import numpy as np
 from PIL import Image
@@ -20,7 +31,6 @@ from PIL import Image
 from engine import *          # noqa: F401,F403
 from lib import *             # noqa: F401,F403
 import perumahan as PR
-import fase3 as F3
 
 OUT_DIR = PR.OUT / 'ubin'
 OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -196,6 +206,33 @@ def ekspor_ubin():
     return ubin
 
 
+ROOT = Path(__file__).resolve().parents[2]
+SALIN_KE = Path(os.environ.get('ENV_ART_SALIN_KE', ROOT / 'assets' / 'sprites' / 'tiles' / 'perumahan'))
+PASANG = list(KOLOM)               # enam kolom jalan, urut dari sisi seberang ke sisi dekat (D-1)
+PASANG_TAMBAHAN = ['rumput_1']     # ubin polos untuk kolom rumput di luar kolom pertama (D-2, satu-satunya pengecualian)
+
+
+def meta_terpasang():
+    """Isi `tile_perumahan.json` di assets/: hanya ubin yang dipasang. Titik pijak (32, 16), kolom x dalam ubin dari garis tengah."""
+    return {'tile': [64, 32], 'ground_anchor': [32, 16], 'unit_dunia_per_ubin': 32,
+            'note': 'Usulan, tools/env_art/ubin_perumahan.py --salin (run fase5a-pasang-aset-gelombang1). Hanya ubin yang dipasang. '
+                    'Kolom mengikuti scripts/config.gd: aspal x -1..1 ubin (seberang, dekat), trotoar 1 ubin per sisi (kerb dalam, '
+                    'lajur sepeda, kerb luar), rumput di luar. Ubin sepanjang jalan berulang tiap 1 ubin. rumput_1: rumput polos '
+                    'untuk kolom rumput di luar kolom pertama (rumput_seberang membawa tepi kerb luar yang tidak boleh berulang).',
+            'kolom_x_ubin': {nm: KOLOM[nm] for nm in PASANG},
+            'ubin_polos_luar': list(PASANG_TAMBAHAN),
+            'tiles': sorted('tile_perumahan_%s.png' % nm for nm in PASANG + PASANG_TAMBAHAN)}
+
+
+def salin(ubin):
+    """Salin HANYA ubin yang dipasang (PNG) dan JSON terpangkas ke SALIN_KE."""
+    SALIN_KE.mkdir(parents=True, exist_ok=True)
+    for nm in PASANG + PASANG_TAMBAHAN:
+        Image.fromarray(ubin[nm], 'RGBA').save(SALIN_KE / ('tile_perumahan_%s.png' % nm))
+    with open(SALIN_KE / 'tile_perumahan.json', 'w') as f:
+        json.dump(meta_terpasang(), f, indent=1, ensure_ascii=False); f.write('\n')
+
+
 def _polos(x, y, v):
     """Aspal polos di x < 4 ubin, rumput polos di luarnya (tanpa marka, kerb, lajur)."""
     road = np.abs(x) < 4 * U
@@ -213,28 +250,6 @@ def _polos(x, y, v):
         fl = (~road) & (h > 0.9) & (np.mod(xw, 4) < 1) & (np.mod(yw, 4) < 1)
         mi2 = np.where(fl, 2, mi2); sh2 = np.where(fl, 0, sh2)
     return mi2, sh2
-
-
-# ------------------------------------------------------------- polisi tidur ----
-KUNING = Mat('#FFE08A', '#FFC94A', '#C98E2A')
-HITAM_PT = Mat('#5A5662', '#3E3A46', '#26222C')
-
-
-def polisi_tidur(s, x=0.0, y=0.0):
-    """Polisi tidur melintang selebar aspal (2 ubin), belang kuning-hitam."""
-    def tex(Pw, Nw):
-        return np.where(np.mod(Pw[:, 0] - x + 64, 8) < 4, 0, 1), 0
-    s.add(ellip((x, y, 0), (A - 0.5, 3.4, 2.4), [KUNING, HITAM_PT], tex, zmin=0))
-
-
-def ekspor_polisi_tidur():
-    a, o, _, _ = F3.render_sprite(lambda s: polisi_tidur(s), ground_mats=[P['asph']], extra_px=(8, 6), pad=3)
-    Image.fromarray(a, 'RGBA').save(OUT_DIR / 'prop_polisi_tidur.png')
-    with open(OUT_DIR / 'prop_polisi_tidur.json', 'w') as f:
-        json.dump({'sprite': 'prop_polisi_tidur.png', 'size': [a.shape[1], a.shape[0]], 'ground_anchor': list(o),
-                   'note': 'Usulan. Melintang aspal 2 ubin, titik pijak = tengah jalan. Bayangan = penanda #000000 alpha 28%.'},
-                  f, indent=1); f.write('\n')
-    return a, o
 
 
 # ------------------------------------------------------------ uji ulang susun ----
@@ -267,6 +282,8 @@ def cek_sambungan(ubin):
 
 if __name__ == '__main__':
     u = ekspor_ubin()
-    ekspor_polisi_tidur()
     print('beda sambungan:', cek_sambungan(u))
     print('selesai ->', OUT_DIR)
+    if '--salin' in sys.argv[1:]:
+        salin(u)
+        print('disalin ke', SALIN_KE, '(hanya', len(PASANG) + len(PASANG_TAMBAHAN), 'ubin dan JSON terpangkas)')

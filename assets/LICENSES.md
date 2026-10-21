@@ -47,6 +47,7 @@ Kedua font berstatus **usulan** (DESIGN_SPEC 1.2, ART_DIRECTION 11): dikunci ata
 
 - Sprite pemain Kemeja Agen: dirender oleh `tools/loper_art/`, salinan di `assets/sprites/loper/`.
 - Ubin dan kotak graybox: dirender oleh `tools/env_art/graybox.py`, di `assets/sprites/_placeholder/`.
+- Aset gelombang 1 Fase 5 yang terpasang (run 5A, usulan): 13 sprite koran, debu roda, garis kecepatan, bintang kena, koin tip, dan kilau misi di `assets/sprites/props/` dan `assets/sprites/vfx/` (dirender `tools/env_art/gelombang1/render.py --salin` dari kode, tanpa gambar generatif) dan tujuh ubin jalan perumahan di `assets/sprites/tiles/perumahan/` (`tools/env_art/ubin_perumahan.py --salin`); dibuat sendiri, tanpa aset pihak ketiga.
 - Bunyi placeholder sepeda (`assets/audio/sfx/bike/*.wav`): dibuat dari rumus oleh `tools/audio_art/sintesis_sepeda.py`; dicatat di `assets/audio/LICENSES.md` (lisensi audio dicatat di sana, SOUND_DESIGN 7).
 - Token warna dan palet induk (`scripts/ui/palette.gd`, `assets/palette/loper_master.gpl`): dari dokumen desain repo ini (ART_DIRECTION 2.4 dan DESIGN_SPEC 1.1), berstatus usulan.
 

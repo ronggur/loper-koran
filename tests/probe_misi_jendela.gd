@@ -255,7 +255,7 @@ func _cek_kucing(keadaan: String) -> void:
 	var layar: Rect2 = Rect2(Vector2.ZERO, root.get_visible_rect().size)
 	var r: Rect2 = _akar.kucing().rect_badan()
 	var piksel: Rect2 = Rect2(r.position + Vector2(Config.MISI_KUCING_PIJAK_PX[0] - 6, Config.MISI_KUCING_PIJAK_PX[1] - 14), Vector2(16, 16))
-	print("kucing [%s]: sel %s, badan sekitar %s, di layar %s, perintah hiasan %d" % [keadaan, r, piksel, layar.encloses(piksel), KucingHiasan.perintah(true, true, 0.0, 0.0).size()])
+	print("kucing [%s]: sel %s, badan sekitar %s, di layar %s, perintah hiasan %d" % [keadaan, r, piksel, layar.encloses(piksel), KucingHiasan.perintah_ekor(true, 0.0).size() + KucingHiasan.item_kilau(true, 0.0).size()])
 	if not layar.encloses(piksel):
 		print("TIDAK SESUAI [%s]: kucing di luar layar" % keadaan)
 		_gagal += 1

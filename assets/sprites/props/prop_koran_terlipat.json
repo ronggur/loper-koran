@@ -1,0 +1,15 @@
+{
+ "sprite": "prop_koran_terlipat.png",
+ "cell": [
+  14,
+  10
+ ],
+ "frames": 1,
+ "fps": 0,
+ "ground_anchor": [
+  7,
+  5
+ ],
+ "board": "koran",
+ "note": "Usulan, tools/env_art/gelombang1 (Fase 5 gelombang 1). Frame berjajar kiri ke kanan. Pose \"terantar\": koran terlipat rata di teras, kepala berita dongker."
+}

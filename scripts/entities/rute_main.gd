@@ -32,6 +32,10 @@ extends AdeganJalan
 ##     app ke background tetap menjeda seperti biasa.
 
 ##
+## Run fase5a bagian B (usulan, hanya tampilan): scene rute memakai sprite gelombang 1 untuk koran (`KoranGambar.pakai_sprite` di `rute.tscn`), debu roda dan garis kecepatan (`atur_sprite` di
+## `_siapkan_dunia`), bintang kena dan koin tip (`UmpanMelayangGambar`), kilau kucing (`KucingHiasan`), dan koran terlipat di rumah terantar (`RumahDaurRute.atur_terantar` tiap langkah dari
+## `_skor.terantar`, hanya dibaca). Skor, zona, tenggat, gerak, tabrakan, misi, dan kondisi tidak berubah.
+##
 ## Run fase4b-misi-kucing (AC-11 sampai AC-14, M-1 sampai M-5, K-1 sampai K-4, usulan): misi sampingan hari ini lewat `atur_misi` (kosong = tanpa misi,
 ## perilaku 3A sampai 4A tidak berubah; `rute.tscn` yang dijalankan sendiri tidak punya misi):
 ## - `RencanaMisi.buat` (benih = seed rute + `SEED_MISI_SELISIH`, disusun tiap rute) lalu `MissionManager.langkah` tiap langkah dengan posisi, kecepatan, jatuh,
@@ -104,6 +108,7 @@ var _daftar_upgrade: Array[DataToko] = []
 
 
 func _siapkan_dunia() -> void:
+	_sepeda.umpan_balik().atur_sprite(true)
 	_daur.penerap = _penerap
 	_rintangan_daur.penerap = _penerap
 	_kucing.penerap = _penerap
@@ -119,6 +124,7 @@ func _perbarui_dunia(jarak_ubin: float) -> void:
 	_langkah_misi(jarak_ubin)
 	_langkah_tutorial()
 	_daur.perbarui(jarak_ubin)
+	_daur.atur_terantar(_skor.terantar)
 	_area_kotak.perbarui(jarak_ubin)
 	_rintangan_daur.perbarui(_rintangan, jarak_ubin)
 	_umpan_gambar.tampilkan(_umpan)

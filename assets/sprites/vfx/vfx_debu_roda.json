@@ -1,0 +1,15 @@
+{
+ "sprite": "vfx_debu_roda.png",
+ "cell": [
+  18,
+  10
+ ],
+ "frames": 6,
+ "fps": 12,
+ "ground_anchor": [
+  14,
+  7
+ ],
+ "board": "vfx",
+ "note": "Usulan, tools/env_art/gelombang1 (Fase 5 gelombang 1). Frame berjajar kiri ke kanan. Loop. Pijak = titik roda belakang di tanah. Kotak 2x2 lalu 1x1 mundur 2 px kiri, 1 px turun per frame."
+}

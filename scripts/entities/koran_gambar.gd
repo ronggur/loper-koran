@@ -7,6 +7,9 @@ extends Node2D
 ## - `UDARA` (di atas objek dunia): koran gulung 8x6 berputar 4 langkah (`PolaPiksel.KORAN_PUTAR`) di posisi udaranya, dan penanda
 ##   kena/meleset di atas titik mendarat selama `Config.PENANDA_LAMA_DETIK`: bentuk dari `ZonaSasaran.Penanda` (centang, setengah,
 ##   bintang, silang kecil), warna `OK` untuk sah, `FAIL` untuk tidak sah.
+## Run fase5a bagian B (D-3, usulan): `pakai_sprite` true (scene rute) menggambar koran putar, bayangan menurut tinggi, dan koran tergeletak dari sprite gelombang 1 (`SpriteKoran`,
+## `DefSprite`) menggantikan pola kode; penanda kena/meleset tetap dari kode. Bawaan false: jalan uji dan probe lama tetap memakai pola kode (D-7: `scenes/dev/*` tidak disentuh).
+## Koran yang bertumpu di kotak surat digambar lapisan `UDARA` (kotak surat ada di lapisan objek, di atas `TANAH`).
 ## Node tipis: daftar koran dan semua waktunya ada di `JalanUji` + `KoranLempar` (murni). Apa yang digambar diputuskan SATU fungsi statis
 ## `perintah_koran` (perintah `GambarPiksel`, dites headless; QA-003 iterasi 2); `_draw` hanya menjalankan `perintah_tampil`.
 ## Posisi gambar dibulatkan ke piksel game (`Iso.posisi_gambar_tinggi`, `Iso.posisi_gambar`).
@@ -14,9 +17,21 @@ extends Node2D
 ## Lapisan gambar.
 enum Lapisan { TANAH, UDARA }
 
+## Sprite yang dipakai mode sprite.
+const SPRITE_PAKAI: Array[String] = ["prop_koran_putar", "prop_koran_bayangan", "prop_koran_teras", "prop_koran_rumput", "prop_koran_kotak_surat"]
+
 @export var lapisan: Lapisan = Lapisan.UDARA
+## True: koran dan bayangan dari sprite gelombang 1 (scene rute); false: pola placeholder dari kode (jalan uji).
+@export var pakai_sprite: bool = false
 
 var _daftar: Array[KoranLempar.Koran] = []
+## Tekstur sprite yang dipegang node (dimuat di `_ready`, bukan di `_draw`; lihat `GambarSprite`).
+var _tekstur: Dictionary = {}
+
+
+func _ready() -> void:
+	if pakai_sprite:
+		_tekstur = GambarSprite.muat(SPRITE_PAKAI)
 
 
 ## Mengganti daftar koran yang digambar (dipanggil `JalanUji` tiap langkah). Gambar ulang hanya bila ada yang berubah atau tampil.
@@ -40,21 +55,40 @@ func jumlah_tampil() -> int:
 func perintah_tampil() -> Array:
 	var hasil: Array = []
 	for koran: KoranLempar.Koran in _daftar:
-		hasil.append_array(perintah_koran(lapisan, koran))
+		hasil.append_array(perintah_koran(lapisan, koran, pakai_sprite))
+	return hasil
+
+
+## Banyaknya tekstur sprite yang dipegang node (untuk tes).
+func jumlah_tekstur() -> int:
+	return _tekstur.size()
+
+
+## Item sprite semua koran yang sedang digambar lapisan ini (mode sprite; kosong bila `pakai_sprite` false). `_draw` menggambar ini dulu, lalu `perintah_tampil`.
+func item_sprite() -> Array[DefSprite.Item]:
+	var hasil: Array[DefSprite.Item] = []
+	if not pakai_sprite:
+		return hasil
+	for koran: KoranLempar.Koran in _daftar:
+		hasil.append_array(SpriteKoran.item_tanah(koran) if lapisan == Lapisan.TANAH else SpriteKoran.item_udara(koran))
 	return hasil
 
 
 func _draw() -> void:
+	GambarSprite.gambar(self, item_sprite(), _tekstur)
 	GambarPiksel.gambar(self, perintah_tampil())
 
 
-## Perintah gambar (`GambarPiksel`) lapisan `lapisan_gambar` untuk satu koran; kosong = koran tidak tampil di lapisan ini.
+## Perintah gambar (`GambarPiksel`) lapisan `lapisan_gambar` untuk satu koran; kosong = koran tidak tampil di lapisan ini. `sprite` true (mode sprite): koran dan bayangan tidak digambar
+## dari pola (sprite dari `SpriteKoran`), hanya penanda yang tersisa.
 ## - `TANAH`: koran terbang = bayangan elips di titik TANAH koran (`pojok_bayangan`, lebar `KoranLempar.lebar_bayangan_px`, `OUTLINE`
 ##   alpha `KORAN_BAYANGAN_ALPHA`); sudah mendarat = koran tergeletak (frame 0) di titik mendarat.
 ## - `UDARA`: koran terbang = koran berputar (`KoranLempar.frame_putar`) di posisi udaranya; sudah mendarat dan penanda masih tampil =
 ##   penanda bentuk `ZonaSasaran.Penanda` di atas titik mendarat, warna `warna_penanda`.
-static func perintah_koran(lapisan_gambar: Lapisan, koran: KoranLempar.Koran) -> Array:
+static func perintah_koran(lapisan_gambar: Lapisan, koran: KoranLempar.Koran, sprite: bool = false) -> Array:
 	if lapisan_gambar == Lapisan.TANAH:
+		if sprite:
+			return []
 		if KoranLempar.di_udara(koran):
 			var lebar: int = KoranLempar.lebar_bayangan_px(KoranLempar.posisi(koran).z)
 			var warna: Color = Color(Palette.OUTLINE, Config.KORAN_BAYANGAN_ALPHA)
@@ -63,6 +97,8 @@ static func perintah_koran(lapisan_gambar: Lapisan, koran: KoranLempar.Koran) ->
 			return GambarPiksel.perintah_pola(PolaPiksel.pola_koran(0), pojok_koran(koran), Palette.TEXT)
 		return []
 	if KoranLempar.di_udara(koran):
+		if sprite:
+			return []
 		var frame: int = KoranLempar.frame_putar(koran, PolaPiksel.KORAN_PUTAR.size())
 		return GambarPiksel.perintah_pola(PolaPiksel.pola_koran(frame), pojok_koran(koran), Palette.TEXT)
 	if koran.mendarat and KoranLempar.sisa_penanda(koran) > 0.0:

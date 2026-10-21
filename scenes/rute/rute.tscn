@@ -1,12 +1,16 @@
-[gd_scene load_steps=29 format=3]
+[gd_scene load_steps=33 format=3]
 
 [ext_resource type="Script" path="res://scripts/entities/rute_main.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/entities/tanah_daur.gd" id="2_tanah"]
 [ext_resource type="Script" path="res://scripts/entities/rumah_daur_rute.gd" id="3_daur"]
 [ext_resource type="Script" path="res://scripts/ui/kontrol_touch.gd" id="4_kontrol"]
-[ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/tile_graybox_aspal.png" id="5_aspal"]
-[ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/tile_graybox_trotoar.png" id="6_trotoar"]
-[ext_resource type="Texture2D" path="res://assets/sprites/_placeholder/tile_graybox_rumput.png" id="7_rumput"]
+[ext_resource type="Texture2D" path="res://assets/sprites/tiles/perumahan/tile_perumahan_rumput_seberang.png" id="5_rumput_seberang"]
+[ext_resource type="Texture2D" path="res://assets/sprites/tiles/perumahan/tile_perumahan_trotoar_seberang.png" id="6_trotoar_seberang"]
+[ext_resource type="Texture2D" path="res://assets/sprites/tiles/perumahan/tile_perumahan_aspal_seberang.png" id="7_aspal_seberang"]
+[ext_resource type="Texture2D" path="res://assets/sprites/tiles/perumahan/tile_perumahan_aspal_dekat.png" id="8_aspal_dekat"]
+[ext_resource type="Texture2D" path="res://assets/sprites/tiles/perumahan/tile_perumahan_trotoar_dekat.png" id="26_trotoar_dekat"]
+[ext_resource type="Texture2D" path="res://assets/sprites/tiles/perumahan/tile_perumahan_rumput_dekat.png" id="27_rumput_dekat"]
+[ext_resource type="Texture2D" path="res://assets/sprites/tiles/perumahan/tile_perumahan_rumput_1.png" id="28_rumput_luar"]
 [ext_resource type="PackedScene" path="res://scenes/entities/kotak_surat.tscn" id="9_kotak_surat"]
 [ext_resource type="PackedScene" path="res://scenes/entities/kotak_surat_bukan.tscn" id="23_kotak_bukan"]
 [ext_resource type="PackedScene" path="res://scenes/entities/sepeda_uji.tscn" id="10_sepeda"]
@@ -35,9 +39,13 @@ unique_name_in_owner = true
 unique_name_in_owner = true
 texture_filter = 1
 script = ExtResource("2_tanah")
-tekstur_aspal = ExtResource("5_aspal")
-tekstur_trotoar = ExtResource("6_trotoar")
-tekstur_rumput = ExtResource("7_rumput")
+tekstur_kolom_rumput_seberang = ExtResource("5_rumput_seberang")
+tekstur_kolom_trotoar_seberang = ExtResource("6_trotoar_seberang")
+tekstur_kolom_aspal_seberang = ExtResource("7_aspal_seberang")
+tekstur_kolom_aspal_dekat = ExtResource("8_aspal_dekat")
+tekstur_kolom_trotoar_dekat = ExtResource("26_trotoar_dekat")
+tekstur_kolom_rumput_dekat = ExtResource("27_rumput_dekat")
+tekstur_rumput_luar = ExtResource("28_rumput_luar")
 
 [node name="AreaKotak" type="Node2D" parent="."]
 unique_name_in_owner = true
@@ -45,8 +53,10 @@ script = ExtResource("18_area")
 
 [node name="KoranTanah" type="Node2D" parent="."]
 unique_name_in_owner = true
+texture_filter = 1
 script = ExtResource("14_koran")
 lapisan = 0
+pakai_sprite = true
 
 [node name="Objek" type="Node2D" parent="."]
 unique_name_in_owner = true
@@ -76,8 +86,10 @@ script = ExtResource("16_penerap")
 
 [node name="KoranUdara" type="Node2D" parent="."]
 unique_name_in_owner = true
+texture_filter = 1
 script = ExtResource("14_koran")
 lapisan = 1
+pakai_sprite = true
 
 [node name="GarisBidik" type="Node2D" parent="."]
 unique_name_in_owner = true
@@ -85,6 +97,7 @@ script = ExtResource("15_bidik")
 
 [node name="UmpanMelayang" type="Node2D" parent="."]
 unique_name_in_owner = true
+texture_filter = 1
 script = ExtResource("22_umpan")
 
 [node name="Hud" parent="." instance=ExtResource("11_hud")]

@@ -308,6 +308,8 @@ const SWIPE_TITIK_JARAK_PX: int = 4
 const LAYAR_LEBAR_MAKS_PX: int = 800
 ## Lebar trotoar di tiap sisi aspal, ubin. Selebihnya rumput.
 const JALAN_TROTOAR_UBIN: float = 1.0
+## Lebar kolom rumput pertama di luar trotoar, ubin (tampilan, run fase5a D-2). Kolom pertama memakai ubin tepi kerb luar (`rumput_seberang`/`rumput_dekat`); kolom di luarnya memakai ubin rumput polos supaya tepi kerb tidak berulang jadi pita.
+const JALAN_RUMPUT_TEPI_UBIN: float = 1.0
 ## Letak sepeda pada sumbu datar layar sebagai pecahan lebar viewport (sepertiga kiri, ART_DIRECTION 2.2).
 const KAMERA_SEPEDA_X_PECAHAN: float = 0.3333
 ## Letak sepeda pada sumbu tegak layar sebagai pecahan tinggi viewport. 0,75 (dulu 0,6; paket pemilik 2026-10-14): jalan di depan terlihat lebih jauh; sprite di geseran dorongan terbesar tidak menabrak panel kecepatan di 640/780/800 (tes tata letak).
@@ -1109,3 +1111,54 @@ const BENGKEL_HARGA_LEBAR_PX: int = 40
 const BENGKEL_KOLOM_SERVIS_RASIO: float = 1.0
 ## Lihat `BENGKEL_KOLOM_SERVIS_RASIO`.
 const BENGKEL_KOLOM_UPGRADE_RASIO: float = 1.0
+
+## --- Aset gelombang 1 terpasang di rute (run fase5a bagian B, D-3 sampai D-6; usulan, dinilai di HP) ---
+## Tiap sprite = [lebar sel, tinggi sel, jumlah frame, titik pijak x, titik pijak y], piksel; frame berjajar kiri ke kanan. Sama dengan `cell`, `frames`, dan `ground_anchor` di JSON
+## aset (`assets/sprites/props/`, `assets/sprites/vfx/`); tes membandingkannya dengan JSON dan ukuran PNG. Pemilihan frame dan letak gambar ada di `DefSprite` dan turunannya.
+## Indeks isi larik `SPRITE_*`: lebar sel 0, tinggi sel 1, jumlah frame 2, pijak x, pijak y; panjang larik.
+const SPRITE_INDEKS_PIJAK_X: int = 3
+const SPRITE_INDEKS_PIJAK_Y: int = 4
+const SPRITE_PANJANG: int = 5
+## Koran gulung berputar di udara (pijak = pusat putar).
+const SPRITE_KORAN_PUTAR: Array[int] = [10, 10, 4, 5, 5]
+## Bayangan koran: tiga frame (lebar 10, 8, 6 px) dalam sel 12 px; pijak = pusat bayangan di tanah.
+const SPRITE_KORAN_BAYANGAN: Array[int] = [12, 6, 3, 6, 3]
+## Koran tergeletak di lantai keras (teras, trotoar, aspal).
+const SPRITE_KORAN_TERAS: Array[int] = [12, 10, 1, 6, 6]
+## Koran tergeletak di rumput.
+const SPRITE_KORAN_RUMPUT: Array[int] = [12, 10, 1, 6, 6]
+## Koran bertumpu di kotak surat sasaran; pijak (-3, 19) = kaki kotak surat sasaran (`prop_kotak_surat`), bukan titik jatuh.
+const SPRITE_KORAN_KOTAK_SURAT: Array[int] = [8, 7, 1, -3, 19]
+## Koran terlipat di teras rumah yang sudah terantar.
+const SPRITE_KORAN_TERLIPAT: Array[int] = [14, 10, 1, 7, 5]
+## Debu roda: enam frame putar, pijak = titik roda belakang di tanah.
+const SPRITE_DEBU_RODA: Array[int] = [18, 10, 6, 14, 7]
+## Garis kecepatan varian a, b, dan c (satu frame; pijak = ujung kepala garis di kanan atas).
+const SPRITE_GARIS_KECEPATAN_A: Array[int] = [28, 14, 1, 27, 7]
+const SPRITE_GARIS_KECEPATAN_B: Array[int] = [28, 14, 1, 27, 7]
+const SPRITE_GARIS_KECEPATAN_C: Array[int] = [28, 14, 1, 27, 7]
+## Bintang kena: enam frame sekali main, pijak = pusat.
+const SPRITE_BINTANG_KENA: Array[int] = [15, 15, 6, 7, 7]
+## Koin tip: enam frame sekali main (koin naik, lalu tulisan "+5"), pijak = titik mendarat di dasar sel.
+const SPRITE_KOIN_TIP: Array[int] = [16, 26, 6, 8, 24]
+## Kilau kucing misi: dua frame, pijak = pusat.
+const SPRITE_MISI_KILAU: Array[int] = [9, 9, 2, 4, 4]
+## Pusat putar sprite koran di udara berada sekian piksel game di atas titik udara koran (setengah tinggi pola koran 8x6 lama, jadi pusat gambar tidak bergeser).
+const KORAN_PUTAR_PUSAT_ATAS_PX: int = 3
+## Lebar bayangan koran tiap frame `SPRITE_KORAN_BAYANGAN`, piksel game, dari yang terlebar (rendah) ke tersempit (tinggi). Frame dipilih yang lebarnya terdekat dengan `KoranLempar.lebar_bayangan_px`.
+const KORAN_BAYANGAN_FRAME_LEBAR_PX: Array[int] = [10, 8, 6]
+## Debu roda sprite berputar (loop) sekian frame per detik.
+const UMPAN_DEBU_SPRITE_FPS: float = 12.0
+## Garis kecepatan sprite diacak (varian dan geseran tegak lurus jalan) tiap sekian sampai sekian frame game.
+const UMPAN_GARIS_GANTI_MIN_FRAME: int = 2
+const UMPAN_GARIS_GANTI_MAKS_FRAME: int = 3
+## Benih RNG garis kecepatan sprite (acak berseed, tetap).
+const UMPAN_GARIS_SPRITE_BENIH: int = 3
+## Bintang kena sekali main sekian frame per detik.
+const UMPAN_BINTANG_FPS: float = 15.0
+## Koin tip sekali main sekian frame per detik.
+const UMPAN_KOIN_TIP_FPS: float = 10.0
+## Nilai tip yang dipanggang di tulisan sprite `vfx_koin_tip` ("+5"). Sprite dipakai hanya bila tip sama dengan ini; bila `KOIN_TIP` berubah baris tip label dipakai lagi.
+const UMPAN_KOIN_TIP_SPRITE_NILAI: int = 5
+## Kotak kilau kucing misi (lebar, tinggi) piksel game: sprite 9x9 di tengahnya, pojok kiri atas kotak = `MISI_KILAU_POSISI_PX`. Juga kotak terburuk untuk "terlihat di layar" (`TampilMisi`).
+const MISI_KILAU_KOTAK_PX: Array[int] = [11, 11]

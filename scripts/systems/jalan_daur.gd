@@ -9,6 +9,10 @@ extends RefCounted
 
 enum Jenis { ASPAL, TROTOAR, RUMPUT }
 
+## Enam kolom ubin tanah melintang jalan, dari sisi `seberang` ke sisi `dekat` (run fase5a, D-2): rumput, trotoar, aspal di tiap sisi.
+## Urutannya = urutan kolom `tools/env_art/ubin_perumahan.py` (`KOLOM`).
+enum Kolom { RUMPUT_SEBERANG, TROTOAR_SEBERANG, ASPAL_SEBERANG, ASPAL_DEKAT, TROTOAR_DEKAT, RUMPUT_DEKAT }
+
 
 ## Jenis ubin tanah di posisi melintang `x` (ubin dari garis tengah jalan), simetris di kedua sisi.
 static func jenis_di(x: float) -> Jenis:
@@ -19,6 +23,25 @@ static func jenis_di(x: float) -> Jenis:
 	if jarak < setengah_aspal + Config.JALAN_TROTOAR_UBIN:
 		return Jenis.TROTOAR
 	return Jenis.RUMPUT
+
+
+## Kolom ubin tanah di posisi melintang `x` (ubin dari garis tengah jalan): jenisnya sama dengan `jenis_di` (batas aspal-trotoar dan
+## trotoar-rumput di |x| = 1 dan 2 dihitung ke kolom luar, di kedua sisi), sisinya dari tanda `x` (negatif = `seberang`, nol dan positif =
+## `dekat`). Simetris: kolom di `-x` adalah cermin kolom di `x` kecuali tepat di `x` = 0.
+static func kolom_di(x: float) -> Kolom:
+	var dekat: bool = x >= 0.0
+	match jenis_di(x):
+		Jenis.ASPAL:
+			return Kolom.ASPAL_DEKAT if dekat else Kolom.ASPAL_SEBERANG
+		Jenis.TROTOAR:
+			return Kolom.TROTOAR_DEKAT if dekat else Kolom.TROTOAR_SEBERANG
+	return Kolom.RUMPUT_DEKAT if dekat else Kolom.RUMPUT_SEBERANG
+
+
+## Benar bila ubin rumput di `x` ada di luar kolom rumput pertama (|x| >= setengah aspal + trotoar + `JALAN_RUMPUT_TEPI_UBIN`, batas
+## inklusif ke luar). Kolom itu memakai ubin rumput polos, bukan ubin tepi kerb (D-2). Salah untuk aspal, trotoar, dan kolom rumput pertama.
+static func rumput_luar(x: float) -> bool:
+	return absf(x) >= Config.JALAN_LEBAR_UBIN / 2 + Config.JALAN_TROTOAR_UBIN + Config.JALAN_RUMPUT_TEPI_UBIN
 
 
 ## Pusat ubin tanah (x dunia, y dunia) yang perlu ada supaya seluruh layar tertutup, relatif terhadap

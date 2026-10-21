@@ -1,0 +1,15 @@
+{
+ "sprite": "prop_koran_bayangan.png",
+ "cell": [
+  12,
+  6
+ ],
+ "frames": 3,
+ "fps": 0,
+ "ground_anchor": [
+  6,
+  3
+ ],
+ "board": "koran",
+ "note": "Usulan, tools/env_art/gelombang1 (Fase 5 gelombang 1). Frame berjajar kiri ke kanan. Pilih frame dari tinggi koran: 10 px (rendah), 8 px, 6 px (tinggi). Warna penanda."
+}

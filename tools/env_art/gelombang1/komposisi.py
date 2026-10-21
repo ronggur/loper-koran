@@ -120,7 +120,7 @@ def build(sore=False, minimal=False):
         put(K_.koran_rumput(), -84, -128, 6, 6)
 
         # tong sampah di rumput sisi dekat, depan tembok
-        put(PR.tong_sampah('hijau'), 80, -150, 10, 25)
+        put(PR.tong_sampah('logam'), 80, -150, 10, 25)
         put(PR.tong_sampah('biru'), 80, -136, 10, 25)
 
         # misi kucing: jejak di trotoar dekat menuju mangkuk + kilau

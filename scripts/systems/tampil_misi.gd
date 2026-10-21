@@ -59,10 +59,10 @@ static func area_penanda(area_layar: Rect2, tinggi: float) -> Rect2:
 	return Rect2(area_layar.position + Vector2(_setengah(), _setengah()), Vector2(maxf(area_layar.size.x - ukuran, 0.0), maxf(bawah - area_layar.position.y - ukuran, 0.0)))
 
 
-## Persegi badan kucing yang harus utuh di `area`: sel sheet penuh (perkiraan terburuk, piksel kosong ikut dihitung) disatukan dengan pola kilau di atas kepala.
+## Persegi badan kucing yang harus utuh di `area`: sel sheet penuh (perkiraan terburuk, piksel kosong ikut dihitung) disatukan dengan kotak kilau (`MISI_KILAU_KOTAK_PX`, tempat sprite kilau) di atas kepala.
 static func rect_badan(kaki: Vector2) -> Rect2:
 	var sel: Rect2 = Rect2(kaki - Vector2(Config.MISI_KUCING_PIJAK_PX[0], Config.MISI_KUCING_PIJAK_PX[1]), Vector2(Config.MISI_KUCING_SEL_PX[0], Config.MISI_KUCING_SEL_PX[1]))
-	var kilau: Rect2 = Rect2(kaki + Vector2(Config.MISI_KILAU_POSISI_PX[0], Config.MISI_KILAU_POSISI_PX[1]), Vector2(PolaPiksel.KILAU_KUCING_2[0].length(), PolaPiksel.KILAU_KUCING_2.size()))
+	var kilau: Rect2 = Rect2(kaki + Vector2(Config.MISI_KILAU_POSISI_PX[0], Config.MISI_KILAU_POSISI_PX[1]), Vector2(Config.MISI_KILAU_KOTAK_PX[0], Config.MISI_KILAU_KOTAK_PX[1]))
 	return sel.merge(kilau)
 
 

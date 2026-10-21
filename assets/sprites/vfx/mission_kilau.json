@@ -1,0 +1,15 @@
+{
+ "sprite": "mission_kilau.png",
+ "cell": [
+  9,
+  9
+ ],
+ "frames": 2,
+ "fps": 4,
+ "ground_anchor": [
+  4,
+  4
+ ],
+ "board": "properti",
+ "note": "Usulan, tools/env_art/gelombang1 (Fase 5 gelombang 1). Frame berjajar kiri ke kanan. Loop 2 frame. Pijak = pusat; dipasang 12-16 px di atas benda petunjuk."
+}

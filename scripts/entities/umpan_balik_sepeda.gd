@@ -1,6 +1,6 @@
 class_name UmpanBalikSepeda
 extends Node2D
-## Umpan balik kecepatan di sepeda (GDD 15, D-2 run fase1b-umpan-balik): debu roda dan garis kecepatan, placeholder dari kode.
+## Umpan balik kecepatan di sepeda (GDD 15, D-2 run fase1b-umpan-balik): debu roda dan garis kecepatan, placeholder dari kode; di scene rute dari sprite gelombang 1 (`atur_sprite`).
 ##
 ## Anak `SepedaUji` (ruang lokal = titik pijak sepeda, digambar di belakang sprite pemain). Tipis: tiap langkah `SepedaUji` memanggil
 ## `perbarui(kecepatan sebenarnya, rem aktif)`, node ini mengisi laju dua `PancaranPiksel` dari `UmpanBalikKecepatan` (logika murni).
@@ -10,8 +10,14 @@ extends Node2D
 ## di ruang lokal sepeda (efek kamera, bukan benda di jalan). Semua angka dari `Config` bagian "Umpan balik kecepatan";
 ## batas jumlah `UMPAN_DEBU_BATAS` dan `UMPAN_GARIS_BATAS`. `kurangi_efek` bawaan dari `Config.UMPAN_KURANGI_EFEK` (belum ada UI).
 
+## Run fase5a bagian B (D-4, usulan): `atur_sprite(true)` (dipanggil scene rute) mengganti partikel kode dengan sprite `vfx_debu_roda` dan `vfx_garis_kecepatan_a/b/c` (`VfxSepedaGambar`, logika
+## `VfxSepeda`): kapan tampil tetap dari `UmpanBalikKecepatan` (tidak berubah), kedua `PancaranPiksel` dimatikan (tersembunyi, tanpa proses, laju 0), dan sprite ikut sepeda (debu tidak
+## tertinggal di dunia saat pindah sisi; gerak mundurnya dipanggang di sprite). Bawaan false: jalan uji dan probe lama tetap memakai partikel kode (D-7: `scenes/dev/*` tidak disentuh).
+
 ## Saklar kurangi efek (rule `ui-scenes`): garis mati, debu dikurangi.
 var kurangi_efek: bool = Config.UMPAN_KURANGI_EFEK
+
+var _sprite: VfxSepedaGambar = null
 
 @onready var _debu: PancaranPiksel = %Debu
 @onready var _garis: PancaranPiksel = %Garis
@@ -43,8 +49,36 @@ func _ready() -> void:
 func perbarui(kecepatan_ud: float, rem_aktif: bool) -> void:
 	if not is_node_ready():
 		return
+	if _sprite != null:
+		_sprite.atur(kecepatan_ud, rem_aktif, kurangi_efek)
+		return
 	_debu.laju = UmpanBalikKecepatan.laju_debu(kecepatan_ud, rem_aktif, kurangi_efek)
 	_garis.laju = UmpanBalikKecepatan.laju_garis(kecepatan_ud, kurangi_efek)
+
+
+## Mengganti partikel kode dengan sprite gelombang 1 (`pakai` true; sekali, tidak dibatalkan) di scene rute. Pemancar kode dimatikan (laju 0, tersembunyi, tanpa proses).
+func atur_sprite(pakai: bool) -> void:
+	if not pakai or _sprite != null or not is_node_ready():
+		return
+	_debu.laju = 0.0
+	_garis.laju = 0.0
+	for pemancar: PancaranPiksel in [_debu, _garis]:
+		pemancar.kosongkan()
+		pemancar.visible = false
+		pemancar.process_mode = Node.PROCESS_MODE_DISABLED
+	_sprite = VfxSepedaGambar.new()
+	_sprite.name = "VfxSprite"
+	add_child(_sprite)
+
+
+## True bila debu dan garis digambar dari sprite (scene rute).
+func pakai_sprite() -> bool:
+	return _sprite != null
+
+
+## Node sprite debu dan garis (null bila belum `atur_sprite`; untuk tes dan probe).
+func sprite() -> VfxSepedaGambar:
+	return _sprite
 
 
 ## Pemancar debu roda (untuk tes dan probe).

@@ -5,10 +5,19 @@ from pxcore import *
 K = P['kertas']
 
 
-def tong_sampah(pal_name='hijau'):
-    """Tong sampah plastik bulat bertutup, tapak r=7 unit (~1/4 ubin).
-    Palette swap: 'hijau' dan 'biru'. Sel 20x30, pijak (10,25)."""
-    pal = P[pal_name]
+# Palet tong sampah (terang, dasar, gelap). K-1 (2026-10-21): hijau dibuang (bentrok OK/tip di HUD dan lajur hijau);
+# 'logam' = abu-abu logam dengan DASAR logamg (bukan #969AA0 = RADAR_BUKAN); 'biru' dipertahankan karena tidak ada
+# token semantik DESIGN_SPEC 1.1 yang biru (diuji tools/tests_cek/uji_aset_gelombang1.py).
+PAL_TONG = {
+    'logam': [P['logam'][0], P['logamg'][0], P['logamg'][1]],
+    'biru': P['biru'],
+}
+
+
+def tong_sampah(pal_name='logam'):
+    """Tong sampah bulat bertutup, tapak r=7 unit (~1/4 ubin).
+    Palette swap: 'logam' (abu-abu logam) dan 'biru'. Sel 20x30, pijak (10,25)."""
+    pal = PAL_TONG[pal_name]
     lg = P['logamg']
     body = sd_cyl(0, 0, 0, 15, 6.5)
     rim = sd_cyl(0, 0, 9.5, 11, 7.0)          # cincin pegangan di tengah badan
@@ -66,16 +75,17 @@ def mangkuk_kucing():
 
 
 def kilau_misi():
-    """Kilau petunjuk misi 9x9, 2 frame, kuning hangat + garis luar
-    (garis luar yang membuatnya terbaca di atas trotoar krem)."""
-    A = P['aksen']; key = {'o': OUT, 'a': A[0], 'b': A[1], 'c': A[2]}
+    """Kilau petunjuk misi 9x9, 2 frame, dua warna + garis luar (K-1, 2026-10-21): krem terang (`kertas` terang) dominan,
+    kuning aksen HANYA satu piksel di titik tengah. Garis luar yang membuatnya terbaca di atas trotoar krem; kuning tidak
+    menjadi isi utama supaya tidak tertukar dengan penanda sasaran kuning (ART_DIRECTION 11a)."""
+    key = {'o': OUT, 'a': P['kertas'][0], 'c': P['aksen'][1]}
     f1 = grid([
         '.........',
         '....o....',
         '...oao...',
-        '..obabo..',
+        '..oaaao..',
         '.oaacaao.',
-        '..obabo..',
+        '..oaaao..',
         '...oao...',
         '....o....',
         '.........'], key)
@@ -83,9 +93,9 @@ def kilau_misi():
         '....o....',
         '...oao...',
         '.o.oao.o.',
-        'oaoobooao',
-        '.oobcboo.',
-        'oaoobooao',
+        'oaooaooao',
+        '.ooacaoo.',
+        'oaooaooao',
         '.o.oao.o.',
         '...oao...',
         '....o....'], key)

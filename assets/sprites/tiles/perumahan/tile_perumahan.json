@@ -1,0 +1,32 @@
+{
+ "tile": [
+  64,
+  32
+ ],
+ "ground_anchor": [
+  32,
+  16
+ ],
+ "unit_dunia_per_ubin": 32,
+ "note": "Usulan, tools/env_art/ubin_perumahan.py --salin (run fase5a-pasang-aset-gelombang1). Hanya ubin yang dipasang. Kolom mengikuti scripts/config.gd: aspal x -1..1 ubin (seberang, dekat), trotoar 1 ubin per sisi (kerb dalam, lajur sepeda, kerb luar), rumput di luar. Ubin sepanjang jalan berulang tiap 1 ubin. rumput_1: rumput polos untuk kolom rumput di luar kolom pertama (rumput_seberang membawa tepi kerb luar yang tidak boleh berulang).",
+ "kolom_x_ubin": {
+  "rumput_seberang": -2.5,
+  "trotoar_seberang": -1.5,
+  "aspal_seberang": -0.5,
+  "aspal_dekat": 0.5,
+  "trotoar_dekat": 1.5,
+  "rumput_dekat": 2.5
+ },
+ "ubin_polos_luar": [
+  "rumput_1"
+ ],
+ "tiles": [
+  "tile_perumahan_aspal_dekat.png",
+  "tile_perumahan_aspal_seberang.png",
+  "tile_perumahan_rumput_1.png",
+  "tile_perumahan_rumput_dekat.png",
+  "tile_perumahan_rumput_seberang.png",
+  "tile_perumahan_trotoar_dekat.png",
+  "tile_perumahan_trotoar_seberang.png"
+ ]
+}
