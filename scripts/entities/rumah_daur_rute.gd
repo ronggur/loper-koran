@@ -21,7 +21,7 @@ extends Node2D
 ## Scene kotak surat rumah bukan pelanggan sisi seberang: abu-abu, lebih rendah, tanpa celah surat (`scenes/entities/kotak_surat_bukan.tscn`).
 ## Hanya hiasan: bukan sasaran, tidak punya zona atau area sendiri (rumah tetap dinilai `BUKAN_PELANGGAN`).
 @export var adegan_kotak_surat_bukan: PackedScene
-## Penerap penutup pemain (opsional; diisi scene rute). Rumah yang muncul didaftarkan dengan kotak `PenutupPemain.dari_rumah`.
+## Penerap penutup pemain (opsional; diisi scene rute). Rumah yang muncul didaftarkan dengan kotak `PenutupPemain.dari_rumah_gambar` (rumah dekat digeser seperti gambarnya, run fase5b B2 P-4).
 var penerap: PenerapPenutup = null
 
 var _rute: RouteBuilder.Rute = null
@@ -210,7 +210,7 @@ func _pasang(indeks: int) -> void:
 	sprite.visible = true
 	_rumah[indeks] = sprite
 	if penerap != null:
-		penerap.daftarkan(sprite, PenutupPemain.dari_rumah(rumah))
+		penerap.daftarkan(sprite, PenutupPemain.dari_rumah_gambar(rumah))
 	_sinkron_terlipat(indeks)
 	_pasang_tembok(indeks, rumah)
 	if rumah.sisi != LoperAnim.Sisi.SEBERANG:

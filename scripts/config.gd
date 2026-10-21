@@ -1180,3 +1180,26 @@ const SPRITE_TEMBOK_GESER_PX: Array[int] = [-32, 16]
 const HASH_FNV1A_AWAL: int = 2166136261
 const HASH_FNV1A_KALI: int = 16777619
 const HASH_FNV1A_MASKER: int = 4294967295
+
+## --- Dekor pinggir jalan di data segmen (run fase5b-tembok-dekor bagian B2, D-5 dan D-6; usulan, dinilai di HP) ---
+## Jenis dekor yang sah di data segmen (urut tetap; tabel `RUTE_DEKOR_*` di bawah sejajar dengan daftar ini).
+const RUTE_DEKOR_JENIS: Array[String] = ["tong_sampah", "pohon", "lampu_jalan"]
+## Varian sah per jenis (D-5): tong sampah logam abu-abu; pohon rindang, glodokan, ketapang; lampu jalan jenis lengan (PJU perumahan).
+const RUTE_DEKOR_VARIAN_TONG_SAMPAH: Array[String] = ["logam"]
+const RUTE_DEKOR_VARIAN_POHON: Array[String] = ["rindang", "glodokan", "ketapang"]
+const RUTE_DEKOR_VARIAN_LAMPU_JALAN: Array[String] = ["lengan"]
+## Lateral pusat dekor per jenis, ubin dari garis tengah jalan (besaran saja; tanda mengikuti sisi: seberang negatif, dekat positif). Pohon dan tong sampah di halaman (2,5), lampu di luar tepi trotoar (2,25).
+const RUTE_DEKOR_LATERAL_UBIN: Array[float] = [2.5, 2.5, 2.25]
+## Setengah sisi tapak kaki dekor per jenis, ubin (persegi di bidang tanah): tong sampah dan pohon 0,5 x 0,5, tiang lampu 0,25 x 0,25. Tapak tidak boleh menyentuh lajur sepeda (|lateral| kurang dari `RUTE_DEKOR_LAJUR_UBIN`).
+const RUTE_DEKOR_SETENGAH_UBIN: Array[float] = [0.25, 0.25, 0.125]
+## Tinggi kotak penutup pemain per jenis, ubin (0 = tidak menutupi dan tidak didaftarkan ke penerap): tong sampah rendah, pohon 1,25 (tajuk), lampu 1,0. Batas atas supaya jalur utama bersih (|lateral| sampai 1,0): tinggi paling besar = lateral - setengah - 1,0.
+const RUTE_DEKOR_TINGGI_PENUTUP_UBIN: Array[float] = [0.0, 1.25, 1.0]
+## Batas lajur sepeda, ubin dari garis tengah: sepeda tidak pernah melewati lateral 2,0 (trotoar sampai tepi), dekor dan tapak kakinya harus di luar.
+const RUTE_DEKOR_LAJUR_UBIN: float = 2.0
+## Jarak paling dekat antara dua dekor sesisi sepanjang jalan, ubin (`pos` bilangan bulat, jadi dua dekor tidak di ubin yang sama).
+const RUTE_DEKOR_JARAK_MIN_UBIN: int = 1
+## `pos` dekor paling kecil, ubin dari awal segmen (paling besar = panjang segmen - sekian): dekor boleh di dekat tepi, jarak antar segmen terjaga oleh batas ini.
+const RUTE_DEKOR_TEPI_UBIN: int = 1
+## Sprite dekor terpasang (PNG di `assets/sprites/props/`), sejajar dengan `RUTE_DEKOR_SPRITE_DATA` (lima angka tiap sprite: lebar sel, tinggi sel, frame, pijak x, pijak y, piksel; sama dengan JSON aset dan ukuran PNG, dijaga tes).
+const RUTE_DEKOR_SPRITE: Array[String] = ["prop_tong_sampah_logam", "prop_pohon_rindang", "prop_pohon_glodokan", "prop_pohon_ketapang", "prop_lampu_lengan_seberang", "prop_lampu_lengan_dekat"]
+const RUTE_DEKOR_SPRITE_DATA: Array[int] = [20, 30, 1, 10, 25, 151, 119, 1, 41, 63, 121, 126, 1, 25, 77, 141, 124, 1, 35, 70, 85, 104, 1, 9, 63, 85, 104, 1, 22, 69]

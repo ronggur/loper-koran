@@ -16,7 +16,10 @@ extends RefCounted
 ## - rintangan tidak memotong tapak rumah mana pun di segmen (`rintangan_memotong_rumah`, ROUTE_DESIGN 4 aturan 7): mobil garasi di
 ##   celah samping rumah sepanjang seluruh lintasannya (parkir sampai berhenti), anjing penjaga di posisi diamnya; tepi yang hanya
 ##   bersentuhan boleh (`Tabrakan.bertumpuk`). Rumah segmen tetangga tidak terjangkau karena rintangan paling dekat 3 ubin ke tepi;
-## - titik misi berdiri di rumah (pos dan sisi sama) dan di luar jendela rintangan (ROUTE_DESIGN 6).
+## - titik misi berdiri di rumah (pos dan sisi sama) dan di luar jendela rintangan (ROUTE_DESIGN 6);
+## - dekor (bidang `dekor` OPSIONAL, run fase5b-tembok-dekor bagian B2, AC-9): tiap butir `{jenis, pos, sisi, varian}` semuanya wajib dan tanpa field lain, jenis dan varian
+##   dari `DekorRute`, `pos` bilangan bulat `RUTE_DEKOR_TEPI_UBIN` sampai `panjang - RUTE_DEKOR_TEPI_UBIN`, tapak kaki di luar lajur sepeda, tidak menimpa zona teras atau
+##   kotak surat rumah mana pun, tapak rumah, atau tapak rintangan diam, dan dua dekor sesisi paling dekat `RUTE_DEKOR_JARAK_MIN_UBIN` ubin. Berkas tanpa `dekor` tetap sah.
 
 ## Tingkat keramaian segmen (tag `tingkat`).
 enum Tingkat { TENANG, SEDANG, PADAT }
@@ -42,11 +45,12 @@ const JENIS_OBJEK: Array[String] = ["anjing_penjaga", "mobil_garasi"]
 ## Distrik yang pelanggannya hanya di sisi `seberang` (GDD 9.1, ROADMAP 5: rumah sisi dekat belum diputuskan).
 const DISTRIK_SATU_SISI: Array[String] = ["perumahan"]
 
-const _FIELD_SEGMEN: Array[String] = ["id", "distrik", "panjang", "tag", "rumah", "objek", "titik_misi"]
+const _FIELD_SEGMEN: Array[String] = ["id", "distrik", "panjang", "tag", "rumah", "objek", "titik_misi", "dekor"]
 const _FIELD_TAG: Array[String] = ["tingkat", "sisi_pelanggan", "posisi"]
 const _FIELD_RUMAH: Array[String] = ["pos", "sisi", "jenis", "pelanggan_boleh"]
 const _FIELD_OBJEK: Array[String] = ["jenis", "pos", "jalur", "tanda_ubin"]
 const _FIELD_TITIK: Array[String] = ["nama", "pos", "sisi"]
+const _FIELD_DEKOR: Array[String] = ["jenis", "pos", "sisi", "varian"]
 
 
 ## Satu rumah di segmen.
@@ -83,6 +87,18 @@ class TitikMisi extends RefCounted:
 	var sisi: LoperAnim.Sisi = LoperAnim.Sisi.TIDAK_ADA
 
 
+## Satu dekor pinggir jalan di segmen (run fase5b-tembok-dekor bagian B2): hiasan, bukan penghalang.
+class Dekor extends RefCounted:
+	## Salah satu `Config.RUTE_DEKOR_JENIS`.
+	var jenis: String = ""
+	## Ubin dari awal segmen.
+	var pos: int = 0
+	## `SEBERANG` atau `DEKAT`.
+	var sisi: LoperAnim.Sisi = LoperAnim.Sisi.TIDAK_ADA
+	## Salah satu `DekorRute.varian_sah(jenis)`.
+	var varian: String = ""
+
+
 ## Hasil `parse`: segmen (null bila ada galat) dan daftar galat berbahasa Indonesia.
 class Hasil extends RefCounted:
 	var segmen: SegmenRute = null
@@ -103,6 +119,8 @@ var sisi_pelanggan: String = ""
 var rumah: Array[Rumah] = []
 var objek: Array[Objek] = []
 var titik_misi: Array[TitikMisi] = []
+## Dekor pinggir jalan (kosong bila berkas tidak punya bidang `dekor`).
+var dekor: Array[Dekor] = []
 
 
 ## Parse dan validasi satu segmen dari `data`. Segmen null bila ada galat; galat mengumpulkan SEMUA pelanggaran yang ketemu.
@@ -124,6 +142,7 @@ static func parse(data: Dictionary) -> Hasil:
 	_parse_rumah(data, segmen, label, ada_panjang, g)
 	_parse_objek(data, segmen, label, ada_panjang, g)
 	_parse_titik_misi(data, segmen, label, ada_panjang, g)
+	_parse_dekor(data, segmen, label, ada_panjang, g)
 	if g.is_empty():
 		hasil.segmen = segmen
 	return hasil
@@ -316,6 +335,61 @@ static func _parse_titik_misi(data: Dictionary, segmen: SegmenRute, label: Strin
 		segmen.titik_misi.append(titik)
 
 
+static func _parse_dekor(data: Dictionary, segmen: SegmenRute, label: String, ada_panjang: bool, g: Array[String]) -> void:
+	if not data.has("dekor"):
+		return
+	if typeof(data["dekor"]) != TYPE_ARRAY:
+		g.append("%s: 'dekor' harus daftar" % label)
+		return
+	var daftar: Array = data["dekor"]
+	var nomor: int = 0
+	for entri: Variant in daftar:
+		nomor += 1
+		var nama: String = "%s dekor #%d" % [label, nomor]
+		if typeof(entri) != TYPE_DICTIONARY:
+			g.append("%s: harus objek" % nama)
+			continue
+		var d: Dictionary = entri
+		_tolak_field_asing(d, _FIELD_DEKOR, nama, g)
+		var dekor: Dekor = Dekor.new()
+		dekor.jenis = _teks_wajib(d, "jenis", nama, g)
+		var jenis_sah: bool = DekorRute.indeks_jenis(dekor.jenis) >= 0
+		if not dekor.jenis.is_empty() and not jenis_sah:
+			g.append("%s: jenis '%s' tidak dikenal (%s)" % [nama, dekor.jenis, ", ".join(Config.RUTE_DEKOR_JENIS)])
+		dekor.varian = _teks_wajib(d, "varian", nama, g)
+		if jenis_sah and not dekor.varian.is_empty() and not DekorRute.varian_sah(dekor.jenis).has(dekor.varian):
+			g.append("%s: varian '%s' tidak sah untuk jenis %s (%s)" % [nama, dekor.varian, dekor.jenis, ", ".join(DekorRute.varian_sah(dekor.jenis))])
+		var nama_sisi: String = _teks_wajib(d, "sisi", nama, g)
+		dekor.sisi = sisi_dari_nama(nama_sisi)
+		if d.has("sisi") and not nama_sisi.is_empty() and dekor.sisi == LoperAnim.Sisi.TIDAK_ADA:
+			g.append("%s: sisi '%s' bukan seberang atau dekat (GDD 4.2)" % [nama, nama_sisi])
+		var ok_pos: bool = _pos_dekor_sah(d, nama, segmen.panjang, ada_panjang, g)
+		if ok_pos:
+			dekor.pos = int(roundf(float(d["pos"])))
+		if ok_pos and jenis_sah and dekor.sisi != LoperAnim.Sisi.TIDAK_ADA:
+			_periksa_tempat_dekor(dekor, segmen, nama, g)
+		segmen.dekor.append(dekor)
+
+
+## Aturan tempat satu dekor (AC-9): lajur sepeda, zona teras dan kotak surat, tapak rumah, tapak rintangan, dan jarak ke dekor sesisi.
+static func _periksa_tempat_dekor(dekor: Dekor, segmen: SegmenRute, nama: String, g: Array[String]) -> void:
+	var tapak: Rect2 = DekorRute.tapak(dekor.jenis, dekor.sisi, float(dekor.pos))
+	if DekorRute.menimpa_lajur(tapak):
+		g.append("%s: %s di pos %d menimpa lajur sepeda (tapak lateral %.2f sampai %.2f, lajur sampai %.1f; jalur utama harus bersih)" % [nama, dekor.jenis, dekor.pos, tapak.position.x, tapak.end.x, Config.RUTE_DEKOR_LAJUR_UBIN])
+	for rumah: Rumah in segmen.rumah:
+		var nama_sisi_rumah: String = NAMA_SISI[0] if rumah.sisi == LoperAnim.Sisi.SEBERANG else NAMA_SISI[1]
+		if DekorRute.menimpa_zona_rumah(tapak, rumah.sisi, float(rumah.pos)):
+			g.append("%s: %s di pos %d menimpa zona teras atau kotak surat rumah %s di pos %d" % [nama, dekor.jenis, dekor.pos, nama_sisi_rumah, rumah.pos])
+		if DekorRute.menimpa_tapak_rumah(tapak, rumah.sisi, float(rumah.pos)):
+			g.append("%s: %s di pos %d menimpa tapak rumah %s di pos %d" % [nama, dekor.jenis, dekor.pos, nama_sisi_rumah, rumah.pos])
+	for objek: Objek in segmen.objek:
+		if JENIS_OBJEK.has(objek.jenis) and DekorRute.menimpa_rintangan(tapak, objek.jenis, float(objek.pos), sisi_dari_nama(objek.jalur)):
+			g.append("%s: %s di pos %d menimpa tapak %s di pos %d (jalur %s)" % [nama, dekor.jenis, dekor.pos, objek.jenis, objek.pos, objek.jalur])
+	for lain: Dekor in segmen.dekor:
+		if lain.sisi == dekor.sisi and absi(lain.pos - dekor.pos) < Config.RUTE_DEKOR_JARAK_MIN_UBIN:
+			g.append("%s: pos %d hanya %d ubin dari dekor sesisi di pos %d (paling dekat %d ubin)" % [nama, dekor.pos, absi(lain.pos - dekor.pos), lain.pos, Config.RUTE_DEKOR_JARAK_MIN_UBIN])
+
+
 # --- Pembantu ---
 
 static func _angka(nilai: Variant) -> bool:
@@ -387,5 +461,20 @@ static func _pos_sah(d: Dictionary, nama: String, panjang: int, ada_panjang: boo
 	var pos: int = int(roundf(float(d["pos"])))
 	if ada_panjang and (pos < Config.RUTE_TEPI_UBIN or pos > panjang - Config.RUTE_TEPI_UBIN):
 		g.append("%s: pos %d di tepi segmen (harus %d sampai %d, tepi %d ubin kosong)" % [nama, pos, Config.RUTE_TEPI_UBIN, panjang - Config.RUTE_TEPI_UBIN, Config.RUTE_TEPI_UBIN])
+		return false
+	return true
+
+
+## `pos` dekor wajib, bilangan bulat, dan di dalam segmen: `RUTE_DEKOR_TEPI_UBIN` sampai `panjang - RUTE_DEKOR_TEPI_UBIN` (lebih longgar dari `_pos_sah`; dekor tidak membawa keputusan). False bila ada galat.
+static func _pos_dekor_sah(d: Dictionary, nama: String, panjang: int, ada_panjang: bool, g: Array[String]) -> bool:
+	if not d.has("pos"):
+		g.append("%s: field wajib 'pos' tidak ada" % nama)
+		return false
+	if not _bulat(d["pos"]):
+		g.append("%s: 'pos' harus bilangan bulat ubin" % nama)
+		return false
+	var pos: int = int(roundf(float(d["pos"])))
+	if ada_panjang and (pos < Config.RUTE_DEKOR_TEPI_UBIN or pos > panjang - Config.RUTE_DEKOR_TEPI_UBIN):
+		g.append("%s: pos %d di luar %d sampai %d" % [nama, pos, Config.RUTE_DEKOR_TEPI_UBIN, panjang - Config.RUTE_DEKOR_TEPI_UBIN])
 		return false
 	return true
