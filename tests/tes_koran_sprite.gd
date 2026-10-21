@@ -454,6 +454,9 @@ func _test_rujukan_sprite_dan_isi_folder() -> void:
 		dikenal[nama] = true
 	dikenal["mission_kucing_sheet"] = true
 	dikenal["prop_graybox_kotak_surat"] = true
+	# Run fase5b-tembok-dekor B2: enam sprite dekor sah dirujuk `DekorRute` (tong sampah logam, tiga pohon, dua lampu lengan); nama lain tetap ditolak.
+	for sufiks: String in SUFIKS_5B_PROPS:
+		dikenal["prop_" + sufiks] = true
 	var berkas: Array[String] = []
 	for akar: String in ["res://scripts", "res://scenes", "res://assets/data", "res://translations"]:
 		_kumpulkan(akar, berkas)
@@ -498,6 +501,9 @@ func _test_rujukan_sprite_dan_isi_folder() -> void:
 func _awalan_dikenal(nama: String) -> bool:
 	for dikenal_nama: String in DefSprite.NAMA + BERKAS_LAMA_PROPS:
 		if dikenal_nama.begins_with(nama):
+			return true
+	for sufiks: String in SUFIKS_5B_PROPS:
+		if ("prop_" + sufiks).begins_with(nama):
 			return true
 	return false
 

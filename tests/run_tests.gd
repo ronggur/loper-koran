@@ -162,6 +162,9 @@ func _initialize() -> void:
 	# Run fase5b-tembok-dekor bagian B1: tembok sisi dekat (varian FNV-1a, modul, geometri tidak berubah, gambar scene, jendela daur, sasaran tidak tertutup).
 	var tembok: TesTembok = TesTembok.new(check, _judul, self)
 	await tembok.jalankan()
+	# Run fase5b-tembok-dekor bagian B2: dekor pinggir jalan di data segmen (skema, validasi, rute identik, gambar, penutup, jalur utama, sasaran) dan kotak penutup rumah dekat digeser (P-4).
+	var dekor: TesDekor = TesDekor.new(check, _judul, self)
+	await dekor.jalankan()
 	var scene_hud_rute: TesHudRuteScene = TesHudRuteScene.new(check, _judul, self)
 	await scene_hud_rute.jalankan()
 	var halaman_koran: TesHalamanKoran = TesHalamanKoran.new(check, _judul, self)

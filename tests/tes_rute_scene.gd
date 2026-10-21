@@ -405,8 +405,8 @@ func _test_rumah_digambar() -> void:
 			anak_gambar += 1
 	# Run fase3b-rintangan-skor: rintangan kini digambar, tetapi di dalam satu node induk `Rintangan` (anak Y-sort Objek), jadi anak Objek =
 	# rumah + tembok sisi dekat (run fase5b B1) + kotak surat (oranye pelanggan dan abu-abu bukan pelanggan seberang, 2026-10-17) + sepeda + node Rintangan (rintangan sendiri
-	# dites di `tes_rintangan_scene.gd`).
-	check(anak_gambar == akar.daur().jumlah_rumah() + akar.daur().jumlah_kotak_surat() + akar.daur().jumlah_kotak_surat_bukan() + akar.daur().jumlah_tembok() + 2 and akar.rintangan_daur().get_parent() == objek, "tidak ada node lain yang digambar di Objek (rumah, tembok, kotak surat oranye dan abu-abu, sepeda, induk rintangan): %d" % anak_gambar)
+	# dites di `tes_rintangan_scene.gd`) + node Dekor (induk dekor pinggir jalan, run fase5b B2; dites di `tes_dekor.gd`).
+	check(anak_gambar == akar.daur().jumlah_rumah() + akar.daur().jumlah_kotak_surat() + akar.daur().jumlah_kotak_surat_bukan() + akar.daur().jumlah_tembok() + 3 and akar.rintangan_daur().get_parent() == objek and akar.dekor_daur().get_parent() == objek, "tidak ada node lain yang digambar di Objek (rumah, tembok, kotak surat oranye dan abu-abu, sepeda, induk rintangan, induk dekor): %d" % anak_gambar)
 	_bersihkan(akar)
 
 
@@ -425,7 +425,7 @@ func _test_jendela_daur_bergerak() -> void:
 			salah.append("jarak %.1f: %s" % [jarak, tampil.size()])
 		maks_tampil = maxi(maks_tampil, tampil.size())
 		maks_node = maxi(maks_node, akar.daur().jumlah_node_rumah())
-		if akar.penerap_penutup().jumlah() != tampil.size() + akar.rintangan_daur().jumlah_tampil():
+		if akar.penerap_penutup().jumlah() != tampil.size() + akar.rintangan_daur().jumlah_tampil() + _jumlah_dekor_penutup(akar):
 			salah.append("jarak %.1f: penerap %d, tampil %d" % [jarak, akar.penerap_penutup().jumlah(), tampil.size()])
 	check(salah.is_empty(), "sepanjang rute (100 titik): rumah digambar = jendela oracle dan didaftarkan ke penerap penutup: %s" % [salah.slice(0, 3)])
 	check(maks_tampil <= 30 and maks_tampil >= 20, "paling banyak %d rumah sekaligus (jendela, bukan 89)" % maks_tampil)
@@ -990,7 +990,7 @@ func _test_penutup() -> void:
 	check(pencacah == 1, "hanya satu simpul PenerapPenutup di seluruh scene (%d)" % pencacah)
 	_taruh_sepeda(akar, 3.0, 0.5, 0.0, 100.0)
 	# Rumah rute di jendela daur terdaftar ke penerap yang sama; tidak ada yang menutupi pemain di jalan resmi (D-8 run 3A).
-	check(penerap.jumlah() == akar.daur().jumlah_rumah() + akar.rintangan_daur().jumlah_tampil() and akar.daur().jumlah_rumah() > 0, "rumah (dan rintangan) di jendela daur terdaftar ke penerap (%d)" % penerap.jumlah())
+	check(penerap.jumlah() == akar.daur().jumlah_rumah() + akar.rintangan_daur().jumlah_tampil() + _jumlah_dekor_penutup(akar) and akar.daur().jumlah_rumah() > 0, "rumah, rintangan, dan pohon/lampu (run fase5b B2) di jendela daur terdaftar ke penerap (%d)" % penerap.jumlah())
 	var menutupi_nyata: int = 0
 	for lateral: float in [-1.0, 0.0, 1.0]:
 		for maju: int in range(0, 237, 2):
@@ -1019,7 +1019,7 @@ func _test_penutup() -> void:
 	akar.perbarui(0.0)
 	check(is_equal_approx(gambar.modulate.a, 0.45), "pemain di lateral -0,9: menutupi lagi (alfa 0,45)")
 	penerap.lepas(gambar)
-	check(gambar.modulate.a == 1.0 and penerap.jumlah() == akar.daur().jumlah_rumah() + akar.rintangan_daur().jumlah_tampil(), "objek dilepas dari penerap: alfa kembali 1,0")
+	check(gambar.modulate.a == 1.0 and penerap.jumlah() == akar.daur().jumlah_rumah() + akar.rintangan_daur().jumlah_tampil() + _jumlah_dekor_penutup(akar), "objek dilepas dari penerap: alfa kembali 1,0")
 	gambar.queue_free()
 	_bersihkan(akar)
 
@@ -1057,3 +1057,12 @@ func _test_tata_letak_akhir(kasus: Array) -> void:
 	for pasang: Array in hud_rect:
 		check(not banner_selesai.intersects(pasang[1], true), "banner Rute selesai tidak menutupi %s" % pasang[0])
 	_bersihkan(akar)
+
+
+## Banyaknya pohon dan lampu dekor yang sedang digambar (hanya keduanya yang didaftarkan ke penerap penutup, run fase5b-tembok-dekor B2).
+func _jumlah_dekor_penutup(akar: RuteMain) -> int:
+	var jumlah: int = 0
+	for i: int in akar.dekor_daur().indeks_tampil():
+		if DekorRute.menutupi(akar.rute().dekor[i].jenis):
+			jumlah += 1
+	return jumlah

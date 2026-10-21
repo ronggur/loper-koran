@@ -313,7 +313,9 @@ func _test_rujukan_dan_pemisahan() -> void:
 	var bersih: Array[String] = []
 	for jalur: String in ["scripts/systems/tabrakan.gd", "scripts/systems/rintangan_rute.gd", "scripts/systems/penutup_pemain.gd", "scripts/systems/medan_koran.gd", "scripts/systems/zona_sasaran.gd", "scripts/systems/skor_rute.gd", "scripts/systems/throw_solver.gd", "scripts/systems/bike_motion.gd", "scripts/systems/tenggat_rute.gd", "scripts/entities/penerap_penutup.gd", "scripts/entities/rintangan_daur.gd"]:
 		var teks: String = FileAccess.get_file_as_string("res://" + jalur).to_lower()
-		if teks.contains("tembok") or teks.contains("rumah_dekat_mundur"):
+		# `PenutupPemain.tapak_rumah_gambar` (run fase5b B2, P-4) memang memakai `RUTE_RUMAH_DEKAT_MUNDUR_UBIN` untuk kotak penutup rumah dekat; hanya kata "tembok" yang tetap terlarang di sana.
+		var kata_mundur: bool = teks.contains("rumah_dekat_mundur") and not jalur.ends_with("penutup_pemain.gd")
+		if teks.contains("tembok") or kata_mundur:
 			bersih.append(jalur)
 	check(bersih.is_empty(), "logika tabrakan, rintangan, penutup, medan, zona, skor, lempar, gerak, tenggat tidak merujuk tembok: %s" % [bersih])
 	var pengguna: Array[String] = []
@@ -384,13 +386,13 @@ func _test_scene_tembok() -> void:
 	for jarak: float in [20.0, 80.0, 150.0, 220.0]:
 		for lateral: float in [-2.0, 0.0, 1.0, 2.0]:
 			_taruh_sepeda(akar, jarak, lateral)
-			if penerap.jumlah() != daur.jumlah_rumah() + akar.rintangan_daur().jumlah_tampil():
+			if penerap.jumlah() != daur.jumlah_rumah() + akar.rintangan_daur().jumlah_tampil() + _jumlah_dekor_penutup(akar):
 				alfa_salah.append("jarak %.0f: penerap %d, rumah %d" % [jarak, penerap.jumlah(), daur.jumlah_rumah()])
 			for i: int in daur.indeks_tampil():
 				for s: Sprite2D in daur.sprite_tembok(i):
 					if s.modulate.a != 1.0:
 						alfa_salah.append("%d lateral %.0f: alfa tembok %.2f" % [i, lateral, s.modulate.a])
-	check(alfa_salah.is_empty(), "tembok tidak didaftarkan ke PenerapPenutup (jumlah terdaftar = rumah + rintangan) dan alfanya selalu 1,0: %s" % [alfa_salah.slice(0, 3)])
+	check(alfa_salah.is_empty(), "tembok tidak didaftarkan ke PenerapPenutup (jumlah terdaftar = rumah + rintangan + pohon dan lampu bagian B2) dan alfanya selalu 1,0: %s" % [alfa_salah.slice(0, 3)])
 	# Tapak logika rumah dekat tidak ikut bergeser: pemain di lateral 2,0 tidak pernah menutupi; kotak penutup literal.
 	var kotak: PenutupPemain.Objek = PenutupPemain.dari_rumah(rute.rumah[_indeks_dekat_pertama(rute)])
 	check(kotak.tapak.position.x == 3.0 and kotak.tapak.size == Vector2(3.0, 3.0), "kotak penutup rumah dekat di rute nyata tetap di lateral 3,0 (x %.2f)" % kotak.tapak.position.x)
@@ -482,6 +484,15 @@ func _varian_rute(benih: int, pustaka: Array[SegmenRute]) -> Array[String]:
 		if r.sisi == LoperAnim.Sisi.DEKAT:
 			hasil.append(VarianTembok.pilih(r.id))
 	return hasil
+
+
+## Banyaknya pohon dan lampu yang sedang digambar (hanya keduanya yang didaftarkan ke penerap, run fase5b B2).
+func _jumlah_dekor_penutup(akar: RuteMain) -> int:
+	var jumlah: int = 0
+	for i: int in akar.dekor_daur().indeks_tampil():
+		if DekorRute.menutupi(akar.rute().dekor[i].jenis):
+			jumlah += 1
+	return jumlah
 
 
 func _indeks_dekat_pertama(rute: RouteBuilder.Rute) -> int:
