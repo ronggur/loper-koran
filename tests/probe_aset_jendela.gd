@@ -32,8 +32,9 @@ const HALAMAN_LATERAL: float = -2.4
 const HALAMAN_MAJU: float = 0.5
 const ASPAL_LATERAL: float = -0.5
 const ASPAL_MAJU: float = 0.5
-## Lateral kucing untuk tangkapan kilau: rumput dan trotoar seberang.
-const KUCING_RUMPUT_LATERAL: float = -2.75
+## Lateral kucing untuk tangkapan kilau: rumput polos dan trotoar seberang. Rumput polos = kolom rumput luar sisi dekat (|x| >= 3, `JalanDaur.rumput_luar`) di celah antara dua rumah dekat
+## (iterasi 2, QA-004: sebelumnya -2,75 di seberang jatuh di teras rumah, bukan rumput polos).
+const KUCING_RUMPUT_LATERAL: float = 3.75
 const KUCING_TROTOAR_LATERAL: float = -1.5
 ## Lama menunggu bintang tampil sebelum foto (frame 1 dari 6), detik.
 const FOTO_BINTANG_DETIK: float = 0.1
@@ -182,7 +183,8 @@ func _initialize() -> void:
 	for kasus: Array in [["kilau_rumput", KUCING_RUMPUT_LATERAL], ["kilau_trotoar", KUCING_TROTOAR_LATERAL]]:
 		var titik: RencanaMisi.Titik = RencanaMisi.Titik.new()
 		titik.jenis = t1.jenis
-		titik.maju_ubin = t1.maju_ubin
+		titik.maju_ubin = t1.maju_ubin if kasus[0] != "kilau_rumput" else _maju_celah_dekat(t1.maju_ubin)
+		_taruh(3.0, 0.5, maxf(titik.maju_ubin - 8.0, 0.0))
 		titik.lateral_ubin = kasus[1]
 		titik.lama_berhenti_detik = t1.lama_berhenti_detik
 		_akar.perbarui(DT)
@@ -194,8 +196,29 @@ func _initialize() -> void:
 		_akar.kucing().tampilkan(titik, _sepeda.jarak_ubin, Config.MISI_KILAU_DETIK + 0.01, 0.0, true, true)
 		await _tunggu(3)
 		await _foto("%s_frame2" % kasus[0])
+	_cek(JalanDaur.rumput_luar(KUCING_RUMPUT_LATERAL) and JalanDaur.kolom_di(KUCING_RUMPUT_LATERAL) == JalanDaur.Kolom.RUMPUT_DEKAT, "lateral kilau_rumput ada di kolom rumput luar sisi dekat (rumput polos)")
 	print("probe selesai, %d keadaan tidak sesuai" % _gagal)
 	await ProbeKeluar.keluar(self, 0 if _gagal == 0 else 1)
+
+
+## Maju (ubin) di tengah celah antara dua rumah sisi dekat yang paling dekat ke `acuan`, supaya kucing di rumput luar sisi dekat berdiri di rumput polos (bukan di halaman atau teras rumah).
+## Celah = dari ujung kavling rumah dekat (`RUTE_RUMAH_PANJANG_UBIN`) sampai awal rumah dekat berikutnya; tengahnya. Tanpa celah >= 3 ubin: `acuan`.
+func _maju_celah_dekat(acuan: float) -> float:
+	var awal: Array[float] = []
+	for r: RouteBuilder.RumahRute in _akar.rute().rumah:
+		if r.sisi == LoperAnim.Sisi.DEKAT:
+			awal.append(r.maju_ubin)
+	var terbaik: float = acuan
+	var jarak_terbaik: float = INF
+	for i: int in range(awal.size() - 1):
+		var ujung: float = awal[i] + Config.RUTE_RUMAH_PANJANG_UBIN
+		if awal[i + 1] - ujung < 3.0:
+			continue
+		var tengah: float = (ujung + awal[i + 1]) / 2.0
+		if absf(tengah - acuan) < jarak_terbaik:
+			jarak_terbaik = absf(tengah - acuan)
+			terbaik = tengah
+	return terbaik
 
 
 ## Memuat scene rute (dengan atau tanpa misi P1 dari seed hari 1) ke pohon dan menyiapkan rujukan; scene lama dilepas. True bila berhasil.
