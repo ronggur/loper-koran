@@ -110,3 +110,10 @@ JANGAN
 - Keputusan K-1 diterapkan di renderer: kilau dua warna, tong sampah abu-abu logam (hijau dibuang), satu polisi tidur (gelombang 1).
 - Belum dipasang: tong sampah, jejak, mangkuk, portal, pos, tembok sisi dekat, percikan, polisi tidur, zebra, genangan (5B dan M3).
 - Penilaian visual di HP: SETUP_ANDROID 8.12. Keraguan yang tercatat: bayangan 28% di aspal, lajur hijau trotoar lawan penanda misi selesai, debu dan garis yang tipis di x3, kilau di atas atap putih, letak koran terlipat terhadap teras sprite rumah. Detail di `docs/loop/20261021-fase5a-pasang-aset-gelombang1/LOG.md` dan ART_DIRECTION 11.
+
+## Hasil pemasangan (Run 5B, 2026-10-21, usulan)
+
+- Run Dev↔QA `20261021-fase5b-tembok-dekor` memasang 23 aset lagi dari renderer ke rute perumahan lewat `--salin` ketiga skrip (`render.py`, `lampu_pohon.py`, `ubin_perumahan.py`; hanya yang dipasang, uji `uji_aset_pasang_5b.py` dan `uji_aset_lampu_pohon.py`): lima modul tembok sisi dekat, tong sampah logam, tiga pohon, dua sprite lampu mati, dan enam ubin (`rumput_2`, `rumput_3`, jalan masuk garasi trotoar dan rumput seberang, simbol sepeda di kedua trotoar). Hanya tampilan dan data dekor (bidang `dekor` di sembilan segmen).
+- Putusan: tembok berpusat 3,125 dan rumah dekat digambar mundur 1,25 ubin (tapak logika tidak berubah); `aspal_1..3` tidak dipasang (polos tanpa garis tepi kerb, memutus garis); tong biru dan lampu nyala tidak dipasang.
+- Belum dipasang: tong sampah biru, bingkai lampu nyala, pohon dan lampu jenis lain, `*_dekat_masuk`, `aspal_N`, jejak, mangkuk, portal, pos, percikan, polisi tidur, zebra, genangan (M3, 5C).
+- Penilaian visual di HP: SETUP_ANDROID 8.13. Keraguan yang tercatat: varian `pot` menutupi 13,1% zona kotak surat dekat, tong abu-abu lawan kotak surat abu-abu, bayangan baked pohon dan lampu selalu ke kanan bawah, ujung kerb di tepi jalan masuk garasi (22 piksel, ubin ujung kerb 5C). Detail di `docs/loop/20261021-fase5b-tembok-dekor/LOG.md` dan ART_DIRECTION 11.

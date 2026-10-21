@@ -1,7 +1,7 @@
 # Loop Log — 20261021-fase5b-tembok-dekor
 Scope: Run 5B, Fase 5, tembok sisi dekat, dekor di data segmen (tong sampah, pohon, lampu jalan), ubin masuk garasi/simbol sepeda/rumput bervariasi, hanya tampilan dan data dekor  ·  Branch: feat/fase5b-tembok-dekor  ·  Mulai: 2026-10-21  ·  Godot: 4.7.2.stable.official.ed1daf0bf
 
-## Status: IN_PROGRESS   (iterasi saat ini: 1/2, Dev bagian A, B1, dan B2 selesai; C belum; satu temuan BLOCKED diputus P-1: AC-8 zona sasaran dekat)
+## Status: IN_PROGRESS   (iterasi saat ini: 1/2, Dev bagian A, B1, B2, C selesai; menunggu QA; satu temuan BLOCKED diputus P-1: AC-8 zona sasaran dekat; satu deviasi C-F1: ujung kerb jalan masuk garasi 22 piksel, ditunda ke 5C)
 
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
@@ -14,6 +14,7 @@ Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MAN
 |---|---|---|---|---|---|---|---|
 | B1-F1 | 1 | Tinggi | AC-8, tembok sisi dekat vs zona sasaran dekat | **BLOCKED.** Badan sprite kotak surat sasaran dekat 0% tertimpa tembok/tiang (semua varian, jenis atap, posisi), tetapi ZONA di tanah tertimpa: kotak surat polos/bata/besi 1,7%, pot 13,1%; teras polos/bata 89,5%, besi 82,3%, pot 97,5% (diukur `UkurTembok`, piksel opak, urutan gambar dihitung; tanpa urutan gambar sama). Sebab: tembok di lateral 3,125 lebih dekat ke kamera dari zona teras dekat (lateral 2,5 sampai 3,0) dan setinggi 14 unit (tiang 17), jadi sinar kamera ke teras dan sebagian kotak surat melewati tembok. Keputusan pemilik: `RUTE_TEMBOK_X_UBIN` dan mundur 1,25 TIDAK digeser. Rute perumahan nyata tidak punya pelanggan dekat, jadi tidak ada dampak di game sekarang; berdampak bila rute dengan pelanggan dekat dibuat. Tangkapan: `shots/iter1/*_dekat_tembok_sasaran_bidik.png` (zona kuning di tanah tidak terlihat di balik tembok, kotak surat sendiri terlihat). Orchestrator/pemilik memutuskan (mis. tembok lebih rendah/bolong di teras, teras dekat digeser, atau terima). | BLOCKED | - | `tes_tembok.gd` `_test_sasaran_tidak_tertutup`: badan = 0 dijaga nol; zona dikunci pada nilai terukur berlabel BLOCKED (berubah jika geometri/aset berubah) |
 | B1-F2 | 1 | Sedang | D-2: tapak logika rumah dekat tidak ikut mundur | Rumah dekat digambar 1,25 ubin lebih jauh tetapi `PenutupPemain.tapak_rumah` tetap di lateral 3,0 (keputusan D-2). Akibat terlihat: pemain di trotoar dekat (lateral 1,75) membuat sprite rumah dekat jadi alfa 0,45 padahal rumah yang digambar tidak menimpa pemain (tangkapan `shots/iter1/*_dekat_tembok_trotoar_dekat.png`: rumah transparan terlepas dari pemain, menimpa HUD bawah). Spike 3C mencatat "Tidak pernah" untuk pendekatan tembok karena spike ikut menggeser kotak penutup; D-2 melarang menggeser tapak, jadi perilaku ini nyata. Bukan BLOCKED (sesuai SPEC), tetapi perlu keputusan: tetap, atau kotak penutup digambar ikut mundur (mengubah `PenutupPemain.tapak_rumah`, dilarang AC-6). | FIXED (B2, P-4) | `PenutupPemain.tapak_rumah_gambar`/`dari_rumah_gambar`, dipakai `RumahDaurRute._pasang`; commit "feat: dekor pinggir jalan ..." | `tes_dekor.gd` `_test_p4_*` (murni, sapuan 2465 titik, scene 6 lateral x 80 jarak: rumah tidak pudar); mutan B2-26, B2-27, B2-28 |
+| C-F1 | 1 | Rendah | AC-16, ubin `*_masuk` vs tetangga | Syarat "`cek_sambungan` = 0" tidak bisa 0 untuk jalan masuk: ubin tetangga di baris maju + 1 (di belakang jalan masuk) memuat piksel kerb yang pada adegan renderer (kerb putus di baris jalan masuk) adalah rumput, tepat **22 piksel** di sekitar kedua kerb sisi seberang (x -2,07 sampai -1,02). Simbol sepeda 0 piksel, rumput_2/3 0 piksel. Perbaikan butuh ubin ujung kerb, yang SPEC masukkan ke 5C (di luar scope). Tidak terlihat di tangkapan (`*_ubin_garasi_*.png`). **DEFERRED ke 5C**, jangan dibaca sebagai BLOCKED. | DEFERRED | - | `uji_aset_pasang_5b.py` (22 piksel tepat, hanya baris maju + 1, hanya x -2,1 .. -1,0) dan kontrol sisi dekat |
 
 ## Iterasi 1, bagian A (Dev): renderer, `--salin`, uji aset (AC-1, AC-2, AC-3, sebagian AC-23)
 
@@ -227,6 +228,95 @@ Commit (branch `feat/fase5b-tembok-dekor`, belum push): `feat:` dekor (skema, `D
 40 mutan (37 + 3 varian), 37 terdeteksi pada percobaan pertama, 3 tidak: B2-8 dan B2-11 mutan setara (cabang parse tak terjangkau data karena lateral dan tapak ditentukan konstanta; fungsi dites langsung dan konstanta dijaga literal), B2-36 bukan mutan sah (diganti B2-36b, terdeteksi). B2-25 dan B2-22 pertama tertangkap pemindai literal; varian B2-25b dan B2-22b (tanpa kata terlarang) membuktikan tes perilaku (1000 lemparan, golden 60 seed) juga menangkapnya. Mutan B2 tidak termasuk di 30 mutan AC-23 yang tersisa untuk bagian C (ubin) dan lainnya.
 
 **BLOCKED**: tidak ada baru. B1-F1 (AC-8) sudah diputus orchestrator (P-1); B1-F2 FIXED di atas.
+
+## Iterasi 1, bagian C (Dev): ubin khusus, probe, paket ekspor, pemindai, dokumen (AC-14 sampai AC-18, AC-21 sampai AC-23)
+
+Commit (branch `feat/fase5b-tembok-dekor`, belum push): `feat:` ubin khusus (`UbinKhusus`, `TanahDaur`, `rute.tscn`, `RuteMain`), `test:` `tes_ubin_5b.gd` + uji Python susunan + referensi, `test:` probe dan tangkapan iterasi 1 diulang, `test:` `tes_export` AC-17, `docs:` dokumen AC-21 dan LOG ini. Satu proses Godot milik saya dalam satu waktu; proses `run_tests.gd` milik sesi lain (PID 26665) tidak disentuh.
+
+**Yang dikerjakan**
+- **`UbinKhusus`** (`scripts/systems/ubin_khusus.gd`, murni, `RefCounted`): `baris_masuk(maju)` = `ceili(maju - 0,5)` (titik tepat di batas dua baris ke baris di belakang), `himpunan_baris_masuk(objek)` (hanya `mobil_garasi` jalur `seberang`), `simbol_di_baris(b)` (`posmod(b - 6, 12) == 0`), `fnv1a_dua_int(a, b)` (FNV-1a 32 bit atas dua bilangan 32 bit little-endian), `varian_rumput(kolom, baris)` (hash mod 100: < 12 rumput_2, < 20 rumput_3), `jenis(x, baris, himpunan)`. Konstanta baru satu baris di `config.gd`: `RUTE_SIMBOL_SEPEDA_SELANG_UBIN` 12, `..._OFFSET_UBIN` 6, `RUTE_RUMPUT_VARIAN_MOD` 100, `..._2_PERSEN` 12, `..._3_PERSEN` 8, `HASH_FNV1A_BYTE_PER_INT`/`GESER_BIT`/`MASKER_BYTE`. Proporsi terukur di 10.000 sel kolom luar: rumput_2 12,1%, rumput_3 8,0%, rumput_1 79,9%; barisan variasi berurutan paling panjang 5.
+- **`TanahDaur`**: enam `@export` tekstur baru (dimuat sebagai ext_resource di `rute.tscn`, dipegang node, tanpa `load()` dan tanpa `_draw`); mode khusus bila 13 tekstur terisi. Enam wadah baru (`RumputLuar2/3`, `MasukTrotoarSeberang`, `MasukRumputSeberang`, `SimbolTrotoarSeberang`, `SimbolTrotoarDekat`), jadi wadah naik tepat 6 (7 menjadi 13) dan tiap wadah satu tekstur (gambar tetap tergabung per tekstur); sprite yang berganti tekstur dipindah antar wadah, hanya saat lantai jarak maju berubah atau baris masuk diatur (`atur_baris_masuk`, dipanggil `RuteMain._susun`, juga untuk "Main lagi"). Sel, posisi, dan jumlah sprite tidak berubah (selisih 0 untuk lebar 640, 667, 780, 800, 800 maks; jumlah node tidak berubah sesudah banyak langkah). Tanpa tekstur khusus (jalan uji, graybox, spike, `cek_render`, tes lama) perilaku identik; `jalan_daur.gd` `git diff` kosong.
+- **Penyimpangan dari SPEC D-7 (dicatat):** SPEC menulis "mobil parkir di celah `pos - 1`, baris dipilih yang menutup celah itu, tie dibuang ke baris di belakang". Geometri nyata: mobil di `maju = pos` bulat, bentuknya `maju +- 0,375`, kavling rumah `maju - 0,5 .. maju + 2,5`, jadi celah antar rumah sama dengan baris ubin `maju` (menutup `maju - 0,5 .. maju + 0,5`). Baris = `ceili(maju - 0,5)` = `maju` untuk titik bulat (bukan `pos - 1`); tie dibuang ke belakang seperti SPEC. Terbukti di tangkapan: mobil parkir berdiri di atas beton jalan masuk (kolom rumput pertama) yang menyambung ke persilangan di trotoar (`*_ubin_garasi_parkir.png`, `*_garasi_tanda.png`). Tes: baris = maju di 60 rute nyata dan seluruh bentuk mobil di dalam baris.
+- **Simbol di baris masuk:** SPEC "kecuali baris `*_masuk`" dibaca tingkat baris: di baris masuk tidak ada simbol di kedua trotoar (trotoar dekat tetap biasa).
+- **AC-16 sambungan Python** (`uji_aset_pasang_5b.py`, kini 368 pemeriksaan): simbol sepeda = adegan renderer 0 piksel beda; rumput_2/3 diulang = adegan rumput polos 0 beda dan warna cincin tepi hanya warna rumput; jalan masuk lihat C-F1 (22 piksel ujung kerb); referensi `tests/data/ubin_potongan_5b.png` dibuat skrip dari assets/ (`--perbarui-referensi`), dihitung dengan oracle terpisah (`struct`) dan dibandingkan piksel-identik dengan susunan `TanahDaur` oleh `tes_ubin_5b.gd` (64 ubin, 9 ubin khusus).
+- **AC-17**: `tes_export.gd` memeriksa 17 PNG 5B beserta `.import` Lossless, skrip, sembilan segmen ikut paket (`JALUR_WAJIB_IKUT`) dan aset tak dipasang tidak ada. `--export-pack` 1,66 MB; dimuat dari folder di luar repo (`godot --main-pack build/kring-uji.pck`, skrip di scratchpad): 17 tekstur baru dengan ukuran sel benar, 9 segmen, `rute.tscn`; `aspal_1`, `trotoar_dekat_masuk`, `prop_tong_sampah_biru`, `tests/tes_ubin_5b.gd`, `docs/GDD.md` tidak ada di paket.
+- **AC-18**: pemindai 5A diperluas, tidak diganti: `tes_ubin.gd` hanya mengizinkan enam nama (`UBIN_5B`), `aspal_N`, `rumput_[04-9]`, `*_dekat_masuk`, dan nama lain tetap terlarang; `tes_ubin_5b.gd` menambah pemindai `aspal_1` dan `*_dekat_masuk` di semua sumber; pemindai tong biru, lampu nyala, beringin sudah ada (B2).
+- **Perubahan tes lama (dicatat, angka perilaku tidak diubah):** `tes_ubin.gd` `_test_scene_rute` dan `_hitung_tekstur_benar`: scene rute kini memakai ubin khusus, jadi ubin dari daftar `UBIN_5B` dihitung benar (letak diuji `tes_ubin_5b.gd`) dan jumlah tekstur tidak lagi tepat 7 melainkan 7 sampai 13 dengan ketujuh tekstur lama terpakai; pemindai rujukan seperti di atas. `run_tests.gd` mendaftarkan `TesUbin5b`. Tes mode tanpa khusus (`_buat_tanah`) tidak berubah.
+- **Probe** `tests/probe_sisi_dekat_jendela.gd`: skenario `ubin_garasi_parkir`, `ubin_garasi_tanda`, `ubin_simbol_sepeda`, `ubin_rumput_luar`, `ubin_jalur_utama`, `ubin_kidal` (rute nyata seed dev, mobil seberang di maju 45 segmen per_tengah_04); mencetak letak ubin masuk (trotoar x -1,5 dan rumput x -2,5 di baris mobil) dan keadaan tidak sesuai. Empat ukuran: "probe selesai, 0 keadaan tidak sesuai" di 2340x1080, 1920x1080, 2400x1080, 1600x720, tanpa ERROR/WARNING. Tangkapan B1/B2 di `shots/iter1/` ikut diulang (tampilan rumput kini bervariasi, jalan masuk dan simbol muncul di tempat yang sama), 24 tangkapan baru `*_dekat_ubin_*.png`.
+
+**Penilaian dari tangkapan** (dilihat sendiri: garasi parkir, garasi tanda, simbol sepeda, rumput luar 2340x1080; jalur utama 1920x1080; kidal 1600x720)
+- Garasi: mobil oranye parkir di atas beton abu-abu terang yang menyambung ke trotoar; saat lampu mundur menyala beton terlihat jelas menyeberangi lajur hijau (persilangan putus-putus). Terbaca sebagai jalan masuk garasi. Ubin ujung kerb di tepi persilangan belum ada (C-F1), tidak mencolok.
+- Simbol sepeda: simbol putih kecil dan pucat di lajur seberang dan dekat, tidak terbaca sebagai marka bahaya, tetapi kecil dan tipis di x3 (dinilai di HP).
+- Rumput luar: variasi halus (bunga dan rumbai kecil), tanpa pita atau tepi; tidak berisik. Rumput di layar lebih sering tertutup rumah, jadi variasi paling terlihat di awal rute dan di celah.
+- Jalur utama: aspal tanpa ubin khusus (61 ubin aspal, 0 bukan tekstur aspal); kidal: tata letak HUD berpindah, ubin sama.
+- Keraguan visual: simbol sepeda sangat pucat; beton jalan masuk berwarna abu-abu terang mirip rumah bukan pelanggan dari jauh (kecil kemungkinan tertukar karena letaknya di trotoar).
+
+**Gerbang** (sesudah commit terakhir, satu proses Godot sekali satu waktu)
+- `godot --headless --import`: 0 ERROR/WARNING. `godot --headless --path . --quit-after 2`: tanpa ERROR/WARNING.
+- `run_tests.gd` + `cek_keluaran_tes.py`: **18073 lolos, 0 gagal, 0 peringatan** (baseline B2 17718; +355: `tes_ubin_5b.gd` 265, `tes_export.gd` 90).
+- Semua `tools/tests_cek/uji_*.py` lolos (pasang_5b 368, lainnya seperti B2).
+- `--export-pack`: 1,66 MB, dimuat dari luar repo (lihat AC-17).
+- `git diff 9b00c0c` kosong untuk `jalan_daur.gd`, `throw_solver.gd`, `zona_sasaran.gd` (dan logika lain yang dilarang; bagian C hanya menambah `UbinKhusus`, `TanahDaur`, `rute.tscn`, `rute_main.gd` satu baris, `config.gd`, tes, dokumen).
+- sha256 `~/Library/Application Support/Godot/app_userdata/Kring Kring!/save.json` sesudah semua tes, probe, mutan, dan ekspor: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` (sama dengan sebelum).
+
+**Mutan C** (satu perubahan, `run_tests.gd` penuh atau `uji_aset_pasang_5b.py` "T5", file dikembalikan `git checkout`; `git status` bersih sesudah semuanya; biner: `godot --headless --import` sebelum dan sesudah)
+
+| ID | File | Perubahan | Gagal | Tes pertama yang gagal |
+|---|---|---|---|---|
+| C-1 | ubin_khusus.gd | baris masuk `floori(maju)` | 5 | baris_masuk(16.6) = 17 |
+| C-2 | ubin_khusus.gd | baris masuk satu baris di belakang (pos - 1) | 36 | baris_masuk(17.0) = 17 |
+| C-3 | ubin_khusus.gd | baris masuk satu baris di depan | 36 | baris_masuk(17.0) = 17 |
+| C-4 | ubin_khusus.gd | trotoar seberang tidak pernah MASUK (kolom salah) | 27 | jenis(x -1.5, baris 17) = MASUK |
+| C-5 | ubin_khusus.gd | rumput_dekat pertama ikut MASUK (sisi salah) | 3 | jenis(x 2.5, baris 17) = BAWAAN |
+| C-6 | ubin_khusus.gd | trotoar dekat ikut MASUK (sisi salah) | 21 | jenis(x 1.5, baris 17) = BAWAAN |
+| C-7 | ubin_khusus.gd | himpunan: jalur dekat ikut dihitung | 2 | mobil sisi dekat tidak punya ubin masuk |
+| C-8 | ubin_khusus.gd | himpunan: bukan hanya mobil garasi (anjing) | 4 | anjing tidak punya ubin masuk |
+| C-9 | ubin_khusus.gd | himpunan: baris 0 selalu masuk (masuk tanpa mobil) | 8 | tanpa objek = tanpa baris masuk |
+| C-10 | ubin_khusus.gd | simbol di baris masuk (trotoar dekat) | 2 | jenis(x 1.5, baris 18, masuk) = BAWAAN |
+| C-11 | ubin_khusus.gd | simbol didahulukan atas masuk (trotoar seberang) | 2 | jenis(x -1.5, baris 18, masuk) = MASUK |
+| C-12 | config.gd | selang simbol 11 | 17 | selang simbol sepeda 12 baris |
+| C-13 | config.gd | geseran simbol 5 | 17 | geseran simbol sepeda 6 baris |
+| C-14 | ubin_khusus.gd | geseran simbol diabaikan | 16 | baris simbol -35 .. 49 |
+| C-15 | ubin_khusus.gd | rumput dekat pertama diganti varian | 3 | jenis(x 2.5, baris 17) = BAWAAN |
+| C-16 | ubin_khusus.gd | rumput seberang pertama diganti varian | 28 | jenis(x -2.5, baris 17) = MASUK |
+| C-17 | config.gd | modulus varian 100 jadi 50 | 13 | modulus 100, 12 persen, 8 persen |
+| C-18 | config.gd | rumput_2 40 persen (proporsi > 25) | 19 | modulus 100, 12 persen, 8 persen; proporsi |
+| C-19 | config.gd | rumput_3 1 persen (proporsi < 5) | 16 | proporsi rumput_3 antara 5 dan 25 persen |
+| C-20 | ubin_khusus.gd | `hash()` bawaan dipakai | 20 | varian_rumput(0, 0) = RUMPUT_2 |
+| C-21 | ubin_khusus.gd | argumen hash tertukar (baris, kolom) | 17 | varian_rumput(-4, 4) = RUMPUT_3 |
+| C-22 | ubin_khusus.gd | FNV `^` jadi `+` | 32 | fnv1a_dua_int(1, 2) = nilai Python |
+| C-23 | ubin_khusus.gd | `int(x)` bukan `floori(x)` (kolom negatif; dijalankan ulang sesudah pola pertama salah) | 16 | kolom luar x -3.5 baris 5 |
+| C-24 | ubin_khusus.gd | variasi di sisi dekat dilepas | 16 | jenis(x 3.5, baris 17) = RUMPUT_3 |
+| C-25 | tanah_daur.gd | kolom trotoar dekat tidak berganti | 10 | tiap sprite = oracle (31 salah) |
+| C-26 | tanah_daur.gd | tidak diterapkan ulang saat jarak berganti | 22 | tiap sprite = oracle (2070 salah) |
+| C-27 | tanah_daur.gd | `_blok` tidak diperbarui | 21 | tiap sprite = oracle |
+| C-28 | tanah_daur.gd | tanda baris mutlak terbalik | 21 | tiap sprite = oracle |
+| C-29 | tanah_daur.gd | baris relatif sprite dari `pusat.y` (tanda salah) | 20 | tiap sprite = oracle |
+| C-30 | tanah_daur.gd | wadah rumput_2 menunjuk wadah rumput_3 | 10 | tiap sprite = oracle |
+| C-31 | tanah_daur.gd | sprite tidak pindah wadah (batch pecah per ubin) | 14 | wadah memuat paling banyak satu tekstur |
+| C-32 | tanah_daur.gd | `atur_baris_masuk` tidak menerapkan ulang | 4 | atur_baris_masuk({}) menghapus ubin masuk |
+| C-33 | tanah_daur.gd | `_draw` dengan `load()` | 1 | TanahDaur tidak memuat tekstur di _draw |
+| C-34 | rute_main.gd | baris masuk tidak diatur dari rute | 20 | scene rute: ubin sesuai oracle |
+| C-35 | jalan_daur.gd | `sel_tanah` bergeser setengah ubin | 36 | jendela pandang tertutup; checksum sel |
+| C-36 | jalan_daur.gd | `kolom_di(0)` jatuh ke seberang | 1 | kolom_di(0.0) = ASPAL_DEKAT |
+| C-37 | rute.tscn | tekstur simbol dekat tidak dipasang (mode khusus mati) | 25 (+1 SCRIPT ERROR) | Tanah memakai mode khusus |
+| C-38 | rute.tscn | rumput_2 dan rumput_3 tertukar di scene | 6 | scene rute: ubin sesuai oracle |
+| C-39 | ubin_perumahan.py | `rumput_dekat_masuk` ikut tersalin (aset tak dipasang) | T5 2 | `--salin` tepat daftar D-1 |
+| C-40 | ubin_perumahan.py | `aspal_2` ikut tersalin | T5 2 | `--salin` tepat daftar D-1 |
+| C-41 | rumput_2.png.import | `compress/mode=1` (bukan Lossless) | RT 2, T5 1 | impor Lossless |
+| C-42 | simbol_seberang.png | satu piksel dalam ubin jadi transparan (celah) | RT 2, T5 2 | nol piksel transparan di 240 viewport |
+| C-43 | rumput_seberang_masuk.png | idem (celah) | RT 2, T5 2 | nol piksel transparan |
+| C-44 | tests/data/ubin_potongan_5b.png | satu piksel referensi diubah | RT 1, T5 1 | susunan = referensi Python |
+| C-45 | rumput_2.png | diganti salinan ubin tepi kerb (pita) | RT 2, T5 4 | warna tepi kerb pada rumput_2 |
+| C-46 | simbol_dekat.png | satu piksel diubah | RT 1, T5 3 | susunan = referensi Python |
+
+46 mutan bagian C, 46 terdeteksi pada percobaan pertama (C-23 dijalankan ulang karena pola mutan pertama tidak cocok, bukan karena hidup), **0 hidup**. Bersama bagian B (66) total 112 mutan nyata di 5B bagian A sampai C selain 26 mutan bagian A, jauh di atas 30 dan mencakup semua butir AC-23.
+
+**Tindakan yang saya lewatkan / catatan**
+- Tidak mencentang `DEV_PHASES.md`, tidak mengedit `CHANGELOG.md` atau `.release-please-manifest.json`, tanpa tag, tanpa push. DATA_SCHEMA 3 dan ROUTE_DESIGN 4b (B2) diperiksa sesuai, tidak diubah.
+- `docs/LOOP-DEV-QA.md` hanya baris 5B di tabel 6g (Bagian 6h tidak disentuh).
+- Keraguan visual yang saya tambahkan: simbol sepeda sangat pucat di x3; ujung kerb jalan masuk (C-F1).
+- Baris Status LOG diperbarui. Tidak ada BLOCKED baru.
 
 ## NEEDS-MANUAL (uji di HP)
 Lihat SPEC bagian NEEDS-MANUAL dan `docs/SETUP_ANDROID.md` 8.13 (ditulis Dev).
