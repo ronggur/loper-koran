@@ -65,7 +65,7 @@ tools/loper_art/       Renderer sprite pemain (Python), lihat ART_DIRECTION bagi
 tools/env_art/         Renderer aset lingkungan, termasuk graybox.py (ada)
 tools/audio_art/       sintesis_sepeda.py, sintesis_lempar.py, sintesis_rute.py, sintesis_misi.py (run 4B): bunyi placeholder dari rumus (stdlib) (ada)
 tools/                 cek_keluaran_tes.py, cek_blok_piksel.py, ekspor_cek_render.py (build probe render), tests_cek/ (uji_pemeriksa, uji_bangun_frames, uji_sintesis_*, uji_aset_kucing) (ada)
-.github/workflows/     tes.yml, CI import dan tes headless (ada)
+.github/workflows/     tes.yml (CI import dan tes headless), build-apk.yml (APK uji), release-please.yml (rilis)
 builds/                APK hasil export, perintah di SETUP_ANDROID.md (di .gitignore, tidak di-commit)
 ```
 

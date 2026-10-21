@@ -104,4 +104,4 @@ godot --headless --path . --export-pack "Android" build/kring-uji.pck   # paket 
 godot --headless --path . --export-debug "Android" builds/kring-kring-debug.apk   # APK debug (export templates 4.7.2 dan Java SDK Path di Editor Settings)
 ```
 
-Export Android dan APK debug (`builds/`): prasyarat mesin, isi preset, pemeriksaan isi APK, pasang ke HP, dan checklist uji ada di [`SETUP_ANDROID.md`](./SETUP_ANDROID.md). CI (`.github/workflows/tes.yml`) menjalankan import, tes, dan pemeriksa keluaran di setiap PR; CI tidak membangun APK.
+Export Android dan APK debug (`builds/`): prasyarat mesin, isi preset, pemeriksaan isi APK, pasang ke HP, dan checklist uji ada di [`SETUP_ANDROID.md`](./SETUP_ANDROID.md). CI (`.github/workflows/tes.yml`) menjalankan import, tes, dan pemeriksa keluaran di setiap PR; `.github/workflows/build-apk.yml` membangun APK uji (debug) di setiap PR dan `release-please.yml` mengurus versi dan Release (SETUP_ANDROID bagian 4b).

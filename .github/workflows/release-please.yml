@@ -1,0 +1,42 @@
+name: release-please
+
+# Menjaga "PR rilis" di main berisi CHANGELOG.md, version.txt, dan kenaikan versi (semver) yang dihitung dari
+# judul PR bergaya Conventional Commits yang sudah di-merge (feat -> minor, fix -> patch, "!" -> minor selama
+# versi masih 0.x; lihat release-please-config.json). Merge PR rilis -> tag + GitHub Release -> build-apk.yml
+# membangun APK uji dan melampirkannya ke Release itu.
+#
+# Syarat: PR di-merge dengan squash dan judulnya Conventional Commits (.cursor/rules/git-workflow.mdc).
+# Setelan repo "Allow GitHub Actions to create and approve pull requests" harus menyala.
+# Build ulang APK untuk rilis yang sudah ada: Actions > build-apk > Run workflow, isi tag (loper-koran-vX.Y.Z).
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  apk:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    uses: ./.github/workflows/build-apk.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag_name }}
+    secrets: inherit
+    permissions:
+      contents: write

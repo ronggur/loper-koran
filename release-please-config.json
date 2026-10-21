@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "f2e5b647ce9ce27073977b76d42e083c578ba134",
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": false,
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "package-name": "loper-koran",
+      "changelog-sections": [
+        { "type": "feat", "section": "Fitur" },
+        { "type": "fix", "section": "Perbaikan" },
+        { "type": "tune", "section": "Balancing" },
+        { "type": "content", "section": "Konten" },
+        { "type": "art", "section": "Aset" },
+        { "type": "perf", "section": "Performa" },
+        { "type": "revert", "section": "Revert" },
+        { "type": "docs", "section": "Dokumentasi" },
+        { "type": "refactor", "section": "Refactor" },
+        { "type": "ci", "section": "CI" },
+        { "type": "chore", "section": "Lain-lain", "hidden": true },
+        { "type": "test", "section": "Tes", "hidden": true },
+        { "type": "build", "section": "Build", "hidden": true }
+      ]
+    }
+  }
+}
