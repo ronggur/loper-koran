@@ -139,6 +139,7 @@ File: `assets/data/routes/<distrik>/<id>.json`, satu file per segmen, **JSON bua
 | `rumah` | Daftar petak rumah: `pos` (ubin dari awal segmen, bilangan bulat), `sisi` (`seberang`/`dekat`), `jenis` (bentuk rumah, daftar di bawah), `pelanggan_boleh` (true/false) |
 | `objek` | Rintangan yang ditandai: `jenis`, `pos`, `jalur` (`seberang`/`dekat`; **tidak pernah `tengah`**), `tanda_ubin` (jarak tanda terlihat sebelum rintangan, paling sedikit 9) |
 | `titik_misi` | Tempat yang boleh dipakai misi: `nama` (mis. `atap`, `balik_pot`), `pos`, `sisi`; harus berdiri di rumah (pos dan sisi sama dengan sebuah rumah) |
+| `dekor` | **Opsional** (run `20261021-fase5b-tembok-dekor`, usulan): hiasan pinggir jalan. Daftar butir `{ "jenis", "pos", "sisi", "varian" }`, keempat field wajib dan tidak ada field lain. Tabel jenis dan aturan di bawah. Berkas tanpa `dekor` tetap sah |
 
 Contoh dari berkas nyata (`assets/data/routes/perumahan/per_tengah_02.json`):
 
@@ -168,6 +169,12 @@ Contoh dari berkas nyata (`assets/data/routes/perumahan/per_tengah_02.json`):
   ],
   "titik_misi": [
     { "nama": "atap", "pos": 6, "sisi": "seberang" }
+  ],
+  "dekor": [
+    { "jenis": "pohon", "pos": 8, "sisi": "dekat", "varian": "glodokan" },
+    { "jenis": "pohon", "pos": 13, "sisi": "seberang", "varian": "rindang" },
+    { "jenis": "tong_sampah", "pos": 21, "sisi": "seberang", "varian": "logam" },
+    { "jenis": "lampu_jalan", "pos": 24, "sisi": "dekat", "varian": "lengan" }
   ]
 }
 ```
@@ -177,8 +184,18 @@ Contoh dari berkas nyata (`assets/data/routes/perumahan/per_tengah_02.json`):
 | Bidang | Nilai | Aset |
 |---|---|---|
 | `rumah.jenis` sisi `seberang` | `limasan`, `pelana`, `sayap` | `assets/sprites/houses/perumahan/house_perumahan_<jenis>_<pelanggan\|bukan>.png` |
-| `rumah.jenis` sisi `dekat` | `dekat_limasan`, `dekat_pelana_lintang`, `dekat_pelana_sejajar` | `house_perumahan_<jenis>_<pelanggan\|bukan>.png` (di distrik perumahan hanya varian `bukan` dipakai; tampilan sisi dekat diputuskan 2026-10-17: tembok/pagar belakang rendah, ROADMAP 4b; field data untuk tembok belum ada) |
+| `rumah.jenis` sisi `dekat` | `dekat_limasan`, `dekat_pelana_lintang`, `dekat_pelana_sejajar` | `house_perumahan_<jenis>_<pelanggan\|bukan>.png` (di distrik perumahan hanya varian `bukan` dipakai; tampilan sisi dekat diputuskan 2026-10-17: tembok/pagar belakang rendah, ROADMAP 4b; tembok belakang rendah digambar otomatis per rumah dekat, tanpa field data, run `20261021-fase5b-tembok-dekor`) |
 | `objek.jenis` | `anjing_penjaga`, `mobil_garasi` | `assets/sprites/obstacles/obs_anjing_sheet`, `obs_mobil_garasi_sheet` (perilaku di Run 3B; di 3A hanya tempatnya yang ditandai) |
+| `dekor.jenis` dan `dekor.varian` | `tong_sampah` (`logam`), `pohon` (`rindang`, `glodokan`, `ketapang`), `lampu_jalan` (`lengan`) | `assets/sprites/props/prop_tong_sampah_logam`, `prop_pohon_<varian>`, `prop_lampu_lengan_<seberang\|dekat>` (lengan lampu menghadap jalan; sprite menurut `sisi`); varian lain (tong biru, pohon dan lampu jenis lain, lampu nyala) tidak dipasang dan ditolak |
+
+**Dekor** (run `20261021-fase5b-tembok-dekor` bagian B2, usulan; `SegmenRute`, `DekorRute`, `RouteBuilder`, `DekorDaur`): hiasan pinggir jalan, hanya tampilan. Bukan penghalang gerak, tidak masuk tabrakan, rintangan, zona, penilaian lemparan, `MedanKoran`, skor, atau tenggat; satu-satunya hubungannya dengan permainan adalah pohon dan lampu menjadi semi-transparan (`RUTE_PENUTUP_ALFA`) bila menutupi pemain di trotoar dekat (aturan `PenutupPemain`, tong sampah tidak). `pos` = ubin bilangan bulat dari awal segmen, `1` sampai `panjang - 1`. Lateral dan tapak kaki ditentukan jenis dan sisi lewat `Config.RUTE_DEKOR_*` (tidak ada di data): pohon dan tong sampah di halaman, lateral 2,5 di sisinya (tapak 0,5 × 0,5), lampu jalan di luar tepi trotoar, lateral 2,25 (tapak 0,25 × 0,25). Dekor digambar di maju = `pos`; id dekor di rute `<id_segmen>:<sisi>@<pos>`. Aturan penempatan (ditolak bila dilanggar):
+
+- tapak kaki tidak menimpa lajur sepeda (`|lateral|` kurang dari 2,0 termasuk tapak kaki);
+- tidak menimpa zona teras atau kotak surat rumah **mana pun** di segmen itu (kedua sisi, `ZonaSasaran.zona_rumah`), atau tapak rumah (`PenutupPemain.tapak_rumah`);
+- tidak menimpa tapak rintangan: seluruh lintasan mobil garasi dan posisi diam anjing (`SegmenRute.bentuk_rintangan_diam`, fungsi yang sama dengan aturan rintangan memotong rumah);
+- dua dekor sesisi tidak lebih dekat dari 1 ubin (di rute utuh juga, sambungan segmen terjaga oleh batas `pos`).
+
+Akibat langsung geometri rumah (petak 4 ubin, rumah 3 ubin): dekor di halaman rumah sisi yang sama hanya muat di celah satu ubin di antara tapak rumah, yaitu `pos` rumah + 3 untuk rumah di `pos` (mis. rumah seberang di 6 dan 10 memberi celah di 9). Tong sampah ditaruh di celah sesudah rumah (dekat kotak surat dan gerbang), pohon di halaman (celah atau kavling kosong), lampu di tepi trotoar. Konvensi isi set perumahan (dijaga tes, bukan validasi): tiap berkas 2 sampai 8 butir, paling banyak satu butir per 4 ubin per sisi, tidak di `pos` kurang dari 2 atau lebih dari `panjang` - 2; seluruh set sedikitnya 3 tong sampah, 6 pohon (ketiga varian di kedua sisi), dan 6 lampu jalan (kedua sisi). Penempatan diperiksa lagi dengan pengukur piksel: sprite dekor tidak menimpa badan kotak surat atau zona kotak surat dan teras rumah seberang yang `pelanggan_boleh` (0%, `tests/ukur_dekor.gd`).
 
 **Id rumah** di rute = `<id_segmen>@<pos>` (mis. `per_tengah_02@18`). Satu `pos` hanya boleh dipakai satu rumah per segmen (kedua sisi), supaya id unik tanpa sisi. Ini id sementara untuk rute dan penilaian zona; pemetaan ke id rumah tetap di save (`per_r014`, bagian 4) ditunda ke Fase 6 (bagian 5).
 
@@ -186,7 +203,7 @@ Contoh dari berkas nyata (`assets/data/routes/perumahan/per_tengah_02.json`):
 
 **Rumah mana yang jadi pelanggan** ditentukan saat rute disusun (seed rute, `RouteBuilder`), bukan di segmen. Segmen hanya menyatakan rumah mana yang **boleh** jadi pelanggan. Distrik pertama: `pelanggan_boleh: true` hanya di sisi `seberang` (GDD 9.1).
 
-**Validasi** (`SegmenRute.parse`, `PemuatRute.periksa_kumpulan`; dijalankan tes pada semua berkas nyata): field wajib ada dan bertipe benar, field tidak dikenal ditolak, sisi hanya `seberang` atau `dekat`, id unik dan sama dengan nama berkas, panjang 24 sampai 40, tepi 2 ubin kosong, pelanggan hanya di seberang, rintangan tidak di jalur `tengah` (jalur utama bersih), tanda rintangan paling sedikit 9 ubin (1,5 detik pada ngebut), dalam jendela 6 ubin maksimal satu rintangan, rintangan tidak memotong tapak rumah mana pun di segmen (mobil garasi seluruh lintasannya, jadi parkir di celah samping rumah: `pos` rumah sesisi − 1; anjing di posisi diamnya; tepi bersentuhan boleh; ROUTE_DESIGN 4 aturan 7, usulan), titik misi di rumah dan di luar jendela rintangan, sekurangnya 2 segmen `pembuka`, 2 `penutup`, dan 5 `tengah` per distrik (satu rute memakai 7 segmen).
+**Validasi** (`SegmenRute.parse`, `PemuatRute.periksa_kumpulan`; dijalankan tes pada semua berkas nyata): field wajib ada dan bertipe benar, field tidak dikenal ditolak, sisi hanya `seberang` atau `dekat`, id unik dan sama dengan nama berkas, panjang 24 sampai 40, tepi 2 ubin kosong, pelanggan hanya di seberang, rintangan tidak di jalur `tengah` (jalur utama bersih), tanda rintangan paling sedikit 9 ubin (1,5 detik pada ngebut), dalam jendela 6 ubin maksimal satu rintangan, rintangan tidak memotong tapak rumah mana pun di segmen (mobil garasi seluruh lintasannya, jadi parkir di celah samping rumah: `pos` rumah sesisi − 1; anjing di posisi diamnya; tepi bersentuhan boleh; ROUTE_DESIGN 4 aturan 7, usulan), titik misi di rumah dan di luar jendela rintangan, dekor (bila ada): keempat field wajib dan tanpa field lain, `jenis`, `sisi`, dan `varian` dari tabel, `pos` bilangan bulat `1` sampai `panjang - 1`, aturan penempatan di atas, sekurangnya 2 segmen `pembuka`, 2 `penutup`, dan 5 `tengah` per distrik (satu rute memakai 7 segmen).
 
 ## 4. Save
 

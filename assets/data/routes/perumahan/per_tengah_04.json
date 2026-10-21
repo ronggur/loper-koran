@@ -24,5 +24,11 @@
     { "jenis": "mobil_garasi", "pos": 17, "jalur": "seberang", "tanda_ubin": 9 },
     { "jenis": "anjing_penjaga", "pos": 28, "jalur": "dekat", "tanda_ubin": 9 }
   ],
-  "titik_misi": []
+  "titik_misi": [],
+  "dekor": [
+    { "jenis": "pohon", "pos": 9, "sisi": "dekat", "varian": "rindang" },
+    { "jenis": "pohon", "pos": 13, "sisi": "seberang", "varian": "ketapang" },
+    { "jenis": "tong_sampah", "pos": 25, "sisi": "seberang", "varian": "logam" },
+    { "jenis": "lampu_jalan", "pos": 27, "sisi": "dekat", "varian": "lengan" }
+  ]
 }

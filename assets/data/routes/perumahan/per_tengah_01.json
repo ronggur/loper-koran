@@ -24,5 +24,11 @@
   ],
   "titik_misi": [
     { "nama": "balik_pot", "pos": 14, "sisi": "seberang" }
+  ],
+  "dekor": [
+    { "jenis": "pohon", "pos": 9, "sisi": "seberang", "varian": "ketapang" },
+    { "jenis": "lampu_jalan", "pos": 17, "sisi": "seberang", "varian": "lengan" },
+    { "jenis": "pohon", "pos": 19, "sisi": "dekat", "varian": "rindang" },
+    { "jenis": "tong_sampah", "pos": 29, "sisi": "seberang", "varian": "logam" }
   ]
 }
