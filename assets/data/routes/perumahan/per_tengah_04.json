@@ -28,7 +28,7 @@
   "dekor": [
     { "jenis": "pohon", "pos": 9, "sisi": "dekat", "varian": "rindang" },
     { "jenis": "pohon", "pos": 13, "sisi": "seberang", "varian": "ketapang" },
-    { "jenis": "tong_sampah", "pos": 25, "sisi": "seberang", "varian": "logam" },
-    { "jenis": "lampu_jalan", "pos": 27, "sisi": "dekat", "varian": "lengan" }
+    { "jenis": "lampu_jalan", "pos": 23, "sisi": "dekat", "varian": "lengan" },
+    { "jenis": "tong_sampah", "pos": 25, "sisi": "seberang", "varian": "logam" }
   ]
 }
