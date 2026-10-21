@@ -1,0 +1,15 @@
+{
+ "sprite": "prop_koran_kotak_surat.png",
+ "cell": [
+  8,
+  7
+ ],
+ "frames": 1,
+ "fps": 0,
+ "ground_anchor": [
+  -3,
+  19
+ ],
+ "board": "koran",
+ "note": "Usulan, tools/env_art/gelombang1 (Fase 5 gelombang 1). Frame berjajar kiri ke kanan. Tumpangan di atas kotak surat yang ada: pijak kotak surat = piksel (-3, 19) sel ini, jadi ujung gulungan keluar dari celah sisi kanan."
+}

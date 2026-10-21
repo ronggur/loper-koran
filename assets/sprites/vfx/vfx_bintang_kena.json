@@ -1,0 +1,15 @@
+{
+ "sprite": "vfx_bintang_kena.png",
+ "cell": [
+  15,
+  15
+ ],
+ "frames": 6,
+ "fps": 15,
+ "ground_anchor": [
+  7,
+  7
+ ],
+ "board": "vfx",
+ "note": "Usulan, tools/env_art/gelombang1 (Fase 5 gelombang 1). Frame berjajar kiri ke kanan. Sekali main. Bintang 4 sudut + 4 sinar pendek berputar 90 derajat lalu pecah jadi serpih."
+}

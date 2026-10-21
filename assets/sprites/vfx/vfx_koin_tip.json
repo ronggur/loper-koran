@@ -1,0 +1,15 @@
+{
+ "sprite": "vfx_koin_tip.png",
+ "cell": [
+  16,
+  26
+ ],
+ "frames": 6,
+ "fps": 10,
+ "ground_anchor": [
+  8,
+  24
+ ],
+ "board": "vfx",
+ "note": "Usulan, tools/env_art/gelombang1 (Fase 5 gelombang 1). Frame berjajar kiri ke kanan. Sekali main. Koin naik 16 px sambil berputar (lebar 6/4/2), lalu \"+5\" tinggal sendiri."
+}

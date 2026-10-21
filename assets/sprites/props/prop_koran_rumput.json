@@ -1,0 +1,15 @@
+{
+ "sprite": "prop_koran_rumput.png",
+ "cell": [
+  12,
+  10
+ ],
+ "frames": 1,
+ "fps": 0,
+ "ground_anchor": [
+  6,
+  6
+ ],
+ "board": "koran",
+ "note": "Usulan, tools/env_art/gelombang1 (Fase 5 gelombang 1). Frame berjajar kiri ke kanan. Gulungan sama, kakinya tertutup dua jumput rumput."
+}

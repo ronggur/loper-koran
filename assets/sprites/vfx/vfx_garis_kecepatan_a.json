@@ -1,0 +1,15 @@
+{
+ "sprite": "vfx_garis_kecepatan_a.png",
+ "cell": [
+  28,
+  14
+ ],
+ "frames": 1,
+ "fps": 0,
+ "ground_anchor": [
+  27,
+  7
+ ],
+ "board": "vfx",
+ "note": "Usulan, tools/env_art/gelombang1 (Fase 5 gelombang 1). Frame berjajar kiri ke kanan. Putih alfa 70 persen, anak tangga 2x1. Tanpa garis luar. Diacak tiap 2-3 frame saat ngebut."
+}

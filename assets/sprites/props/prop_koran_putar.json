@@ -1,0 +1,15 @@
+{
+ "sprite": "prop_koran_putar.png",
+ "cell": [
+  10,
+  10
+ ],
+ "frames": 4,
+ "fps": 12,
+ "ground_anchor": [
+  5,
+  5
+ ],
+ "board": "koran",
+ "note": "Usulan, tools/env_art/gelombang1 (Fase 5 gelombang 1). Frame berjajar kiri ke kanan. Berputar maju: mendatar, serong naik, tegak, serong turun. Pijak = pusat putar; tinggi diatur kode, bayangan terpisah."
+}

@@ -3,8 +3,13 @@
 Dari root repo (butuh numpy dan pillow, seperti tools/env_art):
     python3 tools/env_art/gelombang1/render.py            # ke build/env_art/gelombang1/{sprites,board}/
     python3 tools/env_art/gelombang1/render.py --mock     # juga salin mock terpilih ke docs/design/environment/gelombang1/
+    python3 tools/env_art/gelombang1/render.py --salin    # juga salin HANYA sprite yang dipasang (PASANG) ke assets/sprites/{props,vfx}/
 Keluaran bisa dipindah dengan ENV_ART_OUT (folder induk, sama dengan renderer env_art lain). Hasil deterministik.
-Sprite TIDAK disalin ke assets/: pemasangan di rute adalah run berikutnya (docs/design/PROMPT_FASE5.md).
+`--salin` (run fase5a-pasang-aset-gelombang1, D-1): 13 sprite (PNG + JSON) dipasang di rute: koran ke props/, VFX sepeda, bintang, koin,
+dan kilau misi ke vfx/. Aset lain (tong sampah, jejak, mangkuk, portal, pos, tembok, percikan, ubin) TIDAK disalin; ubin jalan disalin
+`tools/env_art/ubin_perumahan.py --salin`. `ENV_ART_MOCK_KE` mengganti folder mock `--mock`. `ENV_ART_SALIN_KE` mengganti folder induk tujuan (default assets/sprites; dipakai
+tools/tests_cek/uji_aset_pasang_gelombang1.py). Tiga penyesuaian K-1 (2026-10-21): kilau dua warna, tong sampah logam dan biru
+(hijau dibuang), polisi tidur kuning-hitam lama dibuang dari ubin_perumahan.py.
 """
 import json
 import os
@@ -27,9 +32,18 @@ import sumber
 OUTDIR = Path(os.environ.get('ENV_ART_OUT', sumber.ROOT / 'build' / 'env_art')) / 'gelombang1'
 SPR = str(OUTDIR / 'sprites')
 BRD = str(OUTDIR / 'board')
-MOCK = sumber.ROOT / 'docs' / 'design' / 'environment' / 'gelombang1'
+MOCK = Path(os.environ.get('ENV_ART_MOCK_KE', sumber.ROOT / 'docs' / 'design' / 'environment' / 'gelombang1'))
 os.makedirs(SPR, exist_ok=True)
 os.makedirs(BRD, exist_ok=True)
+
+SALIN_KE = Path(os.environ.get('ENV_ART_SALIN_KE', sumber.ROOT / 'assets' / 'sprites'))
+# Hanya yang dipasang di rute (D-1): folder tujuan -> nama sprite (tanpa ekstensi).
+PASANG = {
+    'props': ['prop_koran_putar', 'prop_koran_bayangan', 'prop_koran_teras', 'prop_koran_rumput', 'prop_koran_kotak_surat',
+              'prop_koran_terlipat'],
+    'vfx': ['vfx_debu_roda', 'vfx_garis_kecepatan_a', 'vfx_garis_kecepatan_b', 'vfx_garis_kecepatan_c', 'vfx_bintang_kena',
+            'vfx_koin_tip', 'mission_kilau'],
+}
 
 PANEL = (0x34, 0x27, 0x1F, 255)
 CELL_LINE = (0x5A, 0x46, 0x3A, 255)
@@ -67,10 +81,10 @@ add('vfx', 'vfx_koin_tip', V.koin_tip(), 10, (8, 24),
 add('vfx', 'vfx_percikan_genangan', V.percikan(), 12, (12, 12),
     'M3. Sekali main. Mahkota air, tetes jatuh, cincin melebar lalu putus-putus.')
 
-add('properti', 'prop_tong_sampah_hijau', [PR.tong_sampah('hijau')], 0, (10, 25),
-    'Tong plastik bulat bertutup, tapak r 7 unit.')
+add('properti', 'prop_tong_sampah_logam', [PR.tong_sampah('logam')], 0, (10, 25),
+    'Tong bulat bertutup abu-abu logam (K-1: hijau dibuang), tapak r 7 unit.')
 add('properti', 'prop_tong_sampah_biru', [PR.tong_sampah('biru')], 0, (10, 25),
-    'Palette swap dari versi hijau.')
+    'Palette swap dari versi logam. Biru tidak bentrok token semantik DESIGN_SPEC 1.1.')
 add('properti', 'mission_jejak_kucing_1', [PR.jejak_kucing(1)], 0, (2, 18),
     'Lurus sepanjang jalan, naik ke kanan atas. Decal tanah tanpa garis luar.')
 add('properti', 'mission_jejak_kucing_2', [PR.jejak_kucing(2)], 0, (2, 18),
@@ -223,4 +237,14 @@ if '--mock' in sys.argv:
             paste(kanvas, a, 12, y)
             y += a.shape[0] + 12
         Image.fromarray(kanvas, 'RGBA').save(MOCK / ('lembar_%s_x5.png' % papan))
+if '--salin' in sys.argv:
+    ada = {e['name'] for e in S}
+    for folder, nama in PASANG.items():
+        tujuan = SALIN_KE / folder
+        tujuan.mkdir(parents=True, exist_ok=True)
+        for n in nama:
+            assert n in ada, n
+            for ekstensi in ('.png', '.json'):
+                shutil.copyfile(os.path.join(SPR, n + ekstensi), tujuan / (n + ekstensi))
+    print('disalin ke', SALIN_KE, '(hanya', sum(len(v) for v in PASANG.values()), 'sprite)')
 print(len(S), 'sprite ->', OUTDIR)
