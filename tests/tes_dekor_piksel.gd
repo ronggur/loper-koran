@@ -13,7 +13,7 @@ const FOLDER_RUTE: String = "res://assets/data/routes/perumahan"
 const SEED_DEV: int = 20261016
 ## Sprite sisi dekat yang menutupi: [jenis, varian, tinggi piksel opak di atas pijak (dihitung dari PNG dengan skrip lain), tinggi ubin literal, setengah tapak penutup literal].
 const DEKAT_ORACLE: Array = [
-	["pohon", "rindang", 44, 1.375, 0.875], ["pohon", "glodokan", 63, 1.96875, 0.625], ["pohon", "ketapang", 53, 1.65625, 0.75], ["lampu_jalan", "lengan", 64, 2.0, 0.75],
+	["pohon", "rindang", 44, 1.375, 0.875], ["pohon", "glodokan", 63, 1.96875, 0.625], ["pohon", "ketapang", 53, 1.65625, 0.75], ["lampu_jalan", "lengan", 64, 2.0, 0.75], ["tong_sampah", "logam", 24, 0.75, 0.625],
 ]
 
 ## Sprite sisi seberang (tidak menutupi): [jenis, varian].
@@ -39,7 +39,7 @@ func jalankan() -> void:
 	_test_pemain_tidak_hilang_sprite()
 	_test_pemain_tidak_hilang_data_nyata()
 	_test_model_lama_gagal()
-	_test_tong_dekat_batas_diketahui()
+	_test_tong_dekat_kontrol_lama()
 	_test_seberang_tidak_menutupi()
 	_test_rintangan_terlihat()
 	_test_rintangan_kontrol()
@@ -49,8 +49,8 @@ func jalankan() -> void:
 
 func _test_tabel_penutup() -> void:
 	_judul.call("Kotak penutup dekor: tinggi = piksel opak sprite di atas pijak / 32, tapak penutup literal, hanya sisi dekat menutupi (P-6)")
-	check(Config.RUTE_DEKOR_TINGGI_PENUTUP_UBIN == ([0.0, 1.375, 1.96875, 1.65625, 1.8125, 2.0] as Array[float]), "tinggi penutup per sprite (tong, rindang, glodokan, ketapang, lampu seberang, lampu dekat) = literal")
-	check(Config.RUTE_DEKOR_SETENGAH_PENUTUP_UBIN == ([0.0, 0.875, 0.625, 0.75, 0.75, 0.75] as Array[float]), "setengah tapak penutup per sprite = literal")
+	check(Config.RUTE_DEKOR_TINGGI_PENUTUP_UBIN == ([0.75, 1.375, 1.96875, 1.65625, 1.8125, 2.0] as Array[float]), "tinggi penutup per sprite (tong, rindang, glodokan, ketapang, lampu seberang, lampu dekat) = literal")
+	check(Config.RUTE_DEKOR_SETENGAH_PENUTUP_UBIN == ([0.625, 0.875, 0.625, 0.75, 0.75, 0.75] as Array[float]), "setengah tapak penutup per sprite = literal")
 	# Tinggi dari PNG: baris opak paling atas, dihitung di sini dengan cara sendiri.
 	var nama: Array[String] = ["prop_tong_sampah_logam", "prop_pohon_rindang", "prop_pohon_glodokan", "prop_pohon_ketapang", "prop_lampu_lengan_seberang", "prop_lampu_lengan_dekat"]
 	var salah: Array[String] = []
@@ -58,14 +58,12 @@ func _test_tabel_penutup() -> void:
 		var t: UkurPenutupPiksel.Topeng = UkurPenutupPiksel.topeng_prop(nama[i])
 		var tinggi_px: int = -t.batas.position.y
 		var tinggi_ubin: float = float(tinggi_px) / 32.0
-		if i == 0:
-			if Config.RUTE_DEKOR_TINGGI_PENUTUP_UBIN[i] != 0.0:
-				salah.append("tong tidak menutupi")
-		elif tinggi_ubin != Config.RUTE_DEKOR_TINGGI_PENUTUP_UBIN[i]:
+		if tinggi_ubin != Config.RUTE_DEKOR_TINGGI_PENUTUP_UBIN[i]:
 			salah.append("%s: piksel %d / 32 = %s, tabel %s" % [nama[i], tinggi_px, tinggi_ubin, Config.RUTE_DEKOR_TINGGI_PENUTUP_UBIN[i]])
 	check(salah.is_empty(), "tinggi penutup tiap sprite = (baris opak teratas di atas pijak dari PNG) / 32: %s" % [salah])
 	for baris: Array in DEKAT_ORACLE:
-		var t: UkurPenutupPiksel.Topeng = UkurPenutupPiksel.topeng_prop("prop_pohon_" + str(baris[1]) if baris[0] == "pohon" else "prop_lampu_lengan_dekat")
+		var nama_sprite: String = "prop_tong_sampah_logam" if baris[0] == "tong_sampah" else ("prop_pohon_" + str(baris[1]) if baris[0] == "pohon" else "prop_lampu_lengan_dekat")
+		var t: UkurPenutupPiksel.Topeng = UkurPenutupPiksel.topeng_prop(nama_sprite)
 		check(-t.batas.position.y == int(baris[2]) and float(baris[2]) / 32.0 == float(baris[3]), "%s: tinggi piksel opak %d = %s ubin (literal)" % [baris[1], int(baris[2]), baris[3]])
 	# Hanya sisi dekat, hanya pohon dan lampu.
 	for baris: Array in DEKAT_ORACLE:
@@ -73,11 +71,11 @@ func _test_tabel_penutup() -> void:
 		var varian: String = baris[1]
 		check(DekorRute.tinggi_penutup(jenis, varian, LoperAnim.Sisi.DEKAT) == float(baris[3]) and DekorRute.setengah_penutup(jenis, varian, LoperAnim.Sisi.DEKAT) == float(baris[4]), "%s %s sisi dekat: tinggi %s, setengah tapak %s" % [jenis, varian, baris[3], baris[4]])
 		check(DekorRute.tinggi_penutup(jenis, varian, LoperAnim.Sisi.SEBERANG) == 0.0 and not DekorRute.menutupi(jenis, varian, LoperAnim.Sisi.SEBERANG) and DekorRute.menutupi(jenis, varian, LoperAnim.Sisi.DEKAT), "%s %s: sisi seberang tidak pernah menutupi, sisi dekat menutupi" % [jenis, varian])
-	check(DekorRute.tinggi_penutup("tong_sampah", "logam", LoperAnim.Sisi.DEKAT) == 0.0 and not DekorRute.menutupi("tong_sampah", "logam", LoperAnim.Sisi.DEKAT) and not DekorRute.menutupi("tong_sampah", "logam", LoperAnim.Sisi.SEBERANG), "tong sampah tidak menutupi di sisi mana pun")
 	check(DekorRute.tinggi_penutup("kursi", "x", LoperAnim.Sisi.DEKAT) == 0.0 and DekorRute.tinggi_penutup("pohon", "beringin", LoperAnim.Sisi.DEKAT) == 0.0 and DekorRute.tinggi_penutup("pohon", "rindang", LoperAnim.Sisi.TIDAK_ADA) == 0.0, "jenis, varian, atau sisi tidak dikenal: tinggi 0")
 	check(DekorRute.tapak_penutup("pohon", "rindang", LoperAnim.Sisi.DEKAT, 13.0) == Rect2(1.625, 12.125, 1.75, 1.75), "tapak penutup pohon rindang dekat maju 13: pusat (2,5; 13), setengah 0,875 -> (1,625; 12,125) 1,75 x 1,75")
 	check(DekorRute.tapak_penutup("lampu_jalan", "lengan", LoperAnim.Sisi.DEKAT, 21.0) == Rect2(1.5, 20.25, 1.5, 1.5), "tapak penutup lampu dekat maju 21: pusat (2,25; 21), setengah 0,75 -> (1,5; 20,25) 1,5 x 1,5")
-	check(DekorRute.tapak_penutup("pohon", "rindang", LoperAnim.Sisi.SEBERANG, 13.0) == Rect2() and DekorRute.tapak_penutup("tong_sampah", "logam", LoperAnim.Sisi.DEKAT, 13.0) == Rect2(), "seberang dan tong: tapak penutup kosong")
+	check(DekorRute.tapak_penutup("pohon", "rindang", LoperAnim.Sisi.SEBERANG, 13.0) == Rect2() and DekorRute.tapak_penutup("tong_sampah", "logam", LoperAnim.Sisi.SEBERANG, 13.0) == Rect2(), "seberang (pohon dan tong): tapak penutup kosong")
+	check(DekorRute.tapak_penutup("tong_sampah", "logam", LoperAnim.Sisi.DEKAT, 15.0) == Rect2(1.875, 14.375, 1.25, 1.25), "tapak penutup tong dekat maju 15: pusat (2,5; 15), setengah 0,625 -> (1,875; 14,375) 1,25 x 1,25 (P-7)")
 	# Tapak kaki (validasi tempat) tidak berubah oleh kotak penutup.
 	check(DekorRute.tapak("pohon", LoperAnim.Sisi.DEKAT, 13.0) == Rect2(2.25, 12.75, 0.5, 0.5), "tapak kaki pohon dekat (validasi tempat) tetap 0,5 x 0,5")
 
@@ -108,8 +106,6 @@ func _test_pemain_tidak_hilang_data_nyata() -> void:
 	for segmen: SegmenRute in pustaka:
 		for butir: SegmenRute.Dekor in segmen.dekor:
 			jumlah_dekor += 1
-			if butir.jenis == "tong_sampah" and butir.sisi == LoperAnim.Sisi.DEKAT:
-				continue
 			if butir.sisi == LoperAnim.Sisi.DEKAT:
 				dekat += 1
 			var d: RouteBuilder.DekorItem = UkurPenutupPiksel.dekor_buatan(butir.jenis, butir.varian, butir.sisi, float(butir.pos))
@@ -117,7 +113,7 @@ func _test_pemain_tidak_hilang_data_nyata() -> void:
 			diperiksa += int(h["diperiksa"])
 			if not (h["tak_tertutup"] as Array).is_empty():
 				buruk.append("%s %s@%d: %d" % [segmen.id, butir.jenis, butir.pos, (h["tak_tertutup"] as Array).size()])
-	check(jumlah_dekor == 38 and dekat >= 8 and diperiksa > 10000 and buruk.is_empty(), "%d dekor di sembilan segmen (%d pohon/lampu sisi dekat; tong sampah dekat lihat batas yang diketahui), %d posisi pemain: 0 tertimpa opak tanpa kotak penutup: %s" % [jumlah_dekor, dekat, diperiksa, buruk.slice(0, 3)])
+	check(jumlah_dekor == 38 and dekat >= 8 and diperiksa > 10000 and buruk.is_empty(), "%d dekor di sembilan segmen (%d pohon/lampu sisi dekat), %d posisi pemain: 0 tertimpa opak tanpa kotak penutup: %s" % [jumlah_dekor, dekat, diperiksa, buruk.slice(0, 3)])
 	# 60 rute: tiap kombinasi (jenis, varian, sisi) yang muncul ada di sapuan per sprite; rute hanya menggeser dekor kelipatan satu ubin (bilangan bulat, jadi posisi relatif tetap).
 	var dikenal: Dictionary = {}
 	for baris: Array in DEKAT_ORACLE:
@@ -157,18 +153,25 @@ func _test_model_lama_gagal() -> void:
 	check((h2["tak_tertutup"] as Array).size() >= 20, "glodokan dengan tinggi sprite (1,97) tetapi tapak kaki: masih %d posisi tertimpa opak (tapak penutup harus selebar tajuk)" % (h2["tak_tertutup"] as Array).size())
 
 
-# --- Tong sampah dekat: batas yang diketahui ---
+# --- Tong sampah dekat (P-7) ---
 
-## Tong sampah sisi dekat (tinggi 24 piksel = 0,75 ubin) tidak didaftarkan ke penerap penutup (putusan P-6), jadi ia boleh menimpa pemain dengan piksel opak. Batasnya dikunci di sini supaya tidak berubah diam-diam:
-## hanya di trotoar dekat (lateral 1,375 sampai 2,0), tidak pernah di aspal (|lateral| <= 1,0), dan di bawah 300 piksel. Keputusan mendaftarkannya ke penerap ada di orchestrator (LOG iterasi 2).
-func _test_tong_dekat_batas_diketahui() -> void:
-	_judul.call("Tong sampah sisi dekat: menimpa pemain hanya di trotoar dekat (lateral >= 1,375), tidak pernah di aspal; batas yang diketahui (P-6, LOG iterasi 2)")
+## Kontrol P-7: tong sampah sisi dekat TANPA kotak penutup (aturan lama) menimpa pemain dengan piksel opak di trotoar dekat (lateral 1,375 sampai 2,0, sampai 296 piksel), tidak pernah di aspal.
+## Dengan kotak sprite nyata (tinggi 0,75, setengah tapak 0,625) tidak ada posisi tertimpa tanpa tertutup (diuji di sapuan per sprite).
+func _test_tong_dekat_kontrol_lama() -> void:
+	_judul.call("Kontrol P-7: tong sampah sisi dekat tanpa kotak penutup menimpa pemain di trotoar dekat (lateral >= 1,375), sapuan mampu mendeteksi")
 	var d: RouteBuilder.DekorItem = UkurPenutupPiksel.dekor_buatan("tong_sampah", "logam", LoperAnim.Sisi.DEKAT, 20.0)
-	var h: Dictionary = UkurPenutupPiksel.sapu_pemain(d, 0.125, 1.0 / 32.0, 4.0)
+	var tanpa: PenutupPemain.Objek = PenutupPemain.buat(Rect2(), 0.0, "tanpa_kotak")
+	var h: Dictionary = UkurPenutupPiksel.sapu_pemain(d, 0.125, 1.0 / 32.0, 4.0, tanpa)
 	var lateral_min: float = 99.0
 	for v: Vector3 in h["tak_tertutup"]:
 		lateral_min = minf(lateral_min, v.x)
-	check(int(h["tumpang"]) == (h["tak_tertutup"] as Array).size() and int(h["tumpang"]) > 0 and lateral_min >= 1.375 and int(h["piksel_maks"]) <= 300, "tong sampah dekat: %d posisi menimpa pemain, semuanya tak tertutup (tong tidak menutupi), lateral terkecil %s (>= 1,375: aspal bersih), terburuk %d piksel (<= 300)" % [int(h["tumpang"]), lateral_min, int(h["piksel_maks"])])
+	check((h["tak_tertutup"] as Array).size() >= 150 and lateral_min >= 1.375 and int(h["piksel_maks"]) >= 200, "tong dekat tanpa kotak: %d posisi menimpa pemain, lateral terkecil %s, terburuk %d piksel" % [(h["tak_tertutup"] as Array).size(), lateral_min, int(h["piksel_maks"])])
+	var kotak_kecil: PenutupPemain.Objek = PenutupPemain.buat(Rect2(1.875, 19.375, 1.25, 1.25), 0.75 / 2.0, "tinggi_kecil")
+	var h2: Dictionary = UkurPenutupPiksel.sapu_pemain(d, 0.125, 1.0 / 32.0, 4.0, kotak_kecil)
+	check((h2["tak_tertutup"] as Array).size() >= 10, "tong dekat dengan tinggi kotak separuh: masih %d posisi tertimpa (tinggi harus tinggi sprite)" % (h2["tak_tertutup"] as Array).size())
+	var kotak_sempit: PenutupPemain.Objek = PenutupPemain.buat(Rect2(2.25, 19.75, 0.5, 0.5), 0.75, "tapak_kaki")
+	var h3: Dictionary = UkurPenutupPiksel.sapu_pemain(d, 0.125, 1.0 / 32.0, 4.0, kotak_sempit)
+	check((h3["tak_tertutup"] as Array).size() >= 50, "tong dekat dengan tapak kaki sebagai kotak: masih %d posisi tertimpa (tapak harus lebih lebar)" % (h3["tak_tertutup"] as Array).size())
 
 
 # --- Seberang ---

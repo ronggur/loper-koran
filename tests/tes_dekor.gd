@@ -86,8 +86,8 @@ func _test_tabel_dan_geometri() -> void:
 	check(DekorRute.tapak("lampu_jalan", LoperAnim.Sisi.DEKAT, 21.0) == Rect2(2.125, 20.875, 0.25, 0.25), "tapak lampu dekat di maju 21: (2,125; 20,875) 0,25 x 0,25")
 	check(DekorRute.tapak("tong_sampah", LoperAnim.Sisi.DEKAT, 15.0) == Rect2(2.25, 14.75, 0.5, 0.5), "tapak tong sampah dekat di maju 15: (2,25; 14,75) 0,5 x 0,5")
 	check(DekorRute.tapak("pohon", LoperAnim.Sisi.TIDAK_ADA, 5.0) == Rect2() and DekorRute.tapak("kursi", LoperAnim.Sisi.DEKAT, 5.0) == Rect2(), "jenis atau sisi tidak dikenal: persegi kosong")
-	check(DekorRute.tinggi_penutup("tong_sampah", "logam", LoperAnim.Sisi.DEKAT) == 0.0 and DekorRute.tinggi_penutup("pohon", "glodokan", LoperAnim.Sisi.DEKAT) == 1.96875 and DekorRute.tinggi_penutup("lampu_jalan", "lengan", LoperAnim.Sisi.DEKAT) == 2.0 and DekorRute.tinggi_penutup("kursi", "x", LoperAnim.Sisi.DEKAT) == 0.0, "tinggi penutup sisi dekat: tong 0, pohon glodokan 1,96875, lampu 2,0 (tinggi sprite nyata)")
-	check(not DekorRute.menutupi("tong_sampah", "logam", LoperAnim.Sisi.DEKAT) and DekorRute.menutupi("pohon", "rindang", LoperAnim.Sisi.DEKAT) and DekorRute.menutupi("lampu_jalan", "lengan", LoperAnim.Sisi.DEKAT) and not DekorRute.menutupi("pohon", "rindang", LoperAnim.Sisi.SEBERANG), "hanya pohon dan lampu sisi dekat menutupi (didaftarkan penerap); tong sampah dan sisi seberang tidak")
+	check(DekorRute.tinggi_penutup("tong_sampah", "logam", LoperAnim.Sisi.DEKAT) == 0.75 and DekorRute.tinggi_penutup("tong_sampah", "logam", LoperAnim.Sisi.SEBERANG) == 0.0 and DekorRute.tinggi_penutup("pohon", "glodokan", LoperAnim.Sisi.DEKAT) == 1.96875 and DekorRute.tinggi_penutup("lampu_jalan", "lengan", LoperAnim.Sisi.DEKAT) == 2.0 and DekorRute.tinggi_penutup("kursi", "x", LoperAnim.Sisi.DEKAT) == 0.0, "tinggi penutup sisi dekat: tong 0,75 (seberang 0), pohon glodokan 1,96875, lampu 2,0 (tinggi sprite nyata)")
+	check(DekorRute.menutupi("tong_sampah", "logam", LoperAnim.Sisi.DEKAT) and not DekorRute.menutupi("tong_sampah", "logam", LoperAnim.Sisi.SEBERANG) and DekorRute.menutupi("pohon", "rindang", LoperAnim.Sisi.DEKAT) and DekorRute.menutupi("lampu_jalan", "lengan", LoperAnim.Sisi.DEKAT) and not DekorRute.menutupi("pohon", "rindang", LoperAnim.Sisi.SEBERANG), "semua dekor sisi dekat (pohon, lampu, tong sampah, P-7) menutupi dan didaftarkan penerap; sisi seberang tidak")
 	check(DekorRute.titik_dunia("pohon", LoperAnim.Sisi.DEKAT, 13.0) == Vector2(2.5, -13.0), "titik dunia pohon dekat di maju 13 = (2,5; -13) (y dunia = -maju)")
 	var nama: Dictionary = {
 		["tong_sampah", "logam", 1]: "prop_tong_sampah_logam", ["tong_sampah", "logam", 2]: "prop_tong_sampah_logam",
@@ -454,7 +454,10 @@ func _test_penutup_murni() -> void:
 				tertutup_seberang += 1
 	check(tertutup_seberang == 0, "pohon dan lampu seberang tidak pernah menutupi pemain di lateral -2,0 sampai 2,0: %d titik" % tertutup_seberang)
 	# Tong sampah: tinggi 0 di kedua sisi.
-	check(PenutupPemain.dari_dekor(_item("tong_sampah", LoperAnim.Sisi.DEKAT, 13.0)).tinggi_ubin == 0.0, "tong sampah tidak punya kotak penutup bertinggi")
+	var tong: PenutupPemain.Objek = PenutupPemain.dari_dekor(_item("tong_sampah", LoperAnim.Sisi.DEKAT, 13.0))
+	check(tong.tapak == Rect2(1.875, 12.375, 1.25, 1.25) and tong.tinggi_ubin == 0.75, "kotak penutup tong sampah dekat maju 13 = tapak (1,875; 12,375) 1,25 x 1,25, tinggi 0,75 (P-7)")
+	check(PenutupPemain.menutupi(Vector2(2.0, -13.0), tong) and PenutupPemain.menutupi(Vector2(1.5, -13.2), tong) and not PenutupPemain.menutupi(Vector2(0.5, -13.0), tong) and not PenutupPemain.menutupi(Vector2(2.0, -15.0), tong), "tong dekat menutupi pemain di trotoar (2,0; 13,0) dan (1,5; 13,2), tidak di (0,5; 13,0) dan tidak jauh di depan (2,0; 15,0)")
+	check(PenutupPemain.dari_dekor(_item("tong_sampah", LoperAnim.Sisi.SEBERANG, 13.0)).tinggi_ubin == 0.0, "tong sampah seberang tidak punya kotak penutup bertinggi")
 
 
 func _item(jenis: String, sisi: LoperAnim.Sisi, maju: float) -> RouteBuilder.DekorItem:
@@ -758,7 +761,7 @@ func _test_scene_dekor() -> void:
 	for i: int in dekor.indeks_tampil():
 		tegak_dekor_ada = tegak_dekor_ada or dekor.sprite_dekor(i).position.y != 0.0
 	check(tegak_dekor_ada and daur.jumlah_rumah() > 5, "dekor dan rumah anak induk Y-sort yang sama, urutan dari posisi tegak titik pijak")
-	# Tong sampah tidak didaftarkan ke penerap; alfa selalu 1,0.
+	# Tong sampah sisi seberang tidak didaftarkan ke penerap (alfa selalu 1,0); tong sisi dekat didaftarkan (P-7, alfanya 0,45 hanya bila menutupi pemain, lihat `_test_penutup_scene`).
 	var penerap: PenerapPenutup = akar.penerap_penutup()
 	var tong_tampil: int = 0
 	var alfa_tong_salah: int = 0
@@ -766,13 +769,13 @@ func _test_scene_dekor() -> void:
 		for lateral: float in [-2.0, 0.0, 2.0]:
 			_taruh_sepeda(akar, jarak, lateral)
 			for i: int in dekor.indeks_tampil():
-				if rute.dekor[i].jenis == "tong_sampah":
+				if rute.dekor[i].jenis == "tong_sampah" and rute.dekor[i].sisi == LoperAnim.Sisi.SEBERANG:
 					tong_tampil += 1
 					if dekor.sprite_dekor(i).modulate.a != 1.0:
 						alfa_tong_salah += 1
 			if penerap.jumlah() != daur.jumlah_rumah() + akar.rintangan_daur().jumlah_tampil() + _jumlah_penutup(akar):
 				alfa_tong_salah += 1000
-	check(tong_tampil >= 4 and alfa_tong_salah == 0, "tong sampah tidak didaftarkan ke penerap (jumlah terdaftar = rumah + rintangan + pohon dan lampu) dan alfanya 1,0 di semua sapuan (%d tong terlihat, salah %d)" % [tong_tampil, alfa_tong_salah])
+	check(tong_tampil >= 4 and alfa_tong_salah == 0, "tong sampah seberang tidak didaftarkan ke penerap (jumlah terdaftar = rumah + rintangan + dekor sisi dekat) dan alfanya 1,0 di semua sapuan (%d tong terlihat, salah %d)" % [tong_tampil, alfa_tong_salah])
 	_bersihkan(akar)
 
 
@@ -846,6 +849,39 @@ func _test_penutup_scene() -> void:
 			if sprite_lajur.modulate.a != 1.0:
 				lajur_salah.append("%s: alfa %.2f saat pemain 6 ubin di depannya di lateral %.2f, harap 1,0" % [b.id, sprite_lajur.modulate.a, terbaik.x])
 	check(lajur_dicoba >= 9 and lajur_salah.is_empty(), "%d posisi di lajur sepeda (lateral 0,5 / 0,75 / 1,0) dengan piksel opak dekor di atas pemain: alfa objek 0,45, posisi sepeda = oracle, 1,0 di tepi seberang dan 6 ubin di depan: %s" % [lajur_dicoba, lajur_salah.slice(0, 3)])
+	# Tong sampah sisi dekat (P-7): pemain di trotoar dekat (lateral 1,5 / 1,75 / 2,0) pada maju yang oracle piksel buktikan tertimpa piksel tong => alfa 0,45; pergi (maju +6 atau tepi seberang) => 1,0; sprite dilepas bersama penerap saat keluar jendela.
+	var tong_salah: Array[String] = []
+	var tong_dicoba: int = 0
+	var tong_idx: int = -1
+	for k: int in range(rute.dekor.size()):
+		if rute.dekor[k].jenis == "tong_sampah" and rute.dekor[k].sisi == LoperAnim.Sisi.DEKAT:
+			tong_idx = k
+			break
+	check(tong_idx >= 0, "rute nyata memuat tong sampah sisi dekat")
+	if tong_idx >= 0:
+		var tong_b: RouteBuilder.DekorItem = rute.dekor[tong_idx]
+		var sapuan_tong: Dictionary = UkurPenutupPiksel.sapu_pemain(tong_b, 0.25, 1.0 / 16.0, 3.0)
+		for lateral_tong: float in [1.5, 1.75, 2.0]:
+			var terbaik_tong: Vector3 = Vector3(0.0, 0.0, 0.0)
+			for v: Vector3 in sapuan_tong["posisi_tumpang"]:
+				if is_equal_approx(v.x, lateral_tong) and v.z > terbaik_tong.z:
+					terbaik_tong = v
+			if terbaik_tong.z <= 0.0:
+				tong_salah.append("tidak ada posisi tumpang di lateral %s" % lateral_tong)
+				continue
+			tong_dicoba += 1
+			_taruh_sepeda(akar, terbaik_tong.y, lateral_tong)
+			var sprite_tong: Sprite2D = dekor.sprite_dekor(tong_idx)
+			if sprite_tong == null or not is_equal_approx(sprite_tong.modulate.a, 0.45):
+				tong_salah.append("lateral %s maju %.4f (%d piksel tong di atas pemain): alfa %s, harap 0,45" % [lateral_tong, terbaik_tong.y, int(terbaik_tong.z), sprite_tong.modulate.a if sprite_tong != null else -1.0])
+				continue
+			_taruh_sepeda(akar, terbaik_tong.y + 6.0, lateral_tong)
+			if sprite_tong.modulate.a != 1.0:
+				tong_salah.append("alfa %.2f saat pemain 6 ubin di depan tong, harap 1,0" % sprite_tong.modulate.a)
+			_taruh_sepeda(akar, terbaik_tong.y, -2.0)
+			if sprite_tong.modulate.a != 1.0:
+				tong_salah.append("alfa %.2f saat pemain di tepi seberang, harap 1,0" % sprite_tong.modulate.a)
+	check(tong_dicoba == 3 and tong_salah.is_empty(), "tong sampah sisi dekat: alfa objek 0,45 di trotoar dekat pada %d posisi oracle, 1,0 sesudah pemain pergi: %s" % [tong_dicoba, tong_salah.slice(0, 3)])
 	# Pohon seberang tidak pernah semi-transparan (kamera dari sisi dekat), di semua lateral lajur.
 	var seberang_salah: int = 0
 	var seberang_dicek: int = 0

@@ -12,7 +12,7 @@ extends SceneTree
 ## - `dekor_pohon_menutupi` dan `dekor_lampu_menutupi`: sepeda di trotoar dekat (lateral 2,0) tepat di balik pohon atau lampu sisi dekat: sprite semi-transparan (alfa 0,45).
 ## - `dekor_pohon_seberang`, `dekor_lampu_seberang`, `dekor_tong`: sepeda di jalur tengah di dekat pohon, lampu, dan tong sampah sisi seberang dan dekat (tidak menutupi kotak surat, alfa 1,0).
 ## - `dekor_jalur_utama`: sepeda di tengah jalan melewati dekor kedua sisi (tidak ada dekor yang menutupinya, alfa 1,0).
-## Skenario iterasi 2 (QA-001, P-6): `lajur_<pohon|lampu>_<varian>_lat<lateral>`: sepeda di lajur dekat (lateral 1,0 untuk pohon, 0,5 untuk lampu) pada maju yang menurut oracle piksel (`UkurPenutupPiksel`) paling
+## Skenario iterasi 2 (QA-001, P-6, P-7): `lajur_<pohon|lampu|tong>_<varian>_lat<lateral>`: sepeda di lajur atau trotoar dekat (lateral 1,0 untuk pohon, 0,5 untuk lampu, 2,0 untuk tong sampah) pada maju yang menurut oracle piksel (`UkurPenutupPiksel`) paling
 ##   banyak tertimpa piksel opak dekor; dekor harus semi-transparan (alfa 0,45), pemain tetap terlihat.
 ## Keadaan tidak sesuai dicetak bila alfa dekor tidak sesuai harapan di keadaan itu.
 ## Skenario bagian C (ubin khusus, rute nyata; `TanahDaur` mode khusus, baris mutlak dari awal rute):
@@ -389,7 +389,7 @@ func _foto_dekor_semua() -> void:
 	var menutupi: int = _akar.penerap_penutup().jumlah_menutupi()
 	_cek(menutupi == 0, "jalur utama: tidak ada gambar yang menutupi pemain di lateral 0,0 (%d)" % menutupi)
 	# Lajur dekat (iterasi 2): pohon dan lampu sisi dekat semi-transparan di lajur bila piksel opaknya menimpa pemain (posisi dipilih oleh oracle piksel).
-	var kasus_lajur: Array = [["pohon", "glodokan", 1.0], ["pohon", "ketapang", 1.0], ["pohon", "rindang", 1.0], ["lampu_jalan", "lengan", 0.5]]
+	var kasus_lajur: Array = [["pohon", "glodokan", 1.0], ["pohon", "ketapang", 1.0], ["pohon", "rindang", 1.0], ["lampu_jalan", "lengan", 0.5], ["tong_sampah", "logam", 2.0]]
 	for kasus: Array in kasus_lajur:
 		var indeks: int = -1
 		for i: int in range(rute.dekor.size()):
@@ -407,7 +407,7 @@ func _foto_dekor_semua() -> void:
 		_cek(terbaik.z > 0.0, "oracle: ada posisi di lateral %s dengan piksel opak %s di atas pemain" % [kasus[2], kasus[1]])
 		_taruh(3.0, float(kasus[2]), terbaik.y)
 		await _tunggu(3)
-		var nama_lajur: String = "lajur_%s_%s_lat%d" % ["pohon" if kasus[0] == "pohon" else "lampu", kasus[1], roundi(float(kasus[2]) * 100.0)]
+		var nama_lajur: String = "lajur_%s_%s_lat%d" % [{"pohon": "pohon", "lampu_jalan": "lampu", "tong_sampah": "tong"}[kasus[0]], kasus[1], roundi(float(kasus[2]) * 100.0)]
 		print("%s: oracle %d piksel opak dekor di atas pemain pada maju %.4f" % [nama_lajur, int(terbaik.z), terbaik.y])
 		await _foto_dekor(nama_lajur, indeks, 0.45)
 	# Rumah dekat tidak pudar di trotoar dekat (P-4): lateral 1,75 di samping rumah dekat pertama di jendela.
