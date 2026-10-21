@@ -1,7 +1,7 @@
 # Loop Log — 20261021-fase5b-tembok-dekor
 Scope: Run 5B, Fase 5, tembok sisi dekat, dekor di data segmen (tong sampah, pohon, lampu jalan), ubin masuk garasi/simbol sepeda/rumput bervariasi, hanya tampilan dan data dekor  ·  Branch: feat/fase5b-tembok-dekor  ·  Mulai: 2026-10-21  ·  Godot: 4.7.2.stable.official.ed1daf0bf
 
-## Status: IN_PROGRESS   (iterasi saat ini: 1/2, Dev bagian A selesai; bagian B dan C belum)
+## Status: IN_PROGRESS   (iterasi saat ini: 1/2, Dev bagian A dan B1 selesai; B2 dan C belum; satu temuan BLOCKED: AC-8 zona sasaran dekat)
 
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
@@ -12,6 +12,8 @@ Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MAN
 
 | ID | Iter | Sev | Lokasi | Temuan & reproduksi/bukti | Status | Fix (file/commit) | Tes regresi |
 |---|---|---|---|---|---|---|---|
+| B1-F1 | 1 | Tinggi | AC-8, tembok sisi dekat vs zona sasaran dekat | **BLOCKED.** Badan sprite kotak surat sasaran dekat 0% tertimpa tembok/tiang (semua varian, jenis atap, posisi), tetapi ZONA di tanah tertimpa: kotak surat polos/bata/besi 1,7%, pot 13,1%; teras polos/bata 89,5%, besi 82,3%, pot 97,5% (diukur `UkurTembok`, piksel opak, urutan gambar dihitung; tanpa urutan gambar sama). Sebab: tembok di lateral 3,125 lebih dekat ke kamera dari zona teras dekat (lateral 2,5 sampai 3,0) dan setinggi 14 unit (tiang 17), jadi sinar kamera ke teras dan sebagian kotak surat melewati tembok. Keputusan pemilik: `RUTE_TEMBOK_X_UBIN` dan mundur 1,25 TIDAK digeser. Rute perumahan nyata tidak punya pelanggan dekat, jadi tidak ada dampak di game sekarang; berdampak bila rute dengan pelanggan dekat dibuat. Tangkapan: `shots/iter1/*_dekat_tembok_sasaran_bidik.png` (zona kuning di tanah tidak terlihat di balik tembok, kotak surat sendiri terlihat). Orchestrator/pemilik memutuskan (mis. tembok lebih rendah/bolong di teras, teras dekat digeser, atau terima). | BLOCKED | - | `tes_tembok.gd` `_test_sasaran_tidak_tertutup`: badan = 0 dijaga nol; zona dikunci pada nilai terukur berlabel BLOCKED (berubah jika geometri/aset berubah) |
+| B1-F2 | 1 | Sedang | D-2: tapak logika rumah dekat tidak ikut mundur | Rumah dekat digambar 1,25 ubin lebih jauh tetapi `PenutupPemain.tapak_rumah` tetap di lateral 3,0 (keputusan D-2). Akibat terlihat: pemain di trotoar dekat (lateral 1,75) membuat sprite rumah dekat jadi alfa 0,45 padahal rumah yang digambar tidak menimpa pemain (tangkapan `shots/iter1/*_dekat_tembok_trotoar_dekat.png`: rumah transparan terlepas dari pemain, menimpa HUD bawah). Spike 3C mencatat "Tidak pernah" untuk pendekatan tembok karena spike ikut menggeser kotak penutup; D-2 melarang menggeser tapak, jadi perilaku ini nyata. Bukan BLOCKED (sesuai SPEC), tetapi perlu keputusan: tetap, atau kotak penutup digambar ikut mundur (mengubah `PenutupPemain.tapak_rumah`, dilarang AC-6). | OPEN (keputusan orchestrator) | - | - |
 
 ## Iterasi 1, bagian A (Dev): renderer, `--salin`, uji aset (AC-1, AC-2, AC-3, sebagian AC-23)
 
@@ -81,6 +83,68 @@ Catatan: (1) JSON pohon/lampu memakai bentuk 5A (`cell`, `frames` 1, `fps` 0, `g
 | A26 | assets houses/perumahan | `house_tembok_besi_dekat_masuk.png` liar | T5 |
 
 26 mutan, 25 terdeteksi, 1 mutan setara (A13). Mutan bagian lain (modul tembok, hash varian, dst. di AC-23) menyusul bersama kodenya di bagian B dan C.
+
+## Iterasi 1, bagian B1 (Dev): tembok sisi dekat (AC-4 sampai AC-8, AC-18 bagian tembok, AC-19, AC-20, sebagian AC-22 dan AC-23)
+
+Commit (branch `feat/fase5b-tembok-dekor`, belum push): `9e2c664` feat (modul, scene, tes), probe + tangkapan iterasi 1, dan `test:` penghitung pemuatan PNG tembok (mutan B1-20 hidup lalu diperkuat). Satu proses Godot dalam satu waktu; ada proses `godot --headless --script res://tests/run_tests.gd` lama (hidup sekitar 7,7 jam, bukan milik sesi ini, tergantung dari sesi sebelumnya) yang TIDAK saya matikan; tidak mengganggu hasil.
+
+**Yang dikerjakan**
+- `scripts/config.gd` (satu baris, literal, komentar satuan): `RUTE_TEMBOK_X_UBIN` 3,125, `RUTE_RUMAH_DEKAT_MUNDUR_UBIN` 1,25, `RUTE_TEMBOK_MODUL_UBIN` 1,0, `RUTE_TEMBOK_VARIAN` (polos, bata, besi, pot), `SPRITE_TEMBOK` [46, 46, 1, 41, 25] (sama dengan lima JSON + PNG, dites), `SPRITE_TEMBOK_GESER_PX` [-32, 16] (dites = `Iso`), konstanta FNV-1a (`HASH_FNV1A_AWAL/KALI/MASKER`). `RUTE_RUMAH_DEKAT_X_UBIN` dan `PenutupPemain.tapak_rumah` tidak disentuh (`git diff 41cc11b` kosong untuk ThrowSolver, SkorRute, ZonaSasaran, TenggatRute, BikeMotion, Tabrakan, RintanganRute, PenutupPemain, JalanDaur, MedanKoran).
+- `scripts/systems/varian_tembok.gd` (`VarianTembok`: `fnv1a_32`, `indeks`, `pilih`; FNV-1a 32 bit atas byte UTF-8, tanpa `hash()` dan RNG) dan `scripts/systems/tembok_dekat.gd` (`TembokDekat`: `potongan(rumah)`, `titik_dunia`, `sel/pijak/jalur_png/semua_nama`). `SpriteRumah.pusat_gambar_dunia` (pusat tapak + mundur untuk sisi dekat; `pusat_tapak_dunia` tetap).
+- `RumahDaurRute`: kolam sprite tembok (`_tembok`, `_tembok_bebas`), PNG dimuat sekali di `atur_rute`, tidak didaftarkan ke `PenerapPenutup`, sprite rumah dekat digeser; aksesor `jumlah_tembok`, `sprite_tembok`, `jumlah_node_tembok`, `jumlah_tekstur_tembok`, `jumlah_muat_tembok`.
+- Tes: `tests/tes_tembok.gd` (+ `tests/ukur_tembok.gd` pengukur piksel AC-8, dipakai juga probe), terdaftar di `run_tests.gd`; `tes_rute_scene.gd` disesuaikan hanya untuk letak gambar rumah dekat (oracle literal 5,75 bukan 4,5) dan hitungan anak `Objek` (+ tembok); `tes_ubin.gd`: `house_tembok_` dikeluarkan dari `TERLARANG` (kini sah dirujuk; pemindai khusus di `tes_tembok.gd` hanya mengizinkan lima nama sprite, nama lain gagal; pemindai lain TIDAK dilonggarkan). `tes_koran_sprite.gd` tidak perlu diubah (pemindainya hanya `prop_|vfx_|mission_`).
+- Probe: `tests/probe_sisi_dekat_jendela.gd` (skenario B1: `tembok_polos/bata/besi/pot`, `tembok_jalur_dekat`, `tembok_trotoar_dekat`, `tembok_sasaran_bidik/terbang/kena`, `kidal`), 4 ukuran, 40 tangkapan di `shots/iter1/`.
+
+**Keputusan dan penyimpangan dari SPEC (dicatat, usulan)**
+1. **Arah rantai tembok.** SPEC D-3/AC-4 menulis modul di m, m+1, m+2 dan tiang di m+3. Sprite modul digambar dari pijaknya ke arah MUNDUR (maju mengecil; "modul berikut digeser (-32, +16)" = maju turun) dan tiang awalnya ada di pijak, sehingga rantai tumbuh ke belakang dari modul pertama dan tiang penutup ada di ujung belakang. Implementasi: `maju_ubin` potongan = ujung belakang modul, modul di m, m+1, m+2 (sesuai SPEC), pijak di ujung depan (maju + 1), tiang di maju m (bukan m+3, yang meninggalkan celah 1 ubin dan tiang terlepas). Mutan B1-24 dan B1-26 membuktikan tes menolak tiang di m+3.
+2. **Y-sort wajar, bukan "tembok di depan rumah".** Instruksi minta tembok di depan rumah dan di belakang sepeda. Dengan Y-sort posisi pijak (satu-satunya urutan yang dipakai rumah, kotak surat, sepeda), pijak tembok (lateral 3,125) selalu lebih kecil dari pijak rumah (pusat lateral 5,75), jadi rumah digambar SESUDAH tembok: atap rumah menimpa bagian depan rantai di tangkapan (fisik benar: rumah lebih dekat ke kamera; sama dengan spike 3C yang dipilih pemilik). Terhadap sepeda: tembok digambar sesudah sepeda tetapi tidak menimpanya, karena piksel tembok jatuh 22 sampai 36 px di bawah kaki sepeda (lateral <= 2,0); dilihat di tangkapan jalur/trotoar dekat. Tes mengunci: tembok anak langsung `Objek`, `z_index` 0, Y tembok < Y rumah, alfa 1,0.
+3. **Teras dan zona kotak surat ikut diukur (AC-8)**, bukan hanya badan kotak surat; lihat B1-F1 BLOCKED.
+
+**Penilaian dari tangkapan** (dilihat sendiri, 2340x1080 dan 1600x720)
+- Tembok terbaca sebagai pagar/pembatas halaman krem rendah dengan tiang, bukan pita gelap; keempat varian dapat dibedakan (polos krem, bata merah, besi hitam bersekat, pot dengan semak); tiang ujung tidak berisik (satu tiang per ubin, ritmis). Rumah di belakang tembok tampil wajar, tanpa celah ke tanah. Bagian depan rantai tertimpa atap rumah (Y-sort), terbaca sebagai tembok di belakang rumah.
+- Sasaran: kotak surat dekat terlihat penuh di depan/atas tembok, garis bidik, koran terbang, dan penanda CENTANG/+15 benar (lemparan dinilai KOTAK_SURAT); zona kuning di tanah tertutup tembok (B1-F1).
+- Trotoar dekat: rumah dekat menjadi alfa 0,45 di tempat yang tidak menutupi pemain (B1-F2).
+
+**Gerbang** (sesudah commit terakhir, satu proses Godot dalam satu waktu)
+- `godot --headless --import`: 0 ERROR/WARNING.
+- `run_tests.gd` + `cek_keluaran_tes.py`: **17524 lolos, 0 gagal, 0 peringatan** (baseline bagian A 17409; +115 pemeriksaan baru dari `tes_tembok.gd`). `godot --headless --path . --quit-after 2`: tanpa ERROR/WARNING.
+- Semua `tools/tests_cek/uji_*.py` lolos (gelombang1 352, kucing 12, lampu_pohon 183, pasang_5b 355, pasang_gelombang1 373, bangun_frames 51, pemeriksa 16 kasus, sintesis kondisi 55, lempar 111, misi 47, rute 90, sepeda 32).
+- Probe jendela baru di 2340x1080, 1920x1080, 2400x1080, 1600x720: masing-masing "probe selesai, 0 keadaan tidak sesuai", tanpa ERROR/WARNING.
+- sha256 `~/Library/Application Support/Godot/app_userdata/Kring Kring!/save.json` sesudah semua tes, probe, dan mutan: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` (sama dengan sebelum).
+- AC-6: `git diff 41cc11b` kosong untuk ThrowSolver, SkorRute, ZonaSasaran, TenggatRute, BikeMotion, Tabrakan, RintanganRute, PenutupPemain, JalanDaur, MedanKoran; 1000 lemparan berseed (checksum dihitung di 41cc11b sebelum kode berubah: 1000 / 11137 zona / 339 tertutup / 992255826) identik, dan identik dengan penilaian ulang dari `ZonaSasaran`.
+
+**Mutan B1** (satu perubahan, `run_tests.gd` penuh, `git checkout`; `git status` bersih sesudahnya; "gagal" = jumlah GAGAL/SCRIPT ERROR)
+
+| ID | File | Perubahan | Gagal | Tes pertama yang gagal |
+|---|---|---|---|---|
+| B1-1 | tembok_dekat.gd | jumlah modul 3 jadi 2 | 11 | tiga modul dan satu tiang |
+| B1-2 | tembok_dekat.gd | geser antar modul 0,5 (literal) | 5 | pemindai angka literal di luar config |
+| B1-3 | tembok_dekat.gd | tiang ujung hilang | 13 | tiga modul dan satu tiang |
+| B1-4 | tembok_dekat.gd | varian per modul bukan per rumah | 3 | satu varian untuk ketiga modul |
+| B1-5 | varian_tembok.gd | `hash()` dipakai | 5 | indeks varian = oracle |
+| B1-6 | varian_tembok.gd | hash mod 3 | 10 | pemindai literal, oracle |
+| B1-7 | varian_tembok.gd | hash mod 5 | banyak (indeks di luar rentang) | pemindai literal, SCRIPT ERROR |
+| B1-8 | varian_tembok.gd | FNV-1 (kali lalu xor) bukan FNV-1a | 7 | hash = oracle Python |
+| B1-9 | config.gd | `RUTE_TEMBOK_X_UBIN` 3,25 | 6 | letak modul/lateral 3,125 |
+| B1-10 | config.gd | mundur -1,25 (terbalik) | 7 | posisi rumah dekat |
+| B1-11 | config.gd | mundur 1,0 | 7 | posisi rumah dekat |
+| B1-12 | rumah_daur_rute.gd | tembok didaftarkan ke penerap penutup | 4 | penerap terdaftar = rumah + rintangan |
+| B1-13 | penutup_pemain.gd | tapak rumah dekat ikut mundur | 17 | tes rintangan/geometri tapak |
+| B1-14 | sprite_rumah.gd | rumah seberang ikut digeser | 6 | posisi rumah seberang |
+| B1-15 | tembok_dekat.gd | tembok juga untuk rumah seberang | 9 | rumah seberang tidak bertembok |
+| B1-16 | rumah_daur_rute.gd | `_lepas_tembok` tidak melepas (node bocor di luar jendela) | 6 | sprite tembok = 4 x rumah dekat di jendela |
+| B1-17 | config.gd | pijak tembok y 25 jadi 26 | 9 | Config = JSON = literal |
+| B1-18 | rumah_daur_rute.gd | `z_index = 1` (tembok di depan rumah) | 1 | Y-sort/z_index tembok |
+| B1-19 | tembok_dekat.gd | pijak modul di ujung belakang | 4 | titik pijak dunia |
+| B1-20 | rumah_daur_rute.gd | tekstur tembok dimuat ulang tiap dipakai | **HIDUP** pada percobaan pertama (`load` ber-cache, hitungan kamus tidak berubah); tes diperkuat dengan `jumlah_muat_tembok()` = 5, ulang: **1** | PNG tembok dimuat tepat lima kali (240 tanpa guard) |
+| B1-21 | rumah_daur_rute.gd | tekstur tidak dimuat di atur_rute | 1 | tekstur dimuat di atur_rute |
+| B1-22 | rumah_daur_rute.gd | offset sprite tembok nol (titik pijak salah) | 1 | letak piksel tembok |
+| B1-23 | tembok_dekat.gd | tiang memakai gambar modul | 6 | nama tiang |
+| B1-24 | tembok_dekat.gd | tiang di m+3 (literal) | 4 | pemindai literal |
+| B1-25 | config.gd | `RUTE_TEMBOK_MODUL_UBIN` 0,5 | 13 | tiga modul dan satu tiang |
+| B1-26 | tembok_dekat.gd | tiang di m + `RUTE_RUMAH_PANJANG_UBIN` (arah SPEC) | 3 | titik pijak tembok/tiang |
+
+26 mutan, 25 terdeteksi pada percobaan pertama atau sesudah penguatan (B1-20), 0 hidup sekarang. Catatan: B1-2/6/7/24 pertama kali tertangkap pemindai angka literal; B1-25 dan B1-26 (lewat Config) membuktikan tes geometri juga menangkapnya. AC-23 meminta mutan dekor/ubin/aset di bagian B2 dan C.
 
 ## NEEDS-MANUAL (uji di HP)
 Lihat SPEC bagian NEEDS-MANUAL dan `docs/SETUP_ANDROID.md` 8.13 (ditulis Dev).
