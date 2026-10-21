@@ -23,6 +23,10 @@ extends Node
 ## Bunyi misi run 4B (AC-15 run fase4b-misi-kucing) juga di bus `SFX`, satu pemutar per berkas `BunyiMisi.BERKAS`: peristiwa misi (`putar_misi_peristiwa`:
 ## meong petunjuk, kucing terlihat, misi selesai, misi gagal). Keputusan di `BunyiMisi` (logika murni); jalur jeda dan background sama dengan bunyi lain.
 ##
+## Bunyi kondisi run 6A1 bagian B (AC-23, AC-27) juga di bus `SFX`, satu pemutar per berkas `BunyiKondisi.BERKAS`: tanda peringatan komponen (`putar_kondisi_peringatan`, menerima INDEKS komponen
+## sebagai bilangan bulat karena autoload tidak merujuk `BikeCondition`: ban mendesis, rem berdecit, rantai berisik) dan transaksi bengkel (`putar_servis`, `putar_upgrade`). Keputusan di
+## `BunyiKondisi` (logika murni); jalur jeda dan background sama dengan bunyi lain (tidak ada bunyi baru saat jeda; jeda dan background menghentikan yang berbunyi).
+##
 ## **Tidak merujuk autoload lain** (rule `gdscript`): semua data datang dari pemanggil sebagai argumen. Pemilik sepeda (`JalanUji`)
 ## memanggil `perbarui_sepeda` tiap langkah, menyambungkan sinyal `jeda_berubah` ke `atur_jeda`, dan memanggil `hentikan_sepeda`
 ## saat keluar dari pohon.
@@ -80,6 +84,10 @@ var _pitch_rute_terakhir: float = 1.0
 var _pemutar_misi: Dictionary = {}
 var _jumlah_misi: Dictionary = {}
 var _misi_terakhir: String = ""
+## Pemutar bunyi kondisi per berkas (`BunyiKondisi.BERKAS`): String jalur -> AudioStreamPlayer, jumlah keputusan putar per bunyi, dan berkas terakhir (untuk tes).
+var _pemutar_kondisi: Dictionary = {}
+var _jumlah_kondisi: Dictionary = {}
+var _kondisi_terakhir: String = ""
 
 
 func _init() -> void:
@@ -100,6 +108,10 @@ func _init() -> void:
 		var berkas_misi: String = BunyiMisi.berkas(b)
 		var nama_misi: StringName = StringName("PemutarMisi_" + berkas_misi.get_file().get_basename())
 		_pemutar_misi[berkas_misi] = _buat_pemutar(nama_misi, berkas_misi, BunyiMisi.volume_db(b), BUS_LEMPAR)
+	for b: BunyiKondisi.Bunyi in BunyiKondisi.BERKAS:
+		var berkas_kondisi: String = BunyiKondisi.berkas(b)
+		var nama_kondisi: StringName = StringName("PemutarKondisi_" + berkas_kondisi.get_file().get_basename())
+		_pemutar_kondisi[berkas_kondisi] = _buat_pemutar(nama_kondisi, berkas_kondisi, BunyiKondisi.volume_db(b), BUS_LEMPAR)
 
 
 func _notification(what: int) -> void:
@@ -259,6 +271,56 @@ func ada_bunyi_misi() -> bool:
 	return false
 
 
+## Bunyi kondisi `b` (`BunyiKondisi.Bunyi`). Tidak ada bunyi baru selama jeda.
+func putar_kondisi(b: BunyiKondisi.Bunyi) -> void:
+	if _jeda:
+		return
+	_jumlah_kondisi[b] = int(_jumlah_kondisi.get(b, 0)) + 1
+	_kondisi_terakhir = BunyiKondisi.berkas(b)
+	var pemutar: AudioStreamPlayer = _pemutar_kondisi[_kondisi_terakhir]
+	if _boleh_putar():
+		pemutar.play()
+
+
+## Tanda peringatan komponen berindeks `indeks` di `Config.KONDISI_KOMPONEN` (bilangan bulat: ban, rem, rantai): mendesis, berdecit, atau berisik; indeks asing diabaikan.
+func putar_kondisi_peringatan(indeks: int) -> void:
+	if BunyiKondisi.ada_peringatan(indeks):
+		putar_kondisi(BunyiKondisi.peringatan(indeks))
+
+
+## Servis di bengkel berhasil.
+func putar_servis() -> void:
+	putar_kondisi(BunyiKondisi.Bunyi.SERVIS)
+
+
+## Upgrade di bengkel berhasil dibeli.
+func putar_upgrade() -> void:
+	putar_kondisi(BunyiKondisi.Bunyi.UPGRADE)
+
+
+## Berapa kali bunyi kondisi `b` diputuskan sejak autoload dibuat atau `atur_ulang_rute` (untuk tes).
+func jumlah_bunyi_kondisi(b: BunyiKondisi.Bunyi) -> int:
+	return int(_jumlah_kondisi.get(b, 0))
+
+
+## Jalur berkas bunyi kondisi terakhir ("" bila belum ada; untuk tes).
+func bunyi_kondisi_terakhir() -> String:
+	return _kondisi_terakhir
+
+
+## Pemutar bunyi kondisi untuk jalur `berkas` (`BunyiKondisi.BERKAS`), atau null (untuk tes dan probe).
+func pemutar_kondisi(berkas: String) -> AudioStreamPlayer:
+	return _pemutar_kondisi.get(berkas, null) as AudioStreamPlayer
+
+
+## True bila salah satu bunyi kondisi sedang berbunyi.
+func ada_bunyi_kondisi() -> bool:
+	for pemutar: AudioStreamPlayer in _pemutar_kondisi.values():
+		if pemutar.playing:
+			return true
+	return false
+
+
 ## Mengembalikan pencacah dan giliran bunyi rute ke awal (untuk tes dan "Main lagi").
 func atur_ulang_rute() -> void:
 	_giliran_rute.clear()
@@ -267,6 +329,8 @@ func atur_ulang_rute() -> void:
 	_pitch_rute_terakhir = 1.0
 	_jumlah_misi.clear()
 	_misi_terakhir = ""
+	_jumlah_kondisi.clear()
+	_kondisi_terakhir = ""
 
 
 ## Berapa kali bunyi rute `b` diputuskan sejak autoload dibuat atau `atur_ulang_rute` (untuk tes).
@@ -428,4 +492,6 @@ func _hentikan_pemutar_lempar() -> void:
 	for pemutar: AudioStreamPlayer in _pemutar_rute.values():
 		pemutar.stop()
 	for pemutar: AudioStreamPlayer in _pemutar_misi.values():
+		pemutar.stop()
+	for pemutar: AudioStreamPlayer in _pemutar_kondisi.values():
 		pemutar.stop()

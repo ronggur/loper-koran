@@ -434,7 +434,7 @@ HUD menampilkan kondisi ban, rem, dan rantai sebagai tiga kotak per komponen, de
 
 - Seberapa besar efek tiap kerusakan, supaya terasa menghambat tapi tidak membuat rute mustahil diselesaikan.
 - Ongkos servis dan seberapa cepat komponen aus.
-- Apakah mode bantu mengurangi keausan atau mematikan kerusakan, untuk pemain yang ingin santai.
+- ~~Apakah mode bantu mengurangi keausan atau mematikan kerusakan, untuk pemain yang ingin santai.~~ **Diputuskan pemilik 2026-10-20 (run 6A1): mode bantu TIDAK mengubah keausan atau kerusakan.** Satu ekonomi untuk semua pemain; aus dihitung dari kecepatan dan pengereman yang nyata (mode bantu mengunci 3,0 u/d, jadi aus dari ngebut praktis nol), dan kerusakan sudah hanya menghambat. Seberapa besar efek tiap kerusakan, ongkos servis, dan laju aus kini ada sebagai usulan di `BALANCING.md` 8, dinilai lewat uji HP.
 
 ---
 

@@ -45,6 +45,10 @@ extends AdeganJalan
 ## - Tutorial hari 1 (M-9, `atur_tutorial`): `TutorialLangkah` (logika murni) dari kecepatan, jumlah lemparan, dan keadaan kucing/misi; `TutorialController` hanya
 ##   menampilkan dan tidak memblokir input. Rute yang dijalankan sendiri tidak punya tutorial. Hari tutorial yang berakhir ditulis `tutorial.selesai` oleh `HariMain`.
 ##
+## Run fase6a1-bengkel-kondisi bagian B (AC-6, AC-11, AC-20, AC-21, AC-24): kondisi sepeda rute (`KondisiRute`). `atur_sepeda` (dipanggil `HariMain` SEBELUM scene masuk pohon, seperti `atur_misi`) memberi
+## kondisi dan level upgrade tersimpan, hari (seed kerusakan tabrakan), dan daftar upgrade (`PemuatToko`); tanpa itu rute yang dijalankan sendiri memakai sepeda baru. Aus dan kerusakan berhenti di
+## garis akhir (`_kondisi_selesai`); "Main lagi" mengembalikan kondisi awal rute. Layar hasil mendapat daftar komponen PERLU_BENGKEL (`BikeCondition.perlu_bengkel`) tanpa mengubah `HasilRute.Angka`.
+##
 ## Sepeda mencapai garis akhir rute (tepat sekali per rute; diulang hanya sesudah "Main lagi").
 signal rute_selesai
 ## Rute baru disusun (saat scene siap dan tiap "Main lagi").
@@ -53,8 +57,8 @@ signal rute_disusun(rute: RouteBuilder.Rute)
 signal hasil_dibuka(angka: HasilRute.Angka)
 ## Peristiwa misi (`MissionManager.Peristiwa`) pada langkah ke-`langkah` (indeks titik); sebelum bunyi dan HUD dipasang.
 signal misi_peristiwa(jenis: MissionManager.Peristiwa, langkah: int)
-## Tombol "Hari berikutnya" layar hasil ditekan (hanya di mode hari, `atur_mode_hari`; run fase4a-koran-hari AC-17).
-signal hari_berikutnya_diminta
+## Tombol "Ke bengkel" layar hasil ditekan (hanya di mode hari, `atur_mode_hari`; run fase4a-koran-hari AC-17, run fase6a1-bengkel-kondisi AC-24: dulu "Hari berikutnya").
+signal bengkel_diminta
 
 ## Seed rute yang sedang dimainkan.
 var _benih: int = Config.RUTE_SEED_DEV
@@ -82,6 +86,11 @@ var _detik_misi: float = 0.0
 var _tutorial_diminta: bool = false
 var _tutorial: TutorialLangkah.Keadaan = null
 var _jumlah_lempar: int = 0
+## Sepeda awal rute dari save (`atur_sepeda`): kondisi, level upgrade, hari, dan daftar upgrade yang sah.
+var _sepeda_kondisi: Dictionary = BikeCondition.baru()
+var _sepeda_level: Dictionary = {}
+var _sepeda_hari: int = Config.HARI_AWAL
+var _daftar_upgrade: Array[DataToko] = []
 
 @onready var _daur: RumahDaurRute = %Objek
 @onready var _area_kotak: AreaKotakGambar = %AreaKotak
@@ -102,7 +111,7 @@ func _siapkan_dunia() -> void:
 	koran_dilempar.connect(_saat_lempar_diterima)
 	_panel_akhir.main_lagi_diminta.connect(main_lagi)
 	_layar_hasil.main_lagi_diminta.connect(main_lagi)
-	_layar_hasil.hari_berikutnya_diminta.connect(hari_berikutnya_diminta.emit)
+	_layar_hasil.bengkel_diminta.connect(bengkel_diminta.emit)
 	_susun(_benih)
 
 
@@ -142,7 +151,8 @@ func _perbarui_hud_rute(jarak_ubin: float) -> void:
 func _buka_hasil() -> void:
 	_hasil_tampil = true
 	_angka_hasil = HasilRute.dari(_skor, _rute, _tenggat, _keadaan_misi)
-	_layar_hasil.isi(_angka_hasil, _misi if _keadaan_misi != null else null)
+	var perlu: Array[String] = BikeCondition.perlu_bengkel(_kondisi.kondisi) if _kondisi != null else []
+	_layar_hasil.isi(_angka_hasil, _misi if _keadaan_misi != null else null, perlu)
 	_layar_hasil.tampilkan(true)
 	_panel_akhir.tampilkan(false)
 	_hud.visible = false
@@ -162,7 +172,12 @@ func _tenggat_lewat() -> bool:
 	return TenggatRute.lewat(_tenggat)
 
 
+## Rute yang dibekukan `HariMain` di bawah layar bengkel (`process_mode` DISABLED) mengabaikan semua peristiwa jeda: notifikasi aplikasi (PAUSED, FOCUS_OUT, GO_BACK) tetap
+## dikirim ke tiap node di pohon walau `process_mode` mati, dan menjeda rute tersembunyi memasang `SceneTree.paused` sehingga bengkel berhenti menerima sentuhan dan dialog JEDA muncul
+## di atasnya (QA-001 run fase6a1). Di rute dan layar hasil `process_mode` tetap bawaan, jadi jeda di sana tidak berubah.
 func _saring_jeda(peristiwa: JedaSim.Peristiwa) -> JedaSim.Peristiwa:
+	if process_mode == Node.PROCESS_MODE_DISABLED:
+		return JedaSim.Peristiwa.TIDAK_ADA
 	if _hasil_tampil and peristiwa == JedaSim.Peristiwa.BACK and not sedang_jeda():
 		return JedaSim.Peristiwa.TIDAK_ADA
 	return peristiwa
@@ -200,6 +215,14 @@ func _rute_skor() -> RouteBuilder.Rute:
 
 func _rintangan_awal() -> RintanganRute.Keadaan:
 	return RintanganRute.dari_rute(_rute)
+
+
+func _kondisi_awal() -> KondisiRute.Keadaan:
+	return KondisiRute.awal(_sepeda_kondisi, _sepeda_level, _sepeda_hari, _daftar_upgrade)
+
+
+func _kondisi_selesai() -> bool:
+	return _selesai
 
 
 func _vektor_stick() -> Vector2:
@@ -361,7 +384,7 @@ func atur_benih_awal(benih_baru: int) -> void:
 		perbarui(0.0)
 
 
-## Mode hari: tombol layar hasil menjadi "Hari berikutnya" (memancarkan `hari_berikutnya_diminta`), bukan "Main lagi". Bawaan mati (rute sendiri).
+## Mode hari: tombol layar hasil menjadi "Ke bengkel" (memancarkan `bengkel_diminta`), bukan "Main lagi". Bawaan mati (rute sendiri).
 func atur_mode_hari(nilai: bool) -> void:
 	_layar_hasil.atur_mode_hari(nilai)
 
@@ -473,6 +496,27 @@ func keadaan_misi() -> MissionManager.Keadaan:
 ## Kucing misi (untuk tes dan probe).
 func kucing() -> KucingMisi:
 	return _kucing
+
+
+## Mengatur sepeda awal rute dari save `state` (`sepeda.<komponen>.kondisi` dan `.level`; hilang = baru), hari yang dimainkan (seed kerusakan tabrakan), dan daftar upgrade yang sah
+## (`PemuatToko.Kumpulan.upgrade`, untuk efek dan aus). Dipanggil SEBELUM scene masuk pohon (`HariMain`); bila sudah siap, kondisi rute diatur ulang ke awal.
+func atur_sepeda(state: Dictionary, hari: int, daftar: Array[DataToko]) -> void:
+	_sepeda_kondisi = Economy.kondisi_dari(state)
+	_sepeda_level = Economy.level_dari(state)
+	_sepeda_hari = hari
+	_daftar_upgrade = daftar
+	if is_node_ready():
+		_kondisi = _kondisi_awal()
+		_hud.tampilkan_kondisi(_kondisi)
+
+
+## Kondisi sepeda akhir rute (id -> 0..1, dibulatkan 4 desimal seperti di save): kondisi awal bila rute belum berjalan.
+func kondisi_akhir() -> Dictionary:
+	var hasil: Dictionary = {}
+	var sumber: Dictionary = _kondisi.kondisi if _kondisi != null else _sepeda_kondisi
+	for id: String in Config.KONDISI_KOMPONEN:
+		hasil[id] = BikeCondition.bulatkan(float(sumber.get(id, 1.0)))
+	return hasil
 
 
 ## Menyalakan atau mematikan tutorial hari 1 (`HariMain`: hari pertama dan `tutorial.selesai` belum true). Dipanggil SEBELUM scene masuk pohon; bila sudah siap, tutorial

@@ -58,6 +58,13 @@ const PROGRES_BERIKUTNYA: Array[String] = ["oooooooo", "owwwwwwo", "owowwwwo", "
 ## Belum: kosong dengan garis putus-putus `TEXT_2`.
 const PROGRES_BELUM: Array[String] = ["ss.ss.ss", "swwwwwws", ".wwwwww.", "swwwwwws", "swwwwwws", ".wwwwww.", "swwwwwws", "ss.ss.ss"]
 
+## Kotak kondisi sepeda 5x5 di HUD rute (DESIGN_SPEC 3.3, AC-22 run fase6a1-bengkel-kondisi; `w` = `TEXT`/`WARN` untuk terisi, `UI_PANEL_RAISED` untuk hilang). Terisi: bergaris luar dengan isi 3x3.
+const KOTAK_KONDISI_PENUH: Array[String] = ["ooooo", "owwwo", "owwwo", "owwwo", "ooooo"]
+## Kotak kondisi yang hilang: berongga (bingkai saja), jadi hilang terbaca dari bentuk, bukan warna saja.
+const KOTAK_KONDISI_KOSONG: Array[String] = ["wwwww", "w...w", "w...w", "w...w", "wwwww"]
+## Tanda "!" 3x9 (`w` = `WARN`) di samping kotak komponen PERLU_BENGKEL (DESIGN_SPEC 3.3): batang tegak dan titik.
+const TANDA_SERU_KONDISI: Array[String] = ["www", "www", "www", ".w.", ".w.", "...", "www", "www", "www"]
+
 
 ## Pola kotak progres untuk status `status` (`ProgresRute.Status`).
 static func pola_progres(status: ProgresRute.Status) -> Array[String]:

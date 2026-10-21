@@ -282,7 +282,8 @@ const ZONA_STICK_Y_MAKS_PX: int = 352
 const ZONA_SWIPE_X_MIN_PX: int = 210
 ## Zona swipe: jarak tepi luar dari tepi layar sisi swipe, piksel game.
 const ZONA_SWIPE_TEPI_PX: int = 20
-## Zona swipe: batas atas, diukur dari atas layar, piksel game. Di atasnya strip HUD yang bebas dari kontrol.
+## Zona swipe: batas atas, diukur dari atas layar, piksel game. Di atasnya strip HUD (`HUD_STRIP_ATAS_TINGGI_PX`) yang bebas dari kontrol. Sejak run 6A1 strip atas rute memuat juga panel kondisi (baris 2, y 43 sampai 67) yang
+## memotong bagian paling atas zona swipe; panel itu tidak menangkap sentuhan, jadi swipe yang dimulai di atasnya tetap melempar (QA-003, usulan yang dinilai di HP: apakah jempol menutupi panel saat swipe).
 const ZONA_SWIPE_Y_MIN_PX: int = 48
 ## Zona swipe: batas bawah, diukur dari atas layar, piksel game.
 const ZONA_SWIPE_Y_MAKS_PX: int = 352
@@ -348,7 +349,7 @@ const WAKTU_MS_PER_DETIK: float = 1000.0
 
 ## --- HUD sementara (DESIGN_SPEC 1.3, 3.5, 3.7) ---
 
-## Tinggi strip atas HUD yang bebas dari zona kontrol, piksel game. Sama dengan `ZONA_SWIPE_Y_MIN_PX`.
+## Tinggi strip atas HUD yang bebas dari zona kontrol, piksel game. Sama dengan `ZONA_SWIPE_Y_MIN_PX`. Pengecualian run 6A1: panel kondisi rute melewati garis ini (berakhir y 67) tanpa menangkap sentuhan; zona swipe tetap mulai di sini.
 const HUD_STRIP_ATAS_TINGGI_PX: int = 48
 ## Jarak panel HUD dari tepi layar, piksel game.
 const HUD_MARGIN_TEPI_PX: int = 8
@@ -766,10 +767,14 @@ const SEED_RUTE_DASAR: int = 20261100
 const SEED_MISI_SELISIH: int = 4093
 ## Seed dasar headline harian (`SeedHari.headline`, `HeadlineManager`).
 const SEED_HEADLINE_DASAR: int = 31415926
+## Seed dasar kerusakan tabrakan harian (`SeedHari.kondisi`, `BikeCondition.komponen_tabrakan`, run 6A1): aliran acak sendiri, tidak mengubah rute atau headline.
+const SEED_KONDISI_DASAR: int = 27182818
+## Langkah seed antar tabrakan dalam satu rute (seed tabrakan ke-n = seed kondisi hari itu + n x langkah), bilangan prima.
+const SEED_KONDISI_NOMOR_LANGKAH: int = 7907
 ## Selisih seed antar slot halaman koran (utama, misi, ringan) supaya tiap slot punya aliran acak sendiri.
 const SEED_HEADLINE_SLOT_LANGKAH: int = 7919
-## Versi format save (DATA_SCHEMA 4); naik bersama langkah migrasi di `DataSave.migrasi`. v2 (run 4B): arti `flag` berubah (menunggu tampil, dikonsumsi), `misi_hasil`, `tutorial`.
-const SAVE_VERSI: int = 2
+## Versi format save (DATA_SCHEMA 4); naik bersama langkah migrasi di `DataSave.migrasi`. v2 (run 4B): arti `flag` berubah (menunggu tampil, dikonsumsi), `misi_hasil`, `tutorial`. v3 (run 6A1): `koin` menjadi saldo, `koin_total`, `sepeda`.
+const SAVE_VERSI: int = 3
 ## Berkas save (satu slot, rule save-system); ditulis atomik lewat berkas sementara di folder yang sama.
 const SAVE_BERKAS: String = "user://save.json"
 ## Ekstensi berkas sementara penulisan atomik (`user://save.tmp`).
@@ -972,3 +977,135 @@ const TUTORIAL_LEWATI_LEBAR_PX: int = 64
 const TUTORIAL_PANEL_X_PX: int = 26
 const TUTORIAL_PANEL_Y_PX: int = 88
 const TUTORIAL_PANEL_LEBAR_PX: int = 150
+
+## --- Kondisi sepeda: ban, rem, rantai (GDD 12, BALANCING 8; run 6A1, usulan; dinilai lewat uji HP) ---
+## Kondisi 0,0 (rusak total) sampai 1,0 (baru) per komponen. Tiga tingkat dari ambang: BAIK (>= `KONDISI_AMBANG_AUS`), AUS (tanda peringatan, efek masih nol),
+## PERLU_BENGKEL (< `KONDISI_AMBANG_PERLU_BENGKEL`: efek menghambat naik pelan-pelan sampai nilai terburuk di kondisi 0). `BikeCondition` satu-satunya pemakai.
+## Setang dan lampu dicadangkan sebagai id (belum dibuat, M-1); mode bantu tidak mengubah aus atau kerusakan (K-2).
+
+## Id komponen permanen (M-1), urutan = urutan HUD dan bengkel. Larik angka di bawah (`SERVIS_HARGA_PENUH`, `KONDISI_TABRAKAN_BOBOT`) sejajar dengan larik ini.
+const KONDISI_KOMPONEN: Array[String] = ["ban", "rem", "rantai"]
+## Kondisi di bawah ini = AUS (tanda peringatan muncul). Harus lebih besar dari `KONDISI_AMBANG_PERLU_BENGKEL` (peringatan mendahului efek, prinsip 3).
+const KONDISI_AMBANG_AUS: float = 0.7
+## Kondisi di bawah ini = PERLU_BENGKEL ("!" di HUD) dan efek mulai menghambat. Di atas atau sama dengan ini efek tepat 1,0.
+const KONDISI_AMBANG_PERLU_BENGKEL: float = 0.35
+## Kotak kondisi di HUD (DESIGN_SPEC 3.3): BAIK tiga, AUS dua, PERLU_BENGKEL satu (nol bila kondisi 0).
+const KONDISI_KOTAK_BAIK: int = 3
+## Lihat `KONDISI_KOTAK_BAIK`.
+const KONDISI_KOTAK_AUS: int = 2
+## Lihat `KONDISI_KOTAK_BAIK`.
+const KONDISI_KOTAK_PERLU_BENGKEL: int = 1
+## Kondisi di save dibulatkan ke sekian bagian (10000 = 4 desimal) supaya teks save stabil byte demi byte.
+const KONDISI_PEMBULATAN_PEMBAGI: float = 10000.0
+
+## Aus ban per ubin menurut kecepatan rata-rata langkah (u/d): di bawah santai sebanding kecepatan, antar titik linear, di atas ngebut tetap. Ngebut jauh lebih aus dari santai
+## (prinsip 1: ngebut ada harganya), santai kecil tetapi bukan nol (servis tidak abadi). Kondisi hilang per ubin ditempuh.
+const KONDISI_AUS_BAN_SANTAI_PER_UBIN: float = 0.00015
+## Aus ban per ubin pada kecepatan cepat (4,5 u/d).
+const KONDISI_AUS_BAN_CEPAT_PER_UBIN: float = 0.0003
+## Aus ban per ubin pada kecepatan ngebut (6,0 u/d).
+const KONDISI_AUS_BAN_NGEBUT_PER_UBIN: float = 0.0006
+## Aus rantai per ubin pada kecepatan santai.
+const KONDISI_AUS_RANTAI_SANTAI_PER_UBIN: float = 0.00011
+## Aus rantai per ubin pada kecepatan cepat.
+const KONDISI_AUS_RANTAI_CEPAT_PER_UBIN: float = 0.0003
+## Aus rantai per ubin pada kecepatan ngebut.
+const KONDISI_AUS_RANTAI_NGEBUT_PER_UBIN: float = 0.0007
+## Aus rem setiap pengereman aktif dimulai (tepi naik rem aktif). Rem yang tidak dipakai tidak aus; lepas stick sebelum `REM_TAHAN_DETIK` tidak dihitung.
+const KONDISI_AUS_REM_PER_PENGEREMAN: float = 0.006
+## Aus rem per detik rem aktif selama sepeda masih bergerak.
+const KONDISI_AUS_REM_PER_DETIK: float = 0.01
+
+## Tabrakan (setiap tabrakan baru dari `Tabrakan`) mengurangi SATU komponen terpilih dari seed hari dan nomor tabrakan, dengan peluang relatif ini (bilangan bulat, sejajar `KONDISI_KOMPONEN`: ban 50, rem 20, rantai 30).
+const KONDISI_TABRAKAN_BOBOT: Array[int] = [50, 20, 30]
+## Besar kerusakan satu tabrakan. Harus lebih kecil dari `KONDISI_AMBANG_AUS` dikurangi `KONDISI_AMBANG_PERLU_BENGKEL` supaya satu tabrakan tidak melompati AUS (dijaga tes).
+const KONDISI_TABRAKAN_KERUSAKAN: float = 0.3
+
+## Efek kerusakan hanya menghambat (GDD 12): pengali nilai terburuk di kondisi 0, linear ke 1,0 di `KONDISI_AMBANG_PERLU_BENGKEL`. Ban: pengali kecepatan tujuan dan kecepatan lateral.
+const KONDISI_EFEK_BAN_KECEPATAN_MIN: float = 0.92
+## Ban bocor: pengali kecepatan lateral (sulit belok) di kondisi 0.
+const KONDISI_EFEK_BAN_LATERAL_MIN: float = 0.6
+## Rem blong: pengali perlambatan rem di kondisi 0 (jarak berhenti naik 1 / nilai ini kali).
+const KONDISI_EFEK_REM_MIN: float = 0.4
+## Rantai putus: pengali akselerasi di kondisi 0 ("turun drastis").
+const KONDISI_EFEK_RANTAI_AKSELERASI_MIN: float = 0.35
+## Rantai putus: batas kecepatan puncak di kondisi 0, u/d. Tidak boleh di bawah santai (rute tetap bisa diselesaikan).
+const KONDISI_EFEK_RANTAI_PUNCAK_MIN_UD: float = 3.6
+## Lantai semua pengali efek (tidak ada komponen yang melumpuhkan sepeda, prinsip 2).
+const KONDISI_EFEK_LANTAI: float = 0.3
+## Jarak berhenti terjauh dari rem aktif dengan rem blong (kondisi 0) dari ngebut, ubin (2,5 kali jarak normal 3,6 ubin).
+const KONDISI_REM_JARAK_MAKS_UBIN: float = 9.0
+## Cadangan waktu terhadap tenggat bila semua komponen rusak total dan pemain santai terus, detik: waktu tempuh <= tenggat - cadangan (dites untuk 60 seed).
+const KONDISI_CADANGAN_TENGGAT_DETIK: float = 2.0
+## Toleransi derau float membandingkan kondisi dengan ambangnya.
+const KONDISI_TOLERANSI: float = 0.000001
+
+## Tanda peringatan (M-5): jeda minimum antar peringatan komponen yang sama, detik (waktu game, beku saat jeda).
+const KONDISI_PERINGATAN_JEDA_DETIK: float = 6.0
+## Rantai berisik dan ban mendesis hanya saat sepeda melaju paling sedikit sekian u/d (santai; lebih rendah dari M-5 supaya pemain santai pun diperingatkan sebelum efek).
+const KONDISI_PERINGATAN_KECEPATAN_MIN_UD: float = 3.0
+
+## --- Bengkel: servis dan upgrade (GDD 12.3 dan 12.4, BALANCING 7 dan 8; run 6A1, M-9 dan M-10; usulan; dinilai lewat uji HP) ---
+## Koin bilangan bulat, 1 koin kira-kira Rp100. Belanja dibayar dari saldo `koin` di save (K-1) dan hanya karena pilihan pemain (K-4: bengkel boleh dilewati).
+
+## Harga servis komponen berkondisi 0 (rusak total), sejajar `KONDISI_KOMPONEN` (ban 120, rem 80, rantai 150; BALANCING 7). Harga turun linear dengan kondisi yang tersisa.
+const SERVIS_HARGA_PENUH: Array[int] = [120, 80, 150]
+## Harga servis termurah untuk komponen berkondisi di bawah 1,0 (koin). Komponen berkondisi 1,0 tidak bisa diservis.
+const SERVIS_HARGA_MIN: int = 1
+## Ongkos naik (GDD 12.3): bila `n` komponen PERLU_BENGKEL dan n >= 2, harga tiap servis dikali (1 + nilai ini x (n - 1)). Satu komponen rusak = tanpa kenaikan.
+const SERVIS_KENAIKAN_PER_RUSAK: float = 0.25
+## Id upgrade wajib ada di data upgrade bengkel (TECH_PLAN 6A: ban anti-selip syarat distrik Desa, upgrade pertama syarat Ruko). Id permanen.
+const TOKO_ID_WAJIB: Array[String] = ["ban_anti_selip", "rem_pakem", "rantai_hemat"]
+## Panjang maksimal nama upgrade, karakter teks terjemahan (satu baris kartu bengkel).
+const TOKO_NAMA_PANJANG_MAKS: int = 24
+## Panjang maksimal deskripsi efek upgrade, karakter teks terjemahan (satu baris).
+const TOKO_DESKRIPSI_PANJANG_MAKS: int = 48
+## Jenis efek upgrade yang dikenal (daftar tertutup; semuanya dibaca kode): aus komponen itu, perlambatan rem, kecepatan lateral, dan laju stamina yang menguras.
+## Tidak ada jenis yang menaikkan kecepatan puncak (tanpa power creep). Tiga larik di bawah sejajar dengan daftar ini.
+const TOKO_EFEK_JENIS: Array[String] = ["pengali_aus", "pengali_rem", "pengali_lateral", "pengali_kuras_stamina"]
+## Nilai terkecil yang sah per jenis efek (aus tidak boleh ditiadakan: paling rendah 0,5).
+const TOKO_EFEK_MIN: Array[float] = [0.5, 1.0, 1.0, 0.5]
+## Nilai terbesar yang sah per jenis efek (perlambatan rem paling tinggi 1,5; lateral 1,25).
+const TOKO_EFEK_MAKS: Array[float] = [1.0, 1.5, 1.25, 1.0]
+## Komponen yang boleh membawa jenis efek itu ("" = komponen mana pun).
+const TOKO_EFEK_KOMPONEN: Array[String] = ["", "rem", "ban", "rantai"]
+
+## --- HUD kondisi sepeda di rute, bunyi kondisi, dan layar bengkel (run 6A1 bagian B; DESIGN_SPEC 3.3 dan 4, AC-22 sampai AC-27; usulan; dinilai lewat uji HP) ---
+
+## Kotak kondisi di HUD (DESIGN_SPEC 3.3): sisi kotak, piksel game.
+const KONDISI_HUD_KOTAK_PX: int = 5
+## Jarak antar kotak kondisi, piksel game.
+const KONDISI_HUD_KOTAK_JARAK_PX: int = 1
+## Jarak ikon komponen ke kotak pertama, piksel game.
+const KONDISI_HUD_IKON_JARAK_PX: int = 2
+## Lebar tanda "!" (PERLU_BENGKEL) setelah kotak, piksel game. Ruangnya selalu disediakan supaya panel tidak melompat saat tanda muncul.
+const KONDISI_HUD_SERU_LEBAR_PX: int = 3
+## Jarak kotak terakhir ke tanda "!", piksel game.
+const KONDISI_HUD_SERU_JARAK_PX: int = 2
+## Jarak antar tiga komponen di panel kondisi, piksel game.
+const KONDISI_HUD_ANTAR_KOMPONEN_PX: int = 6
+## Lama visual peringatan (ikon bergetar, kotak terisi berwarna WARN) sesudah satu peristiwa peringatan, detik waktu game (beku saat jeda).
+const KONDISI_KEDIP_DETIK: float = 1.2
+## Periode getar ikon saat peringatan: ikon bergeser tiap setengah periode, detik.
+const KONDISI_GETAR_PERIODE_DETIK: float = 0.1
+## Besar geseran ikon saat bergetar, piksel game.
+const KONDISI_GETAR_PX: int = 1
+## Volume bunyi peringatan kondisi (rantai berisik, rem berdecit, ban mendesis), dB: lebih pelan dari bel dan tabrakan supaya tidak menutupinya.
+const AUDIO_KONDISI_PERINGATAN_VOLUME_DB: float = -8.0
+## Volume bunyi servis dan upgrade di bengkel, dB.
+const AUDIO_KONDISI_TRANSAKSI_VOLUME_DB: float = -3.0
+
+## Layar bengkel (DESIGN_SPEC 4): margin minimum dari tepi layar, piksel game (dipakai max dengan inset aman perangkat).
+const BENGKEL_MARGIN_PX: int = 12
+## Jarak antar elemen di layar bengkel, piksel game.
+const BENGKEL_JARAK_PX: int = 6
+## Lebar minimum tombol Servis dan Beli, piksel game (tinggi `HUD_TOMBOL_TINGGI_PX` 42, >= 44 dp di A54).
+const BENGKEL_TOMBOL_LEBAR_PX: int = 84
+## Lebar minimum tombol "Hari berikutnya" di bengkel, piksel game.
+const BENGKEL_HARI_LEBAR_PX: int = 140
+## Lebar minimum label harga, piksel game (tiga digit berpemisah ribuan tidak melompat).
+const BENGKEL_HARGA_LEBAR_PX: int = 40
+## Perbandingan lebar kolom servis (komponen) terhadap kolom upgrade di layar bengkel.
+const BENGKEL_KOLOM_SERVIS_RASIO: float = 1.0
+## Lihat `BENGKEL_KOLOM_SERVIS_RASIO`.
+const BENGKEL_KOLOM_UPGRADE_RASIO: float = 1.0

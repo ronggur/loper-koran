@@ -397,12 +397,14 @@ Patokan dari GDD 14.1 (diputuskan sebagai acuan). Angka bengkel di bawah adalah 
 | Pemasukan satu hari rapi (25 rumah) | 300–375 koin |
 | Tip pelanggan pemberi tip (koran di teras) | 5 koin (usulan, `KOIN_TIP`) |
 | Hadiah misi kecil / sedang / besar | 45 / 75 / 120 koin |
-| Tambal ban | 100–150 koin (sekitar 1–2 jam kerja loper, usulan) |
-| Servis rem | 80 koin (usulan) |
-| Sambung / ganti rantai | 150 koin (usulan) |
-| Upgrade komponen tingkat 1 | 500–800 koin, sekitar 2 hari kerja (usulan) |
+| Tambal ban | 100–150 koin (sekitar 1–2 jam kerja loper, usulan); harga servis penuh di Config 120 (`SERVIS_HARGA_PENUH`) |
+| Servis rem | 80 koin (usulan, kondisi 0; `SERVIS_HARGA_PENUH`) |
+| Sambung / ganti rantai | 150 koin (usulan, kondisi 0; `SERVIS_HARGA_PENUH`) |
+| Upgrade komponen tingkat 1 | 500–800 koin, sekitar 2 hari kerja (usulan); `upgrades.json`: ban anti-selip 600, rem pakem 500, rantai hemat 700 |
 
 Gagal misi tidak pernah mengurangi koin (GDD 10.5).
+
+**Koin = saldo (run 6A1, K-1, usulan):** `koin` di save boleh turun HANYA karena belanja bengkel yang disengaja (servis, upgrade, bagian 8); tidak pernah karena hukuman. `koin_total` (seumur hidup, hanya naik) dan `tip_total` tidak terpengaruh belanja. Harga servis dan ongkos naik ada di bagian 8.
 
 **Koin di rute (usulan run fase3b-rintangan-skor 2026-10-16, K-2, O-1 sampai O-3; `SkorRute`):** antaran sah **pertama** tiap pelanggan +15 koin ongkos (`KOIN_ONGKOS_ANTAR`), juga antaran halaman (sah setengah untuk skor, ongkos penuh, O-2) dan jendela dengan sakelar bonus. Koran ke teras pelanggan pemberi tip +5 koin tip (`KOIN_TIP`); tip hanya dari teras. Meleset, bukan pelanggan, jendela penalti, dan koran ke rumah yang sudah terantar 0 koin. Koin tidak pernah berkurang (prinsip 2). Tepat tidak menambah koin. **Pemberi tip** = 30% pelanggan rute dibulatkan ke bawah (`RUTE_PEMBERI_TIP_PERSEN`: 25 pelanggan = 7), dipilih `RouteBuilder` dengan RNG rute yang sama sesudah pelanggan (seed sama = sama), tanpa penanda visual di 3B (GDD 8). Rute 25 pelanggan terantar semua = 375 koin ongkos + tip (semua ke teras: 375 + 7 × 5 = 410), dites dengan simulasi; patokan hari rapi 300 sampai 375 koin (GDD 14.1) tetap untuk ongkos.
 
@@ -422,9 +424,79 @@ Detail dan alasan ada di `STORY.md` bagian 4.1. Semua angka masuk `scripts/confi
 | Tabungan pemain rata-rata di akhir | sekitar 22.800 koin (91%) |
 | Ambang akhir (hari ke-120) | Mandiri 100%; Dibantu warga 70 sampai 99% dan reputasi rata-rata minimal 60; di bawah itu Tunda setahun |
 
-## 8. Keausan sepeda
+## 8. Keausan sepeda (usulan run fase6a1-bengkel-kondisi 2026-10-20, dinilai lewat uji HP)
 
-Belum diisi. Diputuskan di Fase 6 bersama layar bengkel (GDD 12.5). Arah yang sudah disepakati: ngebut dan sering mengerem mempercepat aus, kejadian di rute (paku, kaca, genangan) bisa langsung merusak, setiap kerusakan punya tanda peringatan, dan kerusakan hanya menghambat.
+Semua angka di bagian ini **usulan**; sumber kebenaran `scripts/config.gd` (awalan `KONDISI_`, `SERVIS_`, `TOKO_`) dan tes mengecek target di bawah. Keputusan pemilik 2026-10-20: **K-1** koin = saldo (bengkel dibayar langsung); **K-2** mode bantu TIDAK mengubah keausan atau kerusakan (satu ekonomi untuk semua pemain; mode bantu mengunci kecepatan santai 3,0 u/d, jadi aus dari ngebut praktis nol dengan sendirinya, dan `BikeCondition`/`Economy` tidak punya cabang mode bantu); **K-3** kejadian yang merusak di rute 6A1 hanya aus dan tabrakan; **K-4** bengkel boleh dilewati. Arah dari GDD 12: ngebut dan sering mengerem mempercepat aus, setiap kerusakan punya tanda peringatan, kerusakan hanya menghambat.
+
+### 8.1 Komponen, kondisi, dan tingkat
+
+| Hal | Nilai |
+|---|---|
+| Komponen (id permanen) | `ban`, `rem`, `rantai` (`KONDISI_KOMPONEN`). `setang` dan `lampu` **dicadangkan sebagai id, belum dibuat**: setang butuh efek "radius belok" yang belum punya angka tuning sendiri (kelincahan lateral dicakup ban), lampu butuh visibilitas malam yang belum ada |
+| Kondisi | 0,0 (rusak total) sampai 1,0 (baru) per komponen, tersimpan 4 desimal |
+| BAIK | kondisi >= 0,70 (`KONDISI_AMBANG_AUS`): tiga kotak, tanpa tanda, tanpa efek |
+| AUS | 0,35 <= kondisi < 0,70: dua kotak, tanda peringatan saat dipakai, efek **masih nol** |
+| PERLU_BENGKEL | kondisi < 0,35 (`KONDISI_AMBANG_PERLU_BENGKEL`): satu kotak (nol bila kondisi 0), "!" `WARN`, efek menghambat naik pelan-pelan ke nilai terburuk di kondisi 0 |
+
+Urutan wajib (dites, prinsip 3): ambang peringatan 0,70 > ambang efek 0,35; efek bernilai tepat 1,0 di semua kondisi >= 0,35; pengali turun monoton ke nilai terburuk di kondisi 0.
+
+### 8.2 Laju aus (M-3)
+
+`BikeCondition.aus` menerima telemetri langkah `BikeMotion` apa adanya (jarak, kecepatan rata-rata, rem aktif, tepi naik rem) dan tidak menghitung ulang gerak.
+
+| Aus | Santai 3,0 u/d | Cepat 4,5 u/d | Ngebut 6,0 u/d |
+|---|---|---|---|
+| Ban, per ubin | 0,00015 | 0,0003 | 0,0006 |
+| Rantai, per ubin | 0,00011 | 0,0003 | 0,0007 |
+
+Di bawah santai aus sebanding kecepatan (nol bila diam); di antara titik linear; di atas ngebut tetap. Rasio ngebut / santai >= 2,0 (ban 4,0, rantai 6,4): ngebut ada harganya, santai kecil tetapi bukan nol (servis tidak abadi). **Rem** hanya aus saat dipakai: 0,006 setiap pengereman aktif dimulai (`KONDISI_AUS_REM_PER_PENGEREMAN`, tepi naik rem) ditambah 0,01 per detik rem aktif selama sepeda masih bergerak (`KONDISI_AUS_REM_PER_DETIK`); lepas stick sebelum `REM_TAHAN_DETIK` (0,25 detik) tidak dihitung.
+
+**Target aus (dites, `TesKondisiGerak`)**, bot yang menjalankan `BikeMotion` nyata di rute `RouteBuilder` (60 seed, ~236 ubin), tanpa tabrakan dan tanpa servis, mengukur rute saat komponen PERLU_BENGKEL pertama:
+
+| Profil | Perilaku | Hasil ukur | Target |
+|---|---|---|---|
+| Santai terus | stick netral, tanpa rem (= mode bantu) | rute ke-19 (ban) | tidak ada PERLU_BENGKEL dalam >= 12 rute |
+| Campuran | 10 detik cepat / 10 detik santai, rem 0,8 detik tiap 20 detik | rute ke-12 (ban) | di antara, tegas: santai > campuran > ngebut |
+| Ngebut sebisa stamina + rem sering | stick penuh ke atas, tarik penuh ke bawah saat lelah dan 0,8 detik tiap 12 detik | rute ke-5 (rem dan rantai) | komponen pertama dalam <= 6 rute |
+
+Satu rute ngebut mengerem sekitar 11 kali dan tiba sekitar 57 detik (santai 80 detik): ngebut punya keuntungan nyata di samping harga aus. Servis kira-kira tiap 5 rute untuk pengebut dan baru sesudah belasan rute untuk yang santai. Contoh pengebut sesudah 5 rute (ban 0,41, rem 0,26, rantai 0,33; dua PERLU_BENGKEL, ongkos x1,25): servis ketiganya sekitar 290 koin, kira-kira 14% dari penghasilan 5 rute (sekitar 2.050 koin, 410 per rute rapi); harga di 8.5.
+
+### 8.3 Kerusakan tabrakan (M-4)
+
+Setiap tabrakan baru (tepi naik `Tabrakan.Hasil.tabrak`; jatuh yang berlanjut, kebal, dan menempel tidak menggandakan) mengurangi **satu** komponen sebesar `KONDISI_TABRAKAN_KERUSAKAN` = 0,30. Komponen dipilih dari RNG berseed (`SeedHari.kondisi(hari)` + nomor tabrakan x `SEED_KONDISI_NOMOR_LANGKAH`) dengan bobot ban 50 / rem 20 / rantai 30 (`KONDISI_TABRAKAN_BOBOT`); hari dan nomor sama = komponen sama. Kerusakan 0,30 lebih kecil dari lebar tingkat AUS (0,35), jadi satu tabrakan **tidak pernah** memindahkan komponen dari BAIK langsung ke PERLU_BENGKEL (harus lewat AUS dulu; dijaga tes pada kisi 0,01). Kondisi tidak pernah di bawah 0.
+
+### 8.4 Efek kerusakan (M-6): hanya menghambat
+
+Pengali linear dari 1,0 (di kondisi 0,35) ke nilai terburuk di kondisi 0, tidak di bawah lantai `KONDISI_EFEK_LANTAI` 0,30; lewat satu objek `EfekKondisi` yang dibaca `BikeMotion.langkah` (tanpa angka pengali di `bike_motion.gd`).
+
+| Komponen rusak total (kondisi 0) | Efek | Pengali / batas terburuk |
+|---|---|---|
+| Ban bocor | kecepatan tujuan turun, pindah sisi lebih lambat | kecepatan x0,92 (santai 2,76 u/d), lateral x0,60 |
+| Rem blong | perlambatan rem turun, jarak berhenti naik | perlambatan x0,40: dari 6,0 u/d berhenti 9,0 ubin (normal 3,6, 2,5x; `KONDISI_REM_JARAK_MAKS_UBIN`) |
+| Rantai putus | akselerasi turun drastis, kecepatan puncak dibatasi | akselerasi x0,35, puncak 3,6 u/d (tidak di bawah santai 3,0) |
+
+**Rute tetap bisa diselesaikan (dites 60 seed):** dengan ban, rem, dan rantai kondisi 0 sejak awal, pemain santai terus (stick netral, juga kecepatan otomatis mode bantu) tiba dalam sekitar 87 detik pada rute 240 ubin (baru 80 detik, tenggat 92), selalu <= tenggat dikurangi `KONDISI_CADANGAN_TENGGAT_DETIK` 2,0 detik (sisa waktu terkecil 4,9 detik). Stick maju selalu menghasilkan kecepatan > 0 di semua kombinasi kondisi (tanpa kebuntuan). Kerusakan menghambat tetapi tidak menghentikan (prinsip 2).
+
+### 8.5 Servis dan upgrade di bengkel (M-9, M-10)
+
+| Hal | Aturan |
+|---|---|
+| Harga servis | harga penuh (kondisi 0) x (1 - kondisi) x pengali ongkos, dibulatkan ke koin terdekat (setengah ke atas), paling murah 1 koin untuk kondisi < 1,0; komponen 1,0 tidak bisa diservis. Harga penuh: ban 120, rem 80, rantai 150 |
+| Ongkos naik (GDD 12.3) | bila `n` komponen PERLU_BENGKEL dan n >= 2, harga tiap servis x (1 + 0,25 x (n - 1)): 2 rusak x1,25, 3 rusak x1,5 (`SERVIS_KENAIKAN_PER_RUSAK`). Dihitung dari keadaan saat membayar, jadi servis satu per satu menurunkan harga sisanya |
+| Servis | kondisi kembali 1,0, `servis_total` + 1, level upgrade tidak berubah |
+| Upgrade | tingkat 1: `ban_anti_selip` 600 (kecepatan pindah sisi x1,15), `rem_pakem` 500 (perlambatan rem x1,2), `rantai_hemat` 700 (kuras stamina x0,85, aus rantai x0,8). Level berurutan, tidak dua kali, saldo >= harga (tepat sama sah). **Tanpa power creep:** tidak ada jenis efek yang menaikkan kecepatan puncak atau meniadakan aus (rentang aman di Config `TOKO_EFEK_*`) |
+
+Contoh: tiga komponen kondisi 0,3 (semua PERLU_BENGKEL) = (84 + 56 + 105) x 1,5 = 367 koin, sekitar satu hari rapi (hari penuh 300-375); satu komponen 0,3 = 56-105 koin, seperempat hari. Servis ban sesudah ngebut 5 rute (kondisi 0,41, dua komponen rusak) kira-kira 90 koin; upgrade sekitar 1,5-2 hari. Harga dinilai wajar atau tidak lewat uji HP (SETUP_ANDROID 8.11).
+
+### 8.6 Tanda peringatan (M-5)
+
+Setiap komponen AUS atau lebih buruk memperingatkan **saat dipakai**, dengan jeda minimum `KONDISI_PERINGATAN_JEDA_DETIK` 6,0 detik (waktu game, beku saat jeda): rantai berisik dan ban mendesis saat sepeda melaju >= 3,0 u/d (`KONDISI_PERINGATAN_KECEPATAN_MIN_UD`), rem berdecit saat rem aktif. Menyimpang dari M-5 (rantai berisik dari 4,5 u/d): ambang kecepatan diturunkan ke santai supaya pemain yang santai terus pun diperingatkan sebelum efek rantai muncul (prinsip 3); dites dengan lintasan aus nyata (peringatan pertama sedikitnya satu jeda sebelum efek pertama untuk profil santai dan ngebut, dan tidak ada peringatan untuk komponen yang tidak dipakai). Bunyi dan visual berpasangan disambungkan di bagian B run ini (`KondisiRute`, `AdeganJalan`): setiap peristiwa peringatan membunyikan `Audio.putar_kondisi_peringatan` (ban mendesis, rem berdecit, rantai berisik; volume `AUDIO_KONDISI_PERINGATAN_VOLUME_DB` -8 dB, lebih pelan dari bel dan tabrakan -2 dB) dan pada langkah yang sama membuat ikon komponen bergetar (+/- 1 px tiap 0,05 detik) dengan kotak terisi berwarna WARN selama `KONDISI_KEDIP_DETIK` 1,2 detik (waktu game, beku saat jeda). **Keputusan bagian B (usulan): penyimpangan M-5 dipertahankan.** Alasan: dengan ambang 4,5 u/d pemain santai terus (aus rantai terukur mencapai PERLU_BENGKEL di sekitar rute ke-19) tidak pernah mendengar tanda rantai sebelum efeknya, padahal AC-8 menuntut peringatan lebih dulu pada kedua profil; harga: pemain santai yang komponennya AUS mendengar tanda sekali per 6 detik per komponen (sekitar 13 kali per rute, selama belasan rute AUS), yang berpotensi terasa sering; dinilai di HP (SETUP_ANDROID 8.11 butir 2) dan jeda `KONDISI_PERINGATAN_JEDA_DETIK` adalah tombol penyetel pertama bila terlalu sering. Catatan perilaku: ban rusak (< 0,35) menurunkan kecepatan santai di bawah 3,0 u/d (x0,92), jadi tanda ban berhenti saat efek ban sudah terasa; "!" tetap tampil dan peringatan AUS sudah mendahului efek.
+
+**Aus dibekukan di garis akhir (bagian B, usulan):** sesudah sepeda melewati garis akhir rute tidak ada aus, kerusakan, atau peringatan (`KondisiRute.langkah` dengan `selesai`): pengereman otomatis di akhir rute bukan pilihan pemain dan bot ukuran 8.2 berhenti di garis akhir. Mode bantu tidak punya cabang (K-2): `AdeganJalan` hanya meneruskan telemetri gerak dan tabrakan.
+
+### 8.7 Yang tidak dikerjakan di 6A1
+
+Paku, pecahan kaca, genangan, dan kerikil (kerusakan langsung dari objek jalan): **usulan 6A2**, butuh jenis objek jalan baru (DATA_SCHEMA 3), `RouteBuilder`, dan aset; tidak dirancang di sini. Setang dan lampu (8.1), reputasi, setoran tiga pos, dan `sim_ekonomi.gd` (Fase 6B) juga bukan bagian run ini.
 
 ---
 
@@ -437,10 +509,18 @@ Belum diisi. Diputuskan di Fase 6 bersama layar bengkel (GDD 12.5). Arah yang su
 | Satu hari rapi menghasilkan 300–375 koin | Tes logika dari jumlah pelanggan × ongkos |
 | Lemparan bisa mengenai kotak surat di ketiga kecepatan | Uji HP (Fase 2) |
 | 60–70% pemain baru menyelesaikan misi yang diambil | Playtest (GDD 10.8) |
+| Santai terus >= 12 rute tanpa komponen PERLU_BENGKEL; ngebut sebisa stamina + rem sering <= 6 rute; campuran di antaranya (strict) | Tes logika `TesKondisiGerak`: bot di `BikeMotion` dan `RouteBuilder` nyata (bagian 8.2) |
+| Semua komponen rusak total sejak awal: pemain santai tiba <= tenggat - 2,0 detik di 60 seed; rem blong berhenti <= 9,0 ubin; stick maju selalu > 0 | Tes logika `TesKondisiGerak` (bagian 8.4) |
+| Satu tabrakan tidak memindahkan komponen dari BAIK ke PERLU_BENGKEL; peringatan mendahului efek | Tes logika `TesKondisi` dan `TesKondisiGerak` (8.3, 8.6) |
 
 ---
 
 ## 10. Catatan perubahan
+
+- **2026-10-20** — Run fase6a1-bengkel-kondisi iterasi 2 (dokumen dan komentar, tidak ada angka `config.gd` yang berubah; usulan, dinilai di HP): panel kondisi rute (baris 2, y 43 sampai 67) memotong bagian paling atas zona swipe (mulai y 48) tetapi tidak menangkap sentuhan, jadi swipe yang dimulai di atasnya tetap melempar; AC-22 dilonggarkan untuk zona swipe saja (QA-003 DEFERRED). Komentar `ZONA_SWIPE_Y_MIN_PX` dan `HUD_STRIP_ATAS_TINGGI_PX` di `config.gd` diluruskan. Frekuensi peringatan santai (8.6) dan kontras kotak kosong tetap menunggu uji HP (QA-004, QA-007).
+- **2026-10-20** — Run fase6a1-bengkel-kondisi bagian B (usulan, belum diuji di HP; tidak ada angka `config.gd` bagian A yang berubah): angka tampilan dan bunyi baru di `scripts/config.gd` (`KONDISI_HUD_*`, `KONDISI_KEDIP_DETIK` 1,2, `KONDISI_GETAR_*`, `AUDIO_KONDISI_*`, `BENGKEL_*`) dan bagian 8.6 dilengkapi: penyimpangan M-5 (peringatan mulai santai 3,0 u/d) dipertahankan beserta alasan dan harganya, peringatan berpasangan bunyi dan visual, dan aus dibekukan di garis akhir. Angka bagian 8 tidak berubah, jadi target 8.2 dan harga 8.5 masih sama dengan yang diukur bagian A; belum ada pengukuran di HP.
+
+- **2026-10-20** — Run fase6a1-bengkel-kondisi bagian A (usulan, belum diuji di HP): bagian 8 diisi penuh (kondisi, laju aus, kerusakan tabrakan, efek, servis dan upgrade, tanda peringatan, target aus tiga profil) dan bagian 7 dilengkapi (koin = saldo, harga servis dan upgrade). Angka baru di `scripts/config.gd`: `KONDISI_*`, `SERVIS_*`, `TOKO_*`, `SEED_KONDISI_*`; `SAVE_VERSI` 3. Keputusan pemilik K-1 sampai K-4 dan keputusan orchestrator M-1 sampai M-13 di SPEC run. Penyimpangan dari M-5: rantai berisik dan ban mendesis memperingatkan mulai santai 3,0 u/d (bukan 4,5 u/d untuk rantai), supaya pemain santai pun diperingatkan sebelum efek.
 
 - **2026-10-18** — Run fase4b-misi-kucing (usulan, belum diuji di HP): bagian 6g (angka misi kucing P1, hadiah sedang 75 koin sesuai GDD 14.1 dan 10.5; prompt run menyebut 45 yang sebenarnya tingkat kecil, pemilik memilih 75 pada 2026-10-18). Angka baru di `scripts/config.gd` (`MISI_*`, `TUTORIAL_*`, `SEED_MISI_SELISIH`, `AUDIO_MISI_*`).
 

@@ -34,8 +34,11 @@ func jalankan() -> void:
 	check(sebelum == sesudah, "user://save.json tidak tersentuh oleh tes alur misi (%s -> %s)" % [sebelum, sesudah])
 
 
+## Mengakhiri hari dari layar hasil: "Ke bengkel" lalu "Hari berikutnya" di bengkel (run fase6a1-bengkel-kondisi bagian B; bengkel dilewati tanpa belanja, K-4).
 func _hari_berikutnya(rute: RuteMain) -> void:
+	var hari: HariMain = rute.get_parent() as HariMain
 	rute.layar_hasil().tombol_main_lagi().ditekan.emit()
+	hari.bengkel().tombol_hari_berikutnya().ditekan.emit()
 	await _tree.process_frame
 
 
@@ -55,12 +58,16 @@ func _test_skenario_a_selesai() -> void:
 	await _a._selesaikan_rute(rute)
 	var angka: HasilRute.Angka = rute.angka_hasil()
 	check(angka != null and angka.koin == 195 and angka.koin_misi == 75 and angka.misi_hasil == "selesai" and koin_hud == "75", "koin HUD sebelum antaran (75) dan Angka hasil (195 = 120 + 75) konsisten (AC-14)")
-	check(rute.layar_hasil().teks_rekap_misi() == "Misi: Kucing ketemu! +75 koin" and rute.layar_hasil().teks_tombol() == "Hari berikutnya" and rute.layar_hasil().rect_tombol().size.y >= 42.0, "layar hasil: rekap misi dan tombol 'Hari berikutnya' >= 42 px (AC-16)")
+	check(rute.layar_hasil().teks_rekap_misi() == "Misi: Kucing ketemu! +75 koin" and rute.layar_hasil().teks_tombol() == "Ke bengkel" and rute.layar_hasil().rect_tombol().size.y >= 42.0, "layar hasil: rekap misi dan tombol 'Ke bengkel' >= 42 px (AC-16, AC-24)")
 	check(m.get(&"jumlah_simpan") == 0, "sampai layar hasil terbuka: nol simpan (AC-10)")
 	rute.layar_hasil().tombol_main_lagi().ditekan.emit()
 	rute.layar_hasil().tombol_main_lagi().ditekan.emit()
+	check(hari.status().keadaan == MesinHari.Keadaan.BENGKEL and m.get(&"jumlah_simpan") == 0, "'Ke bengkel' (dua ketukan): satu bengkel, belum ada simpan")
+	var bengkel: LayarBengkel = hari.bengkel()
+	bengkel.tombol_hari_berikutnya().ditekan.emit()
+	bengkel.tombol_hari_berikutnya().ditekan.emit()
 	await _tree.process_frame
-	check(m.get(&"jumlah_simpan") == 1 and hari.status().hari == 2, "'Hari berikutnya' (dua ketukan): tepat satu simpan, hari 2")
+	check(m.get(&"jumlah_simpan") == 1 and hari.status().hari == 2, "'Hari berikutnya' di bengkel (dua ketukan): tepat satu simpan, hari 2")
 	var s: Dictionary = _a._baca_save()
 	check(s["koin"] == 195 and s["tip_total"] == 25 and s["flag"] == ["kucing_ketemu"] and s["misi_hasil"] == {"p1_kucing": {"hasil": "selesai", "hari": 1}} and s["terakhir"]["koin_misi"] == 75, "isi save sesuai oracle: koin 195, tip 25, flag kucing_ketemu, misi_hasil selesai, koin_misi 75")
 	check(hari.halaman().ringan.id == "lanjutan_kucing_ketemu" and hari.koran().teks_tampil()[5] == "Kucing Bu Ratmi Sudah Pulang ke Rumah", "koran hari 2 menampilkan 'Kucing Bu Ratmi Sudah Pulang ke Rumah'")
@@ -151,6 +158,9 @@ func _test_tutup_di_tengah_rute_dengan_misi() -> void:
 	var rute: RuteMain = await _a._berangkat(hari)
 	_a._selesaikan_misi(rute)
 	check(rute.keadaan_misi().status == MissionManager.Status.SELESAI, "misi selesai di memori, belum disimpan")
+	# Titik pertama dibaca SEBELUM scene dibuang: `rute` ikut dibebaskan bersama `hari` dan memakainya sesudahnya adalah akses objek yang sudah dibebaskan (nilainya kadang masih terbaca dari
+	# memori lama, kadang SCRIPT ERROR "previously freed" yang menggagalkan fungsi tes dan meninggalkan scene berikutnya dalam keadaan setengah: penyebab galat sekali di bagian A).
+	var titik_awal: float = rute.rencana_misi().titik[0].maju_ubin
 	_a._bersihkan(hari)
 	_a._tutup_manajer(m)
 	check(not FileAccess.file_exists(_a._jalur()), "scene dibuang di tengah rute: tidak ada berkas save")
@@ -159,7 +169,7 @@ func _test_tutup_di_tengah_rute_dengan_misi() -> void:
 	check(hari2.status().hari == 1 and hari2.halaman().misi != null and hari2.halaman().misi.id == "p1_kucing", "buka lagi: hari 1 yang sama dengan misi P1 ditawarkan lagi")
 	hari2.koran().tombol_ambil().ditekan.emit()
 	var rute2: RuteMain = await _a._berangkat(hari2)
-	check(rute2.keadaan_misi().status == MissionManager.Status.AKTIF and rute2.keadaan_misi().langkah == 0 and rute2.rencana_misi().titik[0].maju_ubin == rute.rencana_misi().titik[0].maju_ubin, "misi diulang dari awal dengan rencana yang sama (seed hari sama)")
+	check(rute2.keadaan_misi().status == MissionManager.Status.AKTIF and rute2.keadaan_misi().langkah == 0 and rute2.rencana_misi().titik[0].maju_ubin == titik_awal, "misi diulang dari awal dengan rencana yang sama (seed hari sama)")
 	check(m2.get(&"jumlah_simpan") == 0, "tetap nol simpan")
 	_a._bersihkan(hari2)
 	_a._tutup_manajer(m2)

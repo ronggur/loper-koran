@@ -1,6 +1,8 @@
 class_name DataSave
 extends RefCounted
-## Format save v2 dan aturannya, logika murni (DATA_SCHEMA 4, rule `save-system`; AC-7 sampai AC-12 run fase4a-koran-hari, v2 AC-7 dan AC-8 run
+## Format save v3 dan aturannya (v3, run fase6a1-bengkel-kondisi, AC-1 sampai AC-3: `koin` menjadi SALDO yang boleh turun hanya karena belanja bengkel yang disengaja (K-1), `koin_total` (seumur
+## hidup, hanya naik, awal = `koin` v2), `sepeda` = {ban, rem, rantai: {kondisi 0..1 dibulatkan 4 desimal, level upgrade}, servis_total}; save v2 dan v1 dimigrasi tanpa kehilangan apa pun,
+## sepeda baru semua kondisi 1,0 dan level 0). Sebelum itu: format save v2 dan aturannya, logika murni (DATA_SCHEMA 4, rule `save-system`; AC-7 sampai AC-12 run fase4a-koran-hari, v2 AC-7 dan AC-8 run
 ## fase4b-misi-kucing). v2 (M-6, M-7): `flag` kini berarti "lanjutan menunggu tampil" (dikonsumsi di akhir hari bila halaman koran hari itu menampilkan
 ## headline lanjutannya), BUKAN riwayat; riwayat permanen ada di `misi_hasil`. Field baru: `misi_hasil`, `tutorial`, `terakhir.misi_hasil`, `terakhir.koin_misi`.
 ## Satu Dictionary
@@ -26,7 +28,9 @@ enum Status { BARU, SAH, RUSAK, TERLALU_BARU, TIDAK_TERBACA }
 const _TIPE_KUNCI: Dictionary = {
 	"hari": "angka",
 	"koin": "angka",
+	"koin_total": "angka",
 	"tip_total": "angka",
+	"sepeda": "kamus",
 	"flag": "daftar",
 	"misi_jeda": "kamus",
 	"headline_jeda": "kamus",
@@ -39,6 +43,8 @@ const _PENGATURAN_BOOL: Array[String] = ["kidal", "mode_bantu"]
 const _PENGATURAN_VOLUME: Array[String] = ["suara", "musik"]
 const _TERAKHIR_ANGKA: Array[String] = ["hari", "terkirim", "meleset", "koin", "tip", "skor", "koin_misi"]
 const _HASIL_MISI: Array[String] = ["selesai", "gagal"]
+## Kunci angka `sepeda` selain komponen.
+const _SEPEDA_SERVIS_TOTAL: String = "servis_total"
 
 
 ## Hasil `dari_teks`: state, status, dan alasan (teks developer) bila rusak.
@@ -72,6 +78,11 @@ class CatatanHari extends RefCounted:
 	var tutorial_selesai: bool = false
 	var kidal: bool = false
 	var mode_bantu: bool = false
+	## Sepeda sesudah aus rute, servis, dan upgrade (bentuk `state["sepeda"]`: tiga komponen {kondisi, level} dan `servis_total`). Kosong = sepeda di save tidak berubah.
+	## `kondisi` dijepit 0..1; `level` dan `servis_total` hanya naik terhadap save (tidak pernah turun).
+	var sepeda: Dictionary = {}
+	## Koin yang dibelanjakan di bengkel hari ini (servis dan upgrade). Mengurangi `koin` (saldo), tidak `koin_total` dan tidak `tip_total` (K-1).
+	var belanja_koin: int = 0
 
 
 ## State bawaan (save baru): hari pertama, tanpa koin dan flag, pengaturan bawaan.
@@ -80,7 +91,9 @@ static func templat() -> Dictionary:
 		"versi": Config.SAVE_VERSI,
 		"hari": Config.HARI_AWAL,
 		"koin": 0,
+		"koin_total": 0,
 		"tip_total": 0,
+		"sepeda": sepeda_baru(),
 		"flag": [],
 		"misi_jeda": {},
 		"headline_jeda": {},
@@ -94,6 +107,15 @@ static func templat() -> Dictionary:
 			"musik": Config.SAVE_VOLUME_BAWAAN,
 		},
 	}
+
+
+## Sepeda baru (v3): tiga komponen kondisi 1,0 dan level 0, `servis_total` 0.
+static func sepeda_baru() -> Dictionary:
+	var sepeda: Dictionary = {}
+	for k: String in Config.KONDISI_KOMPONEN:
+		sepeda[k] = {"kondisi": 1.0, "level": 0}
+	sepeda[_SEPEDA_SERVIS_TOTAL] = 0
+	return sepeda
 
 
 ## Teks state sebagai JSON berurut kunci (isi sama = teks sama, byte demi byte).
@@ -123,6 +145,9 @@ static func dari_teks(teks: String) -> Hasil:
 	for kunci: String in _TIPE_KUNCI:
 		if data.has(kunci) and not _tipe_cocok(data[kunci], _TIPE_KUNCI[kunci]):
 			return _rusak(hasil, "field '%s' bertipe salah" % kunci)
+	var galat_sepeda: String = _periksa_sepeda(data)
+	if not galat_sepeda.is_empty():
+		return _rusak(hasil, galat_sepeda)
 	hasil.state = migrasi(data)
 	hasil.status = Status.SAH
 	return hasil
@@ -147,6 +172,12 @@ static func migrasi(data: Dictionary) -> Dictionary:
 			if not hasil.has(kunci):
 				hasil[kunci] = dasar2[kunci]
 		versi = 2
+	if versi < 3:
+		# v2 -> v3 (run fase6a1-bengkel-kondisi): `koin` jadi saldo dan `koin_total` awal = `koin` v2 (belum pernah ada belanja, jadi total = saldo); sepeda baru, semua kondisi 1,0 dan level
+		# 0 (tidak ada kerusakan atau upgrade gratis, dan v2 tidak pernah menulis `sepeda`). Semua field v2 (hari, koin, tip_total, flag, misi_hasil, tutorial, jeda, terakhir, pengaturan) tetap.
+		hasil["koin_total"] = clampi(_ke_bulat(hasil.get("koin", 0)), 0, Config.SAVE_ANGKA_MAKS)
+		hasil["sepeda"] = sepeda_baru()
+		versi = 3
 	hasil["versi"] = versi
 	return _normalisasi(hasil)
 
@@ -157,7 +188,10 @@ static func catat_hari(state: Dictionary, catatan: CatatanHari) -> Dictionary:
 	var baru: Dictionary = _normalisasi(state.duplicate(true))
 	var angka: HasilRute.Angka = catatan.angka if catatan.angka != null else HasilRute.Angka.new()
 	baru["hari"] = clampi(maxi(int(baru["hari"]), catatan.hari + 1), Config.HARI_AWAL, Config.SAVE_ANGKA_MAKS)
-	baru["koin"] = clampi(int(baru["koin"]) + maxi(angka.koin, 0), 0, Config.SAVE_ANGKA_MAKS)
+	# v3 (K-1): koin hari ini masuk saldo DAN `koin_total` persis sekali; belanja bengkel hanya mengurangi saldo (tidak pernah di bawah 0), tidak `koin_total` atau `tip_total`.
+	var koin_hari: int = maxi(angka.koin, 0)
+	baru["koin"] = clampi(int(baru["koin"]) + koin_hari - maxi(catatan.belanja_koin, 0), 0, Config.SAVE_ANGKA_MAKS)
+	baru["koin_total"] = clampi(int(baru["koin_total"]) + koin_hari, 0, Config.SAVE_ANGKA_MAKS)
 	baru["tip_total"] = clampi(int(baru["tip_total"]) + maxi(angka.koin_tip, 0), 0, Config.SAVE_ANGKA_MAKS)
 	var flag: Array = baru["flag"]
 	for f: String in catatan.flag_dikonsumsi:
@@ -166,6 +200,7 @@ static func catat_hari(state: Dictionary, catatan: CatatanHari) -> Dictionary:
 		if not f.is_empty() and not flag.has(f):
 			flag.append(f)
 	_catat_misi_hasil(baru, angka, catatan.hari)
+	_catat_sepeda(baru, catatan.sepeda)
 	if catatan.tutorial_selesai:
 		var tutorial: Dictionary = baru["tutorial"]
 		tutorial["selesai"] = true
@@ -186,6 +221,23 @@ static func catat_hari(state: Dictionary, catatan: CatatanHari) -> Dictionary:
 	pengaturan["kidal"] = catatan.kidal
 	pengaturan["mode_bantu"] = catatan.mode_bantu
 	return _normalisasi(baru)
+
+
+## Menuliskan sepeda akhir hari `akhir` (bentuk `state["sepeda"]`) ke `state`: kondisi komponen = kondisi akhir (dijepit 0..1, 4 desimal), `level` dan `servis_total` hanya naik (tidak pernah turun,
+## AC-3). `akhir` kosong = sepeda di `state` tidak berubah. Komponen yang tidak ada di `akhir` tidak berubah.
+static func _catat_sepeda(state: Dictionary, akhir: Dictionary) -> void:
+	if akhir.is_empty():
+		return
+	var sepeda: Dictionary = state["sepeda"]
+	for k: String in Config.KONDISI_KOMPONEN:
+		var baru_entri: Variant = akhir.get(k)
+		if typeof(baru_entri) != TYPE_DICTIONARY:
+			continue
+		var entri: Dictionary = sepeda[k]
+		var dari: Dictionary = baru_entri
+		entri["kondisi"] = BikeCondition.bulatkan(float(BikeCondition.jepit(dari.get("kondisi", entri["kondisi"]))))
+		entri["level"] = clampi(maxi(int(entri["level"]), _ke_bulat(dari.get("level", entri["level"]))), 0, Config.SAVE_ANGKA_MAKS)
+	sepeda[_SEPEDA_SERVIS_TOTAL] = clampi(maxi(int(sepeda[_SEPEDA_SERVIS_TOTAL]), _ke_bulat(akhir.get(_SEPEDA_SERVIS_TOTAL, sepeda[_SEPEDA_SERVIS_TOTAL]))), 0, Config.SAVE_ANGKA_MAKS)
 
 
 ## Mencatat hasil misi hari ini di `misi_hasil[id]` = {hasil, hari} (riwayat permanen, M-7): `selesai` tidak pernah ditimpa `gagal` dan tidak
@@ -249,6 +301,9 @@ static func _normalisasi(data: Dictionary) -> Dictionary:
 	data["hari"] = clampi(_ke_bulat(data["hari"]), Config.HARI_AWAL, Config.SAVE_ANGKA_MAKS)
 	data["koin"] = clampi(_ke_bulat(data["koin"]), 0, Config.SAVE_ANGKA_MAKS)
 	data["tip_total"] = clampi(_ke_bulat(data["tip_total"]), 0, Config.SAVE_ANGKA_MAKS)
+	# `koin_total` tidak pernah di bawah saldo (saldo = pendapatan seumur hidup dikurangi belanja).
+	data["koin_total"] = clampi(maxi(_ke_bulat(data["koin_total"]), data["koin"]), 0, Config.SAVE_ANGKA_MAKS)
+	data["sepeda"] = _normalisasi_sepeda(data["sepeda"])
 	var flag: Array = []
 	var daftar: Array = data["flag"]
 	for f: Variant in daftar:
@@ -262,6 +317,35 @@ static func _normalisasi(data: Dictionary) -> Dictionary:
 	data["terakhir"] = _normalisasi_terakhir(data["terakhir"])
 	data["pengaturan"] = _normalisasi_pengaturan(data["pengaturan"])
 	return data
+
+
+## `sepeda`: tiga komponen {kondisi 0..1 dibulatkan 4 desimal, level >= 0} dan `servis_total` >= 0. Id komponen asing dibiarkan apa adanya (rule save-system); isi komponen yang
+## kurang atau tidak sah mendapat bawaan (kondisi 1,0, level 0), kondisi di luar 0..1 atau bukan angka berhingga dijepit.
+static func _normalisasi_sepeda(sepeda: Dictionary) -> Dictionary:
+	var hasil: Dictionary = sepeda.duplicate(true)
+	for k: String in Config.KONDISI_KOMPONEN:
+		var entri: Variant = sepeda.get(k)
+		var d: Dictionary = entri if typeof(entri) == TYPE_DICTIONARY else {}
+		var kondisi: Variant = d.get("kondisi", 1.0)
+		var rapi: Dictionary = d.duplicate(true)
+		rapi["kondisi"] = BikeCondition.bulatkan(BikeCondition.jepit(kondisi))
+		rapi["level"] = clampi(_ke_bulat(d.get("level", 0)), 0, Config.SAVE_ANGKA_MAKS)
+		hasil[k] = rapi
+	hasil[_SEPEDA_SERVIS_TOTAL] = clampi(_ke_bulat(sepeda.get(_SEPEDA_SERVIS_TOTAL, 0)), 0, Config.SAVE_ANGKA_MAKS)
+	return hasil
+
+
+## Memeriksa bentuk `sepeda` di berkas mentah: bukan objek (sudah diperiksa `_TIPE_KUNCI`), komponen dikenal bukan objek, atau `servis_total` bukan angka = save rusak (alasan teks developer), "" bila baik.
+static func _periksa_sepeda(data: Dictionary) -> String:
+	if not data.has("sepeda"):
+		return ""
+	var sepeda: Dictionary = data["sepeda"]
+	for k: String in Config.KONDISI_KOMPONEN:
+		if sepeda.has(k) and typeof(sepeda[k]) != TYPE_DICTIONARY:
+			return "sepeda.%s bertipe salah" % k
+	if sepeda.has(_SEPEDA_SERVIS_TOTAL) and not _angka(sepeda[_SEPEDA_SERVIS_TOTAL]):
+		return "sepeda.%s bertipe salah" % _SEPEDA_SERVIS_TOTAL
+	return ""
 
 
 ## `misi_hasil`: id -> {hasil: selesai|gagal, hari >= 1}. Id tak dikenal data dibiarkan; entri bentuk salah dibuang (hasil tak sah tidak bisa ditebak).

@@ -33,6 +33,12 @@ const JALUR_WAJIB_IKUT: Array[String] = [
 	# Run fase4b-misi-kucing (AC-22): sheet kucing, scene kucing dan tutorial, bunyi misi, dan skrip misi.
 	"assets/sprites/npc/mission_kucing_sheet.png", "scenes/entities/kucing_misi.tscn", "scenes/ui/tutorial.tscn", "scripts/systems/mission_manager.gd", "scripts/systems/rencana_misi.gd",
 	"assets/audio/sfx/mission/sfx_mis_meong_01.wav", "assets/audio/sfx/mission/sfx_mis_terlihat_01.wav", "assets/audio/sfx/mission/sfx_mis_selesai_01.wav", "assets/audio/sfx/mission/sfx_mis_gagal_01.wav",
+	# Run fase6a1-bengkel-kondisi (AC-30): data upgrade bengkel dan skrip kondisi, efek, ekonomi, serta pemuat data upgrade (scene, bunyi, dan skrip bengkel di bagian B).
+	"assets/data/shop/upgrades.json", "scripts/systems/bike_condition.gd", "scripts/systems/efek_kondisi.gd", "scripts/systems/economy.gd", "scripts/systems/data_toko.gd", "scripts/systems/pemuat_toko.gd",
+	# Bagian B: scene dan skrip bengkel, kondisi di rute, dan lima bunyi kondisi.
+	"scenes/bengkel/bengkel.tscn", "scripts/ui/layar_bengkel.gd", "scripts/ui/kotak_kondisi.gd", "scripts/systems/kondisi_rute.gd", "scripts/systems/tampil_kondisi.gd", "scripts/systems/bunyi_kondisi.gd",
+	"assets/audio/sfx/condition/sfx_cond_rantai_berisik_01.wav", "assets/audio/sfx/condition/sfx_cond_rem_berdecit_01.wav", "assets/audio/sfx/condition/sfx_cond_ban_mendesis_01.wav",
+	"assets/audio/sfx/condition/sfx_cond_servis_01.wav", "assets/audio/sfx/condition/sfx_cond_upgrade_01.wav",
 ]
 ## Berkas probe render (QA-004 run fase1b-umpan-balik, D-4 run fase1c-perapian): tidak ikut APK normal; build probe dibuat
 ## `tools/ekspor_cek_render.py` yang melepas pola ini sementara (`POLA_PROBE` di skrip itu harus sama persis).

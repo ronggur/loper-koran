@@ -44,6 +44,16 @@ Ke-4 berkas di bawah dibuat dari rumus oleh skrip project `tools/audio_art/sinte
 | `sfx/mission/sfx_mis_selesai_01.wav` | Misi selesai: tiga nada naik lalu satu nada panjang hangat | 0,70 detik | `tools/audio_art/sintesis_misi.py` | Milik project, tanpa atribusi pihak ketiga |
 | `sfx/mission/sfx_mis_gagal_01.wav` | Misi gagal: dua nada turun lembut, lebih pelan (tidak menghakimi) | 0,50 detik | `tools/audio_art/sintesis_misi.py` | Milik project, tanpa atribusi pihak ketiga |
 
+Ke-5 berkas di bawah dibuat dari rumus oleh skrip project `tools/audio_art/sintesis_kondisi.py` (hanya pustaka standar Python, benih acak tetap, deterministik), **tanpa rekaman, sampel, atau unduhan apa pun**. Placeholder Fase 6A (run fase6a1-bengkel-kondisi bagian B, 2026-10-20), usulan; diganti bunyi final di fase aset. Jangan diedit dengan tangan: ubah skripnya lalu jalankan ulang (`tools/tests_cek/uji_sintesis_kondisi.py` memeriksa berkas di repo sama dengan keluaran skrip). Tiap tanda peringatan punya pasangan visual (SOUND_DESIGN 1): ikon komponen bergetar dan kotak kondisi berwarna WARN di HUD rute; servis dan upgrade = tombol berubah ke "Baik"/"Dimiliki" dan saldo berkurang di layar bengkel.
+
+| Berkas | Isi | Durasi | Dibuat oleh | Lisensi |
+|---|---|---|---|---|
+| `sfx/condition/sfx_cond_rantai_berisik_01.wav` | Rantai berisik: lima ketukan logam pendek tak beraturan | 0,55 detik | `tools/audio_art/sintesis_kondisi.py` | Milik project, tanpa atribusi pihak ketiga |
+| `sfx/condition/sfx_cond_rem_berdecit_01.wav` | Rem berdecit: nada tinggi meluncur turun dengan getar | 0,45 detik | `tools/audio_art/sintesis_kondisi.py` | Milik project, tanpa atribusi pihak ketiga |
+| `sfx/condition/sfx_cond_ban_mendesis_01.wav` | Ban mendesis: desis derau bernada tinggi yang meredup | 0,65 detik | `tools/audio_art/sintesis_kondisi.py` | Milik project, tanpa atribusi pihak ketiga |
+| `sfx/condition/sfx_cond_servis_01.wav` | Servis di bengkel: tiga ketukan ratchet lalu dua dentingan naik | 0,60 detik | `tools/audio_art/sintesis_kondisi.py` | Milik project, tanpa atribusi pihak ketiga |
+| `sfx/condition/sfx_cond_upgrade_01.wav` | Upgrade di bengkel: empat nada naik bertimbre cerah | 0,80 detik | `tools/audio_art/sintesis_kondisi.py` | Milik project, tanpa atribusi pihak ketiga |
+
 ## Pihak ketiga
 
 Belum ada.

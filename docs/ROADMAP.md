@@ -78,7 +78,7 @@ Skala dipilih Ronggur; sisanya didelegasikan ke agent dengan alasan tertulis. Bi
 | Cerita besar dan akhirnya | M3 |
 | Distrik bebas dipilih atau berurutan, syarat reputasi tiap distrik (GDD 9.5) | M3 |
 | Misi lintas hari, efek gagal ke pelanggan tertentu (GDD 10.9) | Fase 4 |
-| Efek kerusakan, ongkos servis, laju aus, kerusakan di mode bantu (GDD 12.5) | M3 (bengkel) |
+| Efek kerusakan, ongkos servis, laju aus (GDD 12.5): angka usulan run 6A1 ada di BALANCING 8, menunggu uji HP. **Kerusakan di mode bantu diputuskan pemilik 2026-10-20: tidak mengubah keausan atau kerusakan.** | M3 (bengkel) |
 | Iklan satu-satunya pemasukan atau ada "hapus iklan", besar bonus iklan (GDD 14.3) | M4 |
 | Target usia dan pasar | M4 (kebijakan privasi, aturan iklan) |
 | Musik atau hanya ambience | M3 (audio) |
