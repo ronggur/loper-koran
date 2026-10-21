@@ -161,9 +161,9 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 
 - [ ] Kepribadian pelanggan dan reputasi distrik (GDD 8)
 - [ ] Pelanggan baru dan berhenti
-- [ ] Komponen sepeda: aus, rusak dengan tanda peringatan, efek di rute (GDD 12)
-- [ ] Layar bengkel: servis dan upgrade
-- [ ] Ekonomi dari `config.gd` (GDD 14.1, BALANCING 7)
+- [ ] Komponen sepeda: aus, rusak dengan tanda peringatan, efek di rute (GDD 12) (run 6A1, PR #43: kode dan tes selesai; belum dicentang karena "terasa menghambat, bukan memblokir" dan frekuensi peringatan butuh uji HP, `SETUP_ANDROID.md` 8.11)
+- [x] Layar bengkel: servis dan upgrade (run 6A1, PR #43: `scenes/bengkel/`, `Economy`, `PemuatToko`, `upgrades.json`; dibuktikan tes smoke layar dan alur hari; keterbacaan dan harga di HP menunggu 8.11)
+- [ ] Ekonomi dari `config.gd` (GDD 14.1, BALANCING 7) (run 6A1: harga bengkel dan ongkos naik sudah di `Config`; setoran tiga pos dan ekonomi cerita di 6B, belum dicentang)
 - [ ] Milestone dasar (GDD 13)
 
 ## Fase 7 — Vertical slice perumahan & audio dasar (M3)
