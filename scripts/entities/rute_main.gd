@@ -101,6 +101,7 @@ var _daftar_upgrade: Array[DataToko] = []
 @onready var _penerap: PenerapPenutup = %PenerapPenutup
 @onready var _panel_akhir: PanelAkhirRute = %PanelAkhir
 @onready var _rintangan_daur: RintanganDaur = %Rintangan
+@onready var _dekor_daur: DekorDaur = %Dekor
 @onready var _umpan_gambar: UmpanMelayangGambar = %UmpanMelayang
 @onready var _layar_hasil: LayarHasil = %LayarHasil
 @onready var _kucing: KucingMisi = %Kucing
@@ -111,6 +112,7 @@ func _siapkan_dunia() -> void:
 	_sepeda.umpan_balik().atur_sprite(true)
 	_daur.penerap = _penerap
 	_rintangan_daur.penerap = _penerap
+	_dekor_daur.penerap = _penerap
 	_kucing.penerap = _penerap
 	_tutorial_node.lewati_diminta.connect(_saat_tutorial_dilewati)
 	koran_dilempar.connect(_saat_lempar_diterima)
@@ -127,6 +129,7 @@ func _perbarui_dunia(jarak_ubin: float) -> void:
 	_daur.atur_terantar(_skor.terantar)
 	_area_kotak.perbarui(jarak_ubin)
 	_rintangan_daur.perbarui(_rintangan, jarak_ubin)
+	_dekor_daur.perbarui(jarak_ubin)
 	_umpan_gambar.tampilkan(_umpan)
 	_penerap.terapkan(_sepeda.posisi_dunia())
 	var status: AkhirRute.Status = AkhirRute.periksa(_selesai, jarak_ubin, _rute.panjang_ubin)
@@ -269,8 +272,10 @@ func _susun(benih: int) -> void:
 	_tutorial_node.visible = true
 	_kontrol.set_process_input(true)
 	_daur.atur_rute(_rute)
+	_tanah.atur_baris_masuk(UbinKhusus.himpunan_baris_masuk(_rute.objek))
 	_area_kotak.atur_rute(_rute)
 	_rintangan_daur.lepas_semua()
+	_dekor_daur.atur_rute(_rute)
 	_penerap.terapkan(_sepeda.posisi_dunia())
 	_panel_akhir.tampilkan(false)
 	if gagal:
@@ -423,6 +428,11 @@ func daur() -> RumahDaurRute:
 ## Gambar rintangan (untuk tes dan probe).
 func rintangan_daur() -> RintanganDaur:
 	return _rintangan_daur
+
+
+## Gambar dekor pinggir jalan (untuk tes dan probe).
+func dekor_daur() -> DekorDaur:
+	return _dekor_daur
 
 
 ## Gambar umpan balik melayang (untuk tes dan probe).

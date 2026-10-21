@@ -71,3 +71,24 @@ static func tapak_rumah(sisi: LoperAnim.Sisi, maju_awal_ubin: float) -> Rect2:
 ## Objek penutup dari rumah rute (tapak dan tinggi dari `Config.RUTE_RUMAH_*`).
 static func dari_rumah(rumah: RouteBuilder.RumahRute) -> Objek:
 	return buat(tapak_rumah(rumah.sisi, rumah.maju_ubin), Config.RUTE_RUMAH_TINGGI_UBIN, rumah.id)
+
+
+## Tapak kotak rumah rute seperti yang DIGAMBAR (run fase5b bagian B2, P-4): sama dengan `tapak_rumah`, kecuali rumah sisi `dekat` digeser
+## `RUTE_RUMAH_DEKAT_MUNDUR_UBIN` menjauh dari jalan (lateral positif), sebagaimana sprite-nya (`SpriteRumah.pusat_gambar_dunia`). Hanya untuk kotak yang didaftarkan ke
+## penerap penutup (alfa gambar mengikuti sprite); tapak logika (`tapak_rumah`, validasi segmen, zona) tidak berubah. Sisi `TIDAK_ADA` = persegi kosong.
+static func tapak_rumah_gambar(sisi: LoperAnim.Sisi, maju_awal_ubin: float) -> Rect2:
+	var tapak: Rect2 = tapak_rumah(sisi, maju_awal_ubin)
+	if sisi == LoperAnim.Sisi.DEKAT:
+		tapak.position.x += Config.RUTE_RUMAH_DEKAT_MUNDUR_UBIN
+	return tapak
+
+
+## Objek penutup rumah rute untuk penerap (tapak `tapak_rumah_gambar`, tinggi dari `Config.RUTE_RUMAH_*`).
+static func dari_rumah_gambar(rumah: RouteBuilder.RumahRute) -> Objek:
+	return buat(tapak_rumah_gambar(rumah.sisi, rumah.maju_ubin), Config.RUTE_RUMAH_TINGGI_UBIN, rumah.id)
+
+
+## Objek penutup dekor rute (semua dekor sisi `dekat`: pohon, lampu, tong sampah): tapak dan tinggi dari `DekorRute.tapak_penutup` dan `DekorRute.tinggi_penutup` (`Config.RUTE_DEKOR_*`, tinggi = tinggi sprite nyata);
+## id = id dekor. Dekor sisi `seberang`: tinggi 0, tidak pernah menutupi.
+static func dari_dekor(dekor: RouteBuilder.DekorItem) -> Objek:
+	return buat(DekorRute.tapak_penutup(dekor.jenis, dekor.varian, dekor.sisi, dekor.maju_ubin), DekorRute.tinggi_penutup(dekor.jenis, dekor.varian, dekor.sisi), dekor.id)

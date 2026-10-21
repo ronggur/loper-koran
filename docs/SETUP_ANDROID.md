@@ -690,3 +690,31 @@ Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build 
 8. Save lama utuh ya / tidak
 Catatan (bentuk, warna, angka yang ingin diubah dan alasannya): ____
 ```
+
+### 8.13 Uji tembok sisi dekat, dekor, dan ubin tambahan di rute (run `20261021-fase5b-tembok-dekor`, belum diuji)
+
+Penguji: pemilik sendiri (rule `testing`). Semua bentuk, warna, dan penempatan usulan (ART_DIRECTION 6.3, 6.4, 6.5, 11): catat yang ingin diubah beserta alasannya, jangan diubah di sesi uji. Run ini hanya tampilan dan data dekor; skor, lemparan, zona, tenggat, gerak, tabrakan, rintangan, misi, kondisi, bengkel, dan save tidak berubah (butir 8). **Pasang tanpa menghapus apa pun** (`adb install -r builds/kring-kring-debug.apk`, hanya setelah izin pemilik; HP dipakai bersama project lain). **Jangan uninstall.** Rute perumahan tidak punya pelanggan sisi dekat, jadi butir 2 dinilai dari tangkapan rute uji buatan atau tidak sama sekali di HP. Bukti desktop: tangkapan `docs/loop/20261021-fase5b-tembok-dekor/shots/iter2/` (iter1 sebelum perbaikan QA-001) (`<lebar>x<tinggi>_dekat_<keadaan>.png` di 2340x1080, 1920x1080, 2400x1080, 1600x720) dari `tests/probe_sisi_dekat_jendela.gd`.
+
+1. [ ] **Tembok rendah terbaca sebagai pagar atau batas halaman, bukan pita gelap di tepi bawah layar.** Empat varian (polos krem, bata merah, besi dengan jeruji gelap, pot dengan semak) terbedakan, dan tiang ujung tidak berisik. Rumah dekat terlihat penuh di belakang tembok (digambar mundur 1,25 ubin) dan **tidak pudar** saat sepeda di trotoar dekat. Diharapkan: jalur dekat dan trotoar dekat tetap terbaca, tembok tidak menimpa sepeda. Hasil: ya / tidak (varian mana yang berisik: ____).
+2. [ ] **Sasaran sisi dekat tetap jelas di depan tembok** (hanya rute uji buatan; kotak surat sasaran terlihat penuh, garis bidik dan koran terbang terbaca). Keraguan yang diketahui: varian pot menutupi 13,1% zona kotak surat di tanah, zona teras dekat tertutup tembok (teras dekat tidak terlihat dan bukan sasaran). Hasil: ya / tidak / tidak diuji.
+3. [ ] **Pohon, lampu jalan, dan tong sampah sisi dekat jadi semi-transparan saat menutupi sepeda, termasuk di lajur sepeda (lateral sekitar 0,25 sampai 1,0) dan trotoar**: sepeda tidak pernah tertutup opak (kotak penutup = tinggi dan lebar sprite nyata, dibuktikan dengan piksel di desktop, iterasi 2 P-6). Catat apakah semi-transparan terbaca dan tidak membingungkan jalur, tidak tertukar dengan sasaran atau rintangan, dan apakah pohon/lampu memudar terlalu sering atau terlalu jauh dari sepeda (kotak lebar). Pohon dan lampu sisi seberang tidak menutupi kotak surat dan tidak menimpa sepeda di tepi seberang. Tong sampah sisi dekat ikut semi-transparan saat sepeda di trotoar dekat berada di belakangnya (P-7). Bayangan tanah pohon dan lampu **selalu jatuh ke kanan bawah** layar di kedua sisi (dipanggang di sprite). Hasil: menutupi terbaca ya / tidak, memudar terlalu sering ya / tidak, bayangan tidak mengganggu ya / tidak.
+4. [ ] **Tong sampah abu-abu logam tidak tertukar dengan kotak surat abu-abu rumah bukan pelanggan** (radar bukan pelanggan, `RADAR_BUKAN`). Keraguan yang diketahui: dari jauh mirip. Hasil: ya / tidak.
+5. [ ] **Ubin jalan masuk garasi membuat mobil parkir terbaca sebagai garasi** (beton di trotoar dan rumput pertama tepat di bawah mobil) dan **simbol sepeda tiap 12 baris di kedua lajur sepeda tidak terbaca sebagai marka bahaya atau rintangan**. Ujung kerb di tepi jalan masuk belum ada ubin khusus (22 piksel, 5C). Hasil: garasi ya / tidak, simbol ya / tidak.
+6. [ ] **Rumput luar bervariasi tanpa terlihat acak berisik** (tidak ada pita, garis, atau pola berulang yang mengganggu saat ngebut). Hasil: ya / tidak.
+7. [ ] **60 fps tidak turun dan piksel tetap tajam.** Tembok, pohon, lampu, dan ubin yang berganti tekstur tiap satu ubin maju tidak menurunkan fps di HP menengah; tidak ada blur. Hasil: ya / tidak.
+8. [ ] **Save lama tetap jalan.** Run ini tidak mengubah save: buka app dengan save v3 yang ada; koran hari, koin, kondisi sepeda, dan misi utuh. Hasil: ya / tidak.
+
+**Lembar hasil 8.13 (tembok, dekor, ubin tambahan, run 5B):**
+
+```
+Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build (commit): ____
+1. Tembok terbaca sebagai pagar ya / tidak   empat varian terbedakan ya / tidak   tiang berisik ya / tidak   rumah dekat tidak pudar ya / tidak
+2. Sasaran dekat jelas ya / tidak / tidak diuji   zona tertutup mengganggu ya / tidak
+3. Pohon dan lampu menutupi terbaca ya / tidak   tertukar dengan sasaran atau rintangan ya / tidak   bayangan ke kanan bawah mengganggu ya / tidak
+4. Tong tertukar dengan kotak surat abu-abu ya / tidak
+5. Garasi terbaca ya / tidak   simbol sepeda tertukar dengan marka bahaya ya / tidak
+6. Rumput bervariasi wajar ya / tidak   berisik ya / tidak
+7. 60 fps tetap ya / tidak   piksel tajam ya / tidak
+8. Save lama utuh ya / tidak
+Catatan (bentuk, warna, angka yang ingin diubah dan alasannya): ____
+```

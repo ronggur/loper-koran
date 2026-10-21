@@ -1,0 +1,15 @@
+{
+ "sprite": "prop_pohon_ketapang.png",
+ "cell": [
+  141,
+  124
+ ],
+ "frames": 1,
+ "fps": 0,
+ "ground_anchor": [
+  35,
+  70
+ ],
+ "board": "dekor",
+ "note": "Usulan, tools/env_art/lampu_pohon.py --salin (run fase5b-tembok-dekor). Ketapang kencana: tajuk bertingkat seperti payung. Titik pijak = pangkal batang."
+}

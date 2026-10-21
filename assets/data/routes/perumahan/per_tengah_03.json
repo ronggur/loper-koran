@@ -27,5 +27,11 @@
   ],
   "titik_misi": [
     { "nama": "atap", "pos": 22, "sisi": "seberang" }
+  ],
+  "dekor": [
+    { "jenis": "pohon", "pos": 11, "sisi": "dekat", "varian": "ketapang" },
+    { "jenis": "pohon", "pos": 21, "sisi": "seberang", "varian": "glodokan" },
+    { "jenis": "tong_sampah", "pos": 27, "sisi": "dekat", "varian": "logam" },
+    { "jenis": "lampu_jalan", "pos": 29, "sisi": "seberang", "varian": "lengan" }
   ]
 }

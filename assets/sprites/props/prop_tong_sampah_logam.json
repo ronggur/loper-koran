@@ -1,0 +1,15 @@
+{
+ "sprite": "prop_tong_sampah_logam.png",
+ "cell": [
+  20,
+  30
+ ],
+ "frames": 1,
+ "fps": 0,
+ "ground_anchor": [
+  10,
+  25
+ ],
+ "board": "properti",
+ "note": "Usulan, tools/env_art/gelombang1 (Fase 5 gelombang 1). Frame berjajar kiri ke kanan. Tong bulat bertutup abu-abu logam (K-1: hijau dibuang), tapak r 7 unit."
+}

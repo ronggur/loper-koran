@@ -1116,6 +1116,8 @@ const BENGKEL_KOLOM_UPGRADE_RASIO: float = 1.0
 ## Tiap sprite = [lebar sel, tinggi sel, jumlah frame, titik pijak x, titik pijak y], piksel; frame berjajar kiri ke kanan. Sama dengan `cell`, `frames`, dan `ground_anchor` di JSON
 ## aset (`assets/sprites/props/`, `assets/sprites/vfx/`); tes membandingkannya dengan JSON dan ukuran PNG. Pemilihan frame dan letak gambar ada di `DefSprite` dan turunannya.
 ## Indeks isi larik `SPRITE_*`: lebar sel 0, tinggi sel 1, jumlah frame 2, pijak x, pijak y; panjang larik.
+const SPRITE_INDEKS_LEBAR: int = 0
+const SPRITE_INDEKS_TINGGI: int = 1
 const SPRITE_INDEKS_PIJAK_X: int = 3
 const SPRITE_INDEKS_PIJAK_Y: int = 4
 const SPRITE_PANJANG: int = 5
@@ -1162,3 +1164,63 @@ const UMPAN_KOIN_TIP_FPS: float = 10.0
 const UMPAN_KOIN_TIP_SPRITE_NILAI: int = 5
 ## Kotak kilau kucing misi (lebar, tinggi) piksel game: sprite 9x9 di tengahnya, pojok kiri atas kotak = `MISI_KILAU_POSISI_PX`. Juga kotak terburuk untuk "terlihat di layar" (`TampilMisi`).
 const MISI_KILAU_KOTAK_PX: Array[int] = [11, 11]
+
+## --- Tembok sisi dekat (run fase5b-tembok-dekor bagian B1, D-2 dan D-3; usulan, tinggi dan mundur dinilai di HP) ---
+## Pusat tembok belakang melintang jalan, ubin dari garis tengah (positif = dekat): tebal 4 unit (0,125 ubin), jadi sisi jalannya tepat di `RUTE_RUMAH_DEKAT_X_UBIN` (3,0) dan selisih pusat 0,125 = setengah tebal.
+const RUTE_TEMBOK_X_UBIN: float = 3.125
+## Rumah sisi dekat DIGAMBAR sejauh ini lebih jauh dari jalan (ubin, arah lateral positif); tapak logika (`RUTE_RUMAH_DEKAT_X_UBIN`, penutup, zona) tidak berubah.
+const RUTE_RUMAH_DEKAT_MUNDUR_UBIN: float = 1.25
+## Panjang satu modul tembok sepanjang jalan, ubin (satu modul sudah membawa tiang di awalnya; tiang penutup menutup ujung rantai).
+const RUTE_TEMBOK_MODUL_UBIN: float = 1.0
+## Nama varian tembok, urut tetap (indeks hasil hash mod 4): sprite `house_tembok_<varian>` dan `house_tembok_tiang`.
+const RUTE_TEMBOK_VARIAN: Array[String] = ["polos", "bata", "besi", "pot"]
+## Sprite tembok (modul dan tiang sama): [lebar sel, tinggi sel, frame, pijak x, pijak y], piksel; pijak = garis tengah tembok di awal modul. Sama dengan JSON aset `assets/sprites/houses/perumahan/house_tembok_*.json`, dijaga tes.
+const SPRITE_TEMBOK: Array[int] = [46, 46, 1, 41, 25]
+## Geser layar antar modul tembok berurutan, piksel game: satu ubin mundur dari jalan = (-32, +16). Dijaga tes terhadap `Iso`.
+const SPRITE_TEMBOK_GESER_PX: Array[int] = [-32, 16]
+## Penghitung hash FNV-1a 32 bit (bukan angka tuning): nilai awal, pengali, dan masker 32 bit. Dipakai `VarianTembok` memilih varian dari id rumah tanpa `hash()` dan tanpa RNG.
+const HASH_FNV1A_AWAL: int = 2166136261
+const HASH_FNV1A_KALI: int = 16777619
+const HASH_FNV1A_MASKER: int = 4294967295
+## Tambahan penghitung hash FNV-1a atas bilangan bulat (`UbinKhusus`): jumlah byte per bilangan (32 bit), geser bit antar byte, dan masker satu byte.
+const HASH_FNV1A_BYTE_PER_INT: int = 4
+const HASH_FNV1A_GESER_BIT: int = 8
+const HASH_FNV1A_MASKER_BYTE: int = 255
+
+## --- Ubin khusus di tanah rute (run fase5b-tembok-dekor bagian C, D-7; usulan, dinilai di HP) ---
+## Baris ubin jalan masuk garasi = pembulatan (maju - ini) ke atas, ubin: ubin berpusat di maju bulat dan menutup maju - 0,5 sampai maju + 0,5, jadi titik tepat di batas dua baris jatuh ke baris di belakang.
+const RUTE_BARIS_MASUK_GESER_UBIN: float = 0.5
+## Simbol sepeda di kedua kolom trotoar: satu baris tiap sekian baris ubin maju (baris mutlak dari awal rute), bergeser `RUTE_SIMBOL_SEPEDA_OFFSET_UBIN` (baris mutlak b: simbol bila b - offset kelipatan selang). Tidak di baris jalan masuk garasi.
+const RUTE_SIMBOL_SEPEDA_SELANG_UBIN: int = 12
+const RUTE_SIMBOL_SEPEDA_OFFSET_UBIN: int = 6
+## Variasi rumput polos di kolom rumput luar (di luar kolom rumput pertama): (kolom, baris mutlak) di-hash FNV-1a, sisa bagi `RUTE_RUMPUT_VARIAN_MOD`; nilai di bawah `RUTE_RUMPUT_VARIAN_2_PERSEN` = rumput_2, lalu `RUTE_RUMPUT_VARIAN_3_PERSEN` berikutnya = rumput_3, sisanya rumput_1 (terbanyak).
+const RUTE_RUMPUT_VARIAN_MOD: int = 100
+const RUTE_RUMPUT_VARIAN_2_PERSEN: int = 12
+const RUTE_RUMPUT_VARIAN_3_PERSEN: int = 8
+
+## --- Dekor pinggir jalan di data segmen (run fase5b-tembok-dekor bagian B2, D-5 dan D-6; usulan, dinilai di HP) ---
+## Jenis dekor yang sah di data segmen (urut tetap; tabel `RUTE_DEKOR_*` di bawah sejajar dengan daftar ini).
+const RUTE_DEKOR_JENIS: Array[String] = ["tong_sampah", "pohon", "lampu_jalan"]
+## Varian sah per jenis (D-5): tong sampah logam abu-abu; pohon rindang, glodokan, ketapang; lampu jalan jenis lengan (PJU perumahan).
+const RUTE_DEKOR_VARIAN_TONG_SAMPAH: Array[String] = ["logam"]
+const RUTE_DEKOR_VARIAN_POHON: Array[String] = ["rindang", "glodokan", "ketapang"]
+const RUTE_DEKOR_VARIAN_LAMPU_JALAN: Array[String] = ["lengan"]
+## Lateral pusat dekor sisi `dekat` per jenis, ubin dari garis tengah jalan (besaran saja; tanda positif). Pohon dan tong sampah di halaman (2,5), lampu di luar tepi trotoar (2,25).
+const RUTE_DEKOR_LATERAL_UBIN: Array[float] = [2.5, 2.5, 2.25]
+## Lateral pusat dekor sisi `seberang` per jenis, ubin (besaran saja; tanda negatif). Pohon 2,75 dan lampu 2,625 lebih jauh dari jalan daripada sisi dekat (iterasi 2 run fase5b, D-6): kamera melihat dari sisi dekat, jadi tajuk dan lengan lampu seberang yang digambar sesudah pemain (Y-sort) menimpa pemain di lateral -2,0 sampai -1,75 dengan piksel opak (terukur 272 dan 240 piksel di lateral 2,5 dan 2,25); pada angka ini terukur 0 piksel (tes). Tong sampah 2,5 tetap.
+const RUTE_DEKOR_LATERAL_SEBERANG_UBIN: Array[float] = [2.5, 2.75, 2.625]
+## Setengah sisi tapak kaki dekor per jenis, ubin (persegi di bidang tanah): tong sampah dan pohon 0,5 x 0,5, tiang lampu 0,25 x 0,25. Tapak tidak boleh menyentuh lajur sepeda (|lateral| kurang dari `RUTE_DEKOR_LAJUR_UBIN`). Dipakai validasi tempat dekor, BUKAN kotak penutup.
+const RUTE_DEKOR_SETENGAH_UBIN: Array[float] = [0.25, 0.25, 0.125]
+## Kotak penutup pemain, sejajar `RUTE_DEKOR_SPRITE` (tong, pohon rindang, glodokan, ketapang, lampu seberang, lampu dekat). Tinggi = piksel opak sprite di atas titik pijaknya dibagi 32 piksel per ubin (tong 24, rindang 44, glodokan 63, ketapang 53, lampu seberang 58, lampu dekat 64 piksel). Hanya dekor sisi `dekat` memakai kotak ini (termasuk tong sampah, P-7); sisi `seberang` selalu tinggi 0 (run fase5b iterasi 2, P-6 dan P-7).
+const RUTE_DEKOR_TINGGI_PENUTUP_UBIN: Array[float] = [0.75, 1.375, 1.96875, 1.65625, 1.8125, 2.0]
+## Setengah sisi tapak kotak penutup, ubin (persegi di sekitar titik pijak, sejajar `RUTE_DEKOR_SPRITE`). Lebih besar dari tapak kaki karena tajuk dan lengan lampu melebar jauh dari batang; ukuran terkecil (kelipatan 0,125) yang membuat tidak ada piksel opak dekor di atas piksel pemain tanpa kotak menutupinya, lateral -2,0 sampai 2,0, semua pose berkendara (diukur tes dari PNG): tong 0,625, rindang 0,875, glodokan 0,625, ketapang 0,75, lampu dekat 0,75 (lampu seberang tidak dipakai).
+const RUTE_DEKOR_SETENGAH_PENUTUP_UBIN: Array[float] = [0.625, 0.875, 0.625, 0.75, 0.75, 0.75]
+## Batas lajur sepeda, ubin dari garis tengah: sepeda tidak pernah melewati lateral 2,0 (trotoar sampai tepi), dekor dan tapak kakinya harus di luar.
+const RUTE_DEKOR_LAJUR_UBIN: float = 2.0
+## Jarak paling dekat antara dua dekor sesisi sepanjang jalan, ubin (`pos` bilangan bulat, jadi dua dekor tidak di ubin yang sama).
+const RUTE_DEKOR_JARAK_MIN_UBIN: int = 1
+## `pos` dekor paling kecil, ubin dari awal segmen (paling besar = panjang segmen - sekian): dekor boleh di dekat tepi, jarak antar segmen terjaga oleh batas ini.
+const RUTE_DEKOR_TEPI_UBIN: int = 1
+## Sprite dekor terpasang (PNG di `assets/sprites/props/`), sejajar dengan `RUTE_DEKOR_SPRITE_DATA` (lima angka tiap sprite: lebar sel, tinggi sel, frame, pijak x, pijak y, piksel; sama dengan JSON aset dan ukuran PNG, dijaga tes).
+const RUTE_DEKOR_SPRITE: Array[String] = ["prop_tong_sampah_logam", "prop_pohon_rindang", "prop_pohon_glodokan", "prop_pohon_ketapang", "prop_lampu_lengan_seberang", "prop_lampu_lengan_dekat"]
+const RUTE_DEKOR_SPRITE_DATA: Array[int] = [20, 30, 1, 10, 25, 151, 119, 1, 41, 63, 121, 126, 1, 25, 77, 141, 124, 1, 35, 70, 85, 104, 1, 9, 63, 85, 104, 1, 22, 69]

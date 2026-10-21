@@ -3,10 +3,12 @@
 
 1. `tools/env_art/gelombang1/render.py --salin` dan `tools/env_art/ubin_perumahan.py --salin` deterministik: dua kali jalan = piksel RGBA sama
    dan JSON byte-identik (tujuan dialihkan ke folder sementara lewat ENV_ART_SALIN_KE; folder repo tidak disentuh).
-2. Isi `assets/sprites/props/`, `vfx/`, `tiles/perumahan/` piksel-identik (PNG) dan byte-identik (JSON) dengan keluaran skrip, dan berkas aset
-   di folder itu HANYA daftar D-1 (13 sprite gelombang 1 + 7 ubin + JSON ubin terpangkas, ditambah kotak surat lama). Tidak ada aset
-   gelombang 1 yang belum dipasang (tong sampah, jejak, mangkuk, portal, pos, tembok, percikan, polisi tidur, zebra, genangan, `*_masuk`,
-   `*_simbol`, `aspal_N`, `rumput_2/3`) di assets/.
+2. Isi `assets/sprites/props/`, `vfx/`, `houses/perumahan/`, `tiles/perumahan/` piksel-identik (PNG) dan byte-identik (JSON) dengan keluaran skrip,
+   dan berkas aset di folder itu HANYA daftar D-1 (run 5A: 13 sprite gelombang 1 + 7 ubin + JSON ubin terpangkas; run 5B: lima tembok, tong sampah logam,
+   tiga pohon, dua lampu, `rumput_2/3`, empat ubin khusus), ditambah berkas lama (kotak surat, rumah perumahan). Tidak ada aset gelombang 1 yang belum
+   dipasang (tong sampah biru, jejak, mangkuk, portal, pos, percikan, polisi tidur, zebra, genangan, `aspal_N`, `*_dekat_masuk`) di assets/.
+   Catatan run 5B: pohon dan lampu dikeluarkan `tools/env_art/lampu_pohon.py --salin` (diuji `uji_aset_lampu_pohon.py` dan `uji_aset_pasang_5b.py`),
+   jadi hanya dicek ada di repo di sini, bukan dibangkitkan ulang.
 3. JSON konsisten: sel x jumlah frame = ukuran PNG, titik pijak di dalam sel (kecuali tumpangan kotak surat), ubin 64x32 pijak (32, 16),
    `tile_perumahan.json` hanya memuat ubin yang dipasang dan `tiles` = berkas PNG di folder.
 4. Impor (AC-3): tiap PNG baru punya `.png.import` dengan `compress/mode=0` (Lossless) dan `mipmaps/generate=false`, ukuran < 2048, `.uid`
@@ -46,8 +48,15 @@ PASANG_SPRITE = {
 }
 LAMA_PROPS = ['prop_kotak_surat', 'prop_kotak_surat_bukan']     # sudah ada sebelum run 5A (run 3A)
 PASANG_UBIN = ['rumput_seberang', 'trotoar_seberang', 'aspal_seberang', 'aspal_dekat', 'trotoar_dekat', 'rumput_dekat']
-UBIN_TAMBAHAN = ['rumput_1']        # pengecualian D-2 (satu ubin rumput polos)
-TIDAK_DIPASANG = ('house_tembok_', 'prop_tong_sampah', 'mission_jejak', 'mission_mangkuk', 'prop_portal', 'prop_pos', 'vfx_percikan',
+UBIN_TAMBAHAN = ['rumput_1', 'rumput_2', 'rumput_3']    # D-2 run 5A (rumput_1) dan D-1 run 5B (rumput_2, rumput_3): rumput polos kolom luar
+UBIN_KHUSUS = ['trotoar_seberang_masuk', 'rumput_seberang_masuk', 'trotoar_seberang_simbol', 'trotoar_dekat_simbol']   # D-1 run 5B
+# Run 5B (D-1): keluaran tambahan render.py --salin (isi pasangan 5A di atas tidak berubah) dan keluaran lampu_pohon.py --salin.
+PASANG_SPRITE_5B = {
+    'houses/perumahan': ['house_tembok_polos', 'house_tembok_bata', 'house_tembok_besi', 'house_tembok_pot', 'house_tembok_tiang'],
+    'props': ['prop_tong_sampah_logam'],
+}
+PASANG_LAMPU_POHON = ['prop_pohon_rindang', 'prop_pohon_glodokan', 'prop_pohon_ketapang', 'prop_lampu_lengan_seberang', 'prop_lampu_lengan_dekat']
+TIDAK_DIPASANG = ('prop_tong_sampah_biru', 'mission_jejak', 'mission_mangkuk', 'prop_portal', 'prop_pos', 'vfx_percikan',
                   'tile_perumahan_polisi_tidur', 'tile_perumahan_zebra', 'tile_perumahan_genangan', 'prop_polisi_tidur')
 
 gagal = 0
@@ -171,12 +180,22 @@ def uji_susunan(periksa):
     periksa(not (rusak == kanvas).all(), 'kontrol: pembanding susunan mendeteksi satu piksel berbeda')
 
 
+def ekspektasi_skrip():
+    """{folder relatif: [nama berkas]} keluaran render.py --salin dan ubin_perumahan.py --salin (ditulis eksplisit, bukan dari skrip)."""
+    props = sorted(n + e for n in PASANG_SPRITE['props'] + PASANG_SPRITE_5B['props'] for e in ('.png', '.json'))
+    vfx = sorted(n + e for n in PASANG_SPRITE['vfx'] for e in ('.png', '.json'))
+    rumah = sorted(n + e for n in PASANG_SPRITE_5B['houses/perumahan'] for e in ('.png', '.json'))
+    ubin = sorted(['tile_perumahan_%s.png' % n for n in PASANG_UBIN + UBIN_TAMBAHAN + UBIN_KHUSUS] + ['tile_perumahan.json'])
+    return {'props': props, 'vfx': vfx, os.path.join('houses', 'perumahan'): rumah, os.path.join('tiles', 'perumahan'): ubin}
+
+
 def ekspektasi_repo():
     """{folder relatif: [nama berkas aset]} yang harus ada di assets/sprites sesuai D-1 (ditulis eksplisit, bukan dari skrip)."""
-    props = sorted(n + e for n in PASANG_SPRITE['props'] + LAMA_PROPS for e in ('.png', '.json'))
-    vfx = sorted(n + e for n in PASANG_SPRITE['vfx'] for e in ('.png', '.json'))
-    ubin = sorted(['tile_perumahan_%s.png' % n for n in PASANG_UBIN + UBIN_TAMBAHAN] + ['tile_perumahan.json'])
-    return {'props': props, 'vfx': vfx, os.path.join('tiles', 'perumahan'): ubin}
+    hasil = ekspektasi_skrip()
+    hasil['props'] = sorted(hasil['props'] + [n + e for n in LAMA_PROPS + PASANG_LAMPU_POHON for e in ('.png', '.json')])
+    rumah_lama = sorted(n for n in berkas_aset(os.path.join(SPRITES, 'houses', 'perumahan')) if n.startswith('house_perumahan_'))
+    hasil[os.path.join('houses', 'perumahan')] = sorted(hasil[os.path.join('houses', 'perumahan')] + rumah_lama)
+    return hasil
 
 
 def main():
@@ -187,7 +206,7 @@ def main():
         print('numpy dan pillow dibutuhkan untuk uji ini:', galat)
         return 2
 
-    ekspektasi = ekspektasi_repo()
+    ekspektasi = ekspektasi_skrip()
     with tempfile.TemporaryDirectory() as sementara:
         hasil_salin = {}
         for kunci in ('a', 'b'):
@@ -204,8 +223,8 @@ def main():
 
         a, b = hasil_salin['a'], hasil_salin['b']
         for folder, nama in ekspektasi.items():
-            baru_nama = sorted(n for n in nama if n not in [x + e for x in LAMA_PROPS for e in ('.png', '.json')])
-            # folder keluaran skrip hanya berisi yang dipasang oleh skrip (kotak surat lama bukan keluaran skrip)
+            baru_nama = sorted(nama)
+            # folder keluaran skrip hanya berisi yang dipasang oleh skrip (kotak surat dan rumah lama bukan keluaran skrip)
             isi_a = berkas_aset(os.path.join(a, folder))
             isi_b = berkas_aset(os.path.join(b, folder))
             periksa(isi_a == baru_nama, '--salin menghasilkan tepat daftar D-1 di %s: %s' % (folder, isi_a))
@@ -229,7 +248,7 @@ def main():
                     periksa(baca(repo) == baca(pa), 'assets/sprites/%s/%s byte-identik dengan keluaran skrip' % (folder, n))
 
     # ---- isi folder repo persis daftar D-1
-    for folder, nama in ekspektasi.items():
+    for folder, nama in ekspektasi_repo().items():
         isi = berkas_aset(os.path.join(SPRITES, folder))
         periksa(isi == nama, 'assets/sprites/%s hanya berisi daftar D-1 (+ kotak surat lama): %s' % (folder, isi))
 
@@ -239,42 +258,41 @@ def main():
         semua += [n for n in files if not n.endswith(('.import', '.uid'))]
     asing = [n for n in semua if n.startswith(TIDAK_DIPASANG)]
     periksa(asing == [], 'aset gelombang 1 yang belum dipasang tidak ada di assets/: %s' % asing)
-    asing = [n for n in semua if re.match(r'tile_perumahan_.*(_masuk|_simbol)\.png$', n) or re.match(r'tile_perumahan_(aspal|rumput)_[2-9]\.png$', n)
-             or n in ('tile_perumahan_aspal_1.png',)]
-    periksa(asing == [], 'ubin varian, masuk, simbol tidak ada di assets/: %s' % asing)
+    asing = [n for n in semua if re.match(r'tile_perumahan_.*_dekat_masuk\.png$', n) or re.match(r'tile_perumahan_aspal_[0-9]\.png$', n)
+             or re.match(r'tile_perumahan_rumput_([04-9])\.png$', n)]
+    periksa(asing == [], 'ubin yang belum dipasang (aspal_N, *_dekat_masuk, rumput_4+) tidak ada di assets/: %s' % asing)
 
     # ---- JSON konsisten dengan PNG
-    for folder in ('props', 'vfx'):
-        for n in PASANG_SPRITE[folder]:
-            png = os.path.join(SPRITES, folder, n + '.png')
-            js = os.path.join(SPRITES, folder, n + '.json')
-            if not (os.path.isfile(png) and os.path.isfile(js)):
-                periksa(False, 'PNG dan JSON ada: %s/%s' % (folder, n))
-                continue
-            m = json.loads(baca(js))
-            lebar, tinggi = ukuran(png)
-            cw, ch = m['cell']
-            periksa(m['sprite'] == n + '.png', 'JSON %s menunjuk PNG sendiri' % n)
-            periksa((lebar, tinggi) == (cw * m['frames'], ch), 'JSON %s: sel x frame = ukuran PNG (%s x %d vs %s)' % (n, m['cell'], m['frames'], (lebar, tinggi)))
-            ax, ay = m['ground_anchor']
-            if n != 'prop_koran_kotak_surat':
-                periksa(0 <= ax < cw and 0 <= ay < ch, 'JSON %s: titik pijak di dalam sel' % n)
-            periksa(lebar < 2048 and tinggi < 2048, 'ukuran < 2048: %s' % n)
+    daftar_json = [(f, n) for f in ('props', 'vfx') for n in PASANG_SPRITE[f]] + [(f, n) for f, ns in PASANG_SPRITE_5B.items() for n in ns]
+    for folder, n in daftar_json:
+        png = os.path.join(SPRITES, folder, n + '.png')
+        js = os.path.join(SPRITES, folder, n + '.json')
+        if not (os.path.isfile(png) and os.path.isfile(js)):
+            periksa(False, 'PNG dan JSON ada: %s/%s' % (folder, n))
+            continue
+        m = json.loads(baca(js))
+        lebar, tinggi = ukuran(png)
+        cw, ch = m['cell']
+        periksa(m['sprite'] == n + '.png', 'JSON %s menunjuk PNG sendiri' % n)
+        periksa((lebar, tinggi) == (cw * m['frames'], ch), 'JSON %s: sel x frame = ukuran PNG (%s x %d vs %s)' % (n, m['cell'], m['frames'], (lebar, tinggi)))
+        ax, ay = m['ground_anchor']
+        if n != 'prop_koran_kotak_surat':
+            periksa(0 <= ax < cw and 0 <= ay < ch, 'JSON %s: titik pijak di dalam sel' % n)
+        periksa(lebar < 2048 and tinggi < 2048, 'ukuran < 2048: %s' % n)
     meta = json.loads(baca(os.path.join(SPRITES, 'tiles', 'perumahan', 'tile_perumahan.json')))
     periksa(meta['tile'] == [64, 32] and meta['ground_anchor'] == [32, 16], 'JSON ubin: 64x32, titik pijak (32, 16)')
-    periksa(meta['tiles'] == sorted('tile_perumahan_%s.png' % n for n in PASANG_UBIN + UBIN_TAMBAHAN), 'JSON ubin hanya memuat ubin yang dipasang: %s' % meta['tiles'])
+    periksa(meta['tiles'] == sorted('tile_perumahan_%s.png' % n for n in PASANG_UBIN + UBIN_TAMBAHAN + UBIN_KHUSUS), 'JSON ubin hanya memuat ubin yang dipasang: %s' % meta['tiles'])
     periksa(sorted(meta['kolom_x_ubin']) == sorted(PASANG_UBIN), 'JSON ubin: kolom_x_ubin = enam kolom')
     periksa(meta['kolom_x_ubin'] == {'rumput_seberang': -2.5, 'trotoar_seberang': -1.5, 'aspal_seberang': -0.5, 'aspal_dekat': 0.5,
                                       'trotoar_dekat': 1.5, 'rumput_dekat': 2.5}, 'JSON ubin: pusat kolom -2,5 .. 2,5 ubin')
-    for n in PASANG_UBIN + UBIN_TAMBAHAN:
+    for n in PASANG_UBIN + UBIN_TAMBAHAN + UBIN_KHUSUS:
         jalur = os.path.join(SPRITES, 'tiles', 'perumahan', 'tile_perumahan_%s.png' % n)
         periksa(os.path.isfile(jalur) and ukuran(jalur) == (64, 32), 'ubin %s ukuran 64x32' % n)
 
     # ---- impor Godot (AC-3)
-    png_baru = []
-    for folder in ('props', 'vfx'):
-        png_baru += [os.path.join(SPRITES, folder, n + '.png') for n in PASANG_SPRITE[folder]]
-    png_baru += [os.path.join(SPRITES, 'tiles', 'perumahan', 'tile_perumahan_%s.png' % n) for n in PASANG_UBIN + UBIN_TAMBAHAN]
+    png_baru = [os.path.join(SPRITES, f, n + '.png') for f, n in daftar_json]
+    png_baru += [os.path.join(SPRITES, 'props', n + '.png') for n in PASANG_LAMPU_POHON]
+    png_baru += [os.path.join(SPRITES, 'tiles', 'perumahan', 'tile_perumahan_%s.png' % n) for n in PASANG_UBIN + UBIN_TAMBAHAN + UBIN_KHUSUS]
     for jalur in png_baru:
         nama = os.path.relpath(jalur, SPRITES)
         imp = jalur + '.import'

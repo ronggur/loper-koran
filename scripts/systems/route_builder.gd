@@ -58,6 +58,23 @@ class TitikMisiRute extends RefCounted:
 	var sisi: LoperAnim.Sisi = LoperAnim.Sisi.TIDAK_ADA
 
 
+## Satu dekor pinggir jalan di rute (run fase5b-tembok-dekor bagian B2, AC-10): diturunkan dari data segmen tanpa RNG, hanya tampilan.
+class DekorItem extends RefCounted:
+	## `<id_segmen>:<sisi>@<pos>`: stabil dan unik (dua dekor sesisi tidak di ubin yang sama).
+	var id: String = ""
+	var id_segmen: String = ""
+	## Ubin dari awal segmen (dari data).
+	var pos: int = 0
+	## Ubin dari awal rute.
+	var maju_ubin: float = 0.0
+	## Lateral pusat, ubin dari garis tengah (negatif = seberang; `DekorRute.lateral`).
+	var lateral_ubin: float = 0.0
+	var sisi: LoperAnim.Sisi = LoperAnim.Sisi.TIDAK_ADA
+	## `Config.RUTE_DEKOR_JENIS`.
+	var jenis: String = ""
+	var varian: String = ""
+
+
 ## Satu rute jadi.
 class Rute extends RefCounted:
 	var benih: int = 0
@@ -71,6 +88,8 @@ class Rute extends RefCounted:
 	var rumah: Array[RumahRute] = []
 	var objek: Array[ObjekRute] = []
 	var titik_misi: Array[TitikMisiRute] = []
+	## Dekor pinggir jalan kedua sisi, urut maju (lalu id); tidak memengaruhi rumah, pelanggan, rintangan, atau penilaian.
+	var dekor: Array[DekorItem] = []
 	## Rumah pelanggan, urut maju.
 	var pelanggan: Array[RumahRute] = []
 	## Koran di awal rute (pelanggan + cadangan).
@@ -201,6 +220,15 @@ static func periksa_rute(rute: Rute) -> Array[String]:
 	for i: int in range(1, rintangan.size()):
 		if rintangan[i] - rintangan[i - 1] < float(Config.RUTE_RINTANGAN_JENDELA_UBIN):
 			galat.append("dua rintangan %.1f ubin berdekatan (di %.1f dan %.1f)" % [rintangan[i] - rintangan[i - 1], rintangan[i - 1], rintangan[i]])
+	# Dekor (run fase5b-tembok-dekor B2): dua dekor sesisi tidak lebih dekat dari `RUTE_DEKOR_JARAK_MIN_UBIN` di rute utuh (sambungan segmen terjaga batas `pos`).
+	for sisi: LoperAnim.Sisi in [LoperAnim.Sisi.SEBERANG, LoperAnim.Sisi.DEKAT]:
+		var sebelumnya: float = -INF
+		for butir: DekorItem in rute.dekor:
+			if butir.sisi != sisi:
+				continue
+			if butir.maju_ubin - sebelumnya < float(Config.RUTE_DEKOR_JARAK_MIN_UBIN):
+				galat.append("dua dekor sesisi %.1f ubin berdekatan (di %.1f dan %.1f)" % [butir.maju_ubin - sebelumnya, sebelumnya, butir.maju_ubin])
+			sebelumnya = butir.maju_ubin
 	return galat
 
 
@@ -292,11 +320,23 @@ static func _isi_segmen(rute: Rute, urutan: Array[SegmenRute]) -> void:
 			titik.maju_ubin = awal + float(t.pos)
 			titik.sisi = t.sisi
 			rute.titik_misi.append(titik)
+		for d: SegmenRute.Dekor in segmen.dekor:
+			var butir: DekorItem = DekorItem.new()
+			butir.id_segmen = segmen.id
+			butir.pos = d.pos
+			butir.sisi = d.sisi
+			butir.id = "%s:%s@%d" % [segmen.id, SegmenRute.NAMA_SISI[0] if d.sisi == LoperAnim.Sisi.SEBERANG else SegmenRute.NAMA_SISI[1], d.pos]
+			butir.maju_ubin = awal + float(d.pos)
+			butir.lateral_ubin = DekorRute.lateral(d.jenis, d.sisi)
+			butir.jenis = d.jenis
+			butir.varian = d.varian
+			rute.dekor.append(butir)
 		awal += float(segmen.panjang)
 	rute.panjang_ubin = awal
 	rute.rumah.sort_custom(_lebih_awal)
 	rute.objek.sort_custom(func(a: ObjekRute, b: ObjekRute) -> bool: return a.maju_ubin < b.maju_ubin)
 	rute.titik_misi.sort_custom(func(a: TitikMisiRute, b: TitikMisiRute) -> bool: return a.maju_ubin < b.maju_ubin if a.maju_ubin != b.maju_ubin else a.nama < b.nama)
+	rute.dekor.sort_custom(func(a: DekorItem, b: DekorItem) -> bool: return a.maju_ubin < b.maju_ubin if a.maju_ubin != b.maju_ubin else a.id < b.id)
 
 
 static func _lebih_awal(a: RumahRute, b: RumahRute) -> bool:

@@ -14,5 +14,11 @@
     { "pos": 22, "sisi": "seberang", "jenis": "sayap", "pelanggan_boleh": false }
   ],
   "objek": [],
-  "titik_misi": []
+  "titik_misi": [],
+  "dekor": [
+    { "jenis": "pohon", "pos": 6, "sisi": "dekat", "varian": "ketapang" },
+    { "jenis": "pohon", "pos": 9, "sisi": "seberang", "varian": "glodokan" },
+    { "jenis": "lampu_jalan", "pos": 17, "sisi": "dekat", "varian": "lengan" },
+    { "jenis": "tong_sampah", "pos": 17, "sisi": "seberang", "varian": "logam" }
+  ]
 }

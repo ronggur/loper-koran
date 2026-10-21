@@ -3,11 +3,12 @@
 Dari root repo (butuh numpy dan pillow, seperti tools/env_art):
     python3 tools/env_art/gelombang1/render.py            # ke build/env_art/gelombang1/{sprites,board}/
     python3 tools/env_art/gelombang1/render.py --mock     # juga salin mock terpilih ke docs/design/environment/gelombang1/
-    python3 tools/env_art/gelombang1/render.py --salin    # juga salin HANYA sprite yang dipasang (PASANG) ke assets/sprites/{props,vfx}/
+    python3 tools/env_art/gelombang1/render.py --salin    # juga salin HANYA sprite yang dipasang (PASANG) ke assets/sprites/{props,vfx,houses/perumahan}/
 Keluaran bisa dipindah dengan ENV_ART_OUT (folder induk, sama dengan renderer env_art lain). Hasil deterministik.
 `--salin` (run fase5a-pasang-aset-gelombang1, D-1): 13 sprite (PNG + JSON) dipasang di rute: koran ke props/, VFX sepeda, bintang, koin,
-dan kilau misi ke vfx/. Aset lain (tong sampah, jejak, mangkuk, portal, pos, tembok, percikan, ubin) TIDAK disalin; ubin jalan disalin
-`tools/env_art/ubin_perumahan.py --salin`. `ENV_ART_MOCK_KE` mengganti folder mock `--mock`. `ENV_ART_SALIN_KE` mengganti folder induk tujuan (default assets/sprites; dipakai
+dan kilau misi ke vfx/. Run fase5b-tembok-dekor (D-1): ditambah lima tembok sisi dekat (`house_tembok_{polos,bata,besi,pot,tiang}`) ke
+houses/perumahan/ dan `prop_tong_sampah_logam` ke props/ (tong biru TIDAK, K-2). Aset lain (jejak, mangkuk, portal, pos, percikan, ubin)
+TIDAK disalin; ubin jalan disalin `tools/env_art/ubin_perumahan.py --salin`. `ENV_ART_MOCK_KE` mengganti folder mock `--mock`. `ENV_ART_SALIN_KE` mengganti folder induk tujuan (default assets/sprites; dipakai
 tools/tests_cek/uji_aset_pasang_gelombang1.py). Tiga penyesuaian K-1 (2026-10-21): kilau dua warna, tong sampah logam dan biru
 (hijau dibuang), polisi tidur kuning-hitam lama dibuang dari ubin_perumahan.py.
 """
@@ -43,6 +44,11 @@ PASANG = {
               'prop_koran_terlipat'],
     'vfx': ['vfx_debu_roda', 'vfx_garis_kecepatan_a', 'vfx_garis_kecepatan_b', 'vfx_garis_kecepatan_c', 'vfx_bintang_kena',
             'vfx_koin_tip', 'mission_kilau'],
+}
+# Tambahan run fase5b-tembok-dekor (D-1): isi pasangan 5A di atas tidak berubah.
+PASANG_5B = {
+    'houses/perumahan': ['house_tembok_polos', 'house_tembok_bata', 'house_tembok_besi', 'house_tembok_pot', 'house_tembok_tiang'],
+    'props': ['prop_tong_sampah_logam'],
 }
 
 PANEL = (0x34, 0x27, 0x1F, 255)
@@ -239,12 +245,15 @@ if '--mock' in sys.argv:
         Image.fromarray(kanvas, 'RGBA').save(MOCK / ('lembar_%s_x5.png' % papan))
 if '--salin' in sys.argv:
     ada = {e['name'] for e in S}
-    for folder, nama in PASANG.items():
+    pasang = {folder: list(nama) for folder, nama in PASANG.items()}
+    for folder, nama in PASANG_5B.items():
+        pasang.setdefault(folder, []).extend(nama)
+    for folder, nama in pasang.items():
         tujuan = SALIN_KE / folder
         tujuan.mkdir(parents=True, exist_ok=True)
         for n in nama:
             assert n in ada, n
             for ekstensi in ('.png', '.json'):
                 shutil.copyfile(os.path.join(SPR, n + ekstensi), tujuan / (n + ekstensi))
-    print('disalin ke', SALIN_KE, '(hanya', sum(len(v) for v in PASANG.values()), 'sprite)')
+    print('disalin ke', SALIN_KE, '(hanya', sum(len(v) for v in pasang.values()), 'sprite)')
 print(len(S), 'sprite ->', OUTDIR)

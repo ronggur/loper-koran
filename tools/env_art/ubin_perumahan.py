@@ -15,9 +15,13 @@ diulang ke segala arah.
 `--salin` (run fase5a-pasang-aset-gelombang1, D-1 dan D-2): enam ubin kolom jalan (`PASANG`) ditambah satu ubin rumput polos
 (`PASANG_TAMBAHAN`: `rumput_1`, untuk kolom rumput di luar kolom pertama; ubin `rumput_seberang` membawa tepi kerb luar sehingga
 mengulangnya membuat pita tepi di tiap ubin), masing-masing PNG, ditambah `tile_perumahan.json` yang HANYA memuat ubin yang dipasang
-(dibuat skrip, bukan salinan JSON penuh di build/). Ubin lain (simbol, masuk garasi, aspal_N, rumput_2 dan 3) tetap hanya di build/.
+(dibuat skrip, bukan salinan JSON penuh di build/). Ubin lain (aspal_N, *_dekat_masuk; run 5B memasang simbol, masuk seberang, rumput_2 dan 3) tetap hanya di build/.
 `ENV_ART_SALIN_KE` mengganti folder tujuan (dipakai tools/tests_cek/uji_aset_pasang_gelombang1.py). Polisi tidur kuning-hitam lama
 sudah dibuang dari ekspor (K-1 run 5A): satu-satunya polisi tidur adalah `tile_perumahan_polisi_tidur` di tools/env_art/gelombang1/.
+
+Run fase5b-tembok-dekor (D-1 dan D-4) menambah ke `--salin`: `rumput_2` dan `rumput_3` (variasi rumput polos, `PASANG_TAMBAHAN`) dan empat ubin
+khusus (`PASANG_KHUSUS`): `trotoar_seberang_masuk` dan `rumput_seberang_masuk` (jalan masuk garasi, hanya sisi seberang), `trotoar_seberang_simbol`
+dan `trotoar_dekat_simbol` (simbol sepeda). `aspal_1..3` (polos tanpa garis tepi kerb, memutus garis) dan `*_dekat_masuk` TIDAK disalin.
 """
 import json
 import math
@@ -209,25 +213,29 @@ def ekspor_ubin():
 ROOT = Path(__file__).resolve().parents[2]
 SALIN_KE = Path(os.environ.get('ENV_ART_SALIN_KE', ROOT / 'assets' / 'sprites' / 'tiles' / 'perumahan'))
 PASANG = list(KOLOM)               # enam kolom jalan, urut dari sisi seberang ke sisi dekat (D-1)
-PASANG_TAMBAHAN = ['rumput_1']     # ubin polos untuk kolom rumput di luar kolom pertama (D-2, satu-satunya pengecualian)
+PASANG_TAMBAHAN = ['rumput_1', 'rumput_2', 'rumput_3']   # ubin polos untuk kolom rumput di luar kolom pertama (D-2 run 5A; rumput_2 dan 3: D-1 run 5B)
+PASANG_KHUSUS = ['trotoar_seberang_masuk', 'rumput_seberang_masuk', 'trotoar_seberang_simbol', 'trotoar_dekat_simbol']   # D-1 dan D-7 run 5B
 
 
 def meta_terpasang():
     """Isi `tile_perumahan.json` di assets/: hanya ubin yang dipasang. Titik pijak (32, 16), kolom x dalam ubin dari garis tengah."""
     return {'tile': [64, 32], 'ground_anchor': [32, 16], 'unit_dunia_per_ubin': 32,
-            'note': 'Usulan, tools/env_art/ubin_perumahan.py --salin (run fase5a-pasang-aset-gelombang1). Hanya ubin yang dipasang. '
+            'note': 'Usulan, tools/env_art/ubin_perumahan.py --salin (run fase5a-pasang-aset-gelombang1 dan fase5b-tembok-dekor). Hanya ubin yang dipasang. '
                     'Kolom mengikuti scripts/config.gd: aspal x -1..1 ubin (seberang, dekat), trotoar 1 ubin per sisi (kerb dalam, '
-                    'lajur sepeda, kerb luar), rumput di luar. Ubin sepanjang jalan berulang tiap 1 ubin. rumput_1: rumput polos '
-                    'untuk kolom rumput di luar kolom pertama (rumput_seberang membawa tepi kerb luar yang tidak boleh berulang).',
+                    'lajur sepeda, kerb luar), rumput di luar. Ubin sepanjang jalan berulang tiap 1 ubin. rumput_1, rumput_2, rumput_3: rumput polos '
+                    'untuk kolom rumput di luar kolom pertama (rumput_seberang membawa tepi kerb luar yang tidak boleh berulang; 2 dan 3 variasi, 3 '
+                    'dengan bunga kecil). ubin_khusus: pengganti satu sel kolomnya (*_masuk: jalan masuk garasi beton di bawah mobil parkir, hanya '
+                    'sisi seberang; *_simbol: simbol sepeda dan panah di lajur sepeda trotoar).',
             'kolom_x_ubin': {nm: KOLOM[nm] for nm in PASANG},
             'ubin_polos_luar': list(PASANG_TAMBAHAN),
-            'tiles': sorted('tile_perumahan_%s.png' % nm for nm in PASANG + PASANG_TAMBAHAN)}
+            'ubin_khusus': list(PASANG_KHUSUS),
+            'tiles': sorted('tile_perumahan_%s.png' % nm for nm in PASANG + PASANG_TAMBAHAN + PASANG_KHUSUS)}
 
 
 def salin(ubin):
     """Salin HANYA ubin yang dipasang (PNG) dan JSON terpangkas ke SALIN_KE."""
     SALIN_KE.mkdir(parents=True, exist_ok=True)
-    for nm in PASANG + PASANG_TAMBAHAN:
+    for nm in PASANG + PASANG_TAMBAHAN + PASANG_KHUSUS:
         Image.fromarray(ubin[nm], 'RGBA').save(SALIN_KE / ('tile_perumahan_%s.png' % nm))
     with open(SALIN_KE / 'tile_perumahan.json', 'w') as f:
         json.dump(meta_terpasang(), f, indent=1, ensure_ascii=False); f.write('\n')
@@ -286,4 +294,4 @@ if __name__ == '__main__':
     print('selesai ->', OUT_DIR)
     if '--salin' in sys.argv[1:]:
         salin(u)
-        print('disalin ke', SALIN_KE, '(hanya', len(PASANG) + len(PASANG_TAMBAHAN), 'ubin dan JSON terpangkas)')
+        print('disalin ke', SALIN_KE, '(hanya', len(PASANG) + len(PASANG_TAMBAHAN) + len(PASANG_KHUSUS), 'ubin dan JSON terpangkas)')

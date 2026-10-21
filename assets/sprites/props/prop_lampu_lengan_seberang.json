@@ -1,0 +1,15 @@
+{
+ "sprite": "prop_lampu_lengan_seberang.png",
+ "cell": [
+  85,
+  104
+ ],
+ "frames": 1,
+ "fps": 0,
+ "ground_anchor": [
+  9,
+  63
+ ],
+ "board": "dekor",
+ "note": "Usulan, tools/env_art/lampu_pohon.py --salin (run fase5b-tembok-dekor). PJU perumahan, tiang besi dan lengan lurus (bentuk lib.lamp_post), bingkai mati (siang), lengan ke kanan bawah. Titik pijak = kaki tiang."
+}
