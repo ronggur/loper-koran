@@ -272,6 +272,7 @@ func _susun(benih: int) -> void:
 	_tutorial_node.visible = true
 	_kontrol.set_process_input(true)
 	_daur.atur_rute(_rute)
+	_tanah.atur_baris_masuk(UbinKhusus.himpunan_baris_masuk(_rute.objek))
 	_area_kotak.atur_rute(_rute)
 	_rintangan_daur.lepas_semua()
 	_dekor_daur.atur_rute(_rute)

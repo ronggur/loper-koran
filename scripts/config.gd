@@ -1180,6 +1180,19 @@ const SPRITE_TEMBOK_GESER_PX: Array[int] = [-32, 16]
 const HASH_FNV1A_AWAL: int = 2166136261
 const HASH_FNV1A_KALI: int = 16777619
 const HASH_FNV1A_MASKER: int = 4294967295
+## Tambahan penghitung hash FNV-1a atas bilangan bulat (`UbinKhusus`): jumlah byte per bilangan (32 bit), geser bit antar byte, dan masker satu byte.
+const HASH_FNV1A_BYTE_PER_INT: int = 4
+const HASH_FNV1A_GESER_BIT: int = 8
+const HASH_FNV1A_MASKER_BYTE: int = 255
+
+## --- Ubin khusus di tanah rute (run fase5b-tembok-dekor bagian C, D-7; usulan, dinilai di HP) ---
+## Simbol sepeda di kedua kolom trotoar: satu baris tiap sekian baris ubin maju (baris mutlak dari awal rute), bergeser `RUTE_SIMBOL_SEPEDA_OFFSET_UBIN` (baris mutlak b: simbol bila b - offset kelipatan selang). Tidak di baris jalan masuk garasi.
+const RUTE_SIMBOL_SEPEDA_SELANG_UBIN: int = 12
+const RUTE_SIMBOL_SEPEDA_OFFSET_UBIN: int = 6
+## Variasi rumput polos di kolom rumput luar (di luar kolom rumput pertama): (kolom, baris mutlak) di-hash FNV-1a, sisa bagi `RUTE_RUMPUT_VARIAN_MOD`; nilai di bawah `RUTE_RUMPUT_VARIAN_2_PERSEN` = rumput_2, lalu `RUTE_RUMPUT_VARIAN_3_PERSEN` berikutnya = rumput_3, sisanya rumput_1 (terbanyak).
+const RUTE_RUMPUT_VARIAN_MOD: int = 100
+const RUTE_RUMPUT_VARIAN_2_PERSEN: int = 12
+const RUTE_RUMPUT_VARIAN_3_PERSEN: int = 8
 
 ## --- Dekor pinggir jalan di data segmen (run fase5b-tembok-dekor bagian B2, D-5 dan D-6; usulan, dinilai di HP) ---
 ## Jenis dekor yang sah di data segmen (urut tetap; tabel `RUTE_DEKOR_*` di bawah sejajar dengan daftar ini).
