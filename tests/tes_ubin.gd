@@ -28,6 +28,11 @@ const UBIN_DEKAT_ASPAL: String = "tile_perumahan_aspal_dekat.png"
 const UBIN_DEKAT_TROTOAR: String = "tile_perumahan_trotoar_dekat.png"
 const UBIN_DEKAT_RUMPUT: String = "tile_perumahan_rumput_dekat.png"
 const UBIN_RUMPUT_LUAR: String = "tile_perumahan_rumput_1.png"
+## Ubin tambahan run fase5b-tembok-dekor (D-1): variasi rumput polos dan empat ubin khusus. Hanya dicek ada di folder (isi folder); pemasangan di TanahDaur oleh bagian C.
+const UBIN_5B: Array[String] = [
+	"tile_perumahan_rumput_2.png", "tile_perumahan_rumput_3.png", "tile_perumahan_trotoar_seberang_masuk.png", "tile_perumahan_rumput_seberang_masuk.png",
+	"tile_perumahan_trotoar_seberang_simbol.png", "tile_perumahan_trotoar_dekat_simbol.png",
+]
 ## Jumlah ubin tanah per lebar viewport (tinggi 360) dari `JalanDaur.sel_tanah` SEBELUM run ini (dihitung dari kode lama, ditulis literal)
 ## beserta checksum letaknya: sum(int((x + 10) * 2) * 1009 + int(y + 100)).
 const SEL_SEBELUM: Array = [[640, 434, 7697851], [667, 450, 8215875], [780, 496, 9313896], [800, 511, 9844926]]
@@ -482,13 +487,14 @@ func _test_tanpa_referensi_tak_dipasang() -> void:
 			temuan.append("%s memuat %s" % [jalur, hasil.get_string()])
 	check(berkas.size() > 100, "pemindai membaca banyak berkas sumber (%d)" % berkas.size())
 	check(temuan.is_empty(), "tidak ada rujukan ke aset yang belum dipasang: %s" % [temuan])
-	# Ubin yang dipasang: tepat tujuh PNG dan satu JSON di folder (hasil salin, selain .import/.uid).
+	# Ubin yang dipasang: tujuh PNG run 5A, enam PNG run 5B, dan satu JSON di folder (hasil salin, selain .import/.uid).
 	var isi: Array[String] = []
 	for nama: String in DirAccess.get_files_at(FOLDER_UBIN):
 		if not nama.ends_with(".import") and not nama.ends_with(".uid"):
 			isi.append(nama)
 	isi.sort()
 	var harapan_isi: Array[String] = ["tile_perumahan.json", UBIN_DEKAT_ASPAL, UBIN_DEKAT_RUMPUT, UBIN_DEKAT_TROTOAR, UBIN_RUMPUT_LUAR, UBIN_SEBERANG_ASPAL, UBIN_SEBERANG_RUMPUT, UBIN_SEBERANG_TROTOAR]
+	harapan_isi.append_array(UBIN_5B)
 	harapan_isi.sort()
 	check(isi == harapan_isi, "folder tiles/perumahan hanya berisi ubin yang dipasang: %s" % [isi])
 

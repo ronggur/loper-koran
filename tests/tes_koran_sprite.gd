@@ -31,6 +31,9 @@ const TABEL: Array = [
 ]
 ## Berkas lama yang tetap ada di folder aset bersama sprite yang dipasang.
 const BERKAS_LAMA_PROPS: Array[String] = ["prop_kotak_surat", "prop_kotak_surat_bukan"]
+## Aset props run fase5b-tembok-dekor (D-1): tong sampah logam, tiga pohon, dua lampu mati; awalan "prop_" ditambahkan di kode supaya pemindai rujukan di bawah
+## tidak mengira berkas ini merujuk ke aset yang belum dipakai kode. Hanya dicek ada di folder (uji_aset_pasang_5b.py memeriksa isinya); rujukan kode oleh bagian B.
+const SUFIKS_5B_PROPS: Array[String] = ["tong_sampah_logam", "pohon_rindang", "pohon_glodokan", "pohon_ketapang", "lampu_lengan_seberang", "lampu_lengan_dekat"]
 
 var _cek: Callable
 var _judul: Callable
@@ -483,6 +486,8 @@ func _test_rujukan_sprite_dan_isi_folder() -> void:
 				harapan.append(baris[0])
 		if folder == "props":
 			harapan.append_array(BERKAS_LAMA_PROPS)
+			for sufiks: String in SUFIKS_5B_PROPS:
+				harapan.append("prop_" + sufiks)
 		isi = _unik(isi)
 		isi.sort()
 		harapan.sort()
