@@ -11,7 +11,11 @@
    `tile_perumahan.json` hanya memuat ubin yang dipasang dan `tiles` = berkas PNG di folder.
 4. Impor (AC-3): tiap PNG baru punya `.png.import` dengan `compress/mode=0` (Lossless) dan `mipmaps/generate=false`, ukuran < 2048, `.uid`
    ada, dan `project.godot` menggambar tekstur Nearest (`default_texture_filter=0`) dengan `snap_2d_transforms_to_pixel`.
-5. Kontrol: satu byte yang diubah terdeteksi.
+5. Susunan ubin (AC-6, sisi Python): potongan 8 ubin maju x 8 kolom (-3,5 .. +3,5 ubin, memuat kedua kolom rumput luar `rumput_1`) yang disusun
+   dari berkas PNG di assets/ piksel-identik dengan adegan renderer pada piksel yang dicakup ubin (tanpa celah dan tanpa pita tepi), dan sama
+   dengan referensi `tests/data/ubin_potongan_8_maju.png` yang dibandingkan susunan scene Godot oleh `tests/tes_ubin.gd`. `--perbarui-referensi`
+   menulis ulang berkas referensi itu dari assets/ (hasil skrip, tidak diedit tangan).
+6. Kontrol: satu piksel dan satu byte JSON yang diubah terdeteksi.
 
 Butuh numpy dan pillow (seperti `tools/env_art`); bila tidak ada, uji berhenti dengan exit code 2 (CI memasangnya).
 
@@ -87,6 +91,84 @@ def jalankan(skrip, keluaran, salin_ke):
 def berkas_aset(folder):
     """Berkas aset di folder, tanpa .import dan .uid (hasil Godot)."""
     return sorted(n for n in os.listdir(folder) if not n.endswith(('.import', '.uid'))) if os.path.isdir(folder) else []
+
+
+REFERENSI = os.path.join(ROOT, 'tests', 'data', 'ubin_potongan_8_maju.png')
+KOLOM_REFERENSI = range(-4, 4)      # indeks kolom ic: pusat x = ic + 0,5 ubin (-3,5 .. +3,5)
+BARIS_REFERENSI = range(0, 8)       # 8 ubin maju: pusat y = -maju
+
+
+def nama_ubin_kolom(ic):
+    """Ubin yang dipasang di kolom ic (pusat x = ic + 0,5 ubin), ditulis eksplisit: enam kolom + rumput polos di luar kolom rumput pertama."""
+    x = ic + 0.5
+    if abs(x) >= 3:
+        return 'rumput_1'
+    return {-3: 'rumput_seberang', -2: 'trotoar_seberang', -1: 'aspal_seberang', 0: 'aspal_dekat', 1: 'trotoar_dekat', 2: 'rumput_dekat'}[ic]
+
+
+def susun_referensi():
+    """Susun ubin dari assets/ ke satu gambar RGBA: tiap ubin 64x32 di pusat layar ((x - y) * 32, (x + y) * 16), y = -maju. Kembali (rgba, (kiri, atas))."""
+    import numpy as np
+    from PIL import Image
+    letak = []
+    for m in BARIS_REFERENSI:
+        for ic in KOLOM_REFERENSI:
+            sx = int((ic + 0.5 + m) * 32)
+            sy = int((ic + 0.5 - m) * 16)
+            jalur = os.path.join(SPRITES, 'tiles', 'perumahan', 'tile_perumahan_%s.png' % nama_ubin_kolom(ic))
+            with Image.open(jalur) as g:
+                letak.append((sx - 32, sy - 16, np.array(g.convert('RGBA'))))
+    kiri = min(l[0] for l in letak)
+    atas = min(l[1] for l in letak)
+    lebar = max(l[0] for l in letak) + 64 - kiri
+    tinggi = max(l[1] for l in letak) + 32 - atas
+    kanvas = np.zeros((tinggi, lebar, 4), np.uint8)
+    for x, y, a in letak:
+        tembus = a[..., 3] == 255
+        ruang = kanvas[y - atas:y - atas + 32, x - kiri:x - kiri + 64]
+        ruang[tembus] = a[tembus]
+    return kanvas, (kiri, atas)
+
+
+def uji_susunan(periksa):
+    import numpy as np
+    from PIL import Image
+    kanvas, (kiri, atas) = susun_referensi()
+    # (a) susunan dari berkas = adegan renderer pada piksel yang dicakup ubin (translasi tiap 1 ubin dan rumput_1 menyambung)
+    sys.path.insert(0, os.path.join(ROOT, 'tools', 'env_art'))
+    os.environ.setdefault('ENV_ART_OUT', tempfile.mkdtemp())
+    import ubin_perumahan as UP
+    adegan, _ = UP.render_adegan(lambda s: UP.build_jalan(s))
+    ox, oy = UP.OX, UP.OY
+    tinggi, lebar = kanvas.shape[:2]
+    potong = adegan[atas + oy:atas + oy + tinggi, kiri + ox:kiri + ox + lebar]
+    periksa(potong.shape[:2] == kanvas.shape[:2], 'potongan adegan seukuran susunan (%s vs %s)' % (potong.shape, kanvas.shape))
+    tertutup = kanvas[..., 3] == 255
+    beda = int((potong[..., :3][tertutup].astype(int) != kanvas[..., :3][tertutup].astype(int)).any(axis=1).sum())
+    periksa(beda == 0, 'susunan ubin dari assets/ = adegan renderer: %d piksel beda dari %d (celah atau pita tepi)' % (beda, int(tertutup.sum())))
+    # (b) tanpa celah: setiap piksel yang titik tanahnya jatuh di dalam persegi dunia yang dicakup (x -4..4, y -7,5..0,5 ubin) tertutup ubin
+    py, px = np.mgrid[0:tinggi, 0:lebar]
+    sx, sy = px + 0.5 + kiri, py + 0.5 + atas
+    gx = (sy / 16 + sx / 32) / 2
+    gy = (sy / 16 - sx / 32) / 2
+    dalam = (gx > -4 + 0.01) & (gx < 4 - 0.01) & (gy > -7.5 + 0.01) & (gy < 0.5 - 0.01)
+    celah = int((dalam & ~tertutup).sum())
+    periksa(int(dalam.sum()) > 10000 and celah == 0, 'tanpa celah transparan di dalam persegi yang dicakup ubin (%d piksel dicek, %d celah)' % (int(dalam.sum()), celah))
+    # (c) referensi tests/data = susunan dari assets/ (dibandingkan scene Godot di tests/tes_ubin.gd)
+    if '--perbarui-referensi' in sys.argv:
+        os.makedirs(os.path.dirname(REFERENSI), exist_ok=True)
+        Image.fromarray(kanvas, 'RGBA').save(REFERENSI)
+    if os.path.isfile(REFERENSI):
+        with Image.open(REFERENSI) as g:
+            ref = np.array(g.convert('RGBA'))
+        periksa(ref.shape == kanvas.shape and bool((ref == kanvas).all()), 'tests/data/ubin_potongan_8_maju.png = susunan dari assets/ (jalankan --perbarui-referensi)')
+    else:
+        periksa(False, 'berkas referensi tidak ada: tests/data/ubin_potongan_8_maju.png (jalankan dengan --perbarui-referensi)')
+    # (d) kontrol: satu piksel referensi yang diubah terdeteksi
+    rusak = kanvas.copy()
+    y, x = np.argwhere(tertutup)[len(np.argwhere(tertutup)) // 2]
+    rusak[y, x, 0] ^= 1
+    periksa(not (rusak == kanvas).all(), 'kontrol: pembanding susunan mendeteksi satu piksel berbeda')
 
 
 def ekspektasi_repo():
@@ -207,6 +289,9 @@ def main():
     project = open(os.path.join(ROOT, 'project.godot'), encoding='utf-8').read()
     periksa('textures/canvas_textures/default_texture_filter=0' in project, 'project.godot: filter tekstur bawaan Nearest')
     periksa('2d/snap/snap_2d_transforms_to_pixel=true' in project, 'project.godot: snap_2d_transforms_to_pixel aktif')
+
+    # ---- susunan ubin (AC-6)
+    uji_susunan(periksa)
 
     # ---- kontrol: satu piksel dan satu byte JSON yang diubah terdeteksi oleh pembanding yang sama
     from PIL import Image

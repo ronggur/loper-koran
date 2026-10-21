@@ -149,6 +149,9 @@ func _initialize() -> void:
 	await scene_rute.jalankan()
 	var kotak_surat: TesKotakSurat = TesKotakSurat.new(check, _judul, self)
 	await kotak_surat.jalankan()
+	# Run fase5a-pasang-aset-gelombang1: ubin tanah enam kolom (pemetaan, scene, tanpa celah dan pita, referensi Python).
+	var ubin: TesUbin = TesUbin.new(check, _judul, self)
+	await ubin.jalankan()
 	var scene_rintangan: TesRintanganScene = TesRintanganScene.new(check, _judul, self)
 	await scene_rintangan.jalankan()
 	var scene_hud_rute: TesHudRuteScene = TesHudRuteScene.new(check, _judul, self)
