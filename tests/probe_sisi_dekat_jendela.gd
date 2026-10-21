@@ -13,6 +13,12 @@ extends SceneTree
 ## - `dekor_pohon_seberang`, `dekor_lampu_seberang`, `dekor_tong`: sepeda di jalur tengah di dekat pohon, lampu, dan tong sampah sisi seberang dan dekat (tidak menutupi kotak surat, alfa 1,0).
 ## - `dekor_jalur_utama`: sepeda di tengah jalan melewati dekor kedua sisi (tidak ada dekor yang menutupinya, alfa 1,0).
 ## Keadaan tidak sesuai dicetak bila alfa dekor tidak sesuai harapan di keadaan itu.
+## Skenario bagian C (ubin khusus, rute nyata; `TanahDaur` mode khusus, baris mutlak dari awal rute):
+## - `ubin_garasi_parkir` dan `ubin_garasi_tanda`: sepeda di jalur tengah di depan mobil garasi seberang pertama (mobil parkir, lalu dengan lampu mundur menyala); ubin masuk (trotoar dan rumput pertama) tepat di baris mobil.
+## - `ubin_simbol_sepeda`: simbol sepeda di lajur sepeda kedua trotoar (seberang dan dekat) di baris simbol terdekat di depan sepeda.
+## - `ubin_rumput_luar`: rumput luar bervariasi (rumput_1/2/3) di awal rute, sebelum rumah pertama.
+## - `ubin_jalur_utama`: sepeda di tengah jalan di baris simbol dan baris jalan masuk: kolom aspal tidak berubah (tidak ada ubin khusus di aspal).
+## - `ubin_kidal`: garasi parkir dengan tata letak kidal.
 ## Mencetak data tiap keadaan, kotak teks HUD, pecahan piksel sasaran yang tertimpa tembok (`UkurTembok`), dan keadaan yang tidak sesuai harapan (nol bila baik). Tidak interaktif: keluar sendiri lewat
 ## `ProbeKeluar`. Tidak menulis `user://save.json`.
 ##
@@ -88,6 +94,9 @@ func _initialize() -> void:
 	# --- Dekor pinggir jalan (bagian B2) di rute nyata, rumah dekat tidak pudar lagi di trotoar dekat ---
 	await _foto_dekor_semua()
 
+	# --- Ubin khusus (bagian C): jalan masuk garasi di bawah mobil parkir, simbol sepeda, rumput luar bervariasi, jalur utama bersih ---
+	await _foto_ubin()
+
 	# --- Rute buatan dengan pelanggan di sisi dekat: ukur sasaran, jalur dekat, trotoar dekat, garis bidik, koran terbang, kena ---
 	_pasang_rute_buatan()
 	var indeks: int = KAVLING * 2 + 1
@@ -113,6 +122,9 @@ func _initialize() -> void:
 	await _maju(0.25)
 	await _foto("kidal", foto)
 	_akar.atur_kidal(false)
+
+	# --- Ubin khusus, sepasang kidal (rute nyata lagi) ---
+	await _foto_ubin_kidal()
 
 	print("probe selesai, %d keadaan tidak sesuai" % _gagal)
 	await ProbeKeluar.keluar(self, 0 if _gagal == 0 else 1)
@@ -154,6 +166,7 @@ func _pasang_rute_buatan() -> void:
 	_akar.set("_rute", rute)
 	_akar.set("_medan", MedanKoran.dari_rute(rute))
 	_akar.daur().atur_rute(rute)
+	(_akar.find_child("Tanah", true, false) as TanahDaur).atur_baris_masuk(UbinKhusus.himpunan_baris_masuk(rute.objek))
 	(_akar.find_child("AreaKotak", true, false) as AreaKotakGambar).atur_rute(rute)
 	var objek: Node2D = _akar.find_child("Objek", true, false) as Node2D
 	for r: RouteBuilder.RumahRute in rute.rumah:
@@ -424,3 +437,112 @@ func _simpan(keadaan: String) -> void:
 	var berkas: String = "%s/%s_dekat_%s.png" % [_folder, _awalan, keadaan]
 	var galat: int = gambar.save_png(berkas)
 	print("tangkapan layar %dx%d (%s) ke %s (kode %d)" % [gambar.get_width(), gambar.get_height(), keadaan, berkas, galat])
+
+
+# --- Ubin khusus (bagian C) ---
+
+## Sepeda 9,8 ubin di belakang titik mobil: mobil masih parkir (tanda baru menyala di 9,0). Jarak lain dari konstanta `Config.RUTE_*`/`MOBIL_*` tidak dipakai: ini hanya letak foto.
+const JARAK_FOTO_PARKIR: float = 9.8
+const JARAK_FOTO_TANDA: float = 5.0
+const JARAK_FOTO_SIMBOL: float = 3.0
+const MAJU_FOTO_RUMPUT: float = -9.0
+
+
+func _tanah() -> TanahDaur:
+	return _akar.find_child("Tanah", true, false) as TanahDaur
+
+
+## Menyusun ulang rute nyata (seed dev dan sesudahnya) sampai ada mobil garasi seberang; kembali objek itu (null bila tidak ada di 60 seed). Rute disusun ulang = rintangan kembali ke keadaan awal.
+func _siapkan_rute_dengan_mobil() -> RouteBuilder.ObjekRute:
+	for i: int in range(60):
+		_akar.call("_susun", Config.RUTE_SEED_DEV + i)
+		for o: RouteBuilder.ObjekRute in _akar.rute().objek:
+			if o.jenis == "mobil_garasi" and o.jalur == "seberang":
+				return o
+	return null
+
+
+## Sprite ubin di wadah `wadah` yang barisnya (mutlak, dari letak sprite dan lantai jarak sepeda) = `baris`; kembali daftar pusat melintang (ubin).
+func _x_ubin_di_baris(wadah: String, baris: int) -> Array[float]:
+	var hasil: Array[float] = []
+	var tanah: TanahDaur = _tanah()
+	var blok: int = floori(_sepeda.jarak_ubin)
+	for anak: Node in tanah.get_node(wadah).get_children():
+		var pos: Vector2 = (anak as Sprite2D).position
+		var gx: float = (pos.y / 16.0 + pos.x / 32.0) / 2.0
+		var gy: float = (pos.y / 16.0 - pos.x / 32.0) / 2.0
+		if roundi(-gy) + blok == baris:
+			hasil.append(gx)
+	return hasil
+
+
+func _foto_ubin() -> void:
+	var tanah: TanahDaur = _tanah()
+	_cek(tanah != null and tanah.mode_khusus(), "tanah rute memakai ubin khusus")
+	var mobil: RouteBuilder.ObjekRute = _siapkan_rute_dengan_mobil()
+	_cek(mobil != null, "rute nyata (seed dev dan sesudahnya) memuat mobil garasi seberang")
+	if mobil == null or tanah == null:
+		return
+	var baris: int = UbinKhusus.baris_masuk(mobil.maju_ubin)
+	print("ubin: mobil garasi seberang %s di maju %.1f, baris masuk %d, baris masuk rute %s" % [mobil.id_segmen, mobil.maju_ubin, baris, UbinKhusus.himpunan_baris_masuk(_akar.rute().objek).keys()])
+	# Mobil parkir di atas ubin masuk.
+	_taruh(3.0, 0.0, mobil.maju_ubin - JARAK_FOTO_PARKIR)
+	await _maju(0.25)
+	_periksa_masuk(baris, mobil)
+	await _foto("ubin_garasi_parkir", null)
+	# Lampu mundur menyala (mobil masih di tempat parkir) lebih dekat.
+	_taruh(3.0, 0.0, mobil.maju_ubin - JARAK_FOTO_TANDA)
+	await _maju(0.25)
+	_periksa_masuk(baris, mobil)
+	await _foto("ubin_garasi_tanda", null)
+	# Simbol sepeda di dua lajur: baris simbol terdekat di depan sepeda yang bukan baris masuk, di rute yang sama sesudah disusun ulang.
+	_akar.call("_susun", _akar.benih())
+	var baris_simbol: int = 18
+	while not UbinKhusus.simbol_di_baris(baris_simbol) or UbinKhusus.himpunan_baris_masuk(_akar.rute().objek).has(baris_simbol):
+		baris_simbol += 1
+	_taruh(3.0, 0.0, float(baris_simbol) - JARAK_FOTO_SIMBOL)
+	await _maju(0.25)
+	var x_seberang: Array[float] = _x_ubin_di_baris("SimbolTrotoarSeberang", baris_simbol)
+	var x_dekat: Array[float] = _x_ubin_di_baris("SimbolTrotoarDekat", baris_simbol)
+	print("ubin_simbol_sepeda: baris %d, simbol seberang di x %s, simbol dekat di x %s" % [baris_simbol, x_seberang, x_dekat])
+	_cek(x_seberang == ([-1.5] as Array[float]) and x_dekat == ([1.5] as Array[float]), "simbol sepeda di baris %d di kedua kolom trotoar (-1,5 dan 1,5)" % baris_simbol)
+	await _foto("ubin_simbol_sepeda", null)
+	# Jalur utama bersih: sepeda di tengah jalan di baris simbol; kolom aspal tidak pernah berganti tekstur.
+	var aspal_asing: int = 0
+	var aspal_total: int = 0
+	var nama_aspal: Dictionary = {"AspalSeberang": "tile_perumahan_aspal_seberang.png", "AspalDekat": "tile_perumahan_aspal_dekat.png"}
+	for wadah: String in nama_aspal:
+		for anak: Node in tanah.get_node(wadah).get_children():
+			aspal_total += 1
+			if (anak as Sprite2D).texture.resource_path.get_file() != nama_aspal[wadah]:
+				aspal_asing += 1
+	print("ubin_jalur_utama: %d ubin aspal, %d bukan tekstur kolom aspal" % [aspal_total, aspal_asing])
+	_cek(aspal_total > 30 and aspal_asing == 0, "kolom aspal tidak pernah berganti tekstur (jalur utama bersih dari ubin khusus)")
+	await _foto("ubin_jalur_utama", null)
+	# Rumput luar bervariasi di awal rute (sebelum rumah pertama): rumput_1, rumput_2, dan rumput_3 muncul.
+	_taruh(3.0, 0.0, MAJU_FOTO_RUMPUT)
+	await _maju(0.25)
+	_cek(tanah.get_node("RumputLuar").get_child_count() > 20 and tanah.get_node("RumputLuar2").get_child_count() > 3 and tanah.get_node("RumputLuar3").get_child_count() > 2, "rumput luar: ketiga varian punya ubin di layar (%d, %d, %d)" % [tanah.get_node("RumputLuar").get_child_count(), tanah.get_node("RumputLuar2").get_child_count(), tanah.get_node("RumputLuar3").get_child_count()])
+	await _foto("ubin_rumput_luar", null)
+
+
+## Memeriksa bahwa ubin masuk trotoar dan rumput pertama seberang tepat di baris `baris` (satu ubin tiap kolom), kolom lain tidak, dan mencetak jarak ke mobil.
+func _periksa_masuk(baris: int, mobil: RouteBuilder.ObjekRute) -> void:
+	var trotoar: Array[float] = _x_ubin_di_baris("MasukTrotoarSeberang", baris)
+	var rumput: Array[float] = _x_ubin_di_baris("MasukRumputSeberang", baris)
+	print("ubin masuk di baris %d: trotoar x %s, rumput x %s (mobil maju %.1f, selisih %.1f ubin)" % [baris, trotoar, rumput, mobil.maju_ubin, mobil.maju_ubin - float(baris)])
+	_cek(trotoar == ([-1.5] as Array[float]) and rumput == ([-2.5] as Array[float]), "ubin masuk di baris mobil %d: trotoar seberang (-1,5) dan rumput pertama seberang (-2,5)" % baris)
+	_cek(absf(mobil.maju_ubin - float(baris)) <= 0.5, "mobil di dalam baris ubin masuknya")
+
+
+func _foto_ubin_kidal() -> void:
+	var mobil: RouteBuilder.ObjekRute = _siapkan_rute_dengan_mobil()
+	if mobil == null:
+		return
+	_akar.atur_kidal(true)
+	await _tunggu(3)
+	_taruh(3.0, 0.0, mobil.maju_ubin - JARAK_FOTO_PARKIR)
+	await _maju(0.25)
+	_periksa_masuk(UbinKhusus.baris_masuk(mobil.maju_ubin), mobil)
+	await _foto("ubin_kidal", null)
+	_akar.atur_kidal(false)

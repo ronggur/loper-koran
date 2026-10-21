@@ -165,6 +165,9 @@ func _initialize() -> void:
 	# Run fase5b-tembok-dekor bagian B2: dekor pinggir jalan di data segmen (skema, validasi, rute identik, gambar, penutup, jalur utama, sasaran) dan kotak penutup rumah dekat digeser (P-4).
 	var dekor: TesDekor = TesDekor.new(check, _judul, self)
 	await dekor.jalankan()
+	# Run fase5b-tembok-dekor bagian C: ubin khusus (jalan masuk garasi, simbol sepeda, variasi rumput luar) murni, di TanahDaur dan scene rute, tanpa celah dan pita, referensi Python.
+	var ubin_5b: TesUbin5b = TesUbin5b.new(check, _judul, self)
+	await ubin_5b.jalankan()
 	var scene_hud_rute: TesHudRuteScene = TesHudRuteScene.new(check, _judul, self)
 	await scene_hud_rute.jalankan()
 	var halaman_koran: TesHalamanKoran = TesHalamanKoran.new(check, _judul, self)

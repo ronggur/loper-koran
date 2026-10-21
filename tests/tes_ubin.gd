@@ -28,7 +28,7 @@ const UBIN_DEKAT_ASPAL: String = "tile_perumahan_aspal_dekat.png"
 const UBIN_DEKAT_TROTOAR: String = "tile_perumahan_trotoar_dekat.png"
 const UBIN_DEKAT_RUMPUT: String = "tile_perumahan_rumput_dekat.png"
 const UBIN_RUMPUT_LUAR: String = "tile_perumahan_rumput_1.png"
-## Ubin tambahan run fase5b-tembok-dekor (D-1): variasi rumput polos dan empat ubin khusus. Hanya dicek ada di folder (isi folder); pemasangan di TanahDaur oleh bagian C.
+## Ubin tambahan run fase5b-tembok-dekor (D-1): variasi rumput polos dan empat ubin khusus. Dicek ada di folder (isi folder) dan sah dirujuk (bagian C: `TanahDaur` mode khusus di `rute.tscn`, diuji `tes_ubin_5b.gd`).
 const UBIN_5B: Array[String] = [
 	"tile_perumahan_rumput_2.png", "tile_perumahan_rumput_3.png", "tile_perumahan_trotoar_seberang_masuk.png", "tile_perumahan_rumput_seberang_masuk.png",
 	"tile_perumahan_trotoar_seberang_simbol.png", "tile_perumahan_trotoar_dekat_simbol.png",
@@ -251,6 +251,10 @@ func _hitung_tekstur_benar(tanah: TanahDaur) -> Array:
 		per_nama[jalur.get_file()] = int(per_nama.get(jalur.get_file(), 0)) + 1
 		if jalur == FOLDER_UBIN + harapan:
 			benar += 1
+		elif UBIN_5B.has(jalur.get_file()):
+			# Run fase5b-tembok-dekor bagian C: ubin khusus (masuk, simbol, rumput_2 dan _3) menggantikan tekstur kolom di sel tertentu pada TanahDaur mode khusus (scene rute);
+			# letak dan pilihannya diuji di tes_ubin_5b.gd (oracle per sel). Di sini cukup bahwa tekstur itu ada di daftar ubin 5B yang dipasang.
+			benar += 1
 		elif salah_contoh.is_empty():
 			salah_contoh = "x %s tekstur %s harapan %s" % [x, jalur.get_file(), harapan]
 	return [benar, sprite.size(), salah_contoh, per_nama]
@@ -347,7 +351,13 @@ func _test_scene_rute() -> void:
 				perumahan += 1
 		check(graybox == 0 and perumahan == sprite.size(), "scene rute: semua ubin dari tiles/perumahan, tidak ada graybox")
 		var hitung: Array = _hitung_tekstur_benar(tanah)
-		check(int(hitung[0]) == sprite.size() and (hitung[3] as Dictionary).size() == 7, "scene rute: tiap ubin memakai tekstur kolomnya, tujuh tekstur terpakai: %d dari %d (%s) %s" % [hitung[0], sprite.size(), hitung[2], (hitung[3] as Dictionary).keys()])
+		# Run fase5b-tembok-dekor bagian C: scene rute memakai mode khusus, jadi selain tujuh tekstur lama muncul rumput_2, rumput_3, dan simbol (jalan masuk hanya bila ada mobil di dekat sepeda).
+		var nama_hitung: Dictionary = hitung[3]
+		var lama_semua: bool = true
+		for nama_lama: String in [UBIN_SEBERANG_RUMPUT, UBIN_SEBERANG_TROTOAR, UBIN_SEBERANG_ASPAL, UBIN_DEKAT_ASPAL, UBIN_DEKAT_TROTOAR, UBIN_DEKAT_RUMPUT, UBIN_RUMPUT_LUAR]:
+			if not nama_hitung.has(nama_lama):
+				lama_semua = false
+		check(int(hitung[0]) == sprite.size() and lama_semua and nama_hitung.size() >= 7 and nama_hitung.size() <= 7 + UBIN_5B.size(), "scene rute: tiap ubin memakai tekstur kolomnya atau ubin khusus 5B, ketujuh tekstur lama terpakai: %d dari %d (%s) %s" % [hitung[0], sprite.size(), hitung[2], nama_hitung.keys()])
 	_tree.root.remove_child(akar)
 	akar.free()
 
@@ -485,6 +495,9 @@ func _test_tanpa_referensi_tak_dipasang() -> void:
 		var regex: RegEx = RegEx.new()
 		regex.compile("tile_perumahan_(aspal_[0-9]|rumput_[02-9]|[a-z_]*_masuk|[a-z_]*_simbol)")
 		for hasil: RegExMatch in regex.search_all(teks):
+			# Run fase5b-tembok-dekor bagian C (AC-18): hanya enam nama yang kini dipasang yang sah dirujuk (`UBIN_5B`); aspal_N, rumput_[04-9], *_dekat_masuk, dan nama lain tetap terlarang.
+			if UBIN_5B.has(hasil.get_string() + ".png"):
+				continue
 			temuan.append("%s memuat %s" % [jalur, hasil.get_string()])
 	check(berkas.size() > 100, "pemindai membaca banyak berkas sumber (%d)" % berkas.size())
 	check(temuan.is_empty(), "tidak ada rujukan ke aset yang belum dipasang: %s" % [temuan])

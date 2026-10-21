@@ -15,6 +15,11 @@
 5. Impor (AC-3): tiap PNG baru punya `.png.import` dengan `compress/mode=0` (Lossless), `mipmaps/generate=false`, bukan tekstur VRAM, uid ada,
    ukuran < 2048, dan `project.godot` menggambar tekstur Nearest.
 6. Kontrol: satu piksel, satu byte JSON, dan satu byte golden yang diubah terdeteksi.
+7. Ubin khusus (bagian C, AC-16, sisi Python): susunan dari berkas assets/ untuk potongan 8 ubin maju x 8 kolom yang memuat jalan masuk garasi (baris 4), simbol sepeda (baris 6), dan
+   `rumput_2`/`rumput_3` di kolom luar (pilihan ditulis ulang di sini lewat `struct` dan FNV-1a, oracle terpisah dari `UbinKhusus`) disamakan dengan adegan renderer: simbol sepeda
+   = adegan (0 piksel beda); jalan masuk = adegan di sisi seberang kecuali ujung kerb di baris tetangga (tepat 22 piksel di baris maju + 1, ubin ujung kerb ditunda ke 5C);
+   `rumput_2`/`rumput_3` diulang = adegan rumput polos dan tepi cincinnya hanya memuat warna rumput. `tests/data/ubin_potongan_5b.png` = susunan itu dari assets/ (dibandingkan
+   scene Godot oleh `tests/tes_ubin_5b.gd`; `--perbarui-referensi` menulis ulang berkas dari assets/, bukan diedit tangan).
 
 Butuh numpy dan pillow (seperti `tools/env_art`); bila tidak ada, uji berhenti dengan exit code 2 (CI memasangnya).
 
@@ -27,6 +32,7 @@ import hashlib
 import json
 import os
 import re
+import struct
 import subprocess
 import sys
 import tempfile
@@ -119,6 +125,151 @@ def ekspektasi_repo():
         'props': sorted(pasang(PROPS_5A + PROPS_LAMA + list(TONG) + POHON + LAMPU)),
         'tiles/perumahan': sorted(['tile_perumahan_%s.png' % n for n in UBIN_5A + UBIN_BARU] + ['tile_perumahan.json']),
     }
+
+
+# ---------------------------------------------------------------- ubin khusus (bagian C, AC-16) ----
+REFERENSI_5B = os.path.join(ROOT, 'tests', 'data', 'ubin_potongan_5b.png')
+BARIS_5B = range(0, 8)          # 8 ubin maju (pusat y = -maju); lebih banyak keluar dari adegan renderer (768 x 448)
+KOLOM_5B = range(-4, 4)         # indeks kolom ic: pusat x = ic + 0,5 ubin (-3,5 .. +3,5)
+MASUK_5B = {4}                  # baris jalan masuk garasi di potongan
+SIMBOL_5B = {6}                 # baris simbol sepeda di potongan (baris mutlak 6 + 12 k)
+UJUNG_KERB_MASUK = 22           # piksel beda di baris tetangga (maju + 1) di tepi jalan masuk: ujung kerb, ubin khusus 5C
+
+
+def fnv_dua_int(a, b):
+    """FNV-1a 32 bit atas dua bilangan bulat 32 bit little-endian (oracle terpisah dari UbinKhusus: struct, bukan geser bit)."""
+    h = 0x811C9DC5
+    for byte in struct.pack('<ii', a, b):
+        h = ((h ^ byte) * 0x01000193) & 0xFFFFFFFF
+    return h
+
+
+def nama_ubin_khusus(ic, m, masuk, simbol, varian=True):
+    """Ubin di kolom ic (pusat x = ic + 0,5) baris mutlak m: ditulis eksplisit per kolom (oracle D-7)."""
+    if abs(ic + 0.5) >= 3:
+        if not varian:
+            return 'rumput_1'
+        v = fnv_dua_int(ic, m) % 100
+        return 'rumput_2' if v < 12 else ('rumput_3' if v < 20 else 'rumput_1')
+    if ic == -3:
+        return 'rumput_seberang_masuk' if m in masuk else 'rumput_seberang'
+    if ic == -2:
+        return 'trotoar_seberang_masuk' if m in masuk else ('trotoar_seberang_simbol' if m in simbol else 'trotoar_seberang')
+    if ic == -1:
+        return 'aspal_seberang'
+    if ic == 0:
+        return 'aspal_dekat'
+    if ic == 1:
+        return 'trotoar_dekat_simbol' if (m in simbol and m not in masuk) else 'trotoar_dekat'
+    return 'rumput_dekat'
+
+
+def susun_nama(fn_nama):
+    """Susun ubin dari assets/ menurut fn_nama(ic, m) untuk baris BARIS_5B dan kolom KOLOM_5B. Kembali (rgba, (kiri, atas))."""
+    import numpy as np
+    from PIL import Image
+    letak = []
+    for m in BARIS_5B:
+        for ic in KOLOM_5B:
+            sx = int((ic + 0.5 + m) * 32)
+            sy = int((ic + 0.5 - m) * 16)
+            jalur = os.path.join(SPRITES, 'tiles', 'perumahan', 'tile_perumahan_%s.png' % fn_nama(ic, m))
+            with Image.open(jalur) as g:
+                letak.append((sx - 32, sy - 16, np.array(g.convert('RGBA'))))
+    kiri = min(l[0] for l in letak)
+    atas = min(l[1] for l in letak)
+    lebar = max(l[0] for l in letak) + 64 - kiri
+    tinggi = max(l[1] for l in letak) + 32 - atas
+    kanvas = np.zeros((tinggi, lebar, 4), np.uint8)
+    for x, y, a in letak:
+        tembus = a[..., 3] == 255
+        ruang = kanvas[y - atas:y - atas + 32, x - kiri:x - kiri + 64]
+        ruang[tembus] = a[tembus]
+    return kanvas, (kiri, atas)
+
+
+def uji_ubin_khusus():
+    import numpy as np
+    from PIL import Image
+    sys.path.insert(0, os.path.join(ROOT, 'tools', 'env_art'))
+    os.environ.setdefault('ENV_ART_OUT', tempfile.mkdtemp())
+    import ubin_perumahan as UP
+    ox, oy = UP.OX, UP.OY
+    U = UP.U
+
+    # (a) oracle pemilihan: jumlah dan jenis varian di potongan (kolom luar -4 dan 3), tanpa kolom rumput pertama diganti
+    varian = [(ic, m, nama_ubin_khusus(ic, m, set(), set())) for ic in (-4, 3) for m in BARIS_5B]
+    periksa(any(v[2] == 'rumput_2' for v in varian) and any(v[2] == 'rumput_3' for v in varian), 'potongan 8 ubin memuat rumput_2 dan rumput_3 (%s)' % [v for v in varian if v[2] != 'rumput_1'])
+    periksa(all(nama_ubin_khusus(ic, m, set(), set()) == n for ic, n in ((-3, 'rumput_seberang'), (2, 'rumput_dekat')) for m in range(-60, 60)), 'kolom rumput pertama tidak pernah diganti variasi')
+
+    # (b) simbol sepeda: susunan = adegan (tanpa celah dan tanpa tepi)
+    adegan_s, _ = UP.render_adegan(lambda s: UP.build_jalan(s, simbol=-6 * U))
+    kanvas_s, (kiri, atas) = susun_nama(lambda ic, m: nama_ubin_khusus(ic, m, set(), SIMBOL_5B, varian=False))
+    tinggi, lebar = kanvas_s.shape[:2]
+    potong_s = adegan_s[atas + oy:atas + oy + tinggi, kiri + ox:kiri + ox + lebar]
+    tertutup = kanvas_s[..., 3] == 255
+    beda_s = int((potong_s[..., :3][tertutup].astype(int) != kanvas_s[..., :3][tertutup].astype(int)).any(axis=1).sum())
+    periksa(beda_s == 0, 'ubin simbol sepeda menyambung: susunan = adegan renderer, %d piksel beda dari %d' % (beda_s, int(tertutup.sum())))
+
+    # (c) jalan masuk garasi: sisi seberang = adegan kecuali ujung kerb di baris tetangga (maju + 1)
+    adegan_m, _ = UP.render_adegan(lambda s: UP.build_jalan(s, masuk=(-4 * U - 16.0, -4 * U + 16.0)))
+    kanvas_m, (kiri, atas) = susun_nama(lambda ic, m: nama_ubin_khusus(ic, m, MASUK_5B, set(), varian=False))
+    tinggi, lebar = kanvas_m.shape[:2]
+    potong_m = adegan_m[atas + oy:atas + oy + tinggi, kiri + ox:kiri + ox + lebar]
+    tertutup = kanvas_m[..., 3] == 255
+    py, px = np.mgrid[0:tinggi, 0:lebar]
+    sx, sy = px + 0.5 + kiri, py + 0.5 + atas
+    gx = (sy / 16.0 + sx / 32.0) / 2.0          # x dunia, ubin
+    gy = (sy / 16.0 - sx / 32.0) / 2.0          # y dunia = -maju
+    beda_px = (potong_m[..., :3].astype(int) != kanvas_m[..., :3].astype(int)).any(axis=2) & tertutup
+    seberang = beda_px & (gx < 0)
+    periksa(int(seberang.sum()) == UJUNG_KERB_MASUK, 'jalan masuk seberang: tepat %d piksel beda dari adegan (ujung kerb), dapat %d' % (UJUNG_KERB_MASUK, int(seberang.sum())))
+    maju_beda = sorted({int(round(-gy[y, x])) for y, x in zip(*np.nonzero(seberang))})
+    periksa(maju_beda == [5], 'piksel beda hanya di baris tetangga maju 5 (di belakang jalan masuk di baris 4): %s' % maju_beda)
+    periksa(bool(((gx[seberang] > -2.1) & (gx[seberang] < -1.0)).all()), 'piksel beda hanya di sekitar kedua kerb (x antara -2,1 dan -1,0): ujung kerb dalam dan luar')
+    # sisi dekat berbeda karena adegan menggambar jalan masuk di kedua sisi (ubin *_dekat_masuk tidak dipasang, D-1): kontrol bahwa pembanding mendeteksi perbedaan
+    periksa(int((beda_px & (gx > 0)).sum()) > 0, 'kontrol: pembanding mendeteksi beda di sisi dekat (jalan masuk dekat tidak dipasang)')
+
+    # (d) rumput_2 dan rumput_3 diulang = adegan rumput polos (tanpa pita tepi) dan tepi hanya berwarna rumput
+    rumput1 = np.array(Image.open(os.path.join(SPRITES, 'tiles', 'perumahan', 'tile_perumahan_rumput_1.png')).convert('RGBA'))
+    for v, nama in ((1, 'rumput_2'), (2, 'rumput_3')):
+        adegan_v, _ = UP.render_adegan(lambda s, v=v: s.add(UP.ground_prim(lambda x, y, v=v: UP._polos(x, y, v), UP.MATS)))
+        tile = np.array(Image.open(os.path.join(SPRITES, 'tiles', 'perumahan', 'tile_perumahan_%s.png' % nama)).convert('RGBA'))
+        kanvas = np.zeros((UP.H_ADEGAN, UP.W_ADEGAN, 4), np.uint8)
+        for m in range(0, 4):
+            for ic in range(4, 8):
+                X = int((ic + 0.5 + m) * 32) - 32 + ox
+                Y = int((ic + 0.5 - m) * 16) - 16 + oy
+                t = tile[..., 3] == 255
+                ruang = kanvas[Y:Y + 32, X:X + 64]
+                ruang[t] = tile[t]
+        tertutup_v = kanvas[..., 3] == 255
+        beda_v = int((adegan_v[..., :3][tertutup_v].astype(int) != kanvas[..., :3][tertutup_v].astype(int)).any(axis=1).sum())
+        periksa(int(tertutup_v.sum()) > 10000 and beda_v == 0, '%s diulang = adegan rumput polos: %d piksel beda dari %d (pita atau tepi)' % (nama, beda_v, int(tertutup_v.sum())))
+        # cincin tepi belah ketupat (piksel opak yang punya tetangga 4 arah transparan) hanya berwarna rumput: himpunan warna sudah ada di rumput_1 atau di dalam ubin itu
+        opak = tile[..., 3] == 255
+        dalam = opak.copy()
+        dalam[1:, :] &= opak[:-1, :]; dalam[:-1, :] &= opak[1:, :]; dalam[:, 1:] &= opak[:, :-1]; dalam[:, :-1] &= opak[:, 1:]
+        cincin = opak & ~dalam
+        warna = lambda a, mask: {tuple(c) for c in a[..., :3][mask]}
+        periksa(int(cincin.sum()) > 100 and warna(tile, cincin) <= warna(rumput1, rumput1[..., 3] == 255) | warna(tile, dalam),
+                '%s: warna cincin tepi hanya warna rumput (tanpa garis tepi kerb), %d piksel cincin' % (nama, int(cincin.sum())))
+
+    # (e) referensi tests/data = susunan dari assets/ untuk potongan campuran (masuk, simbol, rumput_2 dan _3); dibandingkan scene Godot di tests/tes_ubin_5b.gd
+    kanvas_r, _ = susun_nama(lambda ic, m: nama_ubin_khusus(ic, m, MASUK_5B, SIMBOL_5B))
+    if '--perbarui-referensi' in sys.argv:
+        os.makedirs(os.path.dirname(REFERENSI_5B), exist_ok=True)
+        Image.fromarray(kanvas_r, 'RGBA').save(REFERENSI_5B)
+    if os.path.isfile(REFERENSI_5B):
+        with Image.open(REFERENSI_5B) as g:
+            ref = np.array(g.convert('RGBA'))
+        periksa(ref.shape == kanvas_r.shape and bool((ref == kanvas_r).all()), 'tests/data/ubin_potongan_5b.png = susunan dari assets/ (jalankan --perbarui-referensi)')
+    else:
+        periksa(False, 'berkas referensi tidak ada: tests/data/ubin_potongan_5b.png (jalankan dengan --perbarui-referensi)')
+    rusak = kanvas_r.copy()
+    y, x = np.argwhere(kanvas_r[..., 3] == 255)[len(np.argwhere(kanvas_r[..., 3] == 255)) // 2]
+    rusak[y, x, 0] ^= 1
+    periksa(not (rusak == kanvas_r).all(), 'kontrol: pembanding susunan ubin khusus mendeteksi satu piksel berbeda')
 
 
 def main():
@@ -280,6 +431,8 @@ def main():
         periksa(sha(bytes(isi)) != golden['props/prop_koran_putar.png'], 'kontrol: golden mendeteksi satu byte PNG 5A berbeda')
     periksa(any(re.search(r'^prop_pohon_(?!rindang\.|glodokan\.|ketapang\.)', n) for n in ['prop_pohon_beringin.png']), 'kontrol: pohon jenis lain terdeteksi')
     periksa(any(re.search(r'nyala', n) for n in ['prop_lampu_lengan_seberang_nyala.png']), 'kontrol: bingkai nyala terdeteksi')
+
+    uji_ubin_khusus()
 
     print('uji_aset_pasang_5b: %d lolos, %d gagal' % (lolos, gagal))
     return 1 if gagal else 0
