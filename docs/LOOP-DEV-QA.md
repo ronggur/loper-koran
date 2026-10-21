@@ -913,6 +913,106 @@ IZIN HP: boleh memasang APK ke vivo V2108 (adb 12d8c9da) setelah QA PASS dengan
 RUN_ID: <YYYYMMDD>-fase6a1-bengkel-kondisi   (tanggal hari run dimulai)
 ```
 
+## 6g. Fase 5: perintah mulai run pasang aset (tempel di sesi baru)
+
+Disimpan 2026-10-21, sesudah PR #42 (aset gelombang 1 dirender) dan PR #43 (run 6A1). Fase 5 berjalan paralel dengan Fase 6 (`DEV_PHASES.md`). Aset gelombang 1 sudah dirender sebagai usulan di `tools/env_art/gelombang1/` dan `tools/env_art/ubin_perumahan.py`, tetapi **belum disalin ke `assets/` dan belum dipasang**: rute masih memakai ubin graybox dan koran, VFX, serta kilau dari kode. Pemasangan dipecah tiga run berurutan, satu PR per run:
+
+| Run | Isi | Prasyarat |
+|---|---|---|
+| 5A | Salin lewat skrip dan pasang tampilan: enam ubin kolom jalan, koran (putar, bayangan, tiga permukaan mendarat, terlipat), VFX sepeda (debu, garis kecepatan, bintang kena, koin tip), kilau misi; tiga penyesuaian renderer (kilau, tong abu-abu, satu polisi tidur) | PR #42 dan #43 di-merge |
+| 5B | Tembok sisi dekat dan komposisi rumah dekat, jenis dekor di data segmen (tong sampah, pohon, lampu jalan; DATA_SCHEMA 3), ubin jalan masuk garasi dan simbol, polisi tidur, zebra, genangan | 5A di-merge |
+| 5C | Animasi pemain yang kurang (berhenti dengan kaki turun, bangkit, jatuh dan terjerembab empat arah lain) lewat `tools/loper_art`, pose kucing ditangkap, ubin ujung kerb dan sudut trotoar | 5A di-merge (boleh paralel dengan 5B) |
+
+Perintah di bawah hanya untuk **5A**. 5B dan 5C ditulis sesudah 5A di-merge, supaya memakai bentuk pemasangan yang nyata.
+
+Catatan untuk semua run Fase 5:
+- **Aset hanya lewat renderer.** Dilarang menyalin atau mengedit PNG dengan tangan (`art-assets.mdc`); salinan ke `assets/` lewat opsi `--salin` pada skrip dan dibuktikan uji deterministik di `tools/tests_cek/`.
+- **Pasang tampilan, jangan ubah logika.** ThrowSolver, skor, zona, tenggat, gerak, tabrakan, dan save tidak berubah. Tes lama lulus tanpa diubah angkanya.
+- **Butir aset di `DEV_PHASES.md` tidak dicentang sebelum dinilai di HP** (keterbacaan koran di ×3, kilau di rumput, kontras ubin, 60 fps). Palet induk tidak dikunci sebelum itu.
+- **Keputusan keraguan warna gelombang 1 (ART_DIRECTION 11) diambil orchestrator atas delegasi pemilik 2026-10-21, usulan, bisa ditolak di review PR:** kilau misi dua warna (krem terang dominan, kuning hanya titik tengah); bintang kena dan koin tip tetap kuning (muncul sekejap, bukan zona diam); tong sampah hijau diganti abu-abu logam; satu polisi tidur saja (versi gelombang 1, belang krem dan logam gelap); koran 8×6 dipakai apa adanya (diperbesar hanya bila uji HP menolak); lebar jalan 2 ubin aspal mengikuti `config.gd` (mock 3 ubin lama tidak berlaku). Debu dan garis kecepatan di trotoar krem distrik lain serta grading sore ditunda ke penilaian HP dan Fase 7.
+
+### Run 5A — pasang aset gelombang 1: ubin, koran, VFX, kilau misi
+
+Prasyarat: **PR #42 (aset gelombang 1) dan PR #43 (run 6A1) sudah di-merge ke `main`**. Kalau belum, berhenti dan minta pemilik merge dulu.
+
+```text
+Kamu adalah ORCHESTRATOR loop Dev↔QA untuk repo Loper Koran. Ikuti docs/LOOP-DEV-QA.md
+secara ketat (Bagian 1, Bagian 0c, Bagian 6g). Mulai dari main terbaru yang sudah memuat
+PR #43 (run 6A1) dan PR #42 (aset gelombang 1); kalau belum, berhenti dan minta saya merge
+dulu. Baca docs/design/PROMPT_FASE5.md, ART_DIRECTION 2, 4, 6 dan 11, docs/loop/20261018-fase4b-misi-kucing/
+{SPEC,LOG}.md (pola pemasangan aset, mutan, probe) dan docs/loop/20261020-fase6a1-bengkel-kondisi/
+{SPEC,LOG}.md dulu: keputusan yang sudah ada berlaku, jangan ditanyakan ulang.
+
+SCOPE: Run 5A — Fase 5, pasang aset gelombang 1 yang sudah dirender (DEV_PHASES Fase 5,
+  ART_DIRECTION 6.2, 6.3, 6.7, 6.9, rule art-assets). TANPA menggambar aset baru kecuali tiga
+  penyesuaian renderer di bawah. Perubahan hanya tampilan: ThrowSolver, skor, zona, tenggat,
+  gerak, tabrakan, save tidak berubah, dan semua tes lama lulus tanpa diubah angkanya.
+  - Salin lewat skrip, bukan tangan: tambah opsi `--salin` di tools/env_art/gelombang1/render.py
+    dan tools/env_art/ubin_perumahan.py yang menyalin HANYA sprite yang dipasang run ini (pola
+    kendaraan.py --salin run 4B): koran (prop_koran_putar, _bayangan, _teras, _rumput,
+    _kotak_surat, _terlipat), VFX (vfx_debu_roda, vfx_garis_kecepatan_a/b/c, vfx_bintang_kena,
+    vfx_koin_tip), mission_kilau, dan enam ubin kolom dasar (tile_perumahan_ rumput_seberang,
+    trotoar_seberang, aspal_seberang, aspal_dekat, trotoar_dekat, rumput_dekat) + JSON titik
+    pijak, ke assets/sprites/. Impor Nearest, Lossless, tanpa mipmap. Uji deterministik baru di
+    tools/tests_cek/ (isi assets/ = hasil skrip, pola uji_aset_kucing.py) + langkah di
+    .github/workflows/tes.yml. Aset yang belum dipasang TIDAK disalin.
+  - Tiga penyesuaian renderer (keputusan pemilik yang didelegasikan ke orchestrator, 2026-10-21,
+    usulan, ART_DIRECTION 11): (1) mission_kilau dua warna: krem terang dominan, kuning aksen hanya
+    titik tengah, ritme tetap beda dari penanda sasaran; (2) tong sampah hijau diganti abu-abu
+    logam (biru tetap bila tidak bentrok token DESIGN_SPEC 1.1); (3) hanya SATU polisi tidur di
+    ekspor: versi gelombang 1 (belang krem/logam gelap); `prop_polisi_tidur` lama kuning-hitam di
+    ubin_perumahan.py dibuang dari ekspor. Render ulang, perbarui mock di docs/design/environment/
+    gelombang1/ dan uji_aset_gelombang1.py. Koran 8x6 dipakai apa adanya (nilai di HP).
+  - Pasang di game (tampilan saja):
+    a. Ubin: TanahDaur dan JalanDaur dari tiga tekstur (aspal, trotoar, rumput) ke enam KOLOM
+       (rumput_seberang, trotoar_seberang, aspal_seberang, aspal_dekat, trotoar_dekat, rumput_dekat)
+       menggantikan tile_graybox_*. Lebar jalan tetap 2 ubin aspal, trotoar 1 per sisi (config.gd).
+       Posisi, batas jalan, dan sel_tanah tidak berubah; sambungan ubin tanpa celah (tes piksel).
+       Varian *_masuk (garasi), *_simbol, aspal_N/rumput_N polos TIDAK dipasang (5B).
+    b. Koran: sprite putar (4 frame, 12 fps) dan bayangan (pilih ukuran dari tinggi) menggantikan
+       pola_piksel koran/bayangan; mendarat memakai prop_koran_teras, _rumput, atau _kotak_surat
+       menurut permukaan (satu pemetaan murni dari hasil lemparan, dites); prop_koran_terlipat untuk
+       keadaan terantar. Penanda kena/meleset, garis bidik, ikon koran HUD tetap dari kode.
+    c. VFX sepeda: debu roda dan garis kecepatan menggantikan umpan_balik_sepeda.gd dengan ambang
+       dan perilaku yang sama (tes lama tetap); bintang kena dan koin tip di umpan_melayang_gambar.
+    d. Kilau misi menggantikan kilau kode di kucing misi (KucingHiasan), ukuran dan tempat tetap.
+    Kode gambar lama (pola_piksel dan sejenisnya) hanya dibuang bila tidak lagi dipakai dan tidak
+    ada tes yang bergantung; jangan membuang diam-diam (belajar dari QA-004 run 4B).
+  - Di LUAR scope (jangan dikerjakan atau diputuskan): tembok sisi dekat dan komposisi rumah dekat
+    (5B), tong sampah/pohon/lampu jalan di rute (butuh jenis dekor di data segmen, DATA_SCHEMA 3,
+    5B), polisi tidur/zebra/genangan/percikan/pos dan portal satpam (M3), jejak kaki dan mangkuk
+    kucing (belum dipakai petunjuk misi), varian ubin garasi dan simbol, animasi pemain (berhenti
+    kaki turun, bangkit, jatuh empat arah lain, pose kucing ditangkap: 5C lewat tools/loper_art),
+    ubin ujung kerb dan sudut trotoar, aset M3, audio, perubahan ThrowSolver/skor/zona, Fase 6A2.
+  - Tes: pemetaan permukaan -> sprite mendarat, pemilihan frame bayangan dari tinggi, enam kolom
+    ubin (jenis per x, tanpa celah), impor sprite (Nearest/Lossless/tanpa mipmap), tidak ada
+    referensi ke aset yang belum dipasang, paket --export-pack memuat sprite baru; mutan nyata;
+    probe jendela di 2340x1080, 1920x1080, 2400x1080, 1600x720 (rute siang dengan ubin baru,
+    koran terbang, mendarat di tiga permukaan, terlipat, ngebut dengan debu dan garis, bintang
+    kena dan koin tip, kilau kucing di rumput dan trotoar) dengan tangkapan layar yang DILIHAT QA;
+    tes tidak boleh menulis save sungguhan (jalur uji SaveManager).
+  - Dokumen: ART_DIRECTION (status terpasang vs usulan di 6.2, 6.3, 6.7, 6.9; 11 diperbarui dengan
+    keputusan di atas; 2.6 lebar jalan 2 ubin; Changelog), DEV_PHASES Fase 5 (centang HANYA "Putuskan
+    keraguan warna gelombang 1"; butir aset dicentang setelah dinilai di HP), AGENTS.md (peta repo
+    dan perintah), docs/README.md, PROMPT_FASE5.md (catatan hasil), SETUP_ANDROID 8.12 (checklist HP).
+  Keputusan terbuka yang mungkin menghambat: tidak ada (keraguan warna sudah diputuskan, Bagian 6g).
+  Jangan mengunci palet induk. Bila ada hal baru, tanyakan SEKALI dengan satu rekomendasi.
+  PENUTUP: DEV_PHASES Fase 5 tidak dicentang penuh (5B dan 5C menyusul); Fase 2, 3, 4, dan M2 tidak
+  dicentang tanpa catatan uji HP pemilik. Run berikutnya: 5B (tembok sisi dekat, dekor di data
+  segmen, ubin M3) dan 5C (animasi pemain), satu PR per run.
+HASIL UJI HP RUN 4A, 4B, DAN 6A1 (ISI: tempel catatan dari SETUP_ANDROID 8.9, 8.10, 8.11; kosongkan
+  bila belum): ISI: ...
+DESIGN: docs/design/DESIGN_SPEC.md (token bagian 1) dan docs/design/environment/gelombang1/ (mock);
+  tidak ada layar baru.
+IZIN HP: boleh memasang APK ke vivo V2108 (adb 12d8c9da) setelah QA PASS dengan `adb install -r`
+  (izin tetap pemilik 2026-10-17, tanpa bertanya lagi); A54 (RRCWA05E2NN) hanya bila tersambung.
+  Hanya orchestrator yang menyentuh HP; cek layar menyala dan tidak sedang dipakai; tidak ada
+  uninstall/logcat -c. Edit save.json lewat run-as lebih disukai daripada pm clear, dan pm clear
+  com.rmh.kring boleh bila perlu (izin pemilik 2026-10-18), tetapi catat save yang dipakai di LOG.
+  Push, PR, dan merge tetap menunggu konfirmasi pemilik.
+RUN_ID: <YYYYMMDD>-fase5a-pasang-aset-gelombang1   (tanggal hari run dimulai)
+```
+
 ## 7. Batasan yang perlu diketahui
 
 - QA berbasis agent tidak menggantikan uji di HP nyata untuk rasa kontrol, performa, dan tampilan rasio layar. Fase gameplay selalu ditutup dengan uji manual (`DEV_PHASES.md`).
