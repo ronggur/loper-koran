@@ -1,7 +1,7 @@
 # Loop Log — 20261021-fase5b-tembok-dekor
 Scope: Run 5B, Fase 5, tembok sisi dekat, dekor di data segmen (tong sampah, pohon, lampu jalan), ubin masuk garasi/simbol sepeda/rumput bervariasi, hanya tampilan dan data dekor  ·  Branch: feat/fase5b-tembok-dekor  ·  Mulai: 2026-10-21  ·  Godot: 4.7.2.stable.official.ed1daf0bf
 
-## Status: IN_PROGRESS   (iterasi saat ini: 1/2, Dev bagian A dan B1 selesai; B2 dan C belum; satu temuan BLOCKED: AC-8 zona sasaran dekat)
+## Status: IN_PROGRESS   (iterasi saat ini: 1/2, Dev bagian A, B1, dan B2 selesai; C belum; satu temuan BLOCKED diputus P-1: AC-8 zona sasaran dekat)
 
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
@@ -13,7 +13,7 @@ Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MAN
 | ID | Iter | Sev | Lokasi | Temuan & reproduksi/bukti | Status | Fix (file/commit) | Tes regresi |
 |---|---|---|---|---|---|---|---|
 | B1-F1 | 1 | Tinggi | AC-8, tembok sisi dekat vs zona sasaran dekat | **BLOCKED.** Badan sprite kotak surat sasaran dekat 0% tertimpa tembok/tiang (semua varian, jenis atap, posisi), tetapi ZONA di tanah tertimpa: kotak surat polos/bata/besi 1,7%, pot 13,1%; teras polos/bata 89,5%, besi 82,3%, pot 97,5% (diukur `UkurTembok`, piksel opak, urutan gambar dihitung; tanpa urutan gambar sama). Sebab: tembok di lateral 3,125 lebih dekat ke kamera dari zona teras dekat (lateral 2,5 sampai 3,0) dan setinggi 14 unit (tiang 17), jadi sinar kamera ke teras dan sebagian kotak surat melewati tembok. Keputusan pemilik: `RUTE_TEMBOK_X_UBIN` dan mundur 1,25 TIDAK digeser. Rute perumahan nyata tidak punya pelanggan dekat, jadi tidak ada dampak di game sekarang; berdampak bila rute dengan pelanggan dekat dibuat. Tangkapan: `shots/iter1/*_dekat_tembok_sasaran_bidik.png` (zona kuning di tanah tidak terlihat di balik tembok, kotak surat sendiri terlihat). Orchestrator/pemilik memutuskan (mis. tembok lebih rendah/bolong di teras, teras dekat digeser, atau terima). | BLOCKED | - | `tes_tembok.gd` `_test_sasaran_tidak_tertutup`: badan = 0 dijaga nol; zona dikunci pada nilai terukur berlabel BLOCKED (berubah jika geometri/aset berubah) |
-| B1-F2 | 1 | Sedang | D-2: tapak logika rumah dekat tidak ikut mundur | Rumah dekat digambar 1,25 ubin lebih jauh tetapi `PenutupPemain.tapak_rumah` tetap di lateral 3,0 (keputusan D-2). Akibat terlihat: pemain di trotoar dekat (lateral 1,75) membuat sprite rumah dekat jadi alfa 0,45 padahal rumah yang digambar tidak menimpa pemain (tangkapan `shots/iter1/*_dekat_tembok_trotoar_dekat.png`: rumah transparan terlepas dari pemain, menimpa HUD bawah). Spike 3C mencatat "Tidak pernah" untuk pendekatan tembok karena spike ikut menggeser kotak penutup; D-2 melarang menggeser tapak, jadi perilaku ini nyata. Bukan BLOCKED (sesuai SPEC), tetapi perlu keputusan: tetap, atau kotak penutup digambar ikut mundur (mengubah `PenutupPemain.tapak_rumah`, dilarang AC-6). | OPEN (keputusan orchestrator) | - | - |
+| B1-F2 | 1 | Sedang | D-2: tapak logika rumah dekat tidak ikut mundur | Rumah dekat digambar 1,25 ubin lebih jauh tetapi `PenutupPemain.tapak_rumah` tetap di lateral 3,0 (keputusan D-2). Akibat terlihat: pemain di trotoar dekat (lateral 1,75) membuat sprite rumah dekat jadi alfa 0,45 padahal rumah yang digambar tidak menimpa pemain (tangkapan `shots/iter1/*_dekat_tembok_trotoar_dekat.png`: rumah transparan terlepas dari pemain, menimpa HUD bawah). Spike 3C mencatat "Tidak pernah" untuk pendekatan tembok karena spike ikut menggeser kotak penutup; D-2 melarang menggeser tapak, jadi perilaku ini nyata. Bukan BLOCKED (sesuai SPEC), tetapi perlu keputusan: tetap, atau kotak penutup digambar ikut mundur (mengubah `PenutupPemain.tapak_rumah`, dilarang AC-6). | FIXED (B2, P-4) | `PenutupPemain.tapak_rumah_gambar`/`dari_rumah_gambar`, dipakai `RumahDaurRute._pasang`; commit "feat: dekor pinggir jalan ..." | `tes_dekor.gd` `_test_p4_*` (murni, sapuan 2465 titik, scene 6 lateral x 80 jarak: rumah tidak pudar); mutan B2-26, B2-27, B2-28 |
 
 ## Iterasi 1, bagian A (Dev): renderer, `--salin`, uji aset (AC-1, AC-2, AC-3, sebagian AC-23)
 
@@ -145,6 +145,88 @@ Commit (branch `feat/fase5b-tembok-dekor`, belum push): `9e2c664` feat (modul, s
 | B1-26 | tembok_dekat.gd | tiang di m + `RUTE_RUMAH_PANJANG_UBIN` (arah SPEC) | 3 | titik pijak tembok/tiang |
 
 26 mutan, 25 terdeteksi pada percobaan pertama atau sesudah penguatan (B1-20), 0 hidup sekarang. Catatan: B1-2/6/7/24 pertama kali tertangkap pemindai angka literal; B1-25 dan B1-26 (lewat Config) membuktikan tes geometri juga menangkapnya. AC-23 meminta mutan dekor/ubin/aset di bagian B2 dan C.
+
+## Iterasi 1, bagian B2 (Dev): dekor di data segmen, gambar, penutup, P-4 (AC-9 sampai AC-13, AC-18 bagian dekor, AC-23 bagian dekor)
+
+Commit (branch `feat/fase5b-tembok-dekor`, belum push): `feat:` dekor (skema, `DekorRute`, `RouteBuilder`, `DekorDaur`, P-4), `content:` data sembilan segmen + `DATA_SCHEMA` 3 + `ROUTE_DESIGN` 4b (satu commit), `test:` `tes_dekor.gd` dan `ukur_dekor.gd` beserta penyesuaian tes lama, `test:` probe dan tangkapan iterasi 1 diulang. Satu proses Godot dalam satu waktu; proses `run_tests.gd` lama milik sesi lain (hidup sejak 13:18) tidak dimatikan dan tidak ditunggu. Bagian C (ubin, paket ekspor, ART_DIRECTION, AGENTS.md, README, SETUP_ANDROID 8.13) tidak dikerjakan.
+
+**Yang dikerjakan**
+- **P-4 (B1-F2) FIXED.** `PenutupPemain.tapak_rumah_gambar(sisi, maju)` (geser `RUTE_RUMAH_DEKAT_MUNDUR_UBIN` hanya untuk `dekat`) dan `dari_rumah_gambar(rumah)`; `RumahDaurRute._pasang` mendaftarkan kotak itu ke `PenerapPenutup`. `tapak_rumah`, `dari_rumah` (dipakai `MedanKoran`), validasi segmen, dan zona tidak berubah (`git diff fb9033d` untuk `ZonaSasaran`, `MedanKoran`, `ThrowSolver`, `SkorRute`, `TenggatRute`, `BikeMotion`, `Tabrakan`, `RintanganRute`, `JalanDaur`: kosong). Penalaran yang dites: kotak gambar rumah dekat mulai di lateral 4,25, garis pandang dari lateral <= 2,0 butuh d >= 2,25 > tinggi 2,0, jadi rumah dekat tidak pernah menutupi pemain di lajur sepeda; kontrol: kotak logika lama menutupi pemain di lateral 1,75 pada 29 titik maju. Tangkapan `*_dekat_tembok_trotoar_dekat.png` diulang di empat ukuran dan DILIHAT: rumah dekat di sisi kanan layar tidak lagi pudar (probe mencetak `alfa rumah foto 1.00`; dulu 0,45).
+- **Skema `dekor` (AC-9).** `SegmenRute.Dekor` + `_parse_dekor` (bidang opsional; `{jenis, pos, sisi, varian}` semuanya wajib, field asing ditolak; `pos` bulat `1..panjang-1` lewat `_pos_dekor_sah`, `Config.RUTE_DEKOR_TEPI_UBIN` = 1). Aturan tempat di `DekorRute` (murni): `menimpa_lajur`, `menimpa_zona_rumah` (zona TERAS dan KOTAK_SURAT dari `ZonaSasaran.zona_rumah`, semua rumah kedua sisi), `menimpa_tapak_rumah` (`PenutupPemain.tapak_rumah`), `menimpa_rintangan` (`SegmenRute.bentuk_rintangan_diam`, fungsi yang sama dengan aturan rintangan memotong rumah), dan jarak sesisi >= `RUTE_DEKOR_JARAK_MIN_UBIN` (1). Berkas lama tanpa `dekor` sah (tes positif). Pesan galat teks developer. Konstanta baru semua di `config.gd` satu baris (`RUTE_DEKOR_*`, 13 baris termasuk komentar).
+- **D-6 angka.** Dipakai angka awal SPEC tanpa perubahan: pohon dan tong lateral 2,5, lampu 2,25; setengah tapak 0,25/0,25/0,125 (tong dibulatkan dari tapak sprite r 7 unit = 0,22 ke 0,25); tinggi kotak penutup tong 0 (tidak didaftarkan), pohon 1,25, lampu 1,0. Alasan tinggi: ketaksamaan jalur utama `tinggi <= lateral - setengah - 1,0` (pohon 2,5 - 0,25 - 1,0 = 1,25; lampu 2,25 - 0,125 - 1,0 = 1,125 jadi 1,0), tinggi di atasnya membuat kaki pemain di lateral 1,0 tertutup (mutan B2-15). Tinggi 1,25 kira-kira sama dengan tajuk sprite (22 sampai 45 px di atas pangkal, 1 ubin = 32 px).
+- **Rute (AC-10).** `RouteBuilder.DekorItem` (id `<id_segmen>:<sisi>@<pos>`, maju mutlak, lateral, jenis, varian), `Rute.dekor` terurut maju lalu id, diisi di `_isi_segmen` tanpa RNG; `periksa_rute` menolak dua dekor sesisi < 1 ubin di rute utuh. Golden: 60 seed (20261016 + 7 i), sidik FNV-1a atas uraian rute (rumah, rintangan, pelanggan, titik misi, tenggat, skor dari 25 antaran dengan kombinasi KOTAK_SURAT/TERAS, tepat, kecepatan) dihitung di commit fb9033d sebelum kode berubah (skrip di luar repo) dan ditulis ke `GOLDEN_RUTE`; sama untuk 60 seed; bangun ulang dengan `dekor` dihapus dari data juga identik.
+- **Gambar (AC-11).** `DekorDaur` (`scripts/entities/dekor_daur.gd`, node `Dekor` anak `Objek` di `rute.tscn`, `y_sort_enabled`, Nearest): jendela daur `DekorRute.rentang_sekitar` (pencarian biner, sama dengan rumah), kolam `Sprite2D`, tekstur dimuat di `atur_rute` dan dipegang node (`jumlah_muat` = nama sprite berbeda = 6), titik pijak dari `Config.RUTE_DEKOR_SPRITE_DATA` (dites = JSON = PNG = literal). Pohon dan lampu didaftarkan ke satu `PenerapPenutup` dengan `PenutupPemain.dari_dekor`; tong tidak. Lampu memakai `prop_lampu_lengan_seberang` di sisi seberang dan `_dekat` di sisi dekat.
+- **Jalur utama bersih dan sasaran (AC-11, AC-12).** Sapuan murni: 25.317 titik di sembilan segmen dan 150.000 titik di 60 rute, 0 yang tertutup pada `|lateral| <= 1,0`; kontrol: pohon dan lampu dekat menutupi pemain di lateral 2,0 pada puluhan titik. `UkurDekor` (pola `UkurTembok`): badan kotak surat (urutan gambar dihitung dan tanpa urutan), zona kotak surat, dan zona teras rumah seberang `pelanggan_boleh` = **0%** di sembilan segmen (37 rumah, 38 dekor); kontrol: pohon rindang seberang di celah tepat sebelum rumah pelanggan menimpa zona teras 8,6%. Penempatan data dipilih dari tabel hasil ukur tiap posisi sah (bukan menggeser aturan atau konstanta). Info, bukan syarat: untuk rumah seberang yang BUKAN `pelanggan_boleh` (kotak surat abu-abu) zona teras tertimpa dekor sampai 8,6% di 6 segmen dan zona kotak 3,75% di `per_buka_01`; badan kotak abu-abu tidak diukur.
+- **Isi sembilan segmen (AC-13).** 38 butir: 9 tong sampah (logam, 5 seberang dan 4 dekat), 18 pohon (rindang, glodokan, ketapang masing-masing 3 di tiap sisi), 11 lampu (6 seberang, 5 dekat); per berkas 4 atau 5 butir; satu butir per >= 4 ubin per sisi; semua `pos` di 2 sampai `panjang - 2` (sambungan segmen >= 4 ubin di rute utuh, dites); tong sampah selalu di celah sesudah rumah sisinya (`pos` rumah + 3, dekat kotak surat). Data ditulis lewat skrip penempatan dari tabel posisi sah (bukan penghitung aturan) dan dicek ulang oleh `tes_dekor.gd`; lolos validasi dan semua tes rute/rintangan lama TANPA angka tes lama diubah (tes lama yang berubah: lihat di bawah).
+- **Dokumen skema.** `DATA_SCHEMA.md` 3 (baris `dekor`, contoh `per_tengah_02` nyata, tabel jenis dan varian, aturan penempatan, validasi) dan `ROUTE_DESIGN.md` (aturan 5 diperluas, bagian 4b) di commit yang sama dengan data.
+- **Pemindai aset (AC-18).** `tes_ubin.gd`: `prop_` + `tong_sampah` jadi `tong_sampah_biru` (hanya tong biru tetap terlarang; `rumput_[02-9]`, `_masuk`, `_simbol`, `aspal_N`, `mission_*`, portal, pos, percikan, polisi tidur, zebra, genangan TIDAK dilonggarkan). `tes_koran_sprite.gd`: enam nama dekor ditambah ke `dikenal` dan awalan sah (`SUFIKS_5B_PROPS` sudah ada dari bagian A); nama prop lain tetap ditolak. `tes_dekor.gd` menambah pemindai khusus (hanya enam nama `prop_pohon|lampu|tong_sampah_*`; tong biru, lampu nyala, beringin ditolak).
+
+**Perubahan tes lama (dicatat; angka perilaku tidak diubah)**
+1. `tes_tembok.gd`: daftar "tidak merujuk tembok" tidak lagi melarang kata `rumah_dekat_mundur` di `penutup_pemain.gd` (P-4 memakai konstanta itu; "tembok" tetap terlarang di sana); hitungan penerap di tes scene ditambah pohon dan lampu.
+2. `tes_rute_scene.gd`: tiga hitungan penerap (`rumah + rintangan`) ditambah pohon dan lampu (`_jumlah_dekor_penutup`); hitungan anak `Objek` +1 (node `Dekor`).
+3. `tes_ubin.gd`, `tes_koran_sprite.gd`: pemindai, lihat atas. `run_tests.gd`: `TesDekor` didaftarkan.
+
+**Gerbang** (sesudah commit terakhir; satu proses Godot dalam satu waktu)
+- `godot --headless --import`: 0 ERROR. `godot --headless --path . --quit-after 2`: tanpa ERROR/WARNING.
+- `run_tests.gd` + `cek_keluaran_tes.py`: **17718 lolos, 0 gagal, 0 peringatan** (baseline B1 17524; +194 dari `tes_dekor.gd`; satu run sebelumnya menghitung 17719, selisih 1 pemeriksaan antar run, kondisional, bukan kegagalan).
+- Semua `tools/tests_cek/uji_*.py` lolos (12 berkas, exit 0).
+- Probe jendela: `probe_sisi_dekat_jendela` (skenario dekor baru) di 2340x1080, 1920x1080, 2400x1080, 1600x720: "0 keadaan tidak sesuai", 0 ERROR; `probe_aset_jendela` di 2340x1080: "0 keadaan tidak sesuai". Tangkapan B1 `iter1` diulang (kini dengan dekor) ditambah `*_dekat_dekor_{pohon_menutupi,lampu_menutupi,pohon_seberang,lampu_seberang,tong,jalur_utama,rumah_dekat_trotoar}.png` di empat ukuran.
+- sha256 `~/Library/Application Support/Godot/app_userdata/Kring Kring!/save.json` sesudah semua tes, probe, dan mutan: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` (sama dengan sebelum).
+
+**Penilaian dari tangkapan** (dilihat sendiri, 2340x1080)
+- Pohon dekat menutupi pemain di trotoar: tajuk semi-transparan di atas pengendara, jelas terbaca; pohon seberang di halaman tidak menimpa kotak surat atau teras; tong sampah abu-abu gelap di celah sesudah rumah mirip kotak surat abu-abu "bukan pelanggan" dari jauh (NEEDS-MANUAL 4); lampu jalan mati terbaca sebagai tiang dengan lengan ke arah jalan di kedua sisi.
+- **Keraguan jujur (bayangan baked).** Bayangan tanah pohon dan lampu selalu jatuh ke kanan bawah layar, juga di sisi dekat dan seberang. Di sisi dekat wajar (jatuh ke halaman di belakang), di sisi seberang jatuh ke arah jalan (sebagian terlihat di trotoar) dan lengan lampu dekat menghadap kiri atas sementara bayangannya ke kanan. Tidak mengganggu keterbacaan di tangkapan, tetapi arah bayangan antar sprite tidak konsisten dengan satu sumber cahaya; dinilai di HP. PNG tidak diedit.
+- **Pohon seberang tidak pernah semi-transparan.** Kamera melihat dari sisi dekat, jadi garis pandang ke tapak dekor seberang tidak pernah menutupi pemain di lateral -2,0 sampai 2,0 (dites); hanya dekor sisi dekat yang menutupi. Sesuai SPEC AC-11 ("pemain di balik pohon sisi dekat").
+- **Keterbatasan geometri.** Di seberang, `pos` dekor yang sah hanya di celah satu ubin antar rumah (pos rumah + 3) karena petak 4 ubin; pohon di celah tepat sebelum rumah pelanggan menimpa zona teras lewat tajuknya (8,6%), jadi pohon seberang ditaruh di celah yang tetangganya bukan `pelanggan_boleh`.
+
+**Mutan B2** (satu perubahan, `run_tests.gd` penuh, file dikembalikan; `git status` bersih sesudah semuanya; "Gagal" = baris GAGAL, SCRIPT ERROR menambah ratusan bila data/validasi pecah; skrip di luar repo)
+
+| ID | File | Perubahan | Gagal | Tes pertama yang gagal |
+|---|---|---|---|---|
+| B2-1 | segmen_rute.gd | cabang jenis tidak dikenal dilepas | 2 | jenis salah ditolak |
+| B2-2 | segmen_rute.gd | cabang varian tidak sah dilepas | 4 | varian pohon salah ditolak |
+| B2-3 | segmen_rute.gd | cabang sisi salah dilepas | 3 | sisi kiri ditolak |
+| B2-4 | segmen_rute.gd | batas bawah `pos <` jadi `<=` | 1 | pos 1 dan pos 27 sah |
+| B2-5 | segmen_rute.gd | batas atas `pos >` jadi `>=` | 1 | pos 1 dan pos 27 sah |
+| B2-6 | segmen_rute.gd | field asing lolos | 1 | field asing ditolak |
+| B2-7 | segmen_rute.gd | cabang zona teras/kotak surat dilepas | 7 | pohon seberang di maju 7 ditolak |
+| B2-8 | segmen_rute.gd | cabang tapak rumah dilepas | **0, SETARA** | lateral dekor tetap per jenis, tapak dekor (|lateral| 2,125 sampai 2,75) tidak pernah menyentuh tapak rumah (|lateral| >= 3,0); fungsi `menimpa_tapak_rumah` dites langsung (kontrol: pengganti fungsi akan gagal) |
+| B2-9 | segmen_rute.gd | cabang tapak rintangan dilepas | 2 | tong di pos mobil garasi ditolak |
+| B2-10 | segmen_rute.gd | jarak sesisi `<` jadi `<=` | 1 | jarak tepat 1 ubin sah |
+| B2-11 | segmen_rute.gd | cabang lajur sepeda dilepas | **0, SETARA** | lateral tetap, tapak semua jenis di luar lajur (dites); cabang tak terjangkau data. Mutan lewat konstanta (B2-14, B2-29) mati |
+| B2-12 | segmen_rute.gd | `dekor` jadi wajib | 25 (+1040 SCRIPT ERROR) | berkas lama tanpa dekor sah |
+| B2-13 | segmen_rute.gd | `varian` hilang dari daftar field | 922 (+1505) | semua berkas nyata lolos pemuat |
+| B2-14 | config.gd | lateral lampu 2,25 jadi 1,5 (ke lajur) | 930 (+1503) | semua berkas nyata lolos pemuat (lampu di lajur ditolak) |
+| B2-15 | config.gd | tinggi penutup pohon 2,0 (menutup jalur utama) | 6 | tabel lateral/tinggi literal; sapuan jalur utama |
+| B2-16 | config.gd | tong sampah didaftarkan penutup (tinggi 1,0) | 5 | tabel literal; tong bukan penerap |
+| B2-17 | dekor_daur.gd | pohon dan lampu tidak didaftarkan ke penerap | 7 | rumah + rintangan + dekor = penerap |
+| B2-18 | dekor_daur.gd | dekor di luar jendela tidak dilepas | 3 | jendela = oracle di enam titik gulir |
+| B2-19 | dekor_daur.gd | dekor dipasang ulang tiap langkah (tergambar dua kali) | 8 | penerap dan node |
+| B2-20 | dekor_daur.gd | offset sprite nol (pijak salah) | 1 | letak piksel dan titik pijak |
+| B2-21 | config.gd | pijak tong y 25 jadi 26 | 2 | tabel Config = JSON = PNG |
+| B2-22 | route_builder.gd | RNG rute dipakai untuk dekor (`randi()`) | 27 | pemindai `randi`; golden |
+| B2-22b | route_builder.gd | RNG rute ditarik tanpa kata terlarang (`randi_range`) | 26 | golden 60 rute dan tes bantu (pelanggan berubah) |
+| B2-23 | route_builder.gd | maju dekor lokal, bukan mutlak | 898 (+1500) | seed dibangun dua kali; rute |
+| B2-24 | route_builder.gd | jarak dekor di `periksa_rute` dilepas | 1 | periksa_rute menolak dekor rapat |
+| B2-25 | medan_koran.gd | dekor masuk `MedanKoran` (pohon menutup titik koran, ada literal) | 4 | pemindai literal; lemparan identik |
+| B2-25b | medan_koran.gd | idem tanpa literal | 3 | 1000 lemparan: tertutup 346 bukan 339 |
+| B2-26 | penutup_pemain.gd | P-4: tapak gambar rumah dekat tidak digeser | 7 | tapak gambar rumah dekat (4,25; 7,5) |
+| B2-27 | penutup_pemain.gd | P-4: tapak gambar rumah seberang ikut digeser | 5 | tapak gambar rumah seberang tidak bergeser |
+| B2-28 | rumah_daur_rute.gd | P-4: penerap memakai kotak logika | 2 | rumah dekat tidak pudar di trotoar (8646 pengamatan) |
+| B2-29 | dekor_rute.gd | `menimpa_lajur`: sentuh tepi dihitung menimpa | 1 | tapak yang hanya menyentuh lajur |
+| B2-30 | dekor_rute.gd | lateral dekor terbalik sisi | 944 (+1502) | semua berkas nyata lolos pemuat |
+| B2-31 | dekor_rute.gd | sprite lampu seberang memakai gambar dekat | 4 | nama sprite per jenis/varian/sisi |
+| B2-32 | dekor_daur.gd | tekstur dimuat ulang tiap dipakai | 3 | PNG dimuat tepat enam kali (34 pemuatan) |
+| B2-33 | dekor_daur.gd | tekstur tidak dimuat di `atur_rute` | 1 | tekstur dimuat di atur_rute |
+| B2-34 | rute_main.gd | `DekorDaur` tidak diberi penerap | 7 | rumah + rintangan + dekor = penerap |
+| B2-35 | per_tengah_01.json | pohon seberang digeser ke celah sebelum rumah pelanggan | 1 | zona teras tertimpa dekor 2,2% (> 0) |
+| B2-36 | per_tengah_03.json | pohon dekat pos 11 jadi 12 | **0, bukan mutan sah** | pos 12 memang sah (kavling tetangga kosong); diganti B2-36b |
+| B2-36b | per_tengah_03.json | pohon dekat pos 11 jadi 10 (zona kotak surat dekat) | 913 (+1501) | semua berkas nyata lolos pemuat |
+| B2-37 | route_builder.gd | lateral dekor rute terbalik | 1 | lateral dan id dekor di 60 rute |
+
+40 mutan (37 + 3 varian), 37 terdeteksi pada percobaan pertama, 3 tidak: B2-8 dan B2-11 mutan setara (cabang parse tak terjangkau data karena lateral dan tapak ditentukan konstanta; fungsi dites langsung dan konstanta dijaga literal), B2-36 bukan mutan sah (diganti B2-36b, terdeteksi). B2-25 dan B2-22 pertama tertangkap pemindai literal; varian B2-25b dan B2-22b (tanpa kata terlarang) membuktikan tes perilaku (1000 lemparan, golden 60 seed) juga menangkapnya. Mutan B2 tidak termasuk di 30 mutan AC-23 yang tersisa untuk bagian C (ubin) dan lainnya.
+
+**BLOCKED**: tidak ada baru. B1-F1 (AC-8) sudah diputus orchestrator (P-1); B1-F2 FIXED di atas.
 
 ## NEEDS-MANUAL (uji di HP)
 Lihat SPEC bagian NEEDS-MANUAL dan `docs/SETUP_ANDROID.md` 8.13 (ditulis Dev).
