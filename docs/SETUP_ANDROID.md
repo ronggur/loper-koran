@@ -646,3 +646,31 @@ Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build 
 12. Background di bengkel: tanpa dialog JEDA, bengkel tetap bisa disentuh ya / tidak
 Catatan (teks, tata letak, angka yang ingin diubah dan alasannya): ____
 ```
+
+### 8.12 Uji aset gelombang 1 di rute: ubin, koran, efek, kilau (run `20261021-fase5a-pasang-aset-gelombang1`, belum diuji)
+
+Penguji: pemilik sendiri (rule `testing`). Semua bentuk, warna, dan penempatan usulan (ART_DIRECTION 6.2, 6.3, 6.7, 6.9, 11): catat yang ingin diubah beserta alasannya, jangan diubah di sesi uji. Run ini hanya tampilan; skor, lemparan, tenggat, gerak, misi, kondisi, bengkel, dan save tidak berubah (butir 8). **Pasang tanpa menghapus apa pun** (`adb install -r builds/kring-kring-debug.apk`, hanya setelah izin pemilik; HP dipakai bersama project lain). **Jangan uninstall.** Bukti desktop: tangkapan `docs/loop/20261021-fase5a-pasang-aset-gelombang1/shots/iter1/` (`<lebar>x<tinggi>_aset_<keadaan>.png` di 2340x1080, 1920x1080, 2400x1080, 1600x720) dari `tests/probe_aset_jendela.gd`.
+
+1. [ ] **Ubin baru terbaca di vivo V2108 dan A54.** Aspal bermarka, kerb, trotoar (lajur hijau), dan rumput kiri-kanan. Diharapkan: jalur utama tetap jelas, lajur hijau trotoar tidak tertukar dengan penanda misi selesai (hijau) atau sasaran kuning, tidak ada celah atau pita di tepi layar saat ngebut dan saat pindah sisi. Hasil: ya / tidak.
+2. [ ] **Koran 8x6 terbaca saat terbang di x3, bayangan terbaca di aspal.** Bayangan memakai warna penanda alpha 28% (lebih pelan dari placeholder 85%); keraguan dicatat di LOG. Diharapkan: koran putar terlihat dari lepas sampai mendarat, bayangan mengecil menurut tinggi dan masih terbaca di aspal. Hasil: koran ya / tidak, bayangan ya / tidak (usul: ____).
+3. [ ] **Mendarat di tiga permukaan, koran terlipat terbaca "terantar".** Lempar ke kotak surat (koran di atas kotak), teras, halaman (rumput), dan aspal; rumah yang sudah terantar menampilkan koran terlipat di terasnya. Diharapkan: tiap permukaan beda terlihat, koran terlipat terbaca sebagai "sudah dikirim" dan tidak tertukar dengan koran yang baru mendarat. Keraguan yang diketahui: titik terlipat = tengah zona teras, bisa jatuh di halaman di depan teras sprite rumah tertentu. Hasil: ya / tidak.
+4. [ ] **Debu dan garis kecepatan terbaca saat ngebut di trotoar dan aspal.** Debu roda berputar dan garis tiga varian (diacak tiap 2-3 frame) lebih jarang dan lebih tipis dari placeholder partikel. Diharapkan: ngebut terasa, garis tidak mengganggu pandangan, debu terlihat di aspal gelap dan trotoar krem. Hasil: ya / tidak (usul: lebih banyak / tebal / sama).
+5. [ ] **Bintang kena dan koin tip tidak mengacaukan penanda dan label.** Bintang di titik mendarat; bila tip, koin naik dengan tulisan "+5" dan baris "tip +5" label tidak tampil. Diharapkan: penanda kena/meleset, "+15", dan "TEPAT" tetap terbaca. Hasil: ya / tidak.
+6. [ ] **Kilau kucing terbaca di rumput dan trotoar** (krem terang, titik tengah kuning) dan tidak tertukar dengan sasaran kuning. Diharapkan: terlihat jelas di atas kepala kucing walau di atas atap atau teras putih. Hasil: ya / tidak.
+7. [ ] **60 fps tidak turun dan piksel tetap tajam.** Gambar sprite per frame (koran, efek, ubin) tidak menurunkan fps di HP menengah; tidak ada blur. Hasil: ya / tidak.
+8. [ ] **Save lama tetap jalan.** Run ini tidak mengubah save: buka app dengan save v3 yang ada; koran hari, koin, kondisi sepeda, dan misi utuh. Hasil: ya / tidak.
+
+**Lembar hasil 8.12 (aset gelombang 1, run 5A):**
+
+```
+Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build (commit): ____
+1. Ubin terbaca ya / tidak   lajur hijau tidak tertukar ya / tidak   celah atau pita ya / tidak
+2. Koran terbang terbaca ya / tidak   bayangan di aspal terbaca ya / tidak (usul ____)
+3. Tiga permukaan beda ya / tidak   terlipat = terantar ya / tidak   posisi terlipat wajar ya / tidak
+4. Debu terbaca ya / tidak   garis terbaca ya / tidak   terlalu sedikit / pas / terlalu banyak
+5. Bintang dan koin tip pas ya / tidak   menutupi label ya / tidak
+6. Kilau di rumput ya / tidak   di trotoar ya / tidak   tertukar dengan sasaran ya / tidak
+7. 60 fps tetap ya / tidak   piksel tajam ya / tidak
+8. Save lama utuh ya / tidak
+Catatan (bentuk, warna, angka yang ingin diubah dan alasannya): ____
+```

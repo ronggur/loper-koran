@@ -103,3 +103,10 @@ JANGAN
 - Komposisi repo memakai geometri game, bukan geometri kanvas: tembok sisi dekat berpusat 100 unit dari garis tengah (`TEMBOK_X_UBIN` 3,125, `scripts/dev/spike_sisi_dekat.gd`), rumah dekat varian `bukan` mundur 40 unit, kotak surat seberang = `prop_kotak_surat` oranye dan `prop_kotak_surat_bukan`. Di kanvas kotak surat lama masih merah dan tembok jatuh di pojok layar.
 - Belum: salin ke `assets/sprites/{props,vfx,houses/perumahan,tiles/perumahan}/` dan pasang di rute menggantikan placeholder dari kode (`pola_piksel.gd`, `umpan_balik_sepeda.gd`, zona graybox), run Dev↔QA berikutnya.
 - Keraguan yang perlu diputuskan pemilik ada di ART_DIRECTION 11 ("Aset gelombang 1").
+
+## Hasil pemasangan (Run 5A, 2026-10-21, usulan)
+
+- Run Dev↔QA `20261021-fase5a-pasang-aset-gelombang1` memasang 13 sprite dan 7 ubin dari renderer ke rute perumahan (`render.py --salin`, `ubin_perumahan.py --salin`; hanya yang dipasang, uji `uji_aset_pasang_gelombang1.py`): enam kolom ubin, koran (putar, bayangan menurut tinggi, tergeletak menurut permukaan, terlipat), debu roda, garis kecepatan, bintang kena, koin tip, dan kilau misi. Hanya tampilan.
+- Keputusan K-1 diterapkan di renderer: kilau dua warna, tong sampah abu-abu logam (hijau dibuang), satu polisi tidur (gelombang 1).
+- Belum dipasang: tong sampah, jejak, mangkuk, portal, pos, tembok sisi dekat, percikan, polisi tidur, zebra, genangan (5B dan M3).
+- Penilaian visual di HP: SETUP_ANDROID 8.12. Keraguan yang tercatat: bayangan 28% di aspal, lajur hijau trotoar lawan penanda misi selesai, debu dan garis yang tipis di x3, kilau di atas atap putih, letak koran terlipat terhadap teras sprite rumah. Detail di `docs/loop/20261021-fase5a-pasang-aset-gelombang1/LOG.md` dan ART_DIRECTION 11.

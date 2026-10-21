@@ -97,6 +97,10 @@ python3 tools/tests_cek/uji_sintesis_rute.py           # bukti 10 WAV rintangan,
 python3 tools/tests_cek/uji_sintesis_misi.py           # bukti 4 WAV misi (meong, terlihat, selesai, gagal) = hasil skrip sintesis
 python3 tools/tests_cek/uji_sintesis_kondisi.py        # bukti 5 WAV kondisi (rantai berisik, rem berdecit, ban mendesis, servis, upgrade) = hasil skrip sintesis
 python3 tools/tests_cek/uji_aset_kucing.py             # bukti sheet kucing misi = hasil tools/env_art/kendaraan.py (butuh numpy, pillow)
+python3 tools/env_art/gelombang1/render.py --salin     # run 5A: salin 13 sprite gelombang 1 yang dipasang (koran, debu, garis, bintang, koin, kilau) ke assets/sprites/{props,vfx}/ (butuh numpy, pillow), lalu godot --headless --import
+python3 tools/env_art/ubin_perumahan.py --salin        # run 5A: salin enam ubin kolom jalan + rumput_1 ke assets/sprites/tiles/perumahan/
+python3 tools/tests_cek/uji_aset_gelombang1.py         # bukti renderer gelombang 1 deterministik, palet induk, manifest, mock docs (juga uji_aset_pasang_gelombang1.py: isi assets/ = keluaran --salin)
+godot --path . --resolution 2340x1080 --position 0,0 --script res://tests/probe_aset_jendela.gd -- docs/loop/<RUN_ID>/shots/iter<N>   # tangkapan layar aset gelombang 1 di rute (ubin, koran, terlipat, debu, garis, bintang, koin, kilau; juga 1920x1080, 2400x1080, 1600x720)
 godot --headless --path . --quit-after 2               # buka project dua frame, harus tanpa ERROR dan WARNING
 godot --path .                                         # jalankan scene utama (hari.tscn sejak run 4A: koran -> rute -> hasil -> Hari berikutnya; menulis user://save.json di akhir hari): stick di layar sentuh, panah atau WASD di editor
 godot --path . scenes/rute/rute.tscn                   # rute saja tanpa alur hari (probe dan tes lama), tanpa save
