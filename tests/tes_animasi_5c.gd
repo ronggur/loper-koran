@@ -62,6 +62,9 @@ func _test_celah_frame_jatuh() -> void:
 	check(f.nama == &"bangkit_normal" and f.frame == 0 and f.progres == 0.0, "tepat 0,6 detik = bangkit frame 0 progres 0 (batas inklusif), dapat %s f%d p%.3f" % [f.nama, f.frame, f.progres])
 	f = LoperAnim.frame_jatuh(0.6 - 0.0000005, 0, 10.0, 4, 3.0, 2, 10.0, 6, 1.2)
 	check(f.nama == &"bangkit_normal" and f.frame == 0, "0,6 - 0,5 toleransi = bangkit frame 0 (dalam toleransi), dapat %s" % f.nama)
+	var tepat_toleransi: float = 0.6 - Config.TABRAKAN_TOLERANSI_DETIK
+	f = LoperAnim.frame_jatuh(tepat_toleransi, 0, 10.0, 4, 3.0, 2, 10.0, 6, 1.2)
+	check(tepat_toleransi + Config.TABRAKAN_TOLERANSI_DETIK == 0.6 and f.nama == &"bangkit_normal" and f.frame == 0, "0,6 - toleransi persis (t + toleransi = 0,6) = bangkit frame 0 (batas >=), dapat %s" % f.nama)
 	f = LoperAnim.frame_jatuh(0.6 - 0.000002, 0, 10.0, 4, 3.0, 2, 10.0, 6, 1.2)
 	check(f.nama == &"terjerembab_normal" and f.frame == 0, "0,6 - 2 x toleransi = terjerembab frame 0, dapat %s f%d" % [f.nama, f.frame])
 	var harapan: Array = [[0.65, &"bangkit_normal", 0, 0.5], [0.7, &"bangkit_normal", 1, 0.0], [0.95, &"bangkit_normal", 3, 0.5], [1.15, &"bangkit_normal", 5, 0.5],
