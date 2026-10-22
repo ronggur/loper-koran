@@ -458,7 +458,7 @@ def chicken(s, x, y, yaw=0.0, phase=0.0, mode='walk', col=None, tail=None, comb=
         foot = base + r * side * 1.2 * k + f * sg * sw * 1.4 * k
         top = body_c - up * 2.4 * k + r * side * 1.0 * k
         c = (foot + top) / 2
-        s.add(obox(c, f, r, top - foot, 0.5 * k, 0.5 * k, np.linalg.norm(top - foot) / 2,
+        s.add(obox(c, f, r, top - foot, 0.5 * k, 0.5 * k, panjang(top - foot) / 2,
                    beak, None, part=pid))
 
 
@@ -467,9 +467,9 @@ def clothes_line(s, p0, p1, items, sway=0.0, t=0.0, pole_h=None, rope=None):
     sway: amplitude in radians; t: animation phase 0..1. Rope is drawn as an overlay."""
     p0, p1 = np.asarray(p0, float), np.asarray(p1, float)
     ax = p1 - p0
-    L = np.linalg.norm(ax)
+    L = panjang(ax)
     a = ax / L
-    hz = np.cross(a, [0, 0, 1.0]); hz /= np.linalg.norm(hz)   # horizontal, perpendicular to line
+    hz = np.cross(a, [0, 0, 1.0]); hz /= panjang(hz)   # horizontal, perpendicular to line
     for i, it in enumerate(items):
         pos, w, h, mat = it[:4]
         kind = it[4] if len(it) > 4 else 'kain'
@@ -499,7 +499,7 @@ def clothes_line(s, p0, p1, items, sway=0.0, t=0.0, pole_h=None, rope=None):
 
 def draw_ropes(s, img, col=(46, 40, 54)):
     for p0, p1 in getattr(s, 'ropes', []):
-        n = int(np.linalg.norm(p1 - p0) * 1.5) + 2
+        n = int(panjang(p1 - p0) * 1.5) + 2
         for i in range(n + 1):
             t = i / n
             p = p0 + (p1 - p0) * t + np.array([0, 0, -1.6 * math.sin(math.pi * t)])
@@ -518,7 +518,7 @@ def draw_ropes(s, img, col=(46, 40, 54)):
 def wires(s, img, pts, sag=6, col=(38, 33, 46)):
     for p0, p1 in zip(pts[:-1], pts[1:]):
         p0, p1 = np.asarray(p0, float), np.asarray(p1, float)
-        n = int(np.linalg.norm(p1 - p0) * 1.6) + 2
+        n = int(panjang(p1 - p0) * 1.6) + 2
         for i in range(n + 1):
             t = i / n
             p = p0 + (p1 - p0) * t + np.array([0, 0, -sag * 4 * t * (1 - t)])
@@ -615,12 +615,12 @@ def _leaf_tex(seed, scale=2.2):
 def _limb(s, a, b, r, mat, part):
     a, b = np.asarray(a, float), np.asarray(b, float)
     d = b - a
-    L = np.linalg.norm(d)
+    L = panjang(d)
     d /= L
     sd = np.cross(d, [0, 0, 1.0])
-    if np.linalg.norm(sd) < 1e-3:
+    if panjang(sd) < 1e-3:
         sd = np.array([1.0, 0, 0])
-    sd /= np.linalg.norm(sd)
+    sd /= panjang(sd)
     s.add(obox((a + b) / 2, d, sd, np.cross(d, sd), L / 2 + r * 0.4, r, r, mat, part=part))
     return s.prims[-1].part
 

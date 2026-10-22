@@ -51,21 +51,21 @@ def rot90_into(s, tmp, t):
     A = A90
     t = np.asarray(t, float)
     for p in tmp.prims:
-        p.planes = [(A @ n, d + float((A @ n) @ t)) for n, d in p.planes]
+        p.planes = [(mm(A, n), d + float(mm(mm(A, n), t))) for n, d in p.planes]
         if p.quad is not None:
             if p.quad[0] == 'ellip':
                 _, c, R, r = p.quad
-                p.quad = ('ellip', A @ c + t, R @ A.T, r)
+                p.quad = ('ellip', mm(A, c) + t, mm(R, A.T), r)
             else:
                 _, ax, c2, r = p.quad
                 e = np.zeros(3); e[ax] = 1
                 c3 = np.zeros(3); o = [i for i in range(3) if i != ax]; c3[o] = c2
-                ne = A @ e; nax = int(np.argmax(np.abs(ne)))
-                w = A @ c3 + t
+                ne = mm(A, e); nax = int(np.argmax(np.abs(ne)))
+                w = mm(A, c3) + t
                 no = [i for i in range(3) if i != nax]
                 p.quad = ('cyl', nax, w[no], r)
         cs = np.array([[x, y, z] for x in (p.lo[0], p.hi[0]) for y in (p.lo[1], p.hi[1]) for z in (p.lo[2], p.hi[2])])
-        w = cs @ A.T + t
+        w = mm(cs, A.T) + t
         p.lo, p.hi = w.min(0), w.max(0)
         if p.tex is not None:
             f = p.tex
@@ -176,12 +176,12 @@ def _limb(s, a, b, r, mat, part):
     a, b = np.asarray(a, float), np.asarray(b, float)
     c = (a + b) / 2
     w = b - a
-    L = np.linalg.norm(w)
+    L = panjang(w)
     w = w / L
     u = np.cross(w, [0, 0, 1.0])
-    if np.linalg.norm(u) < 1e-6:
+    if panjang(u) < 1e-6:
         u = np.array([1.0, 0, 0])
-    u = u / np.linalg.norm(u)
+    u = u / panjang(u)
     v = np.cross(w, u)
     s.add(obox(c, u, v, w, r, r, L / 2, mat, None, part=part))
 
@@ -271,7 +271,7 @@ def anjing(s, x, y, pose='lari_1', size=1.0):
     _limb(s, tail_a, tail_b, 0.9 * k, BULU, pid)
     # kaki: sisi jauh (r negatif) bagian sendiri supaya bergaris terhadap badan
     for i, (a, b) in enumerate(legs):
-        side = (b - base) @ r
+        side = mm(b - base, r)
         part = pid if side > 0 else None
         _limb(s, a, b, 1.05 * k, BULU, part)
         if part is None:
@@ -495,7 +495,7 @@ def _antena_isi(s, kind, x, y, z0, z1, seed):
         el = math.radians(42)
         nrm_ = d * math.cos(el) + up * math.sin(el)          # menghadap langit ke arah satelit
         u = side
-        v = np.cross(nrm_, u); v = v / np.linalg.norm(v)
+        v = np.cross(nrm_, u); v = v / panjang(v)
         c = np.array([x, y, zc]) + d * 1.5
         R = np.stack([u, v, nrm_])
         if big:

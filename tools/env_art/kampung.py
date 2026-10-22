@@ -235,7 +235,7 @@ def banana(s, x, y, h=24, n=7, seed=0, sway=0.0):
         d = np.array([math.cos(yaw) * math.cos(droop), math.sin(yaw) * math.cos(droop), math.sin(droop)])
         base = np.array([x, y, h - 1])
         c = base + d * L / 2
-        side = np.cross(d, [0, 0, 1.0]); side /= np.linalg.norm(side)
+        side = np.cross(d, [0, 0, 1.0]); side /= panjang(side)
         nrm_ = np.cross(side, d)
         s.add(obox(c, d, side, nrm_, L / 2, 2.6, 0.5, K['pisang'],
                    lambda Pw, Nw: (0, np.where(np.abs(Nw[:, 2]) < 0.3, 1, 0))))
