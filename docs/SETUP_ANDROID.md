@@ -693,6 +693,8 @@ Catatan (bentuk, warna, angka yang ingin diubah dan alasannya): ____
 
 ### 8.13 Uji tembok sisi dekat, dekor, dan ubin tambahan di rute (run `20261021-fase5b-tembok-dekor`, belum diuji)
 
+> **Catatan Run 5D (2026-10-22):** tembok sisi dekat (butir 1, 2, dan lembar hasil baris 1) sudah dihapus oleh keputusan pemilik; butir itu tidak berlaku lagi dan diganti 8.16. Butir dekor, ubin, fps, dan save tetap berlaku.
+
 Penguji: pemilik sendiri (rule `testing`). Semua bentuk, warna, dan penempatan usulan (ART_DIRECTION 6.3, 6.4, 6.5, 11): catat yang ingin diubah beserta alasannya, jangan diubah di sesi uji. Run ini hanya tampilan dan data dekor; skor, lemparan, zona, tenggat, gerak, tabrakan, rintangan, misi, kondisi, bengkel, dan save tidak berubah (butir 8). **Pasang tanpa menghapus apa pun** (`adb install -r builds/kring-kring-debug.apk`, hanya setelah izin pemilik; HP dipakai bersama project lain). **Jangan uninstall.** Rute perumahan tidak punya pelanggan sisi dekat, jadi butir 2 dinilai dari tangkapan rute uji buatan atau tidak sama sekali di HP. Bukti desktop: tangkapan `docs/loop/20261021-fase5b-tembok-dekor/shots/iter2/` (iter1 sebelum perbaikan QA-001) (`<lebar>x<tinggi>_dekat_<keadaan>.png` di 2340x1080, 1920x1080, 2400x1080, 1600x720) dari `tests/probe_sisi_dekat_jendela.gd`.
 
 1. [ ] **Tembok rendah terbaca sebagai pagar atau batas halaman, bukan pita gelap di tepi bawah layar.** Empat varian (polos krem, bata merah, besi dengan jeruji gelap, pot dengan semak) terbedakan, dan tiang ujung tidak berisik. Rumah dekat terlihat penuh di belakang tembok (digambar mundur 1,25 ubin) dan **tidak pudar** saat sepeda di trotoar dekat. Diharapkan: jalur dekat dan trotoar dekat tetap terbaca, tembok tidak menimpa sepeda. Hasil: ya / tidak (varian mana yang berisik: ____).
@@ -730,7 +732,7 @@ Penguji: pemilik sendiri (rule `testing`), di vivo V2108 dan A54. Semua bentuk, 
 5. [ ] **Kucing ditangkap terbaca sebagai dielus, bukan diam seperti mati.** Selama bar progres tangkap berjalan, kucing duduk dengan mata terpejam dan kepala menunduk bergantian (3 fps); berhenti saat jeda. Keraguan yang diketahui (B-F1): bila berhenti sangat dekat, badan pemain menutup sebagian besar kucing (hanya telinga terlihat); berhenti sekitar 1,5 ubin sebelumnya kucing terlihat utuh. Hasil: terbaca dielus ya / tidak, tertutup pemain mengganggu ya / tidak.
 6. [ ] **Ujung kerb jalan masuk garasi rapi.** Di jalan masuk beton di bawah mobil garasi seberang, kerb dan lajur sepeda berhenti rapi di tepi jalan masuk tanpa potongan kerb menggantung (C-F1 run 5B). Hasil: ya / tidak.
 7. [ ] **Simpang terbaca sebagai jalan samping dan tidak dikira jalur yang harus dibelok.** Simpang dekat (kanan bawah) ada di setiap rute (`per_tengah_05`, D-F3) dan kadang di awal atau akhir rute; simpang seberang (kiri atas, di antara dua rumah) di sekitar separuh rute (`per_buka_02`). Lengan jalan samping sampai tepi layar. Keraguan yang diketahui: (D-F2) di `per_tengah_05` mobil garasi seberang mundur ke jalan sekitar 1,5 ubin sesudah simpang dekat dan bisa terbaca seperti keluar dari simpang; (D-F3) simpang dekat di posisi yang sama tiap hari bisa terasa berulang. Hasil: terbaca jalan samping ya / tidak, terasa harus dibelok ya / tidak, mobil terbaca keluar simpang ya / tidak, terasa berulang ya / tidak.
-8. [ ] **Tembok dekat terputus wajar di simpang dekat.** Tembok belakang dan rumah dekat berhenti sebelum mulut simpang dan mulai lagi sesudahnya; sudut kerb dan lajur hijau membelok siku. Hasil: ya / tidak.
+8. [ ] **(Tidak berlaku sejak Run 5D: tembok dilepas; lihat 8.16.) Tembok dekat terputus wajar di simpang dekat.** Tembok belakang dan rumah dekat berhenti sebelum mulut simpang dan mulai lagi sesudahnya; sudut kerb dan lajur hijau membelok siku. Hasil: ya / tidak.
 9. [ ] **60 fps tidak turun dan piksel tetap tajam.** Sheet jatuh/bangkit 140x88 dan ubin simpang (wadah tekstur bertambah 36) tidak menurunkan fps di HP menengah; tidak ada blur atau celah transparan di sekitar simpang. Hasil: ya / tidak.
 10. [ ] **Save lama tetap jalan.** Run ini tidak mengubah save: buka app dengan save v3 yang ada; hari, koin, kondisi sepeda, dan misi utuh. Hasil: ya / tidak.
 
@@ -767,4 +769,38 @@ Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build 
 2. Membidik tanpa persegi: santai __/10  cepat __/10  ngebut __/10   lebih membingungkan / sama / lebih jelas
 3. Mode bantu dan radar sama: ya / tidak
 Catatan: ____
+```
+
+### 8.16 Uji pelanggan sisi dekat, halaman terbuka, dan rumah dekat berteras (run `20261022-fase5d-sisi-dekat`, belum diuji)
+
+Penguji: pemilik sendiri (rule `testing`), di vivo V2108 dan A54. Semua bentuk dan angka usulan (ART_DIRECTION 6.6, BALANCING 5, ROUTE_DESIGN 3): catat yang ingin diubah beserta alasannya, jangan diubah di sesi uji. Run ini mengubah tampilan sisi dekat (tembok dihapus, rumah dekat mundur 0,5 ubin dengan teras menjorok), menambah kotak surat dan zona sasaran sisi dekat, dan membuat 8 atau 9 dari 25 pelanggan di sisi dekat **mulai hari 3**. ThrowSolver, gerak, tabrakan, rumus tenggat, angka skor, misi, kondisi, bengkel, dan format save tidak berubah. Pasang dengan `adb install -r` hanya setelah izin pemilik; jangan uninstall. Untuk sampai ke hari 3 tanpa memainkan dua hari: ubah bidang `hari` di `user://save.json` menjadi 3 lewat `run-as com.rmh.kring` (diizinkan pemilik, edit lebih disukai daripada `pm clear`), atau mainkan dua hari.
+
+1. [ ] **Halaman dekat terbaca seperti sisi jauh.** Di hari 1 dan 2 (dan seterusnya), halaman rumput terbuka di sisi dekat terlihat sebagai halaman rumah, bukan area kosong, dan tidak ada tembok. Diharapkan: sisi dekat terasa setara dengan sisi seberang. Hasil: ya / tidak.
+2. [ ] **Teras dekat terbaca dari samping.** Teras menjorok ke arah jalan di ujung maju rumah dekat (lantai, tiga tiang, atap sandar rendah, pintu samping) dan terbaca sebagai teras walau kamera melihat rumah dari belakang; tiga jenis rumah dekat terbedakan. Hasil: ya / tidak.
+3. [ ] **Kotak surat dekat mudah dibidik.** Di hari 3 atau lebih, lempar ke kotak surat oranye sisi dekat (di tepi trotoar dekat) dengan swipe di santai, cepat, dan ngebut, mode bantu mati; lalu dengan mode bantu menyala (tap di sisi dekat selalu kena kotak surat pelanggan dekat terdekat di depan). Diharapkan: sebanding dengan seberang. Hasil: santai __/10, cepat __/10, ngebut __/10; bantu ya / tidak.
+4. [ ] **Rumah dekat tidak menutupi sepeda.** Di jalur dekat dan di tepi trotoar dekat sejajar teras, sepeda tidak pernah tertimpa sprite rumah dekat (diukur 0% di desktop). Hasil: ya / tidak.
+5. [ ] **Rumah dekat tetap opak dan itu wajar.** Pudar rumah (P-3) tidak dipakai karena desain baru sudah mencapai sasaran (kotak surat 0%, zona 2,58%, pemain 0%; LOG run). Diharapkan: tidak ada rumah yang memudar dan tidak ada kotak surat yang tertutup. Hasil: ya / tidak.
+6. [ ] **Tip hari 3 terbaca dan tidak menghalangi.** Di hari 3 muncul tip "Mulai hari ini pelanggan ada di kedua sisi jalan" di kolom kiri di bawah kartu misi selama sekitar 6 detik, sekali; tidak muncul di hari 1, 2, 4. Stick, swipe, dan bel tetap bekerja saat tip tampil. Hasil: terbaca ya / tidak; menghalangi ya / tidak.
+7. [ ] **8 sampai 9 pelanggan dekat terasa adil terhadap tenggat.** Mainkan beberapa rute hari 3 dan lebih dengan kecepatan santai dan sesekali ngebut. Diharapkan: tenggat tetap masuk akal (bot mode bantu di desktop sisa 11,8 sampai 12,4 detik) dan celah antar pelanggan wajar. Hasil: terlalu mudah / pas / terlalu sulit.
+8. [ ] **Rumah dekat di bawah panel HUD bawah.** Rumah dekat selalu lewat di bawah sepeda dan sebagian tertutup panel kecepatan/stamina dan panel koran (terukur: kotak rumah menyentuh panel di 100% sampel, kotak surat pelanggan dalam jangkauan lempar 0%). Hasil: mengganggu ya / tidak; kotak surat dekat sempat tertutup panel ya / tidak.
+9. [ ] **Anjing dekat dan kotak surat abu-abu dua rumah bukan pelanggan.** Anjing dekat di `per_tengah_02@14` dan `per_tengah_03@30` duduk di halaman rumah yang bukan kandidat pelanggan; kotak surat abu-abunya tumpang visual dengan anjing. Hasil: mengganggu ya / tidak. **Keputusan pemilik bila mengganggu:** geser anjing ke @16 dan @32 (mengubah rintangan, di luar scope run ini).
+10. [ ] **60 fps tidak turun dan piksel tetap tajam.** Rumah dekat baru, kotak surat dekat, dan tip tidak menurunkan fps; tidak ada blur. Hasil: ya / tidak.
+11. [ ] **Save lama tetap jalan.** Run ini tidak mengubah save: buka app dengan save v3 yang ada; hari, koin, kondisi sepeda, dan misi utuh. Hasil: ya / tidak.
+
+**Lembar hasil 8.16 (pelanggan sisi dekat, halaman terbuka, rumah dekat berteras, run 5D):**
+
+```
+Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build (commit): ____
+1. Halaman dekat terbaca seperti sisi jauh ya / tidak
+2. Teras dekat terbaca dari samping ya / tidak   tiga jenis terbedakan ya / tidak
+3. Membidik kotak surat dekat: santai __/10  cepat __/10  ngebut __/10   mode bantu ya / tidak
+4. Rumah dekat menutupi sepeda ya / tidak
+5. Rumah dekat opak wajar ya / tidak
+6. Tip hari 3 terbaca ya / tidak   menghalangi ya / tidak
+7. Pelanggan dekat 8-9: terlalu mudah / pas / terlalu sulit
+8. Rumah dekat di bawah panel HUD bawah mengganggu ya / tidak
+9. Anjing dekat dan kotak surat abu-abu mengganggu ya / tidak   geser anjing ya / tidak
+10. 60 fps tetap ya / tidak   piksel tajam ya / tidak
+11. Save lama utuh ya / tidak
+Catatan (bentuk, angka, letak yang ingin diubah dan alasannya): ____
 ```

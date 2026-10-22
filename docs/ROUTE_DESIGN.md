@@ -11,7 +11,7 @@ Pasangan dari GDD bagian 4, 7, dan 9. GDD menjawab "rute itu apa"; dokumen ini m
 - **Tepi segmen netral**: setiap segmen diawali dan diakhiri 2 ubin jalan kosong tanpa rintangan, supaya dua segmen apa pun bisa disambung.
 - Segmen diberi **tag**: distrik, tingkat (`tenang`, `sedang`, `padat`), sisi pelanggan (`seberang`, `dekat`, `dua_sisi`), dan rintangan yang dipakai. Penyusun rute memilih segmen dari tag, bukan dari nama.
 
-Rute perumahan pertama (prototype 3): sekitar 250 ubin, 25 pelanggan di sisi seberang, 6–8 segmen.
+Rute perumahan pertama (prototype 3): sekitar 250 ubin, 25 pelanggan, 6–8 segmen. Hari 1 dan 2 semua pelanggan di sisi seberang; mulai hari 3, 8 atau 9 dari 25 di sisi dekat (bagian 3, Run 5D).
 
 ## 2. Tata letak jalan
 
@@ -34,7 +34,8 @@ Rute perumahan pertama (prototype 3): sekitar 250 ubin, 25 pelanggan di sisi seb
 
 ## 3. Menempatkan rumah pelanggan
 
-- Distrik pertama: pelanggan **hanya di sisi seberang** (GDD 9.1). Rumah sisi dekat ada, tapi bukan pelanggan.
+- Distrik pertama: **hari 1 dan 2** pelanggan hanya di sisi seberang; **mulai hari 3** tepat 8 atau 9 dari 25 pelanggan di sisi dekat (GDD 4.2 dan 9.1; keputusan pemilik 2026-10-22, Run 5D). `RouteBuilder.bangun` menerima nomor hari (bawaan hari 1) dan memilih pelanggan dari rumah yang `pelanggan_boleh`: dekat dulu (kuota 8 atau 9, diundi dari RNG rute sesudah susunan segmen), lalu sisanya di seberang. Hari 1 dan 2 mengonsumsi RNG persis seperti sebelum Run 5D, jadi rute kedua hari itu tidak berubah. Celah antar pelanggan berturut-turut (dua sisi digabung, urut maju) tidak lebih dari `RUTE_PELANGGAN_JARAK_MAKS_UBIN` (20 ubin); terukur di 100 hari: 2 sampai 20, median 10. Hampir semua rumah dekat di sembilan segmen `pelanggan_boleh` (34 dari 36); dua rumah bukan kandidat karena zona kotak surat dekatnya beririsan dengan anjing dekat (`per_tengah_02@12`, `per_tengah_03@28`; `DATA_SCHEMA.md` 3). Titik kucing misi P1 tetap di rumah seberang.
+- **Sisi dekat terbuka.** Tembok sisi dekat Run 5B dihapus: kavling dekat adalah halaman rumput terbuka seperti sisi jauh, rumah dekat mundur 0,5 ubin dan punya teras yang menjorok ke arah jalan. Kotak surat dekat (di tepi trotoar dekat, cermin seberang) ada di semua rumah dekat: oranye bila pelanggan, abu-abu bila bukan. Rumah dekat tidak boleh menutupi kotak surat sasaran atau sepeda (`BALANCING.md` 5, diukur oracle piksel).
 - Jarak rata-rata antar pelanggan sekitar 9 ubin (BALANCING 6). Variasikan: beberapa rumah berurutan (ritme cepat), lalu sela panjang (napas).
 - Sela antar pelanggan diisi rumah bukan pelanggan, persimpangan, taman, atau pos satpam, supaya radar dan mata pemain punya kerja.
 - Jangan menaruh dua pelanggan berturut-turut yang hanya bisa dicapai dari jalur berlawanan dengan jarak kurang dari 4 ubin. Pemain butuh waktu untuk pindah jalur.
@@ -112,5 +113,5 @@ Simpang = jalan samping (simpang T) ke sisi `seberang` atau `dekat`, ditulis tan
 
 - Panjang segmen dan rute final setelah graybox.
 - Rute bercabang (gang pintas vs jalan utama, GDD 4.1): bagaimana cabang disusun dari segmen.
-- ~~Cara menampilkan rumah di sisi dekat~~: diputuskan 2026-10-17, tembok/pagar belakang rendah dengan kavling sisi dekat lebih dalam sekitar 1,25 ubin (`ROADMAP.md` 4b); segmen dua sisi memperhitungkannya.
+- ~~Cara menampilkan rumah di sisi dekat~~: diputuskan 2026-10-17 (tembok/pagar belakang rendah, kavling lebih dalam sekitar 1,25 ubin), **diganti pemilik 2026-10-22**: halaman terbuka tanpa tembok, rumah dekat mundur 0,5 ubin dan didesain ulang dengan teras menjorok (`ROADMAP.md` 4b, Run 5D); angka dan bentuk usulan sampai dinilai di HP (`SETUP_ANDROID.md` 8.16).
 - ~~Persimpangan: hanya dekorasi, atau ada lalu lintas yang memotong~~: **untuk sekarang hiasan** (keputusan pemilik 2026-10-22, run 5C, bagian 4c): simpang T tanpa lalu lintas, rintangan, atau sasaran. Lalu lintas yang berbelok atau memotong di simpang (mobil, motor) dijadwalkan M3 dan memakai data simpang yang sama (`RouteBuilder.simpang_di`). Simpang empat dan pemain berbelok masuk jalan samping tetap terbuka bersama rute bercabang.
