@@ -51,6 +51,7 @@ func check(kondisi: bool, label: String) -> void:
 
 
 func jalankan() -> void:
+	_test_ujung_kerb_literal()
 	_test_config_json()
 	_test_parse_sah_dan_lama()
 	_test_parse_negatif()
@@ -179,6 +180,45 @@ func _simpang_item(maju: float, sisi: LoperAnim.Sisi) -> RouteBuilder.SimpangIte
 
 func _pustaka() -> Array[SegmenRute]:
 	return PemuatRute.muat_folder(FOLDER_RUTE).segmen
+
+
+# --- AC-13: ujung kerb jalan masuk (bagian C) ---
+
+func _test_ujung_kerb_literal() -> void:
+	_judul.call("UbinKhusus: ujung kerb hanya di baris maju + 1 jalan masuk sisi seberang, dua kolom (AC-13, C-F1, oracle tabel)")
+	var U: UbinKhusus.Ubin = UbinKhusus.Ubin.UJUNG
+	var B: UbinKhusus.Ubin = UbinKhusus.Ubin.BAWAAN
+	var masuk: Dictionary = {17: true}
+	# [x, baris, himpunan masuk, dengan_ujung, harapan]; baris 18 juga baris simbol (6 + 12).
+	var tabel: Array = [
+		[-1.5, 18, masuk, true, U], [-2.5, 18, masuk, true, U], [-0.5, 18, masuk, true, B], [1.5, 18, masuk, true, UbinKhusus.Ubin.SIMBOL], [2.5, 18, masuk, true, B],
+		[-1.5, 17, masuk, true, UbinKhusus.Ubin.MASUK], [-1.5, 16, masuk, true, B], [-2.5, 16, masuk, true, B], [-1.5, 19, masuk, true, B],
+		[-1.5, 18, {17: true, 18: true}, true, UbinKhusus.Ubin.MASUK], [-1.5, 19, {17: true, 18: true}, true, U],
+		[-1.5, 18, masuk, false, UbinKhusus.Ubin.SIMBOL], [-2.5, 18, masuk, false, B], [-1.5, 54, {53: true}, true, U], [-1.5, 54, {53: true}, false, UbinKhusus.Ubin.SIMBOL],
+	]
+	for t: Array in tabel:
+		var dapat: UbinKhusus.Ubin = UbinKhusus.jenis(t[0] as float, t[1] as int, t[2] as Dictionary, t[3] as bool)
+		check(dapat == t[4], "jenis(x %s, baris %s, masuk %s, ujung %s) = %s (dapat %s)" % [t[0], t[1], (t[2] as Dictionary).keys(), t[3], UbinKhusus.Ubin.keys()[t[4] as int], UbinKhusus.Ubin.keys()[dapat as int]])
+	var kolom_luar: bool = UbinKhusus.jenis(-3.5, 18, masuk) == UbinKhusus.varian_rumput(-4, 18)
+	check(kolom_luar, "kolom rumput luar di baris ujung tetap variasi rumput (bukan ujung)")
+	var dekat: Array[RouteBuilder.ObjekRute] = []
+	var o: RouteBuilder.ObjekRute = RouteBuilder.ObjekRute.new()
+	o.jenis = "mobil_garasi"
+	o.jalur = "dekat"
+	o.maju_ubin = 17.0
+	dekat.append(o)
+	check(UbinKhusus.jenis(-1.5, 18, UbinKhusus.himpunan_baris_masuk(dekat)) == UbinKhusus.Ubin.SIMBOL, "mobil sisi dekat tidak membuat ujung kerb")
+	var tanah: TanahDaur = _buat_tanah(false)
+	tanah.bangun(Config.LAYAR_LEBAR_MAKS_PX, TINGGI)
+	tanah.atur_baris_masuk({5: true})
+	tanah.perbarui(0.0)
+	var ujung: Dictionary = {}
+	for u: Sprite2D in _sprite_ubin(tanah):
+		if _nama_tekstur(u).ends_with("_ujung"):
+			var d: Vector2 = _dunia_dari_layar(u.position)
+			ujung["%s@%d" % [d.x, int(round(-d.y))]] = _nama_tekstur(u)
+	check(ujung == {"-1.5@6": "trotoar_seberang_masuk_ujung", "-2.5@6": "rumput_seberang_masuk_ujung"}, "TanahDaur: jalan masuk baris 5 = tepat dua ubin ujung di baris 6 kolom -1,5 dan -2,5: %s" % [ujung])
+	tanah.free()
 
 
 # --- D-3: config = JSON renderer ---
