@@ -12,12 +12,16 @@ Memakai engine.py, lib.py, dan perumahan.py apa adanya (tidak mengubah mock lama
 Menjalankan (dari root repo):
     python3 tools/env_art/fase3.py            # render ke build/env_art/fase3/
     python3 tools/env_art/fase3.py --salin    # render lalu salin ke assets/sprites/ dan docs/design/environment/
+`ENV_ART_OUT` mengganti folder build, `ENV_ART_SALIN_KE` mengganti akar tujuan `--salin` (bawaan root repo; dipakai
+tools/tests_cek/uji_aset_fase3.py). Hasil sama bit demi bit di semua mesin (mm()/panjang() dari engine.py, tanpa BLAS).
 Rincian: tools/env_art/README.md, ART_DIRECTION 6.4-6.6.
 """
 import json
 import math
+import os
 import shutil
 import sys
+from pathlib import Path
 
 import numpy as np
 from PIL import Image
@@ -28,6 +32,7 @@ import perumahan as PR
 
 ROOT = PR.ROOT
 OUT_DIR = PR.OUT / 'fase3'
+SALIN_KE = Path(os.environ.get('ENV_ART_SALIN_KE', ROOT))
 
 
 # ------------------------------------------------------------ rotasi 90 derajat ----
@@ -872,12 +877,12 @@ SALIN_MOCK = {'layar_fase3.png': 'fase3_perumahan.png', 'layar_dua_sisi.png': 'f
 
 def salin():
     for folder, names in SALIN_SPRITE.items():
-        d = ROOT / folder
+        d = SALIN_KE / folder
         d.mkdir(parents=True, exist_ok=True)
         for n in names:
             for ext in ('.png', '.json'):
                 shutil.copyfile(OUT_DIR / (n + ext), d / (n + ext))
-    d = ROOT / 'docs/design/environment'
+    d = SALIN_KE / 'docs/design/environment'
     d.mkdir(parents=True, exist_ok=True)
     for src, dst in SALIN_MOCK.items():
         im = Image.open(OUT_DIR / src)
