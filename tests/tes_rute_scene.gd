@@ -374,8 +374,8 @@ func _test_rumah_digambar() -> void:
 			var jangkar: Array = json["ground_anchor"]
 			if sprite.offset != -Vector2(float(jangkar[0]), float(jangkar[1])) or sprite.centered:
 				salah.append("%s: offset %s, harap %s" % [rumah.id, sprite.offset, -Vector2(float(jangkar[0]), float(jangkar[1]))])
-			# Run fase5b bagian B1 (D-2): sprite rumah dekat digambar 1,25 ubin lebih jauh dari jalan (tapak logika tetap 3,0 sampai 6,0, pusat 4,5): 5,75.
-			var tengah_x: float = -4.5 if seberang else 5.75
+			# Run fase5d-sisi-dekat (K-1, P-1): sprite rumah dekat digambar 0,5 ubin lebih jauh dari jalan (tapak logika tetap 3,0 sampai 6,0, pusat 4,5): 5,0 (run 5B: 5,75).
+			var tengah_x: float = -4.5 if seberang else 5.0
 			var letak: Vector2 = _layar(tengah_x, rumah.maju_ubin + 1.0)
 			if sprite.position != letak:
 				salah.append("%s: posisi %s, harap %s" % [rumah.id, sprite.position, letak])
@@ -404,9 +404,9 @@ func _test_rumah_digambar() -> void:
 		if anak is CanvasItem and (anak as CanvasItem).visible:
 			anak_gambar += 1
 	# Run fase3b-rintangan-skor: rintangan kini digambar, tetapi di dalam satu node induk `Rintangan` (anak Y-sort Objek), jadi anak Objek =
-	# rumah + tembok sisi dekat (run fase5b B1) + kotak surat (oranye pelanggan dan abu-abu bukan pelanggan seberang, 2026-10-17) + sepeda + node Rintangan (rintangan sendiri
+	# rumah (tembok sisi dekat run 5B dilepas run 5D) + kotak surat (oranye pelanggan dan abu-abu bukan pelanggan seberang, 2026-10-17) + sepeda + node Rintangan (rintangan sendiri
 	# dites di `tes_rintangan_scene.gd`) + node Dekor (induk dekor pinggir jalan, run fase5b B2; dites di `tes_dekor.gd`).
-	check(anak_gambar == akar.daur().jumlah_rumah() + akar.daur().jumlah_kotak_surat() + akar.daur().jumlah_kotak_surat_bukan() + akar.daur().jumlah_tembok() + 3 and akar.rintangan_daur().get_parent() == objek and akar.dekor_daur().get_parent() == objek, "tidak ada node lain yang digambar di Objek (rumah, tembok, kotak surat oranye dan abu-abu, sepeda, induk rintangan, induk dekor): %d" % anak_gambar)
+	check(anak_gambar == akar.daur().jumlah_rumah() + akar.daur().jumlah_kotak_surat() + akar.daur().jumlah_kotak_surat_bukan() + 3 and akar.rintangan_daur().get_parent() == objek and akar.dekor_daur().get_parent() == objek, "tidak ada node lain yang digambar di Objek (rumah, kotak surat oranye dan abu-abu, sepeda, induk rintangan, induk dekor): %d" % anak_gambar)
 	_bersihkan(akar)
 
 

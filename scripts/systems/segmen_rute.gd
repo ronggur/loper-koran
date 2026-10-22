@@ -21,8 +21,8 @@ extends RefCounted
 ##   dari `DekorRute`, `pos` bilangan bulat `RUTE_DEKOR_TEPI_UBIN` sampai `panjang - RUTE_DEKOR_TEPI_UBIN`, tapak kaki di luar lajur sepeda, tidak menimpa zona teras atau
 ##   kotak surat rumah mana pun, tapak rumah, atau tapak rintangan diam, dan dua dekor sesisi paling dekat `RUTE_DEKOR_JARAK_MIN_UBIN` ubin. Berkas tanpa `dekor` tetap sah.
 ## - simpang T hiasan (bidang `simpang` OPSIONAL, run fase5c-animasi-simpang, P-1, D-3, AC-15): tiap butir `{pos, sisi}` keduanya wajib dan tanpa field lain, `sisi` `seberang` atau `dekat`,
-##   `pos` bilangan bulat (baris `mulut_2`; `pita_maju`). Pita mulut + sudut (`RUTE_SIMPANG_PITA_BARIS`) harus di dalam segmen dan, di sisi simpang, tidak memotong kavling rumah (tapak dan
-##   tembok), zona rumah (kotak surat, halaman, teras, jendela), tapak dekor, bentuk diam rintangan (anjing diam, seluruh lintasan mobil), atau baris jalan masuk garasi beserta ujung kerbnya;
+##   `pos` bilangan bulat (baris `mulut_2`; `pita_maju`). Pita mulut + sudut (`RUTE_SIMPANG_PITA_BARIS`) harus di dalam segmen dan, di sisi simpang, tidak memotong kavling rumah (tapak logika dan
+##   tapak gambar), zona rumah (kotak surat, halaman, teras, jendela), tapak dekor, bentuk diam rintangan (anjing diam, seluruh lintasan mobil), atau baris jalan masuk garasi beserta ujung kerbnya;
 ##   pita dua simpang (sisi mana pun) tidak boleh bertumpuk. Tepi yang hanya bersentuhan boleh. Simpang hanya hiasan: tanpa lalu lintas, rintangan, atau sasaran. Berkas tanpa `simpang` tetap sah.
 
 ## Tingkat keramaian segmen (tag `tingkat`).
@@ -222,13 +222,10 @@ static func pita_bertumpuk(a: Vector2, b: Vector2) -> bool:
 	return a.x < b.y and b.x < a.y
 
 
-## Kavling rumah `sisi` di `pos_rumah` yang tidak boleh dipotong pita simpang: tapak logika (`PenutupPemain.tapak_rumah`) digabung tapak gambar (rumah dekat mundur) dan,
-## untuk rumah dekat, rentang tembok belakangnya (`TembokDekat`: modul di maju `pos` sampai `pos + RUTE_RUMAH_PANJANG_UBIN`).
+## Kavling rumah `sisi` di `pos_rumah` yang tidak boleh dipotong pita simpang: tapak logika (`PenutupPemain.tapak_rumah`) digabung tapak gambar (rumah dekat: kotak sprite
+## nyata semua jenis, mundur 0,5). Tembok belakang run 5B dilepas (run fase5d-sisi-dekat, P-1), jadi rentang tembok tidak lagi ikut.
 static func kavling_rumah(sisi: LoperAnim.Sisi, pos_rumah: float) -> Rect2:
-	var bentuk: Rect2 = PenutupPemain.tapak_rumah(sisi, pos_rumah).merge(PenutupPemain.tapak_rumah_gambar(sisi, pos_rumah))
-	if sisi == LoperAnim.Sisi.DEKAT:
-		bentuk = bentuk.merge(Rect2(Config.RUTE_TEMBOK_X_UBIN, pos_rumah, 0.0, Config.RUTE_RUMAH_PANJANG_UBIN))
-	return bentuk
+	return PenutupPemain.tapak_rumah(sisi, pos_rumah).merge(PenutupPemain.tapak_rumah_gambar(sisi, pos_rumah))
 
 
 ## Baris jalan masuk garasi mobil sisi seberang di `pos_objek` beserta baris ujung kerbnya (`UbinKhusus`): kolom trotoar dan rumput pertama seberang, koordinat jalan.

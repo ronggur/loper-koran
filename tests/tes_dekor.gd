@@ -413,7 +413,7 @@ func _uraian(rute: RouteBuilder.Rute) -> String:
 	return "\n".join(bagian)
 
 
-## FNV-1a 32 bit atas byte UTF-8 (ditulis ulang di sini, bukan `VarianTembok.fnv1a_32`).
+## FNV-1a 32 bit atas byte UTF-8 (ditulis ulang di sini, independen dari kode produksi).
 func _fnv(teks: String) -> int:
 	var nilai: int = 2166136261
 	for b: int in teks.to_utf8_buffer():
@@ -670,18 +670,20 @@ func _test_rujukan_dan_pemisahan() -> void:
 # --- P-4: kotak penutup rumah dekat digeser seperti gambarnya (murni) ---
 
 func _test_p4_tapak_gambar_murni() -> void:
-	_judul.call("P-4 PenutupPemain.tapak_rumah_gambar: rumah dekat digeser 1,25 ubin seperti gambarnya, seberang tetap, tapak logika tidak berubah")
-	check(PenutupPemain.tapak_rumah_gambar(LoperAnim.Sisi.DEKAT, 8.0) == Rect2(4.25, 7.5, 3.0, 3.0), "tapak gambar rumah dekat di maju 8 = (4,25; 7,5) 3 x 3 (tapak logika 3,0 + 1,25)")
+	_judul.call("P-4 PenutupPemain.tapak_rumah_gambar: rumah dekat = kotak sprite nyata (run 5D: mundur 0,5, JSON aset), seberang tetap, tapak logika tidak berubah")
+	# Run fase5d-sisi-dekat (AC-5): dulu (4,25; 7,5) 3 x 3 (logika + 1,25). Kini pusat gambar (5,0; 9,0) + kotak JSON; tanpa jenis = gabungan tiga jenis: lateral 5,0 - 1,09375 = 3,90625,
+	# maju 9,0 - 1,40625 = 7,59375, lebar terbesar 3,1125, panjang terbesar 2,8125.
+	check(PenutupPemain.tapak_rumah_gambar(LoperAnim.Sisi.DEKAT, 8.0).is_equal_approx(Rect2(3.90625, 7.59375, 3.1125, 2.8125)), "tapak gambar rumah dekat di maju 8 tanpa jenis = (3,906; 7,594) 3,1125 x 2,8125 (gabungan sprite nyata)")
 	check(PenutupPemain.tapak_rumah_gambar(LoperAnim.Sisi.SEBERANG, 8.0) == Rect2(-6.0, 7.5, 3.0, 3.0), "tapak gambar rumah seberang di maju 8 = (-6,0; 7,5) tidak bergeser")
 	check(PenutupPemain.tapak_rumah_gambar(LoperAnim.Sisi.TIDAK_ADA, 8.0) == Rect2(), "tapak gambar sisi kosong: persegi kosong")
 	check(PenutupPemain.tapak_rumah(LoperAnim.Sisi.DEKAT, 8.0) == Rect2(3.0, 7.5, 3.0, 3.0) and PenutupPemain.tapak_rumah(LoperAnim.Sisi.SEBERANG, 8.0) == Rect2(-6.0, 7.5, 3.0, 3.0), "tapak logika tidak berubah: dekat (3,0; 7,5), seberang (-6,0; 7,5)")
 	var dekat: RouteBuilder.RumahRute = _rumah(8, 8.0, LoperAnim.Sisi.DEKAT)
 	var seberang: RouteBuilder.RumahRute = _rumah(8, 8.0, LoperAnim.Sisi.SEBERANG)
-	check(PenutupPemain.dari_rumah_gambar(dekat).tapak == Rect2(4.25, 7.5, 3.0, 3.0) and PenutupPemain.dari_rumah_gambar(dekat).tinggi_ubin == 2.0 and PenutupPemain.dari_rumah_gambar(dekat).id == dekat.id, "kotak penutup gambar rumah dekat: tapak geser, tinggi 2,0, id rumah")
+	check(PenutupPemain.dari_rumah_gambar(dekat).tapak.is_equal_approx(Rect2(3.90625, 7.59375, 3.06875, 2.8125)) and PenutupPemain.dari_rumah_gambar(dekat).tinggi_ubin == 1.625 and PenutupPemain.dari_rumah_gambar(dekat).id == dekat.id, "kotak penutup gambar rumah dekat limasan: sprite nyata (3,906; 7,594) 3,06875 x 2,8125, tinggi 1,625, id rumah (run 5D; dulu logika + 1,25 tinggi 2)")
 	check(PenutupPemain.dari_rumah_gambar(seberang).tapak == PenutupPemain.dari_rumah(seberang).tapak, "kotak penutup gambar rumah seberang = kotak penutup logika")
 	check(PenutupPemain.dari_rumah(dekat).tapak == Rect2(3.0, 7.5, 3.0, 3.0), "kotak penutup logika rumah dekat tetap (3,0; 7,5) (MedanKoran, dites lama)")
 	# Sapuan murni: pemain di lateral -2,0 sampai 2,0 (langkah 0,25) dan maju 6 ubin di sekitar rumah (langkah 0,125) tidak pernah tertutup rumah dekat yang digeser.
-	# Penalaran: titik kaki harus bisa mencapai tapak (lateral 4,25) lewat garis pandang (x + d), jadi d >= 4,25 - 2,0 = 2,25 > tinggi 2,0 tak pernah tercapai.
+	# Penalaran (run 5D): titik kaki harus mencapai tapak (lateral 3,906) lewat garis pandang (x + d), jadi d >= 1,906 > tinggi 1,625 tak pernah tercapai.
 	var dekat_tertutup: int = 0
 	var seberang_tertutup: int = 0
 	var diperiksa: int = 0
@@ -708,9 +710,14 @@ func _test_p4_tapak_gambar_murni() -> void:
 		var logika: Rect2 = PenutupPemain.dari_rumah(r).tapak
 		if r.sisi == LoperAnim.Sisi.SEBERANG and gambar != logika:
 			salah.append("%s: seberang bergeser" % r.id)
-		if r.sisi == LoperAnim.Sisi.DEKAT and (gambar.position.x != logika.position.x + 1.25 or gambar.size != logika.size or gambar.position.y != logika.position.y):
-			salah.append("%s: dekat tidak digeser 1,25 sepanjang lateral" % r.id)
-	check(salah.is_empty(), "rute nyata (%d rumah): kotak gambar seberang = logika, dekat = logika + 1,25 lateral: %s" % [rute.rumah.size(), salah.slice(0, 3)])
+		# Run 5D: kotak gambar dekat = pusat tapak logika + 0,5 lateral + kotak sprite nyata per jenis (literal dari JSON aset).
+		var kotak_jenis: Dictionary = {"dekat_limasan": [-1.09375, -1.40625, 3.06875, 2.8125], "dekat_pelana_lintang": [-1.09375, -1.40625, 3.1125, 2.8125], "dekat_pelana_sejajar": [-1.09375, -1.375, 3.1125, 2.75]}
+		if r.sisi == LoperAnim.Sisi.DEKAT:
+			var k: Array = kotak_jenis[r.jenis]
+			var harap: Rect2 = Rect2(logika.get_center().x + 0.5 + float(k[0]), logika.get_center().y + float(k[1]), float(k[2]), float(k[3]))
+			if not gambar.is_equal_approx(harap):
+				salah.append("%s: kotak gambar dekat %s, harap %s" % [r.id, gambar, harap])
+	check(salah.is_empty(), "rute nyata (%d rumah): kotak gambar seberang = logika, dekat = pusat logika + 0,5 + kotak sprite nyata: %s" % [rute.rumah.size(), salah.slice(0, 3)])
 
 
 func _rumah(pos: int, maju: float, sisi: LoperAnim.Sisi) -> RouteBuilder.RumahRute:
@@ -997,7 +1004,8 @@ func _test_p4_scene() -> void:
 	# Letak gambar rumah dekat sesuai tapak: kotak penutup (tapak gambar) mencakup titik pijak gambar (pusat tapak + geser).
 	var pusat: Vector2 = SpriteRumah.pusat_gambar_dunia(dekat)
 	var tapak: Rect2 = PenutupPemain.dari_rumah_gambar(dekat).tapak
-	check(tapak.has_point(Vector2(pusat.x, -pusat.y)) and tapak.get_center() == Vector2(pusat.x, -pusat.y), "pusat gambar rumah dekat (%s) = pusat kotak penutup gambar (%s)" % [pusat, tapak.get_center()])
+	# Run 5D: kotak sprite nyata tidak simetris (toren dan jemuran di belakang), jadi hanya dicek memuat titik pijak gambar.
+	check(tapak.has_point(Vector2(pusat.x, -pusat.y)), "pusat gambar rumah dekat (%s) ada di dalam kotak penutup gambar (%s)" % [pusat, tapak])
 	_bersihkan(akar)
 
 

@@ -307,14 +307,14 @@ func _test_parse_negatif() -> void:
 	check(_ada_galat({"simpang": [{"pos": 10.5, "sisi": "dekat"}]}, "bilangan bulat"), "pos 10,5 ditolak")
 	check(_ada_galat({"simpang": [{"pos": "10", "sisi": "dekat"}]}, "bilangan bulat"), "pos teks ditolak")
 	check(_galat({"simpang": [dekat]}).is_empty(), "kontrol: simpang dekat di pos 10 segmen kosong sah")
-	# Rumah dekat di pos 14: kavling 13,5 .. 17 (tapak 13,5 .. 16,5, tembok 14 .. 17); pita pos 10 = 8,5 .. 13,5 menyentuh saja.
+	# Rumah dekat di pos 14: kavling 13,5 .. 16,5 (tapak; tembok dilepas run 5D, P-1); pita pos 10 = 8,5 .. 13,5 menyentuh saja.
 	var rumah_dekat_14: Dictionary = {"pos": 14, "sisi": "dekat", "jenis": "dekat_limasan", "pelanggan_boleh": false}
 	check(_galat({"rumah": [rumah_dekat_14], "simpang": [dekat]}).is_empty(), "rumah dekat pos 14, simpang dekat pos 10 (pita berakhir 13,5 = awal kavling): sah, tepi bersentuhan")
 	check(_ada_galat({"rumah": [rumah_dekat_14], "simpang": [{"pos": 11, "sisi": "dekat"}]}, "kavling rumah dekat"), "simpang dekat pos 11 (pita 9,5 .. 14,5) memotong kavling rumah dekat pos 14")
-	# Tembok: rumah dekat pos 4 = tapak 3,5 .. 6,5, tembok 4 .. 7; simpang pos 8 = pita 6,5 .. 11,5 hanya memotong tembok (6,5 .. 7).
+	# Run 5D (P-1, tembok dilepas): rumah dekat pos 4 = kavling 3,5 .. 6,5 (tapak logika; kotak gambar 3,59 .. 6,41 di dalamnya). Dulu tembok 4 .. 7 membuat pos 8 ditolak.
 	var rumah_dekat_4: Dictionary = {"pos": 4, "sisi": "dekat", "jenis": "dekat_limasan", "pelanggan_boleh": false}
-	check(_ada_galat({"rumah": [rumah_dekat_4], "simpang": [{"pos": 8, "sisi": "dekat"}]}, "kavling rumah dekat"), "simpang dekat pos 8 memotong tembok rumah dekat pos 4 (tembok sampai maju 7)")
-	check(_galat({"rumah": [rumah_dekat_4], "simpang": [{"pos": 9, "sisi": "dekat"}]}).is_empty(), "simpang dekat pos 9 (pita 7,5 ..) sesudah tembok rumah dekat pos 4: sah")
+	check(_galat({"rumah": [rumah_dekat_4], "simpang": [{"pos": 8, "sisi": "dekat"}]}).is_empty(), "simpang dekat pos 8 (pita 6,5 ..) hanya bersentuhan dengan kavling rumah dekat pos 4 (berakhir 6,5): sah sesudah tembok dilepas")
+	check(_ada_galat({"rumah": [rumah_dekat_4], "simpang": [{"pos": 7, "sisi": "dekat"}]}, "kavling rumah dekat"), "simpang dekat pos 7 (pita 5,5 ..) memotong kavling rumah dekat pos 4")
 	var rumah_seb_10: Dictionary = {"pos": 10, "sisi": "seberang", "jenis": "limasan", "pelanggan_boleh": true}
 	check(_galat({"rumah": [rumah_seb_10], "simpang": [dekat]}).is_empty(), "rumah seberang di maju yang sama dengan simpang DEKAT: sah (sisi lain)")
 	check(_ada_galat({"rumah": [rumah_seb_10], "simpang": [{"pos": 10, "sisi": "seberang"}]}, "kavling rumah seberang"), "rumah seberang di pita simpang seberang ditolak")
@@ -361,7 +361,7 @@ func _test_zona_di_dalam_kavling() -> void:
 			if z.persegi.position.y < kav.position.y or z.persegi.end.y > kav.end.y:
 				di_dalam = false
 		check(di_dalam, "zona rumah %s di dalam rentang maju kavling %s" % [sisi, kav])
-	check(SegmenRute.kavling_rumah(LoperAnim.Sisi.DEKAT, 10.0).position.y == 9.5 and SegmenRute.kavling_rumah(LoperAnim.Sisi.DEKAT, 10.0).end.y == 13.0, "kavling dekat pos 10 = maju 9,5 .. 13 (tembok sampai 13)")
+	check(SegmenRute.kavling_rumah(LoperAnim.Sisi.DEKAT, 10.0).position.y == 9.5 and SegmenRute.kavling_rumah(LoperAnim.Sisi.DEKAT, 10.0).end.y == 12.5, "kavling dekat pos 10 = maju 9,5 .. 12,5 (tembok dilepas run 5D; dulu sampai 13)")
 	check(SegmenRute.kavling_rumah(LoperAnim.Sisi.SEBERANG, 10.0).position.y == 9.5 and SegmenRute.kavling_rumah(LoperAnim.Sisi.SEBERANG, 10.0).end.y == 12.5, "kavling seberang pos 10 = maju 9,5 .. 12,5")
 
 
@@ -851,7 +851,7 @@ func _periksa_scene_simpang(akar: RuteMain, tanah: TanahDaur, it: RouteBuilder.S
 	return salah if diperiksa > 50 else salah + 1
 
 
-## Tembok dan rumah (tapak gambar) sisi simpang tidak ada di pita simpang (100 rute hari, kedua sisi).
+## Rumah (tapak gambar sprite nyata) sisi simpang tidak ada di pita simpang (100 rute hari, kedua sisi). Tembok dilepas run 5D (P-1).
 func _cek_tembok_rumah_100() -> void:
 	var di_pita: int = 0
 	for i: int in range(100):
@@ -861,14 +861,10 @@ func _cek_tembok_rumah_100() -> void:
 			for rumah: RouteBuilder.RumahRute in r.rumah:
 				if rumah.sisi != it.sisi:
 					continue
-				for pot: TembokDekat.Potongan in TembokDekat.potongan(rumah):
-					var akhir: float = pot.maju_ubin + (0.0 if pot.tiang else 1.0)
-					if pot.maju_ubin < pita.y and akhir > pita.x:
-						di_pita += 1
-				var tapak: Rect2 = PenutupPemain.tapak_rumah_gambar(rumah.sisi, rumah.maju_ubin)
+				var tapak: Rect2 = PenutupPemain.tapak_rumah_gambar(rumah.sisi, rumah.maju_ubin, rumah.jenis)
 				if tapak.position.y < pita.y and tapak.end.y > pita.x:
 					di_pita += 1
-	check(di_pita == 0, "100 rute: tidak ada modul tembok, tiang, atau tapak gambar rumah sisi simpang di pita simpang (%d)" % di_pita)
+	check(di_pita == 0, "100 rute: tidak ada tapak gambar rumah sisi simpang di pita simpang (%d)" % di_pita)
 
 
 func _test_scene_gerak_identik() -> void:

@@ -45,9 +45,9 @@ PASANG = {
     'vfx': ['vfx_debu_roda', 'vfx_garis_kecepatan_a', 'vfx_garis_kecepatan_b', 'vfx_garis_kecepatan_c', 'vfx_bintang_kena',
             'vfx_koin_tip', 'mission_kilau'],
 }
-# Tambahan run fase5b-tembok-dekor (D-1): isi pasangan 5A di atas tidak berubah.
+# Tambahan run fase5b-tembok-dekor (D-1): isi pasangan 5A di atas tidak berubah. Run fase5d-sisi-dekat (P-1): tembok sisi dekat dilepas dari rute,
+# jadi lima sprite `house_tembok_*` tidak lagi disalin ke assets/ (tetap dirender ke build/ dan papan).
 PASANG_5B = {
-    'houses/perumahan': ['house_tembok_polos', 'house_tembok_bata', 'house_tembok_besi', 'house_tembok_pot', 'house_tembok_tiang'],
     'props': ['prop_tong_sampah_logam'],
 }
 

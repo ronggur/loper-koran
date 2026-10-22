@@ -12,9 +12,9 @@ extends Node2D
 ## penerap (`PenerapPenutup`), bukan node ini: tiap rumah yang muncul didaftarkan ke penerap dan dilepas saat dibuang.
 ## Run fase5a bagian B (D-3d, usulan): rumah pelanggan yang sudah terantar (`SkorRute.Keadaan.terantar`, hanya dibaca lewat `atur_terantar`) mendapat satu sprite `prop_koran_terlipat` di terasnya
 ## (`SpriteRumah.titik_teras_dunia`), anak induk Y-sort ini sehingga digambar di atas sprite rumah (titik teras di depan tapak), dipakai ulang dari kolam, dan hilang bersama rumah di luar jendela daur.
-## Run fase5b-tembok-dekor bagian B1 (D-2, D-3, usulan): tiap rumah sisi `dekat` di jendela daur mendapat tembok belakang rendah (`TembokDekat`: tiga modul dan satu tiang, satu varian per rumah dari
-## `VarianTembok`) di lateral `RUTE_TEMBOK_X_UBIN`, dan sprite rumahnya digambar `RUTE_RUMAH_DEKAT_MUNDUR_UBIN` lebih jauh dari jalan (`SpriteRumah.pusat_gambar_dunia`). Sprite tembok anak induk Y-sort ini
-## (urutan gambar dari posisi tegak pijak, sama dengan rumah dan sepeda), dipakai ulang dari kolam, dimuat sekali di `atur_rute`, dan TIDAK didaftarkan ke penerap penutup (gambar saja, bukan penghalang).
+## Run fase5d-sisi-dekat bagian A (P-1, keputusan pemilik 2026-10-22): tembok belakang run 5B dilepas, kavling dekat = halaman terbuka; sprite rumah dekat (desain ulang dengan teras
+## menjorok, tanpa kotak surat terpanggang) digambar `RUTE_RUMAH_DEKAT_MUNDUR_UBIN` (0,5) lebih jauh dari jalan (`SpriteRumah.pusat_gambar_dunia`) dan didaftarkan ke penerap dengan kotak
+## sprite nyata (`PenutupPemain.dari_rumah_gambar`).
 
 ## Scene kotak surat sasaran (rumah pelanggan): sprite berbentuk kotak surat, oranye placeholder (`scenes/entities/kotak_surat.tscn`).
 @export var adegan_kotak_surat: PackedScene
@@ -37,12 +37,6 @@ var _rumah_bebas: Array[Sprite2D] = []
 var _terlipat: Dictionary = {}
 var _terlipat_bebas: Array[Sprite2D] = []
 var _terantar: Dictionary = {}
-## Indeks rumah dekat -> sprite tembok (tiga modul dan tiang, urut `TembokDekat.potongan`), kolam sprite bebas, dan tekstur tembok per nama sprite.
-var _tembok: Dictionary = {}
-var _tembok_bebas: Array[Sprite2D] = []
-var _tekstur_tembok: Dictionary = {}
-## Berapa kali PNG tembok benar-benar dimuat dari disk (satu per nama sprite, tidak bertambah saat rute digulir).
-var _muat_tembok: int = 0
 var _kotak_bebas: Array[Node2D] = []
 var _kotak_bukan_bebas: Array[Node2D] = []
 ## Rentang indeks `[awal, akhir)` yang sedang dipasang; (-1, -1) = belum ada.
@@ -58,8 +52,6 @@ func atur_rute(rute: RouteBuilder.Rute) -> void:
 	# Semua PNG jenis rumah yang dipakai rute dimuat sekarang, bukan di tengah frame saat rumah pertama jenis itu muncul.
 	for r: RouteBuilder.RumahRute in rute.rumah:
 		_tekstur_untuk(SpriteRumah.nama_rumah(r))
-		for potong: TembokDekat.Potongan in TembokDekat.potongan(r):
-			_tekstur_tembok_untuk(potong.nama)
 	_tampil = Vector2i(-1, -1)
 	perbarui(0.0)
 
@@ -167,37 +159,6 @@ func jumlah_node_rumah() -> int:
 	return _rumah.size() + _rumah_bebas.size()
 
 
-## Banyaknya sprite tembok yang sedang digambar (semua rumah dekat di jendela daur).
-func jumlah_tembok() -> int:
-	var jumlah: int = 0
-	for daftar: Array in _tembok.values():
-		jumlah += daftar.size()
-	return jumlah
-
-
-## Sprite tembok rumah bernomor `indeks` (modul berurut lalu tiang), atau larik kosong (rumah seberang atau tidak sedang digambar).
-func sprite_tembok(indeks: int) -> Array[Sprite2D]:
-	var hasil: Array[Sprite2D] = []
-	for sprite: Sprite2D in _tembok.get(indeks, []):
-		hasil.append(sprite)
-	return hasil
-
-
-## Banyaknya node sprite tembok yang pernah dibuat (terpakai + kolam), untuk memeriksa tidak ada kebocoran node.
-func jumlah_node_tembok() -> int:
-	return jumlah_tembok() + _tembok_bebas.size()
-
-
-## Banyaknya pemuatan PNG tembok sejak node dibuat (harus sama dengan jumlah nama berbeda yang dipakai).
-func jumlah_muat_tembok() -> int:
-	return _muat_tembok
-
-
-## Banyaknya tekstur tembok yang sudah dimuat (nama sprite berbeda yang dipakai rute; dimuat di `atur_rute`).
-func jumlah_tekstur_tembok() -> int:
-	return _tekstur_tembok.size()
-
-
 func _pasang(indeks: int) -> void:
 	var rumah: RouteBuilder.RumahRute = _rute.rumah[indeks]
 	var nama: String = SpriteRumah.nama_rumah(rumah)
@@ -212,7 +173,6 @@ func _pasang(indeks: int) -> void:
 	if penerap != null:
 		penerap.daftarkan(sprite, PenutupPemain.dari_rumah_gambar(rumah))
 	_sinkron_terlipat(indeks)
-	_pasang_tembok(indeks, rumah)
 	if rumah.sisi != LoperAnim.Sisi.SEBERANG:
 		return
 	if rumah.pelanggan and adegan_kotak_surat != null:
@@ -223,28 +183,6 @@ func _pasang(indeks: int) -> void:
 		var bukan: Node2D = _kotak_bukan_bebas.pop_back() if not _kotak_bukan_bebas.is_empty() else _buat_kotak(adegan_kotak_surat_bukan)
 		_taruh_kotak(bukan, rumah, "KotakBukan_%s")
 		_kotak_bukan[indeks] = bukan
-
-
-## Memasang tembok rumah dekat (kosong untuk rumah seberang): satu sprite per potongan dari kolam, tanpa pendaftaran ke penerap penutup.
-func _pasang_tembok(indeks: int, rumah: RouteBuilder.RumahRute) -> void:
-	var daftar: Array[Sprite2D] = []
-	for potong: TembokDekat.Potongan in TembokDekat.potongan(rumah):
-		var sprite: Sprite2D = _tembok_bebas.pop_back() if not _tembok_bebas.is_empty() else _buat_sprite()
-		sprite.texture = _tekstur_tembok_untuk(potong.nama)
-		sprite.offset = -Vector2(TembokDekat.pijak())
-		sprite.position = Iso.posisi_gambar(TembokDekat.titik_dunia(potong))
-		sprite.name = "%s_%s_%d" % ["TembokTiang" if potong.tiang else "Tembok", rumah.id.replace("@", "_"), daftar.size()]
-		sprite.visible = true
-		daftar.append(sprite)
-	if not daftar.is_empty():
-		_tembok[indeks] = daftar
-
-
-func _lepas_tembok(indeks: int) -> void:
-	for sprite: Sprite2D in _tembok.get(indeks, []):
-		sprite.visible = false
-		_tembok_bebas.append(sprite)
-	_tembok.erase(indeks)
 
 
 ## Kotak surat (oranye atau abu-abu) di titik yang sama: pusat zona kotak surat rumah (`SpriteRumah.titik_kotak_surat_dunia`).
@@ -288,7 +226,6 @@ func _buat_terlipat() -> Sprite2D:
 
 func _lepas(indeks: int) -> void:
 	_lepas_terlipat(indeks)
-	_lepas_tembok(indeks)
 	var sprite: Sprite2D = _rumah.get(indeks) as Sprite2D
 	_rumah.erase(indeks)
 	if sprite != null:
@@ -326,9 +263,3 @@ func _tekstur_untuk(nama: String) -> Texture2D:
 		_tekstur[nama] = load(SpriteRumah.jalur_png(nama)) as Texture2D
 	return _tekstur[nama]
 
-
-func _tekstur_tembok_untuk(nama: String) -> Texture2D:
-	if not _tekstur_tembok.has(nama):
-		_muat_tembok += 1
-		_tekstur_tembok[nama] = load(TembokDekat.jalur_png(nama)) as Texture2D
-	return _tekstur_tembok[nama]

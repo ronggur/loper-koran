@@ -59,6 +59,12 @@ func terapkan(posisi_pemain: Vector2) -> void:
 			_menutupi += 1
 
 
+## Kotak penutup yang terdaftar untuk `gambar`, atau null bila tidak terdaftar (untuk tes: kotak = sprite nyata).
+func objek_untuk(gambar: CanvasItem) -> PenutupPemain.Objek:
+	var indeks: int = _gambar.find(gambar)
+	return _objek[indeks] if indeks >= 0 else null
+
+
 ## Banyaknya gambar terdaftar.
 func jumlah() -> int:
 	return _gambar.size()
