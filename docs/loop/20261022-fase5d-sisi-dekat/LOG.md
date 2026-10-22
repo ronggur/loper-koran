@@ -1,11 +1,12 @@
 # Loop Log — 20261022-fase5d-sisi-dekat
 Scope: Run 5D, Fase 5 (dimajukan dari Fase 8): pelanggan sisi dekat mulai hari 3 (8-9 dari 25), tembok dekat dihapus jadi halaman terbuka, rumah dekat mundur 0,5 ubin dan didesain ulang dengan teras menjorok  ·  Branch: feat/fase5d-sisi-dekat  ·  Mulai: 2026-10-22  ·  Godot: 4.7.2
 
-## Status: IN_PROGRESS   (iterasi saat ini: 1/2, bagian A)
+## Status: IN_PROGRESS   (iterasi saat ini: 1/2, bagian B selesai; bagian C menunggu)
 
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
 |---|---|---|---|---|---|
+| 1 (B) | AC-7..AC-13: data pelanggan dekat (34 dari 36 rumah), validasi segmen, `RouteBuilder` dari hari (8/9 dekat sejak hari 3), zona dekat cermin seberang, kotak surat dua sisi, terlipat teras dekat, bantu/radar/progres, tip hari 3, probe empat ukuran; 30 mutan | import 0 / 19180 lolos 0 gagal / pemeriksa lolos; 14 uji_*.py exit 0; save tetap | menunggu orchestrator | - | - |
 | 1 (A) | AC-1..AC-6: baseline, fase3 dapat dihasilkan ulang + uji, rumah dekat baru (teras menjorok, tanpa kotak surat), tembok dilepas, mundur 0,5, kotak penutup sprite nyata; AC-6 tercapai TANPA pudar (P-3 tidak dipakai); 14 mutan | import 0 / 18933 lolos 0 gagal / pemeriksa lolos; 14 uji_*.py exit 0; save tetap | menunggu orchestrator (titik henti D-1) | - | - |
 
 ## Temuan
@@ -126,3 +127,132 @@ Semua 14 tertangkap, `git status` bersih sesudah tiap mutan (12 lewat skrip + M-
 
 ### Commit bagian A
 ed9b504 (AC-2), 2c799cb (AC-3), db8d9dd (AC-4..AC-6), dan commit probe + tangkapan + LOG ini.
+
+## Iterasi 1, bagian B (Dev)
+
+Commit bagian B: 381fa18 (kode, data, tes), f97cbd4 (probe dan tangkapan), dan commit LOG + DATA_SCHEMA + mock gelombang1 ini. `ThrowSolver`, `BikeMotion`, `Tabrakan`, `TenggatRute`, angka skor, `MissionManager`, `RencanaMisi`, `BikeCondition`, `Economy`, `DataSave`, `SaveManager`: `git diff main` kosong.
+
+### Keputusan Dev (dicatat, bukan putusan pemilik)
+- **Kandidat pelanggan dekat = 34 dari 36 rumah dekat** (`pelanggan_boleh: true`). Dua rumah bukan kandidat: `per_tengah_02@12` dan `per_tengah_03@28`, karena zona kotak surat dekat (lateral 1,75..2,75, maju pos+1,25..2,5) beririsan dengan anjing dekat (lateral 2,5..3,0) di @14 dan @30 (oracle literal di `TesSisiDekatB`). Validasi rintangan-vs-zona berlaku untuk rumah dekat yang `pelanggan_boleh`; dekor dan pita simpang diperiksa untuk SEMUA rumah dekat. **Catatan untuk review (bukan BLOCKED, tidak mengubah rintangan atau rumah):** kotak surat abu-abu dua rumah itu tumpang visual dengan anjing yang duduk di halamannya. Preseden: seberang `per_tengah_04` anjing @8 beririsan dengan zona kotak surat pelanggan seberang @6 sejak run 3B. **Rekomendasi (satu):** bila terasa mengganggu di HP, geser anjing dekat `per_tengah_02` @14 -> @16 dan `per_tengah_03` @30 -> @32 (mengubah rintangan = keputusan pemilik, di luar D-5).
+- **Zona dekat di rute** (`ZonaSasaran.zona_rumah_dekat_rute`, cermin seberang): kotak surat `[1,75; 1,25; 1,0; 1,25]` (+ inti `[2,0; 1,625; 0,5; 0,5]`), halaman `[2,0; -0,5; 1,90625; 3,0]` (dari tepi trotoar sampai badan rumah = pijak 5,0 + penutup JSON -1,09375), teras = `teras_ubin` JSON digeser ke pijak gambar (lateral 3,1875..4,0625, maju kavling -0,375..+0,5625). Konstanta `Config.RUTE_DEKAT_*` (satu baris, literal; tes membandingkan dengan JSON aset). Zona dekat JALAN UJI (`zona_rumah_dekat`, `JALAN_UJI_DEKAT_*`) tidak berubah (D-6).
+- **Kotak surat dekat** di lateral +2,125, maju kavling + 1,75 (cermin sprite seberang -2,125). Oranye pelanggan, abu-abu bukan, semua rumah dekat (D-3), termasuk hari 1-2 (semua abu-abu). `SpriteRumah.nama_rumah` kini memakai varian `_pelanggan` untuk rumah dekat terpilih (sprite A).
+- **Koran terlipat di teras dekat (catatan A):** teras dekat ada di BELAKANG pijak sprite rumah menurut Y-sort. Solusi tetap di induk Y-sort yang sama: `RumahDaurRute` membungkus sprite terlipat rumah DEKAT dalam `Node2D` pembungkus yang diletakkan `RUTE_RUMAH_DEKAT_URUT_TERLIPAT_PX` = 1 px di depan pijak rumah; sprite ada di titik tengah teras sebagai anak pembungkus; kolam dipakai ulang; seberang tidak berubah. Bukti piksel (`TesSisiDekatScene._test_terlipat_dekat`, oracle PNG + JSON + iso ditulis ulang): 0% piksel terlipat tertimpa sprite rumah dengan urutan game; kontrol (diletakkan langsung di titik teras) tertimpa >50%.
+- **`MedanKoran.tertutup_titik`** kini memakai `PenutupPemain.dari_rumah_gambar` (seberang = tapak logika, tak berubah; dekat = kotak sprite nyata). Bukti: 143 dari 143 titik seberang identik, tertutup sisi dekat 196 -> 104 dari 506 lemparan acak (kotak logika lama 3..6 x tinggi 2 menandai halaman/teras dekat "tertutup" padahal tidak tertimpa sprite; banding per lemparan di bawah).
+- **Tip hari 3:** `TipSisiDekat` (logika murni: hari = 3, 6 detik waktu game beku saat jeda, sekali per `RuteMain`, tidak diisi ulang "Main lagi") + `PanelTipSisiDekat` (scene `scenes/ui/panel_tip_sisi_dekat.tscn`, kolom kiri x 26 y 88 di bawah kartu misi, lebar 150, tanpa kontrol penerima sentuhan, inset aman dibaca seperti HUD). Kunci `RUTE_TIP_LABEL` ("TIP") dan `RUTE_TIP_SISI_DEKAT` ("Mulai hari ini pelanggan ada di kedua sisi jalan") di `ui.csv` (awalan `RUTE_` agar pemeriksa awalan tidak diubah). Tanpa bidang save; `DataSave` diff kosong.
+- **Petunjuk misi dari lemparan tepat (catatan, tidak diubah):** `MissionManager` menghitung lemparan tepat ke kotak surat pelanggan di jendela rumah; lemparan tepat ke pelanggan dekat dalam jendela itu juga memberi petunjuk (hanya sisi seberang punya titik kucing). `MissionManager`/`RencanaMisi` tidak boleh berubah; dibiarkan sebagai bonus presisi, ditandai untuk keputusan pemilik.
+- **Lingkungan tes headless:** headless mengembalikan ukuran jendela root sesudah tiap frame (viewport 640x640); tes scene baru mengatur `root.size` lagi sesudah `await` supaya langkah sinkron berjalan di 780x360. Tes lama tidak diubah.
+- **Perbaikan bagian A yang tidak tertangkap:** `uji_aset_gelombang1.py` merah di HEAD bagian A (3 mock `komposisi_siang/sore_x3` dan `sisi_dekat_siang_x3` memakai sprite rumah dekat yang diganti A). Diperbaiki: `python3 tools/env_art/gelombang1/render.py --mock`, hanya tiga PNG yang berubah-dan-diuji yang dikomit (enam PNG lain ikut berubah byte oleh pustaka mesin ini dan dikembalikan).
+- **P-3 pudar, tembok:** tidak dipakai / sudah dihapus di bagian A; mutan terkait ada di tabel A (M-A3, M-A12) dan tidak diulang.
+
+### AC-7 data dan validasi
+- 9 segmen nyata sah, 0 galat; `sisi_pelanggan` semuanya `dua_sisi`; `DISTRIK_SATU_SISI` dihapus. Validasi baru `SegmenRute`: tag sesuai isi (`_periksa_sisi_pelanggan`), `rintangan_menimpa_zona_dekat` (anjing diam dan lintasan mobil vs zona kotak surat dan teras rumah dekat kandidat). Aturan dekor (kotak surat + teras) dan pita simpang (zona rumah) yang lama otomatis memakai geometri zona baru; data nyata lolos tanpa memindah dekor (tidak ada dekor dipindah).
+- Tes negatif satu per satu + positif di `TesSisiDekatB._test_validasi_segmen` (anjing @12 ditolak, @11 sah, rumah bukan kandidat sah, anjing seberang sah, mobil dekat, pohon, lampu, simpang @9 ditolak, pohon @8 dan simpang seberang sah, enam kasus tag). Jalan masuk garasi (lateral <= 0) tidak pernah menjangkau zona dekat: dites untuk pos 3..40, bukan cabang validasi.
+
+### AC-8 RouteBuilder dari hari, ukur hari 3..102 (`tests/ukur_hari_dekat.gd`)
+| Ukuran | Nilai |
+|---|---|
+| Rute sah | 100 dari 100 (gagal 0) |
+| Jumlah dekat per rute | **8: 54 rute, 9: 46 rute** (100% di {8, 9}); 25 pelanggan tiap rute, semua rumah `pelanggan_boleh` |
+| Persentase dekat | 8/25 = 32%, 9/25 = 36% (rata-rata 34,6%) |
+| Celah gabungan (dua sisi, urut maju) | min 2,0 / median 10,0 / **maks 20,0** ubin (batas 20), tidak ada celah 0 |
+| Celah per sisi | seberang 4,0 / 16,0 / 24,0; dekat 16,0 / 28,0 / 44,0 (maks seberang 24 > 20 wajar: batas berlaku pada celah gabungan) |
+| Tenggat | 89 .. 92 detik (panjang rute 232 .. 240 ubin; rumus tidak berubah) |
+- Hari 1-2: rute identik `main`. Golden 60 seed dihitung di `main` (53408cf) oleh Python dari dump pustaka `main` (identitas: panjang, koran, tenggat, segmen, pelanggan, pemberi tip, rintangan, titik misi, dekor, rumah id/maju/jenis) dan ditulis literal di `TesSisiDekatB.GOLDEN_HARI1`: 60 dari 60 cocok; `bangun` tanpa hari = hari 1 = hari 2. Banding pustaka `main` vs HEAD bagian B per bidang (60 seed): satu-satunya beda adalah bidang `pelanggan_boleh` rumah DEKAT (1678 entri); segmen, rumah (id, maju, sisi, jenis), pelanggan, pemberi tip, objek, titik misi, dekor, simpang, panjang, koran, tenggat, galat identik. Pustaka `main` dan HEAD bagian A identik.
+- RNG hari >= 3: kuota (`randi_range(8, 9)`) diundi dari RNG rute SESUDAH susunan segmen; dua `_cocokkan` (dekat, lalu seberang) memakai RNG yang sama; tanpa RNG di luar seed. Hari tidak ikut seed (hari 3 dan hari 50 dengan seed sama = rute sama). `periksa_rute(rute)` memakai `Rute.hari`: pelanggan dekat hanya hari >= 3, hanya rumah `pelanggan_boleh`, kuota 8-9, celah gabungan <= 20.
+- `HariMain` meneruskan hari lewat `RuteMain.atur_hari` SEBELUM scene masuk pohon (tes dengan save hari 2, 3, 4 di folder sementara: `rute.hari()`, seed `SeedHari.rute(hari)`, 0 / 8-9 pelanggan dekat, tip hanya hari 3). `rute.tscn` sendiri = hari 1. "Main lagi" mempertahankan hari.
+
+### AC-9, AC-10, AC-11, AC-12 (tes scene `tes_sisi_dekat_scene.gd`, nilai harapan literal atau dari JSON/PNG)
+- Kotak surat: tiap rumah di jendela punya tepat satu kotak (oranye pelanggan / abu-abu bukan) di lateral -2,125 (seberang) atau +2,125 (dekat), maju kavling + 1,75, sprite rumah varian sesuai; hari 1 semua dekat abu-abu; node kolam dipakai ulang.
+- Prediksi = hasil: swipe NYATA (event sentuh -> `TouchRouter` -> garis bidik -> lepas -> koran terbang -> mendarat) ke kotak surat, teras, halaman, dan meleset di sisi dekat, tangan normal dan KIDAL (zona swipe kiri): titik mendarat diklasifikasikan oracle independen (literal + `teras_ubin`/`penutup_ubin` JSON) = hasil game = prediksi garis bidik = antaran (SAH_PENUH / SAH_PENUH / SAH_SETENGAH / TIDAK_SAH), elips SAH hanya bila sah. Selain itu grid 18.818 titik (1/16 ubin) pelanggan + bukan: 0 beda dari oracle (`_test_zona_oracle_grid`).
+- Skor/koin sama aturan: ANTAR sisi dekat `skor 100` (= `SKOR_SASARAN_DASAR`, combo 1,0, santai) dan koin >= ongkos 15; pemberi tip dekat: teras +5 tip, kotak surat 0 tip (SkorRute tidak punya input sisi).
+- Mode bantu: untuk tiap pelanggan dekat, sepeda mundur 0..8 ubin (langkah 0,5) dari kotak suratnya: SEMUA pilihan bantu dekat (>50) = pelanggan dekat terdekat di depan (oracle literal pos+1,875), mendarat di zona kotak surat (selalu kena); tiap pelanggan dekat terjangkau dari suatu titik; sesudah pelanggan dekat terakhir = tanpa sasaran; sisi seberang tidak pernah menyasar zona dekat; tap bantu nyata: koran bantu, KOTAK_SURAT, bukan tepat.
+- Radar (strip DEKAT = kanan; kidal tidak menukar), `jangkau`, jenis TIP/PELANGGAN/BUKAN (abu-abu hanya mode bantu), terantar keluar: dibandingkan oracle literal (jarak = pos + 1,875 - sepeda, 0..30, jangkau <= 5) untuk 2 x 2 x 122 keadaan; progres 25 kotak dua sisi (BERIKUTNYA, TERLEWAT < -3, TERKIRIM) = oracle; `jumlah_terkirim` menghitung dekat.
+- Tip: hanya hari 3 (tidak 1, 2, 4, 50), teks terjemahan tampil, panel tidak menelan sentuhan (tap bantu tetap melempar saat tip tampil), di dalam viewport dan tidak menimpa panel progres/tombol jeda, beku saat jeda (60 x 1 detik jeda: sisa tidak berubah), hilang sesudah 6 detik, "Main lagi" tidak memunculkan lagi, kidal dan inset aman.
+
+### Bot bantu (scene nyata, AC-11): 25/25 terkirim, 0 lewat tenggat di 22 rute
+Bot: mode bantu, tanpa stick (santai 3,0 u/d), satu tap per pelanggan yang belum dibidik (sisi dekat dulu), dt 1/30 (hari 1-2 = dua rute seed hari 1 dan 2; 20 seed hari 3..22).
+| Hari | Dekat | Selesai (detik) | Tenggat | Sisa |
+|---|---|---|---|---|
+| 1 | 0 | 80,0 | 92 | 12,0 |
+| 2 | 0 | 78,6 | 91 | 12,4 |
+| 3 | 8 | 77,2 | 89 | 11,8 |
+| 4 | 9 | 78,6 | 91 | 12,4 |
+| 5 | 8 | 78,6 | 91 | 12,4 |
+| 6 | 9 | 78,6 | 91 | 12,4 |
+| 7 | 9 | 78,6 | 91 | 12,4 |
+| 8 | 8 | 77,2 | 89 | 11,8 |
+| 9 | 8 | 77,2 | 89 | 11,8 |
+| 10 | 9 | 78,6 | 91 | 12,4 |
+| 11 | 8 | 79,9 | 92 | 12,1 |
+| 12 | 8 | 77,2 | 89 | 11,8 |
+| 13 | 8 | 79,9 | 92 | 12,1 |
+| 14 | 8 | 78,6 | 91 | 12,4 |
+| 15 | 9 | 78,6 | 91 | 12,4 |
+| 16 | 9 | 78,6 | 91 | 12,4 |
+| 17 | 9 | 77,2 | 89 | 11,8 |
+| 18 | 9 | 78,6 | 91 | 12,4 |
+| 19 | 8 | 78,6 | 91 | 12,4 |
+| 20 | 9 | 77,2 | 89 | 11,8 |
+| 21 | 9 | 77,2 | 89 | 11,8 |
+| 22 | 8 | 78,6 | 91 | 12,4 |
+Sisa tenggat 11,8..12,4 detik di semua seed (dua sisi tidak memperlambat bot karena kecepatan santai tetap dan kecepatan bantu tidak bergantung jumlah pelanggan; bot mode bantu tidak melemparkan koran lebih dari 25 dari 30).
+
+### Rumah dekat di bawah panel HUD bawah (diukur, HUD TIDAK diubah; probe 2340x1080, juga 1600x720: angka sama)
+Sepeda tiap 2 ubin sepanjang rute (114 sampel), lateral 0,5, tangan normal dan kidal (angka sama):
+- kotak pembatas sprite rumah dekat menyentuh panel kecepatan/stamina atau panel koran di **100%** sampel (rumah dekat memang selalu lewat di bawah panel bawah, bukan akibat run ini);
+- titik kotak surat dekat (mana pun, termasuk yang sudah lewat) di dalam panel bawah di 52% sampel;
+- **kotak surat PELANGGAN dekat dalam jangkauan lempar (0..5 ubin di depan) di dalam panel bawah di 0% sampel**: sasaran yang bisa dilempar tidak pernah tertutup panel. Rumah dekat tampak (di tangkapan 2340, 1920, 1600) tertutup sebagian panel di bawah sepeda; dinilai di HP (SETUP_ANDROID 8.16 butir 8).
+
+### Tes lama yang angkanya berubah (D-5, satu per satu, alasan)
+1. `tes_rute.gd`: `BOLEH` dipisah, `BOLEH_DEKAT` baru (literal), total `pelanggan_boleh` 37 -> 37 seberang + 34 dekat = 71, tag nyata `seberang` -> `dua_sisi`, mutan data `sisi_pelanggan_dekat` dan `rumah_pelanggan_dekat` kini ditolak dengan "tidak sesuai isi" (aturan satu sisi dihapus, P-4), mutan `periksa_rute` memakai pesan baru "bukan rumah yang boleh untuk hari".
+2. `tes_rute_scene.gd`: `nama_rumah(dekat terpilih)` = `_pelanggan` (dulu selalu `_bukan`); titik "di balik rumah dekat" (2,5 -> 2,9) karena kotak tertutup rumah dekat = sprite nyata (teras dan atap tidak lagi menutup lateral 2,5).
+3. `tes_kotak_surat.gd`: rumah dekat kini punya kotak surat (lateral +2,125); batas simpul kolam 20 -> maks rumah di jendela + 4 (kedua sisi).
+4. `tes_sisi_dekat.gd`: golden 1000 lemparan dipecah per sisi. Seberang `[494, 5508, 143, 809075394]` = nilai sebelum run 5B (tidak berubah); dekat `[506, 5629, 104, 648143202]` baru (HEAD A: tertutup 196, checksum 1274964814). Banding per lemparan HEAD A vs HEAD B (1000 lemparan, skrip `dump_lempar.gd`): 45 beda hasil/zona, **semuanya di sisi dekat (0 di seberang)**; 92 beda tertutup, 0 di seberang. Total checksum 992255826 -> 1166943782.
+5. `tes_dekor.gd`: (a) golden rute 60 seed dihitung ulang oleh skrip; bukti: dengan `pelanggan_boleh` rumah dekat ditopeng false, sidik 60 seed = nilai lama persis (kontrol skrip), jadi beda hanya bidang itu; (b) "tapak (2,25; 10,75) menimpa teras dekat" diganti: teras dekat baru di lateral 3,19..4,06 tidak terjangkau dekor (lateral <= 2,75), ditambah tes tapak hipotetis dan batas kotak surat 2,75; "pohon dekat @11 menimpa teras" -> sah (tapak maju berakhir 11,25 = awal kotak surat).
+6. `tes_simpang.gd`: golden rute 60 seed (uraian dengan dekor) dihitung ulang, bukti kontrol topeng sama.
+- `run_tests.gd`: dua tes baru didaftarkan. Total tes: 18933 -> **19180** lolos (+247), 0 gagal.
+
+### Mutan nyata bagian B (30; satu perubahan, runner = tes bagian B (82 cek) / tes scene baru (122 cek) / `run_tests.gd` penuh, `git checkout`, `git status` bersih tiap kali; skrip `mutan_b.py` di scratchpad Dev)
+| ID | Berkas | Perubahan satu baris | Hasil | Gagal yang menangkap (contoh) |
+|---|---|---|---|---|
+| M-B1 | `route_builder.gd` | hari mulai `>=` jadi `>` | TERTANGKAP (5) | hari mulai pelanggan dekat = 3 (2 tidak, 3 ya) |
+| M-B2 | `config.gd` | kuota min 8 -> 7 | TERTANGKAP (2) | sebaran { 8: 39, 9: 37, 7: 24 } != golden |
+| M-B3 | `config.gd` | kuota maks 9 -> 10 | TERTANGKAP (2) | sebaran dengan 10 |
+| M-B4 | `config.gd` | `RUTE_DEKAT_HARI_MULAI` 3 -> 2 (pelanggan dekat di hari 2) | TERTANGKAP (6) | hari 1 = hari 2 untuk seed sama (0 dari 60) |
+| M-B5 | `route_builder.gd` | RNG hari 1-2 bergeser (`+ rng.randi() * 0` di jalur lama) | TERTANGKAP (1) | 60 rute tanpa hari: identitas = golden main (0 cocok) |
+| M-B6 | `route_builder.gd` | celah gabungan tidak diperiksa di pemilih (batas 1000) | TERTANGKAP (2) | 100 hari semuanya sah (gagal 6, ditolak `periksa_rute`) |
+| M-B7 | `route_builder.gd` | kandidat dekat tanpa `pelanggan_boleh` | TERTANGKAP (6, galat skrip) | 100 hari semuanya sah (gagal 100) |
+| M-B8 | `config.gd` | kotak surat dekat lateral +2,125 -> -2,125 (sisi salah) | TERTANGKAP (2) | tiap rumah punya kotak surat di lateral dekat +2,125 |
+| M-B9 | `zona_sasaran.gd` | teras dekat dari geometri lama (`JALAN_UJI_DEKAT_TERAS_UBIN`) | TERTANGKAP (3) | teras dekat dari geometri teras menjorok |
+| M-B10 | `zona_sasaran.gd` | prioritas halaman dan teras tertukar | TERTANGKAP (2) | klasifikasi grid: 180 beda dari oracle |
+| M-B11 | `zona_sasaran.gd` | skor dekat beda (zona kotak surat dekat berjenis HALAMAN) | TERTANGKAP (8) | kotak surat dekat = cermin seberang |
+| M-B12 | `bantu_lempar.gd` | bantu menyasar sisi seberang untuk tap dekat | TERTANGKAP (24) | sasaran bantu dekat = pelanggan dekat terdekat |
+| M-B13 | `radar_rute.gd` | radar tanpa rumah dekat | TERTANGKAP (2) | radar = oracle literal |
+| M-B14 | `progres_rute.gd` | `jumlah_terkirim` hanya seberang | TERTANGKAP (22) | jumlah terkirim menghitung pelanggan dekat |
+| M-B15 | `tip_sisi_dekat.gd` | tip di hari >= 3 (hari lain) | TERTANGKAP (5) | hari tip hanya 3 |
+| M-B16 | `tip_sisi_dekat.gd` | tip tidak tampil di hari 3 (kunci kosong) | TERTANGKAP (8) | kunci teks dan lama 6 detik hanya di hari 3 |
+| M-B17 | `config.gd` | mundur 0,5 -> 1,25 (mundur lama kembali) | TERTANGKAP (2) | teras dekat dari geometri teras menjorok |
+| M-B18 | `medan_koran.gd` | kotak penutup titik bukan sprite nyata (`dari_rumah`) | TERTANGKAP (1; run_tests penuh) | sisi dekat [506, 5629, 196, ...] != nilai baru |
+| M-B19 | `segmen_rute.gd` | cabang teras validasi rintangan dilepas | TERTANGKAP (1) | lintasan mobil garasi dekat @10 menimpa teras |
+| M-B20 | `segmen_rute.gd` | validasi rintangan berlaku untuk bukan kandidat juga | TERTANGKAP (9) | 9 segmen nyata sah (per_tengah_02 anjing menimpa) |
+| M-B21 | `segmen_rute.gd` | cabang tag `seberang` dilepas | TERTANGKAP (1) | seberang padahal ada rumah dekat yang boleh |
+| M-B22 | `config.gd` | urut Y-sort terlipat +1 -> -1 px | TERTANGKAP (3) | pembungkus di pijak rumah + (0; 1) px |
+| M-B23 | `hari_main.gd` | `atur_hari` tidak dipanggil | TERTANGKAP (6) | save hari 2: rute.hari() = 2 |
+| M-B24 | `rute_main.gd` | tip memakai dt waktu dinding (tidak beku saat jeda) | TERTANGKAP (1) | jeda 60 detik: tip beku (sisa 4,9 = 5,9) |
+| M-B25 | `route_builder.gd` | cek kuota 8-9 di `periksa_rute` dimatikan | TERTANGKAP (2) | mutan: 7 pelanggan dekat ditolak |
+| M-B26 | `sprite_rumah.gd` | rumah dekat selalu varian `_bukan` | TERTANGKAP (1) | sprite rumah bukan varian pelanggan |
+| M-B27 | `rumah_daur_rute.gd` | kotak surat oranye hanya seberang | TERTANGKAP (2) | tiap rumah punya kotak surat sesuai status |
+| M-B28 | `config.gd` | halaman dekat 1,90625 -> 1,0 lebar (geometri halaman lama) | TERTANGKAP (4) | halaman dekat sampai badan rumah |
+| M-B29 | `segmen_rute.gd` | `_periksa_sisi_pelanggan` tidak dipanggil | TERTANGKAP (4) | dua_sisi tanpa rumah dekat yang boleh ditolak |
+| M-B30 | `route_builder.gd` | kuota dekat tetap 8 (tidak diundi) | TERTANGKAP (1) | sebaran { 8: 100 } != golden |
+Total mutan Dev: 14 (A) + 30 (B) = **44** (target >= 30 terpenuhi). Mutan "validasi tumpang tiap cabang dilepas": rintangan (M-B19, M-B20), tag (M-B21, M-B29); dekor dan pita simpang adalah aturan lama yang dijaga `tes_dekor`/`tes_simpang` (M-A12 untuk kavling simpang). Butir AC-19 yang tidak berlaku di bagian B: pudar P-3 (tidak dipakai), tembok masih dipasang (dihapus di A, M-A3), aset tembok tersalin (M-A10), `.import` bukan Lossless (M-A11), fase3 tidak deterministik (M-A2). 
+
+### Gerbang bagian B (Dev, HEAD sesudah commit LOG)
+- `godot --headless --import`: 0 ERROR/WARNING. `godot --headless --path . --quit-after 2`: 0 ERROR/WARNING.
+- `run_tests.gd`: **19180 lolos, 0 gagal**; `tools/cek_keluaran_tes.py`: lolos (0 peringatan).
+- 14 `tools/tests_cek/uji_*.py` exit 0 (setelah mock gelombang1 diperbarui).
+- sha256 save asli sebelum dan sesudah tes, probe, dan mutan: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` (tidak berubah).
+- Probe `tests/probe_sisi_dekat_jendela.gd` 2340x1080, 1920x1080, 2400x1080, 1600x720: exit 0, **0 keadaan tidak sesuai** di keempat ukuran, 0 baris ERROR/WARNING.
+
+### Tangkapan bagian B (`docs/loop/20261022-fase5d-sisi-dekat/shots/iter1/`, `<ukuran>_dekat_<keadaan>.png`, dilihat Dev)
+Keadaan baru: `hari3_tip` (tip di kolom kiri di bawah kartu misi, tidak menutupi kontrol), `jalur_dekat`/`trotoar_dekat` (kotak surat oranye/abu-abu dekat di tepi trotoar), `sasaran_{bidik,terbang,kena}`, `teras_*`, `halaman_*`, `meleset_*` (swipe nyata; kena = centang + "+15" di kotak surat dekat), `terlipat_dekat` (koran terlipat di teras dekat, sepeda 5 ubin di belakang rumah), `bantu_dekat_{terbang,kena,tanpa_sasaran}`, `radar_dekat` (strip kanan, penanda pelanggan dekat), `hari2_tanpa_dekat` (kotak surat dekat semua abu-abu, tanpa tip), `kidal`. Catatan dari tangkapan: rumah dekat di bawah sepeda sebagian tertutup panel HUD bawah (diukur di atas); tip tetap tampil di tangkapan lempar karena belum 6 detik waktu game.
