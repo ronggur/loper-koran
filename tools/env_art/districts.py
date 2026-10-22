@@ -301,11 +301,11 @@ def coconut(s, x, y, h=56, lean=(0.18, 0.05), seed=0, fronds=8):
             a, b = pts[k], pts[k + 1]
             c = (a + b) / 2
             ax = b - a
-            seg = np.linalg.norm(ax)
+            seg = panjang(ax)
             ax = ax / seg
             tm = (k + 0.5) / segs
             w = max(2.0, 5.2 * math.sin(math.pi * min(0.95, tm * 0.9 + 0.12)))
-            sd = np.cross(ax, up); sd /= max(np.linalg.norm(sd), 1e-6)
+            sd = np.cross(ax, up); sd /= max(panjang(sd), 1e-6)
             # pelepah (tulang daun)
             s.add(obox(c, ax, sd, np.cross(ax, sd), seg / 2 + 0.3, 0.45, 0.45, mat, part=crown))
             crown = s.prims[-1].part
@@ -314,8 +314,8 @@ def coconut(s, x, y, h=56, lean=(0.18, 0.05), seed=0, fronds=8):
                 base = a + ax * seg * (j + 0.5) / 3
                 for sg in (-1, 1):
                     v = sd * sg * 0.8 - up * 0.45 + ax * 0.45
-                    v /= np.linalg.norm(v)
-                    nv = np.cross(v, ax); nv /= max(np.linalg.norm(nv), 1e-6)
+                    v /= panjang(v)
+                    nv = np.cross(v, ax); nv /= max(panjang(nv), 1e-6)
                     s.add(obox(base + v * w / 2, v, nv, np.cross(v, nv), w / 2, 0.55, 0.3, mat, part=crown))
     # buah kelapa di bawah mahkota
     buah = Mat('#9CB04A', '#6E8A34', '#4A5E24')

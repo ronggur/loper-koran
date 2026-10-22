@@ -52,7 +52,7 @@ def rz(deg):
 def geser(prims, v):
     v = np.asarray(v, float)
     for p in prims:
-        p.planes = [(n, d + float(n @ v)) for n, d in p.planes]
+        p.planes = [(n, d + float(mm(n, v))) for n, d in p.planes]
         if p.quad is not None:
             if p.quad[0] == 'ellip':
                 _, c, R, r = p.quad
@@ -71,26 +71,26 @@ def xform_into(s, tmp, A, t):
     """dunia = A @ lokal + t (A rotasi kelipatan 90 derajat di sumbu z)."""
     t = np.asarray(t, float)
     for p in tmp.prims:
-        p.planes = [(A @ n, d + float((A @ n) @ t)) for n, d in p.planes]
+        p.planes = [(mm(A, n), d + float(mm(mm(A, n), t))) for n, d in p.planes]
         if p.quad is not None:
             if p.quad[0] == 'ellip':
                 _, c, R, r = p.quad
-                p.quad = ('ellip', A @ c + t, R @ A.T, r)
+                p.quad = ('ellip', mm(A, c) + t, mm(R, A.T), r)
             else:
                 _, ax, c2, r = p.quad
                 e = np.zeros(3); e[ax] = 1
                 c3 = np.zeros(3); o = [i for i in range(3) if i != ax]; c3[o] = c2
-                ne = A @ e
+                ne = mm(A, e)
                 nax = int(np.argmax(np.abs(ne)))
-                w = A @ c3 + t
+                w = mm(A, c3) + t
                 no = [i for i in range(3) if i != nax]
                 p.quad = ('cyl', nax, w[no], r)
         cs = np.array([[x, y, z] for x in (p.lo[0], p.hi[0]) for y in (p.lo[1], p.hi[1]) for z in (p.lo[2], p.hi[2])])
-        w = cs @ A.T + t
+        w = mm(cs, A.T) + t
         p.lo, p.hi = w.min(0), w.max(0)
         if p.tex is not None:
             f = p.tex
-            p.tex = (lambda Pw, Nw, f=f: f((Pw - t) @ A, Nw @ A))
+            p.tex = (lambda Pw, Nw, f=f: f(mm(Pw - t, A), mm(Nw, A)))
         s.prims.append(p)
 
 
@@ -253,7 +253,7 @@ def lampu_v(s, jenis, x, y, sisi='seberang', nyala=False):
     xform_into(s, tmp, A, (x, y, 0))
     out = []
     for p, w in titik:
-        q = A @ np.asarray(p, float) + np.array([x, y, 0])
+        q = mm(A, np.asarray(p, float)) + np.array([x, y, 0])
         out.append((q, w))
     return out
 
@@ -301,7 +301,7 @@ def pohon_flamboyan(s, x, y, seed=0):
     def tex(Pw, Nw):
         cell = np.floor(Pw / 1.6)
         h = hash2(cell[:, 0] + cell[:, 2] * 7, cell[:, 1] - cell[:, 2] * 3, seed + 41)
-        d = Nw @ BAKE
+        d = mm(Nw, BAKE)
         bunga = (h > 0.74) & (Nw[:, 2] > 0.35)
         sh = np.where((h < 0.2) & (d < 0.7), 1, np.where((h > 0.5) & (d > 0.4), -1, 0))
         return np.where(bunga, 1, 0), np.where(bunga, np.clip(sh, -1, 0), sh)
@@ -321,7 +321,7 @@ def pohon_pucuk_merah(s, x, y, seed=0):
         cell = np.floor(Pw / 1.5)
         h = hash2(cell[:, 0] + cell[:, 2] * 5, cell[:, 1] - cell[:, 2] * 3, seed + 9)
         merah = ((Pw[:, 2] > 30) & (h > 0.35)) | ((Pw[:, 2] > 20) & (h > 0.8) & (Nw[:, 2] > 0.3))
-        d = Nw @ BAKE
+        d = mm(Nw, BAKE)
         sh = np.where((h < 0.22) & (d < 0.7), 1, np.where((h > 0.82) & (d > 0.3), -1, 0))
         return np.where(merah, 1, 0), sh
     blobs = [((x, y, 11), (8.0, 8.0, 7.0)), ((x, y, 20), (8.4, 8.4, 7.5)), ((x, y, 29), (6.8, 6.8, 6.2)),
@@ -343,18 +343,18 @@ def _pelepah(s, top, n, L, mat, seed, rise=(0.25, 0.4), drop=(0.75, 1.0), lebar=
         pts = [top + hd * Li * t + up * Li * (ri * t - di * t * t) for t in np.linspace(0, 1, segs + 1)]
         for k in range(segs):
             a, b = pts[k], pts[k + 1]
-            ax = b - a; seg = np.linalg.norm(ax); ax = ax / seg
+            ax = b - a; seg = panjang(ax); ax = ax / seg
             tm = (k + 0.5) / segs
             w = max(1.6, lebar * math.sin(math.pi * min(0.95, tm * 0.9 + 0.12)))
-            sd = np.cross(ax, up); sd /= max(np.linalg.norm(sd), 1e-6)
+            sd = np.cross(ax, up); sd /= max(panjang(sd), 1e-6)
             s.add(obox((a + b) / 2, ax, sd, np.cross(ax, sd), seg / 2 + 0.3, 0.45, 0.45, mat, part=crown))
             crown = s.prims[-1].part
             for j in range(3):
                 bs = a + ax * seg * (j + 0.5) / 3
                 for sg in (-1, 1):
                     v = sd * sg * 0.8 - up * 0.45 + ax * 0.45
-                    v /= np.linalg.norm(v)
-                    nv = np.cross(v, ax); nv /= max(np.linalg.norm(nv), 1e-6)
+                    v /= panjang(v)
+                    nv = np.cross(v, ax); nv /= max(panjang(nv), 1e-6)
                     s.add(obox(bs + v * w / 2, v, nv, np.cross(v, nv), w / 2, 0.55, 0.3, mat, part=crown))
     return crown
 
@@ -392,9 +392,9 @@ def pohon_pepaya(s, x, y, seed=0):
         d = np.array([math.cos(yaw) * math.cos(el), math.sin(yaw) * math.cos(el), math.sin(el)])
         tip = top + d * 11
         _limb(s, top, tip, 0.4, BATANG_PEPAYA, pid)
-        sd = np.cross(d, [0, 0, 1.0]); sd /= np.linalg.norm(sd)
+        sd = np.cross(d, [0, 0, 1.0]); sd /= panjang(sd)
         nrm_ = np.cross(sd, d)
-        dl = d - np.array([0, 0, 0.35]); dl /= np.linalg.norm(dl)
+        dl = d - np.array([0, 0, 0.35]); dl /= panjang(dl)
         s.add(ellip(tip + dl * 4.0, (5.6, 5.0, 1.0), DAUN_PEPAYA, tex, R=np.stack([dl, sd, np.cross(sd, dl)]), part=crown))
         crown = s.prims[-1].part
     for i in range(6):
@@ -421,7 +421,7 @@ def pohon_bambu(s, x, y, seed=0):
         for k in range(9):
             p0, p1 = pts[k], pts[k + 1]
             u, v, w = _frame(p1 - p0)
-            s.add(obox((p0 + p1) / 2, u, v, w, 0.8, 0.8, np.linalg.norm(p1 - p0) / 2, BAMBU_HIJAU,
+            s.add(obox((p0 + p1) / 2, u, v, w, 0.8, 0.8, panjang(p1 - p0) / 2, BAMBU_HIJAU,
                        (lambda Pw, Nw, z1=p1[2]: (0, np.where(np.abs(Pw[:, 2] - z1) < 0.6, 1, 0))), part=pid))
             pid = s.prims[-1].part
         for k in range(4, 10):
@@ -432,11 +432,11 @@ def pohon_bambu(s, x, y, seed=0):
 
 
 def _frame(w):
-    w = np.asarray(w, float); w = w / np.linalg.norm(w)
+    w = np.asarray(w, float); w = w / panjang(w)
     u = np.cross(w, [0, 0, 1.0])
-    if np.linalg.norm(u) < 1e-6:
+    if panjang(u) < 1e-6:
         u = np.array([1.0, 0, 0])
-    u /= np.linalg.norm(u)
+    u /= panjang(u)
     v = np.cross(w, u)
     return u, v, w
 

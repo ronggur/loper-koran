@@ -162,7 +162,7 @@ def roof_tex(kind='genteng', seed=1, wall=None, rust=None):
 def leafy(seed=0, scale=3.0, top_light=True):
     def tex(Pw, Nw):
         h = hash2(np.floor(Pw[:, 0] / scale + Pw[:, 2] / scale), np.floor(Pw[:, 1] / scale - Pw[:, 2] / scale), seed)
-        d = Nw @ BAKE
+        d = mm(Nw, BAKE)
         sh = np.where((h > 0.72) & (d > 0.2), -1, np.where((h < 0.25) & (d < 0.6), 1, 0))
         return 0, sh
     return tex
@@ -344,7 +344,7 @@ def angkot(s, x, y, body=None, length=44, width=22, front=None, stripe=None):
         # pintu geser terbuka di sisi kiri (penumpang naik dari trotoar)
         door = side & (lat * f < 0) & (u > -hl * 0.2) & (u < hl * 0.2) & (pz > 4) & (pz < 21)
         mi = np.where(door, 7, mi)
-        ws = (Nw @ np.array([0, f, 0.0]) > 0.3) & (Nw[:, 2] > 0.3) & (pz > 13) & (pz < zt - 1)
+        ws = (mm(Nw, np.array([0, f, 0.0])) > 0.3) & (Nw[:, 2] > 0.3) & (pz > 13) & (pz < zt - 1)
         mi = np.where(ws & (np.abs(lat) < hw - 2), 6, mi)
         sh = np.where(roof & ((np.mod(u, 6) < 0.8)), sh + 1, sh)
         return mi, sh
@@ -381,7 +381,7 @@ def bus_kecil(s, x, y, body=None, upper=None, length=74, width=24, front=None):
         u = f * (Pw[:, 1] - y)
         lat = Pw[:, 0] - x
         side = np.abs(Nw[:, 0]) > 0.7
-        frontf = (Nw @ np.array([0, f, 0.0])) > 0.5
+        frontf = mm(Nw, np.array([0, f, 0.0])) > 0.5
         upperz = (pz > 14) & (mi == 0)
         mi = np.where(upperz, 8, mi)
         win = side & (pz > 16) & (pz < 26) & (u < hl - 3) & (u > -hl + 4)
@@ -458,7 +458,7 @@ def chicken(s, x, y, yaw=0.0, phase=0.0, mode='walk', col=None, tail=None, comb=
         foot = base + r * side * 1.2 * k + f * sg * sw * 1.4 * k
         top = body_c - up * 2.4 * k + r * side * 1.0 * k
         c = (foot + top) / 2
-        s.add(obox(c, f, r, top - foot, 0.5 * k, 0.5 * k, np.linalg.norm(top - foot) / 2,
+        s.add(obox(c, f, r, top - foot, 0.5 * k, 0.5 * k, panjang(top - foot) / 2,
                    beak, None, part=pid))
 
 
@@ -467,9 +467,9 @@ def clothes_line(s, p0, p1, items, sway=0.0, t=0.0, pole_h=None, rope=None):
     sway: amplitude in radians; t: animation phase 0..1. Rope is drawn as an overlay."""
     p0, p1 = np.asarray(p0, float), np.asarray(p1, float)
     ax = p1 - p0
-    L = np.linalg.norm(ax)
+    L = panjang(ax)
     a = ax / L
-    hz = np.cross(a, [0, 0, 1.0]); hz /= np.linalg.norm(hz)   # horizontal, perpendicular to line
+    hz = np.cross(a, [0, 0, 1.0]); hz /= panjang(hz)   # horizontal, perpendicular to line
     for i, it in enumerate(items):
         pos, w, h, mat = it[:4]
         kind = it[4] if len(it) > 4 else 'kain'
@@ -488,9 +488,9 @@ def clothes_line(s, p0, p1, items, sway=0.0, t=0.0, pole_h=None, rope=None):
             c = top + a * uo + down * (d0 + ph / 2)
             tex = None
             if kind == 'handuk':
-                tex = lambda Pw, Nw, tp=top, dn=down: (0, np.where(np.abs(((Pw - tp) @ dn) - 2.2) < 0.8, -1, 0))
+                tex = lambda Pw, Nw, tp=top, dn=down: (0, np.where(np.abs(mm(Pw - tp, dn) - 2.2) < 0.8, -1, 0))
             elif kind == 'sarung':
-                tex = lambda Pw, Nw, tp=top, dn=down, ax_=a: (0, np.where((np.mod((Pw - tp) @ ax_, 4) < 1) | (np.mod((Pw - tp) @ dn, 4) < 1), 1, 0))
+                tex = lambda Pw, Nw, tp=top, dn=down, ax_=a: (0, np.where((np.mod(mm(Pw - tp, ax_), 4) < 1) | (np.mod(mm(Pw - tp, dn), 4) < 1), 1, 0))
             s.add(obox(c, a, np.cross(a, down), down, pw / 2, 0.6, ph / 2, mat, tex, cast=True, part=pid))
             pid = s.prims[-1].part
     s.ropes = getattr(s, 'ropes', [])
@@ -499,7 +499,7 @@ def clothes_line(s, p0, p1, items, sway=0.0, t=0.0, pole_h=None, rope=None):
 
 def draw_ropes(s, img, col=(46, 40, 54)):
     for p0, p1 in getattr(s, 'ropes', []):
-        n = int(np.linalg.norm(p1 - p0) * 1.5) + 2
+        n = int(panjang(p1 - p0) * 1.5) + 2
         for i in range(n + 1):
             t = i / n
             p = p0 + (p1 - p0) * t + np.array([0, 0, -1.6 * math.sin(math.pi * t)])
@@ -518,7 +518,7 @@ def draw_ropes(s, img, col=(46, 40, 54)):
 def wires(s, img, pts, sag=6, col=(38, 33, 46)):
     for p0, p1 in zip(pts[:-1], pts[1:]):
         p0, p1 = np.asarray(p0, float), np.asarray(p1, float)
-        n = int(np.linalg.norm(p1 - p0) * 1.6) + 2
+        n = int(panjang(p1 - p0) * 1.6) + 2
         for i in range(n + 1):
             t = i / n
             p = p0 + (p1 - p0) * t + np.array([0, 0, -sag * 4 * t * (1 - t)])
@@ -605,7 +605,7 @@ def _leaf_tex(seed, scale=2.2):
     def tex(Pw, Nw):
         cell = np.floor(Pw / scale)
         h = hash2(cell[:, 0] + cell[:, 2] * 7, cell[:, 1] - cell[:, 2] * 3, seed)
-        d = Nw @ BAKE
+        d = mm(Nw, BAKE)
         # gumpalan daun: titik terang di sisi kena cahaya, titik gelap di sisi bayangan
         sh = np.where((h > 0.7) & (d > 0.35), -1, np.where((h < 0.28) & (d < 0.75), 1, 0))
         return 0, sh
@@ -615,12 +615,12 @@ def _leaf_tex(seed, scale=2.2):
 def _limb(s, a, b, r, mat, part):
     a, b = np.asarray(a, float), np.asarray(b, float)
     d = b - a
-    L = np.linalg.norm(d)
+    L = panjang(d)
     d /= L
     sd = np.cross(d, [0, 0, 1.0])
-    if np.linalg.norm(sd) < 1e-3:
+    if panjang(sd) < 1e-3:
         sd = np.array([1.0, 0, 0])
-    sd /= np.linalg.norm(sd)
+    sd /= panjang(sd)
     s.add(obox((a + b) / 2, d, sd, np.cross(d, sd), L / 2 + r * 0.4, r, r, mat, part=part))
     return s.prims[-1].part
 
