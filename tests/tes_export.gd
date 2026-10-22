@@ -635,7 +635,7 @@ func _test_dokumen_5d() -> void:
 	check(readme.contains("8.16") and readme.contains("20261022-fase5d-sisi-dekat"), "docs/README.md menyebut run 5D dan checklist 8.16")
 	var agents: String = _baca_jika_ada("res://AGENTS.md")
 	check(agents.contains("uji_aset_fase3.py") and agents.contains("tes_sisi_dekat_scene") and agents.contains("TipSisiDekat"), "AGENTS.md memuat uji dan kelas run 5D")
-	check(not agents.contains("`TembokDekat`, `VarianTembok`") and not agents.contains("varian_" + "tembok (") and not agents.contains("tembok_dekat (`"), "AGENTS.md tidak lagi mendaftar kelas tembok sebagai ada")
+	check(not agents.contains("`Tembok" + "Dekat`, `Varian" + "Tembok`") and not agents.contains("varian_" + "tembok (") and not agents.contains("tembok_dekat (`"), "AGENTS.md tidak lagi mendaftar kelas tembok sebagai ada")
 	var gdd: String = _baca_jika_ada("res://docs/GDD.md")
 	check(gdd.contains("mulai hari 3") and gdd.contains("8 atau 9 dari 25"), "GDD memuat pelanggan sisi dekat mulai hari 3 (8 atau 9 dari 25)")
 	var roadmap: String = _baca_jika_ada("res://docs/ROADMAP.md")

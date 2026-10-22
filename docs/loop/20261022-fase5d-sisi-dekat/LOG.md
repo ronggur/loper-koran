@@ -1,11 +1,12 @@
 # Loop Log — 20261022-fase5d-sisi-dekat
 Scope: Run 5D, Fase 5 (dimajukan dari Fase 8): pelanggan sisi dekat mulai hari 3 (8-9 dari 25), tembok dekat dihapus jadi halaman terbuka, rumah dekat mundur 0,5 ubin dan didesain ulang dengan teras menjorok  ·  Branch: feat/fase5d-sisi-dekat  ·  Mulai: 2026-10-22  ·  Godot: 4.7.2
 
-## Status: IN_PROGRESS   (iterasi saat ini: 1/2, bagian B selesai; bagian C menunggu)
+## Status: IN_PROGRESS   (iterasi saat ini: 1/2, bagian A, B, dan C selesai; menunggu QA)
 
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
 |---|---|---|---|---|---|
+| 1 (C) | AC-14..AC-19: paket diperiksa dan dimuat dari luar repo (47 cek), `tes_export` diperluas (aset 5D, pemindai rujukan, dokumen), dokumen AC-17 (GDD, ROADMAP 4b, ROUTE_DESIGN, BALANCING, ART_DIRECTION, AGENTS, SETUP_ANDROID 8.16, dst.), gerbang akhir, 15 mutan C (total 59) | import 0 / 19281 lolos 0 gagal / pemeriksa lolos; `--quit-after 2` bersih; 14 uji_*.py exit 0; 4 probe lama 0 tidak sesuai; paket 47 cek; save tetap | menunggu orchestrator/QA | - | - |
 | 1 (B) | AC-7..AC-13: data pelanggan dekat (34 dari 36 rumah), validasi segmen, `RouteBuilder` dari hari (8/9 dekat sejak hari 3), zona dekat cermin seberang, kotak surat dua sisi, terlipat teras dekat, bantu/radar/progres, tip hari 3, probe empat ukuran; 30 mutan | import 0 / 19180 lolos 0 gagal / pemeriksa lolos; 14 uji_*.py exit 0; save tetap | menunggu orchestrator | - | - |
 | 1 (A) | AC-1..AC-6: baseline, fase3 dapat dihasilkan ulang + uji, rumah dekat baru (teras menjorok, tanpa kotak surat), tembok dilepas, mundur 0,5, kotak penutup sprite nyata; AC-6 tercapai TANPA pudar (P-3 tidak dipakai); 14 mutan | import 0 / 18933 lolos 0 gagal / pemeriksa lolos; 14 uji_*.py exit 0; save tetap | menunggu orchestrator (titik henti D-1) | - | - |
 
@@ -256,3 +257,60 @@ Total mutan Dev: 14 (A) + 30 (B) = **44** (target >= 30 terpenuhi). Mutan "valid
 
 ### Tangkapan bagian B (`docs/loop/20261022-fase5d-sisi-dekat/shots/iter1/`, `<ukuran>_dekat_<keadaan>.png`, dilihat Dev)
 Keadaan baru: `hari3_tip` (tip di kolom kiri di bawah kartu misi, tidak menutupi kontrol), `jalur_dekat`/`trotoar_dekat` (kotak surat oranye/abu-abu dekat di tepi trotoar), `sasaran_{bidik,terbang,kena}`, `teras_*`, `halaman_*`, `meleset_*` (swipe nyata; kena = centang + "+15" di kotak surat dekat), `terlipat_dekat` (koran terlipat di teras dekat, sepeda 5 ubin di belakang rumah), `bantu_dekat_{terbang,kena,tanpa_sasaran}`, `radar_dekat` (strip kanan, penanda pelanggan dekat), `hari2_tanpa_dekat` (kotak surat dekat semua abu-abu, tanpa tip), `kidal`. Catatan dari tangkapan: rumah dekat di bawah sepeda sebagian tertutup panel HUD bawah (diukur di atas); tip tetap tampil di tangkapan lempar karena belum 6 detik waktu game.
+
+## Iterasi 1, bagian C (Dev)
+
+Commit bagian C: e610f9f (tes paket, cek paket dari luar repo), a90ebf5 (dokumen AC-17), commit tes dokumen + LICENSES + skrip mutan C, dan commit LOG ini. `ThrowSolver`, `BikeMotion`, `Tabrakan`, `TenggatRute`, `MissionManager`, `RencanaMisi`, `BikeCondition`, `Economy`, `DataSave`, `SaveManager`: `git diff main` kosong (diperiksa lagi di bagian C); `scripts/config.gd` tidak mengubah angka skor, combo, koin, atau tenggat (baris tambahan hanya `RUTE_DEKAT_*`, `RUTE_RUMAH_DEKAT_*`, `TIP_SISI_DEKAT_*`, `RUTE_DEKAT_*`, dan penghapusan `RUTE_TEMBOK_*`/`SPRITE_TEMBOK*`).
+
+### AC-14 Paket
+- `godot --headless --path . --export-pack "Android" build/kring-uji.pck`: exit 0, 0 baris ERROR/WARNING, **1.773.380 byte (1,77 MB)**, 682 berkas (697 di 5C; 5 PNG tembok x tiga berkas dilepas dan berkas baru 5D ditambah).
+- Dimuat dari folder di luar repo (`<scratchpad>/paket5d`) dengan `godot --headless --main-pack <repo>/build/kring-uji.pck --script cek_paket_5d.gd` (salinan di `docs/loop/20261022-fase5d-sisi-dekat/dev_ukur/cek_paket_5d.gd`): **47 cek lolos, 0 gagal**, 0 ERROR/WARNING. Isi diperiksa: tidak ada `res://tests/`, `docs/`, `tools/`, `build/`, spike, `cek_render`, `warna_bayangan`, dan **tidak ada berkas dengan nama tembok**; 6 rumah dekat + 6 seberang (PNG dimuat, ukuran = `size` JSON, `teras_ubin`/`penutup_ubin`/`penutup_tinggi_ubin` ada), kedua kotak surat dimuat, kunci `RUTE_TIP_LABEL` dan `RUTE_TIP_SISI_DEKAT` diterjemahkan dari paket, `PemuatRute.muat_folder()` 9 segmen tanpa galat, 34 rumah dekat `pelanggan_boleh`, semua segmen `dua_sisi`; `RouteBuilder.bangun` dari paket: hari 1 dan 2 = 0 dekat, hari 3 = 8, hari 4 = 9, hari 10 = 9 (25 pelanggan, sah); `rute.tscn` dan `panel_tip_sisi_dekat.tscn` dimuat dan dibuat.
+- `tests/tes_export.gd` diperluas: `JALUR_WAJIB_IKUT_5D` (rumah dekat PNG/.import/JSON, kotak surat, panel tip, kunci terjemahan, skrip pelanggan dekat) ikut `_pelanggaran_preset` (ada di repo dan tidak dikecualikan filter); `_test_aset_5d_ikut_paket` (impor Lossless, JSON = PNG, folder rumah tepat 12 PNG, tidak ada nama berkas tembok di `assets/` selain graybox spike yang dikecualikan preset, kunci tip tepat satu di `ui.csv`, 9 segmen `dua_sisi` dan 34 rumah dekat `pelanggan_boleh` dihitung dari JSON); `_test_rujukan_5d_tak_dipasang` (pemindai rujukan ke `house_*`/`prop_kotak_surat_*` yang tidak dipasang atau bernama tembok, dengan lima contoh buruk sintetis dan kontrol nama yang dipasang); `_test_dokumen_5d` (SETUP_ANDROID 8.16 dengan 11 butir dan lembar hasil, catatan 8.13, README, AGENTS.md, GDD, ROADMAP). `tes_export` sekarang 625 cek (runner terpisah).
+
+### AC-17 Dokumen (commit a90ebf5 dan sesudahnya)
+GDD 4.2 dan 9.1 (pelanggan dekat mulai hari 3, 8 atau 9 dari 25) dan baris keputusan terbuka "Cara menampilkan rumah di sisi dekat" (ditandai diganti); ROADMAP 4b (baris tampilan rumah dekat: keputusan 2026-10-22 menggantikan tembok, riwayat 2026-10-17 tetap, status Run 5D); ROUTE_DESIGN 1, 3, 8; BALANCING 5 (zona dekat di rute), 6b (pelanggan per rute), 10 (catatan perubahan); DATA_SCHEMA 3 (catatan tembok di pita simpang; contoh dari bagian B); ART_DIRECTION 6.4 (paragraf "Rumah dekat Run 5D", tembok ditandai tidak terpasang), keputusan terbuka dan Changelog; TECH_PLAN (spike diganti); `tools/env_art/README.md`; AGENTS.md (peta repo, perintah, tanpa `TembokDekat`/`VarianTembok`); `.cursor/rules/00-project-core.mdc` dan `content-data.mdc`; `docs/README.md`; `assets/LICENSES.md`; LOOP-DEV-QA hanya tabel 6g (baris 5D = dikerjakan, menunggu QA dan uji HP; Bagian 6j tidak disentuh); SETUP_ANDROID 8.16 (11 butir + lembar hasil; 8.13 ditandai tembok tidak berlaku). `DEV_PHASES.md`, `CHANGELOG.md`, `.release-please-manifest.json`: tidak diubah.
+
+### AC-15, AC-16, AC-18 Gerbang akhir bagian C (HEAD sebelum commit LOG)
+- `godot --headless --import`: 0 ERROR/WARNING. `godot --headless --path . --quit-after 2`: 0 ERROR/WARNING.
+- `run_tests.gd`: **19281 lolos, 0 gagal** (19180 sesudah bagian B + 86 cek paket/pemindai/dokumen 5D di `tes_export` + 15 cek dokumen); `tools/cek_keluaran_tes.py`: lolos (0 peringatan). Satu putaran sempat merah (tes pemindai tembok di `tes_sisi_dekat` menandai teks `TembokDekat` yang saya tulis polos di `tes_export`); diperbaiki dengan penyambungan string, putaran penuh diulang hijau.
+- 14 `tools/tests_cek/uji_*.py` exit 0 (termasuk `uji_aset_fase3.py` dan `uji_aset_gelombang1.py`).
+- Probe 2340x1080 (`probe_sisi_dekat_jendela`, `probe_simpang_jendela`, `probe_rute_jendela`, `probe_hud_rute_jendela`): exit 0, 0 ERROR/WARNING, 0 keadaan tidak sesuai.
+- `git diff main` kosong untuk `ThrowSolver`, `BikeMotion`, `Tabrakan`, `TenggatRute`, `MissionManager`, `RencanaMisi`, `BikeCondition`, `Economy`, `DataSave`, `SaveManager`; angka skor `config.gd` tidak berubah.
+- sha256 `user://save.json` asli sesudah semua tes, probe, mutan: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` (tidak berubah).
+- Paket (AC-14): 1.773.380 byte, 682 berkas, cek dari luar repo 47 lolos, 0 gagal.
+
+### Pindai AC-16 (diff `main...HEAD`)
+- Static typing: tidak ada `var`/`const` tanpa tipe di baris tambahan `scripts/` dan `tests/` (pindai regex 0 temuan; `:=` tidak dipakai di tambahan). `##` bahasa Indonesia; sisi hanya `seberang`/`dekat`.
+- Hex di luar `palette.gd`: 0 di baris tambahan `scripts/` dan `scenes/`. Teks pemain tertanam: hanya `tr("RUTE_TIP_LABEL")` dan kunci `RUTE_TIP_SISI_DEKAT` (keduanya di `ui.csv`).
+- Angka ajaib: literal baru di luar `config.gd` hanya nilai struktural (0.0, 1.0, 2 sebagai pembagi/indeks); semua angka tuning ada di `config.gd` satu baris literal (`RUTE_DEKAT_*`, `RUTE_RUMAH_DEKAT_*`, `TIP_SISI_DEKAT_*`).
+- `.uid`/`.import`: semua `.gd` dan PNG baru di `scripts/`, `tests/`, `assets/` punya `.uid`/`.import` terkomit (`docs/` dikecualikan Godot oleh `docs/.gdignore`, jadi `dev_ukur/*.gd` dan PNG docs tanpa `.uid`/`.import`, sama dengan 5C). Tidak ada `build/`, `builds/`, `.godot/`, APK, AAB, keystore di diff.
+- Tembok: `assets/` tidak punya berkas tembok (selain graybox spike, dikecualikan paket); kode tidak punya `TembokDekat`, `VarianTembok`, `RUTE_TEMBOK*`, `SPRITE_TEMBOK*` (dijaga `tes_sisi_dekat` dan `tes_export`); sisa kata "tembok" di kode hanya komentar sejarah ("dilepas run 5D") dan nama run `fase5b-tembok-dekor`.
+- Impor Nearest/Lossless/tanpa mipmap: dijaga `tes_export` (rumah dekat, kotak surat) dan `uji_aset_fase3.py`. Tekstur dimuat di `_init`/`_ready` (tidak ada `load`/`preload` di `_draw` pada tambahan).
+
+### Mutan nyata bagian C (15; satu perubahan, runner `tes_export` lewat `dev_ukur/mutan_c.py` atau paket nyata, `git checkout`/hapus berkas, `git status` bersih tiap kali)
+| ID | Berkas | Perubahan satu baris | Hasil | Gagal yang menangkap |
+|---|---|---|---|---|
+| M-C1 | `assets/sprites/houses/perumahan/house_tembok_polos.png` | aset tembok ikut tersalin ke `assets/` | MATI (3 gagal) | aset tak dipasang tidak ada di repo; folder rumah tepat 12 PNG |
+| M-C2 | `house_perumahan_dekat_pelana_sejajar_pelanggan.png.import` | `compress/mode=0` -> 2 (bukan Lossless) | MATI (1) | impor Lossless tanpa mipmap |
+| M-C3 | `scripts/config.gd` | komentar merujuk `house_perumahan_dekat_pelana_gudang_bukan` | MATI (1) | pemindai: rujukan ke rumah yang belum dipasang |
+| M-C4 | `scenes/rute/rute.tscn` | merujuk `prop_kotak_surat_dekat` | MATI (1) | pemindai: rujukan ke kotak surat yang belum dipasang |
+| M-C5 | `export_presets.cfg` | satu rumah dekat dikecualikan dari paket | MATI (21) | `exclude_filter` mengecualikan berkas yang harus ikut paket |
+| M-C6 | `translations/ui.csv` | baris `RUTE_TIP_SISI_DEKAT` dihapus | MATI (1) | kunci tepat satu di ui.csv |
+| M-C7 | `per_buka_01.json` | satu rumah dekat `pelanggan_boleh` true -> false | MATI (1) | 34 rumah dekat `pelanggan_boleh` di JSON (dapat 33) |
+| M-C8 | `house_perumahan_dekat_limasan_bukan.json` | kunci `teras_ubin` rusak | MATI (1) | titik pijak, teras, penutup di JSON |
+| M-C9 | `per_tutup_02.json` | tag `dua_sisi` -> `seberang` | MATI (1) | tag sisi_pelanggan dua_sisi |
+| M-C10 | `docs/SETUP_ANDROID.md` | judul 8.16 -> 8.17 | MATI (9) | bagian 8.16 ada; 11 butir |
+| M-C11 | `docs/ROADMAP.md` | "Riwayat (diganti, tetap dicatat)" -> "Riwayat" | MATI (1) | ROADMAP 4b menandai tembok diganti dengan riwayat tetap |
+| M-C12 | `docs/GDD.md` | "8 atau 9 dari 25" -> "7 atau 10 dari 25" (semua) | MATI (1) | GDD memuat 8 atau 9 dari 25 |
+| M-C13 | `AGENTS.md` | `TembokDekat`/`VarianTembok` didaftar lagi | MATI (1) | AGENTS.md tidak lagi mendaftar kelas tembok |
+| M-C14 | paket nyata | JSON `house_tembok_polos.json` di `assets/`, `--export-pack` | MATI (cek paket 46/1) | tidak ada berkas bernama tembok di paket |
+| M-C15 | paket nyata, `export_presets.cfg` | `per_tutup_02.json` dikecualikan dari paket | MATI (cek paket 45/2) | 9 segmen dimuat dari paket tanpa galat; 34 rumah dekat dari paket |
+Total mutan Dev: 14 (A) + 30 (B) + 15 (C) = **59** (target >= 30; butir wajib AC-19 tercakup di A, B, dan C: aset tembok tersalin M-A10/M-C1/M-C14, pemindai rujukan M-C3/M-C4, `.import` bukan Lossless M-A11/M-C2, fase3 tidak deterministik M-A2, dokumen-tes M-C10..M-C13).
+
+### Tangkapan dan probe lama (2340x1080, non-headless, satu proses Godot sekaligus)
+`probe_sisi_dekat_jendela`, `probe_simpang_jendela`, `probe_rute_jendela`, `probe_hud_rute_jendela`: exit 0, 0 baris ERROR/WARNING, "probe selesai, 0 keadaan tidak sesuai" di keempatnya (tangkapan ke folder sementara, tidak dikomit). Probe `sisi_dekat` sudah dijalankan di empat ukuran di bagian B.
+
+### Hal yang menunggu keputusan pemilik (dari bagian B, diteruskan)
+1. Anjing dekat `per_tengah_02@14` dan `per_tengah_03@30` beririsan dengan zona kotak surat dua rumah bukan pelanggan: geser ke @16 dan @32 bila mengganggu di HP (SETUP_ANDROID 8.16 butir 9).
+2. Lemparan tepat ke pelanggan dekat dalam jendela rumah memberi petunjuk misi (bonus presisi; `MissionManager` tidak boleh berubah).
+3. Rumah dekat sebagian tertutup panel HUD bawah (HUD tidak diubah; 8.16 butir 8).
