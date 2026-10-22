@@ -1,6 +1,6 @@
 # Roadmap — Loper Koran
 
-Status per **17 Oktober 2026** (Fase 3 run 3C: radar, HUD rute final, tenggat, layar hasil, dan spike sisi dekat, usulan, menunggu uji HP penutup Fase 3; tampilan rumah sisi dekat diputuskan pemilik 2026-10-17: tembok rendah; run 3A dan 3B juga menunggu uji HP; Fase 2 dan M1 masih menunggu uji HP). Dokumen ini mencatat kesiapan sebelum produksi, milestone sampai rilis, dan keputusan yang masih terbuka. Rincian kerja per fase ada di [`DEV_PHASES.md`](./DEV_PHASES.md).
+Status per **22 Oktober 2026**: pemilik menguji HP 2026-10-22 ("untuk uji hp sejauh ini oke semua"), jadi **M1 dan M2 tercapai** (Fase 2, 3, 4 selesai, `DEV_PHASES.md`). Fase 5 (aset) dan Fase 6 berjalan; berikutnya Run 5D: pelanggan sisi dekat mulai hari 3 dan tembok sisi dekat diganti halaman terbuka (keputusan pemilik 2026-10-22, mengganti keputusan tembok 2026-10-17 di 4b; dikerjakan di Run 5D). Status sebelumnya (17 Oktober 2026): Fase 3 run 3C: radar, HUD rute final, tenggat, layar hasil, dan spike sisi dekat, usulan, menunggu uji HP penutup Fase 3; tampilan rumah sisi dekat diputuskan pemilik 2026-10-17: tembok rendah; run 3A dan 3B juga menunggu uji HP; Fase 2 dan M1 masih menunggu uji HP. Dokumen ini mencatat kesiapan sebelum produksi, milestone sampai rilis, dan keputusan yang masih terbuka. Rincian kerja per fase ada di [`DEV_PHASES.md`](./DEV_PHASES.md).
 
 Status: ⬜ belum mulai · 🟡 sedang dikerjakan · ✅ selesai
 
