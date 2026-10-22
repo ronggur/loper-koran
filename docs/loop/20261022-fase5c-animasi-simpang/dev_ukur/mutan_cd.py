@@ -35,6 +35,12 @@ M = [
 ("D19", "tools/env_art/ubin_perumahan.py", "SIMPANG_SISI_DIPASANG = ['dekat']", "SIMPANG_SISI_DIPASANG = ['dekat', 'seberang']", "ubin simpang seberang yang tidak dipakai ikut tersalin", PY_SIMPANG),
 ("D20", "assets/sprites/tiles/perumahan/tile_perumahan_simpang_dekat_lengan_mulut_1.png.import", "compress/mode=0\n", "compress/mode=2\n", ".import ubin simpang bukan Lossless", PY_SIMPANG),
 ("D21", SR, "\t\t\t\tg.append(\"%s: pita %.1f sampai %.1f memotong zona %s rumah %s di pos %d\" % [nama, pita.x, pita.y, ZonaSasaran.Jenis.keys()[zona.jenis], nama_sisi_rumah, r.pos])", "\t\t\t\tpass", "penolakan zona dilepas (dugaan ekuivalen: zona di dalam kavling)", G),
+# Sisi seberang (putusan P-6)
+("S1", UK, "\t\treturn Config.RUTE_SIMPANG_SEL_SEBERANG\n", "\t\treturn Config.RUTE_SIMPANG_SEL_DEKAT\n", "sisi seberang memakai tabel sel dekat", G),
+("S2", "scripts/config.gd", "const RUTE_SIMPANG_SEL_SEBERANG: Array[int] = [3, 2, 3, 3,", "const RUTE_SIMPANG_SEL_SEBERANG: Array[int] = [3, 1, 3, 3,", "sel seberang pertama di kolom salah (trotoar, bukan rumput)", G),
+("S3", "scenes/rute/rute.tscn", 'ExtResource("56_simpang_seberang_0"), ExtResource("57_simpang_seberang_1")', 'ExtResource("57_simpang_seberang_1"), ExtResource("56_simpang_seberang_0")', "dua tekstur seberang tertukar di rute.tscn", G),
+("S4", "assets/data/routes/perumahan/per_buka_02.json", '{ "pos": 18, "sisi": "seberang" }', '{ "pos": 17, "sisi": "seberang" }', "simpang seberang bergeser satu ubin (pita memotong kavling rumah @14)", G),
+("S5", "tools/env_art/ubin_perumahan.py", "SIMPANG_SISI_DIPASANG = ['dekat', 'seberang']", "SIMPANG_SISI_DIPASANG = ['dekat']", "ubin seberang yang dipakai data tidak tersalin", PY_SIMPANG),
 ]
 pilih = sys.argv[1:]
 for kode, f, a, b, ket, perintah in M:
