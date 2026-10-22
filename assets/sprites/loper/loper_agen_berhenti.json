@@ -1,0 +1,146 @@
+{
+ "sprite": "loper_agen_berhenti.png",
+ "cell": [
+  46,
+  58
+ ],
+ "columns": 2,
+ "rows": 5,
+ "ground_anchor": [
+  23,
+  46
+ ],
+ "godot_offset": [
+  0.0,
+  -17.0
+ ],
+ "status": "usulan Fase 5C",
+ "note": "Kaki kanan turun ke tanah (sisi kamera), sepeda condong 7 derajat ke kanan, pedal kiri di depan. Frame 1: badan atas turun 1 px (bernapas), digeser kaku seperti rem_meluncur.py.",
+ "animations": [
+  {
+   "name": "berhenti_normal",
+   "heading": "normal",
+   "row": 0,
+   "fps": 3,
+   "loop": true,
+   "frames": [
+    0,
+    1
+   ],
+   "regions": [
+    [
+     0,
+     0,
+     46,
+     58
+    ],
+    [
+     46,
+     0,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "berhenti_serong_kanan",
+   "heading": "serong_kanan",
+   "row": 1,
+   "fps": 3,
+   "loop": true,
+   "frames": [
+    0,
+    1
+   ],
+   "regions": [
+    [
+     0,
+     58,
+     46,
+     58
+    ],
+    [
+     46,
+     58,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "berhenti_kanan",
+   "heading": "kanan",
+   "row": 2,
+   "fps": 3,
+   "loop": true,
+   "frames": [
+    0,
+    1
+   ],
+   "regions": [
+    [
+     0,
+     116,
+     46,
+     58
+    ],
+    [
+     46,
+     116,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "berhenti_serong_kiri",
+   "heading": "serong_kiri",
+   "row": 3,
+   "fps": 3,
+   "loop": true,
+   "frames": [
+    0,
+    1
+   ],
+   "regions": [
+    [
+     0,
+     174,
+     46,
+     58
+    ],
+    [
+     46,
+     174,
+     46,
+     58
+    ]
+   ]
+  },
+  {
+   "name": "berhenti_kiri",
+   "heading": "kiri",
+   "row": 4,
+   "fps": 3,
+   "loop": true,
+   "frames": [
+    0,
+    1
+   ],
+   "regions": [
+    [
+     0,
+     232,
+     46,
+     58
+    ],
+    [
+     46,
+     232,
+     46,
+     58
+    ]
+   ]
+  }
+ ]
+}

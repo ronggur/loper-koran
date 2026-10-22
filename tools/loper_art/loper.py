@@ -247,7 +247,11 @@ def build(cfg, phi_deg=-40):
         M.box(pedal + v(0, 0, -0.3), v(1, 0, 0), v(0, 1, 0), v(0, 0, 1), 1.0, 0.8, 0.25, DARK, pc)
         rider()
         hip = HIP_C + v(0, side * 1.6, 0)
-        ankle = roll_pt(pedal + v(-0.6, 0, 1.3))
+        fd = cfg.get('foot_down')          # berhenti (Fase 5C): satu kaki lepas dari pedal, turun ke tanah
+        if fd and fd['side'] == side:
+            ankle = np.asarray(fd['ankle'], float)
+        else:
+            ankle = roll_pt(pedal + v(-0.6, 0, 1.3))
         knee = leg_ik(hip, ankle, 8.0, 8.1)
         p_leg = M.part(f'leg{side}')
         p_shin = M.part(f'shin{side}')

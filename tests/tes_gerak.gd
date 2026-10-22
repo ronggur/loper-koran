@@ -478,9 +478,9 @@ func _test_lateral() -> void:
 	rem.rem_aktif = true
 	rem.tahan_rem_detik = 1.0
 	h = BikeMotion.langkah(rem, Vector2(0.3, -0.954), DT)
-	check(h.keadaan.rem_aktif and h.lateral_ud > 0.0 and h.arah_sprite == 2 and _nama(h) == &"rem_kanan", "berhenti dengan rem sambil geser ke sisi dekat: rem_kanan (90 derajat dari gerak nyata), dapat %s" % _nama(h))
+	check(h.keadaan.rem_aktif and h.lateral_ud > 0.0 and h.arah_sprite == 2 and _nama(h) == &"berhenti_kanan", "berhenti dengan rem sambil geser ke sisi dekat: berhenti_kanan (Fase 5C; 90 derajat dari gerak nyata), dapat %s" % _nama(h))
 	h = BikeMotion.langkah(rem, Vector2(0, -1), DT)
-	check(h.arah_sprite == 0 and _nama(h) == &"rem_normal", "berhenti tanpa lateral: arah normal (rem_normal)")
+	check(h.arah_sprite == 0 and _nama(h) == &"berhenti_normal", "berhenti tanpa lateral: arah normal (berhenti_normal, Fase 5C)")
 
 
 # --- AC-6: pose dan laju kayuh (D-7, D-8) ---
@@ -489,7 +489,9 @@ func _test_pose() -> void:
 	_judul.call("LoperAnim: pose dari gerak (AC-6, D-7)")
 	var tol: float = Config.POSE_MELUNCUR_TOLERANSI_UD
 	check(LoperAnim.pose_dari_gerak(true, -1.0, 3.0, 1.5) == LoperAnim.Pose.REM, "rem aktif, kecepatan 3,0 = REM")
-	check(LoperAnim.pose_dari_gerak(true, -1.0, 0.0, 1.5) == LoperAnim.Pose.REM, "rem aktif, sudah berhenti (0) = REM")
+	check(LoperAnim.pose_dari_gerak(true, -1.0, 0.0, 1.5) == LoperAnim.Pose.BERHENTI, "rem aktif, sudah berhenti (0) = BERHENTI (Fase 5C, kaki turun)")
+	check(LoperAnim.pose_dari_gerak(true, -1.0, tol, 1.5) == LoperAnim.Pose.BERHENTI and LoperAnim.pose_dari_gerak(true, -1.0, tol * 1.01, 1.5) == LoperAnim.Pose.REM and LoperAnim.pose_dari_gerak(true, -1.0, NAN, 1.5) == LoperAnim.Pose.REM,
+		"rem aktif: kecepatan sampai toleransi pose = BERHENTI (inklusif), di atasnya = REM, NaN = REM")
 	check(LoperAnim.pose_dari_gerak(true, 0.0, 2.0, 3.0) == LoperAnim.Pose.REM, "rem aktif menang atas semua (stick netral)")
 	check(LoperAnim.pose_dari_gerak(false, -1.0, 3.0, 1.5) == LoperAnim.Pose.MELUNCUR, "stick bawah, kecepatan 3,0 di atas tujuan 1,5 = MELUNCUR")
 	check(LoperAnim.pose_dari_gerak(false, -0.5, 2.0 + tol * 1.01, 2.0) == LoperAnim.Pose.MELUNCUR, "kecepatan di atas tujuan sedikit lebih dari toleransi = MELUNCUR")
@@ -513,7 +515,7 @@ func _test_pose_dari_langkah() -> void:
 	# [label, keadaan awal, stick, jumlah langkah, nama harapan]
 	var ngebut: BikeMotion.Keadaan = _keadaan(6.0)
 	kasus.append(["rem bergerak (0,3 detik bawah penuh dari ngebut)", ngebut, Vector2(0, -1), 18, &"rem_normal"])
-	kasus.append(["rem berhenti (3 detik bawah penuh)", ngebut, Vector2(0, -1), 180, &"rem_normal"])
+	kasus.append(["rem berhenti (3 detik bawah penuh)", ngebut, Vector2(0, -1), 180, &"berhenti_normal"])
 	kasus.append(["meluncur (bawah 0,85 dari ngebut, 0,5 detik)", ngebut, Vector2(0, -0.85), 30, &"meluncur_normal"])
 	kasus.append(["melambat (bawah 0,85 dari ngebut, 4 detik: sudah di tujuan)", ngebut, Vector2(0, -0.85), 240, &"melambat_normal"])
 	kasus.append(["kayuh santai", _keadaan(), Vector2.ZERO, 30, &"santai_normal"])

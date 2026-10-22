@@ -1,30 +1,126 @@
-[gd_resource type="SpriteFrames" load_steps=8 format=3]
+[gd_resource type="SpriteFrames" load_steps=32 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/loper/loper_agen_jatuh.png" id="1_sheet"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_j1"]
 atlas = ExtResource("1_sheet")
-region = Rect2(0, 0, 114, 68)
+region = Rect2(0, 0, 140, 88)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_j2"]
 atlas = ExtResource("1_sheet")
-region = Rect2(114, 0, 114, 68)
+region = Rect2(140, 0, 140, 88)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_j3"]
 atlas = ExtResource("1_sheet")
-region = Rect2(228, 0, 114, 68)
+region = Rect2(280, 0, 140, 88)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_j4"]
 atlas = ExtResource("1_sheet")
-region = Rect2(342, 0, 114, 68)
+region = Rect2(420, 0, 140, 88)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_j5"]
 atlas = ExtResource("1_sheet")
-region = Rect2(342, 0, 114, 68)
+region = Rect2(420, 0, 140, 88)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_j6"]
 atlas = ExtResource("1_sheet")
-region = Rect2(456, 0, 114, 68)
+region = Rect2(560, 0, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j7"]
+atlas = ExtResource("1_sheet")
+region = Rect2(0, 88, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j8"]
+atlas = ExtResource("1_sheet")
+region = Rect2(140, 88, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j9"]
+atlas = ExtResource("1_sheet")
+region = Rect2(280, 88, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j10"]
+atlas = ExtResource("1_sheet")
+region = Rect2(420, 88, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j11"]
+atlas = ExtResource("1_sheet")
+region = Rect2(420, 88, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j12"]
+atlas = ExtResource("1_sheet")
+region = Rect2(560, 88, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j13"]
+atlas = ExtResource("1_sheet")
+region = Rect2(0, 176, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j14"]
+atlas = ExtResource("1_sheet")
+region = Rect2(140, 176, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j15"]
+atlas = ExtResource("1_sheet")
+region = Rect2(280, 176, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j16"]
+atlas = ExtResource("1_sheet")
+region = Rect2(420, 176, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j17"]
+atlas = ExtResource("1_sheet")
+region = Rect2(420, 176, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j18"]
+atlas = ExtResource("1_sheet")
+region = Rect2(560, 176, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j19"]
+atlas = ExtResource("1_sheet")
+region = Rect2(0, 264, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j20"]
+atlas = ExtResource("1_sheet")
+region = Rect2(140, 264, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j21"]
+atlas = ExtResource("1_sheet")
+region = Rect2(280, 264, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j22"]
+atlas = ExtResource("1_sheet")
+region = Rect2(420, 264, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j23"]
+atlas = ExtResource("1_sheet")
+region = Rect2(420, 264, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j24"]
+atlas = ExtResource("1_sheet")
+region = Rect2(560, 264, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j25"]
+atlas = ExtResource("1_sheet")
+region = Rect2(0, 352, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j26"]
+atlas = ExtResource("1_sheet")
+region = Rect2(140, 352, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j27"]
+atlas = ExtResource("1_sheet")
+region = Rect2(280, 352, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j28"]
+atlas = ExtResource("1_sheet")
+region = Rect2(420, 352, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j29"]
+atlas = ExtResource("1_sheet")
+region = Rect2(420, 352, 140, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j30"]
+atlas = ExtResource("1_sheet")
+region = Rect2(560, 352, 140, 88)
 
 [resource]
 animations = [{
@@ -54,5 +150,117 @@ animations = [{
 }],
 "loop": true,
 "name": &"terjerembab_normal",
+"speed": 3.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j9")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j10")
+}],
+"loop": false,
+"name": &"jatuh_serong_kanan",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j11")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j12")
+}],
+"loop": true,
+"name": &"terjerembab_serong_kanan",
+"speed": 3.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j13")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j14")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j15")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j16")
+}],
+"loop": false,
+"name": &"jatuh_kanan",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j17")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j18")
+}],
+"loop": true,
+"name": &"terjerembab_kanan",
+"speed": 3.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j19")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j20")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j21")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j22")
+}],
+"loop": false,
+"name": &"jatuh_serong_kiri",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j23")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j24")
+}],
+"loop": true,
+"name": &"terjerembab_serong_kiri",
+"speed": 3.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j25")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j26")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j27")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j28")
+}],
+"loop": false,
+"name": &"jatuh_kiri",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j29")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j30")
+}],
+"loop": true,
+"name": &"terjerembab_kiri",
 "speed": 3.0
 }]

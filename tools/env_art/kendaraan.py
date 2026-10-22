@@ -470,6 +470,8 @@ WARNA_KUCING = {
 }
 HITAM_K = Mat('#5A5462', '#3E3846', '#26222C')
 KUCING_POSE = ['duduk', 'tidur', 'jalan_1', 'jalan_2', 'lari_1', 'lari_2', 'kaget']
+# Fase 5C (usulan): kucing misi yang sudah ditangkap, duduk tenang seperti sedang dielus. Hanya sheet kucing misi.
+KUCING_POSE_MISI = KUCING_POSE + ['ditangkap_1', 'ditangkap_2']
 KUCING_ARAH = ['searah', 'masuk', 'lawan', 'keluar']
 KUCING_URUT = ['oren', 'abu', 'tuksedo', 'putih', 'belang_tiga']
 
@@ -517,7 +519,25 @@ def _kucing_lokal(s, pose, warna, kalung):
 
     O = np.zeros(3)
     ekor_tebal = 0.55
-    if pose == 'duduk':
+    telinga = (1.0, 0.0, 1.0, (0.55, 0.7, 1.1))      # (samping, maju, naik, jari-jari)
+    moncong_turun = 0.5
+    mata_tutup = False
+    if pose.startswith('ditangkap'):
+        # duduk lebih rendah dan membulat, kepala menunduk ke depan, mata terpejam, telinga rileks ke samping,
+        # ekor melingkar rapat di depan kaki. Frame 2: ujung ekor bergeser (bergoyang pelan).
+        pid = E(O + up * 3.2 + f * 0.1, (2.1, 1.9, 3.0), R=np.stack([r, np.cross(up, r) * -1, up]))
+        E(O - f * 1.0 + up * 1.8, (2.7, 2.3, 1.8), part=pid)                                  # pinggul
+        head = O + f * 1.5 + up * 6.9
+        for sg in (-1, 1):
+            L(O + f * 1.4 + r * sg * 0.9 + up * 3.2, O + f * 1.9 + r * sg * 0.9 + up * 0.3, 0.55, pid)
+        if pose == 'ditangkap_1':
+            tail = [O - f * 2.7 + up * 0.5, O - f * 1.2 + r * 2.6 + up * 0.4, O + f * 2.0 + r * 1.6 + up * 0.4]
+        else:          # ujung ekor bergeser dan pangkal ekor sedikit terangkat, supaya terlihat dari belakang juga
+            tail = [O - f * 2.8 + up * 0.8, O - f * 1.6 + r * 3.0 + up * 1.4, O + f * 2.3 + r * 0.6 + up * 0.5]
+        telinga = (1.15, -0.3, 0.75, (0.55, 0.7, 0.95))
+        moncong_turun = 1.0
+        mata, mata_tutup = True, True
+    elif pose == 'duduk':
         pid = E(O + up * 3.6 + f * 0.2, (2.0, 1.8, 3.4), R=np.stack([r, np.cross(up, r) * -1, up]))
         E(O - f * 1.0 + up * 1.9, (2.6, 2.2, 1.9), part=pid)                                  # pinggul
         head = O + f * 1.0 + up * 7.4
@@ -568,14 +588,22 @@ def _kucing_lokal(s, pose, warna, kalung):
         mata = True
     # kepala, telinga, mata, hidung
     E(head, (1.9, 1.8, 1.6), part=pid)
-    E(head + f * 1.2 - up * 0.5, (1.0, 1.1, 0.7), part=pid)                                  # moncong
+    E(head + f * 1.2 - up * moncong_turun, (1.0, 1.1, 0.7), part=pid)                        # moncong
     for sg in (-1, 1):
-        a = head + r * sg * 1.0 + up * 1.0
-        s.add(ellip(a + up * 0.8, (0.55, 0.7, 1.1), bulu, None, part=pid))                   # telinga
+        a = head + r * sg * telinga[0] + f * telinga[1] + up * telinga[2]
+        s.add(ellip(a + up * 0.8, telinga[3], bulu, None, part=pid))                         # telinga
     if mata:
         for sg in (-1, 1):
-            s.add(ellip(head + f * 1.5 + r * sg * 0.75 + up * 0.35, (0.35, 0.35, 0.45), HIDUNG_K, None, part=pid))
-    if kalung:
+            if mata_tutup:     # garis mata terpejam: pipih dan sedikit lebih rendah
+                s.add(ellip(head + f * 1.5 + r * sg * 0.75 + up * 0.15, (0.45, 0.35, 0.18), HIDUNG_K, None, part=pid))
+            else:
+                s.add(ellip(head + f * 1.5 + r * sg * 0.75 + up * 0.35, (0.35, 0.35, 0.45), HIDUNG_K, None, part=pid))
+    if kalung and mata_tutup:
+        # kepala menunduk menutupi leher: kalung sedikit lebih besar dan maju supaya merah dan lonceng tetap terlihat
+        nk = head - f * 0.3 - up * 1.4
+        s.add(ellip(nk, (1.5, 1.7, 0.55), KALUNG_K, None, part=pid))
+        s.add(ellip(nk + f * 1.45 - up * 0.45, (0.55, 0.55, 0.55), LONCENG, None, part=pid))
+    elif kalung:
         nk = head - f * 0.8 - up * 1.2
         s.add(ellip(nk, (1.2, 1.5, 0.5), KALUNG_K, None, part=pid))
         s.add(ellip(nk + f * 1.2 - up * 0.4, (0.5, 0.5, 0.5), LONCENG, None, part=pid))
@@ -675,17 +703,25 @@ def ekspor_motor():
 def ekspor_kucing():
     out = {}
     for w in KUCING_URUT:
+        misi = w == 'belang_tiga'
+        poses = KUCING_POSE_MISI if misi else KUCING_POSE
         rows = [[_spr(lambda s, p=p, w=w, a_=a_: kucing(s, 0, 0, p, w, a_), aspal=False, extra=(10, 6), pad=3)
-                 for p in KUCING_POSE] for a_ in KUCING_ARAH]
-        fname = 'mission_kucing_sheet' if w == 'belang_tiga' else 'npc_kucing_%s_sheet' % w
-        out[w] = pack_grid(rows, KUCING_ARAH, KUCING_POSE, fname, {
+                 for p in poses] for a_ in KUCING_ARAH]
+        fname = 'mission_kucing_sheet' if misi else 'npc_kucing_%s_sheet' % w
+        anim = {'diam': ['duduk'], 'tidur': ['tidur'], 'jalan': ['jalan_1', 'jalan_2'],
+                'lari': ['lari_1', 'lari_2'], 'kaget': ['kaget']}
+        fps = {'jalan': 6, 'lari': 10}
+        if misi:
+            anim['ditangkap'] = ['ditangkap_1', 'ditangkap_2']
+            fps['ditangkap'] = 3
+        out[w] = pack_grid(rows, KUCING_ARAH, poses, fname, {
             'note': 'Usulan, tools/env_art/kendaraan.py. Baris = arah moncong (searah kanan atas, masuk kiri atas, '
                     'lawan kiri bawah, keluar kanan bawah). ' +
                     ('Kucing misi Bu Ratmi: belang tiga, kalung merah, lonceng.' if w == 'belang_tiga' else
-                     'Kucing dekorasi: tanpa kalung.'),
-            'anim': {'diam': ['duduk'], 'tidur': ['tidur'], 'jalan': ['jalan_1', 'jalan_2'],
-                     'lari': ['lari_1', 'lari_2'], 'kaget': ['kaget']},
-            'fps': {'jalan': 6, 'lari': 10}})
+                     'Kucing dekorasi: tanpa kalung.') +
+                    (' ditangkap_1/_2 (Fase 5C, usulan): duduk tenang, mata terpejam, kepala menunduk, ekor melingkar; '
+                     '3 fps berulang.' if misi else ''),
+            'anim': anim, 'fps': fps})
     return out
 
 

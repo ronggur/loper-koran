@@ -162,7 +162,7 @@ func _test_rem_di_scene() -> void:
 	_langkah(akar, 60)
 	var jarak_henti: float = sepeda.jarak_ubin
 	_langkah(akar, 30)
-	check(sepeda.kecepatan_ud == 0.0 and sepeda.jarak_ubin == jarak_henti and sepeda.nama_animasi() == &"rem_normal" and kontrol.busur_rem_tampil(), "rem ditahan: sepeda berhenti (0 u/d, jarak tetap), rem_normal, busur tetap tampil")
+	check(sepeda.kecepatan_ud == 0.0 and sepeda.jarak_ubin == jarak_henti and sepeda.nama_animasi() == &"berhenti_normal" and kontrol.busur_rem_tampil(), "rem ditahan: sepeda berhenti (0 u/d, jarak tetap), berhenti_normal (Fase 5C, kaki turun), busur tetap tampil")
 	check(hud.nilai_kecepatan() == 0.0, "HUD menampilkan kecepatan 0")
 	_sentuh(0, TITIK_STICK + Vector2(0, Config.STICK_RADIUS_PX), false)
 	_langkah(akar, 1)

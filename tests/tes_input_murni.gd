@@ -514,7 +514,7 @@ func _test_stick_ke_animasi() -> void:
 	check(c.tingkat_sprite == LoperAnim.TINGKAT_MELAMBAT and _animasi(c) == &"meluncur_normal", "10c: bawah penuh langkah pertama = meluncur_normal (kecepatan 2,97 di atas tujuan 1,5, D-7), dapat %s" % _animasi(c))
 	# Bawah penuh ditahan 2 detik: rem aktif sesudah 0,25 detik, berhenti di 0 (D-2); run sprite: 1,5 u/d dan melambat_normal.
 	c = _jalankan(Vector2(0, -1), 120, dt)
-	check(c.keadaan.kecepatan_ud == 0.0 and c.keadaan.rem_aktif and _animasi(c) == &"rem_normal", "10c: bawah penuh 2 detik = rem, berhenti 0 u/d, rem_normal, dapat %s %s" % [c.keadaan.kecepatan_ud, _animasi(c)])
+	check(c.keadaan.kecepatan_ud == 0.0 and c.keadaan.rem_aktif and _animasi(c) == &"berhenti_normal", "10c: bawah penuh 2 detik = rem, berhenti 0 u/d, berhenti_normal (Fase 5C), dapat %s %s" % [c.keadaan.kecepatan_ud, _animasi(c)])
 	# Bawah 0,8 (di bawah ambang rem 0,90) 2 detik: sampai tujuan 1,8 u/d lalu melambat_normal (kayuh 4 fps).
 	c = _jalankan(Vector2(0, -0.8), 120, dt)
 	check(is_equal_approx(c.keadaan.kecepatan_ud, 1.8) and not c.keadaan.rem_aktif and _animasi(c) == &"melambat_normal", "10c: bawah 0,8 2 detik = 1,8 u/d dan melambat_normal (tanpa rem), dapat %s %s" % [c.keadaan.kecepatan_ud, _animasi(c)])

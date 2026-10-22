@@ -429,13 +429,13 @@ func _test_nama_animasi_dan_frames() -> void:
 	check(LoperAnim.nama_animasi(-1, 9) == &"melambat_kanan", "tingkat -1 = melambat dan arah di luar jangkauan dijepit: (-1, 9) = melambat_kanan (sebelum run sprite-lempar-melambat: santai_kanan)")
 	check(LoperAnim.nama_animasi(-9, 0) == &"melambat_normal", "tingkat jauh di bawah jangkauan dijepit ke melambat (-9, 0) = melambat_normal")
 
-	# SpriteFrames memuat 50 animasi sejak 2026-10-17 (48 sejak run fase1a-gerak): 15 kayuh + 5 melambat + 18 lempar + 5 meluncur
-	# + 5 rem + jatuh_normal dan terjerembab_normal. Semua nama yang bisa dihasilkan LoperAnim (kayuh, melambat, lempar, pose meluncur
-	# dan rem, jatuh dan terjerembab untuk semua arah) ada di SpriteFrames dan sebaliknya: tidak ada yang yatim. Pemeriksaan isi
-	# (region, fps, loop) terhadap enam JSON ada di `tests/tes_sprite.gd`.
+	# SpriteFrames memuat 68 animasi sejak Fase 5C (50 sejak 2026-10-17, 48 sejak run fase1a-gerak): 15 kayuh + 5 melambat + 18 lempar
+	# + 5 meluncur + 5 rem + 5 berhenti + jatuh, terjerembab, dan bangkit lima arah. Semua nama yang bisa dihasilkan LoperAnim (kayuh,
+	# melambat, lempar, pose meluncur, rem, dan berhenti, jatuh/terjerembab/bangkit per arah) ada di SpriteFrames dan sebaliknya: tidak
+	# ada yang yatim. Pemeriksaan isi (region, fps, loop) terhadap delapan JSON ada di `tests/tes_sprite.gd`.
 	for arah: int in range(-2, 3):
 		nama_dipakai[LoperAnim.nama_animasi(LoperAnim.TINGKAT_MELAMBAT, arah)] = true
-	for pose: LoperAnim.Pose in [LoperAnim.Pose.KAYUH, LoperAnim.Pose.MELUNCUR, LoperAnim.Pose.REM]:
+	for pose: LoperAnim.Pose in [LoperAnim.Pose.KAYUH, LoperAnim.Pose.MELUNCUR, LoperAnim.Pose.REM, LoperAnim.Pose.BERHENTI]:
 		for tingkat: int in range(LoperAnim.TINGKAT_MELAMBAT, 3):
 			for arah: int in range(-2, 3):
 				nama_dipakai[LoperAnim.nama_animasi_pose(pose, tingkat, arah)] = true
@@ -444,9 +444,10 @@ func _test_nama_animasi_dan_frames() -> void:
 	for arah: int in range(-2, 3):
 		nama_dipakai[LoperAnim.nama_jatuh(arah)] = true
 		nama_dipakai[LoperAnim.nama_terjerembab(arah)] = true
-	check(nama_dipakai.size() == 50, "LoperAnim menghasilkan tepat 50 nama (15 kayuh + 5 melambat + 18 lempar + 5 meluncur + 5 rem + jatuh + terjerembab), dapat %d" % nama_dipakai.size())
+		nama_dipakai[LoperAnim.nama_bangkit(arah)] = true
+	check(nama_dipakai.size() == 68, "LoperAnim menghasilkan tepat 68 nama (15 kayuh + 5 melambat + 18 lempar + 5 meluncur + 5 rem + 5 berhenti + 15 jatuh/terjerembab/bangkit), dapat %d" % nama_dipakai.size())
 	var nama_frames: PackedStringArray = frames.get_animation_names()
-	check(nama_frames.size() == 50, "SpriteFrames memuat tepat 50 animasi (15 kayuh + 5 melambat + 18 lempar + 5 meluncur + 5 rem + 2 jatuh), dapat %d" % nama_frames.size())
+	check(nama_frames.size() == 68, "SpriteFrames memuat tepat 68 animasi (15 kayuh + 5 melambat + 18 lempar + 5 meluncur + 5 rem + 10 jatuh + 5 bangkit + 5 berhenti), dapat %d" % nama_frames.size())
 	for nama: String in nama_frames:
 		check(nama_dipakai.has(StringName(nama)), "animasi SpriteFrames '%s' dipakai LoperAnim (tidak ada animasi yatim)" % nama)
 	for nama: StringName in nama_dipakai:

@@ -4,7 +4,7 @@
   46,
   38
  ],
- "columns": 7,
+ "columns": 9,
  "rows": 4,
  "ground_anchor": [
   18,
@@ -17,7 +17,9 @@
   "jalan_2",
   "lari_1",
   "lari_2",
-  "kaget"
+  "kaget",
+  "ditangkap_1",
+  "ditangkap_2"
  ],
  "row_names": [
   "searah",
@@ -25,7 +27,7 @@
   "lawan",
   "keluar"
  ],
- "note": "Usulan, tools/env_art/kendaraan.py. Baris = arah moncong (searah kanan atas, masuk kiri atas, lawan kiri bawah, keluar kanan bawah). Kucing misi Bu Ratmi: belang tiga, kalung merah, lonceng.",
+ "note": "Usulan, tools/env_art/kendaraan.py. Baris = arah moncong (searah kanan atas, masuk kiri atas, lawan kiri bawah, keluar kanan bawah). Kucing misi Bu Ratmi: belang tiga, kalung merah, lonceng. ditangkap_1/_2 (Fase 5C, usulan): duduk tenang, mata terpejam, kepala menunduk, ekor melingkar; 3 fps berulang.",
  "anim": {
   "diam": [
    "duduk"
@@ -43,10 +45,15 @@
   ],
   "kaget": [
    "kaget"
+  ],
+  "ditangkap": [
+   "ditangkap_1",
+   "ditangkap_2"
   ]
  },
  "fps": {
   "jalan": 6,
-  "lari": 10
+  "lari": 10,
+  "ditangkap": 3
  }
 }

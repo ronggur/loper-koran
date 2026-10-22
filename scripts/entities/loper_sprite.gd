@@ -3,8 +3,8 @@ extends AnimatedSprite2D
 ## Sprite pemain (Kemeja Agen) yang memilih animasi dari pose, tingkat kecepatan, dan arah, dan memainkan lempar koran (ART_DIRECTION 3.2).
 ##
 ## Node hanya menampilkan: pemilihan nama animasi ada di `LoperAnim` dan garis waktu lempar di `LemparWaktu` (logika murni).
-## - `pose`: `KAYUH` (bawaan) memakai `speed_level`; `MELUNCUR` dan `REM` memakai `meluncur_<arah>` dan `rem_<arah>` (D-7 run
-##   fase1a-gerak); pemilihan pose dari keadaan gerak ada di `LoperAnim.pose_dari_gerak`, bukan di node ini;
+## - `pose`: `KAYUH` (bawaan) memakai `speed_level`; `MELUNCUR`, `REM`, dan `BERHENTI` memakai `meluncur_<arah>`, `rem_<arah>`, dan
+##   `berhenti_<arah>` (D-7 run fase1a-gerak; berhenti Fase 5C); pemilihan pose dari keadaan gerak ada di `LoperAnim.pose_dari_gerak`, bukan di node ini;
 ## - `speed_level`: -1 = melambat (kayuh 4 fps), 0 = santai, 1 = cepat, 2 = ngebut (dijepit ke -1 sampai 2);
 ## - `steer`: -2 = 90 derajat ke sisi seberang, -1 = serong seberang, 0 = lurus, 1 = serong dekat,
 ##   2 = 90 derajat ke sisi dekat (dijepit ke -2 sampai 2). Nama animasi memakai `kiri` / `kanan`
@@ -28,8 +28,9 @@ extends AnimatedSprite2D
 ## Jatuh (`atur_jatuh`, keputusan pemilik 2026-10-17: tabrakan = jatuh): selama jatuh gambar diambil dari `LoperAnim.frame_jatuh` dengan lama
 ## sejak tabrakan dari pemanggil (`Tabrakan.lewat_jatuh_detik`), sprite dijeda (bukan pemutar bawaan), jadi jeda game membekukannya dan tes
 ## bisa memajukannya dengan `dt` tetap. Masuk jatuh menutup lempar yang berjalan (tanpa sinyal, seperti `batalkan_lempar`), lempar baru
-## ditolak, dan `pose`/`speed_level`/`steer` tetap tersimpan tanpa mengganti gambar. Bangun = langsung kembali ke animasi pose saat itu dan
-## diputar lagi (belum ada animasi bangkit; kedip kebal menutupinya, aset bangkit Fase 5).
+## ditolak, dan `pose`/`speed_level`/`steer` tetap tersimpan tanpa mengganti gambar. Di akhir waktu jatuh `bangkit_<arah>` diputar (Fase 5C,
+## lama jatuh `TABRAKAN_JATUH_DETIK` tidak berubah); frame terakhirnya = kayuh santai frame 0, jadi bangun = langsung kembali ke animasi pose
+## saat itu dan diputar lagi tanpa lompatan.
 
 ## Koran lepas dari tangan: dipancarkan tepat sekali per lempar, saat frame `Config.LEMPAR_FRAME_LEPAS` (indeks 2) tampil (atau saat lempar
 ## yang belum sampai frame lepas disela lempar berikutnya). Koran terbang tidak bergantung pada sinyal ini (`KoranLempar` memakai jeda
@@ -152,7 +153,7 @@ func sedang_jatuh() -> bool:
 
 
 ## Menampilkan jatuh (`aktif`) dengan lama `lewat_detik` sejak tabrakan, atau keluar dari jatuh (bangun). Lihat bagian Jatuh di atas.
-## Animasi dan fps dibaca dari `sprite_frames` (`jatuh_<arah>`, `terjerembab_<arah>`, arah dari `steer` tetapi diabaikan `LoperAnim`).
+## Animasi dan fps dibaca dari `sprite_frames` (`jatuh_<arah>`, `terjerembab_<arah>`, dan `bangkit_<arah>` bila ada; arah dari `steer`).
 func atur_jatuh(aktif: bool, lewat_detik: float) -> void:
 	if not aktif:
 		if _jatuh:
@@ -170,7 +171,13 @@ func atur_jatuh(aktif: bool, lewat_detik: float) -> void:
 	if not sprite_frames.has_animation(nama_j) or not sprite_frames.has_animation(nama_t):
 		push_warning("LoperSprite: animasi '%s' atau '%s' tidak ada di SpriteFrames" % [nama_j, nama_t])
 		return
-	var f: LoperAnim.FrameJatuh = LoperAnim.frame_jatuh(lewat_detik, steer, sprite_frames.get_animation_speed(nama_j), sprite_frames.get_frame_count(nama_j), sprite_frames.get_animation_speed(nama_t), sprite_frames.get_frame_count(nama_t))
+	var nama_b: StringName = LoperAnim.nama_bangkit(steer)
+	var fps_b: float = 0.0
+	var n_b: int = 0
+	if sprite_frames.has_animation(nama_b):
+		fps_b = sprite_frames.get_animation_speed(nama_b)
+		n_b = sprite_frames.get_frame_count(nama_b)
+	var f: LoperAnim.FrameJatuh = LoperAnim.frame_jatuh(lewat_detik, steer, sprite_frames.get_animation_speed(nama_j), sprite_frames.get_frame_count(nama_j), sprite_frames.get_animation_speed(nama_t), sprite_frames.get_frame_count(nama_t), fps_b, n_b, Config.TABRAKAN_JATUH_DETIK)
 	if animation != f.nama:
 		animation = f.nama
 	set_frame_and_progress(f.frame, f.progres)

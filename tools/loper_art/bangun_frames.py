@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Membangun `loper_agen_frames.tres` gabungan (kayuh + melambat + lempar + meluncur + rem + jatuh) dari enam JSON sumber.
+"""Membangun `loper_agen_frames.tres` gabungan (kayuh + melambat + lempar + meluncur + rem + jatuh + bangkit + berhenti) dari delapan JSON sumber.
 
 Hanya pustaka standar Python 3 (tanpa numpy, pillow, atau renderer). Format `.tres` sama dengan
 yang ditulis `produce.py` (SpriteFrames Godot 4, satu AtlasTexture per frame, durasi frame 1.0),
@@ -10,16 +10,17 @@ jadi 15 animasi kayuh pertama tetap persis seperti sebelumnya dan animasi baru d
     python3 tools/loper_art/bangun_frames.py --cek                 # tidak menulis; exit 1 bila isi --out berbeda dari hasil
 
 Yang dilakukan:
-    1. Membaca enam JSON sumber: kayuh (`loper_agen.json`), melambat (`melambat/loper_agen_melambat.json`),
+    1. Membaca delapan JSON sumber: kayuh (`loper_agen.json`), melambat (`melambat/loper_agen_melambat.json`),
        lempar (`lempar/loper_agen_lempar.json`), meluncur (`rem_meluncur/loper_agen_meluncur.json`), rem
-       (`rem_meluncur/loper_agen_rem.json`), dan jatuh (`jatuh/loper_agen_jatuh.json`, sejak 2026-10-17: `jatuh_normal` dan
-       `terjerembab_normal`, sel 114x68 dengan titik pijak (57, 51), jadi offset Godot (0, -17) sama dengan sheet kayuh).
-       Urutan animasi di `.tres` = urutan keenam berkas, dan di dalam tiap berkas urutan `animations`
-       (15 + 5 + 18 + 5 + 5 + 2 = 50 animasi).
+       (`rem_meluncur/loper_agen_rem.json`), jatuh (`jatuh/loper_agen_jatuh.json`: `jatuh_<arah>` dan `terjerembab_<arah>`
+       lima arah, sejak Fase 5C sel 140x88 dengan titik pijak (70, 61)), bangkit (`bangkit/loper_agen_bangkit.json`, sel 140x88,
+       titik pijak (70, 61)), dan berhenti (`berhenti/loper_agen_berhenti.json`, sel 46x58 seperti kayuh). Semua sheet punya
+       offset Godot (0, -17) yang sama dengan sheet kayuh. Urutan animasi di `.tres` = urutan kedelapan berkas, dan di dalam
+       tiap berkas urutan `animations` (15 + 5 + 18 + 5 + 5 + 10 + 5 + 5 = 68 animasi).
     2. Memeriksa JSON: nama animasi unik, tiap region ada di dalam PNG-nya (ukuran dibaca dari header PNG).
     3. Menyalin PNG dan JSON byte demi byte ke folder hasil (aset di repo tidak pernah diedit dengan tangan).
-    4. Menulis `loper_agen_frames.tres`: fps dan `loop` tiap animasi dari JSON (lempar dan `jatuh_normal` tidak berulang;
-       meluncur 4 fps, rem 8 fps, dan `terjerembab_normal` 3 fps berulang).
+    4. Menulis `loper_agen_frames.tres`: fps dan `loop` tiap animasi dari JSON (lempar, `jatuh_<arah>`, dan `bangkit_<arah>`
+       tidak berulang; meluncur 4 fps, rem 8 fps, `terjerembab_<arah>` dan `berhenti_<arah>` 3 fps berulang).
 
 Deterministik: tanpa cap waktu, urutan tetap, akhir baris `\\n`, jadi dua kali jalan menghasilkan byte yang sama.
 Jangan menulis `.tres` dengan tangan; ubah JSON sumber (lewat renderernya) lalu jalankan skrip ini.
@@ -39,6 +40,8 @@ SUMBER = [
     ('rem_meluncur/loper_agen_meluncur.json', '4_meluncur'),
     ('rem_meluncur/loper_agen_rem.json', '5_rem'),
     ('jatuh/loper_agen_jatuh.json', '6_jatuh'),
+    ('bangkit/loper_agen_bangkit.json', '7_bangkit'),
+    ('berhenti/loper_agen_berhenti.json', '8_berhenti'),
 ]
 BERKAS_HASIL = 'loper_agen_frames.tres'
 BAWAAN_SUMBER = 'docs/design/character/loper_agen'
@@ -124,8 +127,8 @@ def bangun(folder_sumber, folder_hasil, res_dir):
 
 
 def main():
-    ap = argparse.ArgumentParser(description='Bangun loper_agen_frames.tres gabungan dari enam JSON sumber.')
-    ap.add_argument('--src', default=BAWAAN_SUMBER, help='folder sumber (berisi loper_agen.json, melambat/, lempar/, rem_meluncur/, jatuh/)')
+    ap = argparse.ArgumentParser(description='Bangun loper_agen_frames.tres gabungan dari delapan JSON sumber.')
+    ap.add_argument('--src', default=BAWAAN_SUMBER, help='folder sumber (berisi loper_agen.json, melambat/, lempar/, rem_meluncur/, jatuh/, bangkit/, berhenti/)')
     ap.add_argument('--out', default=BAWAAN_HASIL, help='folder hasil (PNG, JSON, .tres)')
     ap.add_argument('--res-dir', default=BAWAAN_RES, help='folder sheet di project Godot (untuk path di .tres)')
     ap.add_argument('--cek', action='store_true', help='jangan menulis; exit 1 bila isi --out berbeda dari hasil')
