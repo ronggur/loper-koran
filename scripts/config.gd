@@ -1215,7 +1215,7 @@ const RUTE_SIMPANG_PITA_BARIS: Array[int] = [-1, 3]
 const RUTE_SETENGAH_BARIS_UBIN: float = 0.5
 ## Sel ubin simpang sisi `dekat`, pasangan (baris relatif maju, kolom: 0 aspal, 1 trotoar, 2 rumput pertama, 3 lengan = semua kolom rumput luar), urut sama dengan `simpang.sisi.dekat` di `tile_perumahan.json` dan `TanahDaur.tekstur_simpang_dekat`.
 const RUTE_SIMPANG_SEL_DEKAT: Array[int] = [3, 1, 3, 2, 3, 3, 2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 1, 1, 1, 2, 1, 3, 0, 0, 0, 1, 0, 2, 0, 3, -1, 1, -1, 2, -1, 3]
-## Sel ubin simpang sisi `seberang` (pola sama; dari JSON renderer `build/env_art/ubin/simpang/`, dijaga `tools/tests_cek/uji_aset_simpang.py`). Ubinnya belum dipasang selama data belum memakai simpang seberang (D-2).
+## Sel ubin simpang sisi `seberang` (pola sama; dari JSON renderer `build/env_art/ubin/simpang/`, dijaga `tools/tests_cek/uji_aset_simpang.py`). Ubinnya dipasang sejak putusan P-6 run 5C (simpang seberang `per_buka_02` pos 18).
 const RUTE_SIMPANG_SEL_SEBERANG: Array[int] = [3, 2, 3, 3, 2, 1, 2, 2, 2, 3, 1, 0, 1, 1, 1, 2, 1, 3, 0, 0, 0, 1, 0, 2, 0, 3, -1, 1, -1, 2, -1, 3]
 
 ## --- Dekor pinggir jalan di data segmen (run fase5b-tembok-dekor bagian B2, D-5 dan D-6; usulan, dinilai di HP) ---
