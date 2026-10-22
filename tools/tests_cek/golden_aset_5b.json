@@ -1,5 +1,5 @@
 {
- "catatan": "Golden hash (dihitung di luar kode, dari berkas sebelum run fase5b-tembok-dekor; commit d102d61). pasangan_5a: sha256 byte berkas di assets/sprites (isi pasangan 5A, kotak surat lama, rumah perumahan lama) yang TIDAK boleh berubah. lampu_pohon_lama: keluaran lampu_pohon.py TANPA argumen (sha256 piksel RGBA berawalan ukuran untuk PNG, sha256 byte untuk JSON).",
+ "catatan": "Golden hash (dihitung di luar kode, dari berkas sebelum run fase5b-tembok-dekor; commit d102d61). pasangan_5a: sha256 byte berkas di assets/sprites (isi pasangan 5A, kotak surat lama, rumah perumahan lama) yang TIDAK boleh berubah. lampu_pohon_lama: keluaran lampu_pohon.py TANPA argumen (sha256 piksel RGBA berawalan ukuran untuk PNG, sha256 byte untuk JSON). Diperbarui 2026-10-22 (fix/ci-uji-lampu-pohon): engine.py memakai mm() tanpa BLAS supaya hasil sama di semua CPU; hanya 1 piksel di layar_lampu_pohon_siang.png dan 1 piksel di prop_pohon_palem_raja.png berubah (keduanya tidak terpasang di assets/; nilai lama hasil Accelerate macOS).",
  "pasangan_5a": {
   "props/prop_koran_putar.png": "3fe54cba207dcc5d366d0e29f27a6d10b8d543c043693275cacf3e0f132d2071",
   "props/prop_koran_putar.json": "0878865e6bb915ff1841bd08a0bd1507067554fefcc3062788c6040977b9548d",
@@ -65,7 +65,7 @@
  },
  "lampu_pohon_lama": {
   "layar_lampu_pohon_malam.png": "640x360:0da201ae446cee87a7792272f57d7fa43290cdacd5a0ed86320c84410561403f",
-  "layar_lampu_pohon_siang.png": "640x360:dc777a3eff6109eda8b0739f3a00ec26eb0f8f09e3292d06c2cfe2b5eeb026cf",
+  "layar_lampu_pohon_siang.png": "640x360:d29c51ada3eed4ab3e8ecf5e25c9a779e3641204c3343d64ba08fea425896561",
   "prop_lampu_bambu_sheet.json": "3b115139367a698053fe97c44e9898e0781e65472cc812b792c41d9e4d04220f",
   "prop_lampu_bambu_sheet.png": "384x98:e45fa3eba93f8769faf867c030a4f8495e74484806c77b1c9b4f73f049b3cc06",
   "prop_lampu_ganda_sheet.json": "e9e60ecdaba8c9f991cb65cf115851e9571990d7136cff82b9e457961f047fd5",
@@ -93,7 +93,7 @@
   "prop_pohon_ketapang.json": "f642ade5ca864fa83c51d7e2ec4c4924b70a7a8def33e5d5c41d04821dd9559e",
   "prop_pohon_ketapang.png": "141x124:7d8014c09b2371566272112fb83f39ae7be78925ce11ae807d51e38ec0bd7be6",
   "prop_pohon_palem_raja.json": "b71b905bc7cd011c6c2a156ccff83cc71f0151f4bd7eeb4ca19dd226526128fc",
-  "prop_pohon_palem_raja.png": "171x158:4e361ab06ae465d1d29fc8caa6c426c181dae3b1746f606feb6900873612a3b8",
+  "prop_pohon_palem_raja.png": "171x158:737bb392ae0e19ffafc9eade7bea7049ca801cc46922ae07c276da14188a5932",
   "prop_pohon_pepaya.json": "ccabc23e34ab90404382ffc1c517f72e0c100ccd503286dd77d4314e6392cf56",
   "prop_pohon_pepaya.png": "163x134:39ecf928eb9427d9934b04f089797cad243de5398ecba9082f812dcc5590076e",
   "prop_pohon_pisang.json": "d92d50f3c0323993ae3a5688e697cb9f472e415536ba14894da9ec3a8c1d6b36",

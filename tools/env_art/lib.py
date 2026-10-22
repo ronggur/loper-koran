@@ -162,7 +162,7 @@ def roof_tex(kind='genteng', seed=1, wall=None, rust=None):
 def leafy(seed=0, scale=3.0, top_light=True):
     def tex(Pw, Nw):
         h = hash2(np.floor(Pw[:, 0] / scale + Pw[:, 2] / scale), np.floor(Pw[:, 1] / scale - Pw[:, 2] / scale), seed)
-        d = Nw @ BAKE
+        d = mm(Nw, BAKE)
         sh = np.where((h > 0.72) & (d > 0.2), -1, np.where((h < 0.25) & (d < 0.6), 1, 0))
         return 0, sh
     return tex
@@ -344,7 +344,7 @@ def angkot(s, x, y, body=None, length=44, width=22, front=None, stripe=None):
         # pintu geser terbuka di sisi kiri (penumpang naik dari trotoar)
         door = side & (lat * f < 0) & (u > -hl * 0.2) & (u < hl * 0.2) & (pz > 4) & (pz < 21)
         mi = np.where(door, 7, mi)
-        ws = (Nw @ np.array([0, f, 0.0]) > 0.3) & (Nw[:, 2] > 0.3) & (pz > 13) & (pz < zt - 1)
+        ws = (mm(Nw, np.array([0, f, 0.0])) > 0.3) & (Nw[:, 2] > 0.3) & (pz > 13) & (pz < zt - 1)
         mi = np.where(ws & (np.abs(lat) < hw - 2), 6, mi)
         sh = np.where(roof & ((np.mod(u, 6) < 0.8)), sh + 1, sh)
         return mi, sh
@@ -381,7 +381,7 @@ def bus_kecil(s, x, y, body=None, upper=None, length=74, width=24, front=None):
         u = f * (Pw[:, 1] - y)
         lat = Pw[:, 0] - x
         side = np.abs(Nw[:, 0]) > 0.7
-        frontf = (Nw @ np.array([0, f, 0.0])) > 0.5
+        frontf = mm(Nw, np.array([0, f, 0.0])) > 0.5
         upperz = (pz > 14) & (mi == 0)
         mi = np.where(upperz, 8, mi)
         win = side & (pz > 16) & (pz < 26) & (u < hl - 3) & (u > -hl + 4)
@@ -488,9 +488,9 @@ def clothes_line(s, p0, p1, items, sway=0.0, t=0.0, pole_h=None, rope=None):
             c = top + a * uo + down * (d0 + ph / 2)
             tex = None
             if kind == 'handuk':
-                tex = lambda Pw, Nw, tp=top, dn=down: (0, np.where(np.abs(((Pw - tp) @ dn) - 2.2) < 0.8, -1, 0))
+                tex = lambda Pw, Nw, tp=top, dn=down: (0, np.where(np.abs(mm(Pw - tp, dn) - 2.2) < 0.8, -1, 0))
             elif kind == 'sarung':
-                tex = lambda Pw, Nw, tp=top, dn=down, ax_=a: (0, np.where((np.mod((Pw - tp) @ ax_, 4) < 1) | (np.mod((Pw - tp) @ dn, 4) < 1), 1, 0))
+                tex = lambda Pw, Nw, tp=top, dn=down, ax_=a: (0, np.where((np.mod(mm(Pw - tp, ax_), 4) < 1) | (np.mod(mm(Pw - tp, dn), 4) < 1), 1, 0))
             s.add(obox(c, a, np.cross(a, down), down, pw / 2, 0.6, ph / 2, mat, tex, cast=True, part=pid))
             pid = s.prims[-1].part
     s.ropes = getattr(s, 'ropes', [])
@@ -605,7 +605,7 @@ def _leaf_tex(seed, scale=2.2):
     def tex(Pw, Nw):
         cell = np.floor(Pw / scale)
         h = hash2(cell[:, 0] + cell[:, 2] * 7, cell[:, 1] - cell[:, 2] * 3, seed)
-        d = Nw @ BAKE
+        d = mm(Nw, BAKE)
         # gumpalan daun: titik terang di sisi kena cahaya, titik gelap di sisi bayangan
         sh = np.where((h > 0.7) & (d > 0.35), -1, np.where((h < 0.28) & (d < 0.75), 1, 0))
         return 0, sh

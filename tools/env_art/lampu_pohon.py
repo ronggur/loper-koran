@@ -90,7 +90,7 @@ def xform_into(s, tmp, A, t):
         p.lo, p.hi = w.min(0), w.max(0)
         if p.tex is not None:
             f = p.tex
-            p.tex = (lambda Pw, Nw, f=f: f((Pw - t) @ A, Nw @ A))
+            p.tex = (lambda Pw, Nw, f=f: f(mm(Pw - t, A), mm(Nw, A)))
         s.prims.append(p)
 
 
@@ -301,7 +301,7 @@ def pohon_flamboyan(s, x, y, seed=0):
     def tex(Pw, Nw):
         cell = np.floor(Pw / 1.6)
         h = hash2(cell[:, 0] + cell[:, 2] * 7, cell[:, 1] - cell[:, 2] * 3, seed + 41)
-        d = Nw @ BAKE
+        d = mm(Nw, BAKE)
         bunga = (h > 0.74) & (Nw[:, 2] > 0.35)
         sh = np.where((h < 0.2) & (d < 0.7), 1, np.where((h > 0.5) & (d > 0.4), -1, 0))
         return np.where(bunga, 1, 0), np.where(bunga, np.clip(sh, -1, 0), sh)
@@ -321,7 +321,7 @@ def pohon_pucuk_merah(s, x, y, seed=0):
         cell = np.floor(Pw / 1.5)
         h = hash2(cell[:, 0] + cell[:, 2] * 5, cell[:, 1] - cell[:, 2] * 3, seed + 9)
         merah = ((Pw[:, 2] > 30) & (h > 0.35)) | ((Pw[:, 2] > 20) & (h > 0.8) & (Nw[:, 2] > 0.3))
-        d = Nw @ BAKE
+        d = mm(Nw, BAKE)
         sh = np.where((h < 0.22) & (d < 0.7), 1, np.where((h > 0.82) & (d > 0.3), -1, 0))
         return np.where(merah, 1, 0), sh
     blobs = [((x, y, 11), (8.0, 8.0, 7.0)), ((x, y, 20), (8.4, 8.4, 7.5)), ((x, y, 29), (6.8, 6.8, 6.2)),

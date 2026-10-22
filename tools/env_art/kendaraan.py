@@ -91,7 +91,7 @@ def xform_into(s, tmp, A, t, k=1.0):
         p.lo, p.hi = w.min(0), w.max(0)
         if p.tex is not None:
             f = p.tex
-            p.tex = (lambda Pw, Nw, f=f: f(((Pw - t) @ A) / k, Nw @ A))
+            p.tex = (lambda Pw, Nw, f=f: f(mm(Pw - t, A) / k, mm(Nw, A)))
         s.prims.append(p)
 
 

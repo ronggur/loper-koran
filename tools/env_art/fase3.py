@@ -69,7 +69,7 @@ def rot90_into(s, tmp, t):
         p.lo, p.hi = w.min(0), w.max(0)
         if p.tex is not None:
             f = p.tex
-            p.tex = (lambda Pw, Nw, f=f: f((Pw - t) @ A, Nw @ A))
+            p.tex = (lambda Pw, Nw, f=f: f(mm(Pw - t, A), mm(Nw, A)))
         s.prims.append(p)
 
 
@@ -501,7 +501,7 @@ def _antena_isi(s, kind, x, y, z0, z1, seed):
         if big:
             def mesh(Pw, Nw, c=c, u=u, v=v):
                 q = Pw - c
-                a_ = np.floor((q @ u) / 1.6); b_ = np.floor((q @ v) / 1.6)
+                a_ = np.floor(mm(q, u) / 1.6); b_ = np.floor(mm(q, v) / 1.6)
                 return np.where((np.mod(a_, 2) == 0) | (np.mod(b_, 2) == 0), 0, 1), 0
             s.add(ellip(c, (r, r, 1.4), [ANT_JARING, Mat('#9A96A2', '#6E6A76', '#4E4A56')], mesh, R=R, part=pid))
         else:
@@ -516,7 +516,7 @@ def _antena_isi(s, kind, x, y, z0, z1, seed):
         fn = nrm(d * 0.5 + side)                      # setengah menghadap pemancar, cukup terbaca dari kamera
         fu = nrm(np.cross(up, fn))
         c = np.array([x, y, z1 - 2]) + fn * 1.2
-        grid = lambda Pw, Nw, c=c, fu=fu, fn=fn: (np.where((np.mod(np.floor((Pw - c) @ fu / 1.5), 2) == 0) & (np.abs(Nw @ fn) > 0.6), 1, 0), 0)
+        grid = lambda Pw, Nw, c=c, fu=fu, fn=fn: (np.where((np.mod(np.floor(mm(Pw - c, fu) / 1.5), 2) == 0) & (np.abs(mm(Nw, fn)) > 0.6), 1, 0), 0)
         s.add(obox(c, fu, fn, up, 4.5, 0.6, 5.5, [ANT_PANEL, ANT_ALU], grid, part=pid))
         s.add(obox(np.array([x, y, z1 - 12]) - fn * 1.2, fu, fn, up, 1.4, 1.0, 1.8, ANT_PUTIH, part=pid))  # booster
 
