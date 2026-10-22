@@ -187,6 +187,9 @@ func _initialize() -> void:
 	# Run 20261022-fase5c-animasi-simpang bagian B: pose kucing ditangkap (PoseKucing, JSON = konstanta, scene).
 	var kucing_ditangkap: TesKucingDitangkap = TesKucingDitangkap.new(check, _judul, self)
 	await kucing_ditangkap.jalankan()
+	# Run 20261022-fase5c-animasi-simpang bagian D: simpang T hiasan (validasi, rute identik, ubin, piksel, gerak dan zona tidak berubah).
+	var simpang: TesSimpang = TesSimpang.new(check, _judul, self)
+	await simpang.jalankan()
 	# Run fase6a1-bengkel-kondisi bagian B: kondisi sepeda di scene rute, HUD kondisi, peringatan berpasangan, layar hasil, layar bengkel, dan alur Hasil -> Bengkel -> Hari berikutnya.
 	var scene_kondisi: TesKondisiScene = TesKondisiScene.new(check, _judul, self)
 	await scene_kondisi.jalankan()
