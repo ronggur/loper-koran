@@ -11,10 +11,32 @@ import numpy as np
 from PIL import Image
 
 OUT = np.array([14, 10, 28], np.float32)
-BAKE = np.array([-0.6, 0.8, 1.4]); BAKE /= np.linalg.norm(BAKE)
+BAKE = np.array([-0.6, 0.8, 1.4])            # dinormalkan sesudah panjang() di bawah
 T_LIGHT, T_DARK = 0.78, -0.12
 VIEW = -np.array([1.0, 1.0, 1.0]) / math.sqrt(3)
 FAR = 3000.0
+
+
+def mm(a, b):
+    """Perkalian matriks seperti `a @ b` untuk vektor 3D, tanpa BLAS: hasil sama bit demi bit di semua CPU.
+
+    `@` numpy memanggil BLAS (OpenBLAS di Linux, Accelerate di macOS) yang memilih kernel per CPU (AVX2, AVX-512, FMA),
+    sehingga bit terakhir hasil kali titik bisa beda antar mesin dan piksel di tepi bentuk ikut berubah. Di sini perkalian
+    dan penjumlahan memakai ufunc biasa (IEEE, tanpa FMA) dengan urutan tetap ((x0 + x1) + x2).
+    """
+    a = np.asarray(a, float)
+    b = np.asarray(b, float)
+    if b.ndim == 1:
+        return (a * b).sum(-1)
+    return (a[..., :, None] * b).sum(-2)
+
+
+def panjang(v):
+    """Panjang vektor seperti `np.linalg.norm(v)` (yang juga memanggil BLAS), tanpa BLAS."""
+    return np.sqrt(mm(v, v))
+
+
+BAKE /= panjang(BAKE)
 
 
 def hexc(h):
@@ -37,7 +59,7 @@ def flat(c, glow=None):
 
 def nrm(v):
     v = np.asarray(v, float)
-    return v / np.linalg.norm(v)
+    return v / panjang(v)
 
 
 class Prim:
@@ -45,7 +67,7 @@ class Prim:
 
     def __init__(s, planes=(), quad=None, mats=None, tex=None, part=None, outline=True,
                  cast=True, aabb=None, tag=''):
-        s.planes = [(nrm(n), float(d) / np.linalg.norm(n)) for n, d in planes]
+        s.planes = [(nrm(n), float(d) / panjang(n)) for n, d in planes]
         s.quad = quad
         s.mats = mats if isinstance(mats, (list, tuple)) else [mats]
         s.tex = tex
@@ -66,8 +88,8 @@ class Prim:
         nidx = np.full(n, -1)          # -1 = quadric normal, else plane index
         ok = np.ones(n, bool)
         for j, (pn, pd) in enumerate(s.planes):
-            no = O @ pn
-            nd = float(pn @ D)
+            no = mm(O, pn)
+            nd = float(mm(pn, D))
             if nd > 1e-9:
                 tx = np.minimum(tx, (pd - no) / nd)
             elif nd < -1e-9:
@@ -82,18 +104,18 @@ class Prim:
             kind = s.quad[0]
             if kind == 'ellip':
                 _, c, R, r = s.quad  # R: 3x3 rows = local axes
-                Ol = ((O - c) @ R.T) / r
-                Dl = (R @ D) / r
-                a = Dl @ Dl
-                b = 2 * Ol @ Dl
+                Ol = mm(O - c, R.T) / r
+                Dl = mm(R, D) / r
+                a = mm(Dl, Dl)
+                b = mm(2 * Ol, Dl)
                 cc = (Ol * Ol).sum(1) - 1
             else:  # cyl: axis index, centre (2,), radius
                 _, ax, c2, r = s.quad
                 o = [i for i in range(3) if i != ax]
                 Ol = (O[:, o] - c2) / r
                 Dl = D[o] / r
-                a = Dl @ Dl
-                b = 2 * Ol @ Dl
+                a = mm(Dl, Dl)
+                b = mm(2 * Ol, Dl)
                 cc = (Ol * Ol).sum(1) - 1
             if a < 1e-12:
                 ok &= cc <= 0
@@ -119,9 +141,9 @@ class Prim:
         if m.any() and s.quad is not None:
             if s.quad[0] == 'ellip':
                 _, c, R, r = s.quad
-                Pl = ((P[m] - c) @ R.T) / r
+                Pl = mm(P[m] - c, R.T) / r
                 Nl = Pl / r
-                Nw = Nl @ R
+                Nw = mm(Nl, R)
             else:
                 _, ax, c2, r = s.quad
                 o = [i for i in range(3) if i != ax]
@@ -144,8 +166,8 @@ def obox(c, u, v, w, hu, hv, hw, mats, tex=None, **kw):
     u, v, w = nrm(u), nrm(v), nrm(w)
     pl = []
     for ax, h in ((u, hu), (v, hv), (w, hw)):
-        pl.append((ax, ax @ c + h))
-        pl.append((-ax, -(ax @ c) + h))
+        pl.append((ax, mm(ax, c) + h))
+        pl.append((-ax, -mm(ax, c) + h))
     ext = np.abs(u) * hu + np.abs(v) * hv + np.abs(w) * hw
     return Prim(pl, None, mats, tex, aabb=(c - ext, c + ext), **kw)
 
@@ -201,7 +223,7 @@ def ellip(c, r, mats, tex=None, R=None, zmin=None, **kw):
     r = np.asarray(r if np.ndim(r) else (r, r, r), float)
     R = np.eye(3) if R is None else np.asarray(R, float)
     pl = [] if zmin is None else [((0, 0, -1), -zmin)]
-    ext = np.abs(R.T) @ r
+    ext = mm(np.abs(R.T), r)
     lo = c - ext
     if zmin is not None:
         lo[2] = max(lo[2], zmin)
@@ -269,7 +291,7 @@ class TimeCfg:
 
     def sun_dir(s):
         # azimuth of the baked light (from screen left), elevation varies with time
-        az = np.array([-0.6, 0.8, 0.0]); az /= np.linalg.norm(az)
+        az = np.array([-0.6, 0.8, 0.0]); az /= panjang(az)
         e = math.radians(s.elev)
         return np.array([az[0] * math.cos(e), az[1] * math.cos(e), math.sin(e)])
 
@@ -346,7 +368,7 @@ class Scene:
             m = np.where(pbest == i)[0]
             Ni = p.normal(P[m], nbest[m])
             N[m] = Ni
-            dd = Ni @ BAKE
+            dd = mm(Ni, BAKE)
             tone = np.where(dd > T_LIGHT, 0, np.where(dd < T_DARK, 2, 1))
             if p.tex is not None:
                 mi, sh = p.tex(P[m], Ni)
@@ -370,7 +392,7 @@ class Scene:
 
         # ---- dynamic light ----
         Ls = tcfg.sun_dir()
-        lit = (N @ Ls) > 0.04
+        lit = mm(N, Ls) > 0.04
         shadow = np.zeros(n, bool)
         cand = np.where(hitm & lit)[0]
         Os = P[cand] + N[cand] * 0.6 + Ls * 0.4
@@ -595,7 +617,7 @@ def shift_prims(prims, dx, dy=0.0):
     """Move primitives by (dx, dy, 0) in world space; textures keep their local look."""
     d = np.array([dx, dy, 0.0])
     for p in prims:
-        p.planes = [(n, dd + float(n @ d)) for n, dd in p.planes]
+        p.planes = [(n, dd + float(mm(n, d))) for n, dd in p.planes]
         if p.quad is not None:
             if p.quad[0] == 'ellip':
                 _, c, R, r = p.quad

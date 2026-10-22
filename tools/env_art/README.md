@@ -14,6 +14,8 @@ python3 districts.py                               # enam vinyet distrik, atau s
 python3 details.py                                 # loop jemuran, ayam, asap warung + strip frame
 ```
 
+**Sama di semua mesin:** hasil kali titik dan panjang vektor (tabrakan sinar, normal, tekstur, penyusunan bentuk) memakai `mm()` dan `panjang()` di `engine.py`, bukan operator `@` atau `np.linalg.norm` numpy. Keduanya memanggil BLAS (Accelerate di macOS, OpenBLAS di Linux) yang memilih kernel menurut CPU (AVX2, AVX-512, FMA), sehingga bit terakhir hasil bisa beda dan piksel di tepi bentuk ikut berubah; uji golden di CI Linux pernah gagal karena itu. Kode render baru memakai `mm(a, b)` dan `panjang(v)` juga.
+
 Ubin dan kotak graybox untuk project Godot (Fase 0) dibuat oleh `graybox.py`, yang hanya memakai pustaka standar Python (tanpa numpy dan pillow) dan menulis langsung ke `assets/sprites/_placeholder/`:
 
 ```

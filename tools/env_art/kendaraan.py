@@ -51,7 +51,7 @@ def geser(prims, v):
     """Geser primitif lokal sebesar v (3,)."""
     v = np.asarray(v, float)
     for p in prims:
-        p.planes = [(n, d + float(n @ v)) for n, d in p.planes]
+        p.planes = [(n, d + float(mm(n, v))) for n, d in p.planes]
         if p.quad is not None:
             if p.quad[0] == 'ellip':
                 _, c, R, r = p.quad
@@ -71,27 +71,27 @@ def xform_into(s, tmp, A, t, k=1.0):
     Silinder harus tetap sejajar sumbu."""
     t = np.asarray(t, float)
     for p in tmp.prims:
-        p.planes = [(A @ n, k * d + float((A @ n) @ t)) for n, d in p.planes]
+        p.planes = [(mm(A, n), k * d + float(mm(mm(A, n), t))) for n, d in p.planes]
         if p.quad is not None:
             if p.quad[0] == 'ellip':
                 _, c, R, r = p.quad
-                p.quad = ('ellip', k * (A @ c) + t, R @ A.T, np.asarray(r, float) * k)
+                p.quad = ('ellip', k * mm(A, c) + t, mm(R, A.T), np.asarray(r, float) * k)
             else:
                 _, ax, c2, r = p.quad
                 e = np.zeros(3); e[ax] = 1
                 c3 = np.zeros(3); o = [i for i in range(3) if i != ax]; c3[o] = c2
-                ne = A @ e
+                ne = mm(A, e)
                 nax = int(np.argmax(np.abs(ne)))
                 assert abs(abs(ne[nax]) - 1) < 1e-6, 'silinder harus sejajar sumbu'
-                w = k * (A @ c3) + t
+                w = k * mm(A, c3) + t
                 no = [i for i in range(3) if i != nax]
                 p.quad = ('cyl', nax, w[no], r * k)
         cs = np.array([[x, y, z] for x in (p.lo[0], p.hi[0]) for y in (p.lo[1], p.hi[1]) for z in (p.lo[2], p.hi[2])])
-        w = k * (cs @ A.T) + t
+        w = k * mm(cs, A.T) + t
         p.lo, p.hi = w.min(0), w.max(0)
         if p.tex is not None:
             f = p.tex
-            p.tex = (lambda Pw, Nw, f=f: f(((Pw - t) @ A) / k, Nw @ A))
+            p.tex = (lambda Pw, Nw, f=f: f(mm(Pw - t, A) / k, mm(Nw, A)))
         s.prims.append(p)
 
 
@@ -99,12 +99,12 @@ def _limb(s, a, b, r, mat, part):
     a, b = np.asarray(a, float), np.asarray(b, float)
     c = (a + b) / 2
     w = b - a
-    L = np.linalg.norm(w)
+    L = panjang(w)
     w = w / L
     u = np.cross(w, [0, 0, 1.0])
-    if np.linalg.norm(u) < 1e-6:
+    if panjang(u) < 1e-6:
         u = np.array([1.0, 0, 0])
-    u = u / np.linalg.norm(u)
+    u = u / panjang(u)
     v = np.cross(w, u)
     s.add(obox(c, u, v, w, r, r, L / 2, mat, None, part=part))
 
@@ -113,12 +113,12 @@ def _ellip_along(s, a, b, rr, mat, part, tex=None):
     """Elipsoid memanjang dari a ke b, jari-jari lintang rr (lateral, tinggi)."""
     a, b = np.asarray(a, float), np.asarray(b, float)
     w = b - a
-    L = np.linalg.norm(w)
+    L = panjang(w)
     w = w / L
     u = np.cross([0, 0, 1.0], w)
-    if np.linalg.norm(u) < 1e-6:
+    if panjang(u) < 1e-6:
         u = np.array([1.0, 0, 0])
-    u = u / np.linalg.norm(u)
+    u = u / panjang(u)
     v = np.cross(w, u)
     s.add(ellip((a + b) / 2, (rr[0], rr[1], L / 2), mat, tex, R=np.stack([u, v, w]), part=part))
 
@@ -444,7 +444,7 @@ def motor_v(s, kind, x, y, arah='searah', jalan=False, dz=0.0, body=None, jaket=
             geser(tmp.prims[nr:], (0, 0, dz))
         A = rz(HEAD[arah])
     else:
-        A = rz(HEAD[arah]) @ ry(9.0)
+        A = mm(rz(HEAD[arah]), ry(9.0))
         geser(tmp.prims, (0, 0, -0.25))
     xform_into(s, tmp, A, (x, y, 0), SKALA_MOTOR)
 
