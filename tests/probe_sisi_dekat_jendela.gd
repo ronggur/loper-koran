@@ -161,7 +161,7 @@ func _rumah_dekat_varian(varian: String) -> RouteBuilder.RumahRute:
 	return null
 
 
-## Rute buatan spike (pelanggan sisi dekat) menggantikan rute nyata di scene yang sama: medan, daur rumah, dan area kotak ikut diganti; kotak surat sasaran dekat
+## Rute buatan spike (pelanggan sisi dekat) menggantikan rute nyata di scene yang sama: medan dan daur rumah ikut diganti; kotak surat sasaran dekat
 ## digambar probe di pusat zona (rumah dekat nyata memang tanpa kotak surat).
 func _pasang_rute_buatan() -> void:
 	var rute: RouteBuilder.Rute = SpikeSisiDekat.susun_rute()
@@ -169,7 +169,6 @@ func _pasang_rute_buatan() -> void:
 	_akar.set("_medan", MedanKoran.dari_rute(rute))
 	_akar.daur().atur_rute(rute)
 	(_akar.find_child("Tanah", true, false) as TanahDaur).atur_baris_masuk(UbinKhusus.himpunan_baris_masuk(rute.objek))
-	(_akar.find_child("AreaKotak", true, false) as AreaKotakGambar).atur_rute(rute)
 	var objek: Node2D = _akar.find_child("Objek", true, false) as Node2D
 	for r: RouteBuilder.RumahRute in rute.rumah:
 		if r.sisi != LoperAnim.Sisi.DEKAT or not r.pelanggan:

@@ -1,12 +1,14 @@
 class_name KucingMisi
 extends Node2D
 ## Kucing misi P1 di rute (AC-12 run fase4b-misi-kucing, usulan): sprite `mission_kucing_sheet` (belang tiga berkalung, hasil `tools/env_art/kendaraan.py --salin`,
-## baris "masuk" menghadap rumah seberang, pose duduk; pose intip/ditangkap khusus ada di Fase 5, M-10) dan hiasan dari kode (`KucingHiasan`: kilau, ekor,
+## baris "masuk" menghadap rumah seberang, pose duduk dan ditangkap (run 5C); pose intip khusus ada di Fase 5, M-10) dan hiasan dari kode (`KucingHiasan`: kilau, ekor,
 ## bar progres tangkap). Node tipis: keputusan tampil dan posisi dari `MissionManager` dan `RencanaMisi`; di sini hanya memasang. Anak induk Y-sort rumah
 ## (`RumahDaurRute`, `y_sort_enabled`), jadi urutan gambar mengikuti titik pijak seperti rumah dan sepeda. Hanya tampil selama titiknya aktif di
 ## `MissionManager` dan dalam jendela daur rumah (`RUTE_DAUR_MUNDUR_UBIN`/`RUTE_DAUR_MAJU_UBIN`), jadi tidak bocor di luar jendela. Alfa penutup pemain diurus
 ## SATU `PenerapPenutup` (kotak kecil `RencanaMisi.persegi_kucing` setinggi `MISI_KUCING_TINGGI_UBIN`). Tidak menambah rintangan dan tidak menghalangi
 ## tabrakan, skor, atau sasaran: tanpa zona, tanpa tabrakan.
+## Pose (run 20261022-fase5c-animasi-simpang, AC-9, usulan): frame badan dari `PoseKucing.frame` tiap `tampilkan`: duduk, atau ditangkap (kolom 7/8, dua frame dari
+## waktu animasi misi) selama langkah `tangkap` dengan progres > 0. Titik pijak, offset, kotak penutup, dan hiasan tidak bergantung pada pose.
 
 ## Penerap penutup pemain (diisi scene rute).
 var penerap: PenerapPenutup = null
@@ -48,6 +50,7 @@ func tampilkan(titik: RencanaMisi.Titik, jarak_ubin: float, detik: float, progre
 	_titik = titik
 	_detik = detik
 	position = posisi_gambar(titik)
+	_badan.frame = PoseKucing.frame(titik.jenis, progres, detik)
 	visible = true
 	_hiasan.atur(kilau, ekor, progres, detik)
 	if penerap != null:

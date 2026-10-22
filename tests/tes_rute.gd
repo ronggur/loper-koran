@@ -80,7 +80,6 @@ func jalankan() -> void:
 	_test_data_ikut_paket()
 	_test_zona_rumah_literal()
 	_test_kotak_surat_area()
-	_test_area_kotak_gambar()
 	_test_zona_rute_dan_penilaian()
 	_test_bantu_di_zona_rute()
 	_test_penutup_literal()
@@ -489,7 +488,8 @@ func _test_berkas_nyata_oracle_mentah() -> void:
 			var titik: Dictionary = t
 			var pos: int = int(titik["pos"])
 			check(pos_rumah.has(pos) and pos_rumah[pos] == titik["sisi"], "%s: titik misi '%s' pos %d berdiri di rumah sisi yang sama" % [id, titik["nama"], pos])
-	check(total_rumah == 109, "total rumah di 9 segmen = 109 (73 seberang: 7+8+9+8+10+9+9+6+7, 36 dekat: 3+4+5+4+6+5+4+2+3): %d" % total_rumah)
+	# Run 5C putusan P-6: rumah seberang per_buka_02@18 dihapus untuk simpang seberang (109 -> 108; dihitung skrip dev_ukur/banding_p6.gd).
+	check(total_rumah == 108, "total rumah di 9 segmen = 108 (72 seberang: 7+7+9+8+10+9+9+6+7, 36 dekat: 3+4+5+4+6+5+4+2+3): %d" % total_rumah)
 	check(total_objek == 11, "total rintangan di 9 segmen = 11 (1 + 2 + 2 + 3 + 3): %d" % total_objek)
 	check(total_boleh == 3 + 3 + 5 + 5 + 6 + 5 + 5 + 2 + 3, "total rumah pelanggan_boleh = 37: %d" % total_boleh)
 
@@ -1110,73 +1110,6 @@ func _rumah_uji(id: String, maju: float, sisi: LoperAnim.Sisi, pelanggan: bool) 
 	r.pelanggan = pelanggan
 	r.pelanggan_boleh = pelanggan
 	return r
-
-
-## Kotak pembatas (piksel game) isi satu perintah gambar: [x_min, x_maks, y_min, y_maks], maks eksklusif.
-func _kotak_perintah(perintah: Array) -> Rect2i:
-	var daftar: Array[Vector3i] = perintah[0]
-	var x_min: int = 1000000
-	var x_maks: int = -1000000
-	var y_min: int = 1000000
-	var y_maks: int = -1000000
-	for r: Vector3i in daftar:
-		x_min = mini(x_min, r.y)
-		x_maks = maxi(x_maks, r.z)
-		y_min = mini(y_min, r.x)
-		y_maks = maxi(y_maks, r.x + 1)
-	return Rect2i(x_min, y_min, x_maks - x_min, y_maks - y_min)
-
-
-func _test_area_kotak_gambar() -> void:
-	_judul.call("Penggambar area kotak surat: satu area per rumah pelanggan seberang, nol untuk bukan pelanggan dan sisi dekat (tune pemilik 2026-10-16)")
-	var pelanggan: RouteBuilder.RumahRute = _rumah_uji("a@50", 50.0, LoperAnim.Sisi.SEBERANG, true)
-	var bukan: RouteBuilder.RumahRute = _rumah_uji("a@54", 54.0, LoperAnim.Sisi.SEBERANG, false)
-	var dekat: RouteBuilder.RumahRute = _rumah_uji("a@58", 58.0, LoperAnim.Sisi.DEKAT, true)
-	var tanpa_sisi: RouteBuilder.RumahRute = _rumah_uji("a@62", 62.0, LoperAnim.Sisi.TIDAK_ADA, true)
-	var perintah: Array = AreaKotakGambar.perintah_rumah(pelanggan)
-	check(perintah.size() == 2, "rumah pelanggan seberang: dua perintah (isi lalu garis tepi), dapat %d" % perintah.size())
-	check(AreaKotakGambar.perintah_rumah(bukan).is_empty(), "rumah seberang bukan pelanggan: tidak ada area")
-	check(AreaKotakGambar.perintah_rumah(dekat).is_empty(), "rumah dekat (pelanggan sekalipun): tidak ada area")
-	check(AreaKotakGambar.perintah_rumah(tanpa_sisi).is_empty(), "rumah tanpa sisi: tidak ada area")
-	if perintah.size() == 2:
-		var isi: Rect2i = _kotak_perintah(perintah[0])
-		# Area 1,0 x 1,25 di halaman: lateral -2,75 sampai -1,75, maju 51,25 sampai 52,5. Layar (iso 2:1, ditulis ulang): x = (lateral + maju) x 32,
-		# y = (lateral - maju) x 16. x: (51,25 - 2,75) x 32 = 1552 sampai (52,5 - 1,75) x 32 = 1624; y: (-2,75 - 52,5) x 16 = -884
-		# sampai (-1,75 - 51,25) x 16 = -848.
-		check(absi(isi.position.x - 1552) <= 1 and absi(isi.end.x - 1624) <= 1, "isi: lebar layar 1552 sampai 1624 (72 px = 2,25 ubin iso), dapat %d sampai %d" % [isi.position.x, isi.end.x])
-		check(absi(isi.position.y - (-884)) <= 1 and absi(isi.end.y - (-848)) <= 1, "isi: tinggi layar -884 sampai -848 (36 px), dapat %d sampai %d" % [isi.position.y, isi.end.y])
-		var tepi: Rect2i = _kotak_perintah(perintah[1])
-		check(tepi == isi, "garis tepi membatasi kotak yang sama dengan isi (%s, %s)" % [tepi, isi])
-		var isi_rentang: Array[Vector3i] = perintah[0][0]
-		var tepi_rentang: Array[Vector3i] = perintah[1][0]
-		var luas_isi: int = 0
-		for r: Vector3i in isi_rentang:
-			luas_isi += r.z - r.y
-		var luas_tepi: int = 0
-		for r: Vector3i in tepi_rentang:
-			luas_tepi += r.z - r.y
-		check(luas_tepi > 0 and luas_tepi < luas_isi, "garis tepi ada dan lebih sedikit piksel dari isi (tepi %d, isi %d)" % [luas_tepi, luas_isi])
-		# Luas belah ketupat 1,0 x 1,25 ubin x 1024 px = 1280.
-		check(absf(float(luas_isi) - 1280.0) <= 1280.0 * 0.05 + 4.0, "isi sekitar 1280 piksel (luas belah ketupat 1,0 x 1,25), dapat %d" % luas_isi)
-		var warna_isi: Color = perintah[0][2]
-		var warna_tepi: Color = perintah[1][2]
-		check(Color(warna_isi, 1.0) == Palette.ACCENT and Color(warna_tepi, 1.0) == Palette.OUTLINE, "warna dari token Palette: isi ACCENT, garis tepi OUTLINE")
-		check(warna_isi.a > 0.0 and warna_isi.a < warna_tepi.a and warna_tepi.a <= 1.0, "isi tipis (alfa %.2f > 0) dan garis tepi lebih tegas (alfa %.2f)" % [warna_isi.a, warna_tepi.a])
-		check(perintah[0][1] == Vector2.ZERO and perintah[1][1] == Vector2.ZERO, "perintah tanpa geseran (koordinat dunia mutlak)")
-	# QA-010 (QA tindak lanjut zona kotak surat): nilai mutlak alfa dijaga, bukan hanya urutannya. Isi tipis tapi terlihat (tanah di bawahnya
-	# tetap terbaca), garis tepi tegas. Pita lebar supaya penyetelan di HP tetap bebas; di luar pita area tak terlihat atau menutup tanah.
-	check(Config.AREA_KOTAK_ISI_ALPHA >= 0.15 and Config.AREA_KOTAK_ISI_ALPHA <= 0.5, "alfa isi area kotak surat di pita 0,15 sampai 0,5 (tipis tapi terlihat), dapat %.2f" % Config.AREA_KOTAK_ISI_ALPHA)
-	check(Config.AREA_KOTAK_TEPI_ALPHA >= 0.7 and Config.AREA_KOTAK_TEPI_ALPHA <= 1.0, "alfa garis tepi area kotak surat di pita 0,7 sampai 1,0 (tegas), dapat %.2f" % Config.AREA_KOTAK_TEPI_ALPHA)
-	# Rentang: hanya rumah yang indeksnya di rentang dan pelanggan seberang menghasilkan area, dua perintah per area, urut.
-	var daftar: Array[RouteBuilder.RumahRute] = [pelanggan, bukan, dekat, tanpa_sisi, _rumah_uji("a@66", 66.0, LoperAnim.Sisi.SEBERANG, true)]
-	check(AreaKotakGambar.perintah_rentang(daftar, Vector2i(0, 5)).size() == 4, "rentang semua: 2 rumah pelanggan seberang = 4 perintah")
-	check(AreaKotakGambar.perintah_rentang(daftar, Vector2i(1, 4)).is_empty(), "rentang bukan pelanggan, dekat, dan tanpa sisi = kosong")
-	check(AreaKotakGambar.perintah_rentang(daftar, Vector2i(4, 5)).size() == 2 and AreaKotakGambar.perintah_rentang(daftar, Vector2i(0, 1)).size() == 2, "rentang satu rumah pelanggan = dua perintah")
-	check(AreaKotakGambar.perintah_rentang(daftar, Vector2i(3, 3)).is_empty() and AreaKotakGambar.perintah_rentang(daftar, Vector2i(-2, 99)).size() == 4, "rentang kosong = kosong; rentang melewati ujung dipotong ke daftar")
-	# Rumah kedua menggeser area tepat 16 ubin maju: x +512 px, y -256 px (pola sama, geser iso).
-	var kedua: Rect2i = _kotak_perintah(AreaKotakGambar.perintah_rentang(daftar, Vector2i(4, 5))[0])
-	var pertama: Rect2i = _kotak_perintah(AreaKotakGambar.perintah_rentang(daftar, Vector2i(0, 1))[0])
-	check(absi(kedua.position.x - pertama.position.x - 512) <= 1 and absi(kedua.position.y - pertama.position.y + 256) <= 1, "rumah di awal 66 = rumah di awal 50 digeser 16 ubin maju (x +512, y -256), dapat %s dan %s" % [kedua.position, pertama.position])
 
 
 func _test_zona_rute_dan_penilaian() -> void:

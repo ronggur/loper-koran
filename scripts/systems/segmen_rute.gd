@@ -20,6 +20,10 @@ extends RefCounted
 ## - dekor (bidang `dekor` OPSIONAL, run fase5b-tembok-dekor bagian B2, AC-9): tiap butir `{jenis, pos, sisi, varian}` semuanya wajib dan tanpa field lain, jenis dan varian
 ##   dari `DekorRute`, `pos` bilangan bulat `RUTE_DEKOR_TEPI_UBIN` sampai `panjang - RUTE_DEKOR_TEPI_UBIN`, tapak kaki di luar lajur sepeda, tidak menimpa zona teras atau
 ##   kotak surat rumah mana pun, tapak rumah, atau tapak rintangan diam, dan dua dekor sesisi paling dekat `RUTE_DEKOR_JARAK_MIN_UBIN` ubin. Berkas tanpa `dekor` tetap sah.
+## - simpang T hiasan (bidang `simpang` OPSIONAL, run fase5c-animasi-simpang, P-1, D-3, AC-15): tiap butir `{pos, sisi}` keduanya wajib dan tanpa field lain, `sisi` `seberang` atau `dekat`,
+##   `pos` bilangan bulat (baris `mulut_2`; `pita_maju`). Pita mulut + sudut (`RUTE_SIMPANG_PITA_BARIS`) harus di dalam segmen dan, di sisi simpang, tidak memotong kavling rumah (tapak dan
+##   tembok), zona rumah (kotak surat, halaman, teras, jendela), tapak dekor, bentuk diam rintangan (anjing diam, seluruh lintasan mobil), atau baris jalan masuk garasi beserta ujung kerbnya;
+##   pita dua simpang (sisi mana pun) tidak boleh bertumpuk. Tepi yang hanya bersentuhan boleh. Simpang hanya hiasan: tanpa lalu lintas, rintangan, atau sasaran. Berkas tanpa `simpang` tetap sah.
 
 ## Tingkat keramaian segmen (tag `tingkat`).
 enum Tingkat { TENANG, SEDANG, PADAT }
@@ -45,12 +49,13 @@ const JENIS_OBJEK: Array[String] = ["anjing_penjaga", "mobil_garasi"]
 ## Distrik yang pelanggannya hanya di sisi `seberang` (GDD 9.1, ROADMAP 5: rumah sisi dekat belum diputuskan).
 const DISTRIK_SATU_SISI: Array[String] = ["perumahan"]
 
-const _FIELD_SEGMEN: Array[String] = ["id", "distrik", "panjang", "tag", "rumah", "objek", "titik_misi", "dekor"]
+const _FIELD_SEGMEN: Array[String] = ["id", "distrik", "panjang", "tag", "rumah", "objek", "titik_misi", "dekor", "simpang"]
 const _FIELD_TAG: Array[String] = ["tingkat", "sisi_pelanggan", "posisi"]
 const _FIELD_RUMAH: Array[String] = ["pos", "sisi", "jenis", "pelanggan_boleh"]
 const _FIELD_OBJEK: Array[String] = ["jenis", "pos", "jalur", "tanda_ubin"]
 const _FIELD_TITIK: Array[String] = ["nama", "pos", "sisi"]
 const _FIELD_DEKOR: Array[String] = ["jenis", "pos", "sisi", "varian"]
+const _FIELD_SIMPANG: Array[String] = ["pos", "sisi"]
 
 
 ## Satu rumah di segmen.
@@ -99,6 +104,14 @@ class Dekor extends RefCounted:
 	var varian: String = ""
 
 
+## Satu simpang T hiasan di segmen (run fase5c-animasi-simpang, P-1): jalan samping ke satu sisi, tanpa lalu lintas.
+class Simpang extends RefCounted:
+	## Ubin dari awal segmen ke pusat baris `mulut_2` (baris mulut yang lebih dekat ke awal segmen).
+	var pos: int = 0
+	## `SEBERANG` atau `DEKAT`: sisi jalan samping.
+	var sisi: LoperAnim.Sisi = LoperAnim.Sisi.TIDAK_ADA
+
+
 ## Hasil `parse`: segmen (null bila ada galat) dan daftar galat berbahasa Indonesia.
 class Hasil extends RefCounted:
 	var segmen: SegmenRute = null
@@ -121,6 +134,8 @@ var objek: Array[Objek] = []
 var titik_misi: Array[TitikMisi] = []
 ## Dekor pinggir jalan (kosong bila berkas tidak punya bidang `dekor`).
 var dekor: Array[Dekor] = []
+## Simpang T hiasan (kosong bila berkas tidak punya bidang `simpang`).
+var simpang: Array[Simpang] = []
 
 
 ## Parse dan validasi satu segmen dari `data`. Segmen null bila ada galat; galat mengumpulkan SEMUA pelanggaran yang ketemu.
@@ -143,6 +158,7 @@ static func parse(data: Dictionary) -> Hasil:
 	_parse_objek(data, segmen, label, ada_panjang, g)
 	_parse_titik_misi(data, segmen, label, ada_panjang, g)
 	_parse_dekor(data, segmen, label, ada_panjang, g)
+	_parse_simpang(data, segmen, label, ada_panjang, g)
 	if g.is_empty():
 		hasil.segmen = segmen
 	return hasil
@@ -181,6 +197,77 @@ static func rintangan_memotong_rumah(jenis: String, pos_objek: float, sisi_objek
 	if sisi_rumah == LoperAnim.Sisi.TIDAK_ADA:
 		return false
 	return Tabrakan.bertumpuk(bentuk_rintangan_diam(jenis, pos_objek, sisi_objek), PenutupPemain.tapak_rumah(sisi_rumah, pos_rumah))
+
+
+## Pita larangan simpang di `pos` (maju dari titik acuan yang sama dengan `pos`): Vector2(maju awal, maju akhir) = baris `pos + RUTE_SIMPANG_PITA_BARIS[0]` sampai
+## `pos + RUTE_SIMPANG_PITA_BARIS[1]`, tiap baris setengah `RUTE_SETENGAH_BARIS_UBIN` ke kedua arah (pita = `pos - 1,5` sampai `pos + 3,5`).
+static func pita_maju(pos: float) -> Vector2:
+	return Vector2(pos + float(Config.RUTE_SIMPANG_PITA_BARIS[0]) - Config.RUTE_SETENGAH_BARIS_UBIN, pos + float(Config.RUTE_SIMPANG_PITA_BARIS[1]) + Config.RUTE_SETENGAH_BARIS_UBIN)
+
+
+## True bila `bentuk` (koordinat jalan: x lateral, y maju) memotong pita `pita` (`pita_maju`) di sisi `sisi`: rentang maju bertumpuk (tepi yang bersentuhan tidak) dan bentuk
+## menjangkau sisi simpang (lateral positif untuk `dekat`, negatif untuk `seberang`). Pita sisi simpang membentang dari garis tengah ke luar tanpa batas (lengan jalan samping).
+static func memotong_pita(pita: Vector2, sisi: LoperAnim.Sisi, bentuk: Rect2) -> bool:
+	if bentuk.position.y >= pita.y or bentuk.end.y <= pita.x:
+		return false
+	if sisi == LoperAnim.Sisi.DEKAT:
+		return bentuk.end.x > 0.0
+	if sisi == LoperAnim.Sisi.SEBERANG:
+		return bentuk.position.x < 0.0
+	return false
+
+
+## True bila pita dua simpang bertumpuk (sisi mana pun): rentang maju bertumpuk, tepi yang bersentuhan tidak.
+static func pita_bertumpuk(a: Vector2, b: Vector2) -> bool:
+	return a.x < b.y and b.x < a.y
+
+
+## Kavling rumah `sisi` di `pos_rumah` yang tidak boleh dipotong pita simpang: tapak logika (`PenutupPemain.tapak_rumah`) digabung tapak gambar (rumah dekat mundur) dan,
+## untuk rumah dekat, rentang tembok belakangnya (`TembokDekat`: modul di maju `pos` sampai `pos + RUTE_RUMAH_PANJANG_UBIN`).
+static func kavling_rumah(sisi: LoperAnim.Sisi, pos_rumah: float) -> Rect2:
+	var bentuk: Rect2 = PenutupPemain.tapak_rumah(sisi, pos_rumah).merge(PenutupPemain.tapak_rumah_gambar(sisi, pos_rumah))
+	if sisi == LoperAnim.Sisi.DEKAT:
+		bentuk = bentuk.merge(Rect2(Config.RUTE_TEMBOK_X_UBIN, pos_rumah, 0.0, Config.RUTE_RUMAH_PANJANG_UBIN))
+	return bentuk
+
+
+## Baris jalan masuk garasi mobil sisi seberang di `pos_objek` beserta baris ujung kerbnya (`UbinKhusus`): kolom trotoar dan rumput pertama seberang, koordinat jalan.
+static func bentuk_jalan_masuk(pos_objek: float) -> Rect2:
+	var baris: float = float(UbinKhusus.baris_masuk(pos_objek))
+	var awal: float = baris - Config.RUTE_SETENGAH_BARIS_UBIN
+	var panjang: float = float(Config.RUTE_UJUNG_KERB_BARIS_RELATIF) + Config.RUTE_SETENGAH_BARIS_UBIN + Config.RUTE_SETENGAH_BARIS_UBIN
+	var luar: float = Config.JALAN_LEBAR_UBIN / 2 + Config.JALAN_TROTOAR_UBIN + Config.JALAN_RUMPUT_TEPI_UBIN
+	return Rect2(-luar, awal, luar - Config.JALAN_LEBAR_UBIN / 2, panjang)
+
+
+## Galat tempat satu simpang `sisi` di `pos` terhadap isi segmen (rumah, zona, dekor, rintangan, jalan masuk). Dipakai `_parse_simpang` dan, dengan maju mutlak, `RouteBuilder.periksa_rute`.
+static func galat_tempat_simpang(pos: float, sisi: LoperAnim.Sisi, rumah: Array[Rumah], objek: Array[Objek], dekor: Array[Dekor], nama: String) -> Array[String]:
+	var g: Array[String] = []
+	var pita: Vector2 = pita_maju(pos)
+	for r: Rumah in rumah:
+		if r.sisi == LoperAnim.Sisi.TIDAK_ADA:
+			continue
+		var nama_sisi_rumah: String = NAMA_SISI[0] if r.sisi == LoperAnim.Sisi.SEBERANG else NAMA_SISI[1]
+		if memotong_pita(pita, sisi, kavling_rumah(r.sisi, float(r.pos))):
+			g.append("%s: pita %.1f sampai %.1f memotong kavling rumah %s di pos %d" % [nama, pita.x, pita.y, nama_sisi_rumah, r.pos])
+		var rr: RouteBuilder.RumahRute = RouteBuilder.RumahRute.new()
+		rr.sisi = r.sisi
+		rr.maju_ubin = float(r.pos)
+		for zona: ZonaSasaran.Zona in ZonaSasaran.zona_rumah(rr):
+			if memotong_pita(pita, sisi, zona.persegi):
+				g.append("%s: pita %.1f sampai %.1f memotong zona %s rumah %s di pos %d" % [nama, pita.x, pita.y, ZonaSasaran.Jenis.keys()[zona.jenis], nama_sisi_rumah, r.pos])
+	for d: Dekor in dekor:
+		if d.sisi != LoperAnim.Sisi.TIDAK_ADA and DekorRute.indeks_jenis(d.jenis) >= 0 and memotong_pita(pita, sisi, DekorRute.tapak(d.jenis, d.sisi, float(d.pos))):
+			g.append("%s: pita %.1f sampai %.1f memotong dekor %s di pos %d" % [nama, pita.x, pita.y, d.jenis, d.pos])
+	for o: Objek in objek:
+		var sisi_objek: LoperAnim.Sisi = sisi_dari_nama(o.jalur)
+		if not JENIS_OBJEK.has(o.jenis) or sisi_objek == LoperAnim.Sisi.TIDAK_ADA:
+			continue
+		if memotong_pita(pita, sisi, bentuk_rintangan_diam(o.jenis, float(o.pos), sisi_objek)):
+			g.append("%s: pita %.1f sampai %.1f memotong %s di pos %d (jalur %s)" % [nama, pita.x, pita.y, o.jenis, o.pos, o.jalur])
+		if o.jenis == "mobil_garasi" and sisi_objek == LoperAnim.Sisi.SEBERANG and memotong_pita(pita, sisi, bentuk_jalan_masuk(float(o.pos))):
+			g.append("%s: pita %.1f sampai %.1f memotong jalan masuk garasi mobil di pos %d" % [nama, pita.x, pita.y, o.pos])
+	return g
 
 
 # --- Pemeriksa bagian ---
@@ -369,6 +456,47 @@ static func _parse_dekor(data: Dictionary, segmen: SegmenRute, label: String, ad
 		if ok_pos and jenis_sah and dekor.sisi != LoperAnim.Sisi.TIDAK_ADA:
 			_periksa_tempat_dekor(dekor, segmen, nama, g)
 		segmen.dekor.append(dekor)
+
+
+static func _parse_simpang(data: Dictionary, segmen: SegmenRute, label: String, ada_panjang: bool, g: Array[String]) -> void:
+	if not data.has("simpang"):
+		return
+	if typeof(data["simpang"]) != TYPE_ARRAY:
+		g.append("%s: 'simpang' harus daftar" % label)
+		return
+	var daftar: Array = data["simpang"]
+	var nomor: int = 0
+	for entri: Variant in daftar:
+		nomor += 1
+		var nama: String = "%s simpang #%d" % [label, nomor]
+		if typeof(entri) != TYPE_DICTIONARY:
+			g.append("%s: harus objek" % nama)
+			continue
+		var d: Dictionary = entri
+		_tolak_field_asing(d, _FIELD_SIMPANG, nama, g)
+		var item: Simpang = Simpang.new()
+		var nama_sisi: String = _teks_wajib(d, "sisi", nama, g)
+		item.sisi = sisi_dari_nama(nama_sisi)
+		if d.has("sisi") and not nama_sisi.is_empty() and item.sisi == LoperAnim.Sisi.TIDAK_ADA:
+			g.append("%s: sisi '%s' bukan seberang atau dekat (GDD 4.2)" % [nama, nama_sisi])
+		var ok_pos: bool = false
+		if not d.has("pos"):
+			g.append("%s: field wajib 'pos' tidak ada" % nama)
+		elif not _bulat(d["pos"]):
+			g.append("%s: 'pos' harus bilangan bulat ubin" % nama)
+		else:
+			ok_pos = true
+			item.pos = int(roundf(float(d["pos"])))
+		if ok_pos:
+			var pita: Vector2 = pita_maju(float(item.pos))
+			if ada_panjang and (pita.x < 0.0 or pita.y > float(segmen.panjang)):
+				g.append("%s: pita %.1f sampai %.1f di luar segmen 0 sampai %d" % [nama, pita.x, pita.y, segmen.panjang])
+			for lain: Simpang in segmen.simpang:
+				if pita_bertumpuk(pita, pita_maju(float(lain.pos))):
+					g.append("%s: pita di pos %d bertumpuk dengan pita simpang di pos %d" % [nama, item.pos, lain.pos])
+			if item.sisi != LoperAnim.Sisi.TIDAK_ADA:
+				g.append_array(galat_tempat_simpang(float(item.pos), item.sisi, segmen.rumah, segmen.objek, segmen.dekor, nama))
+		segmen.simpang.append(item)
 
 
 ## Aturan tempat satu dekor (AC-9): lajur sepeda, zona teras dan kotak surat, tapak rumah, tapak rintangan, dan jarak ke dekor sesisi.

@@ -27,9 +27,12 @@ const N_MASUK_TROTOAR: String = "trotoar_seberang_masuk"
 const N_MASUK_RUMPUT: String = "rumput_seberang_masuk"
 const N_SIMBOL_SEBERANG: String = "trotoar_seberang_simbol"
 const N_SIMBOL_DEKAT: String = "trotoar_dekat_simbol"
+## Ujung kerb jalan masuk (run fase5c-animasi-simpang, C-F1): baris maju + 1 dari jalan masuk, kolom trotoar dan rumput pertama seberang.
+const N_UJUNG_TROTOAR: String = "trotoar_seberang_masuk_ujung"
+const N_UJUNG_RUMPUT: String = "rumput_seberang_masuk_ujung"
 ## Nama wadah baru dan tekstur masing-masing (urut sama dengan `TanahDaur.bangun`).
-const WADAH_BARU: Array[String] = ["RumputLuar2", "RumputLuar3", "MasukTrotoarSeberang", "MasukRumputSeberang", "SimbolTrotoarSeberang", "SimbolTrotoarDekat"]
-const TEKSTUR_WADAH_BARU: Array[String] = [N_RUMPUT_2, N_RUMPUT_3, N_MASUK_TROTOAR, N_MASUK_RUMPUT, N_SIMBOL_SEBERANG, N_SIMBOL_DEKAT]
+const WADAH_BARU: Array[String] = ["RumputLuar2", "RumputLuar3", "MasukTrotoarSeberang", "MasukRumputSeberang", "SimbolTrotoarSeberang", "SimbolTrotoarDekat", "UjungTrotoarSeberang", "UjungRumputSeberang"]
+const TEKSTUR_WADAH_BARU: Array[String] = [N_RUMPUT_2, N_RUMPUT_3, N_MASUK_TROTOAR, N_MASUK_RUMPUT, N_SIMBOL_SEBERANG, N_SIMBOL_DEKAT, N_UJUNG_TROTOAR, N_UJUNG_RUMPUT]
 ## Awal nama berkas yang tidak boleh muncul di sumber (disambung supaya berkas ini tidak cocok dengan dirinya sendiri): ubin `aspal_N` dan `*_dekat_masuk` tidak dipasang (D-1, D-4).
 const TERLARANG_UBIN: Array[String] = ["tile_perumahan_" + "aspal_1", "tile_perumahan_" + "trotoar_dekat_masuk", "tile_perumahan_" + "rumput_dekat_masuk"]
 
@@ -74,7 +77,7 @@ func _tekstur(nama: String) -> Texture2D:
 	return load(FOLDER_UBIN + "tile_perumahan_%s.png" % nama) as Texture2D
 
 
-## `TanahDaur` dengan semua tekstur (13): enam kolom, rumput polos, dan enam tekstur khusus.
+## `TanahDaur` dengan semua tekstur (15): enam kolom, rumput polos, enam tekstur khusus, dan dua ujung kerb (run 5C). Tanpa ubin simpang (diuji `tes_simpang.gd`).
 func _buat_tanah(khusus: bool = true) -> TanahDaur:
 	var tanah: TanahDaur = TanahDaur.new()
 	tanah.tekstur_kolom_rumput_seberang = _tekstur(N_RUMPUT_SEBERANG)
@@ -91,6 +94,8 @@ func _buat_tanah(khusus: bool = true) -> TanahDaur:
 		tanah.tekstur_masuk_rumput_seberang = _tekstur(N_MASUK_RUMPUT)
 		tanah.tekstur_simbol_trotoar_seberang = _tekstur(N_SIMBOL_SEBERANG)
 		tanah.tekstur_simbol_trotoar_dekat = _tekstur(N_SIMBOL_DEKAT)
+		tanah.tekstur_ujung_trotoar_seberang = _tekstur(N_UJUNG_TROTOAR)
+		tanah.tekstur_ujung_rumput_seberang = _tekstur(N_UJUNG_RUMPUT)
 	return tanah
 
 
@@ -149,6 +154,8 @@ func _fnv(a: int, b: int) -> int:
 func _nama_harapan(x: float, baris: int, masuk: Dictionary, simbol_baris: Array[int]) -> String:
 	var ic: int = int(floor(x))
 	var ada_masuk: bool = masuk.has(baris)
+	# Run 5C (C-F1): baris tepat satu di depan jalan masuk (maju + 1) dan bukan jalan masuk = ujung kerb di dua kolom seberang, menang atas simbol.
+	var ujung: bool = masuk.has(baris - 1) and not ada_masuk
 	var simbol: bool = simbol_baris.has(baris)
 	if absf(x) >= 3.0:
 		var v: int = _fnv(ic, baris) % 100
@@ -158,10 +165,14 @@ func _nama_harapan(x: float, baris: int, masuk: Dictionary, simbol_baris: Array[
 			return N_RUMPUT_3
 		return N_RUMPUT_1
 	if ic == -3:
+		if ujung:
+			return N_UJUNG_RUMPUT
 		return N_MASUK_RUMPUT if ada_masuk else N_RUMPUT_SEBERANG
 	if ic == -2:
 		if ada_masuk:
 			return N_MASUK_TROTOAR
+		if ujung:
+			return N_UJUNG_TROTOAR
 		return N_SIMBOL_SEBERANG if simbol else N_TROTOAR_SEBERANG
 	if ic == -1:
 		return N_ASPAL_SEBERANG
@@ -373,9 +384,12 @@ func _test_kolom_pertama_dan_proporsi() -> void:
 			ganti += 1
 		if jenis_seberang == UbinKhusus.Ubin.SIMBOL:
 			ganti += 1
-		if b != 17 and jenis_seberang != UbinKhusus.Ubin.BAWAAN:
+		# Run 5C (C-F1): baris 18 (maju + 1 dari jalan masuk 17) = ujung kerb, satu-satunya baris lain yang bukan bawaan.
+		if b == 18 and jenis_seberang != UbinKhusus.Ubin.UJUNG:
 			ganti += 1
-	check(ganti == 0, "kolom rumput pertama (-2,5 dan 2,5) tidak pernah rumput_2, rumput_3, atau simbol (1200 baris); masuk hanya di baris 17")
+		if b != 17 and b != 18 and jenis_seberang != UbinKhusus.Ubin.BAWAAN:
+			ganti += 1
+	check(ganti == 0, "kolom rumput pertama (-2,5 dan 2,5) tidak pernah rumput_2, rumput_3, atau simbol (1200 baris); masuk hanya di baris 17, ujung kerb hanya di baris 18")
 	# 10.000 sel kolom luar: x = 3,5 .. 102,5 (seberang dan dekat bergantian), baris 0 .. 99.
 	var hitung: Dictionary = {UbinKhusus.Ubin.BAWAAN: 0, UbinKhusus.Ubin.RUMPUT_2: 0, UbinKhusus.Ubin.RUMPUT_3: 0}
 	var total: int = 0
@@ -435,7 +449,7 @@ func _test_tanpa_hash_bawaan() -> void:
 # --- AC-15: pemasangan di TanahDaur ---
 
 ## Cacah sprite yang tidak sesuai oracle di `tanah` untuk jarak `jarak` dan himpunan baris masuk `masuk`. Kembali [salah, total, contoh, per_nama].
-func _periksa_tanah(tanah: TanahDaur, jarak: float, masuk: Dictionary) -> Array:
+func _periksa_tanah(tanah: TanahDaur, jarak: float, masuk: Dictionary, pita_dekat: Dictionary = {}) -> Array:
 	var blok: int = int(floor(jarak))
 	var simbol: Array[int] = _baris_simbol(blok - 200, blok + 200)
 	var salah: int = 0
@@ -449,6 +463,9 @@ func _periksa_tanah(tanah: TanahDaur, jarak: float, masuk: Dictionary) -> Array:
 		var jalur: String = ubin.texture.resource_path
 		var nama: String = jalur.get_file().trim_prefix("tile_perumahan_").trim_suffix(".png")
 		per_nama[nama] = int(per_nama.get(nama, 0)) + 1
+		# Run 5C: di baris pita simpang dekat rute (`pita_dekat`), sel sisi dekat boleh memakai ubin simpang dekat (letaknya diuji per sel di `tes_simpang.gd`).
+		if pita_dekat.has(baris) and dunia.x > 0.0 and nama.begins_with("simpang_dekat_"):
+			continue
 		if nama != harapan:
 			salah += 1
 			if contoh.is_empty():
@@ -466,7 +483,7 @@ func _test_tanah_khusus() -> void:
 	var nama_wadah: Array[String] = []
 	for wadah: Node in tanah.get_children():
 		nama_wadah.append(String(wadah.name))
-	check(nama_wadah == ["RumputSeberang", "TrotoarSeberang", "AspalSeberang", "AspalDekat", "TrotoarDekat", "RumputDekat", "RumputLuar", "RumputLuar2", "RumputLuar3", "MasukTrotoarSeberang", "MasukRumputSeberang", "SimbolTrotoarSeberang", "SimbolTrotoarDekat"], "tiga belas wadah: tujuh lama + enam wadah tekstur baru (jumlah wadah naik tepat 6): %s" % [nama_wadah])
+	check(nama_wadah == ["RumputSeberang", "TrotoarSeberang", "AspalSeberang", "AspalDekat", "TrotoarDekat", "RumputDekat", "RumputLuar", "RumputLuar2", "RumputLuar3", "MasukTrotoarSeberang", "MasukRumputSeberang", "SimbolTrotoarSeberang", "SimbolTrotoarDekat", "UjungTrotoarSeberang", "UjungRumputSeberang"], "lima belas wadah: tujuh lama + enam wadah 5B + dua ujung kerb 5C (jumlah wadah naik tepat sebanyak tekstur baru): %s" % [nama_wadah])
 	# Sel, posisi, dan jumlah sprite sama dengan sebelum run untuk lima lebar (selisih 0).
 	var sama_semua: bool = true
 	for lebar: int in [640, 667, 780, 800, Config.LAYAR_LEBAR_MAKS_PX]:
@@ -564,14 +581,14 @@ func _test_scene_rute() -> void:
 	await _tree.process_frame
 	await _tree.process_frame
 	var tanah: TanahDaur = akar.find_child("Tanah", true, false) as TanahDaur
-	check(tanah != null and tanah.mode_khusus(), "Tanah di rute.tscn memakai mode khusus (tiga belas tekstur)")
+	check(tanah != null and tanah.mode_khusus() and tanah.mode_ujung(), "Tanah di rute.tscn memakai mode khusus dan ujung kerb")
 	if tanah == null:
 		_tree.root.remove_child(akar)
 		akar.free()
 		return
 	var sprite: Array[Sprite2D] = _sprite_ubin(tanah)
 	check(sprite.size() == JalanDaur.sel_tanah(Config.LAYAR_LEBAR_MAKS_PX, Config.LAYAR_TINGGI_DASAR_PX).size(), "scene rute: jumlah sprite ubin tetap = sel_tanah lebar maksimal (%d)" % sprite.size())
-	check(tanah.get_child_count() == 13, "scene rute: 13 wadah ubin (7 lama + 6 baru), dapat %d" % tanah.get_child_count())
+	check(tanah.get_child_count() == 49, "scene rute: 49 wadah ubin (7 lama + 6 run 5B + 2 ujung kerb + 18 simpang dekat + 16 simpang seberang run 5C), dapat %d" % tanah.get_child_count())
 	# Cari seed yang rutenya punya mobil garasi seberang, lalu susun rute itu di scene.
 	var kumpulan: PemuatRute.Kumpulan = PemuatRute.muat_folder()
 	var benih: int = -1
@@ -583,6 +600,7 @@ func _test_scene_rute() -> void:
 	check(benih > 0, "ada seed dengan mobil garasi seberang untuk uji scene")
 	akar.call("_susun", benih)
 	var rute: RouteBuilder.Rute = akar.get("_rute") as RouteBuilder.Rute
+	var pita: Dictionary = _pita_dekat(rute)
 	var mobil: Array[float] = []
 	for o: RouteBuilder.ObjekRute in rute.objek:
 		if o.jenis == "mobil_garasi" and o.jalur == "seberang":
@@ -594,7 +612,7 @@ func _test_scene_rute() -> void:
 	for maju: float in mobil:
 		# Sepeda 4 ubin di belakang mobil: baris masuk terlihat.
 		tanah.perbarui(maju - 4.0)
-		var hasil: Array = _periksa_tanah(tanah, maju - 4.0, masuk)
+		var hasil: Array = _periksa_tanah(tanah, maju - 4.0, masuk, pita)
 		check(hasil[0] == 0, "scene rute, mobil di maju %s: semua ubin sesuai oracle (%s)" % [maju, hasil[2]])
 		var per_nama: Dictionary = hasil[3]
 		check(int(per_nama.get(N_MASUK_TROTOAR, 0)) >= 1 and int(per_nama.get(N_MASUK_RUMPUT, 0)) >= 1, "scene rute, mobil di maju %s: ubin masuk trotoar dan rumput terpasang (%s)" % [maju, per_nama])
@@ -626,10 +644,20 @@ func _test_scene_rute() -> void:
 		if o.jenis == "mobil_garasi" and o.jalur == "seberang":
 			masuk2[int(ceil(o.maju_ubin - 0.5))] = true
 	tanah.perbarui(0.0)
-	var hasil2: Array = _periksa_tanah(tanah, 0.0, masuk2)
+	var hasil2: Array = _periksa_tanah(tanah, 0.0, masuk2, _pita_dekat(rute2))
 	check(rute2 != rute and hasil2[0] == 0, "sesudah Main lagi: ubin sesuai baris masuk rute baru (%s)" % hasil2[2])
 	_tree.root.remove_child(akar)
 	akar.free()
+
+
+## Baris pita simpang sisi dekat rute (`pos` - 1 sampai `pos` + 3, literal D-3 run 5C), untuk `_periksa_tanah`.
+func _pita_dekat(rute: RouteBuilder.Rute) -> Dictionary:
+	var hasil: Dictionary = {}
+	for item: RouteBuilder.SimpangItem in rute.simpang:
+		if item.sisi == LoperAnim.Sisi.DEKAT:
+			for b: int in range(int(item.maju_ubin) - 1, int(item.maju_ubin) + 4):
+				hasil[b] = true
+	return hasil
 
 
 # --- AC-16: tanpa celah dan tanpa pita ---
@@ -652,7 +680,7 @@ func _test_tanpa_celah() -> void:
 			tanah.perbarui(jarak_ubin)
 			for ubin: Sprite2D in _sprite_ubin(tanah):
 				var jalur: String = ubin.texture.resource_path
-				if jalur.ends_with("_masuk.png") or jalur.ends_with("_simbol.png") or jalur.ends_with("rumput_2.png") or jalur.ends_with("rumput_3.png"):
+				if jalur.ends_with("_masuk.png") or jalur.ends_with("_ujung.png") or jalur.ends_with("_simbol.png") or jalur.ends_with("rumput_2.png") or jalur.ends_with("rumput_3.png"):
 					khusus_terlihat += 1
 			for lat: float in lateral:
 				var layar_sepeda: Vector2 = Vector2((lat + jarak_ubin) * 32.0, (lat - jarak_ubin) * 16.0)
@@ -770,9 +798,9 @@ func _test_susunan_referensi() -> void:
 		x_min = mini(x_min, int(u.position.x) - 32)
 		y_min = mini(y_min, int(u.position.y) - 16)
 		var f: String = u.texture.resource_path.get_file()
-		if f.ends_with("_masuk.png") or f.ends_with("_simbol.png") or f.ends_with("rumput_2.png") or f.ends_with("rumput_3.png"):
+		if f.ends_with("_masuk.png") or f.ends_with("_ujung.png") or f.ends_with("_simbol.png") or f.ends_with("rumput_2.png") or f.ends_with("rumput_3.png"):
 			khusus += 1
-	check(khusus == 9, "potongan memuat 9 ubin khusus (2 masuk, 2 simbol, 5 rumput_2/3), dapat %d" % khusus)
+	check(khusus == 11, "potongan memuat 11 ubin khusus (2 masuk, 2 ujung kerb run 5C, 2 simbol, 5 rumput_2/3), dapat %d" % khusus)
 	var kanvas: Image = Image.create(ref.get_width(), ref.get_height(), false, Image.FORMAT_RGBA8)
 	kanvas.fill(Color(0, 0, 0, 0))
 	for u: Sprite2D in terpilih:

@@ -30,7 +30,8 @@ extends AnimatedSprite2D
 ## bisa memajukannya dengan `dt` tetap. Masuk jatuh menutup lempar yang berjalan (tanpa sinyal, seperti `batalkan_lempar`), lempar baru
 ## ditolak, dan `pose`/`speed_level`/`steer` tetap tersimpan tanpa mengganti gambar. Di akhir waktu jatuh `bangkit_<arah>` diputar (Fase 5C,
 ## lama jatuh `TABRAKAN_JATUH_DETIK` tidak berubah); frame terakhirnya = kayuh santai frame 0, jadi bangun = langsung kembali ke animasi pose
-## saat itu dan diputar lagi tanpa lompatan.
+## saat itu, mulai dari frame 0, dan diputar lagi tanpa lompatan. Arah jatuh = `steer` yang dipasang pemanggil; `SepedaUji` tidak menggantinya
+## selama jatuh (run 5C).
 
 ## Koran lepas dari tangan: dipancarkan tepat sekali per lempar, saat frame `Config.LEMPAR_FRAME_LEPAS` (indeks 2) tampil (atau saat lempar
 ## yang belum sampai frame lepas disela lempar berikutnya). Koran terbang tidak bergantung pada sinyal ini (`KoranLempar` memakai jeda
@@ -159,6 +160,10 @@ func atur_jatuh(aktif: bool, lewat_detik: float) -> void:
 		if _jatuh:
 			_jatuh = false
 			_terapkan_animasi()
+			# Animasi pose dimulai dari frame 0, bukan indeks frame bangkit (6 frame) yang dijepit ke frame terakhir kayuh (4 frame): frame terakhir
+			# `bangkit_<arah>` = kayuh santai frame 0, jadi bangun tanpa lompatan piksel (AC-3 run 20261022-fase5c-animasi-simpang).
+			if sprite_frames != null and sprite_frames.has_animation(animation):
+				set_frame_and_progress(0, 0.0)
 			_mainkan_bila_siap()
 		return
 	if _sedang_melempar:

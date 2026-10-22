@@ -54,6 +54,30 @@ const JALUR_WAJIB_IKUT: Array[String] = [
 	"scripts/systems/varian_tembok.gd", "scripts/systems/tembok_dekat.gd", "scripts/systems/dekor_rute.gd", "scripts/systems/ubin_khusus.gd", "scripts/entities/dekor_daur.gd", "scripts/entities/tanah_daur.gd", "scripts/entities/rumah_daur_rute.gd",
 	"assets/data/routes/perumahan/per_buka_01.json", "assets/data/routes/perumahan/per_buka_02.json", "assets/data/routes/perumahan/per_tengah_01.json", "assets/data/routes/perumahan/per_tengah_02.json", "assets/data/routes/perumahan/per_tengah_03.json", "assets/data/routes/perumahan/per_tengah_04.json", "assets/data/routes/perumahan/per_tengah_05.json", "assets/data/routes/perumahan/per_tutup_01.json", "assets/data/routes/perumahan/per_tutup_02.json",
 ]
+## Run fase5c-animasi-simpang (AC-22): animasi pemain (jatuh lima arah, bangkit, berhenti) beserta SpriteFrames gabungan 68 animasi, sheet kucing
+## 9 kolom, dan skrip pemakai baru. Ubin ujung kerb dan simpang (36 PNG) diambil dari `TesUbin.UBIN_5C` (literal) di `_test_aset_5c_ikut_paket`.
+## Daftar ini ikut diperiksa `_pelanggaran_preset` (ada di repo dan tidak cocok dengan exclude_filter), sama seperti `JALUR_WAJIB_IKUT`.
+const JALUR_WAJIB_IKUT_5C: Array[String] = [
+	"assets/sprites/loper/loper_agen_frames.tres", "assets/sprites/loper/loper_agen_jatuh.png", "assets/sprites/loper/loper_agen_jatuh.png.import", "assets/sprites/loper/loper_agen_jatuh.json",
+	"assets/sprites/loper/loper_agen_bangkit.png", "assets/sprites/loper/loper_agen_bangkit.png.import", "assets/sprites/loper/loper_agen_bangkit.json",
+	"assets/sprites/loper/loper_agen_berhenti.png", "assets/sprites/loper/loper_agen_berhenti.png.import", "assets/sprites/loper/loper_agen_berhenti.json",
+	"assets/sprites/npc/mission_kucing_sheet.png.import", "assets/sprites/npc/mission_kucing_sheet.json", "assets/sprites/tiles/perumahan/tile_perumahan.json",
+	"scripts/systems/pose_kucing.gd", "scripts/systems/segmen_rute.gd", "scripts/systems/pemuat_rute.gd", "scripts/systems/route_builder.gd", "scripts/entities/kucing_misi.gd", "scripts/entities/loper_sprite.gd",
+]
+## PNG 5C yang dicek impor Lossless (selain 36 ubin dari `TesUbin.UBIN_5C`): tiga sheet pemain dan sheet kucing.
+const PNG_5C_NON_UBIN: Array[String] = [
+	"assets/sprites/loper/loper_agen_jatuh.png", "assets/sprites/loper/loper_agen_bangkit.png", "assets/sprites/loper/loper_agen_berhenti.png", "assets/sprites/npc/mission_kucing_sheet.png",
+]
+## Jumlah animasi `loper_agen_frames.tres` dan kolom sheet kucing sesudah PR #51 (literal; sama dengan `uji_bangun_frames.py` dan `uji_aset_kucing.py`).
+const JUMLAH_ANIMASI_5C: int = 68
+const KOLOM_KUCING_5C: int = 9
+## Ubin yang TIDAK dipasang run 5C (D-2): ujung kerb sisi dekat (renderer tidak membuatnya) dan ubin simpang yang sama dengan jalan lurus
+## (renderer tidak mengekspornya). Tidak boleh ada di repo. Nama disambung supaya pemindai rujukan `tes_ubin.gd` tidak menandai berkas ini.
+const JALUR_TIDAK_ADA_5C: Array[String] = [
+	"assets/sprites/tiles/perumahan/tile_perumahan_" + "trotoar_dekat_masuk_ujung.png", "assets/sprites/tiles/perumahan/tile_perumahan_" + "rumput_dekat_masuk_ujung.png",
+	"assets/sprites/tiles/perumahan/tile_perumahan_" + "simpang_dekat_aspal_dekat_depan_2.png", "assets/sprites/tiles/perumahan/tile_perumahan_" + "simpang_dekat_aspal_seberang_mulut_1.png",
+	"assets/sprites/tiles/perumahan/tile_perumahan_" + "simpang_seberang_aspal_seberang_depan_1.png", "assets/sprites/tiles/perumahan/tile_perumahan_" + "simpang_seberang_aspal_dekat_mulut_1.png",
+]
 ## Aset yang TIDAK dipasang (D-1, D-4 run fase5b-tembok-dekor): tidak boleh ada di repo sehingga tidak ikut paket. Nama disambung supaya pemindai rujukan 5A tidak menandai berkas ini.
 const JALUR_TIDAK_ADA_5B: Array[String] = [
 	"assets/sprites/tiles/perumahan/tile_perumahan_" + "aspal_1.png", "assets/sprites/tiles/perumahan/tile_perumahan_" + "aspal_2.png", "assets/sprites/tiles/perumahan/tile_perumahan_" + "aspal_3.png",
@@ -111,6 +135,7 @@ func jalankan() -> void:
 	_test_preset_asli()
 	_test_preset_contoh_buruk()
 	_test_aset_5b_ikut_paket()
+	_test_aset_5c_ikut_paket()
 	_test_probe_tidak_ikut()
 	_test_spike_tidak_ikut()
 	_test_ikon_sementara()
@@ -174,6 +199,8 @@ func _test_preset_contoh_buruk() -> void:
 		['exclude_filter="docs/*, ', 'exclude_filter="assets/sprites/npc/*, docs/*, ', "assets/sprites/npc/mission_kucing_sheet.png", "sheet kucing dikecualikan dari paket"],
 		['exclude_filter="docs/*, ', 'exclude_filter="assets/audio/sfx/mission/*, docs/*, ', "assets/audio/sfx/mission/sfx_mis_meong_01.wav", "bunyi misi dikecualikan dari paket"],
 		['exclude_filter="docs/*, ', 'exclude_filter="scenes/ui/tutorial.tscn, docs/*, ', "scenes/ui/tutorial.tscn", "scene tutorial dikecualikan dari paket"],
+		['exclude_filter="docs/*, ', 'exclude_filter="assets/sprites/loper/*, docs/*, ', "assets/sprites/loper/loper_agen_frames.tres", "sheet pemain dan SpriteFrames 68 animasi dikecualikan dari paket (AC-22 run 5C)"],
+		['exclude_filter="docs/*, ', 'exclude_filter="scripts/systems/pose_kucing.gd, docs/*, ', "scripts/systems/pose_kucing.gd", "skrip pose kucing ditangkap dikecualikan dari paket (AC-22 run 5C)"],
 		['name="Android"', 'name="Android uji"', "nama", "nama preset bukan Android"],
 		['runnable=true', 'runnable=false', "runnable", "runnable mati"],
 		['package/signed=true', 'package/signed=false', "package/signed", "APK tidak ditandatangani (tidak bisa dipasang)"],
@@ -271,7 +298,7 @@ func _pelanggaran_preset(teks: String) -> Array[String]:
 	for spike: String in FILTER_SPIKE:
 		if not kecuali.has(spike):
 			hasil.append("exclude_filter harus memuat %s (spike sisi dekat tidak ikut paket game, AC-14 run 3C)" % spike)
-	for wajib_ikut: String in JALUR_WAJIB_IKUT:
+	for wajib_ikut: String in JALUR_WAJIB_IKUT + JALUR_WAJIB_IKUT_5C:
 		if _dikecualikan(wajib_ikut, kecuali):
 			hasil.append("%s harus ikut paket tetapi cocok dengan exclude_filter (konten dan scene alur hari, run fase4a-koran-hari)" % wajib_ikut)
 		if not FileAccess.file_exists("res://" + wajib_ikut):
@@ -362,6 +389,50 @@ func _test_aset_5b_ikut_paket() -> void:
 		check(not FileAccess.file_exists("res://" + jalur), "aset tak dipasang tidak ada di repo (tidak ikut paket): %s" % jalur)
 	for nama: String in DirAccess.get_files_at("res://assets/sprites/tiles/perumahan"):
 		check(not nama.contains("aspal_1") and not nama.contains("aspal_2") and not nama.contains("aspal_3") and not nama.contains("_dekat_masuk"), "tiles/perumahan tanpa aspal_N dan *_dekat_masuk: %s" % nama)
+
+
+# --- AC-22 run fase5c-animasi-simpang: animasi pemain, sheet kucing 9 kolom, ubin ujung kerb dan simpang ikut paket; ubin tak dipasang tidak ada ---
+
+func _test_aset_5c_ikut_paket() -> void:
+	_judul.call("Aset 5C ikut paket dengan remap .import Lossless dan ubin tak dipasang tidak ada (AC-22 run 5C)")
+	var cfg: ConfigFile = ConfigFile.new()
+	cfg.load(BERKAS_PRESET)
+	var kecuali: Array[String] = []
+	for bagian_filter: String in str(cfg.get_value("preset.0", "exclude_filter", "")).split(","):
+		kecuali.append(bagian_filter.strip_edges())
+	var png_5c: Array[String] = []
+	png_5c.append_array(PNG_5C_NON_UBIN)
+	for nama: String in TesUbin.UBIN_5C:
+		png_5c.append("assets/sprites/tiles/perumahan/" + nama)
+	check(png_5c.size() == 40, "40 PNG 5C dicek (3 sheet pemain, sheet kucing, 2 ujung kerb, 18 simpang dekat, 16 simpang seberang), dapat %d" % png_5c.size())
+	for jalur: String in png_5c:
+		var teks_import: String = _baca_jika_ada("res://" + jalur + ".import")
+		check(FileAccess.file_exists("res://" + jalur) and not teks_import.is_empty(), "%s dan remap .import ada (ikut paket)" % jalur)
+		check(teks_import.contains("compress/mode=0") and teks_import.contains("mipmaps/generate=false"), "%s: impor Lossless tanpa mipmap" % jalur)
+		check(not _dikecualikan(jalur, kecuali) and not _dikecualikan(jalur + ".import", kecuali), "%s tidak dikecualikan filter preset" % jalur)
+	for jalur: String in JALUR_WAJIB_IKUT_5C:
+		check(FileAccess.file_exists("res://" + jalur) and not _dikecualikan(jalur, kecuali), "%s ada dan tidak dikecualikan filter preset" % jalur)
+	# Isi yang dibawa paket: SpriteFrames gabungan 68 animasi (termasuk jatuh, terjerembab, bangkit, berhenti lima arah) dan sheet kucing 9 kolom.
+	var frames: SpriteFrames = load("res://assets/sprites/loper/loper_agen_frames.tres") as SpriteFrames
+	var nama_anim: PackedStringArray = frames.get_animation_names() if frames != null else PackedStringArray()
+	check(nama_anim.size() == JUMLAH_ANIMASI_5C, "loper_agen_frames.tres memuat %d animasi, dapat %d" % [JUMLAH_ANIMASI_5C, nama_anim.size()])
+	for arah: String in ["kiri", "serong_kiri", "normal", "serong_kanan", "kanan"]:
+		for awalan: String in ["jatuh_", "terjerembab_", "bangkit_", "berhenti_"]:
+			check(nama_anim.has(awalan + arah), "SpriteFrames paket punya animasi %s%s" % [awalan, arah])
+	var json_kucing: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://assets/sprites/npc/mission_kucing_sheet.json"))
+	var kolom: int = int((json_kucing as Dictionary).get("columns", 0)) if json_kucing is Dictionary else 0
+	var tekstur_kucing: Texture2D = load("res://assets/sprites/npc/mission_kucing_sheet.png") as Texture2D
+	var lebar_sel: int = int(((json_kucing as Dictionary).get("cell", [0, 0]) as Array)[0]) if json_kucing is Dictionary else 0
+	check(kolom == KOLOM_KUCING_5C and tekstur_kucing != null and tekstur_kucing.get_width() == KOLOM_KUCING_5C * lebar_sel, "sheet kucing 9 kolom: JSON columns %d, lebar tekstur %d = 9 x sel %d" % [kolom, tekstur_kucing.get_width() if tekstur_kucing != null else -1, lebar_sel])
+	# Ubin tak dipasang (D-2) tidak ada di repo, dan folder ubin hanya berisi ubin ujung/simpang yang terdaftar.
+	for jalur: String in JALUR_TIDAK_ADA_5C:
+		check(not FileAccess.file_exists("res://" + jalur), "ubin tak dipasang tidak ada di repo (tidak ikut paket): %s" % jalur)
+	var ubin_5c_folder: int = 0
+	for nama: String in DirAccess.get_files_at("res://assets/sprites/tiles/perumahan"):
+		if nama.ends_with(".png") and (nama.contains("simpang_") or nama.contains("_ujung")):
+			ubin_5c_folder += 1
+			check(TesUbin.UBIN_5C.has(nama), "ubin simpang/ujung di folder terdaftar sebagai dipasang: %s" % nama)
+	check(ubin_5c_folder == TesUbin.UBIN_5C.size(), "folder tiles/perumahan memuat tepat %d ubin simpang/ujung, dapat %d" % [TesUbin.UBIN_5C.size(), ubin_5c_folder])
 
 
 # --- QA-004: probe render tidak ikut APK normal, pola sama dengan tools/ekspor_cek_render.py ---

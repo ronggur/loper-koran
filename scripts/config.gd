@@ -178,9 +178,11 @@ const GARIS_BIDIK_SAMPEL: int = 96
 const GARIS_BIDIK_TERTUTUP_ALPHA: float = 0.5
 ## Alpha garis tepi halaman dan isi zona placeholder di jalan uji.
 const ZONA_GARIS_ALPHA: float = 0.7
-## Alpha isi area kotak surat rumah pelanggan seberang di scene rute (`AreaKotakGambar`): tipis supaya rumput halaman dan trotoar tetap terbaca.
+## Alpha isi persegi zona kotak surat di scene dev spike sisi dekat (tidak ikut paket): tipis supaya tanah tetap terbaca.
+## Scene rute TIDAK lagi menggambar area kotak surat (keputusan pemilik 2026-10-22: persegi membuat pemain mengira hanya area itu yang
+## dinilai); konstanta ini tinggal hanya untuk spike.
 const AREA_KOTAK_ISI_ALPHA: float = 0.28
-## Alpha garis tepi area kotak surat di scene rute: tegas (bentuk terbaca tanpa bergantung warna isi).
+## Alpha garis tepi persegi zona kotak surat di scene dev spike sisi dekat: tegas (bentuk terbaca tanpa bergantung warna isi).
 const AREA_KOTAK_TEPI_ALPHA: float = 0.9
 
 ## --- Umpan balik kecepatan (GDD 15; usulan run fase1b-umpan-balik, dinilai di HP) ---
@@ -911,9 +913,13 @@ const MISI_KUCING_JAUH_MOBIL_UBIN: float = 6.0
 const MISI_KUCING_SEL_PX: Array[int] = [46, 38]
 ## Titik pijak kucing di dalam sel, piksel (sama dengan `ground_anchor` di JSON).
 const MISI_KUCING_PIJAK_PX: Array[int] = [18, 21]
-## Kolom dan baris sheet (9 pose x 4 arah moncong; kolom 7-8 = ditangkap_1/_2 sejak Fase 5C, usulan, belum dipakai rute).
+## Kolom dan baris sheet (9 pose x 4 arah moncong; kolom 7-8 = ditangkap_1/_2 sejak Fase 5C, usulan).
 const MISI_KUCING_KOLOM: int = 9
 const MISI_KUCING_BARIS: int = 4
+## Kolom pose ditangkap (duduk tenang dielus, dua frame bergantian; `frames` 7 dan 8 = `anim.ditangkap` di JSON sheet, dijaga tes). Tampil selama langkah `tangkap` dengan progres > 0 (P-3 run 5C, usulan).
+const MISI_KUCING_KOLOM_DITANGKAP: Array[int] = [7, 8]
+## Laju pose ditangkap, frame per detik dari waktu animasi misi (membeku saat jeda); sama dengan `fps.ditangkap` di JSON sheet (dijaga tes).
+const MISI_KUCING_DITANGKAP_FPS: float = 3.0
 ## Baris "masuk" (moncong kiri atas, menghadap rumah sisi seberang) dan kolom pose duduk: placeholder untuk semua titik (M-10: pose intip khusus ada di Fase 5).
 const MISI_KUCING_BARIS_HADAP: int = 1
 const MISI_KUCING_KOLOM_DUDUK: int = 0
@@ -1156,6 +1162,12 @@ const UMPAN_GARIS_GANTI_MIN_FRAME: int = 2
 const UMPAN_GARIS_GANTI_MAKS_FRAME: int = 3
 ## Benih RNG garis kecepatan sprite (acak berseed, tetap).
 const UMPAN_GARIS_SPRITE_BENIH: int = 3
+## Garis kecepatan sprite: titik kepala (pijak sprite) dari titik pijak sepeda, sebelum geseran tegak lurus jalan, piksel game (datar, positif = ke kanan). Dipilih supaya pusat piksel garis
+## (rata-rata tiga varian) jatuh di pusat rata-rata garis partikel run 1B seperti tergambar di 60 fps (11,7; -13,8): muncul di (30, -24), mundur 200 px/d, umur 0 sampai 17 frame. Run 5A memakai
+## `UMPAN_GARIS_ASAL_*` (titik muncul) sebagai kepala, jadi garis diam sekitar 13,5 px lebih ke depan sepanjang jalan (umpan balik HP pemilik 2026-10-22; usulan, dinilai di HP).
+const UMPAN_GARIS_SPRITE_KEPALA_X_PX: float = 20.0
+## Garis kecepatan sprite: titik kepala dari titik pijak sepeda, tegak, piksel game (negatif = ke atas). Lihat `UMPAN_GARIS_SPRITE_KEPALA_X_PX`.
+const UMPAN_GARIS_SPRITE_KEPALA_Y_PX: float = -14.0
 ## Bintang kena sekali main sekian frame per detik.
 const UMPAN_BINTANG_FPS: float = 15.0
 ## Koin tip sekali main sekian frame per detik.
@@ -1197,6 +1209,22 @@ const RUTE_SIMBOL_SEPEDA_OFFSET_UBIN: int = 6
 const RUTE_RUMPUT_VARIAN_MOD: int = 100
 const RUTE_RUMPUT_VARIAN_2_PERSEN: int = 12
 const RUTE_RUMPUT_VARIAN_3_PERSEN: int = 8
+## Ujung kerb jalan masuk sisi seberang (run fase5c-animasi-simpang, C-F1 run 5B): baris maju relatif ke baris jalan masuk yang memakai ubin `*_masuk_ujung` di kolom trotoar dan rumput pertama seberang (= `ujung_kerb_baris_relatif` di `tile_perumahan.json`, dijaga tes).
+const RUTE_UJUNG_KERB_BARIS_RELATIF: int = 1
+
+## --- Simpang T hiasan (run fase5c-animasi-simpang, keputusan pemilik 2026-10-22 K-1/P-1, D-3; usulan, dinilai di HP) ---
+## Lebar mulut jalan samping sepanjang jalan utama, ubin (= `simpang.lebar_mulut_ubin` di `tile_perumahan.json` = selisih `SIMPANG_Y` renderer / 32, dijaga tes). Data segmen hanya `{pos, sisi}`.
+const RUTE_SIMPANG_LEBAR_MULUT_UBIN: float = 2.0
+## Tepi mulut paling dekat ke awal rute relatif ke `pos` simpang, ubin maju (= -`simpang.y_mulut_unit[1]` / 32 renderer): `pos` = baris `mulut_2` (berpusat di maju bulat), mulut menutup `pos - 0,5` sampai `pos + 1,5`.
+const RUTE_SIMPANG_MULUT_AWAL_UBIN: float = -0.5
+## Pita larangan simpang: baris relatif maju (dari baris `pos`) pertama dan terakhir yang ubinnya diganti renderer di kolom trotoar, rumput, atau lengan, kedua sisi (= `simpang.pita_baris_relatif`). Tiap baris menutup baris - 0,5 sampai baris + 0,5, jadi pita = maju `pos - 1,5` sampai `pos + 3,5`.
+const RUTE_SIMPANG_PITA_BARIS: Array[int] = [-1, 3]
+## Setengah tinggi satu baris ubin sepanjang jalan, ubin: baris berpusat di maju bulat b menutup b - ini sampai b + ini (dipakai tepi pita simpang dan baris jalan masuk di validasi simpang).
+const RUTE_SETENGAH_BARIS_UBIN: float = 0.5
+## Sel ubin simpang sisi `dekat`, pasangan (baris relatif maju, kolom: 0 aspal, 1 trotoar, 2 rumput pertama, 3 lengan = semua kolom rumput luar), urut sama dengan `simpang.sisi.dekat` di `tile_perumahan.json` dan `TanahDaur.tekstur_simpang_dekat`.
+const RUTE_SIMPANG_SEL_DEKAT: Array[int] = [3, 1, 3, 2, 3, 3, 2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 1, 1, 1, 2, 1, 3, 0, 0, 0, 1, 0, 2, 0, 3, -1, 1, -1, 2, -1, 3]
+## Sel ubin simpang sisi `seberang` (pola sama; dari JSON renderer `build/env_art/ubin/simpang/`, dijaga `tools/tests_cek/uji_aset_simpang.py`). Ubinnya dipasang sejak putusan P-6 run 5C (simpang seberang `per_buka_02` pos 18).
+const RUTE_SIMPANG_SEL_SEBERANG: Array[int] = [3, 2, 3, 3, 2, 1, 2, 2, 2, 3, 1, 0, 1, 1, 1, 2, 1, 3, 0, 0, 0, 1, 0, 2, 0, 3, -1, 1, -1, 2, -1, 3]
 
 ## --- Dekor pinggir jalan di data segmen (run fase5b-tembok-dekor bagian B2, D-5 dan D-6; usulan, dinilai di HP) ---
 ## Jenis dekor yang sah di data segmen (urut tetap; tabel `RUTE_DEKOR_*` di bawah sejajar dengan daftar ini).

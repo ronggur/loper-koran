@@ -98,10 +98,13 @@ python3 tools/tests_cek/uji_sintesis_misi.py           # bukti 4 WAV misi (meong
 python3 tools/tests_cek/uji_sintesis_kondisi.py        # bukti 5 WAV kondisi (rantai berisik, rem berdecit, ban mendesis, servis, upgrade) = hasil skrip sintesis
 python3 tools/tests_cek/uji_aset_kucing.py             # bukti sheet kucing misi = hasil tools/env_art/kendaraan.py (butuh numpy, pillow)
 python3 tools/env_art/gelombang1/render.py --salin     # run 5A: salin 13 sprite gelombang 1 yang dipasang (koran, debu, garis, bintang, koin, kilau) ke assets/sprites/{props,vfx}/ (butuh numpy, pillow), lalu godot --headless --import
-python3 tools/env_art/ubin_perumahan.py --salin        # run 5A: salin enam ubin kolom jalan + rumput_1 ke assets/sprites/tiles/perumahan/
+python3 tools/env_art/ubin_perumahan.py --salin        # run 5A: salin enam ubin kolom jalan + rumput_1 ke assets/sprites/tiles/perumahan/ (5B: + ubin khusus; 5C: + ujung kerb jalan masuk dan ubin simpang T yang dipasang)
+python3 tools/tests_cek/uji_aset_simpang.py            # run 5C: bukti ubin simpang dan ujung kerb di assets/ = keluaran ubin_perumahan.py --salin, susunan = adegan renderer
 python3 tools/env_art/lampu_pohon.py --salin            # run 5B: salin tiga pohon dan dua lampu mati ke assets/sprites/props/ (render.py dan ubin_perumahan.py --salin juga memasang tembok, tong logam, dan enam ubin 5B), lalu godot --headless --import
 python3 tools/tests_cek/uji_aset_pasang_5b.py           # bukti isi assets/ = keluaran ketiga --salin, impor Lossless, susunan ubin khusus (juga uji_aset_lampu_pohon.py)
 godot --path . --resolution 2340x1080 --position 0,0 --script res://tests/probe_sisi_dekat_jendela.gd -- docs/loop/<RUN_ID>/shots/iter<N>   # tangkapan layar run 5B: tembok, dekor, ubin masuk, simbol, rumput luar (juga 1920x1080, 2400x1080, 1600x720)
+godot --path . --resolution 2340x1080 --position 0,0 --script res://tests/probe_animasi_pemain_jendela.gd -- docs/loop/<RUN_ID>/shots/iter<N>   # tangkapan layar run 5C: jatuh, terjerembab, bangkit lima arah, rem -> berhenti (juga di titik tangkap kucing), bangkit -> kayuh, kidal (juga 1920x1080, 2400x1080, 1600x720)
+godot --path . --resolution 2340x1080 --position 0,0 --script res://tests/probe_simpang_jendela.gd -- docs/loop/<RUN_ID>/shots/iter<N>   # tangkapan layar run 5C: simpang dekat dan seberang, melintas mulut, lengan sampai tepi layar, ujung kerb, kidal (juga 1920x1080, 2400x1080, 1600x720)
 python3 tools/tests_cek/uji_aset_gelombang1.py         # bukti renderer gelombang 1 deterministik, palet induk, manifest, mock docs (juga uji_aset_pasang_gelombang1.py: isi assets/ = keluaran --salin)
 godot --path . --resolution 2340x1080 --position 0,0 --script res://tests/probe_aset_jendela.gd -- docs/loop/<RUN_ID>/shots/iter<N>   # tangkapan layar aset gelombang 1 di rute (ubin, koran, terlipat, debu, garis, bintang, koin, kilau; juga 1920x1080, 2400x1080, 1600x720)
 godot --headless --path . --quit-after 2               # buka project dua frame, harus tanpa ERROR dan WARNING
@@ -118,7 +121,7 @@ mkdir -p builds                                        # folder APK hasil ekspor
 godot --headless --path . --export-pack "Android" build/kring-uji.pck   # paket game dengan filter preset (tanpa Java), periksa tidak ada tests/, docs/, atau spike sisi dekat dan 9 segmen rute ikut
 godot --headless --path . --export-debug "Android" builds/kring-kring-debug.apk   # APK debug; butuh export templates 4.7.2 dan Java SDK Path di Editor Settings
 python3 tools/loper_art/produce.py --out build/loper_art   # render ulang sprite pemain (butuh numpy, pillow)
-python3 tools/loper_art/bangun_frames.py                   # bangun ulang loper_agen_frames.tres gabungan (50 animasi) dan salin PNG/JSON sprite ke assets/ (hanya stdlib)
+python3 tools/loper_art/bangun_frames.py                   # bangun ulang loper_agen_frames.tres gabungan (68 animasi sejak Fase 5C) dan salin PNG/JSON sprite ke assets/ (hanya stdlib)
 python3 tools/env_art/graybox.py                       # render ulang ubin dan kotak graybox (hanya stdlib)
 python3 tools/env_art/spike_sisi_dekat.py --salin      # aset graybox spike sisi dekat ke assets/sprites/_spike/sisi_dekat/ (butuh numpy, pillow)
 python3 tools/audio_art/sintesis_sepeda.py             # buat ulang tiga WAV placeholder sepeda (hanya stdlib), lalu godot --headless --import

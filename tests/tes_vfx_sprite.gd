@@ -13,6 +13,16 @@ const SKALA: int = 3
 const LEBAR: int = 780
 const TITIK_STICK: Vector2 = Vector2(100, 260)
 const TOL: float = 0.0001
+## Posisi garis kecepatan LAMA relatif titik pijak sepeda (umpan balik HP pemilik 2026-10-22: "posisi yang sebelumnya sudah pas"): pusat piksel garis rata-rata seperti tergambar di 60 fps,
+## dari kode run 1B (commit 7acbef7, `PancaranPiksel` + `UmpanBalikSepeda._ready`; ditulis literal, tidak dibaca dari konstanta): garis muncul di (30, -24) lalu melaju mundur (-2, 1)/akar 5
+## x 200 px/d; umur 0,3 d = hidup di umur 0 sampai 17 frame, jadi rata-rata 8,5/60 x 200 = 28,33 px mundur = (-25,34; 12,67); pusat anak tangga 2x1 tujuh langkah dari titik garis = (7; -2,5).
+## Total (11,66; -13,83). Sebaran tegak lurus jalan simetris (rata-rata 0).
+const GARIS_LAMA_PUSAT: Vector2 = Vector2(11.66, -13.83)
+## Pusat anak tangga garis partikel dari titik gambarnya (`PancaranPiksel._draw`: kotak 2x1 di (2j, -j), j = 0 sampai 6): x rata-rata 6 + 1, y rata-rata -3 + 0,5.
+const GARIS_LAMA_TANGGA_PUSAT: Vector2 = Vector2(7.0, -2.5)
+## Sumbu maju sepanjang jalan dan tegak lurus jalan di layar (2:1), ditulis ulang: (2, -1)/akar 5 dan (-1, -2)/akar 5.
+const SUMBU_MAJU: Vector2 = Vector2(0.8944272, -0.4472136)
+const SUMBU_TEGAK: Vector2 = Vector2(-0.4472136, -0.8944272)
 
 var _cek: Callable
 var _judul: Callable
@@ -36,7 +46,10 @@ func jalankan() -> void:
 	_test_garis_acak_murni()
 	_test_vfx_antaran_murni()
 	_test_node_vfx_sepeda()
+	_test_garis_posisi_lama()
+	await _test_garis_lama_dari_partikel()
 	await _test_debu_garis_di_scene()
+	await _test_garis_posisi_lama_di_scene()
 	await _test_jeda_membekukan_vfx()
 	await _test_bintang_dan_koin_di_scene()
 	await _test_tip_sesudah_tenggat_tanpa_koin()
@@ -193,7 +206,8 @@ func _test_aturan_tampil_murni() -> void:
 	check(salah_garis.is_empty(), "garis: ambang 4,5 inklusif, satu langkah di sisi salah, mati saat kurangi efek: %s" % [salah_garis])
 	check(absf(VfxSepeda.garis_alfa(4.5, false) - 0.25) < TOL and absf(VfxSepeda.garis_alfa(5.25, false) - 0.625) < TOL and absf(VfxSepeda.garis_alfa(6.0, false) - 1.0) < TOL and absf(VfxSepeda.garis_alfa(9.0, false) - 1.0) < TOL and VfxSepeda.garis_alfa(4.0, false) == 0.0 and VfxSepeda.garis_alfa(6.0, true) == 0.0, "alpha garis = kekuatan: 0,25 di 4,5, 0,625 di 5,25, 1,0 di 6,0 dan di atasnya, 0 di bawah ambang dan saat kurangi efek")
 	check(absf(VfxSepeda.item_garis(5.25, false, k)[0].alfa - 0.625) < TOL, "item garis membawa alpha kekuatan")
-	# Letak gambar: debu berpijak (14, 7) di titik roda belakang (-12, 2); garis berujung kepala (27, 7) di (30, -24) digeser tegak lurus jalan.
+	# Letak gambar: debu berpijak (14, 7) di titik roda belakang (-12, 2); garis berujung kepala (27, 7) di (20, -14) digeser tegak lurus jalan (perbaikan 2026-10-22: sebelumnya (30, -24),
+	# titik muncul partikel, sekitar 13,5 px di depan garis lama; posisi lama dikunci terpisah di `_test_garis_posisi_lama`).
 	var item_debu: DefSprite.Item = VfxSepeda.item_debu(5.0, false, false, 0.0)[0]
 	check(item_debu.nama == "vfx_debu_roda" and item_debu.pojok == Vector2(-26, -5) and item_debu.frame == 0, "debu: pojok (-26, -5) = roda belakang (-12, 2) - pijak (14, 7)")
 	var tegak: Vector2 = VfxSepeda.arah_tegak()
@@ -201,12 +215,12 @@ func _test_aturan_tampil_murni() -> void:
 	var nol: VfxSepeda.GarisKeadaan = VfxSepeda.GarisKeadaan.new()
 	nol.varian = 1
 	var item_nol: DefSprite.Item = VfxSepeda.item_garis(6.0, false, nol)[0]
-	check(item_nol.nama == "vfx_garis_kecepatan_b" and item_nol.pojok == Vector2(3, -31), "garis varian b tanpa geseran: pojok (3, -31) = kepala (30, -24) - pijak (27, 7)")
+	check(item_nol.nama == "vfx_garis_kecepatan_b" and item_nol.pojok == Vector2(-7, -21), "garis varian b tanpa geseran: pojok (-7, -21) = kepala (20, -14) - pijak (27, 7)")
 	var geser: VfxSepeda.GarisKeadaan = VfxSepeda.GarisKeadaan.new()
 	geser.varian = 2
 	geser.geser_px = 10.0
 	var item_geser: DefSprite.Item = VfxSepeda.item_garis(6.0, false, geser)[0]
-	check(item_geser.nama == "vfx_garis_kecepatan_c" and item_geser.pojok == Vector2(-1, -40), "garis varian c digeser 10 px tegak lurus jalan: pojok (-1, -40)")
+	check(item_geser.nama == "vfx_garis_kecepatan_c" and item_geser.pojok == Vector2(-11, -30), "garis varian c digeser 10 px tegak lurus jalan: kepala (20, -14) + 10 x (-0,447; -0,894) = (15,53; -22,94), dibulatkan (16, -23), pojok (-11, -30)")
 	# Frame debu berputar (loop 12 fps, 6 frame).
 	var frame: Array[int] = []
 	for detik: float in [0.0, 0.09, 0.17, 0.26, 0.34, 0.43, 0.51, 1.0]:
@@ -417,6 +431,138 @@ func _test_alfa_sampai_gambar() -> void:
 
 
 # --- Debu dan garis di scene (AC-13) ---
+
+# --- Posisi garis kecepatan = posisi lama run 1B (umpan balik HP pemilik 2026-10-22) ---
+
+## Pusat piksel tak transparan sprite garis `nama` di ruang selnya (pusat piksel = x + 0,5, y + 0,5), dibaca dari PNG aset (bukan dari kode produksi).
+func _pusat_sel_garis(nama: String) -> Vector2:
+	var gambar: Image = (load(DefSprite.jalur_png(nama)) as Texture2D).get_image()
+	var jumlah: Vector2 = Vector2.ZERO
+	var n: int = 0
+	for y: int in range(gambar.get_height()):
+		for x: int in range(gambar.get_width()):
+			if gambar.get_pixel(x, y).a > 0.0:
+				jumlah += Vector2(x + 0.5, y + 0.5)
+				n += 1
+	return jumlah / float(maxi(n, 1))
+
+
+## Pusat piksel garis item `item` di ruang lokal sepeda: pojok + pusat sel varian (dari PNG).
+func _pusat_item_garis(item: DefSprite.Item, pusat_sel: Dictionary) -> Vector2:
+	return item.pojok + (pusat_sel[item.nama] as Vector2)
+
+
+func _semua_pusat_sel() -> Dictionary:
+	var hasil: Dictionary = {}
+	for nama: String in ["vfx_garis_kecepatan_a", "vfx_garis_kecepatan_b", "vfx_garis_kecepatan_c"]:
+		hasil[nama] = _pusat_sel_garis(nama)
+	return hasil
+
+
+func _test_garis_posisi_lama() -> void:
+	_judul.call("VfxSepeda: garis kecepatan sprite di posisi garis partikel lama run 1B relatif pemain, bukan di titik munculnya (umpan balik HP pemilik 2026-10-22)")
+	var pusat_sel: Dictionary = _semua_pusat_sel()
+	var rata: Vector2 = Vector2.ZERO
+	var salah: Array[String] = []
+	for varian: int in range(3):
+		var k: VfxSepeda.GarisKeadaan = VfxSepeda.GarisKeadaan.new()
+		k.varian = varian
+		var pusat: Vector2 = _pusat_item_garis(VfxSepeda.item_garis(6.0, false, k)[0], pusat_sel)
+		rata += pusat / 3.0
+		# Tiap varian: sepanjang jalan dalam 2 px dari pusat lama (varian berbeda bentuk; c paling depan, a paling belakang).
+		var beda_maju: float = (pusat - GARIS_LAMA_PUSAT).dot(SUMBU_MAJU)
+		if absf(beda_maju) > 2.0:
+			salah.append("varian %d pusat %s, beda sepanjang jalan %.2f px" % [varian, pusat, beda_maju])
+	check(salah.is_empty(), "tiap varian garis tanpa geseran: pusat sepanjang jalan dalam 2 px dari pusat lama %s: %s" % [GARIS_LAMA_PUSAT, salah])
+	check(rata.distance_to(GARIS_LAMA_PUSAT) <= 1.0, "rata-rata tiga varian: pusat garis %s dalam 1 px dari pusat garis lama %s (sebelum perbaikan sekitar (21,9; -23,5), 13,5 px di depan sepanjang jalan)" % [rata, GARIS_LAMA_PUSAT])
+	check((rata - GARIS_LAMA_PUSAT).dot(SUMBU_MAJU) < 1.0, "garis tidak lebih di depan pemain daripada posisi lama (beda sepanjang jalan %.2f px)" % (rata - GARIS_LAMA_PUSAT).dot(SUMBU_MAJU))
+	# Geseran tegak lurus jalan tetap simetris di sekitar posisi lama: +-g menggeser pusat +-g tegak lurus jalan, tidak sepanjang jalan (pembulatan 1 px).
+	var salah_geser: Array[String] = []
+	for g: float in [-26.0, -13.0, 7.5, 26.0]:
+		for varian: int in range(3):
+			var k0: VfxSepeda.GarisKeadaan = VfxSepeda.GarisKeadaan.new()
+			k0.varian = varian
+			var kg: VfxSepeda.GarisKeadaan = k0.salin()
+			kg.geser_px = g
+			var d: Vector2 = _pusat_item_garis(VfxSepeda.item_garis(6.0, false, kg)[0], pusat_sel) - _pusat_item_garis(VfxSepeda.item_garis(6.0, false, k0)[0], pusat_sel)
+			if absf(d.dot(SUMBU_MAJU)) > 1.0 or absf(d.dot(SUMBU_TEGAK) - g) > 1.0:
+				salah_geser.append("g %s varian %d: %s" % [g, varian, d])
+	check(salah_geser.is_empty(), "geseran g menggeser pusat garis g tegak lurus jalan saja (sebaran lama +-26 di sekitar pusat yang sama): %s" % [salah_geser])
+
+
+## Oracle dari kode lama yang masih ada: pemancar partikel `PancaranPiksel` di `UmpanBalikSepeda` tanpa sprite (dipakai jalan uji, tidak diubah sejak run 1B selain pembulatan) memberi pusat
+## garis rata-rata = `GARIS_LAMA_PUSAT`, jadi literal di atas benar-benar posisi lama.
+func _test_garis_lama_dari_partikel() -> void:
+	_judul.call("Oracle posisi lama: garis partikel UmpanBalikSepeda tanpa sprite (kode run 1B) rata-rata berpusat di (11,66; -13,83) relatif titik pijak sepeda di 60 fps")
+	var umpan: UmpanBalikSepeda = (load("res://scenes/entities/umpan_balik_sepeda.tscn") as PackedScene).instantiate() as UmpanBalikSepeda
+	_tree.root.add_child(umpan)
+	var garis: PancaranPiksel = umpan.garis()
+	garis.set_process(false)
+	umpan.debu().set_process(false)
+	umpan.perbarui(6.0, false)
+	var jumlah: Vector2 = Vector2.ZERO
+	var n: int = 0
+	for langkah: int in range(3600):
+		garis.maju(DT)
+		if langkah < 60:
+			continue
+		for i: int in range(garis.jumlah_aktif()):
+			jumlah += garis.titik_gambar(i) + GARIS_LAMA_TANGGA_PUSAT
+			n += 1
+	var pusat: Vector2 = jumlah / float(maxi(n, 1))
+	var beda: Vector2 = pusat - GARIS_LAMA_PUSAT
+	# Sepanjang jalan tidak dipengaruhi sebaran (hanya pembulatan piksel); tegak lurus jalan dipengaruhi sebaran acak +-26, rata-rata ribuan sampel.
+	check(n > 10000 and absf(beda.dot(SUMBU_MAJU)) <= 0.5, "garis partikel lama: pusat sepanjang jalan %.2f px dari literal (%d sampel, pusat %s)" % [beda.dot(SUMBU_MAJU), n, pusat])
+	check(absf(beda.dot(SUMBU_TEGAK)) <= 2.0, "garis partikel lama: pusat tegak lurus jalan %.2f px dari literal (sebaran +-26 simetris)" % beda.dot(SUMBU_TEGAK))
+	_tree.root.remove_child(umpan)
+	umpan.free()
+
+
+## Di scene rute (sprite), gerak nyata lewat stick: pusat garis relatif titik pijak sepeda (dikurangi geseran acak) = posisi lama, saat lurus, serong ke seberang, serong ke dekat, dan kidal.
+func _test_garis_posisi_lama_di_scene() -> void:
+	_judul.call("Scene rute: garis kecepatan sprite relatif pemain = posisi lama run 1B saat lurus, serong ke seberang, serong ke dekat, dan kidal (umpan balik HP pemilik 2026-10-22)")
+	var pusat_sel: Dictionary = _semua_pusat_sel()
+	var arah_terlihat: Dictionary = {}
+	for kidal: bool in [false, true]:
+		for arah: String in ["lurus", "seberang", "dekat"]:
+			var akar: RuteMain = await _siapkan()
+			if kidal:
+				akar.atur_kidal(true)
+			var sepeda: SepedaUji = _sepeda(akar)
+			var sprite: VfxSepedaGambar = sepeda.umpan_balik().sprite()
+			var loper: LoperSprite = _anak(akar, "LoperAgen") as LoperSprite
+			var stick: Vector2 = Vector2(LEBAR - TITIK_STICK.x, TITIK_STICK.y) if kidal else TITIK_STICK
+			_sentuh(0, stick, true)
+			_geser(0, stick - Vector2(0, Config.STICK_RADIUS_PX))
+			for i: int in range(150):
+				akar.perbarui(DT)
+				sprite.maju(DT)
+			var samping: float = 0.0 if arah == "lurus" else (-1.0 if arah == "seberang" else 1.0)
+			_geser(0, stick + Vector2(samping, -0.3) * Config.STICK_RADIUS_PX)
+			var jumlah: Vector2 = Vector2.ZERO
+			var n: int = 0
+			var steer: Dictionary = {}
+			for i: int in range(24):
+				akar.perbarui(DT)
+				sprite.maju(DT)
+				var item: Array[DefSprite.Item] = sprite.item_sprite()
+				if item.size() != 2:
+					continue
+				var k: VfxSepeda.GarisKeadaan = sprite.keadaan_garis()
+				var relatif: Vector2 = sprite.global_position - sepeda.global_position + _pusat_item_garis(item[1], pusat_sel) - SUMBU_TEGAK * k.geser_px
+				jumlah += relatif
+				n += 1
+				steer[loper.steer] = true
+				arah_terlihat[loper.steer] = true
+			var pusat: Vector2 = jumlah / float(maxi(n, 1))
+			check(n >= 20 and sepeda.kecepatan_ud >= 4.5, "kidal %s, %s: garis tampil (%d dari 24 frame, kecepatan %.2f, arah sprite %s)" % [kidal, arah, n, sepeda.kecepatan_ud, steer.keys()])
+			check(pusat.distance_to(GARIS_LAMA_PUSAT) <= 2.0, "kidal %s, %s: pusat garis relatif titik pijak sepeda %s dalam 2 px dari posisi lama %s" % [kidal, arah, pusat, GARIS_LAMA_PUSAT])
+			_sentuh(0, stick, false)
+			if kidal:
+				akar.atur_kidal(false)
+			_bersihkan(akar)
+	check(arah_terlihat.size() >= 3, "arah sprite pemain yang teruji beragam (%s), termasuk serong" % [arah_terlihat.keys()])
+
 
 func _test_debu_garis_di_scene() -> void:
 	_judul.call("Scene rute: debu dan garis dari sprite, pemancar kode dimatikan, ikut sepeda; sapuan kecepatan, rem, dan kurangi efek (AC-13, D-4)")

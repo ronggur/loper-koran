@@ -82,6 +82,9 @@ jobs:
       - name: Uji pemasangan aset run 5B (tembok, tong sampah logam, pohon, lampu mati, ubin tambahan = keluaran --salin, golden 5A byte-identik, impor Lossless)
         run: python3 tools/tests_cek/uji_aset_pasang_5b.py
 
+      - name: Uji ubin simpang T dan ujung kerb run 5C (deterministik, hanya yang dipakai, config = JSON renderer, susunan = adegan renderer, referensi, impor Lossless)
+        run: python3 tools/tests_cek/uji_aset_simpang.py
+
       - name: Import project (tanpa error, tanpa berkas yang belum di-commit)
         run: |
           set -uo pipefail

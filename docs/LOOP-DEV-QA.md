@@ -575,7 +575,9 @@ CATATAN DARI RUN 3A (sudah di main sesudah PR #28 di-merge; baca LOG.md dan SPEC
     Zona halaman/teras/jendela tidak digambar di tanah rute (D-20).
   - Kotak surat sekarang AREA di RUMPUT HALAMAN (PR #30, 2026-10-16): seberang 1,0 x 1,25 dan
     dekat 0,75 x 1,25 ubin, menempel trotoar, digambar di tanah rute (`AreaKotakGambar`;
-    tindak lanjut review pemilik, LOG 3A D-28 sampai D-32). Sepeda boleh naik trotoar: batas
+    tindak lanjut review pemilik, LOG 3A D-28 sampai D-32; DIGANTI 2026-10-22: persegi area
+    tidak digambar lagi di rute karena pemain mengira hanya area itu yang dinilai, zona dan
+    penilaian tidak berubah, `AreaKotakGambar` dihapus). Sepeda boleh naik trotoar: batas
     lateral +-2,0 ubin (tepi trotoar), bukan lagi +-1,0 (revisi D-4, BALANCING 2 dan 5);
     rintangan (anjing, mobil garasi) harus diuji dari posisi sepeda di trotoar juga.
     Pertimbangkan "inti" 0,5 x 0,5 di pusat (zona lama) sebagai kandidat bonus "tepat" di
@@ -920,8 +922,8 @@ Disimpan 2026-10-21, sesudah PR #42 (aset gelombang 1 dirender) dan PR #43 (run 
 | Run | Isi | Prasyarat |
 |---|---|---|
 | 5A | Salin lewat skrip dan pasang tampilan: enam ubin kolom jalan, koran (putar, bayangan, tiga permukaan mendarat, terlipat), VFX sepeda (debu, garis kecepatan, bintang kena, koin tip), kilau misi; tiga penyesuaian renderer (kilau, tong abu-abu, satu polisi tidur) | PR #42 dan #43 di-merge |
-| 5B | Tembok sisi dekat dan komposisi rumah dekat, jenis dekor di data segmen (tong sampah, pohon, lampu jalan; DATA_SCHEMA 3), ubin jalan masuk garasi dan simbol, polisi tidur, zebra, genangan. **Status (2026-10-21): dikerjakan Run 5B** (`docs/loop/20261021-fase5b-tembok-dekor/`, branch `feat/fase5b-tembok-dekor`, Dev iterasi 1 bagian A, B1, B2, C selesai; QA iterasi 1 FAIL (QA-001); Dev iterasi 2 selesai: kotak penutup dekor sisi dekat = sprite nyata, dibuktikan piksel; menunggu QA iterasi 2 dan uji HP): isi nyata = tembok empat varian + tiang dan rumah dekat digambar mundur 1,25 ubin, dekor `tong_sampah`/`pohon`/`lampu_jalan` di sembilan segmen, ubin jalan masuk garasi (sisi seberang), simbol sepeda, variasi rumput luar (`rumput_2`, `rumput_3`). **Tidak dikerjakan:** polisi tidur, zebra, genangan (M3, butuh desain gameplay), `aspal_N` (D-4), tong biru, lampu nyala | 5A di-merge |
-| 5C | Animasi pemain yang kurang (berhenti dengan kaki turun, bangkit, jatuh dan terjerembab empat arah lain) lewat `tools/loper_art`, pose kucing ditangkap, ubin ujung kerb dan sudut trotoar | 5A di-merge (boleh paralel dengan 5B) |
+| 5B | Tembok sisi dekat dan komposisi rumah dekat, jenis dekor di data segmen (tong sampah, pohon, lampu jalan; DATA_SCHEMA 3), ubin jalan masuk garasi dan simbol, polisi tidur, zebra, genangan. **Status (2026-10-22): di-merge PR #49** (`docs/loop/20261021-fase5b-tembok-dekor/`, QA PASS sesudah iterasi 2: kotak penutup dekor sisi dekat = sprite nyata, dibuktikan piksel; uji HP 8.13 belum ada): isi nyata = tembok empat varian + tiang dan rumah dekat digambar mundur 1,25 ubin, dekor `tong_sampah`/`pohon`/`lampu_jalan` di sembilan segmen, ubin jalan masuk garasi (sisi seberang), simbol sepeda, variasi rumput luar (`rumput_2`, `rumput_3`). **Tidak dikerjakan:** polisi tidur, zebra, genangan (M3, butuh desain gameplay), `aspal_N` (D-4), tong biru, lampu nyala | 5A di-merge |
+| 5C | Animasi pemain yang kurang (berhenti dengan kaki turun, bangkit, jatuh dan terjerembab empat arah lain) lewat `tools/loper_art`, pose kucing ditangkap, ubin ujung kerb dan sudut trotoar. **Status (2026-10-22): aset dirender di PR #51 (di-merge); verifikasi dan pemasangan dikerjakan Run 5C** (`docs/loop/20261022-fase5c-animasi-simpang/`, branch `feat/fase5c-animasi-simpang`, belum di-merge): Dev iterasi 1 bagian AB (animasi pemain diverifikasi, dua perbaikan tampilan, pose kucing ditangkap), CD (ujung kerb jalan masuk, simpang T hiasan tiga dekat dan satu seberang sesudah putusan P-6), dan E (paket ekspor, dokumen, gerbang) selesai; menunggu QA iterasi 1 dan uji HP 8.14 | 5A di-merge (boleh paralel dengan 5B) |
 
 Perintah di bawah hanya untuk **5A**. Perintah 5B ada di Bagian 6h (ditulis sesudah 5A di-merge, dengan usulan pengubahan cakupan); 5C ditulis sesudah 5B.
 

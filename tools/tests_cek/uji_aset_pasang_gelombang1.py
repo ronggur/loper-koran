@@ -50,6 +50,14 @@ LAMA_PROPS = ['prop_kotak_surat', 'prop_kotak_surat_bukan']     # sudah ada sebe
 PASANG_UBIN = ['rumput_seberang', 'trotoar_seberang', 'aspal_seberang', 'aspal_dekat', 'trotoar_dekat', 'rumput_dekat']
 UBIN_TAMBAHAN = ['rumput_1', 'rumput_2', 'rumput_3']    # D-2 run 5A (rumput_1) dan D-1 run 5B (rumput_2, rumput_3): rumput polos kolom luar
 UBIN_KHUSUS = ['trotoar_seberang_masuk', 'rumput_seberang_masuk', 'trotoar_seberang_simbol', 'trotoar_dekat_simbol']   # D-1 run 5B
+# Run fase5c-animasi-simpang (D-2): dua ujung kerb jalan masuk seberang dan 18 ubin simpang sisi dekat, ditulis eksplisit.
+UBIN_5C = ['trotoar_seberang_masuk_ujung', 'rumput_seberang_masuk_ujung'] + ['simpang_dekat_%s' % n for n in (
+    'trotoar_dekat_depan_2', 'rumput_dekat_depan_2', 'lengan_depan_2', 'aspal_dekat_depan_1', 'trotoar_dekat_depan_1', 'rumput_dekat_depan_1', 'lengan_depan_1',
+    'aspal_dekat_mulut_1', 'trotoar_dekat_mulut_1', 'rumput_dekat_mulut_1', 'lengan_mulut_1', 'aspal_dekat_mulut_2', 'trotoar_dekat_mulut_2', 'rumput_dekat_mulut_2',
+    'lengan_mulut_2', 'trotoar_dekat_belakang_1', 'rumput_dekat_belakang_1', 'lengan_belakang_1')]
+UBIN_5C += ['simpang_seberang_%s' % n for n in (
+    'rumput_seberang_depan_2', 'lengan_depan_2', 'trotoar_seberang_depan_1', 'rumput_seberang_depan_1', 'lengan_depan_1', 'aspal_seberang_mulut_1', 'trotoar_seberang_mulut_1', 'rumput_seberang_mulut_1',
+    'lengan_mulut_1', 'aspal_seberang_mulut_2', 'trotoar_seberang_mulut_2', 'rumput_seberang_mulut_2', 'lengan_mulut_2', 'trotoar_seberang_belakang_1', 'rumput_seberang_belakang_1', 'lengan_belakang_1')]   # putusan P-6 run 5C
 # Run 5B (D-1): keluaran tambahan render.py --salin (isi pasangan 5A di atas tidak berubah) dan keluaran lampu_pohon.py --salin.
 PASANG_SPRITE_5B = {
     'houses/perumahan': ['house_tembok_polos', 'house_tembok_bata', 'house_tembok_besi', 'house_tembok_pot', 'house_tembok_tiang'],
@@ -185,7 +193,7 @@ def ekspektasi_skrip():
     props = sorted(n + e for n in PASANG_SPRITE['props'] + PASANG_SPRITE_5B['props'] for e in ('.png', '.json'))
     vfx = sorted(n + e for n in PASANG_SPRITE['vfx'] for e in ('.png', '.json'))
     rumah = sorted(n + e for n in PASANG_SPRITE_5B['houses/perumahan'] for e in ('.png', '.json'))
-    ubin = sorted(['tile_perumahan_%s.png' % n for n in PASANG_UBIN + UBIN_TAMBAHAN + UBIN_KHUSUS] + ['tile_perumahan.json'])
+    ubin = sorted(['tile_perumahan_%s.png' % n for n in PASANG_UBIN + UBIN_TAMBAHAN + UBIN_KHUSUS + UBIN_5C] + ['tile_perumahan.json'])
     return {'props': props, 'vfx': vfx, os.path.join('houses', 'perumahan'): rumah, os.path.join('tiles', 'perumahan'): ubin}
 
 
@@ -281,18 +289,18 @@ def main():
         periksa(lebar < 2048 and tinggi < 2048, 'ukuran < 2048: %s' % n)
     meta = json.loads(baca(os.path.join(SPRITES, 'tiles', 'perumahan', 'tile_perumahan.json')))
     periksa(meta['tile'] == [64, 32] and meta['ground_anchor'] == [32, 16], 'JSON ubin: 64x32, titik pijak (32, 16)')
-    periksa(meta['tiles'] == sorted('tile_perumahan_%s.png' % n for n in PASANG_UBIN + UBIN_TAMBAHAN + UBIN_KHUSUS), 'JSON ubin hanya memuat ubin yang dipasang: %s' % meta['tiles'])
+    periksa(meta['tiles'] == sorted('tile_perumahan_%s.png' % n for n in PASANG_UBIN + UBIN_TAMBAHAN + UBIN_KHUSUS + UBIN_5C), 'JSON ubin hanya memuat ubin yang dipasang: %s' % meta['tiles'])
     periksa(sorted(meta['kolom_x_ubin']) == sorted(PASANG_UBIN), 'JSON ubin: kolom_x_ubin = enam kolom')
     periksa(meta['kolom_x_ubin'] == {'rumput_seberang': -2.5, 'trotoar_seberang': -1.5, 'aspal_seberang': -0.5, 'aspal_dekat': 0.5,
                                       'trotoar_dekat': 1.5, 'rumput_dekat': 2.5}, 'JSON ubin: pusat kolom -2,5 .. 2,5 ubin')
-    for n in PASANG_UBIN + UBIN_TAMBAHAN + UBIN_KHUSUS:
+    for n in PASANG_UBIN + UBIN_TAMBAHAN + UBIN_KHUSUS + UBIN_5C:
         jalur = os.path.join(SPRITES, 'tiles', 'perumahan', 'tile_perumahan_%s.png' % n)
         periksa(os.path.isfile(jalur) and ukuran(jalur) == (64, 32), 'ubin %s ukuran 64x32' % n)
 
     # ---- impor Godot (AC-3)
     png_baru = [os.path.join(SPRITES, f, n + '.png') for f, n in daftar_json]
     png_baru += [os.path.join(SPRITES, 'props', n + '.png') for n in PASANG_LAMPU_POHON]
-    png_baru += [os.path.join(SPRITES, 'tiles', 'perumahan', 'tile_perumahan_%s.png' % n) for n in PASANG_UBIN + UBIN_TAMBAHAN + UBIN_KHUSUS]
+    png_baru += [os.path.join(SPRITES, 'tiles', 'perumahan', 'tile_perumahan_%s.png' % n) for n in PASANG_UBIN + UBIN_TAMBAHAN + UBIN_KHUSUS + UBIN_5C]
     for jalur in png_baru:
         nama = os.path.relpath(jalur, SPRITES)
         imp = jalur + '.import'

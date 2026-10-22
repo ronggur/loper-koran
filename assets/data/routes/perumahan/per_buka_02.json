@@ -10,7 +10,6 @@
     { "pos": 10, "sisi": "seberang", "jenis": "pelana", "pelanggan_boleh": true },
     { "pos": 12, "sisi": "dekat", "jenis": "dekat_limasan", "pelanggan_boleh": false },
     { "pos": 14, "sisi": "seberang", "jenis": "sayap", "pelanggan_boleh": false },
-    { "pos": 18, "sisi": "seberang", "jenis": "limasan", "pelanggan_boleh": false },
     { "pos": 20, "sisi": "dekat", "jenis": "dekat_pelana_lintang", "pelanggan_boleh": false },
     { "pos": 22, "sisi": "seberang", "jenis": "pelana", "pelanggan_boleh": true },
     { "pos": 26, "sisi": "seberang", "jenis": "sayap", "pelanggan_boleh": false },
@@ -27,5 +26,8 @@
     { "jenis": "tong_sampah", "pos": 15, "sisi": "dekat", "varian": "logam" },
     { "jenis": "lampu_jalan", "pos": 25, "sisi": "seberang", "varian": "lengan" },
     { "jenis": "lampu_jalan", "pos": 27, "sisi": "dekat", "varian": "lengan" }
+  ],
+  "simpang": [
+    { "pos": 18, "sisi": "seberang" }
   ]
 }

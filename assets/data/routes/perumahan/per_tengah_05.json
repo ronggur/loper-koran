@@ -29,5 +29,8 @@
     { "jenis": "pohon", "pos": 21, "sisi": "seberang", "varian": "rindang" },
     { "jenis": "lampu_jalan", "pos": 25, "sisi": "seberang", "varian": "lengan" },
     { "jenis": "tong_sampah", "pos": 27, "sisi": "dekat", "varian": "logam" }
+  ],
+  "simpang": [
+    { "pos": 3, "sisi": "dekat" }
   ]
 }
