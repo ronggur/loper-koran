@@ -135,8 +135,8 @@ File: `assets/data/routes/<distrik>/<id>.json`, satu file per segmen, **JSON bua
 | `id` | Kode unik huruf kecil dan garis bawah, **sama dengan nama berkas** (`per_tengah_02` di `per_tengah_02.json`) |
 | `distrik` | Distrik segmen (`perumahan`) |
 | `panjang` | Panjang dalam ubin, bilangan bulat 24 sampai 40 |
-| `tag` | `tingkat` (`tenang`/`sedang`/`padat`), `sisi_pelanggan` (`seberang`/`dekat`/`dua_sisi`), `posisi` (`pembuka`/`tengah`/`penutup`). Pembuka dan penutup selalu `tenang` |
-| `rumah` | Daftar petak rumah: `pos` (ubin dari awal segmen, bilangan bulat), `sisi` (`seberang`/`dekat`), `jenis` (bentuk rumah, daftar di bawah), `pelanggan_boleh` (true/false) |
+| `tag` | `tingkat` (`tenang`/`sedang`/`padat`), `sisi_pelanggan` (`seberang`/`dekat`/`dua_sisi`), `posisi` (`pembuka`/`tengah`/`penutup`). Pembuka dan penutup selalu `tenang`. `sisi_pelanggan` harus sesuai isi (run `20261022-fase5d-sisi-dekat` bagian B, divalidasi `SegmenRute`): `dua_sisi` bila ada rumah seberang DAN rumah dekat yang `pelanggan_boleh`, `seberang` bila tidak ada rumah dekat yang boleh, `dekat` bila tidak ada rumah seberang yang boleh. Sembilan segmen perumahan sekarang `dua_sisi` |
+| `rumah` | Daftar petak rumah: `pos` (ubin dari awal segmen, bilangan bulat), `sisi` (`seberang`/`dekat`), `jenis` (bentuk rumah, daftar di bawah), `pelanggan_boleh` (true/false; rumah dekat boleh sejak run 5D bagian B, tetapi pelanggan dekat baru dipilih `RouteBuilder` pada hari >= 3) |
 | `objek` | Rintangan yang ditandai: `jenis`, `pos`, `jalur` (`seberang`/`dekat`; **tidak pernah `tengah`**), `tanda_ubin` (jarak tanda terlihat sebelum rintangan, paling sedikit 9) |
 | `titik_misi` | Tempat yang boleh dipakai misi: `nama` (mis. `atap`, `balik_pot`), `pos`, `sisi`; harus berdiri di rumah (pos dan sisi sama dengan sebuah rumah) |
 | `dekor` | **Opsional** (run `20261021-fase5b-tembok-dekor`, usulan): hiasan pinggir jalan. Daftar butir `{ "jenis", "pos", "sisi", "varian" }`, keempat field wajib dan tidak ada field lain. Tabel jenis dan aturan di bawah. Berkas tanpa `dekor` tetap sah |
@@ -149,19 +149,19 @@ Contoh dari berkas nyata (`assets/data/routes/perumahan/per_tengah_02.json`):
   "id": "per_tengah_02",
   "distrik": "perumahan",
   "panjang": 32,
-  "tag": { "tingkat": "sedang", "sisi_pelanggan": "seberang", "posisi": "tengah" },
+  "tag": { "tingkat": "sedang", "sisi_pelanggan": "dua_sisi", "posisi": "tengah" },
   "rumah": [
     { "pos": 2, "sisi": "seberang", "jenis": "pelana", "pelanggan_boleh": false },
-    { "pos": 4, "sisi": "dekat", "jenis": "dekat_limasan", "pelanggan_boleh": false },
+    { "pos": 4, "sisi": "dekat", "jenis": "dekat_limasan", "pelanggan_boleh": true },
     { "pos": 6, "sisi": "seberang", "jenis": "limasan", "pelanggan_boleh": true },
     { "pos": 10, "sisi": "seberang", "jenis": "sayap", "pelanggan_boleh": true },
     { "pos": 12, "sisi": "dekat", "jenis": "dekat_pelana_sejajar", "pelanggan_boleh": false },
     { "pos": 14, "sisi": "seberang", "jenis": "limasan", "pelanggan_boleh": false },
     { "pos": 18, "sisi": "seberang", "jenis": "pelana", "pelanggan_boleh": true },
-    { "pos": 20, "sisi": "dekat", "jenis": "dekat_pelana_lintang", "pelanggan_boleh": false },
+    { "pos": 20, "sisi": "dekat", "jenis": "dekat_pelana_lintang", "pelanggan_boleh": true },
     { "pos": 22, "sisi": "seberang", "jenis": "sayap", "pelanggan_boleh": true },
     { "pos": 26, "sisi": "seberang", "jenis": "pelana", "pelanggan_boleh": true },
-    { "pos": 28, "sisi": "dekat", "jenis": "dekat_limasan", "pelanggan_boleh": false },
+    { "pos": 28, "sisi": "dekat", "jenis": "dekat_limasan", "pelanggan_boleh": true },
     { "pos": 30, "sisi": "seberang", "jenis": "limasan", "pelanggan_boleh": false }
   ],
   "objek": [
@@ -185,9 +185,17 @@ Contoh dari berkas nyata (`assets/data/routes/perumahan/per_tengah_02.json`):
 | Bidang | Nilai | Aset |
 |---|---|---|
 | `rumah.jenis` sisi `seberang` | `limasan`, `pelana`, `sayap` | `assets/sprites/houses/perumahan/house_perumahan_<jenis>_<pelanggan\|bukan>.png` |
-| `rumah.jenis` sisi `dekat` | `dekat_limasan`, `dekat_pelana_lintang`, `dekat_pelana_sejajar` | `house_perumahan_<jenis>_<pelanggan\|bukan>.png` (di distrik perumahan hanya varian `bukan` dipakai; tampilan sisi dekat diputuskan 2026-10-17: tembok/pagar belakang rendah, ROADMAP 4b; tembok belakang rendah digambar otomatis per rumah dekat, tanpa field data, run `20261021-fase5b-tembok-dekor`) |
+| `rumah.jenis` sisi `dekat` | `dekat_limasan`, `dekat_pelana_lintang`, `dekat_pelana_sejajar` | `house_perumahan_<jenis>_<pelanggan\|bukan>.png` (varian `pelanggan` dipakai rumah dekat yang dipilih jadi pelanggan, `bukan` selebihnya; sejak run `20261022-fase5d-sisi-dekat` tembok belakang dilepas, rumah dekat berteras menjorok digambar mundur 0,5 ubin, ROADMAP 4b) |
 | `objek.jenis` | `anjing_penjaga`, `mobil_garasi` | `assets/sprites/obstacles/obs_anjing_sheet`, `obs_mobil_garasi_sheet` (perilaku di Run 3B; di 3A hanya tempatnya yang ditandai) |
 | `dekor.jenis` dan `dekor.varian` | `tong_sampah` (`logam`), `pohon` (`rindang`, `glodokan`, `ketapang`), `lampu_jalan` (`lengan`) | `assets/sprites/props/prop_tong_sampah_logam`, `prop_pohon_<varian>`, `prop_lampu_lengan_<seberang\|dekat>` (lengan lampu menghadap jalan; sprite menurut `sisi`); varian lain (tong biru, pohon dan lampu jenis lain, lampu nyala) tidak dipasang dan ditolak |
+
+**Pelanggan sisi dekat** (run `20261022-fase5d-sisi-dekat` bagian B, usulan; `SegmenRute`, `RouteBuilder`, `ZonaSasaran`): rumah dekat yang `pelanggan_boleh` jadi kandidat pelanggan sejak hari >= 3 (`RouteBuilder.bangun(benih, pustaka, hari)`; hari 1 dan 2 tetap hanya seberang dengan RNG yang sama). Kuota 8 atau 9 dari 25 (`Config.RUTE_DEKAT_KUOTA_MIN`/`MAKS`), celah antar pelanggan dua sisi digabung <= 20 ubin. Aturan tempat yang divalidasi `SegmenRute.parse` untuk kotak surat dekat (zona `RUTE_DEKAT_KOTAK_SURAT_UBIN` = cermin seberang, lateral 1,75 sampai 2,75, maju `pos` + 1,25 sampai 2,5) dan teras dekat (lateral 3,1875 sampai 4,0625):
+
+- dekor sisi dekat tidak menimpa zona kotak surat atau teras **semua** rumah dekat (aturan dekor lama, geometri zona baru);
+- pita simpang tidak memotong zona rumah dekat (aturan simpang lama);
+- rintangan (anjing di posisi diam, lintasan mobil) tidak menimpa zona kotak surat atau teras rumah dekat yang `pelanggan_boleh` (`SegmenRute.rintangan_menimpa_zona_dekat`). Rumah dekat bukan kandidat boleh berbagi halaman dengan anjing: per_tengah_02@12 dan per_tengah_03@28 (anjing dekat @14 dan @30) `pelanggan_boleh: false` karena itu;
+- jalan masuk garasi hanya di lateral negatif (seberang) sehingga tidak pernah menjangkau zona dekat (dijaga tes, bukan cabang validasi).
+
 
 **Dekor** (run `20261021-fase5b-tembok-dekor` bagian B2, usulan; `SegmenRute`, `DekorRute`, `RouteBuilder`, `DekorDaur`): hiasan pinggir jalan, hanya tampilan. Bukan penghalang gerak, tidak masuk tabrakan, rintangan, zona, penilaian lemparan, `MedanKoran`, skor, atau tenggat; satu-satunya hubungannya dengan permainan adalah pohon, lampu, dan tong sampah **sisi dekat** menjadi semi-transparan (`RUTE_PENUTUP_ALFA`) bila menutupi pemain di lajur sepeda atau trotoar dekat (aturan `PenutupPemain`, kotak penutup = tinggi dan lebar sprite nyata, `Config.RUTE_DEKOR_TINGGI_PENUTUP_UBIN` dan `RUTE_DEKOR_SETENGAH_PENUTUP_UBIN`; dekor seberang tidak; P-7). `pos` = ubin bilangan bulat dari awal segmen, `1` sampai `panjang - 1`. Lateral dan tapak kaki ditentukan jenis dan sisi lewat `Config.RUTE_DEKOR_*` (tidak ada di data): sisi dekat: pohon dan tong sampah di halaman, lateral 2,5 (tapak kaki 0,5 × 0,5), lampu jalan di luar tepi trotoar, lateral 2,25 (tapak 0,25 × 0,25); sisi seberang: tong 2,5, pohon 2,75, lampu 2,625 (`RUTE_DEKOR_LATERAL_SEBERANG_UBIN`, lebih jauh supaya tidak menimpa pemain di tepi seberang). Dekor digambar di maju = `pos`; id dekor di rute `<id_segmen>:<sisi>@<pos>`. Aturan penempatan (ditolak bila dilanggar):
 
@@ -215,7 +223,7 @@ Akibat langsung geometri rumah (petak 4 ubin, rumah 3 ubin): dekor di halaman ru
 `pos` = ubin dari awal segmen ke pusat baris mulut `mulut_2` (baris mulut yang lebih dekat ke awal segmen). Lebar mulut dan pita tidak ada di data, tetapi konstanta `config.gd` yang dites sama dengan JSON renderer `tile_perumahan.json` (D-3): mulut 2 ubin (`RUTE_SIMPANG_LEBAR_MULUT_UBIN`, maju `pos` − 0,5 sampai `pos` + 1,5, `RUTE_SIMPANG_MULUT_AWAL_UBIN`); **pita** = semua baris yang ubinnya diganti renderer (mulut dan sudut kerb, `RUTE_SIMPANG_PITA_BARIS` −1 sampai 3), maju `pos` − 1,5 sampai `pos` + 3,5 (5 ubin). Pita sisi simpang membentang dari garis tengah jalan ke luar tanpa batas (lengan jalan samping berulang sampai tepi layar); sisi lain jalan tetap lurus. Di rute (`RouteBuilder`, tanpa RNG baru) tiap simpang menjadi `SimpangItem` dengan id `<id_segmen>:simpang:<sisi>@<pos>`, maju mutlak, sisi, lebar mulut, dan awal mulut, dibaca hanya lewat `RouteBuilder.simpang_di(rute)` (titik pakai lalu lintas berbelok kelak, M3; sekarang hanya `TanahDaur`). Aturan penempatan (ditolak bila dilanggar; tepi yang bersentuhan boleh):
 
 - pita seluruhnya di dalam segmen (`pos` − 1,5 >= 0 dan `pos` + 3,5 <= `panjang`; jadi `pos` 2 sampai `panjang` − 4);
-- pita tidak memotong, di sisi simpang, kavling rumah mana pun (tapak logika, tapak gambar rumah dekat yang mundur, dan tembok belakang rumah dekat `pos` sampai `pos` + 3), zona kotak surat, teras, halaman, atau jendela, dekor, rintangan (posisi diam anjing dan seluruh lintasan mobil garasi), atau baris jalan masuk garasi beserta baris ujung kerbnya;
+- pita tidak memotong, di sisi simpang, kavling rumah mana pun (tapak logika dan tapak gambar rumah dekat yang mundur 0,5 ubin; tembok belakang Run 5B dilepas Run 5D), zona kotak surat, teras, halaman, atau jendela, dekor, rintangan (posisi diam anjing dan seluruh lintasan mobil garasi), atau baris jalan masuk garasi beserta baris ujung kerbnya;
 - pita dua simpang (sisi mana pun) tidak bertumpuk, di segmen dan di rute utuh (`RouteBuilder.periksa_rute` memeriksa juga isi segmen tetangga di sambungan).
 
 Akibat geometri rumah (petak 4 ubin, kavling 3 ubin): celah antar rumah sesisi paling lebar 1 ubin, jadi simpang hanya muat di rentang tanpa rumah di sisi itu. Isi set perumahan sekarang: simpang dekat di `per_buka_01@3`, `per_tengah_05@3`, `per_tutup_01@2`, dan satu simpang seberang di `per_buka_02@18`, tempat rumah seberang bukan pelanggan dihapus (P-6 run 5C). Titik kucing misi (`RencanaMisi`) tidak pernah jatuh di pita (dites 600 hari).

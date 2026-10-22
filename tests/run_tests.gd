@@ -159,9 +159,15 @@ func _initialize() -> void:
 	await koran_sprite.jalankan()
 	var vfx_sprite: TesVfxSprite = TesVfxSprite.new(check, _judul, self)
 	await vfx_sprite.jalankan()
-	# Run fase5b-tembok-dekor bagian B1: tembok sisi dekat (varian FNV-1a, modul, geometri tidak berubah, gambar scene, jendela daur, sasaran tidak tertutup).
-	var tembok: TesTembok = TesTembok.new(check, _judul, self)
-	await tembok.jalankan()
+	# Run fase5d-sisi-dekat bagian A (menggantikan tes tembok run 5B): halaman terbuka tanpa tembok, rumah dekat baru mundur 0,5, kotak penutup sprite nyata, Y-sort, ukur piksel AC-6.
+	var sisi_dekat: TesSisiDekat = TesSisiDekat.new(check, _judul, self)
+	await sisi_dekat.jalankan()
+	# Run fase5d-sisi-dekat bagian B (murni): zona dekat cermin seberang, data pelanggan dekat, validasi segmen, RouteBuilder dari hari.
+	var sisi_dekat_b: TesSisiDekatB = TesSisiDekatB.new(check, _judul)
+	sisi_dekat_b.jalankan()
+	# Run fase5d-sisi-dekat bagian B (scene): kotak surat dua sisi, terlipat dekat, swipe nyata, bantu, radar, progres, tip hari 3, HariMain, bot bantu.
+	var sisi_dekat_scene: TesSisiDekatScene = TesSisiDekatScene.new(check, _judul, self)
+	await sisi_dekat_scene.jalankan()
 	# Run fase5b-tembok-dekor bagian B2: dekor pinggir jalan di data segmen (skema, validasi, rute identik, gambar, penutup, jalur utama, sasaran) dan kotak penutup rumah dekat digeser (P-4).
 	var dekor: TesDekor = TesDekor.new(check, _judul, self)
 	await dekor.jalankan()

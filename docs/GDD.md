@@ -83,6 +83,8 @@ Pelanggan ada di kiri dan kanan jalan, dan posisi jalur menentukan seberapa muda
 - Dua sisi bisa berbeda isi, misalnya kiri pelanggan dan kanan bukan pelanggan, atau kiri rumah dan kanan toko. Rintangan juga datang dari dua arah.
 - Antaran bergantian kiri-kanan secara berurutan bisa memberi bonus combo zigzag.
 
+**Pelanggan sisi dekat (keputusan pemilik 2026-10-22, dimajukan dari Fase 8 ke Run 5D; angka dan bentuk usulan sampai dinilai di HP):** hari 1 dan 2 pelanggan hanya di sisi seberang; **mulai hari 3**, 8 atau 9 dari 25 pelanggan rute perumahan ada di sisi dekat (total tetap 25, dipilih dari seed hari). Sasaran dekat mencerminkan seberang: kotak surat di tepi trotoar (oranye bila pelanggan, abu-abu bila bukan), teras, dan halaman, dengan aturan penilaian, prioritas, dan angka skor yang sama (`BALANCING.md` 5). Sisi dekat memperlihatkan rumah dari belakang dan samping: halaman rumput terbuka tanpa tembok, rumah mundur 0,5 ubin dari tepi kavling, teras menjorok ke arah jalan sehingga terbaca dari samping. Pemain diberi tahu sekali lewat tip singkat di hari 3. Titik kucing misi tetap di rumah seberang.
+
 ### 4.3 Radar rumah pelanggan
 
 Radar menandai rumah pelanggan yang akan datang di kiri dan kanan, supaya pemain bisa ancang-ancang berpindah jalur.
@@ -195,7 +197,7 @@ Game punya beberapa distrik dengan aturan main berbeda yang dibuka bertahap lewa
 
 - Pemain mulai di distrik pertama yang ritmenya tenang. Distrik berikutnya dibuka lewat reputasi lingkungan (bagian 8).
 - Tiap distrik baru memperkenalkan satu atau dua rintangan atau aturan baru, lalu distrik lanjutan menggabungkannya.
-- Distrik pertama hanya punya pelanggan di satu sisi jalan (sisi seberang, karena fasad dan pintunya terlihat di isometrik) sebagai tutorial alami, distrik lanjutan memakai dua sisi (bagian 4.2).
+- Distrik pertama (perumahan) memulai dengan pelanggan hanya di sisi seberang (fasad dan pintunya terlihat di isometrik) sebagai tutorial alami: **hari 1 dan 2** satu sisi, **mulai hari 3** pelanggan juga di sisi dekat, 8 atau 9 dari 25 (keputusan pemilik 2026-10-22, Run 5D; menggantikan rencana "satu sisi sepanjang distrik pertama"). Distrik lanjutan memakai dua sisi sejak hari pertamanya (bagian 4.2).
 - Urutan usulan: perumahan, perkampungan, ruko, lalu distrik lain di tabel. Urutan ini belum final. Apartemen dan kampus sudah dibuang.
 
 ### 9.2 Daftar distrik
@@ -524,7 +526,7 @@ Beberapa keputusan masih terbuka dan paling baik diputuskan lewat prototype kasa
 **Pertanyaan terbuka**
 
 - Cerita besar dan kondisi gagal (bagian 3.2).
-- ~~Cara menampilkan rumah di sisi dekat~~: diputuskan pemilik 2026-10-17, tembok atau pagar belakang rendah di kaki kavling dengan rumah penuh di belakangnya (pendekatan 2 spike run 3C; keputusan pemilik 2026-10-17) (`ROADMAP.md` 4b).
+- ~~Cara menampilkan rumah di sisi dekat~~: diputuskan pemilik 2026-10-17, tembok atau pagar belakang rendah di kaki kavling dengan rumah penuh di belakangnya (pendekatan 2 spike run 3C; keputusan pemilik 2026-10-17) (`ROADMAP.md` 4b); **diganti pemilik 2026-10-22**: halaman rumput terbuka tanpa tembok, rumah dekat mundur 0,5 ubin dengan teras menjorok, pelanggan dekat mulai hari 3 (bagian 4.2, Run 5D).
 - Kontrol landscape: apakah ambang rem di ujung bawah stick nyaman tanpa berhenti tak sengaja, dan apakah swipe pendek cukup teliti di layar kecil.
 - Bel: apakah tombol di pojok kanan bawah mudah dijangkau tanpa terpencet saat swipe, dan apakah bel dimajukan ke prototype awal karena sekarang menjadi ciri judul game (saat ini dijadwalkan Fase 6–7, `SOUND_DESIGN.md` 8).
 - Struktur sesi: rute harian berurutan, atau run roguelite dengan rute acak.

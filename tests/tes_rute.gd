@@ -27,12 +27,20 @@ const PANJANG: Dictionary = {
 	"per_tengah_01": 36, "per_tengah_02": 32, "per_tengah_03": 40, "per_tengah_04": 36, "per_tengah_05": 36,
 	"per_tutup_01": 24, "per_tutup_02": 28,
 }
-## `pos` rumah seberang yang `pelanggan_boleh: true` per segmen.
+## `pos` rumah seberang yang `pelanggan_boleh: true` per segmen (tidak berubah sejak run 3A).
 const BOLEH: Dictionary = {
 	"per_buka_01": [6, 10, 18], "per_buka_02": [6, 10, 22],
 	"per_tengah_01": [6, 14, 18, 26, 30], "per_tengah_02": [6, 10, 18, 22, 26], "per_tengah_03": [6, 14, 18, 26, 30, 34],
 	"per_tengah_04": [6, 10, 22, 26, 30], "per_tengah_05": [6, 14, 18, 26, 30],
 	"per_tutup_01": [6, 14], "per_tutup_02": [6, 10, 18],
+}
+## `pos` rumah DEKAT yang `pelanggan_boleh: true` per segmen (run fase5d-sisi-dekat bagian B, AC-7): semua rumah dekat, kecuali per_tengah_02@12 dan per_tengah_03@28 yang zona kotak suratnya beririsan dengan anjing dekat
+## (per_tengah_02 anjing @14, per_tengah_03 anjing @30; anjing duduk di lateral 2,5 .. 3,0, zona kotak surat dekat lateral 1,75 .. 2,75).
+const BOLEH_DEKAT: Dictionary = {
+	"per_buka_01": [8, 16, 24], "per_buka_02": [4, 12, 20, 28],
+	"per_tengah_01": [4, 12, 16, 24, 32], "per_tengah_02": [4, 20, 28], "per_tengah_03": [4, 8, 16, 24, 36],
+	"per_tengah_04": [4, 12, 20, 28, 32], "per_tengah_05": [8, 16, 24, 32],
+	"per_tutup_01": [8, 16], "per_tutup_02": [4, 12, 20],
 }
 ## `pos` mobil garasi per segmen (keputusan pemilik 2026-10-17: di celah samping rumah, pos rumah seberang - 1), urut.
 const MOBIL: Dictionary = {
@@ -264,13 +272,13 @@ func _test_segmen_sah_dan_mutan() -> void:
 		["id_baris_baru", "harus huruf kecil, angka, dan garis bawah"], ["titik_nama_baris_baru", "harus huruf kecil, angka, dan garis bawah"],
 		["panjang_23", "di luar 24 sampai 40"], ["panjang_41", "di luar 24 sampai 40"], ["panjang_pecahan", "bilangan bulat"],
 		["tingkat_salah", "tingkat 'ramai'"], ["posisi_salah", "posisi 'tengah_dua'"],
-		["sisi_pelanggan_salah", "sisi_pelanggan 'kiri'"], ["sisi_pelanggan_dekat", "hanya punya pelanggan di sisi seberang"],
+		["sisi_pelanggan_salah", "sisi_pelanggan 'kiri'"], ["sisi_pelanggan_dekat", "sisi_pelanggan 'dekat' tidak sesuai isi"],
 		["pembuka_padat", "harus bertingkat tenang"], ["penutup_sedang", "harus bertingkat tenang"], ["field_asing", "field 'warna' tidak dikenal"],
 		["rumah_sisi_kiri", "bukan seberang atau dekat"], ["rumah_sisi_kanan", "bukan seberang atau dekat"], ["rumah_tanpa_pos", "field wajib 'pos'"],
 		["rumah_pos_1", "di tepi segmen"], ["rumah_pos_akhir_min_1", "di tepi segmen"], ["rumah_pos_di_luar", "di tepi segmen"],
 		["rumah_pos_pecahan", "bilangan bulat"], ["rumah_jenis_salah", "tidak dikenal untuk sisi"],
 		["rumah_jenis_dekat_di_seberang", "tidak dikenal untuk sisi"], ["rumah_jenis_seberang_di_dekat", "tidak dikenal untuk sisi"],
-		["rumah_pelanggan_dekat", "tidak boleh jadi pelanggan"], ["rumah_pelanggan_bukan_bool", "true atau false"],
+		["rumah_pelanggan_dekat", "sisi_pelanggan 'seberang' tidak sesuai isi"], ["rumah_pelanggan_bukan_bool", "true atau false"],
 		["rumah_tanpa_pelanggan_boleh", "field wajib 'pelanggan_boleh'"], ["rumah_pos_sama_sisi_beda", "dipakai dua rumah"],
 		["rumah_petak_sempit", "terlalu dekat rumah"], ["rumah_field_asing", "field 'atap' tidak dikenal"],
 		["objek_jalur_tengah", "jalur utama harus selalu bersih"], ["objek_jalur_kiri", "bukan seberang, tengah, atau dekat"],
@@ -394,7 +402,7 @@ func _test_berkas_nyata() -> void:
 	for segmen: SegmenRute in kumpulan.segmen:
 		check(PANJANG.has(segmen.id) and segmen.panjang == int(PANJANG[segmen.id]), "%s: panjang %d sama dengan harapan literal" % [segmen.id, segmen.panjang])
 		check(segmen.panjang >= 24 and segmen.panjang <= 40, "%s: panjang 24 sampai 40 (AC-1)" % segmen.id)
-		check(segmen.distrik == "perumahan" and segmen.sisi_pelanggan == "seberang", "%s: distrik perumahan, pelanggan di seberang" % segmen.id)
+		check(segmen.distrik == "perumahan" and segmen.sisi_pelanggan == "dua_sisi", "%s: distrik perumahan, pelanggan di dua sisi (run 5D bagian B)" % segmen.id)
 		match segmen.posisi:
 			SegmenRute.Posisi.PEMBUKA:
 				pembuka += 1
@@ -429,6 +437,7 @@ func _test_berkas_nyata_oracle_mentah() -> void:
 		var panjang: int = int(d["panjang"])
 		check(d["id"] == id and panjang == int(PANJANG[id]), "%s: id sama dengan nama berkas dan panjang cocok" % id)
 		var pos_boleh: Array[int] = []
+		var pos_boleh_dekat: Array[int] = []
 		var pos_rumah: Dictionary = {}
 		var posisi_seberang: Array[int] = []
 		var posisi_dekat: Array[int] = []
@@ -446,13 +455,21 @@ func _test_berkas_nyata_oracle_mentah() -> void:
 				posisi_dekat.append(pos)
 			if rumah["pelanggan_boleh"]:
 				total_boleh += 1
-				pos_boleh.append(pos)
-				check(rumah["sisi"] == "seberang", "%s: pelanggan hanya di sisi seberang (pos %d, GDD 9.1)" % [id, pos])
+				if rumah["sisi"] == "seberang":
+					pos_boleh.append(pos)
+				else:
+					pos_boleh_dekat.append(pos)
 		pos_boleh.sort()
+		pos_boleh_dekat.sort()
 		var harapan: Array[int] = []
 		for p: Variant in BOLEH[id]:
 			harapan.append(int(p))
-		check(pos_boleh == harapan, "%s: pos pelanggan_boleh = harapan literal %s (dapat %s)" % [id, str(harapan), str(pos_boleh)])
+		check(pos_boleh == harapan, "%s: pos pelanggan_boleh seberang = harapan literal %s (dapat %s)" % [id, str(harapan), str(pos_boleh)])
+		var harapan_dekat: Array[int] = []
+		for p: Variant in BOLEH_DEKAT[id]:
+			harapan_dekat.append(int(p))
+		check(pos_boleh_dekat == harapan_dekat, "%s: pos pelanggan_boleh dekat = harapan literal %s (dapat %s)" % [id, str(harapan_dekat), str(pos_boleh_dekat)])
+		check(d["tag"]["sisi_pelanggan"] == "dua_sisi", "%s: tag sisi_pelanggan = dua_sisi (ada rumah boleh di kedua sisi)" % id)
 		for daftar: Array[int] in [posisi_seberang, posisi_dekat]:
 			daftar.sort()
 			for i: int in range(1, daftar.size()):
@@ -491,7 +508,7 @@ func _test_berkas_nyata_oracle_mentah() -> void:
 	# Run 5C putusan P-6: rumah seberang per_buka_02@18 dihapus untuk simpang seberang (109 -> 108; dihitung skrip dev_ukur/banding_p6.gd).
 	check(total_rumah == 108, "total rumah di 9 segmen = 108 (72 seberang: 7+7+9+8+10+9+9+6+7, 36 dekat: 3+4+5+4+6+5+4+2+3): %d" % total_rumah)
 	check(total_objek == 11, "total rintangan di 9 segmen = 11 (1 + 2 + 2 + 3 + 3): %d" % total_objek)
-	check(total_boleh == 3 + 3 + 5 + 5 + 6 + 5 + 5 + 2 + 3, "total rumah pelanggan_boleh = 37: %d" % total_boleh)
+	check(total_boleh == (3 + 3 + 5 + 5 + 6 + 5 + 5 + 2 + 3) + (3 + 4 + 5 + 3 + 5 + 5 + 4 + 2 + 3), "total rumah pelanggan_boleh = 37 seberang + 34 dekat = 71: %d" % total_boleh)
 
 
 ## Rintangan dan tapak rumah: oracle literal (keputusan pemilik 2026-10-17). Tapak rumah seberang p: lateral -6..-3, maju p - 0,5 ..
@@ -842,11 +859,11 @@ func _test_periksa_rute_mutan() -> void:
 	# 2. Pelanggan pindah ke sisi dekat.
 	var sisi_asli: LoperAnim.Sisi = asli.pelanggan[3].sisi
 	asli.pelanggan[3].sisi = LoperAnim.Sisi.DEKAT
-	check(_galat_berisi(RouteBuilder.periksa_rute(asli), "bukan rumah seberang yang boleh"), "mutan: pelanggan di sisi dekat ditolak")
+	check(_galat_berisi(RouteBuilder.periksa_rute(asli), "bukan rumah yang boleh untuk hari"), "mutan: pelanggan di sisi dekat ditolak (hari 1)")
 	asli.pelanggan[3].sisi = sisi_asli
 	# 3. Pelanggan bukan pelanggan_boleh.
 	asli.pelanggan[5].pelanggan_boleh = false
-	check(_galat_berisi(RouteBuilder.periksa_rute(asli), "bukan rumah seberang yang boleh"), "mutan: pelanggan dari rumah yang tidak boleh ditolak")
+	check(_galat_berisi(RouteBuilder.periksa_rute(asli), "bukan rumah yang boleh untuk hari"), "mutan: pelanggan dari rumah yang tidak boleh ditolak")
 	asli.pelanggan[5].pelanggan_boleh = true
 	# 4. Segmen ganda.
 	var segmen_asli: SegmenRute = asli.segmen[3]

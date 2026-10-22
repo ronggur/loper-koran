@@ -2,14 +2,14 @@
   "id": "per_tutup_01",
   "distrik": "perumahan",
   "panjang": 24,
-  "tag": { "tingkat": "tenang", "sisi_pelanggan": "seberang", "posisi": "penutup" },
+  "tag": { "tingkat": "tenang", "sisi_pelanggan": "dua_sisi", "posisi": "penutup" },
   "rumah": [
     { "pos": 2, "sisi": "seberang", "jenis": "limasan", "pelanggan_boleh": false },
     { "pos": 6, "sisi": "seberang", "jenis": "pelana", "pelanggan_boleh": true },
-    { "pos": 8, "sisi": "dekat", "jenis": "dekat_pelana_lintang", "pelanggan_boleh": false },
+    { "pos": 8, "sisi": "dekat", "jenis": "dekat_pelana_lintang", "pelanggan_boleh": true },
     { "pos": 10, "sisi": "seberang", "jenis": "sayap", "pelanggan_boleh": false },
     { "pos": 14, "sisi": "seberang", "jenis": "limasan", "pelanggan_boleh": true },
-    { "pos": 16, "sisi": "dekat", "jenis": "dekat_limasan", "pelanggan_boleh": false },
+    { "pos": 16, "sisi": "dekat", "jenis": "dekat_limasan", "pelanggan_boleh": true },
     { "pos": 18, "sisi": "seberang", "jenis": "pelana", "pelanggan_boleh": false },
     { "pos": 22, "sisi": "seberang", "jenis": "sayap", "pelanggan_boleh": false }
   ],

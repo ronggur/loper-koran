@@ -44,14 +44,14 @@ const JALUR_WAJIB_IKUT: Array[String] = [
 	"assets/sprites/vfx/vfx_debu_roda.png", "assets/sprites/vfx/vfx_debu_roda.png.import", "assets/sprites/vfx/vfx_garis_kecepatan_a.png", "assets/sprites/vfx/vfx_garis_kecepatan_a.png.import", "assets/sprites/vfx/vfx_garis_kecepatan_b.png", "assets/sprites/vfx/vfx_garis_kecepatan_b.png.import", "assets/sprites/vfx/vfx_garis_kecepatan_c.png", "assets/sprites/vfx/vfx_garis_kecepatan_c.png.import", "assets/sprites/vfx/vfx_bintang_kena.png", "assets/sprites/vfx/vfx_bintang_kena.png.import", "assets/sprites/vfx/vfx_koin_tip.png", "assets/sprites/vfx/vfx_koin_tip.png.import", "assets/sprites/vfx/mission_kilau.png", "assets/sprites/vfx/mission_kilau.png.import",
 	"assets/sprites/tiles/perumahan/tile_perumahan_rumput_seberang.png", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_seberang.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_trotoar_seberang.png", "assets/sprites/tiles/perumahan/tile_perumahan_trotoar_seberang.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_aspal_seberang.png", "assets/sprites/tiles/perumahan/tile_perumahan_aspal_seberang.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_aspal_dekat.png", "assets/sprites/tiles/perumahan/tile_perumahan_aspal_dekat.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_trotoar_dekat.png", "assets/sprites/tiles/perumahan/tile_perumahan_trotoar_dekat.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_dekat.png", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_dekat.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_1.png", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_1.png.import",
 	"scripts/systems/def_sprite.gd", "scripts/systems/permukaan_koran.gd", "scripts/systems/sprite_koran.gd", "scripts/systems/vfx_sepeda.gd", "scripts/systems/vfx_antaran.gd", "scripts/ui/gambar_sprite.gd", "scripts/entities/vfx_sepeda_gambar.gd",
-	# Run fase5b-tembok-dekor bagian C (AC-17): tembok sisi dekat, dekor (tong sampah, pohon, lampu mati), enam ubin khusus beserta remap .import, skrip pemakainya, dan sembilan segmen rute.
-	"assets/sprites/houses/perumahan/house_tembok_polos.png", "assets/sprites/houses/perumahan/house_tembok_polos.png.import", "assets/sprites/houses/perumahan/house_tembok_bata.png", "assets/sprites/houses/perumahan/house_tembok_bata.png.import", "assets/sprites/houses/perumahan/house_tembok_besi.png", "assets/sprites/houses/perumahan/house_tembok_besi.png.import",
-	"assets/sprites/houses/perumahan/house_tembok_pot.png", "assets/sprites/houses/perumahan/house_tembok_pot.png.import", "assets/sprites/houses/perumahan/house_tembok_tiang.png", "assets/sprites/houses/perumahan/house_tembok_tiang.png.import", "assets/sprites/props/prop_tong_sampah_logam.png", "assets/sprites/props/prop_tong_sampah_logam.png.import",
+	# Run fase5b-tembok-dekor bagian C (AC-17): dekor (tong sampah, pohon, lampu mati), enam ubin khusus beserta remap .import, skrip pemakainya, dan sembilan segmen rute.
+	# Tembok sisi dekat run 5B dilepas run fase5d-sisi-dekat (P-1): sprite dan skripnya tidak ada lagi (`JALUR_TIDAK_ADA_5B`).
+	"assets/sprites/props/prop_tong_sampah_logam.png", "assets/sprites/props/prop_tong_sampah_logam.png.import",
 	"assets/sprites/props/prop_pohon_rindang.png", "assets/sprites/props/prop_pohon_rindang.png.import", "assets/sprites/props/prop_pohon_glodokan.png", "assets/sprites/props/prop_pohon_glodokan.png.import", "assets/sprites/props/prop_pohon_ketapang.png", "assets/sprites/props/prop_pohon_ketapang.png.import",
 	"assets/sprites/props/prop_lampu_lengan_seberang.png", "assets/sprites/props/prop_lampu_lengan_seberang.png.import", "assets/sprites/props/prop_lampu_lengan_dekat.png", "assets/sprites/props/prop_lampu_lengan_dekat.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_2.png", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_2.png.import",
 	"assets/sprites/tiles/perumahan/tile_perumahan_rumput_3.png", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_3.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_trotoar_seberang_masuk.png", "assets/sprites/tiles/perumahan/tile_perumahan_trotoar_seberang_masuk.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_seberang_masuk.png", "assets/sprites/tiles/perumahan/tile_perumahan_rumput_seberang_masuk.png.import",
 	"assets/sprites/tiles/perumahan/tile_perumahan_trotoar_seberang_simbol.png", "assets/sprites/tiles/perumahan/tile_perumahan_trotoar_seberang_simbol.png.import", "assets/sprites/tiles/perumahan/tile_perumahan_trotoar_dekat_simbol.png", "assets/sprites/tiles/perumahan/tile_perumahan_trotoar_dekat_simbol.png.import",
-	"scripts/systems/varian_tembok.gd", "scripts/systems/tembok_dekat.gd", "scripts/systems/dekor_rute.gd", "scripts/systems/ubin_khusus.gd", "scripts/entities/dekor_daur.gd", "scripts/entities/tanah_daur.gd", "scripts/entities/rumah_daur_rute.gd",
+	"scripts/systems/dekor_rute.gd", "scripts/systems/ubin_khusus.gd", "scripts/entities/dekor_daur.gd", "scripts/entities/tanah_daur.gd", "scripts/entities/rumah_daur_rute.gd",
 	"assets/data/routes/perumahan/per_buka_01.json", "assets/data/routes/perumahan/per_buka_02.json", "assets/data/routes/perumahan/per_tengah_01.json", "assets/data/routes/perumahan/per_tengah_02.json", "assets/data/routes/perumahan/per_tengah_03.json", "assets/data/routes/perumahan/per_tengah_04.json", "assets/data/routes/perumahan/per_tengah_05.json", "assets/data/routes/perumahan/per_tutup_01.json", "assets/data/routes/perumahan/per_tutup_02.json",
 ]
 ## Run fase5c-animasi-simpang (AC-22): animasi pemain (jatuh lima arah, bangkit, berhenti) beserta SpriteFrames gabungan 68 animasi, sheet kucing
@@ -78,12 +78,45 @@ const JALUR_TIDAK_ADA_5C: Array[String] = [
 	"assets/sprites/tiles/perumahan/tile_perumahan_" + "simpang_dekat_aspal_dekat_depan_2.png", "assets/sprites/tiles/perumahan/tile_perumahan_" + "simpang_dekat_aspal_seberang_mulut_1.png",
 	"assets/sprites/tiles/perumahan/tile_perumahan_" + "simpang_seberang_aspal_seberang_depan_1.png", "assets/sprites/tiles/perumahan/tile_perumahan_" + "simpang_seberang_aspal_dekat_mulut_1.png",
 ]
+## Run fase5d-sisi-dekat (AC-14): rumah sisi dekat baru (teras menjorok, tanpa kotak surat terpanggang), tiga sprite kotak surat, panel tip hari 3, kunci terjemahannya, dan skrip
+## pelanggan dekat. Daftar ini ikut diperiksa `_pelanggaran_preset` (ada di repo dan tidak cocok dengan exclude_filter), sama seperti `JALUR_WAJIB_IKUT`.
+const FOLDER_RUMAH_5D: String = "assets/sprites/houses/perumahan/"
+## Nama dasar (tanpa ekstensi) enam rumah sisi dekat dan enam rumah sisi seberang yang dipasang; folder rumah tidak boleh berisi PNG lain (tembok dilepas, P-1).
+const RUMAH_DEKAT_5D: Array[String] = [
+	"house_perumahan_dekat_limasan_bukan", "house_perumahan_dekat_limasan_pelanggan", "house_perumahan_dekat_pelana_lintang_bukan",
+	"house_perumahan_dekat_pelana_lintang_pelanggan", "house_perumahan_dekat_pelana_sejajar_bukan", "house_perumahan_dekat_pelana_sejajar_pelanggan",
+]
+const RUMAH_SEBERANG_5D: Array[String] = [
+	"house_perumahan_limasan_bukan", "house_perumahan_limasan_pelanggan", "house_perumahan_pelana_bukan", "house_perumahan_pelana_pelanggan",
+	"house_perumahan_sayap_bukan", "house_perumahan_sayap_pelanggan",
+]
+const PROP_KOTAK_SURAT_5D: Array[String] = ["prop_kotak_surat", "prop_kotak_surat_bukan"]
+const JALUR_WAJIB_IKUT_5D: Array[String] = [
+	"assets/sprites/houses/perumahan/house_perumahan_dekat_limasan_bukan.png", "assets/sprites/houses/perumahan/house_perumahan_dekat_limasan_bukan.png.import", "assets/sprites/houses/perumahan/house_perumahan_dekat_limasan_bukan.json",
+	"assets/sprites/houses/perumahan/house_perumahan_dekat_limasan_pelanggan.png", "assets/sprites/houses/perumahan/house_perumahan_dekat_limasan_pelanggan.png.import", "assets/sprites/houses/perumahan/house_perumahan_dekat_limasan_pelanggan.json",
+	"assets/sprites/houses/perumahan/house_perumahan_dekat_pelana_lintang_bukan.png", "assets/sprites/houses/perumahan/house_perumahan_dekat_pelana_lintang_bukan.png.import", "assets/sprites/houses/perumahan/house_perumahan_dekat_pelana_lintang_bukan.json",
+	"assets/sprites/houses/perumahan/house_perumahan_dekat_pelana_lintang_pelanggan.png", "assets/sprites/houses/perumahan/house_perumahan_dekat_pelana_lintang_pelanggan.png.import", "assets/sprites/houses/perumahan/house_perumahan_dekat_pelana_lintang_pelanggan.json",
+	"assets/sprites/houses/perumahan/house_perumahan_dekat_pelana_sejajar_bukan.png", "assets/sprites/houses/perumahan/house_perumahan_dekat_pelana_sejajar_bukan.png.import", "assets/sprites/houses/perumahan/house_perumahan_dekat_pelana_sejajar_bukan.json",
+	"assets/sprites/houses/perumahan/house_perumahan_dekat_pelana_sejajar_pelanggan.png", "assets/sprites/houses/perumahan/house_perumahan_dekat_pelana_sejajar_pelanggan.png.import", "assets/sprites/houses/perumahan/house_perumahan_dekat_pelana_sejajar_pelanggan.json",
+	"assets/sprites/props/prop_kotak_surat.png", "assets/sprites/props/prop_kotak_surat.png.import", "assets/sprites/props/prop_kotak_surat.json",
+	"assets/sprites/props/prop_kotak_surat_bukan.png", "assets/sprites/props/prop_kotak_surat_bukan.png.import", "assets/sprites/props/prop_kotak_surat_bukan.json",
+	"scenes/ui/panel_tip_sisi_dekat.tscn", "scripts/ui/panel_tip_sisi_dekat.gd", "scripts/systems/tip_sisi_dekat.gd", "translations/ui.id.translation", "translations/ui.csv",
+	"scripts/systems/zona_sasaran.gd", "scripts/systems/medan_koran.gd", "scripts/systems/bantu_lempar.gd", "scripts/systems/radar_rute.gd", "scripts/systems/progres_rute.gd",
+	"scripts/systems/sprite_rumah.gd", "scripts/systems/penutup_pemain.gd", "scripts/entities/rute_main.gd", "scripts/entities/hari_main.gd",
+]
+## Kunci teks tip hari 3 dan labelnya di `translations/ui.csv` (literal; dijaga juga `TesSisiDekatScene`).
+const KUNCI_TIP_5D: Array[String] = ["RUTE_TIP_LABEL", "RUTE_TIP_SISI_DEKAT"]
+## Jumlah rumah dekat `pelanggan_boleh` di sembilan segmen nyata (literal; dihitung dari berkas JSON, bukan dari kode).
+const JUMLAH_DEKAT_BOLEH_5D: int = 34
 ## Aset yang TIDAK dipasang (D-1, D-4 run fase5b-tembok-dekor): tidak boleh ada di repo sehingga tidak ikut paket. Nama disambung supaya pemindai rujukan 5A tidak menandai berkas ini.
 const JALUR_TIDAK_ADA_5B: Array[String] = [
 	"assets/sprites/tiles/perumahan/tile_perumahan_" + "aspal_1.png", "assets/sprites/tiles/perumahan/tile_perumahan_" + "aspal_2.png", "assets/sprites/tiles/perumahan/tile_perumahan_" + "aspal_3.png",
 	"assets/sprites/tiles/perumahan/tile_perumahan_" + "trotoar_dekat_masuk.png", "assets/sprites/tiles/perumahan/tile_perumahan_" + "rumput_dekat_masuk.png",
 	"assets/sprites/props/prop_tong_sampah_" + "biru.png", "assets/sprites/props/prop_" + "pohon_beringin.png", "assets/sprites/props/prop_lampu_lengan_" + "seberang_nyala.png",
 	"assets/sprites/props/prop_lampu_lengan_" + "dekat_nyala.png", "assets/sprites/tiles/perumahan/tile_perumahan_polisi_" + "tidur.png", "assets/sprites/tiles/perumahan/tile_perumahan_" + "zebra.png",
+	# Run fase5d-sisi-dekat (P-1): lima sprite tembok sisi dekat dan dua skripnya dilepas.
+	"assets/sprites/houses/perumahan/house_" + "tembok_polos.png", "assets/sprites/houses/perumahan/house_" + "tembok_bata.png", "assets/sprites/houses/perumahan/house_" + "tembok_besi.png",
+	"assets/sprites/houses/perumahan/house_" + "tembok_pot.png", "assets/sprites/houses/perumahan/house_" + "tembok_tiang.png", "scripts/systems/varian_" + "tembok.gd", "scripts/systems/" + "tembok_dekat.gd",
 ]
 ## Berkas probe render (QA-004 run fase1b-umpan-balik, D-4 run fase1c-perapian): tidak ikut APK normal; build probe dibuat
 ## `tools/ekspor_cek_render.py` yang melepas pola ini sementara (`POLA_PROBE` di skrip itu harus sama persis).
@@ -136,6 +169,9 @@ func jalankan() -> void:
 	_test_preset_contoh_buruk()
 	_test_aset_5b_ikut_paket()
 	_test_aset_5c_ikut_paket()
+	_test_aset_5d_ikut_paket()
+	_test_rujukan_5d_tak_dipasang()
+	_test_dokumen_5d()
 	_test_probe_tidak_ikut()
 	_test_spike_tidak_ikut()
 	_test_ikon_sementara()
@@ -298,7 +334,7 @@ func _pelanggaran_preset(teks: String) -> Array[String]:
 	for spike: String in FILTER_SPIKE:
 		if not kecuali.has(spike):
 			hasil.append("exclude_filter harus memuat %s (spike sisi dekat tidak ikut paket game, AC-14 run 3C)" % spike)
-	for wajib_ikut: String in JALUR_WAJIB_IKUT + JALUR_WAJIB_IKUT_5C:
+	for wajib_ikut: String in JALUR_WAJIB_IKUT + JALUR_WAJIB_IKUT_5C + JALUR_WAJIB_IKUT_5D:
 		if _dikecualikan(wajib_ikut, kecuali):
 			hasil.append("%s harus ikut paket tetapi cocok dengan exclude_filter (konten dan scene alur hari, run fase4a-koran-hari)" % wajib_ikut)
 		if not FileAccess.file_exists("res://" + wajib_ikut):
@@ -377,14 +413,14 @@ func _test_aset_5b_ikut_paket() -> void:
 	for jalur: String in JALUR_WAJIB_IKUT:
 		if not (jalur.begins_with("assets/sprites/") and jalur.ends_with(".png")):
 			continue
-		if not (jalur.contains("tembok") or jalur.contains("tong_sampah") or jalur.contains("pohon") or jalur.contains("lampu") or jalur.contains("_masuk") or jalur.contains("_simbol") or jalur.contains("rumput_2") or jalur.contains("rumput_3")):
+		if not (jalur.contains("tong_sampah") or jalur.contains("pohon") or jalur.contains("lampu") or jalur.contains("_masuk") or jalur.contains("_simbol") or jalur.contains("rumput_2") or jalur.contains("rumput_3")):
 			continue
 		png += 1
 		var teks_import: String = _baca_jika_ada("res://" + jalur + ".import")
 		check(FileAccess.file_exists("res://" + jalur) and not teks_import.is_empty(), "%s dan remap .import ada (ikut paket)" % jalur)
 		check(teks_import.contains("compress/mode=0") and teks_import.contains("mipmaps/generate=false"), "%s: impor Lossless tanpa mipmap" % jalur)
 		check(not _dikecualikan(jalur, kecuali) and not _dikecualikan(jalur + ".import", kecuali), "%s tidak dikecualikan filter preset" % jalur)
-	check(png == 17, "17 PNG 5B dicek (5 tembok, tong sampah, 3 pohon, 2 lampu, 6 ubin), dapat %d" % png)
+	check(png == 12, "12 PNG 5B dicek (tong sampah, 3 pohon, 2 lampu, 6 ubin; lima tembok dilepas run 5D), dapat %d" % png)
 	for jalur: String in JALUR_TIDAK_ADA_5B:
 		check(not FileAccess.file_exists("res://" + jalur), "aset tak dipasang tidak ada di repo (tidak ikut paket): %s" % jalur)
 	for nama: String in DirAccess.get_files_at("res://assets/sprites/tiles/perumahan"):
@@ -433,6 +469,185 @@ func _test_aset_5c_ikut_paket() -> void:
 			ubin_5c_folder += 1
 			check(TesUbin.UBIN_5C.has(nama), "ubin simpang/ujung di folder terdaftar sebagai dipasang: %s" % nama)
 	check(ubin_5c_folder == TesUbin.UBIN_5C.size(), "folder tiles/perumahan memuat tepat %d ubin simpang/ujung, dapat %d" % [TesUbin.UBIN_5C.size(), ubin_5c_folder])
+
+
+# --- AC-14 run fase5d-sisi-dekat: rumah dekat baru, kotak surat, data segmen, dan kunci tip ikut paket; aset tembok tidak ada ---
+
+func _test_aset_5d_ikut_paket() -> void:
+	_judul.call("Aset 5D ikut paket (rumah dekat baru, kotak surat, data segmen, tip) dan aset tembok tidak ada (AC-14 run 5D)")
+	var cfg: ConfigFile = ConfigFile.new()
+	cfg.load(BERKAS_PRESET)
+	var kecuali: Array[String] = []
+	for bagian_filter: String in str(cfg.get_value("preset.0", "exclude_filter", "")).split(","):
+		kecuali.append(bagian_filter.strip_edges())
+	for jalur: String in JALUR_WAJIB_IKUT_5D:
+		check(FileAccess.file_exists("res://" + jalur) and not _dikecualikan(jalur, kecuali), "%s ada dan tidak dikecualikan filter preset" % jalur)
+	# Rumah dekat: PNG + JSON (ukuran = PNG, titik pijak, teras, penutup) dan impor Lossless tanpa mipmap.
+	for nama: String in RUMAH_DEKAT_5D:
+		var jalur_png: String = "res://" + FOLDER_RUMAH_5D + nama + ".png"
+		var teks_import: String = _baca_jika_ada(jalur_png + ".import")
+		check(teks_import.contains("compress/mode=0") and teks_import.contains("mipmaps/generate=false"), "%s: impor Lossless tanpa mipmap" % nama)
+		var json: Variant = JSON.parse_string(_baca_jika_ada("res://" + FOLDER_RUMAH_5D + nama + ".json"))
+		check(json is Dictionary, "%s.json bisa diurai" % nama)
+		if not (json is Dictionary):
+			continue
+		var d: Dictionary = json
+		var tekstur: Texture2D = load(jalur_png) as Texture2D
+		var ukuran: Array = d.get("size", []) as Array
+		check(tekstur != null and ukuran.size() == 2 and int(ukuran[0]) == tekstur.get_width() and int(ukuran[1]) == tekstur.get_height(), "%s: size JSON = ukuran PNG" % nama)
+		check((d.get("ground_anchor", []) as Array).size() == 2 and (d.get("teras_ubin", []) as Array).size() == 4 and (d.get("penutup_ubin", []) as Array).size() == 4 and float(d.get("penutup_tinggi_ubin", 0.0)) > 0.0, "%s: titik pijak, teras_ubin, penutup_ubin, dan penutup_tinggi_ubin ada di JSON" % nama)
+	for nama: String in PROP_KOTAK_SURAT_5D:
+		var teks_import: String = _baca_jika_ada("res://assets/sprites/props/" + nama + ".png.import")
+		check(teks_import.contains("compress/mode=0") and teks_import.contains("mipmaps/generate=false"), "%s: impor Lossless tanpa mipmap" % nama)
+	# Folder rumah memuat tepat 12 PNG (6 dekat, 6 seberang) dan tidak ada nama dengan kata tembok di seluruh assets/ (aset yang tak dipasang tidak ikut paket).
+	var png_rumah: Array[String] = []
+	for nama: String in DirAccess.get_files_at("res://" + FOLDER_RUMAH_5D):
+		if nama.ends_with(".png"):
+			png_rumah.append(nama.trim_suffix(".png"))
+	png_rumah.sort()
+	var harapan_rumah: Array[String] = []
+	harapan_rumah.append_array(RUMAH_DEKAT_5D)
+	harapan_rumah.append_array(RUMAH_SEBERANG_5D)
+	harapan_rumah.sort()
+	check(png_rumah == harapan_rumah, "folder houses/perumahan hanya berisi 12 rumah yang dipasang: %s" % [png_rumah])
+	var semua_aset: Array[String] = []
+	_daftar_berkas_rekursif("res://assets", semua_aset)
+	var kata_tak_ada: String = "tem" + "bok"
+	var bernama_terlarang: Array[String] = []
+	for jalur: String in semua_aset:
+		# Graybox spike (`assets/sprites/_spike/`) dikecualikan dari paket oleh preset dan bukan aset game; sengaja punya tembok graybox.
+		if jalur.to_lower().contains(kata_tak_ada) and not _dikecualikan(jalur.trim_prefix("res://"), kecuali):
+			bernama_terlarang.append(jalur)
+	check(semua_aset.size() > 300 and bernama_terlarang.is_empty(), "%d berkas di assets/ diperiksa, tidak ada nama berkas tembok (tidak ikut paket): %s" % [semua_aset.size(), bernama_terlarang])
+	# Kunci tip hari 3 di ui.csv (kolom keys,id; teks tidak kosong, kunci tidak ganda) dan terjemahan hasil impor ada.
+	var baris_csv: PackedStringArray = _baca_jika_ada("res://translations/ui.csv").split("\n")
+	for kunci: String in KUNCI_TIP_5D:
+		var jumlah: int = 0
+		var isi_kunci: String = ""
+		for baris: String in baris_csv:
+			if baris.begins_with(kunci + ","):
+				jumlah += 1
+				isi_kunci = baris.trim_prefix(kunci + ",").strip_edges()
+		check(jumlah == 1 and not isi_kunci.is_empty(), "kunci %s tepat satu di ui.csv dan teksnya tidak kosong" % kunci)
+	# Data segmen: sembilan berkas, semuanya dua_sisi, dan jumlah rumah dekat pelanggan_boleh = literal (dihitung dari JSON, bukan dari kode).
+	var dekat_boleh: int = 0
+	var segmen: int = 0
+	for nama: String in DirAccess.get_files_at("res://assets/data/routes/perumahan"):
+		if not nama.ends_with(".json"):
+			continue
+		segmen += 1
+		var data: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://assets/data/routes/perumahan/" + nama))
+		var tag: Variant = (data as Dictionary).get("tag", {}) if data is Dictionary else {}
+		check(tag is Dictionary and str((tag as Dictionary).get("sisi_pelanggan", "")) == "dua_sisi", "%s: tag sisi_pelanggan dua_sisi" % nama)
+		if not (data is Dictionary):
+			continue
+		for rumah: Variant in (data as Dictionary).get("rumah", []) as Array:
+			if rumah is Dictionary and str((rumah as Dictionary).get("sisi", "")) == "dekat" and bool((rumah as Dictionary).get("pelanggan_boleh", false)):
+				dekat_boleh += 1
+	check(segmen == 9 and dekat_boleh == JUMLAH_DEKAT_BOLEH_5D, "9 segmen, %d rumah dekat pelanggan_boleh di JSON (dapat %d segmen, %d rumah)" % [JUMLAH_DEKAT_BOLEH_5D, segmen, dekat_boleh])
+
+
+func _daftar_berkas_rekursif(folder: String, hasil: Array[String]) -> void:
+	for nama: String in DirAccess.get_files_at(folder):
+		hasil.append(folder + "/" + nama)
+	for sub: String in DirAccess.get_directories_at(folder):
+		_daftar_berkas_rekursif(folder + "/" + sub, hasil)
+
+
+# --- AC-14 run fase5d-sisi-dekat: pemindai "tidak ada rujukan ke aset rumah atau kotak surat yang belum dipasang" ---
+
+## Rujukan di `teks` ke sprite rumah atau kotak surat yang tidak dipasang: nama dengan kata tembok, `house_perumahan_*` yang bukan salah satu dari 12 rumah (atau awalannya), dan
+## `prop_kotak_surat_*` selain varian bukan pelanggan. Awalan nama (dipakai untuk menyusun nama di kode) tidak ditandai.
+func _rujukan_rumah_tak_dipasang(teks: String) -> Array[String]:
+	var hasil: Array[String] = []
+	var dipasang: Array[String] = []
+	dipasang.append_array(RUMAH_DEKAT_5D)
+	dipasang.append_array(RUMAH_SEBERANG_5D)
+	var regex_rumah: RegEx = RegEx.new()
+	regex_rumah.compile("house_[a-z_]*[a-z]_?")
+	for cocok: RegExMatch in regex_rumah.search_all(teks):
+		var nama: String = cocok.get_string()
+		var inti: String = nama.trim_suffix("_")
+		if inti.contains("tem" + "bok"):
+			hasil.append(nama)
+			continue
+		if not inti.begins_with("house_perumahan"):
+			continue
+		var awalan_sah: bool = false
+		for rumah: String in dipasang:
+			if rumah == inti or rumah.begins_with(nama):
+				awalan_sah = true
+		if not awalan_sah:
+			hasil.append(nama)
+	var regex_kotak: RegEx = RegEx.new()
+	regex_kotak.compile("prop_kotak_surat(_[a-z]+)*")
+	for cocok: RegExMatch in regex_kotak.search_all(teks):
+		if not PROP_KOTAK_SURAT_5D.has(cocok.get_string()):
+			hasil.append(cocok.get_string())
+	return hasil
+
+
+func _test_rujukan_5d_tak_dipasang() -> void:
+	_judul.call("Pemindai rujukan: tidak ada rujukan ke rumah atau kotak surat yang belum dipasang (AC-14 run 5D)")
+	var berkas: Array[String] = ["res://project.godot", "res://export_presets.cfg"]
+	for akar: String in ["res://scripts", "res://scenes", "res://assets/data", "res://translations"]:
+		_kumpulkan_sumber(akar, berkas)
+	for nama: String in DirAccess.get_files_at("res://tests"):
+		if nama.ends_with(".gd") and not nama.begins_with("probe_") and nama != "tes_export.gd":
+			berkas.append("res://tests/" + nama)
+	var temuan: Array[String] = []
+	for jalur: String in berkas:
+		for nama: String in _rujukan_rumah_tak_dipasang(FileAccess.get_file_as_string(jalur)):
+			temuan.append("%s memuat %s" % [jalur, nama])
+	check(berkas.size() > 100, "pemindai membaca banyak berkas sumber (%d)" % berkas.size())
+	check(temuan.is_empty(), "tidak ada rujukan ke rumah atau kotak surat yang belum dipasang: %s" % [temuan])
+	# Contoh buruk sintetis harus tertangkap (nama disambung supaya berkas ini sendiri tidak memuatnya).
+	var buruk: Array[String] = [
+		"house_" + "tembok_polos", "house_perumahan_dekat_" + "pelana_lintang_rusak", "house_perumahan_" + "gudang_bukan", "prop_kotak_surat_" + "dekat", "prop_kotak_surat_" + "pelanggan",
+	]
+	for nama: String in buruk:
+		var dapat: Array[String] = _rujukan_rumah_tak_dipasang("var t = \"res://assets/x/" + nama + ".png\"")
+		check(dapat.size() == 1 and dapat[0] == nama, "pemindai menandai %s, dapat %s" % [nama, dapat])
+	# Nama yang dipasang dan awalannya tidak ditandai.
+	var sah: String = "house_perumahan_dekat_ house_perumahan_ house_ prop_kotak_surat prop_kotak_surat_bukan prop_koran_kotak_surat\n"
+	for nama: String in RUMAH_DEKAT_5D + RUMAH_SEBERANG_5D:
+		sah += "res://assets/sprites/houses/perumahan/" + nama + ".png\n"
+	check(_rujukan_rumah_tak_dipasang(sah).is_empty(), "pemindai tidak menandai 12 rumah dan 2 kotak surat yang dipasang: %s" % [_rujukan_rumah_tak_dipasang(sah)])
+
+
+## Dokumen run 5D (AC-17): checklist HP 8.16 lengkap (sebelas butir bernomor dan lembar hasil), 8.13 menandai tembok tidak berlaku, dan dokumen lain tidak lagi menyebut tembok sebagai tampilan sisi dekat yang berlaku.
+func _test_dokumen_5d() -> void:
+	_judul.call("Dokumen run 5D: SETUP_ANDROID 8.16, rujukan silang, dan AGENTS.md tanpa kelas tembok yang sudah dihapus (AC-17 run 5D)")
+	var setup: String = _baca_jika_ada(BERKAS_SETUP)
+	var awal: int = setup.find("### 8.16 ")
+	check(awal >= 0, "SETUP_ANDROID.md punya bagian 8.16 (uji pelanggan sisi dekat)")
+	var bagian: String = setup.substr(awal) if awal >= 0 else ""
+	var nomor: int = 0
+	for baris: String in bagian.split("\n"):
+		if baris.begins_with("%d. [ ] **" % (nomor + 1)):
+			nomor += 1
+	check(nomor == 11, "8.16 punya 11 butir bernomor bercentang kosong, dapat %d" % nomor)
+	check(bagian.contains("**Lembar hasil 8.16") and bagian.contains("11. Save lama utuh"), "8.16 punya lembar hasil dengan 11 baris")
+	for kata: String in ["hari 3", "teras", "kotak surat dekat", "panel HUD bawah", "Anjing dekat", "60 fps"]:
+		check(bagian.contains(kata), "8.16 menyebut '%s'" % kata)
+	check(setup.contains("Catatan Run 5D") and setup.contains("tidak berlaku lagi"), "8.13 menandai butir tembok tidak berlaku sejak run 5D")
+	var readme: String = _baca_jika_ada(BERKAS_README_DOCS)
+	check(readme.contains("8.16") and readme.contains("20261022-fase5d-sisi-dekat"), "docs/README.md menyebut run 5D dan checklist 8.16")
+	var agents: String = _baca_jika_ada("res://AGENTS.md")
+	check(agents.contains("uji_aset_fase3.py") and agents.contains("tes_sisi_dekat_scene") and agents.contains("TipSisiDekat"), "AGENTS.md memuat uji dan kelas run 5D")
+	check(not agents.contains("`Tembok" + "Dekat`, `Varian" + "Tembok`") and not agents.contains("varian_" + "tembok (") and not agents.contains("tembok_dekat (`"), "AGENTS.md tidak lagi mendaftar kelas tembok sebagai ada")
+	var gdd: String = _baca_jika_ada("res://docs/GDD.md")
+	check(gdd.contains("mulai hari 3") and gdd.contains("8 atau 9 dari 25"), "GDD memuat pelanggan sisi dekat mulai hari 3 (8 atau 9 dari 25)")
+	var roadmap: String = _baca_jika_ada("res://docs/ROADMAP.md")
+	check(roadmap.contains("menggantikan") and roadmap.contains("Riwayat (diganti, tetap dicatat)") and roadmap.contains("0,5 ubin"), "ROADMAP 4b menandai tembok diganti halaman terbuka mundur 0,5 dengan riwayat tetap")
+
+
+func _kumpulkan_sumber(folder: String, hasil: Array[String]) -> void:
+	for nama: String in DirAccess.get_files_at(folder):
+		if nama.ends_with(".gd") or nama.ends_with(".tscn") or nama.ends_with(".tres") or nama.ends_with(".json") or nama.ends_with(".csv") or nama.ends_with(".cfg"):
+			hasil.append(folder + "/" + nama)
+	for sub: String in DirAccess.get_directories_at(folder):
+		_kumpulkan_sumber(folder + "/" + sub, hasil)
 
 
 # --- QA-004: probe render tidak ikut APK normal, pola sama dengan tools/ekspor_cek_render.py ---

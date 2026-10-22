@@ -511,7 +511,7 @@ const RUTE_BANNER_MARGIN_ATAS_PX: int = 64
 ## Nama 12 sprite rumah perumahan (`assets/sprites/houses/perumahan/<nama>.png`), sejajar dengan `RUTE_RUMAH_PIJAK_PX`.
 const RUTE_RUMAH_SPRITE: Array[String] = ["house_perumahan_dekat_limasan_bukan", "house_perumahan_dekat_limasan_pelanggan", "house_perumahan_dekat_pelana_lintang_bukan", "house_perumahan_dekat_pelana_lintang_pelanggan", "house_perumahan_dekat_pelana_sejajar_bukan", "house_perumahan_dekat_pelana_sejajar_pelanggan", "house_perumahan_limasan_bukan", "house_perumahan_limasan_pelanggan", "house_perumahan_pelana_bukan", "house_perumahan_pelana_pelanggan", "house_perumahan_sayap_bukan", "house_perumahan_sayap_pelanggan"]
 ## Titik pijak tiap sprite rumah (`ground_anchor` di JSON aset, tengah tapak), piksel dari pojok kiri atas gambar: x lalu y, sejajar dengan `RUTE_RUMAH_SPRITE`. Tes membandingkannya dengan JSON aset.
-const RUTE_RUMAH_PIJAK_PX: Array[int] = [97, 123, 155, 152, 96, 122, 155, 151, 96, 118, 154, 147, 105, 127, 105, 127, 96, 148, 96, 148, 105, 119, 105, 119]
+const RUTE_RUMAH_PIJAK_PX: Array[int] = [110, 127, 110, 127, 110, 126, 110, 126, 110, 122, 110, 122, 105, 127, 105, 127, 96, 148, 96, 148, 105, 119, 105, 119]
 
 ## --- Rintangan perumahan (GDD 9.3, ROUTE_DESIGN 4, BALANCING 6c; usulan run fase3b-rintangan-skor, dinilai lewat uji HP) ---
 ## Posisi dalam koordinat jalan: lateral dari garis tengah (negatif = `seberang`), maju dari awal rute, ubin. Bentuk tabrakan = persegi di
@@ -1177,20 +1177,21 @@ const UMPAN_KOIN_TIP_SPRITE_NILAI: int = 5
 ## Kotak kilau kucing misi (lebar, tinggi) piksel game: sprite 9x9 di tengahnya, pojok kiri atas kotak = `MISI_KILAU_POSISI_PX`. Juga kotak terburuk untuk "terlihat di layar" (`TampilMisi`).
 const MISI_KILAU_KOTAK_PX: Array[int] = [11, 11]
 
-## --- Tembok sisi dekat (run fase5b-tembok-dekor bagian B1, D-2 dan D-3; usulan, tinggi dan mundur dinilai di HP) ---
-## Pusat tembok belakang melintang jalan, ubin dari garis tengah (positif = dekat): tebal 4 unit (0,125 ubin), jadi sisi jalannya tepat di `RUTE_RUMAH_DEKAT_X_UBIN` (3,0) dan selisih pusat 0,125 = setengah tebal.
-const RUTE_TEMBOK_X_UBIN: float = 3.125
-## Rumah sisi dekat DIGAMBAR sejauh ini lebih jauh dari jalan (ubin, arah lateral positif); tapak logika (`RUTE_RUMAH_DEKAT_X_UBIN`, penutup, zona) tidak berubah.
-const RUTE_RUMAH_DEKAT_MUNDUR_UBIN: float = 1.25
-## Panjang satu modul tembok sepanjang jalan, ubin (satu modul sudah membawa tiang di awalnya; tiang penutup menutup ujung rantai).
-const RUTE_TEMBOK_MODUL_UBIN: float = 1.0
-## Nama varian tembok, urut tetap (indeks hasil hash mod 4): sprite `house_tembok_<varian>` dan `house_tembok_tiang`.
-const RUTE_TEMBOK_VARIAN: Array[String] = ["polos", "bata", "besi", "pot"]
-## Sprite tembok (modul dan tiang sama): [lebar sel, tinggi sel, frame, pijak x, pijak y], piksel; pijak = garis tengah tembok di awal modul. Sama dengan JSON aset `assets/sprites/houses/perumahan/house_tembok_*.json`, dijaga tes.
-const SPRITE_TEMBOK: Array[int] = [46, 46, 1, 41, 25]
-## Geser layar antar modul tembok berurutan, piksel game: satu ubin mundur dari jalan = (-32, +16). Dijaga tes terhadap `Iso`.
-const SPRITE_TEMBOK_GESER_PX: Array[int] = [-32, 16]
-## Penghitung hash FNV-1a 32 bit (bukan angka tuning): nilai awal, pengali, dan masker 32 bit. Dipakai `VarianTembok` memilih varian dari id rumah tanpa `hash()` dan tanpa RNG.
+## --- Rumah sisi dekat, halaman terbuka (run fase5d-sisi-dekat bagian A, P-1 dan P-2, keputusan pemilik 2026-10-22 K-1; usulan, dinilai di HP) ---
+## Tembok belakang run 5B dilepas (P-1): kavling dekat = halaman rumput terbuka. Rumah sisi dekat DIGAMBAR sejauh ini lebih jauh dari jalan (ubin, arah lateral positif; pilihan pemilik 2026-10-22, dulu 1,25 dengan tembok); tapak logika (`RUTE_RUMAH_DEKAT_X_UBIN`, zona, validasi) tidak berubah.
+const RUTE_RUMAH_DEKAT_MUNDUR_UBIN: float = 0.5
+## Jenis rumah sisi dekat, urut tetap; tabel `RUTE_RUMAH_DEKAT_PENUTUP_*` sejajar dengan daftar ini.
+const RUTE_RUMAH_DEKAT_JENIS: Array[String] = ["dekat_limasan", "dekat_pelana_lintang", "dekat_pelana_sejajar"]
+## Kotak penutup rumah dekat = sprite nyata (`penutup_ubin` + `penutup_tinggi_ubin` di JSON aset `house_perumahan_dekat_*`, dari primitif renderer `tools/env_art/fase3.py`; badan dan atap tanpa teras dan antena, dijaga tes):
+## lima tabel sejajar `RUTE_RUMAH_DEKAT_JENIS`, ubin relatif titik pijak GAMBAR (lateral positif menjauh dari jalan). Pelanggan dan bukan sama.
+const RUTE_RUMAH_DEKAT_PENUTUP_LATERAL_UBIN: Array[float] = [-1.09375, -1.09375, -1.09375]
+const RUTE_RUMAH_DEKAT_PENUTUP_MAJU_UBIN: Array[float] = [-1.40625, -1.40625, -1.375]
+const RUTE_RUMAH_DEKAT_PENUTUP_LEBAR_UBIN: Array[float] = [3.06875, 3.1125, 3.1125]
+const RUTE_RUMAH_DEKAT_PENUTUP_PANJANG_UBIN: Array[float] = [2.8125, 2.8125, 2.75]
+const RUTE_RUMAH_DEKAT_PENUTUP_TINGGI_UBIN: Array[float] = [1.625, 1.6875, 1.5625]
+## Lantai teras menjorok rumah dekat (`teras_ubin` di JSON aset, sama untuk semua jenis): [lateral_min, maju_min, lebar_lateral, panjang_maju], ubin relatif titik pijak gambar. Untuk zona teras dekat (run 5D bagian B, AC-10).
+const RUTE_RUMAH_DEKAT_TERAS_UBIN: Array[float] = [-1.8125, -1.375, 0.875, 0.9375]
+## Penghitung hash FNV-1a 32 bit (bukan angka tuning): nilai awal, pengali, dan masker 32 bit. Dipakai `UbinKhusus` (variasi rumput) tanpa `hash()` dan tanpa RNG.
 const HASH_FNV1A_AWAL: int = 2166136261
 const HASH_FNV1A_KALI: int = 16777619
 const HASH_FNV1A_MASKER: int = 4294967295
@@ -1252,3 +1253,25 @@ const RUTE_DEKOR_TEPI_UBIN: int = 1
 ## Sprite dekor terpasang (PNG di `assets/sprites/props/`), sejajar dengan `RUTE_DEKOR_SPRITE_DATA` (lima angka tiap sprite: lebar sel, tinggi sel, frame, pijak x, pijak y, piksel; sama dengan JSON aset dan ukuran PNG, dijaga tes).
 const RUTE_DEKOR_SPRITE: Array[String] = ["prop_tong_sampah_logam", "prop_pohon_rindang", "prop_pohon_glodokan", "prop_pohon_ketapang", "prop_lampu_lengan_seberang", "prop_lampu_lengan_dekat"]
 const RUTE_DEKOR_SPRITE_DATA: Array[int] = [20, 30, 1, 10, 25, 151, 119, 1, 41, 63, 121, 126, 1, 25, 77, 141, 124, 1, 35, 70, 85, 104, 1, 9, 63, 85, 104, 1, 22, 69]
+
+## --- Pelanggan sisi dekat, sasaran dekat, dan tip hari 3 (run fase5d-sisi-dekat bagian B, P-4, P-5, P-6, D-2, D-3, D-4; usulan, dinilai di HP) ---
+## Hari pertama yang punya pelanggan sisi dekat (P-4): hari 1 dan 2 hanya seberang, rute identik run sebelumnya (RNG sama). Juga hari tip singkat (P-6).
+const RUTE_DEKAT_HARI_MULAI: int = 3
+## Jumlah pelanggan sisi dekat per rute sejak `RUTE_DEKAT_HARI_MULAI`: paling sedikit dan paling banyak (8 atau 9 dari `RUTE_PELANGGAN` = sekitar 35%); total tetap `RUTE_PELANGGAN`.
+const RUTE_DEKAT_KUOTA_MIN: int = 8
+const RUTE_DEKAT_KUOTA_MAKS: int = 9
+## Zona kotak surat rumah dekat di rute = cermin zona seberang (`JALAN_UJI_SEBERANG_KOTAK_SURAT_UBIN` -> lateral positif): [lateral_min, maju_min, lebar_lateral, panjang_maju], ubin, maju relatif awal kavling. Lebih lebar dari zona dekat jalan uji (0,75) karena teras dekat kini di lateral >= 3,19 (tidak lagi di lateral 2,5).
+const RUTE_DEKAT_KOTAK_SURAT_UBIN: Array[float] = [1.75, 1.25, 1.0, 1.25]
+## Inti "tepat" zona kotak surat dekat rute: 0,5 x 0,5 di pusat zona (cermin `JALAN_UJI_SEBERANG_KOTAK_SURAT_INTI_UBIN`).
+const RUTE_DEKAT_KOTAK_SURAT_INTI_UBIN: Array[float] = [2.0, 1.625, 0.5, 0.5]
+## Zona halaman rumah dekat di rute: rumput dari tepi trotoar dekat (lateral 2,0) sampai tepi badan rumah (pusat gambar 5,0 + `RUTE_RUMAH_DEKAT_PENUTUP_LATERAL_UBIN` -1,09375 = 3,90625), maju -0,5 sampai 2,5 relatif awal kavling. Dijaga tes terhadap JSON aset.
+const RUTE_DEKAT_HALAMAN_UBIN: Array[float] = [2.0, -0.5, 1.90625, 3.0]
+## Letak sprite kotak surat rumah dekat: lateral (cermin `JALAN_UJI_KOTAK_SURAT_X_UBIN` -2,125); maju relatif awal kavling sama dengan seberang (`JALAN_UJI_KOTAK_SURAT_MAJU_UBIN`).
+const RUTE_DEKAT_KOTAK_SURAT_X_UBIN: float = 2.125
+## Tip hari 3 (P-6): lama tampil sejak rute dimulai (detik waktu game, beku saat jeda), letak panel (kolom kiri di bawah kartu misi, sama dengan petunjuk tutorial) dan lebarnya, piksel game.
+const TIP_SISI_DEKAT_DETIK: float = 6.0
+const TIP_SISI_DEKAT_X_PX: int = 26
+const TIP_SISI_DEKAT_Y_PX: int = 88
+const TIP_SISI_DEKAT_LEBAR_PX: int = 150
+## Koran terlipat di teras rumah dekat (AC-9): teras dekat ada di belakang titik pijak sprite rumahnya menurut Y-sort, jadi pembungkus Y-sort sprite terlipat diletakkan sekian piksel game di DEPAN titik pijak rumah supaya digambar sesudah sprite rumah.
+const RUTE_RUMAH_DEKAT_URUT_TERLIPAT_PX: int = 1

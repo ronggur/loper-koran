@@ -73,19 +73,40 @@ static func dari_rumah(rumah: RouteBuilder.RumahRute) -> Objek:
 	return buat(tapak_rumah(rumah.sisi, rumah.maju_ubin), Config.RUTE_RUMAH_TINGGI_UBIN, rumah.id)
 
 
-## Tapak kotak rumah rute seperti yang DIGAMBAR (run fase5b bagian B2, P-4): sama dengan `tapak_rumah`, kecuali rumah sisi `dekat` digeser
-## `RUTE_RUMAH_DEKAT_MUNDUR_UBIN` menjauh dari jalan (lateral positif), sebagaimana sprite-nya (`SpriteRumah.pusat_gambar_dunia`). Hanya untuk kotak yang didaftarkan ke
-## penerap penutup (alfa gambar mengikuti sprite); tapak logika (`tapak_rumah`, validasi segmen, zona) tidak berubah. Sisi `TIDAK_ADA` = persegi kosong.
-static func tapak_rumah_gambar(sisi: LoperAnim.Sisi, maju_awal_ubin: float) -> Rect2:
-	var tapak: Rect2 = tapak_rumah(sisi, maju_awal_ubin)
-	if sisi == LoperAnim.Sisi.DEKAT:
-		tapak.position.x += Config.RUTE_RUMAH_DEKAT_MUNDUR_UBIN
-	return tapak
+## Tapak kotak rumah rute seperti yang DIGAMBAR: rumah seberang = `tapak_rumah`; rumah sisi `dekat` (run fase5d-sisi-dekat bagian A, AC-5) = kotak sprite nyata
+## (`Config.RUTE_RUMAH_DEKAT_PENUTUP_*`, dari JSON aset) relatif titik pijak gambar (`SpriteRumah.pusat_gambar_dunia`: pusat tapak logika + `RUTE_RUMAH_DEKAT_MUNDUR_UBIN`).
+## `jenis` kosong (rumah dekat tanpa jenis, mis. kavling validasi segmen) = gabungan kotak semua jenis dekat. Hanya untuk kotak penerap dan kavling simpang; tapak logika
+## (`tapak_rumah`, validasi segmen, zona) tidak berubah. Sisi `TIDAK_ADA` = persegi kosong.
+static func tapak_rumah_gambar(sisi: LoperAnim.Sisi, maju_awal_ubin: float, jenis: String = "") -> Rect2:
+	if sisi != LoperAnim.Sisi.DEKAT:
+		return tapak_rumah(sisi, maju_awal_ubin)
+	var pusat: Vector2 = tapak_rumah(sisi, maju_awal_ubin).get_center() + Vector2(Config.RUTE_RUMAH_DEKAT_MUNDUR_UBIN, 0.0)
+	var hasil: Rect2 = Rect2()
+	var ada: bool = false
+	for i: int in range(Config.RUTE_RUMAH_DEKAT_JENIS.size()):
+		if not jenis.is_empty() and Config.RUTE_RUMAH_DEKAT_JENIS[i] != jenis:
+			continue
+		var kotak: Rect2 = Rect2(pusat.x + Config.RUTE_RUMAH_DEKAT_PENUTUP_LATERAL_UBIN[i], pusat.y + Config.RUTE_RUMAH_DEKAT_PENUTUP_MAJU_UBIN[i], Config.RUTE_RUMAH_DEKAT_PENUTUP_LEBAR_UBIN[i], Config.RUTE_RUMAH_DEKAT_PENUTUP_PANJANG_UBIN[i])
+		hasil = kotak if not ada else hasil.merge(kotak)
+		ada = true
+	return hasil
 
 
-## Objek penutup rumah rute untuk penerap (tapak `tapak_rumah_gambar`, tinggi dari `Config.RUTE_RUMAH_*`).
+## Tinggi kotak penutup gambar rumah: rumah dekat = tinggi sprite nyata per jenis (`Config.RUTE_RUMAH_DEKAT_PENUTUP_TINGGI_UBIN`; jenis tak dikenal = tertinggi), selain itu `RUTE_RUMAH_TINGGI_UBIN`.
+static func tinggi_rumah_gambar(sisi: LoperAnim.Sisi, jenis: String) -> float:
+	if sisi != LoperAnim.Sisi.DEKAT:
+		return Config.RUTE_RUMAH_TINGGI_UBIN
+	var tinggi: float = 0.0
+	for i: int in range(Config.RUTE_RUMAH_DEKAT_JENIS.size()):
+		if Config.RUTE_RUMAH_DEKAT_JENIS[i] == jenis:
+			return Config.RUTE_RUMAH_DEKAT_PENUTUP_TINGGI_UBIN[i]
+		tinggi = maxf(tinggi, Config.RUTE_RUMAH_DEKAT_PENUTUP_TINGGI_UBIN[i])
+	return tinggi
+
+
+## Objek penutup rumah rute untuk penerap: tapak `tapak_rumah_gambar` dan tinggi `tinggi_rumah_gambar` menurut jenis rumah (rumah dekat = sprite nyata).
 static func dari_rumah_gambar(rumah: RouteBuilder.RumahRute) -> Objek:
-	return buat(tapak_rumah_gambar(rumah.sisi, rumah.maju_ubin), Config.RUTE_RUMAH_TINGGI_UBIN, rumah.id)
+	return buat(tapak_rumah_gambar(rumah.sisi, rumah.maju_ubin, rumah.jenis), tinggi_rumah_gambar(rumah.sisi, rumah.jenis), rumah.id)
 
 
 ## Objek penutup dekor rute (semua dekor sisi `dekat`: pohon, lampu, tong sampah): tapak dan tinggi dari `DekorRute.tapak_penutup` dan `DekorRute.tinggi_penutup` (`Config.RUTE_DEKOR_*`, tinggi = tinggi sprite nyata);

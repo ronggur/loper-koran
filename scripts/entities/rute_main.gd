@@ -53,6 +53,10 @@ extends AdeganJalan
 ## kondisi dan level upgrade tersimpan, hari (seed kerusakan tabrakan), dan daftar upgrade (`PemuatToko`); tanpa itu rute yang dijalankan sendiri memakai sepeda baru. Aus dan kerusakan berhenti di
 ## garis akhir (`_kondisi_selesai`); "Main lagi" mengembalikan kondisi awal rute. Layar hasil mendapat daftar komponen PERLU_BENGKEL (`BikeCondition.perlu_bengkel`) tanpa mengubah `HasilRute.Angka`.
 ##
+## Run fase5d-sisi-dekat bagian B (P-4, P-5, P-6; usulan, dinilai di HP): nomor hari (`atur_hari`, `HariMain` meneruskan `_mesin.hari` SEBELUM scene masuk pohon; bawaan hari 1 untuk `rute.tscn` yang dijalankan
+## sendiri, probe, dan tes lama) masuk ke `RouteBuilder.bangun`: hari 1 dan 2 hanya pelanggan seberang (rute identik run sebelumnya), sejak hari 3 sebanyak 8 atau 9 dari 25 pelanggan di sisi dekat. Sasaran dekat
+## (zona, kotak surat oranye/abu-abu, teras, mode bantu, radar, progres, skor) lewat kode yang sama dengan seberang. Hari 3: tip singkat sekali (`TipSisiDekat`, `PanelTipSisiDekat`, beku saat jeda).
+##
 ## Sepeda mencapai garis akhir rute (tepat sekali per rute; diulang hanya sesudah "Main lagi").
 signal rute_selesai
 ## Rute baru disusun (saat scene siap dan tiap "Main lagi").
@@ -66,6 +70,11 @@ signal bengkel_diminta
 
 ## Seed rute yang sedang dimainkan.
 var _benih: int = Config.RUTE_SEED_DEV
+## Nomor hari rute (bawaan hari 1; `atur_hari`).
+var _hari: int = Config.HARI_AWAL
+## Sisa detik tip hari 3 (`TipSisiDekat`); diisi sekali saat rute pertama disusun dan tidak diisi ulang oleh "Main lagi".
+var _tip_sisa: float = 0.0
+var _tip_sudah: bool = false
 var _rute: RouteBuilder.Rute = RouteBuilder.Rute.new()
 var _pustaka: Array[SegmenRute] = []
 ## Galat memuat segmen atau menyusun rute (kosong bila baik).
@@ -105,6 +114,7 @@ var _daftar_upgrade: Array[DataToko] = []
 @onready var _layar_hasil: LayarHasil = %LayarHasil
 @onready var _kucing: KucingMisi = %Kucing
 @onready var _tutorial_node: TutorialController = %Tutorial
+@onready var _tip_node: PanelTipSisiDekat = %TipSisiDekat
 
 
 func _siapkan_dunia() -> void:
@@ -128,6 +138,7 @@ func _perbarui_dunia(jarak_ubin: float) -> void:
 	_daur.atur_terantar(_skor.terantar)
 	_rintangan_daur.perbarui(_rintangan, jarak_ubin)
 	_dekor_daur.perbarui(jarak_ubin)
+	_tip_node.tampilkan(TipSisiDekat.kunci_teks(_hari) if TipSisiDekat.tampil(_tip_sisa) and not _hasil_tampil else "")
 	_umpan_gambar.tampilkan(_umpan)
 	_penerap.terapkan(_sepeda.posisi_dunia())
 	var status: AkhirRute.Status = AkhirRute.periksa(_selesai, jarak_ubin, _rute.panjang_ubin)
@@ -171,6 +182,7 @@ func _buka_hasil() -> void:
 
 func _langkah_waktu(langkah_dt: float) -> void:
 	_dt_langkah = langkah_dt
+	_tip_sisa = TipSisiDekat.sisa(_tip_sisa, langkah_dt)
 	if not _selesai:
 		_tenggat = TenggatRute.langkah(_tenggat, langkah_dt)
 
@@ -250,7 +262,7 @@ func _susun(benih: int) -> void:
 		var kumpulan: PemuatRute.Kumpulan = PemuatRute.muat_folder()
 		_galat.append_array(kumpulan.galat)
 		_pustaka = kumpulan.segmen
-	var hasil: RouteBuilder.Hasil = RouteBuilder.bangun(benih, _pustaka)
+	var hasil: RouteBuilder.Hasil = RouteBuilder.bangun(benih, _pustaka, _hari)
 	_galat.append_array(hasil.galat)
 	var gagal: bool = false
 	if hasil.rute != null and _galat.is_empty():
@@ -268,6 +280,9 @@ func _susun(benih: int) -> void:
 	_layar_hasil.tampilkan(false)
 	_hud.visible = true
 	_tutorial_node.visible = true
+	if not _tip_sudah:
+		_tip_sudah = true
+		_tip_sisa = TipSisiDekat.detik_awal(_hari)
 	_kontrol.set_process_input(true)
 	_daur.atur_rute(_rute)
 	_tanah.atur_baris_masuk(UbinKhusus.himpunan_baris_masuk(_rute.objek))
@@ -382,6 +397,31 @@ func _tampilkan_misi() -> void:
 func main_lagi() -> void:
 	_susun(_benih + 1)
 	perbarui(0.0)
+
+
+## Mengatur nomor hari rute (run fase5d-sisi-dekat bagian B, AC-8): menentukan pelanggan sisi dekat (sejak `Config.RUTE_DEKAT_HARI_MULAI`) dan tip hari 3. Dipanggil SEBELUM scene masuk pohon (`HariMain`); bila sudah
+## siap, rute disusun ulang dengan seed yang sedang dipakai. Bawaan hari 1.
+func atur_hari(hari_baru: int) -> void:
+	_hari = hari_baru
+	if is_node_ready():
+		_tip_sudah = false
+		_susun(_benih)
+		perbarui(0.0)
+
+
+## Nomor hari rute (bawaan hari 1).
+func hari() -> int:
+	return _hari
+
+
+## Sisa detik tip hari 3 (untuk tes dan probe).
+func sisa_tip() -> float:
+	return _tip_sisa
+
+
+## Panel tip hari 3 (untuk tes dan probe).
+func tip_node() -> PanelTipSisiDekat:
+	return _tip_node
 
 
 ## Mengatur seed rute awal (run fase4a-koran-hari AC-17: seed hari dari `SeedHari`). Dipanggil SEBELUM scene masuk pohon, jadi rute pertama

@@ -4,7 +4,7 @@
 1. `tools/env_art/gelombang1/render.py --salin` dan `tools/env_art/ubin_perumahan.py --salin` deterministik: dua kali jalan = piksel RGBA sama
    dan JSON byte-identik (tujuan dialihkan ke folder sementara lewat ENV_ART_SALIN_KE; folder repo tidak disentuh).
 2. Isi `assets/sprites/props/`, `vfx/`, `houses/perumahan/`, `tiles/perumahan/` piksel-identik (PNG) dan byte-identik (JSON) dengan keluaran skrip,
-   dan berkas aset di folder itu HANYA daftar D-1 (run 5A: 13 sprite gelombang 1 + 7 ubin + JSON ubin terpangkas; run 5B: lima tembok, tong sampah logam,
+   dan berkas aset di folder itu HANYA daftar D-1 (run 5A: 13 sprite gelombang 1 + 7 ubin + JSON ubin terpangkas; run 5B: tong sampah logam (lima tembok 5B dilepas run 5D),
    tiga pohon, dua lampu, `rumput_2/3`, empat ubin khusus), ditambah berkas lama (kotak surat, rumah perumahan). Tidak ada aset gelombang 1 yang belum
    dipasang (tong sampah biru, jejak, mangkuk, portal, pos, percikan, polisi tidur, zebra, genangan, `aspal_N`, `*_dekat_masuk`) di assets/.
    Catatan run 5B: pohon dan lampu dikeluarkan `tools/env_art/lampu_pohon.py --salin` (diuji `uji_aset_lampu_pohon.py` dan `uji_aset_pasang_5b.py`),
@@ -60,7 +60,7 @@ UBIN_5C += ['simpang_seberang_%s' % n for n in (
     'lengan_mulut_1', 'aspal_seberang_mulut_2', 'trotoar_seberang_mulut_2', 'rumput_seberang_mulut_2', 'lengan_mulut_2', 'trotoar_seberang_belakang_1', 'rumput_seberang_belakang_1', 'lengan_belakang_1')]   # putusan P-6 run 5C
 # Run 5B (D-1): keluaran tambahan render.py --salin (isi pasangan 5A di atas tidak berubah) dan keluaran lampu_pohon.py --salin.
 PASANG_SPRITE_5B = {
-    'houses/perumahan': ['house_tembok_polos', 'house_tembok_bata', 'house_tembok_besi', 'house_tembok_pot', 'house_tembok_tiang'],
+    'houses/perumahan': [],   # run fase5d-sisi-dekat (P-1): lima tembok tidak lagi dipasang
     'props': ['prop_tong_sampah_logam'],
 }
 PASANG_LAMPU_POHON = ['prop_pohon_rindang', 'prop_pohon_glodokan', 'prop_pohon_ketapang', 'prop_lampu_lengan_seberang', 'prop_lampu_lengan_dekat']

@@ -4,7 +4,7 @@ extends RefCounted
 ##
 ## `KoranLempar` menilai dan membentuk elips garis bidik dari medan ini. `null` berarti jalan uji (zona kavling berkala dan rumah graybox,
 ## perilaku run 2A dan 2B tidak berubah). `dari_rute` membuat medan rumah satu rute (AC-10): zona kotak surat, halaman, teras, dan jendela
-## tiap rumah (`ZonaSasaran.zona_rumah`) dan kotak rumah penutup (`PenutupPemain.dari_rumah`); hanya rumah di sekitar titik yang dilihat
+## tiap rumah (`ZonaSasaran.zona_rumah`) dan kotak rumah penutup (`PenutupPemain.dari_rumah_gambar`: seberang = tapak logika, dekat = kotak sprite nyata, run fase5d-sisi-dekat bagian B AC-10); hanya rumah di sekitar titik yang dilihat
 ## (pencarian biner `JendelaRute`), bukan seluruh rute, dan penilaian tetap dari titik mendarat saja. Satu kelas konkret (bukan turunan):
 ## pewarisan `MedanKoran` -> medan rute membuat skrip data rute tertahan di akhir proses (GDScript, dites di LOG run 3A bagian B).
 
@@ -50,7 +50,7 @@ func tertutup_titik(titik_dunia: Vector2, tinggi_ubin: float) -> bool:
 		return false
 	var rentang: Vector2i = JendelaRute.rentang(_rumah, maju - float(Config.RUTE_PETAK_UBIN * Config.RUTE_PENUTUP_JENDELA_BELAKANG_PETAK), maju + float(Config.RUTE_PETAK_UBIN))
 	for i: int in range(rentang.x, rentang.y):
-		var objek: PenutupPemain.Objek = PenutupPemain.dari_rumah(_rumah[i])
+		var objek: PenutupPemain.Objek = PenutupPemain.dari_rumah_gambar(_rumah[i])
 		if ZonaSasaran.tertutup_kotak(titik_dunia, tinggi_ubin, objek.tapak, objek.tinggi_ubin):
 			return true
 	return false

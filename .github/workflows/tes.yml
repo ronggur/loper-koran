@@ -85,6 +85,9 @@ jobs:
       - name: Uji ubin simpang T dan ujung kerb run 5C (deterministik, hanya yang dipakai, config = JSON renderer, susunan = adegan renderer, referensi, impor Lossless)
         run: python3 tools/tests_cek/uji_aset_simpang.py
 
+      - name: Uji aset fase 3 perumahan run 5D (rumah, rintangan, kotak surat = keluaran fase3.py, deterministik, hanya yang dipasang, mock docs, impor Lossless)
+        run: python3 tools/tests_cek/uji_aset_fase3.py
+
       - name: Import project (tanpa error, tanpa berkas yang belum di-commit)
         run: |
           set -uo pipefail

@@ -19,11 +19,13 @@ const DAUR_MUNDUR: float = 20.0
 const DAUR_MAJU: float = 30.0
 ## Sidik uraian rute untuk seed 20261016 + 7 i (i = 0 sampai 59), dihitung di commit fb9033d sebelum dekor ada; dihitung ulang oleh skrip `docs/loop/20261022-fase5c-animasi-simpang/dev_ukur/banding_p6.gd`
 ## sesudah putusan P-6 run 5C (rumah seberang per_buka_02@18 dihapus: 31 seed berubah, satu-satunya beda baris rumah itu; LOG run 5C).
+## Run 5D bagian B (AC-8, D-5): sidik DIHITUNG ULANG oleh skrip dari kode sesudah rumah dekat diberi pelanggan_boleh (34 dari 36 rumah dekat; baris R memuat bidang itu). Bukti per golden: dengan bidang pelanggan_boleh rumah DEKAT
+## ditopeng false, sidik 60 seed sama persis dengan nilai sebelumnya (kontrol skrip), jadi satu-satunya beda adalah bidang itu; segmen, rumah, pelanggan, pemberi tip, rintangan, titik misi, dekor, tenggat, dan skor tidak berubah (LOG bagian B).
 const GOLDEN_RUTE: Array[int] = [
-	1053547187, 201012141, 535340357, 3101343437, 2384170777, 2425101367, 606511764, 2615973514, 75170362, 2213281972, 535338084, 3566692995, 242340111, 2373965757, 4292549382,
-	1952976997, 641662113, 614736801, 4168929600, 2953684554, 279121403, 1627079354, 2458150444, 2007949863, 1225487247, 47348422, 1522119727, 361492249, 683036218, 243808589,
-	561625159, 1769945955, 3379215725, 1570568726, 17364547, 3528437544, 3984388242, 3427485282, 388415640, 2304979405, 3667959912, 3604277041, 2244197453, 2474205298, 270615812,
-	1901329420, 1941848645, 2191162568, 3215408483, 4092028916, 1003141323, 3995673655, 2459532425, 491403030, 76337326, 471371402, 206386824, 267717709, 2490243646, 1070982758,
+	299265929, 592171248, 1677403481, 32812021, 2913826288, 1046867607, 988649871, 1534843447, 330497132, 2754380451, 2522862173, 3442290866, 2427538121, 4120860591, 1824805011,
+	3043426513, 21044601, 180660512, 3160363486, 1915645779, 2609557601, 759987888, 374147715, 3655786764, 1664289267, 3154014392, 1118545561, 3742039627, 471049183, 456681243,
+	3514914666, 4182804130, 126450175, 3476316046, 2976101518, 1870146191, 1103024936, 1301129216, 955434053, 4062427992, 780297767, 2986942708, 426223188, 4294850231, 3331496612,
+	1054790504, 4103035617, 524582720, 496311467, 4004418556, 2131610056, 1640273865, 4127787835, 2966526230, 1474512725, 251310509, 339062592, 2229810785, 1594329270, 3403948488,
 ]
 ## Banyaknya dekor per berkas (urut nama): dihitung dari berkas data dengan skrip lain (Python), ditulis literal.
 const JUMLAH_PER_BERKAS: Array = [
@@ -147,8 +149,12 @@ func _test_aturan_tempat_murni() -> void:
 	check(DekorRute.menimpa_zona_rumah(Rect2(-2.0, 7.75, 0.25, 0.25), s, 6.0), "tapak (-2,0; 7,75) menimpa zona kotak surat seberang (maju 7,25 sampai 8,5)")
 	check(not DekorRute.menimpa_zona_rumah(Rect2(-2.75, 8.5, 0.5, 0.5), s, 6.0), "tapak yang mulai tepat di ujung zona (maju 8,5, eksklusif) tidak menimpa")
 	check(not DekorRute.menimpa_zona_rumah(Rect2(-2.75, 4.5, 0.5, 0.5), s, 6.0), "tapak di maju 4,5 sampai 5,0 (jauh di belakang teras) tidak menimpa")
-	check(DekorRute.menimpa_zona_rumah(Rect2(2.25, 10.75, 0.5, 0.5), d, 10.0), "tapak (2,25; 10,75) menimpa teras dekat rumah pos 10 (lateral 2,5 sampai 3,0; maju 10,25 sampai 11,75)")
-	check(DekorRute.menimpa_zona_rumah(Rect2(2.25, 11.75, 0.5, 0.5), d, 10.0), "tapak (2,25; 11,75) menimpa kotak surat dekat (lateral 1,75 sampai 2,5; maju 11,25 sampai 12,5)")
+	# Run 5D bagian B (AC-10): zona dekat di rute = cermin seberang. Kotak surat lateral 1,75 sampai 2,75 (dulu 2,5), maju 11,25 sampai 12,5; teras menjorok rumah baru di lateral 3,1875 sampai 4,0625, maju 9,625 sampai 10,5625
+	# (rumah pos 10: pusat gambar (5,0; 11,0) + teras_ubin [-1,8125; -1,375; 0,875; 0,9375]), jadi dekor sisi dekat (lateral <= 2,75) tidak pernah menjangkau teras dekat.
+	check(not DekorRute.menimpa_zona_rumah(Rect2(2.25, 10.75, 0.5, 0.5), d, 10.0), "tapak (2,25; 10,75) tidak lagi menimpa zona dekat: teras dekat baru di lateral 3,1875 .. 4,0625 (dulu teras placeholder di lateral 2,5)")
+	check(DekorRute.menimpa_zona_rumah(Rect2(3.25, 9.75, 0.5, 0.5), d, 10.0), "tapak hipotetis (3,25; 9,75) menimpa teras dekat rumah pos 10 (lateral 3,1875 .. 4,0625; maju 9,625 .. 10,5625)")
+	check(DekorRute.menimpa_zona_rumah(Rect2(2.25, 11.75, 0.5, 0.5), d, 10.0), "tapak (2,25; 11,75) menimpa kotak surat dekat (lateral 1,75 sampai 2,75; maju 11,25 sampai 12,5)")
+	check(DekorRute.menimpa_zona_rumah(Rect2(2.625, 11.75, 0.25, 0.25), d, 10.0) and not DekorRute.menimpa_zona_rumah(Rect2(2.75, 11.75, 0.25, 0.25), d, 10.0), "kotak surat dekat berakhir di lateral 2,75 (eksklusif): tapak 2,625 .. 2,875 menimpa, tapak 2,75 .. 3,0 tidak")
 	check(not DekorRute.menimpa_zona_rumah(Rect2(2.25, 12.5, 0.5, 0.5), d, 10.0), "tapak mulai tepat di ujung kotak surat dekat (maju 12,5) tidak menimpa")
 	check(not DekorRute.menimpa_zona_rumah(Rect2(-2.75, 6.75, 0.5, 0.5), LoperAnim.Sisi.TIDAK_ADA, 6.0), "rumah tanpa sisi: tanpa zona")
 	# Halaman dan jendela BUKAN zona yang dihitung: tapak di halaman seberang jauh dari teras dan kotak surat boleh.
@@ -251,7 +257,7 @@ func _test_validasi_parse() -> void:
 	# Tempat: zona teras dan kotak surat rumah mana pun (seberang pos 6, dekat pos 10), tapak rintangan.
 	check(_galat_memuat(_dengan([_butir("pohon", 7, "seberang", "rindang")]), "menimpa zona teras atau kotak surat rumah seberang di pos 6"), "pohon seberang di maju 7 menimpa teras rumah pos 6: ditolak")
 	check(_galat_memuat(_dengan([_butir("tong_sampah", 8, "seberang", "logam")]), "menimpa zona teras atau kotak surat rumah seberang di pos 6"), "tong seberang di maju 8 menimpa kotak surat rumah pos 6: ditolak")
-	check(_galat_memuat(_dengan([_butir("pohon", 11, "dekat", "rindang")]), "menimpa zona teras atau kotak surat rumah dekat di pos 10"), "pohon dekat di maju 11 menimpa teras rumah dekat pos 10: ditolak")
+	check(_sah(_dengan([_butir("pohon", 11, "dekat", "rindang")])), "pohon dekat di maju 11 sah: tapak maju 10,75 .. 11,25 berakhir tepat di awal kotak surat dekat (11,25) dan teras dekat baru jauh di lateral 3,19 (run 5D bagian B)")
 	check(_galat_memuat(_dengan([_butir("pohon", 12, "dekat", "rindang")]), "menimpa zona teras atau kotak surat rumah dekat di pos 10"), "pohon dekat di maju 12 menimpa kotak surat dekat: ditolak")
 	check(_galat_memuat(_dengan([_butir("lampu_jalan", 7, "seberang", "lengan")]), "menimpa zona teras atau kotak surat rumah seberang di pos 6"), "lampu seberang di maju 7 menimpa teras (lateral -3 sampai -2,5, maju 6 sampai 7,25): tapak -2,75 sampai -2,5 (iterasi 2: lampu seberang 2,625) ditolak")
 	check(_sah(_dengan([_butir("lampu_jalan", 9, "seberang", "lengan")])), "lampu seberang di maju 9 sah: celah sesudah rumah pos 6, tapak maju 8,875 sampai 9,125 di luar kotak surat (sampai 8,5)")
@@ -413,7 +419,7 @@ func _uraian(rute: RouteBuilder.Rute) -> String:
 	return "\n".join(bagian)
 
 
-## FNV-1a 32 bit atas byte UTF-8 (ditulis ulang di sini, bukan `VarianTembok.fnv1a_32`).
+## FNV-1a 32 bit atas byte UTF-8 (ditulis ulang di sini, independen dari kode produksi).
 func _fnv(teks: String) -> int:
 	var nilai: int = 2166136261
 	for b: int in teks.to_utf8_buffer():
@@ -670,18 +676,20 @@ func _test_rujukan_dan_pemisahan() -> void:
 # --- P-4: kotak penutup rumah dekat digeser seperti gambarnya (murni) ---
 
 func _test_p4_tapak_gambar_murni() -> void:
-	_judul.call("P-4 PenutupPemain.tapak_rumah_gambar: rumah dekat digeser 1,25 ubin seperti gambarnya, seberang tetap, tapak logika tidak berubah")
-	check(PenutupPemain.tapak_rumah_gambar(LoperAnim.Sisi.DEKAT, 8.0) == Rect2(4.25, 7.5, 3.0, 3.0), "tapak gambar rumah dekat di maju 8 = (4,25; 7,5) 3 x 3 (tapak logika 3,0 + 1,25)")
+	_judul.call("P-4 PenutupPemain.tapak_rumah_gambar: rumah dekat = kotak sprite nyata (run 5D: mundur 0,5, JSON aset), seberang tetap, tapak logika tidak berubah")
+	# Run fase5d-sisi-dekat (AC-5): dulu (4,25; 7,5) 3 x 3 (logika + 1,25). Kini pusat gambar (5,0; 9,0) + kotak JSON; tanpa jenis = gabungan tiga jenis: lateral 5,0 - 1,09375 = 3,90625,
+	# maju 9,0 - 1,40625 = 7,59375, lebar terbesar 3,1125, panjang terbesar 2,8125.
+	check(PenutupPemain.tapak_rumah_gambar(LoperAnim.Sisi.DEKAT, 8.0).is_equal_approx(Rect2(3.90625, 7.59375, 3.1125, 2.8125)), "tapak gambar rumah dekat di maju 8 tanpa jenis = (3,906; 7,594) 3,1125 x 2,8125 (gabungan sprite nyata)")
 	check(PenutupPemain.tapak_rumah_gambar(LoperAnim.Sisi.SEBERANG, 8.0) == Rect2(-6.0, 7.5, 3.0, 3.0), "tapak gambar rumah seberang di maju 8 = (-6,0; 7,5) tidak bergeser")
 	check(PenutupPemain.tapak_rumah_gambar(LoperAnim.Sisi.TIDAK_ADA, 8.0) == Rect2(), "tapak gambar sisi kosong: persegi kosong")
 	check(PenutupPemain.tapak_rumah(LoperAnim.Sisi.DEKAT, 8.0) == Rect2(3.0, 7.5, 3.0, 3.0) and PenutupPemain.tapak_rumah(LoperAnim.Sisi.SEBERANG, 8.0) == Rect2(-6.0, 7.5, 3.0, 3.0), "tapak logika tidak berubah: dekat (3,0; 7,5), seberang (-6,0; 7,5)")
 	var dekat: RouteBuilder.RumahRute = _rumah(8, 8.0, LoperAnim.Sisi.DEKAT)
 	var seberang: RouteBuilder.RumahRute = _rumah(8, 8.0, LoperAnim.Sisi.SEBERANG)
-	check(PenutupPemain.dari_rumah_gambar(dekat).tapak == Rect2(4.25, 7.5, 3.0, 3.0) and PenutupPemain.dari_rumah_gambar(dekat).tinggi_ubin == 2.0 and PenutupPemain.dari_rumah_gambar(dekat).id == dekat.id, "kotak penutup gambar rumah dekat: tapak geser, tinggi 2,0, id rumah")
+	check(PenutupPemain.dari_rumah_gambar(dekat).tapak.is_equal_approx(Rect2(3.90625, 7.59375, 3.06875, 2.8125)) and PenutupPemain.dari_rumah_gambar(dekat).tinggi_ubin == 1.625 and PenutupPemain.dari_rumah_gambar(dekat).id == dekat.id, "kotak penutup gambar rumah dekat limasan: sprite nyata (3,906; 7,594) 3,06875 x 2,8125, tinggi 1,625, id rumah (run 5D; dulu logika + 1,25 tinggi 2)")
 	check(PenutupPemain.dari_rumah_gambar(seberang).tapak == PenutupPemain.dari_rumah(seberang).tapak, "kotak penutup gambar rumah seberang = kotak penutup logika")
 	check(PenutupPemain.dari_rumah(dekat).tapak == Rect2(3.0, 7.5, 3.0, 3.0), "kotak penutup logika rumah dekat tetap (3,0; 7,5) (MedanKoran, dites lama)")
 	# Sapuan murni: pemain di lateral -2,0 sampai 2,0 (langkah 0,25) dan maju 6 ubin di sekitar rumah (langkah 0,125) tidak pernah tertutup rumah dekat yang digeser.
-	# Penalaran: titik kaki harus bisa mencapai tapak (lateral 4,25) lewat garis pandang (x + d), jadi d >= 4,25 - 2,0 = 2,25 > tinggi 2,0 tak pernah tercapai.
+	# Penalaran (run 5D): titik kaki harus mencapai tapak (lateral 3,906) lewat garis pandang (x + d), jadi d >= 1,906 > tinggi 1,625 tak pernah tercapai.
 	var dekat_tertutup: int = 0
 	var seberang_tertutup: int = 0
 	var diperiksa: int = 0
@@ -708,9 +716,14 @@ func _test_p4_tapak_gambar_murni() -> void:
 		var logika: Rect2 = PenutupPemain.dari_rumah(r).tapak
 		if r.sisi == LoperAnim.Sisi.SEBERANG and gambar != logika:
 			salah.append("%s: seberang bergeser" % r.id)
-		if r.sisi == LoperAnim.Sisi.DEKAT and (gambar.position.x != logika.position.x + 1.25 or gambar.size != logika.size or gambar.position.y != logika.position.y):
-			salah.append("%s: dekat tidak digeser 1,25 sepanjang lateral" % r.id)
-	check(salah.is_empty(), "rute nyata (%d rumah): kotak gambar seberang = logika, dekat = logika + 1,25 lateral: %s" % [rute.rumah.size(), salah.slice(0, 3)])
+		# Run 5D: kotak gambar dekat = pusat tapak logika + 0,5 lateral + kotak sprite nyata per jenis (literal dari JSON aset).
+		var kotak_jenis: Dictionary = {"dekat_limasan": [-1.09375, -1.40625, 3.06875, 2.8125], "dekat_pelana_lintang": [-1.09375, -1.40625, 3.1125, 2.8125], "dekat_pelana_sejajar": [-1.09375, -1.375, 3.1125, 2.75]}
+		if r.sisi == LoperAnim.Sisi.DEKAT:
+			var k: Array = kotak_jenis[r.jenis]
+			var harap: Rect2 = Rect2(logika.get_center().x + 0.5 + float(k[0]), logika.get_center().y + float(k[1]), float(k[2]), float(k[3]))
+			if not gambar.is_equal_approx(harap):
+				salah.append("%s: kotak gambar dekat %s, harap %s" % [r.id, gambar, harap])
+	check(salah.is_empty(), "rute nyata (%d rumah): kotak gambar seberang = logika, dekat = pusat logika + 0,5 + kotak sprite nyata: %s" % [rute.rumah.size(), salah.slice(0, 3)])
 
 
 func _rumah(pos: int, maju: float, sisi: LoperAnim.Sisi) -> RouteBuilder.RumahRute:
@@ -997,7 +1010,8 @@ func _test_p4_scene() -> void:
 	# Letak gambar rumah dekat sesuai tapak: kotak penutup (tapak gambar) mencakup titik pijak gambar (pusat tapak + geser).
 	var pusat: Vector2 = SpriteRumah.pusat_gambar_dunia(dekat)
 	var tapak: Rect2 = PenutupPemain.dari_rumah_gambar(dekat).tapak
-	check(tapak.has_point(Vector2(pusat.x, -pusat.y)) and tapak.get_center() == Vector2(pusat.x, -pusat.y), "pusat gambar rumah dekat (%s) = pusat kotak penutup gambar (%s)" % [pusat, tapak.get_center()])
+	# Run 5D: kotak sprite nyata tidak simetris (toren dan jemuran di belakang), jadi hanya dicek memuat titik pijak gambar.
+	check(tapak.has_point(Vector2(pusat.x, -pusat.y)), "pusat gambar rumah dekat (%s) ada di dalam kotak penutup gambar (%s)" % [pusat, tapak])
 	_bersihkan(akar)
 
 

@@ -179,7 +179,7 @@ static func zona_jalan_uji(indeks: int) -> Array[Zona]:
 
 # --- Zona dari data rute (AC-9 run fase3a-rute; usulan) ---
 # Geometri sama dengan zona jalan uji (`Config.JALAN_UJI_*`), diparametrisasi oleh awal kavling `maju_awal_ubin` (jarak maju dari awal
-# rute sampai `pos` rumah). Rumah yang bukan pelanggan memberi zona `BUKAN_PELANGGAN` (rumah dekat di distrik perumahan selalu begitu).
+# rute sampai `pos` rumah). Rumah yang bukan pelanggan memberi zona `BUKAN_PELANGGAN` (rumah dekat pelanggan hanya sejak hari `RUTE_DEKAT_HARI_MULAI`, run fase5d-sisi-dekat bagian B).
 
 ## Empat zona rumah sisi `seberang` (kotak surat, halaman, teras, jendela) dengan awal kavling `maju_awal_ubin`.
 static func zona_rumah_seberang(maju_awal_ubin: float, pelanggan: bool, nomor: int = 0, id_rumah: String = "") -> Array[Zona]:
@@ -194,7 +194,7 @@ static func zona_rumah_seberang(maju_awal_ubin: float, pelanggan: bool, nomor: i
 	return hasil
 
 
-## Tiga zona rumah sisi `dekat` (kotak surat, halaman, teras; tanpa jendela) dengan awal kavling `maju_awal_ubin`.
+## Tiga zona rumah sisi `dekat` JALAN UJI (kotak surat, halaman, teras; tanpa jendela, placeholder datar `Config.JALAN_UJI_DEKAT_*`) dengan awal kavling `maju_awal_ubin`. Rumah dekat di rute memakai `zona_rumah_dekat_rute`.
 static func zona_rumah_dekat(maju_awal_ubin: float, pelanggan: bool, nomor: int = 0, id_rumah: String = "") -> Array[Zona]:
 	var hasil: Array[Zona] = []
 	hasil.append(buat(_persegi(Config.JALAN_UJI_DEKAT_KOTAK_SURAT_UBIN, maju_awal_ubin), LoperAnim.Sisi.DEKAT, Jenis.KOTAK_SURAT, pelanggan, nomor))
@@ -206,12 +206,37 @@ static func zona_rumah_dekat(maju_awal_ubin: float, pelanggan: bool, nomor: int 
 	return hasil
 
 
+## Lantai teras menjorok rumah dekat di rute, koordinat jalan (x = lateral, y = maju), ubin, awal kavling `maju_awal_ubin` (run fase5d-sisi-dekat bagian B, AC-10): `teras_ubin` dari JSON aset
+## (`Config.RUTE_RUMAH_DEKAT_TERAS_UBIN`, relatif titik pijak gambar) digeser ke pijak gambar rumah dekat = pusat tapak logika (kaki fasad `RUTE_RUMAH_DEKAT_X_UBIN` + setengah `RUTE_RUMAH_DALAM_UBIN`,
+## `JALAN_UJI_RUMAH_MAJU_UBIN` + setengah `RUTE_RUMAH_PANJANG_UBIN`) + mundur `RUTE_RUMAH_DEKAT_MUNDUR_UBIN` (SpriteRumah.pusat_gambar_dunia). Sama untuk semua jenis rumah dekat.
+static func teras_dekat(maju_awal_ubin: float) -> Rect2:
+	var teras: Array[float] = Config.RUTE_RUMAH_DEKAT_TERAS_UBIN
+	var pusat_lateral: float = Config.RUTE_RUMAH_DEKAT_X_UBIN + Config.RUTE_RUMAH_DALAM_UBIN / 2 + Config.RUTE_RUMAH_DEKAT_MUNDUR_UBIN
+	var pusat_maju: float = maju_awal_ubin + Config.JALAN_UJI_RUMAH_MAJU_UBIN + Config.RUTE_RUMAH_PANJANG_UBIN / 2
+	var ukuran: Array[float] = teras.slice(2)
+	return Rect2(pusat_lateral + teras[0], pusat_maju + teras[1], ukuran[0], ukuran[1])
+
+
+## Tiga zona rumah sisi `dekat` di RUTE (kotak surat, halaman, teras; tanpa jendela), cermin sasaran seberang (run fase5d-sisi-dekat bagian B, P-5, AC-10): kotak surat `RUTE_DEKAT_KOTAK_SURAT_UBIN`
+## (dengan inti tepat), halaman `RUTE_DEKAT_HALAMAN_UBIN`, dan teras dari geometri teras menjorok rumah dekat baru (`teras_dekat`). Prioritas dan angka skor sama dengan seberang. Zona dekat jalan uji
+## (placeholder datar, `zona_rumah_dekat`) tidak berubah.
+static func zona_rumah_dekat_rute(maju_awal_ubin: float, pelanggan: bool, nomor: int = 0, id_rumah: String = "") -> Array[Zona]:
+	var hasil: Array[Zona] = []
+	hasil.append(buat(_persegi(Config.RUTE_DEKAT_KOTAK_SURAT_UBIN, maju_awal_ubin), LoperAnim.Sisi.DEKAT, Jenis.KOTAK_SURAT, pelanggan, nomor))
+	hasil.append(buat(_persegi(Config.RUTE_DEKAT_HALAMAN_UBIN, maju_awal_ubin), LoperAnim.Sisi.DEKAT, Jenis.HALAMAN, pelanggan, nomor))
+	hasil.append(buat(teras_dekat(maju_awal_ubin), LoperAnim.Sisi.DEKAT, Jenis.TERAS, pelanggan, nomor))
+	hasil[0].inti = _persegi(Config.RUTE_DEKAT_KOTAK_SURAT_INTI_UBIN, maju_awal_ubin)
+	for zona: Zona in hasil:
+		zona.id_rumah = id_rumah
+	return hasil
+
+
 ## Zona satu rumah rute menurut sisinya (kosong bila sisi `TIDAK_ADA`).
 static func zona_rumah(rumah: RouteBuilder.RumahRute) -> Array[Zona]:
 	if rumah.sisi == LoperAnim.Sisi.SEBERANG:
 		return zona_rumah_seberang(rumah.maju_ubin, rumah.pelanggan, 0, rumah.id)
 	if rumah.sisi == LoperAnim.Sisi.DEKAT:
-		return zona_rumah_dekat(rumah.maju_ubin, rumah.pelanggan, 0, rumah.id)
+		return zona_rumah_dekat_rute(rumah.maju_ubin, rumah.pelanggan, 0, rumah.id)
 	return []
 
 
@@ -222,7 +247,7 @@ static func maju_kotak_surat(rumah: RouteBuilder.RumahRute) -> float:
 	if rumah.sisi == LoperAnim.Sisi.SEBERANG:
 		data = Config.JALAN_UJI_SEBERANG_KOTAK_SURAT_UBIN
 	elif rumah.sisi == LoperAnim.Sisi.DEKAT:
-		data = Config.JALAN_UJI_DEKAT_KOTAK_SURAT_UBIN
+		data = Config.RUTE_DEKAT_KOTAK_SURAT_UBIN
 	if data.is_empty():
 		return rumah.maju_ubin
 	return _persegi(data, rumah.maju_ubin).get_center().y

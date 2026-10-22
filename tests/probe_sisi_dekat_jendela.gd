@@ -1,13 +1,17 @@
 extends SceneTree
-## Probe tampilan sisi dekat di jendela asli, non-headless (AC-22 run fase5b-tembok-dekor; bagian B1: tembok; bagian lain menambah skenario dekor dan ubin ke probe yang sama): memuat
+## Probe tampilan sisi dekat di jendela asli, non-headless (AC-22 run fase5b-tembok-dekor; run fase5d-sisi-dekat bagian A mengganti skenario tembok dengan halaman terbuka): memuat
 ## `scenes/rute/rute.tscn`, memajukan simulasi dengan langkah tetap `perbarui(1/60)` (bukan waktu dinding), lalu menyimpan tangkapan layar.
 ##
-## Skenario bagian B1 (tembok belakang rendah, rumah penuh di belakangnya digeser 1,25 ubin):
-## - `tembok_polos`, `tembok_bata`, `tembok_besi`, `tembok_pot`: rute nyata, sepeda di jalur dekat di samping rumah dekat pertama berbarengan varian itu (id rumah -> FNV-1a); tiang ujung terlihat.
-## - `tembok_sasaran_*`: rute buatan (`SpikeSisiDekat.susun_rute`, pelanggan di sisi dekat, geometri `JALAN_UJI_DEKAT_*`, rute nyata tidak punya pelanggan dekat) dengan kotak surat sasaran di zona
-##   dekat: garis bidik (`_bidik`), koran terbang (`_terbang`), dan penanda sesudah mendarat (`_kena`).
-## - `tembok_jalur_dekat` dan `tembok_trotoar_dekat`: sepeda di jalur dekat (lateral 0,5) dan trotoar dekat (lateral 1,75) di samping rumah pelanggan dekat bertembok.
-## - `kidal`: tata letak kidal dengan tembok di layar.
+## Skenario run 5D bagian A (tembok dilepas, halaman terbuka, rumah dekat baru dengan teras menjorok digambar mundur 0,5 ubin; pudar P-3 TIDAK dipakai):
+## - `halaman_<jenis>` (limasan, pelana_lintang, pelana_sejajar): rute nyata, sepeda di jalur dekat (lateral 0,5) di belakang rumah dekat jenis itu: halaman terbuka, teras terbaca dari samping.
+## - `halaman_trotoar_<jenis>`: sepeda di tepi trotoar dekat (lateral 2,0) tepat di samping teras rumah jenis itu: rumah tetap opak (alfa 1,0), pemain tidak tertimpa.
+## Skenario run 5D bagian B (rute NYATA hari 3 dengan 8-9 pelanggan dekat; `RuteMain.atur_hari`):
+## - `hari3_tip`: tip hari 3 di awal rute. `jalur_dekat` dan `trotoar_dekat`: kotak surat oranye (pelanggan) dan abu-abu (bukan) di tepi trotoar dekat, rumah pelanggan berwarna.
+## - `sasaran_*`, `teras_*`, `halaman_*`, `meleset_*` (`_bidik`, `_terbang`, `_kena`): swipe NYATA ke kotak surat, teras, halaman, dan meleset di sisi dekat; hasil mendarat harus sama dengan sasaran.
+## - `terlipat_dekat`: koran terlipat di teras dekat sesudah terantar. `bantu_dekat_*`: tap mode bantu sisi dekat (terbang, kena, tanpa sasaran). `radar_dekat`: strip radar kanan.
+## - `hari2_tanpa_dekat`: hari 2, semua kotak surat dekat abu-abu, tanpa tip. Juga mencetak ukur rumah dekat di bawah panel HUD bawah (`HUD bawah`).
+## - `kidal`: tata letak kidal dengan rumah dekat di layar.
+## Juga mencetak angka oracle piksel AC-6 (`UkurSisiDekat`) dan memeriksa tidak ada node tembok di scene.
 ## Skenario bagian B2 (dekor pinggir jalan dari data segmen, rute nyata seed dev; kotak penutup rumah dekat digeser seperti gambarnya, P-4):
 ## - `dekor_pohon_menutupi` dan `dekor_lampu_menutupi`: sepeda di trotoar dekat (lateral 2,0) tepat di balik pohon atau lampu sisi dekat: sprite semi-transparan (alfa 0,45).
 ## - `dekor_pohon_seberang`, `dekor_lampu_seberang`, `dekor_tong`: sepeda di jalur tengah di dekat pohon, lampu, dan tong sampah sisi seberang dan dekat (tidak menutupi kotak surat, alfa 1,0).
@@ -21,7 +25,7 @@ extends SceneTree
 ## - `ubin_rumput_luar`: rumput luar bervariasi (rumput_1/2/3) di awal rute, sebelum rumah pertama.
 ## - `ubin_jalur_utama`: sepeda di tengah jalan di baris simbol dan baris jalan masuk: kolom aspal tidak berubah (tidak ada ubin khusus di aspal).
 ## - `ubin_kidal`: garasi parkir dengan tata letak kidal.
-## Mencetak data tiap keadaan, kotak teks HUD, pecahan piksel sasaran yang tertimpa tembok (`UkurTembok`), dan keadaan yang tidak sesuai harapan (nol bila baik). Tidak interaktif: keluar sendiri lewat
+## Mencetak data tiap keadaan, kotak teks HUD, angka oracle piksel sisi dekat (`UkurSisiDekat`), dan keadaan yang tidak sesuai harapan (nol bila baik). Tidak interaktif: keluar sendiri lewat
 ## `ProbeKeluar`. Tidak menulis `user://save.json`.
 ##
 ## Pakai (jendela harus muat di layar monitor), empat ukuran:
@@ -32,15 +36,14 @@ extends SceneTree
 ## Berkas: `<lebar>x<tinggi>_dekat_<keadaan>.png`.
 
 const BERKAS_RUTE: String = "res://scenes/rute/rute.tscn"
-const ADEGAN_KOTAK_SURAT: PackedScene = preload("res://scenes/entities/kotak_surat.tscn")
 const FRAME_TUNGGU_LAYOUT: int = 5
 const DT: float = 1.0 / 60.0
-## Sepeda di belakang awal kavling rumah foto varian (ubin), supaya rumah dan tembok masuk layar di kanan atas pemain.
+## Sepeda di belakang awal kavling rumah foto jenis (ubin), supaya rumah masuk layar di kanan atas pemain.
 const MAJU_FOTO_VARIAN: float = -2.0
 const LATERAL_JALUR: float = 0.5
-const LATERAL_TROTOAR: float = 1.75
-## Kavling rumah pelanggan dekat rute buatan yang difoto (pola spike: kavling 3, indeks rumah = kavling * 2 + 1).
-const KAVLING: int = 3
+const LATERAL_TROTOAR: float = 2.0
+## Sepeda di tepi trotoar sejajar teras rumah dekat (awal kavling + ini, ubin): teras menjorok di maju kavling -0,4 .. +0,6.
+const MAJU_FOTO_TERAS: float = 0.0
 const MAJU_JALUR: float = -1.5
 const MAJU_TROTOAR: float = 0.5
 ## Sepeda saat swipe lempar, relatif awal kavling foto.
@@ -48,7 +51,7 @@ const MAJU_LEMPAR: float = -2.0
 const SWIPE_X_PECAHAN: float = 0.72
 const SWIPE_Y: float = 250.0
 const FOTO_TERBANG_PECAHAN: float = 0.5
-const VARIAN: Array[String] = ["polos", "bata", "besi", "pot"]
+const JENIS_DEKAT: Array[String] = ["dekat_limasan", "dekat_pelana_lintang", "dekat_pelana_sejajar"]
 
 var _skala: float = 1.0
 var _folder: String = ""
@@ -82,16 +85,20 @@ func _initialize() -> void:
 	print("rute: seed %d, panjang %.0f ubin, %d rumah, galat %s" % [_akar.benih(), rute.panjang_ubin, rute.rumah.size(), _akar.galat_rute()])
 	_cetak_kecualikan("HUD", [_hud.rect_tombol_jeda(), _hud.rect_panel_progres(), _hud.rect_panel_kecepatan(), _hud.rect_panel_koran()])
 
-	# --- Empat varian tembok di rute nyata (rumah dekat, tiang ujung, rumah penuh di belakang) ---
-	for varian: String in VARIAN:
-		var rumah: RouteBuilder.RumahRute = _rumah_dekat_varian(varian)
-		_cek(rumah != null, "rute nyata memuat rumah dekat bertembok %s" % varian)
+	# --- Halaman terbuka: tiga jenis rumah dekat baru di rute nyata, jalur dekat dan tepi trotoar dekat ---
+	for jenis: String in JENIS_DEKAT:
+		var rumah: RouteBuilder.RumahRute = _rumah_dekat_jenis(jenis)
+		_cek(rumah != null, "rute nyata memuat rumah dekat %s" % jenis)
 		if rumah == null:
 			continue
 		_taruh(3.0, LATERAL_JALUR, rumah.maju_ubin + MAJU_FOTO_VARIAN)
 		await _maju(0.25)
-		await _foto("tembok_%s" % varian, rumah)
-		_periksa_tembok(rumah, varian)
+		await _foto("halaman_%s" % jenis.trim_prefix("dekat_"), rumah)
+		_periksa_halaman(rumah)
+		_taruh(3.0, LATERAL_TROTOAR, rumah.maju_ubin + MAJU_FOTO_TERAS)
+		await _maju(0.25)
+		await _foto("halaman_trotoar_%s" % jenis.trim_prefix("dekat_"), rumah)
+		_periksa_halaman(rumah)
 
 	# --- Dekor pinggir jalan (bagian B2) di rute nyata, rumah dekat tidak pudar lagi di trotoar dekat ---
 	await _foto_dekor_semua()
@@ -99,22 +106,88 @@ func _initialize() -> void:
 	# --- Ubin khusus (bagian C): jalan masuk garasi di bawah mobil parkir, simbol sepeda, rumput luar bervariasi, jalur utama bersih ---
 	await _foto_ubin()
 
-	# --- Rute buatan dengan pelanggan di sisi dekat: ukur sasaran, jalur dekat, trotoar dekat, garis bidik, koran terbang, kena ---
-	_pasang_rute_buatan()
-	var indeks: int = KAVLING * 2 + 1
-	var foto: RouteBuilder.RumahRute = _akar.rute().rumah[indeks]
-	print("rumah foto: %s sisi %s pelanggan %s maju %.1f varian tembok %s" % [foto.id, LoperAnim.Sisi.keys()[foto.sisi], foto.pelanggan, foto.maju_ubin, VarianTembok.pilih(foto.id)])
-	_cek(foto.sisi == LoperAnim.Sisi.DEKAT and foto.pelanggan, "rumah foto rute buatan: pelanggan di sisi dekat")
+	# --- Hari 3: rute nyata dengan 8 atau 9 pelanggan di sisi dekat (run 5D bagian B) ---
+	_pasang_hari(3)
+	var pelanggan_dekat: Array[RouteBuilder.RumahRute] = _pelanggan_dekat()
+	_cek(pelanggan_dekat.size() in [8, 9], "hari 3: 8 atau 9 pelanggan dekat (%d)" % pelanggan_dekat.size())
+	var foto: RouteBuilder.RumahRute = pelanggan_dekat[1]
+	print("rumah foto: %s sisi %s pelanggan %s maju %.1f jenis %s; rute hari 3: %d dekat dari %d pelanggan, panjang %.0f ubin" % [foto.id, LoperAnim.Sisi.keys()[foto.sisi], foto.pelanggan, foto.maju_ubin, foto.jenis, pelanggan_dekat.size(), _akar.rute().pelanggan.size(), _akar.rute().panjang_ubin])
+	_cek(foto.sisi == LoperAnim.Sisi.DEKAT and foto.pelanggan, "rumah foto hari 3: pelanggan di sisi dekat")
 	_cetak_ukur()
+	# Tip hari 3: muncul di awal rute, kolom kiri di bawah kartu misi, tidak menutupi kontrol.
+	_taruh(3.0, LATERAL_JALUR, 0.0)
+	await _maju(0.25)
+	_cek(_akar.tip_node().tampil(), "tip hari 3 tampil di awal rute")
+	_cetak_kecualikan("tip", [_akar.tip_node().rect_panel()])
+	await _foto("hari3_tip", pelanggan_dekat[0])
+	await _cetak_hud_bawah()
+	# Kotak surat oranye (pelanggan) dan abu-abu (bukan) di sisi dekat, jalur dan trotoar.
 	_taruh(3.0, LATERAL_JALUR, foto.maju_ubin + MAJU_JALUR)
 	await _maju(0.25)
-	await _foto("tembok_jalur_dekat", foto)
+	await _foto("jalur_dekat", foto)
 	_taruh(3.0, LATERAL_TROTOAR, foto.maju_ubin + MAJU_TROTOAR)
 	await _maju(0.25)
-	await _foto("tembok_trotoar_dekat", foto)
-	_taruh(3.0, LATERAL_JALUR, foto.maju_ubin + MAJU_LEMPAR)
-	await _maju(Config.LEMPAR_JEDA_DETIK)
-	await _lempar_dekat("tembok_sasaran", foto)
+	await _foto("trotoar_dekat", foto)
+	_periksa_halaman(foto)
+	# Bidik dan lempar nyata: kotak surat (kena), teras, halaman, meleset.
+	var bukan_dekat: RouteBuilder.RumahRute = null
+	for r: RouteBuilder.RumahRute in _akar.rute().rumah:
+		if r.sisi == LoperAnim.Sisi.DEKAT and not r.pelanggan and r.maju_ubin > pelanggan_dekat[2].maju_ubin:
+			bukan_dekat = r
+			break
+	for kasus: Array in [["sasaran", ZonaSasaran.Jenis.KOTAK_SURAT], ["teras", ZonaSasaran.Jenis.TERAS], ["halaman", ZonaSasaran.Jenis.HALAMAN], ["meleset", -1]]:
+		_akar.koran = SisaKoran.awal(30)
+		_taruh(3.0, LATERAL_JALUR, foto.maju_ubin + MAJU_LEMPAR)
+		await _maju(Config.LEMPAR_JEDA_DETIK)
+		await _lempar_dekat(String(kasus[0]), foto, int(kasus[1]))
+		await _maju(0.6)
+	# Koran terlipat di teras dekat sesudah terantar (kotak surat dan teras sasaran).
+	_akar.skor().terantar[foto.id] = true
+	# Sepeda 5 ubin di belakang rumah foto: rumah dekat naik ke kanan atas pemain, di atas panel HUD bawah, teras terlihat.
+	_taruh(3.0, LATERAL_JALUR, foto.maju_ubin - 5.0)
+	await _maju(0.25)
+	await _foto("terlipat_dekat", foto)
+	var i_foto: int = _akar.rute().rumah.find(foto)
+	_cek(_akar.daur().sprite_terlipat(i_foto) != null and _akar.daur().pembungkus_terlipat(i_foto) != null, "koran terlipat tampil di teras dekat rumah foto")
+	# Mode bantu: tap sisi dekat melempar ke kotak surat pelanggan dekat terdekat; radar menampilkan penanda abu-abu rumah bukan pelanggan.
+	_akar.atur_mode_bantu(true)
+	_akar.koran = SisaKoran.awal(30)
+	var sasaran_bantu: RouteBuilder.RumahRute = pelanggan_dekat[3]
+	_taruh(3.0, LATERAL_JALUR, sasaran_bantu.maju_ubin - 2.0)
+	await _maju(0.3)
+	var tap: Vector2 = _akar.posisi_layar_sepeda() + Vector2(180, 40)
+	var sebelum: int = _akar.koran_terbang().size()
+	_sentuh(1, tap, true)
+	_sentuh(1, tap, false)
+	_cek(_akar.koran_terbang().size() == sebelum + 1, "tap bantu sisi dekat melempar satu koran")
+	await _maju(0.35)
+	await _foto("bantu_dekat_terbang", sasaran_bantu)
+	await _maju(1.0)
+	await _foto("bantu_dekat_kena", sasaran_bantu)
+	# Tap bantu tanpa sasaran dekat (sesudah pelanggan dekat terakhir): tanda di titik tap.
+	var terakhir: RouteBuilder.RumahRute = pelanggan_dekat[pelanggan_dekat.size() - 1]
+	_taruh(3.0, LATERAL_JALUR, terakhir.maju_ubin + 4.0)
+	await _maju(0.4)
+	var tap_kosong: Vector2 = _akar.posisi_layar_sepeda() + Vector2(180, 40)
+	_sentuh(1, tap_kosong, true)
+	_sentuh(1, tap_kosong, false)
+	await _maju(0.1)
+	await _foto("bantu_dekat_tanpa_sasaran", terakhir)
+	_akar.atur_mode_bantu(false)
+	# Radar dua strip dengan pelanggan dekat (strip kanan) di tengah rute.
+	_taruh(3.0, LATERAL_JALUR, pelanggan_dekat[4].maju_ubin - 12.0)
+	await _maju(0.25)
+	await _foto("radar_dekat", pelanggan_dekat[4])
+	# Hari 2: tanpa pelanggan dekat (semua kotak surat dekat abu-abu, tanpa tip).
+	_pasang_hari(2)
+	var dekat_hari2: int = RouteBuilder.jumlah_dekat(_akar.rute())
+	_cek(dekat_hari2 == 0 and not _akar.tip_node().tampil(), "hari 2: 0 pelanggan dekat dan tanpa tip (%d)" % dekat_hari2)
+	var rumah_dekat_h2: RouteBuilder.RumahRute = _rumah_dekat_jenis("dekat_pelana_lintang")
+	_taruh(3.0, LATERAL_JALUR, rumah_dekat_h2.maju_ubin + MAJU_JALUR)
+	await _maju(0.25)
+	await _foto("hari2_tanpa_dekat", rumah_dekat_h2)
+	_pasang_hari(3)
+	foto = _pelanggan_dekat()[1]
 
 	# --- Kidal ---
 	_akar.atur_kidal(true)
@@ -153,96 +226,139 @@ func _muat() -> bool:
 	return true
 
 
-## Rumah dekat pertama di rute nyata yang id-nya memilih varian `varian` dan kavlingnya cukup jauh dari awal.
-func _rumah_dekat_varian(varian: String) -> RouteBuilder.RumahRute:
+## Rumah dekat pertama di rute nyata berjenis `jenis` yang kavlingnya cukup jauh dari awal.
+func _rumah_dekat_jenis(jenis: String) -> RouteBuilder.RumahRute:
 	for r: RouteBuilder.RumahRute in _akar.rute().rumah:
-		if r.sisi == LoperAnim.Sisi.DEKAT and r.maju_ubin >= 8.0 and VarianTembok.pilih(r.id) == varian:
+		if r.sisi == LoperAnim.Sisi.DEKAT and r.maju_ubin >= 8.0 and r.jenis == jenis:
 			return r
 	return null
 
 
-## Rute buatan spike (pelanggan sisi dekat) menggantikan rute nyata di scene yang sama: medan dan daur rumah ikut diganti; kotak surat sasaran dekat
-## digambar probe di pusat zona (rumah dekat nyata memang tanpa kotak surat).
-func _pasang_rute_buatan() -> void:
-	var rute: RouteBuilder.Rute = SpikeSisiDekat.susun_rute()
-	_akar.set("_rute", rute)
-	_akar.set("_medan", MedanKoran.dari_rute(rute))
-	_akar.daur().atur_rute(rute)
-	(_akar.find_child("Tanah", true, false) as TanahDaur).atur_baris_masuk(UbinKhusus.himpunan_baris_masuk(rute.objek))
-	var objek: Node2D = _akar.find_child("Objek", true, false) as Node2D
-	for r: RouteBuilder.RumahRute in rute.rumah:
-		if r.sisi != LoperAnim.Sisi.DEKAT or not r.pelanggan:
-			continue
-		for z: ZonaSasaran.Zona in ZonaSasaran.zona_rumah(r):
-			if z.jenis == ZonaSasaran.Jenis.KOTAK_SURAT:
-				var kotak: Node2D = ADEGAN_KOTAK_SURAT.instantiate() as Node2D
-				kotak.name = "KotakDekat_%s" % r.id.replace("@", "_")
-				kotak.position = Iso.posisi_gambar(Vector2(z.persegi.get_center().x, -z.persegi.get_center().y))
-				objek.add_child(kotak)
+## Menyusun ulang rute scene untuk hari `hari` (pelanggan sisi dekat sejak hari 3; tip hari 3 muncul lagi karena rute baru), sepeda di awal rute dengan koran penuh.
+func _pasang_hari(hari: int) -> void:
+	_akar.atur_hari(hari)
 	_akar.koran = SisaKoran.awal(30)
 	_taruh(3.0, LATERAL_JALUR, 0.0)
 
 
-## Pecahan piksel sasaran sisi dekat yang tertimpa tembok untuk 4 varian x 3 jenis atap (kavling foto dan satu kavling lain), dari `UkurTembok`.
+## Pelanggan sisi dekat rute scene, urut maju.
+func _pelanggan_dekat() -> Array[RouteBuilder.RumahRute]:
+	var hasil: Array[RouteBuilder.RumahRute] = []
+	for r: RouteBuilder.RumahRute in _akar.rute().pelanggan:
+		if r.sisi == LoperAnim.Sisi.DEKAT:
+			hasil.append(r)
+	return hasil
+
+
+## Ukur rumah dekat di bawah panel HUD bawah (tanpa mengubah HUD): sepanjang rute (sepeda tiap 2 ubin, lateral 0,5, kidal dan bukan) hitung berapa sampel di mana kotak bounding sprite rumah dekat
+## yang tampil atau titik kotak surat dekat jatuh di dalam persegi panel kecepatan/stamina atau panel koran.
+func _cetak_hud_bawah() -> void:
+	# Transform kanvas kamera baru berlaku sesudah satu frame, jadi tiap sampel menunggu dua frame.
+	for kidal: bool in [false, true]:
+		_akar.atur_kidal(kidal)
+		var sampel: int = 0
+		var rumah_di_bawah: int = 0
+		var kotak_di_bawah: int = 0
+		var sampel_dengan_rumah: int = 0
+		var sampel_dengan_kotak: int = 0
+		var sampel_kotak_jangkau: int = 0
+		var panel: Array[Rect2] = [_hud.rect_panel_kecepatan(), _hud.rect_panel_koran()]
+		var jarak: float = 4.0
+		while jarak < _akar.rute().panjang_ubin - 4.0:
+			_taruh(3.0, 0.5, jarak)
+			await _tunggu(2)
+			sampel += 1
+			var ada_rumah: bool = false
+			var ada_kotak: bool = false
+			var ada_jangkau: bool = false
+			for indeks: int in _akar.daur().indeks_tampil():
+				var r: RouteBuilder.RumahRute = _akar.rute().rumah[indeks]
+				if r.sisi != LoperAnim.Sisi.DEKAT:
+					continue
+				var sprite: Sprite2D = _akar.daur().sprite_rumah(indeks)
+				var tarik: Transform2D = sprite.get_global_transform_with_canvas()
+				var kotak_rumah: Rect2 = tarik * Rect2(sprite.offset, sprite.texture.get_size())
+				var titik_kotak: Vector2 = _akar.get_viewport().get_canvas_transform() * Iso.posisi_gambar(SpriteRumah.titik_kotak_surat_dunia(r))
+				for pn: Rect2 in panel:
+					if pn.intersects(kotak_rumah):
+						rumah_di_bawah += 1
+						ada_rumah = true
+					if pn.has_point(titik_kotak):
+						kotak_di_bawah += 1
+						ada_kotak = true
+						var di_depan: float = r.maju_ubin + 1.875 - jarak
+						if r.pelanggan and di_depan >= 0.0 and di_depan <= ThrowSolver.jarak_ubin(1.0):
+							ada_jangkau = true
+			sampel_dengan_rumah += 1 if ada_rumah else 0
+			sampel_dengan_kotak += 1 if ada_kotak else 0
+			sampel_kotak_jangkau += 1 if ada_jangkau else 0
+			jarak += 2.0
+		print("HUD bawah (kidal %s): %d sampel sepanjang rute; kotak pembatas sprite rumah dekat menyentuh panel bawah di %d sampel (%.0f%%), titik kotak surat dekat (mana pun) di dalam panel bawah di %d sampel (%.0f%%), kotak surat PELANGGAN dekat dalam jangkauan lempar (0..5 ubin di depan) di dalam panel bawah di %d sampel (%.0f%%)" % [kidal, sampel, sampel_dengan_rumah, 100.0 * float(sampel_dengan_rumah) / float(sampel), sampel_dengan_kotak, 100.0 * float(sampel_dengan_kotak) / float(sampel), sampel_kotak_jangkau, 100.0 * float(sampel_kotak_jangkau) / float(sampel)])
+	_akar.atur_kidal(false)
+
+
+## Angka oracle piksel AC-6 (`UkurSisiDekat`, enam sprite rumah dekat x tetangga +-4 ubin): kotak surat dekat, zona kotak surat, halaman, teras, pemain lajur dan trotoar dekat.
 func _cetak_ukur() -> void:
-	var terburuk_badan: float = 0.0
-	var teras: Array[String] = []
-	var kotak: Array[String] = []
-	for varian: String in VARIAN:
-		var maks_kotak: float = 0.0
-		var maks_teras: float = 0.0
-		for jenis: String in ["dekat_limasan", "dekat_pelana_lintang", "dekat_pelana_sejajar"]:
-			for maju: float in [8.0, 20.0, 20.5]:
-				var h: Dictionary = UkurTembok.ukur(maju, jenis, varian)
-				terburuk_badan = maxf(terburuk_badan, float(h["kotak_badan"]))
-				maks_kotak = maxf(maks_kotak, float(h["zona_kotak"]))
-				maks_teras = maxf(maks_teras, float(h["zona_teras"]))
-		kotak.append("%s %.1f%%" % [varian, maks_kotak * 100.0])
-		teras.append("%s %.1f%%" % [varian, maks_teras * 100.0])
-	print("ukur AC-8 (terburuk dari 3 jenis atap x 3 kavling): badan kotak surat %.1f%%; zona kotak surat %s; zona teras %s" % [terburuk_badan * 100.0, ", ".join(kotak), ", ".join(teras)])
-	_cek(terburuk_badan == 0.0, "badan kotak surat sasaran dekat tidak tertimpa tembok (AC-8)")
+	var maks: Dictionary = {"kotak_badan": 0.0, "zona_kotak": 0.0, "halaman": 0.0, "teras_tetangga": 0.0}
+	var lajur: float = 0.0
+	var trotoar: float = 0.0
+	for r: Array in UkurSisiDekat.semua_rumah():
+		var daftar: Array = [[]]
+		for n: Array in UkurSisiDekat.semua_rumah():
+			for d: float in [-4.0, 4.0]:
+				daftar.append([[n[0], n[1], d]])
+		for tetangga: Array in daftar:
+			var h: Dictionary = UkurSisiDekat.ukur_sasaran(r[0], r[1], 8.0, tetangga)
+			for kunci: String in maks.keys():
+				maks[kunci] = maxf(float(maks[kunci]), float(h[kunci]))
+		lajur = maxf(lajur, float(UkurSisiDekat.sapu_pemain(r[0], r[1], 8.0, 0.0, 1.0, 0.125)["pecahan_maks"]))
+		trotoar = maxf(trotoar, float(UkurSisiDekat.sapu_pemain(r[0], r[1], 8.0, 1.0, 2.0, 0.125)["pecahan_maks"]))
+	print("ukur AC-6 (terburuk 6 sprite x tetangga): kotak surat dekat %.2f%%, zona kotak surat %.2f%%, halaman tertimpa %.2f%%, teras tertimpa tetangga %.2f%%, pemain lajur %.2f%%, trotoar %.2f%%" % [float(maks["kotak_badan"]) * 100.0, float(maks["zona_kotak"]) * 100.0, float(maks["halaman"]) * 100.0, float(maks["teras_tetangga"]) * 100.0, lajur * 100.0, trotoar * 100.0])
+	_cek(float(maks["kotak_badan"]) == 0.0 and float(maks["zona_kotak"]) <= 0.05 and lajur == 0.0 and trotoar == 0.0, "sasaran AC-6 tercapai tanpa pudar")
 
 
-## Memeriksa tembok rumah `rumah` di scene: empat sprite (tiga modul varian `varian` dan tiang), tekstur benar, alfa 1,0, dan tidak ada sprite tembok untuk rumah seberang.
-func _periksa_tembok(rumah: RouteBuilder.RumahRute, varian: String) -> void:
+## Rumah `rumah` di scene: tidak ada node tembok di Objek, sprite rumah opak (alfa 1,0, tidak pudar), kotak penutup rumah terdaftar dan tidak menutupi pemain.
+func _periksa_halaman(rumah: RouteBuilder.RumahRute) -> void:
 	var indeks: int = _akar.rute().rumah.find(rumah)
-	var tembok: Array[Sprite2D] = _akar.daur().sprite_tembok(indeks)
-	var nama: Array[String] = []
-	for s: Sprite2D in tembok:
-		nama.append(s.texture.resource_path.get_file().get_basename() if s.texture != null else "null")
-	print("tembok %s (%s): %s, alfa rumah %.2f" % [rumah.id, varian, nama, _akar.daur().sprite_rumah(indeks).modulate.a])
-	_cek(tembok.size() == 4 and nama == (["house_tembok_" + varian, "house_tembok_" + varian, "house_tembok_" + varian, "house_tembok_tiang"] as Array[String]), "tembok %s: tiga modul %s dan satu tiang" % [rumah.id, varian])
-	for s: Sprite2D in tembok:
-		_cek(s.modulate.a == 1.0 and s.visible, "sprite tembok %s opak dan terlihat" % s.name)
-	var dekat_di_jendela: int = 0
-	for i: int in _akar.daur().indeks_tampil():
-		if _akar.rute().rumah[i].sisi == LoperAnim.Sisi.DEKAT:
-			dekat_di_jendela += 1
-	_cek(_akar.daur().jumlah_tembok() == 4 * dekat_di_jendela, "jumlah sprite tembok = 4 x rumah dekat di jendela daur (%d, %d)" % [_akar.daur().jumlah_tembok(), dekat_di_jendela])
+	var sprite: Sprite2D = _akar.daur().sprite_rumah(indeks)
+	var tembok: int = 0
+	for anak: Node in (_akar.find_child("Objek", true, false) as Node2D).get_children():
+		if String(anak.name).begins_with("Tembok"):
+			tembok += 1
+	print("halaman %s (%s): alfa rumah %.2f, node tembok %d, menutupi pemain %d" % [rumah.id, rumah.jenis, sprite.modulate.a if sprite != null else -1.0, tembok, _akar.penerap_penutup().jumlah_menutupi()])
+	_cek(sprite != null and sprite.modulate.a == 1.0, "rumah dekat %s opak (tidak pudar)" % rumah.id)
+	_cek(tembok == 0, "tidak ada node tembok di scene")
+	# Gambar lain (pohon/lampu dekat) boleh menutupi dan memudar (aturan dekor run 5B); yang dicek di sini hanya kotak rumah dekat ini.
+	var kotak: PenutupPemain.Objek = _akar.penerap_penutup().objek_untuk(sprite)
+	_cek(kotak != null and not PenutupPemain.menutupi(Vector2(_sepeda.lateral_ubin, -_sepeda.jarak_ubin), kotak), "kotak rumah dekat %s terdaftar dan tidak menutupi pemain" % rumah.id)
 
 
-## Swipe ke kotak surat sisi dekat rumah `rumah`: sudut dan panjang dicari lewat `lintasan_swipe` (fungsi yang sama dengan garis bidik) sampai titik mendarat di zona kotak surat rumah itu; jari ditekan,
-## digeser (garis bidik), lalu diangkat. Memotret garis bidik, koran terbang, dan penanda sesudah mendarat.
-func _lempar_dekat(nama: String, rumah: RouteBuilder.RumahRute) -> void:
-	var zona: ZonaSasaran.Zona = null
-	for z: ZonaSasaran.Zona in ZonaSasaran.zona_rumah(rumah):
-		if z.jenis == ZonaSasaran.Jenis.KOTAK_SURAT:
-			zona = z
+## Swipe ke sasaran sisi dekat rumah `rumah` (`kelas`: nilai `ZonaSasaran.Jenis`, atau -1 = meleset di sisi dekat): sudut dan panjang dicari lewat `lintasan_swipe` (fungsi yang sama dengan garis bidik) sampai
+## titik mendarat di zona itu; jari ditekan, digeser (garis bidik), lalu diangkat. Memotret garis bidik, koran terbang, dan penanda sesudah mendarat; hasil mendarat harus sama dengan sasaran.
+func _lempar_dekat(nama: String, rumah: RouteBuilder.RumahRute, kelas: int) -> void:
+	var medan: MedanKoran = _akar.medan()
+	var syarat: Callable = func(l: ThrowSolver.Lintasan) -> bool:
+		if l.sisi != LoperAnim.Sisi.DEKAT:
+			return false
+		var z: ZonaSasaran.Zona = ZonaSasaran.zona_kena(l.titik_mendarat, medan.zona_sekitar(l.titik_mendarat))
+		if kelas < 0:
+			return z == null and l.titik_mendarat.x > 0.0
+		return z != null and z.id_rumah == rumah.id and int(z.jenis) == kelas
 	var lebar: float = root.get_visible_rect().size.x
 	var awal: Vector2 = Vector2(roundf(lebar * SWIPE_X_PECAHAN), SWIPE_Y)
 	var akhir: Vector2 = Vector2.INF
-	for derajat: int in range(0, 91, 2):
+	for derajat: int in range(0, 360, 2):
 		var panjang: float = ceilf(ThrowSolver.swipe_min_px(lebar))
 		while panjang <= ThrowSolver.swipe_maks_px(lebar) and akhir == Vector2.INF:
 			var coba: Vector2 = awal + Vector2(cos(deg_to_rad(derajat)), -sin(deg_to_rad(derajat))) * panjang
 			var l: ThrowSolver.Lintasan = _akar.lintasan_swipe(awal, coba)
-			if l != null and ZonaSasaran.memuat(zona, l.titik_mendarat):
+			if l != null and syarat.call(l):
 				akhir = coba.round()
 			panjang += 2.0
 		if akhir != Vector2.INF:
 			break
 	if akhir == Vector2.INF:
-		print("PERINGATAN %s: tidak ada swipe ke kotak surat dekat %s" % [nama, zona.id_rumah])
+		print("PERINGATAN %s: tidak ada swipe ke sasaran dekat %s" % [nama, rumah.id])
 		_gagal += 1
 		return
 	_gambar_jari(awal, akhir)
@@ -257,7 +373,7 @@ func _lempar_dekat(nama: String, rumah: RouteBuilder.RumahRute) -> void:
 		print("PERINGATAN %s: swipe tidak melempar" % nama)
 		_gagal += 1
 		return
-	print("%s: swipe %s -> %s ke %s" % [nama, awal, akhir, zona.id_rumah])
+	print("%s: swipe %s -> %s ke %s" % [nama, awal, akhir, rumah.id])
 	var koran: KoranLempar.Koran = _akar.koran_terbang()[_akar.koran_terbang().size() - 1]
 	await _maju(koran.lintasan.jeda_lepas + koran.lintasan.lama_terbang * FOTO_TERBANG_PECAHAN)
 	await _foto(nama + "_terbang", rumah)
@@ -268,7 +384,15 @@ func _lempar_dekat(nama: String, rumah: RouteBuilder.RumahRute) -> void:
 	var mendarat: KoranLempar.Koran = _koran_ini(koran)
 	await _maju(DT)
 	print("%s: mendarat %s, hasil %s, penanda %s" % [nama, mendarat.mendarat, ZonaSasaran.Hasil.keys()[mendarat.hasil], ZonaSasaran.Penanda.keys()[mendarat.penanda]])
-	_cek(mendarat.mendarat and mendarat.hasil == ZonaSasaran.Hasil.KOTAK_SURAT, "koran mendarat di kotak surat sasaran sisi dekat (penilaian tidak berubah)")
+	var harapan: ZonaSasaran.Hasil = ZonaSasaran.Hasil.MELESET
+	match kelas:
+		int(ZonaSasaran.Jenis.KOTAK_SURAT):
+			harapan = ZonaSasaran.Hasil.KOTAK_SURAT
+		int(ZonaSasaran.Jenis.TERAS):
+			harapan = ZonaSasaran.Hasil.TERAS
+		int(ZonaSasaran.Jenis.HALAMAN):
+			harapan = ZonaSasaran.Hasil.HALAMAN
+	_cek(mendarat.mendarat and mendarat.hasil == harapan, "koran mendarat sesuai sasaran dekat %s: %s (penilaian = oracle swipe)" % [nama, ZonaSasaran.Hasil.keys()[harapan]])
 	await _foto(nama + "_kena", rumah)
 
 
@@ -448,8 +572,8 @@ func _foto(keadaan: String, rumah: RouteBuilder.RumahRute) -> void:
 	var indeks: int = _akar.rute().rumah.find(rumah)
 	var alfa: String = ""
 	if indeks >= 0 and _akar.daur().sprite_rumah(indeks) != null:
-		alfa = ", alfa rumah foto %.2f, tembok %d" % [_akar.daur().sprite_rumah(indeks).modulate.a, _akar.daur().sprite_tembok(indeks).size()]
-	print("%s: kecepatan %.2f u/d, lateral %.2f, jarak %.2f ubin, kidal %s, koran terbang %d, rumah tampil %d, tembok tampil %d, menutupi pemain %d%s" % [keadaan, _sepeda.kecepatan_ud, _sepeda.lateral_ubin, _sepeda.jarak_ubin, _kontrol.router.kidal(), _akar.koran_terbang().size(), _akar.daur().jumlah_rumah(), _akar.daur().jumlah_tembok(), _akar.penerap_penutup().jumlah_menutupi(), alfa])
+		alfa = ", alfa rumah foto %.2f" % _akar.daur().sprite_rumah(indeks).modulate.a
+	print("%s: kecepatan %.2f u/d, lateral %.2f, jarak %.2f ubin, kidal %s, koran terbang %d, rumah tampil %d, menutupi pemain %d%s" % [keadaan, _sepeda.kecepatan_ud, _sepeda.lateral_ubin, _sepeda.jarak_ubin, _kontrol.router.kidal(), _akar.koran_terbang().size(), _akar.daur().jumlah_rumah(), _akar.penerap_penutup().jumlah_menutupi(), alfa])
 	_simpan(keadaan)
 
 

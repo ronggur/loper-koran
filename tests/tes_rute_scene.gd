@@ -267,7 +267,9 @@ func _test_murni() -> void:
 	dekat.sisi = LoperAnim.Sisi.DEKAT
 	dekat.jenis = "dekat_limasan"
 	dekat.pelanggan = true
-	check(SpriteRumah.nama_rumah(dekat) == "house_perumahan_dekat_limasan_bukan", "rumah dekat selalu _bukan (cara menampilkan sisi dekat belum diputuskan)")
+	check(SpriteRumah.nama_rumah(dekat) == "house_perumahan_dekat_limasan_pelanggan", "rumah dekat terpilih = _pelanggan (sejak run 5D bagian B pelanggan juga di sisi dekat)")
+	dekat.pelanggan = false
+	check(SpriteRumah.nama_rumah(dekat) == "house_perumahan_dekat_limasan_bukan", "rumah dekat yang tidak terpilih = _bukan")
 	check(SpriteRumah.titik_pijak("house_perumahan_pelana_bukan") == Vector2i(96, 148) and SpriteRumah.titik_pijak("tidak_ada") == Vector2i(-1, -1), "titik pijak sprite dikenal dan tidak dikenal")
 	_test_tabel_sprite()
 
@@ -374,8 +376,8 @@ func _test_rumah_digambar() -> void:
 			var jangkar: Array = json["ground_anchor"]
 			if sprite.offset != -Vector2(float(jangkar[0]), float(jangkar[1])) or sprite.centered:
 				salah.append("%s: offset %s, harap %s" % [rumah.id, sprite.offset, -Vector2(float(jangkar[0]), float(jangkar[1]))])
-			# Run fase5b bagian B1 (D-2): sprite rumah dekat digambar 1,25 ubin lebih jauh dari jalan (tapak logika tetap 3,0 sampai 6,0, pusat 4,5): 5,75.
-			var tengah_x: float = -4.5 if seberang else 5.75
+			# Run fase5d-sisi-dekat (K-1, P-1): sprite rumah dekat digambar 0,5 ubin lebih jauh dari jalan (tapak logika tetap 3,0 sampai 6,0, pusat 4,5): 5,0 (run 5B: 5,75).
+			var tengah_x: float = -4.5 if seberang else 5.0
 			var letak: Vector2 = _layar(tengah_x, rumah.maju_ubin + 1.0)
 			if sprite.position != letak:
 				salah.append("%s: posisi %s, harap %s" % [rumah.id, sprite.position, letak])
@@ -404,9 +406,9 @@ func _test_rumah_digambar() -> void:
 		if anak is CanvasItem and (anak as CanvasItem).visible:
 			anak_gambar += 1
 	# Run fase3b-rintangan-skor: rintangan kini digambar, tetapi di dalam satu node induk `Rintangan` (anak Y-sort Objek), jadi anak Objek =
-	# rumah + tembok sisi dekat (run fase5b B1) + kotak surat (oranye pelanggan dan abu-abu bukan pelanggan seberang, 2026-10-17) + sepeda + node Rintangan (rintangan sendiri
+	# rumah (tembok sisi dekat run 5B dilepas run 5D) + kotak surat (oranye pelanggan dan abu-abu bukan pelanggan seberang, 2026-10-17) + sepeda + node Rintangan (rintangan sendiri
 	# dites di `tes_rintangan_scene.gd`) + node Dekor (induk dekor pinggir jalan, run fase5b B2; dites di `tes_dekor.gd`).
-	check(anak_gambar == akar.daur().jumlah_rumah() + akar.daur().jumlah_kotak_surat() + akar.daur().jumlah_kotak_surat_bukan() + akar.daur().jumlah_tembok() + 3 and akar.rintangan_daur().get_parent() == objek and akar.dekor_daur().get_parent() == objek, "tidak ada node lain yang digambar di Objek (rumah, tembok, kotak surat oranye dan abu-abu, sepeda, induk rintangan, induk dekor): %d" % anak_gambar)
+	check(anak_gambar == akar.daur().jumlah_rumah() + akar.daur().jumlah_kotak_surat() + akar.daur().jumlah_kotak_surat_bukan() + 3 and akar.rintangan_daur().get_parent() == objek and akar.dekor_daur().get_parent() == objek, "tidak ada node lain yang digambar di Objek (rumah, kotak surat oranye dan abu-abu, sepeda, induk rintangan, induk dekor): %d" % anak_gambar)
 	_bersihkan(akar)
 
 
@@ -512,13 +514,14 @@ func _test_zona_dari_data() -> void:
 		var t1: Vector2 = Vector2(-2.25, -(bukan_seberang.maju_ubin + 1.875))
 		var t2: Vector2 = Vector2(2.5, -(dekat.maju_ubin + 1.0))
 		check(ZonaSasaran.klasifikasi(t1, medan.zona_sekitar(t1)) == ZonaSasaran.Hasil.BUKAN_PELANGGAN, "kotak surat rumah seberang yang tidak terpilih (%s) = BUKAN_PELANGGAN" % bukan_seberang.id)
-		check(ZonaSasaran.klasifikasi(t2, medan.zona_sekitar(t2)) == ZonaSasaran.Hasil.BUKAN_PELANGGAN, "halaman rumah dekat (%s) = BUKAN_PELANGGAN (distrik perumahan tanpa pelanggan sisi dekat)" % dekat.id)
+		check(ZonaSasaran.klasifikasi(t2, medan.zona_sekitar(t2)) == ZonaSasaran.Hasil.BUKAN_PELANGGAN, "halaman rumah dekat (%s) = BUKAN_PELANGGAN (rute hari 1: tanpa pelanggan sisi dekat)" % dekat.id)
 	# Elips TERTUTUP: titik mendarat di balik atap rumah dari kamera iso (rumah rute kedua sisi, bukan hanya graybox seberang).
 	if dekat != null:
-		var di_balik_dekat: Vector2 = Vector2(2.5, -(dekat.maju_ubin + 1.0))
+		# Titik (2,9; maju + 1,0): sinar ke kamera bergeser d = 1,0 .. 1,5 masuk kotak sprite rumah dekat (badan mulai lateral 3,906, tinggi >= 1,56), jadi tertutup menurut sprite nyata (run 5D bagian B, AC-10).
+		var di_balik_dekat: Vector2 = Vector2(2.9, -(dekat.maju_ubin + 1.0))
 		var l_dekat: ThrowSolver.Lintasan = ThrowSolver.Lintasan.new()
 		l_dekat.titik_mendarat = di_balik_dekat
-		check(medan.tertutup_titik(di_balik_dekat, 0.0) and not medan.tertutup_titik(Vector2(0.0, di_balik_dekat.y), 0.0), "halaman rumah dekat %s tertutup atap dari kamera (sinar ke kamera bergeser 1 ubin masuk tapak), tengah jalan tidak" % dekat.id)
+		check(medan.tertutup_titik(di_balik_dekat, 0.0) and not medan.tertutup_titik(Vector2(0.0, di_balik_dekat.y), 0.0), "halaman rumah dekat %s tertutup badan rumah dari kamera (sinar ke kamera bergeser masuk kotak sprite nyata), tengah jalan tidak" % dekat.id)
 		check(KoranLempar.bentuk_elips(l_dekat, false, medan) == KoranLempar.Elips.TERTUTUP and KoranLempar.bentuk_elips(l_dekat, false) == KoranLempar.Elips.SAH, "elips di balik rumah dekat = TERTUTUP di medan rute (BUKAN_PELANGGAN), sedangkan zona jalan uji di titik yang sama = SAH (halaman pelanggan dekat)")
 	var seberang_tertutup: Vector2 = Vector2(-4.5, -(rute.pelanggan[8].maju_ubin + 1.0))
 	check(medan.tertutup_titik(seberang_tertutup, 0.0), "titik di dalam tapak rumah seberang (pelanggan ke-9) tertutup")

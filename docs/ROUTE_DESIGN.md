@@ -11,7 +11,7 @@ Pasangan dari GDD bagian 4, 7, dan 9. GDD menjawab "rute itu apa"; dokumen ini m
 - **Tepi segmen netral**: setiap segmen diawali dan diakhiri 2 ubin jalan kosong tanpa rintangan, supaya dua segmen apa pun bisa disambung.
 - Segmen diberi **tag**: distrik, tingkat (`tenang`, `sedang`, `padat`), sisi pelanggan (`seberang`, `dekat`, `dua_sisi`), dan rintangan yang dipakai. Penyusun rute memilih segmen dari tag, bukan dari nama.
 
-Rute perumahan pertama (prototype 3): sekitar 250 ubin, 25 pelanggan di sisi seberang, 6–8 segmen.
+Rute perumahan pertama (prototype 3): sekitar 250 ubin, 25 pelanggan, 6–8 segmen. Hari 1 dan 2 semua pelanggan di sisi seberang; mulai hari 3, 8 atau 9 dari 25 di sisi dekat (bagian 3, Run 5D).
 
 ## 2. Tata letak jalan
 
@@ -34,7 +34,8 @@ Rute perumahan pertama (prototype 3): sekitar 250 ubin, 25 pelanggan di sisi seb
 
 ## 3. Menempatkan rumah pelanggan
 
-- Distrik pertama: pelanggan **hanya di sisi seberang** (GDD 9.1). Rumah sisi dekat ada, tapi bukan pelanggan.
+- Distrik pertama: **hari 1 dan 2** pelanggan hanya di sisi seberang; **mulai hari 3** tepat 8 atau 9 dari 25 pelanggan di sisi dekat (GDD 4.2 dan 9.1; keputusan pemilik 2026-10-22, Run 5D). `RouteBuilder.bangun` menerima nomor hari (bawaan hari 1) dan memilih pelanggan dari rumah yang `pelanggan_boleh`: dekat dulu (kuota 8 atau 9, diundi dari RNG rute sesudah susunan segmen), lalu sisanya di seberang. Hari 1 dan 2 mengonsumsi RNG persis seperti sebelum Run 5D, jadi rute kedua hari itu tidak berubah. Celah antar pelanggan berturut-turut (dua sisi digabung, urut maju) tidak lebih dari `RUTE_PELANGGAN_JARAK_MAKS_UBIN` (20 ubin); terukur di 100 hari: 2 sampai 20, median 10. Hampir semua rumah dekat di sembilan segmen `pelanggan_boleh` (34 dari 36); dua rumah bukan kandidat karena zona kotak surat dekatnya beririsan dengan anjing dekat (`per_tengah_02@12`, `per_tengah_03@28`; `DATA_SCHEMA.md` 3). Titik kucing misi P1 tetap di rumah seberang.
+- **Sisi dekat terbuka.** Tembok sisi dekat Run 5B dihapus: kavling dekat adalah halaman rumput terbuka seperti sisi jauh, rumah dekat mundur 0,5 ubin dan punya teras yang menjorok ke arah jalan. Kotak surat dekat (di tepi trotoar dekat, cermin seberang) ada di semua rumah dekat: oranye bila pelanggan, abu-abu bila bukan. Rumah dekat tidak boleh menutupi kotak surat sasaran atau sepeda (`BALANCING.md` 5, diukur oracle piksel).
 - Jarak rata-rata antar pelanggan sekitar 9 ubin (BALANCING 6). Variasikan: beberapa rumah berurutan (ritme cepat), lalu sela panjang (napas).
 - Sela antar pelanggan diisi rumah bukan pelanggan, persimpangan, taman, atau pos satpam, supaya radar dan mata pemain punya kerja.
 - Jangan menaruh dua pelanggan berturut-turut yang hanya bisa dicapai dari jalur berlawanan dengan jarak kurang dari 4 ubin. Pemain butuh waktu untuk pindah jalur.
@@ -81,7 +82,7 @@ Dekor = tong sampah, pohon, dan lampu jalan di halaman dan tepi trotoar, ditulis
 Simpang = jalan samping (simpang T) ke sisi `seberang` atau `dekat`, ditulis tangan di bidang `simpang` `{pos, sisi}` tiap segmen (`DATA_SCHEMA.md` 3). **Hanya hiasan** (keputusan pemilik 2026-10-22, bagian 8): tanpa lalu lintas, rintangan, atau sasaran; pemain tidak bisa berbelok; gerak, zona, penilaian lemparan, skor, dan tenggat tidak berubah, dan rute untuk seed yang sama identik (tanpa RNG baru). Data disiapkan supaya kelak mobil atau motor bisa berbelok (M3) tanpa mengubah format: satu fungsi baca `RouteBuilder.simpang_di(rute)`.
 
 - **Pita.** Mulut 2 ubin, ubin yang diganti renderer (mulut dan sudut kerb) 5 baris: maju `pos` − 1,5 sampai `pos` + 3,5. Di sisi simpang pita membentang dari garis tengah ke luar (lengan jalan samping sampai tepi layar); sisi lain jalan tetap lurus.
-- **Aturan.** Pita di dalam segmen; tidak memotong (di sisi simpang) kavling rumah termasuk tembok belakang rumah dekat, zona sasaran, dekor, rintangan (anjing diam, lintasan mobil), jalan masuk garasi dan ujung kerbnya, atau pita simpang lain, juga di sambungan antar segmen. Tepi bersentuhan boleh. Divalidasi `SegmenRute.galat_tempat_simpang` dan `RouteBuilder.periksa_rute`.
+- **Aturan.** Pita di dalam segmen; tidak memotong (di sisi simpang) kavling rumah (tembok dekat sudah dihapus di Run 5D), zona sasaran, dekor, rintangan (anjing diam, lintasan mobil), jalan masuk garasi dan ujung kerbnya, atau pita simpang lain, juga di sambungan antar segmen. Tepi bersentuhan boleh. Divalidasi `SegmenRute.galat_tempat_simpang` dan `RouteBuilder.periksa_rute`.
 - **Tempat.** Rumah sesisi berjarak 4 ubin dengan kavling 3 ubin, jadi celah paling lebar 1 ubin; simpang hanya muat di rentang tanpa rumah di sisinya. Sisi dekat punya rentang kosong di awal beberapa segmen; sisi seberang tidak punya sama sekali, sehingga satu rumah seberang bukan pelanggan (`per_buka_02@18`) dihapus untuk memberi tempat simpang seberang (putusan P-6 run 5C; kandidat pelanggan tidak berubah).
 - **Isi sekarang.** Simpang dekat `per_buka_01@3`, `per_tengah_05@3`, `per_tutup_01@2`; simpang seberang `per_buka_02@18`.
 - **Frekuensi (diukur, 100 rute hari `SeedHari.rute(1..100)`):** 100% rute memuat paling sedikit satu simpang, **100% simpang dekat**, **56% simpang seberang**; 1 sampai 3 simpang per rute. Simpang dekat ada di setiap rute karena `per_tengah_05` selalu terpakai (lima segmen tengah = lima yang dibutuhkan), selalu di posisi segmen yang sama; bisa terasa berulang (D-F3 run 5C), dinilai di HP dan saat segmen bertambah. Mobil garasi seberang `per_tengah_05@9` mundur ke jalan sekitar 1,5 ubin sesudah pita simpang dekat dan bisa terbaca seperti keluar dari simpang (D-F2), dinilai di HP.
@@ -112,5 +113,5 @@ Simpang = jalan samping (simpang T) ke sisi `seberang` atau `dekat`, ditulis tan
 
 - Panjang segmen dan rute final setelah graybox.
 - Rute bercabang (gang pintas vs jalan utama, GDD 4.1): bagaimana cabang disusun dari segmen.
-- ~~Cara menampilkan rumah di sisi dekat~~: diputuskan 2026-10-17, tembok/pagar belakang rendah dengan kavling sisi dekat lebih dalam sekitar 1,25 ubin (`ROADMAP.md` 4b); segmen dua sisi memperhitungkannya.
+- ~~Cara menampilkan rumah di sisi dekat~~: diputuskan 2026-10-17 (tembok/pagar belakang rendah, kavling lebih dalam sekitar 1,25 ubin), **diganti pemilik 2026-10-22**: halaman terbuka tanpa tembok, rumah dekat mundur 0,5 ubin dan didesain ulang dengan teras menjorok (`ROADMAP.md` 4b, Run 5D); angka dan bentuk usulan sampai dinilai di HP (`SETUP_ANDROID.md` 8.16).
 - ~~Persimpangan: hanya dekorasi, atau ada lalu lintas yang memotong~~: **untuk sekarang hiasan** (keputusan pemilik 2026-10-22, run 5C, bagian 4c): simpang T tanpa lalu lintas, rintangan, atau sasaran. Lalu lintas yang berbelok atau memotong di simpang (mobil, motor) dijadwalkan M3 dan memakai data simpang yang sama (`RouteBuilder.simpang_di`). Simpang empat dan pemain berbelok masuk jalan samping tetap terbuka bersama rute bercabang.

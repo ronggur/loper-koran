@@ -157,12 +157,12 @@ func _periksa_tembok(it: RouteBuilder.SimpangItem) -> void:
 		var kav: Rect2 = SegmenRute.kavling_rumah(r.sisi, r.maju_ubin)
 		if absf(kav.get_center().y - (pita.x + pita.y) / 2) < 8.0:
 			tetangga.append("%s %.1f..%.1f" % [r.id, kav.position.y, kav.end.y])
-		for pot: TembokDekat.Potongan in TembokDekat.potongan(r):
-			var akhir: float = pot.maju_ubin + (0.0 if pot.tiang else Config.RUTE_TEMBOK_MODUL_UBIN)
-			if pot.maju_ubin < pita.y and akhir > pita.x:
-				di_pita += 1
-	print("tembok sekitar %s (pita %.1f..%.1f): rumah dekat tetangga %s; tembok di pita %d; tembok tampil %d" % [it.id, pita.x, pita.y, tetangga, di_pita, _akar.daur().jumlah_tembok()])
-	_cek(di_pita == 0, "tembok terputus di pita %s" % it.id)
+		# Run 5D (P-1): tembok dilepas; yang dicek kotak gambar rumah dekat (sprite nyata) tidak masuk pita.
+		var gambar: Rect2 = PenutupPemain.tapak_rumah_gambar(r.sisi, r.maju_ubin, r.jenis)
+		if gambar.position.y < pita.y and gambar.end.y > pita.x:
+			di_pita += 1
+	print("halaman terbuka sekitar %s (pita %.1f..%.1f): rumah dekat tetangga %s; rumah gambar di pita %d" % [it.id, pita.x, pita.y, tetangga, di_pita])
+	_cek(di_pita == 0, "rumah dekat tidak di pita %s" % it.id)
 
 
 func _lintas(it: RouteBuilder.SimpangItem, lateral: float, awalan: String = "") -> void:
@@ -304,7 +304,7 @@ func _maju(detik: float, gambar: bool = true) -> void:
 
 func _foto(keadaan: String) -> void:
 	await _tunggu(3)
-	print("%s: kecepatan %.2f u/d, lateral %.2f, jarak %.2f ubin, kidal %s, tembok tampil %d" % [keadaan, _sepeda.kecepatan_ud, _sepeda.lateral_ubin, _sepeda.jarak_ubin, _kontrol.router.kidal(), _akar.daur().jumlah_tembok()])
+	print("%s: kecepatan %.2f u/d, lateral %.2f, jarak %.2f ubin, kidal %s, rumah tampil %d" % [keadaan, _sepeda.kecepatan_ud, _sepeda.lateral_ubin, _sepeda.jarak_ubin, _kontrol.router.kidal(), _akar.daur().jumlah_rumah()])
 	if _folder.is_empty():
 		return
 	var gambar: Image = root.get_texture().get_image()

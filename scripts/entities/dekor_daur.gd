@@ -3,7 +3,7 @@ extends Node2D
 ## Dekor pinggir jalan rute digambar dari data rute (tong sampah, pohon, lampu jalan; run fase5b-tembok-dekor bagian B2, AC-11, usulan), jendela daur di sekitar sepeda.
 ##
 ## Node tipis bergaya `RintanganDaur`: anak induk Y-sort rumah dan sepeda (`RumahDaurRute`), dengan `y_sort_enabled` sendiri, jadi sprite dekor diurutkan bersama rumah, kotak
-## surat, tembok, rintangan, dan sepeda menurut posisi tegak titik pijaknya (pusat tapak kaki, `DekorRute.titik_dunia`). Hanya dekor yang `maju_ubin`-nya di jendela daur
+## surat, rintangan, dan sepeda menurut posisi tegak titik pijaknya (pusat tapak kaki, `DekorRute.titik_dunia`). Hanya dekor yang `maju_ubin`-nya di jendela daur
 ## (`DekorRute.rentang_sekitar`, `Config.RUTE_DAUR_*`) punya node; sprite dipakai ulang dari kolam, bukan diinstansiasi ulang tiap langkah. Sprite per jenis, varian, dan sisi dari
 ## `DekorRute.nama_sprite` (PNG di `assets/sprites/props/`), titik pijak dan ukuran sel dari tabel `Config.RUTE_DEKOR_SPRITE*` (dijaga tes = JSON dan PNG). Semua PNG yang dipakai
 ## rute dimuat sekali di `atur_rute` (bukan di `_draw` atau saat dekor pertama muncul) dan dipegang node ini.
