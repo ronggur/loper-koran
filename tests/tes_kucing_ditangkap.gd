@@ -41,7 +41,7 @@ func _test_murni() -> void:
 	var kasus: Array = [
 		["tangkap", 0.0, 0.0, F_DUDUK], ["tangkap", 0.0, 0.5, F_DUDUK], ["tangkap", 0.000000001, 0.0, F_TANGKAP_1], ["tangkap", 1.0, 0.0, F_TANGKAP_1],
 		["tangkap", 0.5, 0.3333, F_TANGKAP_1], ["tangkap", 0.5, 1.0 / 3.0, F_TANGKAP_2], ["tangkap", 0.5, 0.5, F_TANGKAP_2], ["tangkap", 0.5, 2.0 / 3.0, F_TANGKAP_1],
-		["tangkap", 0.5, 1.0, F_TANGKAP_2], ["tangkap", 0.5, 10.0, F_TANGKAP_1], ["tangkap", 0.5, NAN, F_TANGKAP_1], ["tangkap", 0.5, -2.0, F_TANGKAP_1],
+		["tangkap", 0.5, 1.0, F_TANGKAP_2], ["tangkap", 0.5, 10.0, F_TANGKAP_1], ["tangkap", 0.5, NAN, F_TANGKAP_1], ["tangkap", 0.5, -2.0, F_TANGKAP_1], ["tangkap", 0.5, -0.2, F_TANGKAP_1],
 		["tangkap", NAN, 0.5, F_DUDUK], ["tangkap", -0.2, 0.5, F_DUDUK], ["tangkap", INF, 0.5, F_DUDUK],
 		["lihat", 0.5, 0.5, F_DUDUK], ["lihat", 1.0, 0.0, F_DUDUK], ["", 0.5, 0.5, F_DUDUK], ["kabur", 0.5, 0.5, F_DUDUK], ["petunjuk", 0.5, 0.5, F_DUDUK], ["Tangkap", 0.5, 0.5, F_DUDUK],
 	]
@@ -51,11 +51,12 @@ func _test_murni() -> void:
 		if f != int(k[3]):
 			beda.append("%s p%s t%s: %d (harap %d)" % [k[0], k[1], k[2], f, k[3]])
 	check(beda.is_empty(), "%d kasus literal (progres 0/0+/1, batas 1/3 detik, NaN, langkah lain); beda: %s" % [kasus.size(), beda])
-	# Waktu dari langkah 1/60 yang dijumlahkan (seperti `_detik_misi`): 20 langkah = 1/3 detik = frame kedua (toleransi).
+	# Waktu dari langkah 1/60 yang dijumlahkan (seperti `_detik_misi`): 100 langkah = 5/3 detik (jumlah float 1,6666666666666656, x 3 = 4,9999999999999964)
+	# = segmen ke-5 = frame kedua berkat toleransi (tanpa toleransi segmen ke-4).
 	var t: float = 0.0
-	for i: int in range(20):
+	for i: int in range(100):
 		t += DT
-	check(PoseKucing.frame("tangkap", 0.5, t) == F_TANGKAP_2, "20 langkah 1/60 dijumlahkan (%.17f) = frame kedua" % t)
+	check(t < 5.0 / 3.0 and PoseKucing.frame("tangkap", 0.5, t) == F_TANGKAP_2, "100 langkah 1/60 dijumlahkan (%.17f) = frame kedua (toleransi batas)" % t)
 	var urutan: Array[int] = []
 	for i: int in range(120):
 		var f: int = PoseKucing.frame("tangkap", 0.5, float(i) / 60.0)
@@ -157,7 +158,11 @@ func _test_scene() -> void:
 	for i: int in range(90):
 		_letakkan(sepeda, t3.maju_ubin - 1.2, -1.0, 0.0)
 		akar.perbarui(DT)
-	check(akar.sedang_jeda() and [kucing.badan().frame, akar.keadaan_misi().timer_detik] == sebelum, "90 langkah jeda: frame dan timer tetap %s" % [sebelum])
+	# Waktu dinding berjalan sekitar 1/3 detik selama jeda: frame tetap (pose dari waktu animasi misi, bukan waktu dinding).
+	OS.delay_msec(340)
+	_letakkan(sepeda, t3.maju_ubin - 1.2, -1.0, 0.0)
+	akar.perbarui(DT)
+	check(akar.sedang_jeda() and [kucing.badan().frame, akar.keadaan_misi().timer_detik] == sebelum, "90 langkah jeda + 0,34 detik waktu dinding: frame dan timer tetap %s" % [sebelum])
 	akar.minta_lanjut()
 	_tree.root.remove_child(akar)
 	akar.free()

@@ -92,8 +92,6 @@ func atur_ulang() -> void:
 	jarak_ubin = 0.0
 	lateral_ud = 0.0
 	batalkan_lempar()
-	# Keluar dari jatuh lebih dulu supaya arah dan animasi dipasang dari keadaan awal, bukan arah jatuh lama (AC-5 run 5C).
-	_sprite.atur_jatuh(false, 0.0)
 	gerak(Vector2.ZERO, 0.0)
 
 
