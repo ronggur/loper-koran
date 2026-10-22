@@ -1201,6 +1201,22 @@ const RUTE_SIMBOL_SEPEDA_OFFSET_UBIN: int = 6
 const RUTE_RUMPUT_VARIAN_MOD: int = 100
 const RUTE_RUMPUT_VARIAN_2_PERSEN: int = 12
 const RUTE_RUMPUT_VARIAN_3_PERSEN: int = 8
+## Ujung kerb jalan masuk sisi seberang (run fase5c-animasi-simpang, C-F1 run 5B): baris maju relatif ke baris jalan masuk yang memakai ubin `*_masuk_ujung` di kolom trotoar dan rumput pertama seberang (= `ujung_kerb_baris_relatif` di `tile_perumahan.json`, dijaga tes).
+const RUTE_UJUNG_KERB_BARIS_RELATIF: int = 1
+
+## --- Simpang T hiasan (run fase5c-animasi-simpang, keputusan pemilik 2026-10-22 K-1/P-1, D-3; usulan, dinilai di HP) ---
+## Lebar mulut jalan samping sepanjang jalan utama, ubin (= `simpang.lebar_mulut_ubin` di `tile_perumahan.json` = selisih `SIMPANG_Y` renderer / 32, dijaga tes). Data segmen hanya `{pos, sisi}`.
+const RUTE_SIMPANG_LEBAR_MULUT_UBIN: float = 2.0
+## Tepi mulut paling dekat ke awal rute relatif ke `pos` simpang, ubin maju (= -`simpang.y_mulut_unit[1]` / 32 renderer): `pos` = baris `mulut_2` (berpusat di maju bulat), mulut menutup `pos - 0,5` sampai `pos + 1,5`.
+const RUTE_SIMPANG_MULUT_AWAL_UBIN: float = -0.5
+## Pita larangan simpang: baris relatif maju (dari baris `pos`) pertama dan terakhir yang ubinnya diganti renderer di kolom trotoar, rumput, atau lengan, kedua sisi (= `simpang.pita_baris_relatif`). Tiap baris menutup baris - 0,5 sampai baris + 0,5, jadi pita = maju `pos - 1,5` sampai `pos + 3,5`.
+const RUTE_SIMPANG_PITA_BARIS: Array[int] = [-1, 3]
+## Setengah tinggi satu baris ubin sepanjang jalan, ubin: baris berpusat di maju bulat b menutup b - ini sampai b + ini (dipakai tepi pita simpang dan baris jalan masuk di validasi simpang).
+const RUTE_SETENGAH_BARIS_UBIN: float = 0.5
+## Sel ubin simpang sisi `dekat`, pasangan (baris relatif maju, kolom: 0 aspal, 1 trotoar, 2 rumput pertama, 3 lengan = semua kolom rumput luar), urut sama dengan `simpang.sisi.dekat` di `tile_perumahan.json` dan `TanahDaur.tekstur_simpang_dekat`.
+const RUTE_SIMPANG_SEL_DEKAT: Array[int] = [3, 1, 3, 2, 3, 3, 2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 1, 1, 1, 2, 1, 3, 0, 0, 0, 1, 0, 2, 0, 3, -1, 1, -1, 2, -1, 3]
+## Sel ubin simpang sisi `seberang` (pola sama; dari JSON renderer `build/env_art/ubin/simpang/`, dijaga `tools/tests_cek/uji_aset_simpang.py`). Ubinnya belum dipasang selama data belum memakai simpang seberang (D-2).
+const RUTE_SIMPANG_SEL_SEBERANG: Array[int] = [3, 2, 3, 3, 2, 1, 2, 2, 2, 3, 1, 0, 1, 1, 1, 2, 1, 3, 0, 0, 0, 1, 0, 2, 0, 3, -1, 1, -1, 2, -1, 3]
 
 ## --- Dekor pinggir jalan di data segmen (run fase5b-tembok-dekor bagian B2, D-5 dan D-6; usulan, dinilai di HP) ---
 ## Jenis dekor yang sah di data segmen (urut tetap; tabel `RUTE_DEKOR_*` di bawah sejajar dengan daftar ini).

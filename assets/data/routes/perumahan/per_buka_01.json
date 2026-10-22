@@ -23,5 +23,8 @@
     { "jenis": "tong_sampah", "pos": 17, "sisi": "seberang", "varian": "logam" },
     { "jenis": "lampu_jalan", "pos": 21, "sisi": "dekat", "varian": "lengan" },
     { "jenis": "lampu_jalan", "pos": 25, "sisi": "seberang", "varian": "lengan" }
+  ],
+  "simpang": [
+    { "pos": 3, "sisi": "dekat" }
   ]
 }

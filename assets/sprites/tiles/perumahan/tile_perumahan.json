@@ -8,7 +8,7 @@
   16
  ],
  "unit_dunia_per_ubin": 32,
- "note": "Usulan, tools/env_art/ubin_perumahan.py --salin (run fase5a-pasang-aset-gelombang1 dan fase5b-tembok-dekor). Hanya ubin yang dipasang. Kolom mengikuti scripts/config.gd: aspal x -1..1 ubin (seberang, dekat), trotoar 1 ubin per sisi (kerb dalam, lajur sepeda, kerb luar), rumput di luar. Ubin sepanjang jalan berulang tiap 1 ubin. rumput_1, rumput_2, rumput_3: rumput polos untuk kolom rumput di luar kolom pertama (rumput_seberang membawa tepi kerb luar yang tidak boleh berulang; 2 dan 3 variasi, 3 dengan bunga kecil). ubin_khusus: pengganti satu sel kolomnya (*_masuk: jalan masuk garasi beton di bawah mobil parkir, hanya sisi seberang; *_simbol: simbol sepeda dan panah di lajur sepeda trotoar).",
+ "note": "Usulan, tools/env_art/ubin_perumahan.py --salin (run fase5a-pasang-aset-gelombang1 dan fase5b-tembok-dekor). Hanya ubin yang dipasang. Kolom mengikuti scripts/config.gd: aspal x -1..1 ubin (seberang, dekat), trotoar 1 ubin per sisi (kerb dalam, lajur sepeda, kerb luar), rumput di luar. Ubin sepanjang jalan berulang tiap 1 ubin. rumput_1, rumput_2, rumput_3: rumput polos untuk kolom rumput di luar kolom pertama (rumput_seberang membawa tepi kerb luar yang tidak boleh berulang; 2 dan 3 variasi, 3 dengan bunga kecil). ubin_khusus: pengganti satu sel kolomnya (*_masuk: jalan masuk garasi beton di bawah mobil parkir, hanya sisi seberang; *_simbol: simbol sepeda dan panah di lajur sepeda trotoar). ubin_ujung_kerb (run fase5c): ujung kerb di baris maju + ujung_kerb_baris_relatif dari jalan masuk sisi seberang. simpang (run fase5c, usulan, hiasan): ubin simpang T per sisi terpasang; baris_relatif = maju dari baris mulut_2 (pos data segmen), kolom lengan berulang ke luar sejauh kolom yang tampil.",
  "kolom_x_ubin": {
   "rumput_seberang": -2.5,
   "trotoar_seberang": -1.5,
@@ -28,6 +28,152 @@
   "trotoar_seberang_simbol",
   "trotoar_dekat_simbol"
  ],
+ "ubin_ujung_kerb": [
+  "trotoar_seberang_masuk_ujung",
+  "rumput_seberang_masuk_ujung"
+ ],
+ "ujung_kerb_baris_relatif": 1,
+ "simpang": {
+  "y_mulut_unit": [
+   -48.0,
+   16.0
+  ],
+  "lebar_mulut_ubin": 2.0,
+  "pita_baris_relatif": [
+   -1,
+   3
+  ],
+  "sisi": {
+   "dekat": [
+    {
+     "nama": "simpang_dekat_trotoar_dekat_depan_2",
+     "kolom": "trotoar",
+     "kolom_x_ubin": 1.5,
+     "baris_relatif": 3,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_dekat_rumput_dekat_depan_2",
+     "kolom": "rumput",
+     "kolom_x_ubin": 2.5,
+     "baris_relatif": 3,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_dekat_lengan_depan_2",
+     "kolom": "lengan",
+     "kolom_x_ubin": 3.5,
+     "baris_relatif": 3,
+     "berulang_ke_luar": true
+    },
+    {
+     "nama": "simpang_dekat_aspal_dekat_depan_1",
+     "kolom": "aspal",
+     "kolom_x_ubin": 0.5,
+     "baris_relatif": 2,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_dekat_trotoar_dekat_depan_1",
+     "kolom": "trotoar",
+     "kolom_x_ubin": 1.5,
+     "baris_relatif": 2,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_dekat_rumput_dekat_depan_1",
+     "kolom": "rumput",
+     "kolom_x_ubin": 2.5,
+     "baris_relatif": 2,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_dekat_lengan_depan_1",
+     "kolom": "lengan",
+     "kolom_x_ubin": 3.5,
+     "baris_relatif": 2,
+     "berulang_ke_luar": true
+    },
+    {
+     "nama": "simpang_dekat_aspal_dekat_mulut_1",
+     "kolom": "aspal",
+     "kolom_x_ubin": 0.5,
+     "baris_relatif": 1,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_dekat_trotoar_dekat_mulut_1",
+     "kolom": "trotoar",
+     "kolom_x_ubin": 1.5,
+     "baris_relatif": 1,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_dekat_rumput_dekat_mulut_1",
+     "kolom": "rumput",
+     "kolom_x_ubin": 2.5,
+     "baris_relatif": 1,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_dekat_lengan_mulut_1",
+     "kolom": "lengan",
+     "kolom_x_ubin": 3.5,
+     "baris_relatif": 1,
+     "berulang_ke_luar": true
+    },
+    {
+     "nama": "simpang_dekat_aspal_dekat_mulut_2",
+     "kolom": "aspal",
+     "kolom_x_ubin": 0.5,
+     "baris_relatif": 0,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_dekat_trotoar_dekat_mulut_2",
+     "kolom": "trotoar",
+     "kolom_x_ubin": 1.5,
+     "baris_relatif": 0,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_dekat_rumput_dekat_mulut_2",
+     "kolom": "rumput",
+     "kolom_x_ubin": 2.5,
+     "baris_relatif": 0,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_dekat_lengan_mulut_2",
+     "kolom": "lengan",
+     "kolom_x_ubin": 3.5,
+     "baris_relatif": 0,
+     "berulang_ke_luar": true
+    },
+    {
+     "nama": "simpang_dekat_trotoar_dekat_belakang_1",
+     "kolom": "trotoar",
+     "kolom_x_ubin": 1.5,
+     "baris_relatif": -1,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_dekat_rumput_dekat_belakang_1",
+     "kolom": "rumput",
+     "kolom_x_ubin": 2.5,
+     "baris_relatif": -1,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_dekat_lengan_belakang_1",
+     "kolom": "lengan",
+     "kolom_x_ubin": 3.5,
+     "baris_relatif": -1,
+     "berulang_ke_luar": true
+    }
+   ]
+  }
+ },
  "tiles": [
   "tile_perumahan_aspal_dekat.png",
   "tile_perumahan_aspal_seberang.png",
@@ -37,10 +183,30 @@
   "tile_perumahan_rumput_dekat.png",
   "tile_perumahan_rumput_seberang.png",
   "tile_perumahan_rumput_seberang_masuk.png",
+  "tile_perumahan_rumput_seberang_masuk_ujung.png",
+  "tile_perumahan_simpang_dekat_aspal_dekat_depan_1.png",
+  "tile_perumahan_simpang_dekat_aspal_dekat_mulut_1.png",
+  "tile_perumahan_simpang_dekat_aspal_dekat_mulut_2.png",
+  "tile_perumahan_simpang_dekat_lengan_belakang_1.png",
+  "tile_perumahan_simpang_dekat_lengan_depan_1.png",
+  "tile_perumahan_simpang_dekat_lengan_depan_2.png",
+  "tile_perumahan_simpang_dekat_lengan_mulut_1.png",
+  "tile_perumahan_simpang_dekat_lengan_mulut_2.png",
+  "tile_perumahan_simpang_dekat_rumput_dekat_belakang_1.png",
+  "tile_perumahan_simpang_dekat_rumput_dekat_depan_1.png",
+  "tile_perumahan_simpang_dekat_rumput_dekat_depan_2.png",
+  "tile_perumahan_simpang_dekat_rumput_dekat_mulut_1.png",
+  "tile_perumahan_simpang_dekat_rumput_dekat_mulut_2.png",
+  "tile_perumahan_simpang_dekat_trotoar_dekat_belakang_1.png",
+  "tile_perumahan_simpang_dekat_trotoar_dekat_depan_1.png",
+  "tile_perumahan_simpang_dekat_trotoar_dekat_depan_2.png",
+  "tile_perumahan_simpang_dekat_trotoar_dekat_mulut_1.png",
+  "tile_perumahan_simpang_dekat_trotoar_dekat_mulut_2.png",
   "tile_perumahan_trotoar_dekat.png",
   "tile_perumahan_trotoar_dekat_simbol.png",
   "tile_perumahan_trotoar_seberang.png",
   "tile_perumahan_trotoar_seberang_masuk.png",
+  "tile_perumahan_trotoar_seberang_masuk_ujung.png",
   "tile_perumahan_trotoar_seberang_simbol.png"
  ]
 }

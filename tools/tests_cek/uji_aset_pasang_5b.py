@@ -17,7 +17,8 @@
 6. Kontrol: satu piksel, satu byte JSON, dan satu byte golden yang diubah terdeteksi.
 7. Ubin khusus (bagian C, AC-16, sisi Python): susunan dari berkas assets/ untuk potongan 8 ubin maju x 8 kolom yang memuat jalan masuk garasi (baris 4), simbol sepeda (baris 6), dan
    `rumput_2`/`rumput_3` di kolom luar (pilihan ditulis ulang di sini lewat `struct` dan FNV-1a, oracle terpisah dari `UbinKhusus`) disamakan dengan adegan renderer: simbol sepeda
-   = adegan (0 piksel beda); jalan masuk = adegan di sisi seberang kecuali ujung kerb di baris tetangga (tepat 22 piksel di baris maju + 1, ubin ujung kerb ditunda ke 5C);
+   = adegan (0 piksel beda); jalan masuk = adegan di sisi seberang, 0 piksel beda (run fase5c: ubin ujung kerb `*_masuk_ujung` di baris maju + 1 menutup C-F1; kontrol:
+   tanpa ubin ujung tepat 22 piksel beda di baris itu, angka lama run 5B);
    `rumput_2`/`rumput_3` diulang = adegan rumput polos dan tepi cincinnya hanya memuat warna rumput. `tests/data/ubin_potongan_5b.png` = susunan itu dari assets/ (dibandingkan
    scene Godot oleh `tests/tes_ubin_5b.gd`; `--perbarui-referensi` menulis ulang berkas dari assets/, bukan diedit tangan).
 
@@ -123,7 +124,7 @@ def ekspektasi_repo():
     return {
         'houses/perumahan': sorted(pasang(RUMAH_LAMA) + pasang(TEMBOK)),
         'props': sorted(pasang(PROPS_5A + PROPS_LAMA + list(TONG) + POHON + LAMPU)),
-        'tiles/perumahan': sorted(['tile_perumahan_%s.png' % n for n in UBIN_5A + UBIN_BARU] + ['tile_perumahan.json']),
+        'tiles/perumahan': sorted(['tile_perumahan_%s.png' % n for n in UBIN_5A + UBIN_BARU + UBIN_5C] + ['tile_perumahan.json']),
     }
 
 
@@ -133,7 +134,14 @@ BARIS_5B = range(0, 8)          # 8 ubin maju (pusat y = -maju); lebih banyak ke
 KOLOM_5B = range(-4, 4)         # indeks kolom ic: pusat x = ic + 0,5 ubin (-3,5 .. +3,5)
 MASUK_5B = {4}                  # baris jalan masuk garasi di potongan
 SIMBOL_5B = {6}                 # baris simbol sepeda di potongan (baris mutlak 6 + 12 k)
-UJUNG_KERB_MASUK = 22           # piksel beda di baris tetangga (maju + 1) di tepi jalan masuk: ujung kerb, ubin khusus 5C
+UJUNG_KERB_MASUK = 22           # kontrol: piksel beda di baris tetangga (maju + 1) di tepi jalan masuk TANPA ubin ujung kerb (C-F1 run 5B)
+# Run fase5c-animasi-simpang (C-F1, simpang T sisi dekat; D-2): ubin baru yang dipasang, ditulis eksplisit.
+UBIN_UJUNG = ['trotoar_seberang_masuk_ujung', 'rumput_seberang_masuk_ujung']
+UBIN_SIMPANG_DEKAT = ['simpang_dekat_%s' % n for n in (
+    'trotoar_dekat_depan_2', 'rumput_dekat_depan_2', 'lengan_depan_2', 'aspal_dekat_depan_1', 'trotoar_dekat_depan_1', 'rumput_dekat_depan_1', 'lengan_depan_1',
+    'aspal_dekat_mulut_1', 'trotoar_dekat_mulut_1', 'rumput_dekat_mulut_1', 'lengan_mulut_1', 'aspal_dekat_mulut_2', 'trotoar_dekat_mulut_2', 'rumput_dekat_mulut_2',
+    'lengan_mulut_2', 'trotoar_dekat_belakang_1', 'rumput_dekat_belakang_1', 'lengan_belakang_1')]
+UBIN_5C = UBIN_UJUNG + UBIN_SIMPANG_DEKAT
 
 
 def fnv_dua_int(a, b):
@@ -144,16 +152,21 @@ def fnv_dua_int(a, b):
     return h
 
 
-def nama_ubin_khusus(ic, m, masuk, simbol, varian=True):
-    """Ubin di kolom ic (pusat x = ic + 0,5) baris mutlak m: ditulis eksplisit per kolom (oracle D-7)."""
+def nama_ubin_khusus(ic, m, masuk, simbol, varian=True, ujung=True):
+    """Ubin di kolom ic (pusat x = ic + 0,5) baris mutlak m: ditulis eksplisit per kolom (oracle D-7; ujung kerb run 5C di baris m bila m - 1 jalan masuk)."""
+    uj = ujung and (m - 1) in masuk and m not in masuk
     if abs(ic + 0.5) >= 3:
         if not varian:
             return 'rumput_1'
         v = fnv_dua_int(ic, m) % 100
         return 'rumput_2' if v < 12 else ('rumput_3' if v < 20 else 'rumput_1')
     if ic == -3:
+        if uj:
+            return 'rumput_seberang_masuk_ujung'
         return 'rumput_seberang_masuk' if m in masuk else 'rumput_seberang'
     if ic == -2:
+        if uj:
+            return 'trotoar_seberang_masuk_ujung'
         return 'trotoar_seberang_masuk' if m in masuk else ('trotoar_seberang_simbol' if m in simbol else 'trotoar_seberang')
     if ic == -1:
         return 'aspal_seberang'
@@ -211,9 +224,10 @@ def uji_ubin_khusus():
     beda_s = int((potong_s[..., :3][tertutup].astype(int) != kanvas_s[..., :3][tertutup].astype(int)).any(axis=1).sum())
     periksa(beda_s == 0, 'ubin simbol sepeda menyambung: susunan = adegan renderer, %d piksel beda dari %d' % (beda_s, int(tertutup.sum())))
 
-    # (c) jalan masuk garasi: sisi seberang = adegan kecuali ujung kerb di baris tetangga (maju + 1)
+    # (c) jalan masuk garasi: sisi seberang = adegan (run 5C: ubin ujung kerb); kontrol tanpa ubin ujung = 22 piksel ujung kerb di baris tetangga (maju + 1)
     adegan_m, _ = UP.render_adegan(lambda s: UP.build_jalan(s, masuk=(-4 * U - 16.0, -4 * U + 16.0)))
-    kanvas_m, (kiri, atas) = susun_nama(lambda ic, m: nama_ubin_khusus(ic, m, MASUK_5B, set(), varian=False))
+    kanvas_u, _ = susun_nama(lambda ic, m: nama_ubin_khusus(ic, m, MASUK_5B, set(), varian=False))
+    kanvas_m, (kiri, atas) = susun_nama(lambda ic, m: nama_ubin_khusus(ic, m, MASUK_5B, set(), varian=False, ujung=False))
     tinggi, lebar = kanvas_m.shape[:2]
     potong_m = adegan_m[atas + oy:atas + oy + tinggi, kiri + ox:kiri + ox + lebar]
     tertutup = kanvas_m[..., 3] == 255
@@ -223,10 +237,13 @@ def uji_ubin_khusus():
     gy = (sy / 16.0 - sx / 32.0) / 2.0          # y dunia = -maju
     beda_px = (potong_m[..., :3].astype(int) != kanvas_m[..., :3].astype(int)).any(axis=2) & tertutup
     seberang = beda_px & (gx < 0)
-    periksa(int(seberang.sum()) == UJUNG_KERB_MASUK, 'jalan masuk seberang: tepat %d piksel beda dari adegan (ujung kerb), dapat %d' % (UJUNG_KERB_MASUK, int(seberang.sum())))
+    periksa(int(seberang.sum()) == UJUNG_KERB_MASUK, 'kontrol tanpa ubin ujung: jalan masuk seberang tepat %d piksel beda dari adegan (ujung kerb C-F1), dapat %d' % (UJUNG_KERB_MASUK, int(seberang.sum())))
     maju_beda = sorted({int(round(-gy[y, x])) for y, x in zip(*np.nonzero(seberang))})
-    periksa(maju_beda == [5], 'piksel beda hanya di baris tetangga maju 5 (di belakang jalan masuk di baris 4): %s' % maju_beda)
-    periksa(bool(((gx[seberang] > -2.1) & (gx[seberang] < -1.0)).all()), 'piksel beda hanya di sekitar kedua kerb (x antara -2,1 dan -1,0): ujung kerb dalam dan luar')
+    periksa(maju_beda == [5], 'kontrol: piksel beda hanya di baris tetangga maju 5 (di depan jalan masuk di baris 4): %s' % maju_beda)
+    periksa(bool(((gx[seberang] > -2.1) & (gx[seberang] < -1.0)).all()), 'kontrol: piksel beda hanya di sekitar kedua kerb (x antara -2,1 dan -1,0): ujung kerb dalam dan luar')
+    beda_u = (potong_m[..., :3].astype(int) != kanvas_u[..., :3].astype(int)).any(axis=2) & (kanvas_u[..., 3] == 255)
+    periksa(int((beda_u & (gx < 0)).sum()) == 0, 'jalan masuk seberang dengan ubin ujung kerb (run 5C) = adegan renderer: %d piksel beda (C-F1 = 0)' % int((beda_u & (gx < 0)).sum()))
+    periksa(int((kanvas_u[..., 3] == 255).sum()) == int(tertutup.sum()), 'susunan dengan ujung kerb menutup piksel yang sama (tanpa celah)')
     # sisi dekat berbeda karena adegan menggambar jalan masuk di kedua sisi (ubin *_dekat_masuk tidak dipasang, D-1): kontrol bahwa pembanding mendeteksi perbedaan
     periksa(int((beda_px & (gx > 0)).sum()) > 0, 'kontrol: pembanding mendeteksi beda di sisi dekat (jalan masuk dekat tidak dipasang)')
 
@@ -300,6 +317,7 @@ def main():
             periksa(ku == 0, 'ubin_perumahan.py --salin berhasil (%s): %s' % (kunci, ou.strip()[-200:]))
             periksa(kl == 0, 'lampu_pohon.py --salin berhasil (%s): %s' % (kunci, ol.strip()[-200:]))
             periksa('beda sambungan: 0' in ou, 'ubin_perumahan.py: ubin menyambung, beda sambungan = 0')
+            periksa('beda sambungan masuk seberang: 0' in ou, 'ubin_perumahan.py: jalan masuk seberang dengan ujung kerb menyambung, beda = 0 (C-F1)')
             hasil[kunci] = tujuan
 
         a, b = hasil['a'], hasil['b']
@@ -379,20 +397,21 @@ def main():
         periksa(0 <= ax < lebar and 0 <= ay < tinggi and lebar < 2048 and tinggi < 2048, '%s: pijak di dalam gambar, ukuran < 2048' % nama)
     meta = json.loads(baca(os.path.join(SPRITES, 'tiles', 'perumahan', 'tile_perumahan.json')))
     periksa(meta['tile'] == [64, 32] and meta['ground_anchor'] == [32, 16], 'JSON ubin: 64x32, titik pijak (32, 16)')
-    periksa(meta['tiles'] == sorted('tile_perumahan_%s.png' % n for n in UBIN_5A + UBIN_BARU), 'JSON ubin hanya memuat ubin yang dipasang: %s' % meta['tiles'])
+    periksa(meta['tiles'] == sorted('tile_perumahan_%s.png' % n for n in UBIN_5A + UBIN_BARU + UBIN_5C), 'JSON ubin hanya memuat ubin yang dipasang: %s' % meta['tiles'])
+    periksa(meta['ubin_ujung_kerb'] == UBIN_UJUNG and meta['ujung_kerb_baris_relatif'] == 1, 'JSON ubin: ujung kerb = %s baris relatif %s' % (meta['ubin_ujung_kerb'], meta['ujung_kerb_baris_relatif']))
     periksa(meta['ubin_khusus'] == UBIN_BARU[:4], 'JSON ubin: ubin_khusus = %s' % meta['ubin_khusus'])
     periksa(meta['ubin_polos_luar'] == ['rumput_1', 'rumput_2', 'rumput_3'], 'JSON ubin: ubin_polos_luar = %s' % meta['ubin_polos_luar'])
     periksa(meta['kolom_x_ubin'] == {'rumput_seberang': -2.5, 'trotoar_seberang': -1.5, 'aspal_seberang': -0.5, 'aspal_dekat': 0.5,
                                       'trotoar_dekat': 1.5, 'rumput_dekat': 2.5}, 'JSON ubin: pusat kolom -2,5 .. 2,5 ubin')
-    for n in UBIN_5A + UBIN_BARU:
+    for n in UBIN_5A + UBIN_BARU + UBIN_5C:
         jalur = os.path.join(SPRITES, 'tiles', 'perumahan', 'tile_perumahan_%s.png' % n)
         periksa(os.path.isfile(jalur) and ukuran(jalur) == (64, 32), 'ubin %s ukuran 64x32' % n)
 
     # ---- impor Godot (AC-3)
     png_baru = [os.path.join(SPRITES, 'houses', 'perumahan', n + '.png') for n in TEMBOK]
     png_baru += [os.path.join(SPRITES, 'props', n + '.png') for n in list(TONG) + POHON + LAMPU]
-    png_baru += [os.path.join(SPRITES, 'tiles', 'perumahan', 'tile_perumahan_%s.png' % n) for n in UBIN_BARU]
-    periksa(len(png_baru) == 17, '17 PNG baru (dapat %d)' % len(png_baru))
+    png_baru += [os.path.join(SPRITES, 'tiles', 'perumahan', 'tile_perumahan_%s.png' % n) for n in UBIN_BARU + UBIN_5C]
+    periksa(len(png_baru) == 37, '37 PNG baru (17 run 5B + 20 run 5C; dapat %d)' % len(png_baru))
     for jalur in png_baru:
         nama = os.path.relpath(jalur, SPRITES)
         imp = jalur + '.import'

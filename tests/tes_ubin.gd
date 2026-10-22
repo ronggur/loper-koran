@@ -33,6 +33,17 @@ const UBIN_5B: Array[String] = [
 	"tile_perumahan_rumput_2.png", "tile_perumahan_rumput_3.png", "tile_perumahan_trotoar_seberang_masuk.png", "tile_perumahan_rumput_seberang_masuk.png",
 	"tile_perumahan_trotoar_seberang_simbol.png", "tile_perumahan_trotoar_dekat_simbol.png",
 ]
+## Ubin tambahan run fase5c-animasi-simpang (C-F1 dan simpang T, D-2): dua ujung kerb jalan masuk seberang dan 18 ubin simpang sisi dekat (sisi seberang tidak dipasang). Ditulis literal;
+## letak dan pilihannya diuji `tes_ubin_5b.gd` (ujung) dan `tes_simpang.gd` (simpang).
+const UBIN_5C: Array[String] = [
+	"tile_perumahan_trotoar_seberang_masuk_ujung.png", "tile_perumahan_rumput_seberang_masuk_ujung.png", "tile_perumahan_simpang_dekat_trotoar_dekat_depan_2.png",
+	"tile_perumahan_simpang_dekat_rumput_dekat_depan_2.png", "tile_perumahan_simpang_dekat_lengan_depan_2.png", "tile_perumahan_simpang_dekat_aspal_dekat_depan_1.png",
+	"tile_perumahan_simpang_dekat_trotoar_dekat_depan_1.png", "tile_perumahan_simpang_dekat_rumput_dekat_depan_1.png", "tile_perumahan_simpang_dekat_lengan_depan_1.png",
+	"tile_perumahan_simpang_dekat_aspal_dekat_mulut_1.png", "tile_perumahan_simpang_dekat_trotoar_dekat_mulut_1.png", "tile_perumahan_simpang_dekat_rumput_dekat_mulut_1.png",
+	"tile_perumahan_simpang_dekat_lengan_mulut_1.png", "tile_perumahan_simpang_dekat_aspal_dekat_mulut_2.png", "tile_perumahan_simpang_dekat_trotoar_dekat_mulut_2.png",
+	"tile_perumahan_simpang_dekat_rumput_dekat_mulut_2.png", "tile_perumahan_simpang_dekat_lengan_mulut_2.png", "tile_perumahan_simpang_dekat_trotoar_dekat_belakang_1.png",
+	"tile_perumahan_simpang_dekat_rumput_dekat_belakang_1.png", "tile_perumahan_simpang_dekat_lengan_belakang_1.png",
+]
 ## Jumlah ubin tanah per lebar viewport (tinggi 360) dari `JalanDaur.sel_tanah` SEBELUM run ini (dihitung dari kode lama, ditulis literal)
 ## beserta checksum letaknya: sum(int((x + 10) * 2) * 1009 + int(y + 100)).
 const SEL_SEBELUM: Array = [[640, 434, 7697851], [667, 450, 8215875], [780, 496, 9313896], [800, 511, 9844926]]
@@ -251,7 +262,7 @@ func _hitung_tekstur_benar(tanah: TanahDaur) -> Array:
 		per_nama[jalur.get_file()] = int(per_nama.get(jalur.get_file(), 0)) + 1
 		if jalur == FOLDER_UBIN + harapan:
 			benar += 1
-		elif UBIN_5B.has(jalur.get_file()):
+		elif UBIN_5B.has(jalur.get_file()) or UBIN_5C.has(jalur.get_file()):
 			# Run fase5b-tembok-dekor bagian C: ubin khusus (masuk, simbol, rumput_2 dan _3) menggantikan tekstur kolom di sel tertentu pada TanahDaur mode khusus (scene rute);
 			# letak dan pilihannya diuji di tes_ubin_5b.gd (oracle per sel). Di sini cukup bahwa tekstur itu ada di daftar ubin 5B yang dipasang.
 			benar += 1
@@ -357,7 +368,7 @@ func _test_scene_rute() -> void:
 		for nama_lama: String in [UBIN_SEBERANG_RUMPUT, UBIN_SEBERANG_TROTOAR, UBIN_SEBERANG_ASPAL, UBIN_DEKAT_ASPAL, UBIN_DEKAT_TROTOAR, UBIN_DEKAT_RUMPUT, UBIN_RUMPUT_LUAR]:
 			if not nama_hitung.has(nama_lama):
 				lama_semua = false
-		check(int(hitung[0]) == sprite.size() and lama_semua and nama_hitung.size() >= 7 and nama_hitung.size() <= 7 + UBIN_5B.size(), "scene rute: tiap ubin memakai tekstur kolomnya atau ubin khusus 5B, ketujuh tekstur lama terpakai: %d dari %d (%s) %s" % [hitung[0], sprite.size(), hitung[2], nama_hitung.keys()])
+		check(int(hitung[0]) == sprite.size() and lama_semua and nama_hitung.size() >= 7 and nama_hitung.size() <= 7 + UBIN_5B.size() + UBIN_5C.size(), "scene rute: tiap ubin memakai tekstur kolomnya atau ubin khusus 5B/5C, ketujuh tekstur lama terpakai: %d dari %d (%s) %s" % [hitung[0], sprite.size(), hitung[2], nama_hitung.keys()])
 	_tree.root.remove_child(akar)
 	akar.free()
 
@@ -496,7 +507,7 @@ func _test_tanpa_referensi_tak_dipasang() -> void:
 		regex.compile("tile_perumahan_(aspal_[0-9]|rumput_[02-9]|[a-z_]*_masuk|[a-z_]*_simbol)")
 		for hasil: RegExMatch in regex.search_all(teks):
 			# Run fase5b-tembok-dekor bagian C (AC-18): hanya enam nama yang kini dipasang yang sah dirujuk (`UBIN_5B`); aspal_N, rumput_[04-9], *_dekat_masuk, dan nama lain tetap terlarang.
-			if UBIN_5B.has(hasil.get_string() + ".png"):
+			if UBIN_5B.has(hasil.get_string() + ".png") or UBIN_5C.has(hasil.get_string() + ".png"):
 				continue
 			temuan.append("%s memuat %s" % [jalur, hasil.get_string()])
 	check(berkas.size() > 100, "pemindai membaca banyak berkas sumber (%d)" % berkas.size())
@@ -509,6 +520,7 @@ func _test_tanpa_referensi_tak_dipasang() -> void:
 	isi.sort()
 	var harapan_isi: Array[String] = ["tile_perumahan.json", UBIN_DEKAT_ASPAL, UBIN_DEKAT_RUMPUT, UBIN_DEKAT_TROTOAR, UBIN_RUMPUT_LUAR, UBIN_SEBERANG_ASPAL, UBIN_SEBERANG_RUMPUT, UBIN_SEBERANG_TROTOAR]
 	harapan_isi.append_array(UBIN_5B)
+	harapan_isi.append_array(UBIN_5C)
 	harapan_isi.sort()
 	check(isi == harapan_isi, "folder tiles/perumahan hanya berisi ubin yang dipasang: %s" % [isi])
 

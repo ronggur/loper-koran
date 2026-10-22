@@ -22,6 +22,12 @@ sudah dibuang dari ekspor (K-1 run 5A): satu-satunya polisi tidur adalah `tile_p
 Run fase5b-tembok-dekor (D-1 dan D-4) menambah ke `--salin`: `rumput_2` dan `rumput_3` (variasi rumput polos, `PASANG_TAMBAHAN`) dan empat ubin
 khusus (`PASANG_KHUSUS`): `trotoar_seberang_masuk` dan `rumput_seberang_masuk` (jalan masuk garasi, hanya sisi seberang), `trotoar_seberang_simbol`
 dan `trotoar_dekat_simbol` (simbol sepeda). `aspal_1..3` (polos tanpa garis tepi kerb, memutus garis) dan `*_dekat_masuk` TIDAK disalin.
+
+Run fase5c-animasi-simpang (C-F1 run 5B, D-2 dan D-3 run 5C) menambah ke `--salin`: dua ubin ujung kerb jalan masuk sisi seberang (`PASANG_UJUNG`:
+`trotoar_seberang_masuk_ujung`, `rumput_seberang_masuk_ujung`, baris maju + 1 dari baris jalan masuk; hanya sel yang pada adegan jalan masuk berbeda dari ubin
+lurus, dihitung, bukan didaftar tangan) dan ubin simpang T hiasan untuk sisi yang dipakai data segmen (`SIMPANG_SISI_DIPASANG`; hanya ubin yang berbeda dari jalan lurus,
+pola `ekspor_simpang`). JSON terpangkas membawa `ubin_ujung_kerb`, `ujung_kerb_baris_relatif`, dan `simpang` (y mulut renderer, lebar mulut, pita baris, sel per sisi
+dengan baris relatif maju) yang dijaga sama dengan konstanta `scripts/config.gd` oleh tes. `*_dekat_masuk`, `aspal_N`, dan ubin simpang sisi yang tidak dipakai TIDAK disalin.
 """
 import json
 import math
@@ -270,6 +276,16 @@ def ekspor_ubin():
     ubin['trotoar_dekat_masuk'] = potong(img_masuk, 1.5 * U, 0.0)
     ubin['rumput_seberang_masuk'] = potong(img_masuk, -2.5 * U, 0.0)
     ubin['rumput_dekat_masuk'] = potong(img_masuk, 2.5 * U, 0.0)
+    # ujung kerb (C-F1, run 5C): sel tetangga jalan masuk sisi seberang yang pada adegan jalan masuk berbeda dari ubin lurus (kerb yang putus di baris
+    # jalan masuk tidak lagi menjorok ke sel tetangga). Dihitung, lalu dicocokkan dengan UJUNG_SEL supaya perubahan adegan tidak lolos diam-diam.
+    beda_ujung = []
+    for cy in (-1, 1):
+        for nm in ('rumput_seberang', 'trotoar_seberang', 'aspal_seberang'):
+            t = potong(img_masuk, KOLOM[nm] * U, cy * U)
+            if not (t == potong(img, KOLOM[nm] * U, cy * U)).all():
+                beda_ujung.append((nm, -cy))
+                ubin[nm + '_masuk_ujung'] = t
+    assert sorted(beda_ujung) == sorted(UJUNG_SEL), 'sel ujung kerb berubah: %s' % beda_ujung
     # ubin polos (diulang ke segala arah): kolom jauh dari kerb, tanpa marka
     for v in range(3):
         im, _ = render_adegan(lambda s, v=v: s.add(ground_prim(lambda x, y, v=v: _polos(x, y, v), MATS)))
@@ -282,7 +298,7 @@ def ekspor_ubin():
                     '(seberang, dekat), trotoar 1 ubin per sisi (kerb dalam, lajur sepeda, kerb luar), rumput di luar. '
                     'Ubin sepanjang jalan berulang tiap 1 ubin. *_simbol: simbol sepeda dan panah; *_masuk: jalan masuk '
                     'garasi beton (kerb putus, lajur tetap menerus dengan tepi putus-putus; rumput_*_masuk menyambung ke halaman). aspal_N dan rumput_N: polos, bisa diulang ke segala arah (N=2 tambalan, '
-                    'N=3 retak untuk aspal; N=3 bunga kecil untuk rumput).',
+                    'N=3 retak untuk aspal; N=3 bunga kecil untuk rumput). *_masuk_ujung: ujung kerb di baris maju + 1 dari jalan masuk sisi seberang.',
             'kolom_x_ubin': KOLOM, 'tiles': sorted('tile_perumahan_%s.png' % n for n in ubin)}
     with open(OUT_DIR / 'tile_perumahan.json', 'w') as f:
         json.dump(meta, f, indent=1, ensure_ascii=False); f.write('\n')
@@ -294,9 +310,15 @@ SALIN_KE = Path(os.environ.get('ENV_ART_SALIN_KE', ROOT / 'assets' / 'sprites' /
 PASANG = list(KOLOM)               # enam kolom jalan, urut dari sisi seberang ke sisi dekat (D-1)
 PASANG_TAMBAHAN = ['rumput_1', 'rumput_2', 'rumput_3']   # ubin polos untuk kolom rumput di luar kolom pertama (D-2 run 5A; rumput_2 dan 3: D-1 run 5B)
 PASANG_KHUSUS = ['trotoar_seberang_masuk', 'rumput_seberang_masuk', 'trotoar_seberang_simbol', 'trotoar_dekat_simbol']   # D-1 dan D-7 run 5B
+# Ujung kerb jalan masuk sisi seberang (C-F1, run 5C): (kolom, baris maju relatif ke baris jalan masuk). Sel ini satu-satunya yang berbeda dari ubin lurus di baris
+# tetangga sisi seberang (diperiksa `ekspor_ubin`): kerb dalam dan luar yang berhenti di tepi jalan masuk.
+UJUNG_SEL = [('trotoar_seberang', 1), ('rumput_seberang', 1)]
+PASANG_UJUNG = [nm + '_masuk_ujung' for nm, _ in UJUNG_SEL]
+# Sisi simpang T yang dipasang (D-2 run 5C: hanya ubin yang dipakai data segmen). Sisi seberang belum dipakai data (lihat LOG run 5C, D-4), jadi ubinnya hanya di build/.
+SIMPANG_SISI_DIPASANG = ['dekat']
 
 
-def meta_terpasang():
+def meta_terpasang(meta_simpang):
     """Isi `tile_perumahan.json` di assets/: hanya ubin yang dipasang. Titik pijak (32, 16), kolom x dalam ubin dari garis tengah."""
     return {'tile': [64, 32], 'ground_anchor': [32, 16], 'unit_dunia_per_ubin': 32,
             'note': 'Usulan, tools/env_art/ubin_perumahan.py --salin (run fase5a-pasang-aset-gelombang1 dan fase5b-tembok-dekor). Hanya ubin yang dipasang. '
@@ -304,20 +326,44 @@ def meta_terpasang():
                     'lajur sepeda, kerb luar), rumput di luar. Ubin sepanjang jalan berulang tiap 1 ubin. rumput_1, rumput_2, rumput_3: rumput polos '
                     'untuk kolom rumput di luar kolom pertama (rumput_seberang membawa tepi kerb luar yang tidak boleh berulang; 2 dan 3 variasi, 3 '
                     'dengan bunga kecil). ubin_khusus: pengganti satu sel kolomnya (*_masuk: jalan masuk garasi beton di bawah mobil parkir, hanya '
-                    'sisi seberang; *_simbol: simbol sepeda dan panah di lajur sepeda trotoar).',
+                    'sisi seberang; *_simbol: simbol sepeda dan panah di lajur sepeda trotoar). ubin_ujung_kerb (run fase5c): ujung kerb di baris '
+                    'maju + ujung_kerb_baris_relatif dari jalan masuk sisi seberang. simpang (run fase5c, usulan, hiasan): ubin simpang T per sisi terpasang; baris_relatif = '
+                    'maju dari baris mulut_2 (pos data segmen), kolom lengan berulang ke luar sejauh kolom yang tampil.',
             'kolom_x_ubin': {nm: KOLOM[nm] for nm in PASANG},
             'ubin_polos_luar': list(PASANG_TAMBAHAN),
             'ubin_khusus': list(PASANG_KHUSUS),
-            'tiles': sorted('tile_perumahan_%s.png' % nm for nm in PASANG + PASANG_TAMBAHAN + PASANG_KHUSUS)}
+            'ubin_ujung_kerb': list(PASANG_UJUNG),
+            'ujung_kerb_baris_relatif': UJUNG_SEL[0][1],
+            'simpang': meta_simpang_terpasang(meta_simpang),
+            'tiles': sorted('tile_perumahan_%s.png' % nm for nm in PASANG + PASANG_TAMBAHAN + PASANG_KHUSUS + PASANG_UJUNG + nama_simpang_terpasang(meta_simpang))}
 
 
-def salin(ubin):
+def nama_simpang_terpasang(meta_simpang):
+    """Nama ubin simpang (tanpa awalan dan .png) untuk sisi di SIMPANG_SISI_DIPASANG, urut seperti ekspor."""
+    return [d['file'][len('tile_perumahan_'):-len('.png')] for sisi in SIMPANG_SISI_DIPASANG for d in meta_simpang['sisi'][sisi]]
+
+
+def meta_simpang_terpasang(meta_simpang):
+    """Bagian `simpang` JSON terpangkas (D-3 run 5C): y mulut renderer (unit dunia), lebar mulut (ubin), pita baris relatif maju (semua baris yang ubinnya diganti di
+    kolom trotoar, rumput, atau lengan, kedua sisi yang dirender), dan sel per sisi terpasang dengan baris relatif maju (= -baris_y_ubin renderer; baris 0 = `mulut_2`)."""
+    baris = sorted({-d['baris_y_ubin'] for l in meta_simpang['sisi'].values() for d in l if abs(d['kolom_x_ubin']) >= 1.5})
+    kolom = {0.5: 'aspal', 1.5: 'trotoar', 2.5: 'rumput', 3.5: 'lengan'}
+    return {'y_mulut_unit': list(SIMPANG_Y), 'lebar_mulut_ubin': (SIMPANG_Y[1] - SIMPANG_Y[0]) / U,
+            'pita_baris_relatif': [baris[0], baris[-1]],
+            'sisi': {sisi: [{'nama': d['file'][len('tile_perumahan_'):-len('.png')], 'kolom': kolom[abs(d['kolom_x_ubin'])],
+                             'kolom_x_ubin': d['kolom_x_ubin'], 'baris_relatif': -d['baris_y_ubin'], 'berulang_ke_luar': d['berulang_ke_luar']}
+                            for d in meta_simpang['sisi'][sisi]] for sisi in SIMPANG_SISI_DIPASANG}}
+
+
+def salin(ubin, hasil_simpang, meta_simpang):
     """Salin HANYA ubin yang dipasang (PNG) dan JSON terpangkas ke SALIN_KE."""
     SALIN_KE.mkdir(parents=True, exist_ok=True)
-    for nm in PASANG + PASANG_TAMBAHAN + PASANG_KHUSUS:
+    for nm in PASANG + PASANG_TAMBAHAN + PASANG_KHUSUS + PASANG_UJUNG:
         Image.fromarray(ubin[nm], 'RGBA').save(SALIN_KE / ('tile_perumahan_%s.png' % nm))
+    for nm in nama_simpang_terpasang(meta_simpang):
+        Image.fromarray(hasil_simpang[nm], 'RGBA').save(SALIN_KE / ('tile_perumahan_%s.png' % nm))
     with open(SALIN_KE / 'tile_perumahan.json', 'w') as f:
-        json.dump(meta_terpasang(), f, indent=1, ensure_ascii=False); f.write('\n')
+        json.dump(meta_terpasang(meta_simpang), f, indent=1, ensure_ascii=False); f.write('\n')
 
 
 def _polos(x, y, v):
@@ -364,6 +410,24 @@ def cek_sambungan(ubin):
         for m in (-1, 0, 1):
             a = potong(img, cxu * U, m * U)
             beda += int(np.abs(a.astype(int) - ubin[nm].astype(int)).sum())
+    return beda
+
+
+def cek_masuk(ubin):
+    """Susun ulang jalan masuk sisi seberang dari ubin terpasang (baris jalan masuk: *_masuk, baris maju + 1: *_masuk_ujung, lain: lurus, kolom luar rumput_1)
+    dan bandingkan dengan adegan jalan masuk: harus identik (C-F1 run 5C; sebelumnya 22 piksel ujung kerb)."""
+    img, _ = render_adegan(lambda s: build_jalan(s, masuk=(-16.0, 16.0)))
+    ujung = {nm: r for nm, r in UJUNG_SEL}
+    beda = 0
+    for cy in range(-3, 4):
+        for nm, cxu in list(KOLOM.items())[:3] + [('rumput_1', -3.5), ('rumput_1', -4.5)]:
+            if cy == 0 and nm in ('trotoar_seberang', 'rumput_seberang'):
+                t = ubin[nm + '_masuk']
+            elif nm in ujung and -cy == ujung[nm]:
+                t = ubin[nm + '_masuk_ujung']
+            else:
+                t = ubin[nm]
+            beda += int(np.abs(t.astype(int) - potong(img, cxu * U, cy * U).astype(int)).sum())
     return beda
 
 
@@ -430,9 +494,11 @@ def cek_simpang(meta):
 if __name__ == '__main__':
     u = ekspor_ubin()
     print('beda sambungan:', cek_sambungan(u))
-    _, meta_simpang = ekspor_simpang()
+    print('beda sambungan masuk seberang:', cek_masuk(u))
+    hasil_simpang, meta_simpang = ekspor_simpang()
     print('beda sambungan simpang:', cek_simpang(meta_simpang))
     print('selesai ->', OUT_DIR)
     if '--salin' in sys.argv[1:]:
-        salin(u)
-        print('disalin ke', SALIN_KE, '(hanya', len(PASANG) + len(PASANG_TAMBAHAN) + len(PASANG_KHUSUS), 'ubin dan JSON terpangkas)')
+        salin(u, hasil_simpang, meta_simpang)
+        n = len(PASANG) + len(PASANG_TAMBAHAN) + len(PASANG_KHUSUS) + len(PASANG_UJUNG) + len(nama_simpang_terpasang(meta_simpang))
+        print('disalin ke', SALIN_KE, '(hanya', n, 'ubin dan JSON terpangkas)')

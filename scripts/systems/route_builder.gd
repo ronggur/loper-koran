@@ -17,6 +17,8 @@ extends RefCounted
 ## 5. Pemberi tip (O-3 run fase3b-rintangan-skor): `jumlah_pemberi_tip` pelanggan (`RUTE_PEMBERI_TIP_PERSEN` persen dibulatkan ke bawah)
 ##    dipilih dengan RNG rute yang sama SESUDAH pelanggan (Fisher-Yates sebagian), jadi seed sama = pemberi tip sama dan susunan rute,
 ##    pelanggan, serta koran awal tidak berubah dari run 3A. Tidak ditandai visual (GDD 8: pelanggan "punya kebiasaan").
+## 6. Simpang T hiasan (run fase5c-animasi-simpang, P-1, AC-16): diteruskan dari data segmen tanpa RNG (maju mutlak, sisi, lebar mulut, id stabil) dan dibaca lewat
+##    SATU fungsi, `simpang_di`, yang kelak menjadi titik pakai lalu lintas berbelok (M3). Sekarang tidak ada lalu lintas, rintangan, atau sasaran di simpang.
 
 
 ## Satu rumah di rute, dengan posisi maju dari awal rute.
@@ -75,6 +77,23 @@ class DekorItem extends RefCounted:
 	var varian: String = ""
 
 
+## Satu simpang T hiasan di rute (run fase5c-animasi-simpang, P-1): hanya tampilan sekarang; data untuk lalu lintas berbelok kelak (M3) tanpa mengubah format.
+class SimpangItem extends RefCounted:
+	## `<id_segmen>:simpang:<sisi>@<pos>`: stabil dan unik (pita dua simpang tidak bertumpuk).
+	var id: String = ""
+	var id_segmen: String = ""
+	## Ubin dari awal segmen (dari data): baris `mulut_2`.
+	var pos: int = 0
+	## Ubin dari awal rute ke pusat baris `mulut_2` (bilangan bulat).
+	var maju_ubin: float = 0.0
+	## Sisi jalan samping.
+	var sisi: LoperAnim.Sisi = LoperAnim.Sisi.TIDAK_ADA
+	## Lebar mulut sepanjang jalan utama, ubin (`RUTE_SIMPANG_LEBAR_MULUT_UBIN`).
+	var lebar_mulut_ubin: float = 0.0
+	## Tepi mulut paling dekat ke awal rute, ubin dari awal rute (`maju_ubin + RUTE_SIMPANG_MULUT_AWAL_UBIN`); mulut sampai `+ lebar_mulut_ubin`.
+	var mulut_awal_ubin: float = 0.0
+
+
 ## Satu rute jadi.
 class Rute extends RefCounted:
 	var benih: int = 0
@@ -90,6 +109,8 @@ class Rute extends RefCounted:
 	var titik_misi: Array[TitikMisiRute] = []
 	## Dekor pinggir jalan kedua sisi, urut maju (lalu id); tidak memengaruhi rumah, pelanggan, rintangan, atau penilaian.
 	var dekor: Array[DekorItem] = []
+	## Simpang T hiasan, urut maju (baca lewat `RouteBuilder.simpang_di`).
+	var simpang: Array[SimpangItem] = []
 	## Rumah pelanggan, urut maju.
 	var pelanggan: Array[RumahRute] = []
 	## Koran di awal rute (pelanggan + cadangan).
@@ -129,6 +150,14 @@ static func bangun(benih: int, pustaka: Array[SegmenRute]) -> Hasil:
 		return hasil
 	hasil.rute = rute
 	return hasil
+
+
+## Simpang T rute `rute` (urut maju): SATU-SATUNYA fungsi baca simpang (scene, tanah, dan kelak lalu lintas berbelok M3). Rute null = kosong.
+static func simpang_di(rute: Rute) -> Array[SimpangItem]:
+	if rute == null:
+		var kosong: Array[SimpangItem] = []
+		return kosong
+	return rute.simpang
 
 
 ## Koran awal untuk `jumlah_pelanggan`: pelanggan + `RUTE_KORAN_CADANGAN_PERSEN` persen dibulatkan ke atas (BALANCING 4): 25 = 30.
@@ -229,6 +258,41 @@ static func periksa_rute(rute: Rute) -> Array[String]:
 			if butir.maju_ubin - sebelumnya < float(Config.RUTE_DEKOR_JARAK_MIN_UBIN):
 				galat.append("dua dekor sesisi %.1f ubin berdekatan (di %.1f dan %.1f)" % [butir.maju_ubin - sebelumnya, sebelumnya, butir.maju_ubin])
 			sebelumnya = butir.maju_ubin
+	galat.append_array(_periksa_simpang(rute))
+	return galat
+
+
+## Simpang di rute utuh (run fase5c): pita tidak bertumpuk dan tidak memotong rumah, zona, dekor, rintangan, atau jalan masuk segmen MANA PUN (termasuk segmen tetangga
+## di sambungan), dengan aturan yang sama dengan validasi segmen (`SegmenRute.galat_tempat_simpang`) pada maju mutlak.
+static func _periksa_simpang(rute: Rute) -> Array[String]:
+	var galat: Array[String] = []
+	if rute.simpang.is_empty():
+		return galat
+	var rumah: Array[SegmenRute.Rumah] = []
+	for r: RumahRute in rute.rumah:
+		var salin: SegmenRute.Rumah = SegmenRute.Rumah.new()
+		salin.pos = roundi(r.maju_ubin)
+		salin.sisi = r.sisi
+		rumah.append(salin)
+	var objek: Array[SegmenRute.Objek] = []
+	for o: ObjekRute in rute.objek:
+		var salin_o: SegmenRute.Objek = SegmenRute.Objek.new()
+		salin_o.jenis = o.jenis
+		salin_o.pos = roundi(o.maju_ubin)
+		salin_o.jalur = o.jalur
+		objek.append(salin_o)
+	var dekor: Array[SegmenRute.Dekor] = []
+	for d: DekorItem in rute.dekor:
+		var salin_d: SegmenRute.Dekor = SegmenRute.Dekor.new()
+		salin_d.jenis = d.jenis
+		salin_d.pos = roundi(d.maju_ubin)
+		salin_d.sisi = d.sisi
+		dekor.append(salin_d)
+	for i: int in range(rute.simpang.size()):
+		var item: SimpangItem = rute.simpang[i]
+		galat.append_array(SegmenRute.galat_tempat_simpang(item.maju_ubin, item.sisi, rumah, objek, dekor, "simpang '%s'" % item.id))
+		if i > 0 and SegmenRute.pita_bertumpuk(SegmenRute.pita_maju(item.maju_ubin), SegmenRute.pita_maju(rute.simpang[i - 1].maju_ubin)):
+			galat.append("simpang '%s' bertumpuk dengan '%s'" % [item.id, rute.simpang[i - 1].id])
 	return galat
 
 
@@ -331,11 +395,22 @@ static func _isi_segmen(rute: Rute, urutan: Array[SegmenRute]) -> void:
 			butir.jenis = d.jenis
 			butir.varian = d.varian
 			rute.dekor.append(butir)
+		for sp: SegmenRute.Simpang in segmen.simpang:
+			var item: SimpangItem = SimpangItem.new()
+			item.id_segmen = segmen.id
+			item.pos = sp.pos
+			item.sisi = sp.sisi
+			item.id = "%s:simpang:%s@%d" % [segmen.id, SegmenRute.NAMA_SISI[0] if sp.sisi == LoperAnim.Sisi.SEBERANG else SegmenRute.NAMA_SISI[1], sp.pos]
+			item.maju_ubin = awal + float(sp.pos)
+			item.lebar_mulut_ubin = Config.RUTE_SIMPANG_LEBAR_MULUT_UBIN
+			item.mulut_awal_ubin = item.maju_ubin + Config.RUTE_SIMPANG_MULUT_AWAL_UBIN
+			rute.simpang.append(item)
 		awal += float(segmen.panjang)
 	rute.panjang_ubin = awal
 	rute.rumah.sort_custom(_lebih_awal)
 	rute.objek.sort_custom(func(a: ObjekRute, b: ObjekRute) -> bool: return a.maju_ubin < b.maju_ubin)
 	rute.titik_misi.sort_custom(func(a: TitikMisiRute, b: TitikMisiRute) -> bool: return a.maju_ubin < b.maju_ubin if a.maju_ubin != b.maju_ubin else a.nama < b.nama)
+	rute.simpang.sort_custom(func(a: SimpangItem, b: SimpangItem) -> bool: return a.maju_ubin < b.maju_ubin)
 	rute.dekor.sort_custom(func(a: DekorItem, b: DekorItem) -> bool: return a.maju_ubin < b.maju_ubin if a.maju_ubin != b.maju_ubin else a.id < b.id)
 
 
