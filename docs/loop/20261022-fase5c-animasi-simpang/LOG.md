@@ -8,6 +8,7 @@ Scope: Run 5C, Fase 5, verifikasi animasi pemain PR #51 (jatuh/terjerembab lima 
 |---|---|---|---|---|---|
 | 1 (AB) | Bagian A (AC-1..AC-8) dan B (AC-9..AC-11), bagian A/B dari AC-23/24/27; lihat "Iterasi 1, bagian AB (Dev)" | hijau: import 0 ERROR/WARNING, 18420 lolos 0 gagal, pemeriksa lolos, `--quit-after 2` bersih, 12 `uji_*.py` exit 0 | - | A-F1 Minor FIXED, A-F2 Major FIXED, A-F3 Nit, A-F4 Nit, B-F1 Nit, I2-F3 diukur ulang (DEFERRED) | - |
 | 1 (CD) | Bagian C (AC-12..AC-14) dan D (AC-15..AC-21), bagian C/D dari AC-23/24/27; simpang seberang sesudah putusan P-6; lihat "Iterasi 1, bagian CD (Dev)" dan "Lanjutan P-6" | hijau: import 0 ERROR/WARNING, 18835 lolos 0 gagal, pemeriksa lolos, `--quit-after 2` bersih, 13 `uji_*.py` exit 0 | - | C-F1 (5B) FIXED, D-F1 FIXED (P-6), D-F2 Nit, D-F3 Nit | - |
+| 1 (E) | Bagian E (AC-22..AC-27): paket ekspor diperiksa dan dimuat dari luar repo, `tes_export`/pemindai diperluas, dokumen AC-25, gerbang akhir iterasi 1, 7 mutan E; lihat "Iterasi 1, bagian E (Dev)" | hijau: import 0 ERROR/WARNING, 19052 lolos 0 gagal, pemeriksa lolos, `--quit-after 2` bersih, 13 `uji_*.py` exit 0, paket 155 cek lolos | - | tidak ada | - |
 
 ## Temuan
 Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MANUAL | BLOCKED
@@ -275,3 +276,61 @@ Total mutan bagian CD: 30 mati (C1-C5, D1-D20, S1-S5), 1 ekuivalen (D21).
 - `git diff main` kosong untuk sistem gerak/skor/zona/tenggat/tabrakan/rintangan/misi/kondisi/ekonomi/save/`jalan_daur`/`medan_koran`/`penutup_pemain`/autoload.
 - sha256 `user://save.json` asli sebelum dan sesudah semua tes, probe, mutan, dan perbandingan: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e`.
 - Commit lanjutan: 35db641 (content: simpang seberang P-6, tes, uji, probe, tangkapan), commit LOG ini. Tidak di-push.
+
+
+## Iterasi 1, bagian E (Dev)
+
+Dikerjakan: AC-22 sampai AC-27 bagian E (SPEC D-1). Kode gameplay tidak diubah; hanya tes, dokumen, dan skrip ukur. Tidak ada BLOCKED.
+
+### AC-22 Paket ekspor
+- **Tes diperluas** (`tests/tes_export.gd`, commit 5011058): `JALUR_WAJIB_IKUT_5C` (SpriteFrames 68 animasi, PNG/JSON/.import jatuh, bangkit, berhenti, `.import`/JSON sheet kucing, `tile_perumahan.json`, `pose_kucing.gd`, `segmen_rute.gd`, `pemuat_rute.gd`, `route_builder.gd`, `kucing_misi.gd`, `loper_sprite.gd`) ikut diperiksa `_pelanggaran_preset` (ada di repo, tidak cocok exclude_filter); `_test_aset_5c_ikut_paket`: 40 PNG 5C (3 sheet pemain, sheet kucing, 2 ujung kerb, 18 simpang dekat, 16 simpang seberang dari `TesUbin.UBIN_5C`) punya `.import` Lossless tanpa mipmap dan tidak dikecualikan, `loper_agen_frames.tres` 68 animasi termasuk `jatuh_/terjerembab_/bangkit_/berhenti_<arah>` lima arah, JSON kucing `columns` 9 = lebar tekstur 414 / sel 46, `JALUR_TIDAK_ADA_5C` (ujung kerb sisi dekat, empat ubin simpang yang sama dengan jalan lurus) tidak ada, folder ubin memuat tepat 36 ubin simpang/ujung terdaftar. Dua contoh buruk preset baru (loper/* dan `pose_kucing.gd` dikecualikan) ditolak.
+- **Pemindai rujukan** (`tests/tes_ubin.gd`): regex diperluas ke `simpang_*` dan `*_masuk_ujung` (alternatif ditulis lebih dulu supaya tidak terpotong `_masuk`), hanya nama `UBIN_5B`/`UBIN_5C` yang sah; dipindah ke `_rujukan_ubin_tak_dipasang` dengan tujuh contoh buruk sintetis (dua simpang tak dipasang, simpang `mulut_3`, dua `*_dekat_masuk_ujung`, `aspal_2`, `trotoar_dekat_masuk`) yang tertangkap dan 42 nama terpasang yang tidak tertangkap. Perubahan tes lama: hanya refactor pemindai ke fungsi pembantu (logika dan pengecualian lama sama); tidak ada angka lama diubah.
+- **Paket nyata:** `godot --headless --path . --export-pack "Android" build/kring-uji.pck` exit 0, 0 baris ERROR/WARNING, **1.769.916 byte (1,77 MB)**, 697 berkas. Dimuat dari folder di luar repo (scratchpad) dengan `godot --headless --main-pack <repo>/build/kring-uji.pck --script <scratchpad>/cek_paket_5c.gd` (salinan skrip: `dev_ukur/cek_paket_5c.gd`): **155 cek lolos, 0 gagal**, 0 ERROR/WARNING. Isi: tidak ada `res://tests/`, `docs/`, `tools/`, `build/`, spike, `cek_render`, `warna_bayangan`; SpriteFrames 68 animasi, 20 animasi 5C dengan ukuran frame benar (jatuh/terjerembab/bangkit 140x88, berhenti 46x58; `bangkit_normal` 6 frame, `jatuh_kiri` 4); tiga PNG pemain dan sheet kucing 9 kolom dimuat; 36 ubin ujung/simpang (18 dekat, 16 seberang, 2 ujung) beserta remap `.import` dimuat; `aspal_1..3`, `*_dekat_masuk`, dua ubin simpang tak dipasang, polisi tidur, zebra tidak ada; `PemuatRute.muat_folder()` dari paket: 9 segmen tanpa galat, simpang `per_buka_01@3:dekat`, `per_buka_02@18:seberang`, `per_tengah_05@3:dekat`, `per_tutup_01@2:dekat`; rute hari 1 sah, 25 pelanggan, simpang `per_buka_02:simpang:seberang@18`, `per_tengah_05:simpang:dekat@3`; `rute.tscn` dari paket: 18 + 16 tekstur simpang dan dua tekstur ujung kerb terisi.
+
+### AC-23 Regresi
+- `run_tests.gd`: **19052 lolos, 0 gagal** (18835 sesudah CD + 217 cek baru bagian E dari `tes_export`/`tes_ubin`); pemeriksa lolos, 0 peringatan. Tidak ada angka tes lama yang diubah di bagian E.
+- `git diff main` kosong untuk `throw_solver`, `skor_rute`, `zona_sasaran`, `tenggat_rute`, `bike_motion`, `tabrakan`, `rintangan_rute`, `mission_manager`, `rencana_misi`, `bike_condition`, `economy`, `data_save`, `jalan_daur`, `medan_koran`, `penutup_pemain`, `scripts/autoload/`.
+- sha256 `user://save.json` asli sebelum bagian E, sesudah semua tes, ekspor, pemuatan paket, mutan, dan gerbang: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e`.
+
+### AC-24 Rule (seluruh run, dicek ulang di bagian E)
+- `git diff --name-only main` tanpa `.godot/`, `build/`, `builds/`, APK/AAB, keystore, `CHANGELOG.md`, `.release-please-manifest.json`; tidak ada tag dibuat.
+- PNG yang berubah terhadap `main` selain berkas baru hanya `tests/data/ubin_potongan_5b.png` (dibuat ulang `uji_aset_pasang_5b.py --perbarui-referensi`, bagian CD); tidak ada PNG renderer diedit tangan.
+- Gaya kode (static typing, `##` bahasa Indonesia, angka ajaib, hex di luar palet) dijaga cek gaya runner, lolos; sisi `seberang`/`dekat` di data dan kode; bagian E tidak menambah kode game.
+
+### AC-25 Dokumen (commit 70ddc51, 05652a9, f0f4523)
+- `docs/DATA_SCHEMA.md` 3: baris tabel `simpang`, contoh dari `per_tengah_05.json` dan `per_buka_02.json`, makna `pos`, mulut dan pita dari `config.gd` (D-3), `SimpangItem`/`simpang_di`, aturan penempatan, akibat geometri, isi set sekarang, butir validasi.
+- `docs/ROUTE_DESIGN.md`: bagian baru 4c (simpang hiasan, pita, aturan, P-6 rumah `per_buka_02@18` dihapus, isi, frekuensi 100% bersimpang / 100% dekat / 56% seberang dari 100 rute hari, D-F2, D-F3); bagian 8 persimpangan dicoret: hiasan dulu (pemilik 2026-10-22), lalu lintas berbelok M3; aturan 5 batas sprite jatuh diperbarui ke 140x88 dan I2-F3.
+- `docs/ART_DIRECTION.md`: 3.4 (berhenti: A-F3; jatuh/bangkit: verifikasi run 5C, A-F1/A-F2, I2-F3), 6.1 (baris tabrakan), 6.3 (paragraf terpasang run 5C: ujung kerb dan simpang; catatan 5A/5B "ditunda ke 5C" ditandai ditutup), 6.7 (pose kucing ditangkap, B-F1), 11 (butir Run 5C: P-1..P-6, D-2, keraguan HP), Changelog 2026-10-22 baru (menggantikan "belum dipakai/belum dipasang" di entri PR #51). Semua berstatus usulan, dinilai di HP.
+- `tools/env_art/README.md` (`--salin` ujung kerb dan simpang, `uji_aset_simpang.py`), `tools/loper_art/README.md` (verifikasi offset pijak run 5C).
+- `AGENTS.md`: paragraf perintah cepat (run 5C), perintah `probe_animasi_pemain_jendela.gd`, `probe_simpang_jendela.gd`, `uji_aset_simpang.py`, catatan `ubin_perumahan.py --salin`; peta repo baris Run 5C (`pose_kucing`, simpang di `segmen_rute`/`route_builder`/`ubin_khusus`/`tanah_daur`, entities, data, aset, tes baru).
+- `.cursor/rules/00-project-core.mdc`: `bangun_frames.py` 50 -> 68 animasi, perintah `uji_aset_simpang.py` dan dua probe 5C.
+- `docs/README.md`: status Run 5C, hasil uji HP 4A/4B/6A1/5A/5B belum ada per 2026-10-22, Fase 2/3/4/5/M2 belum dicentang; daftar tes dan alat.
+- `docs/DEV_PHASES.md`: hanya catatan Run 5C di paragraf pembagian pemasangan; **tidak ada centang** (butir aset, Fase 2/3/4/5, M2).
+- `docs/LOOP-DEV-QA.md`: **hanya tabel 6g** (baris 5B = di-merge PR #49; baris 5C = status run ini). Bagian 6i tidak disentuh.
+- `docs/SETUP_ANDROID.md` **8.14** baru: 10 butir NEEDS-MANUAL SPEC + temuan A-F3 (butir 4), A-F4 (butir 2), B-F1 (butir 5), D-F2 dan D-F3 (butir 7), I2-F3 (butir 1), lembar hasil. Tidak mengklaim hasil uji HP apa pun.
+
+### AC-26 Gerbang akhir iterasi 1 (HEAD f0f4523 + LOG)
+- `godot --headless --import`: 0 baris ERROR/WARNING.
+- `godot --headless --script res://tests/run_tests.gd`: exit 0, **19052 lolos, 0 gagal**; `python3 tools/cek_keluaran_tes.py build/tests.log`: lolos (0 peringatan).
+- `godot --headless --path . --quit-after 2`: 0 baris ERROR/WARNING.
+- 13 `tools/tests_cek/uji_*.py` exit 0: aset_gelombang1 352, aset_kucing 13, aset_lampu_pohon 183, aset_pasang_5b 661, aset_pasang_gelombang1 625, aset_simpang 214, bangun_frames 62, pemeriksa (lulus), sintesis_kondisi 55, lempar 111, misi 47, rute 90, sepeda 32. CI `.github/workflows/tes.yml` menjalankan ke-13-nya (termasuk `uji_aset_simpang.py`).
+- Paket diperiksa (AC-22). Probe AC-8/AC-11/AC-21 dan `probe_sisi_dekat_jendela.gd` tidak diulang: tidak ada kode game atau aset berubah sejak gerbang CD (bagian E hanya tes dan dokumen).
+- Satu proses Godot sekaligus; proses lama pid 26665 (bukan milik Dev) dibiarkan. HP/adb tidak disentuh. Tidak di-push.
+
+### AC-27 Mutan bagian E
+Skrip `dev_ukur/mutan_e.py` (satu perubahan, `run_tests.gd` penuh, dikembalikan `git checkout`/hapus berkas; `git status` sesudah tiap mutan hanya skrip ukur yang belum dikomit):
+
+| Kode | Berkas | Perubahan | Hasil (lolos/gagal) | Tes yang gagal (contoh) |
+|---|---|---|---|---|
+| E1 | export_presets.cfg | `assets/sprites/loper/*` dikecualikan | 19020/32 MATI | "loper_agen_frames.tres harus ikut paket tetapi cocok dengan exclude_filter" |
+| E2 | export_presets.cfg | `tile_perumahan_simpang_seberang_lengan_mulut_1.png` dikecualikan | 19032/20 MATI | "...simpang_seberang_lengan_mulut_1.png tidak dikecualikan filter preset" (`_test_aset_5c_ikut_paket`) |
+| E3 | assets/sprites/tiles/perumahan/ | ubin simpang tak dipasang `simpang_dekat_aspal_dekat_depan_2` ikut ada | 19050/5 MATI | "ubin tak dipasang tidak ada di repo", "folder ... tepat 36 ubin simpang/ujung, dapat 37" |
+| E4 | scripts/config.gd | komentar merujuk `tile_perumahan_simpang_dekat_aspal_dekat_depan_2` | 19051/1 MATI | "tidak ada rujukan ke aset yang belum dipasang" (hanya pemindai yang diperluas yang menangkapnya) |
+| E5 | scenes/rute/rute.tscn | komentar merujuk `tile_perumahan_trotoar_dekat_masuk_ujung` | 19050/2 MATI | "rute.tscn memuat tile_perumahan_trotoar_dekat_masuk_ujung" |
+| E6 | loper_agen_bangkit.png.import | `compress/mode=0` jadi `1` | 19049/3 MATI | "loper_agen_bangkit.png: impor Lossless" |
+| E7 | mission_kucing_sheet.json | `columns` 9 jadi 8 | 19049/3 MATI | "sheet kucing 9 kolom: JSON columns 8, lebar tekstur 414 = 9 x sel 46" |
+
+7 mutan E mati, 0 hidup. **Total mutan run (Dev iterasi 1): 59 mati** (A1-A14, B1-B8, C1-C5, D1-D20, S1-S5, E1-E7), 2 ekuivalen ditarik dengan bukti (A15, D21). Cakupan daftar AC-27 SPEC terpenuhi (bangkit/berhenti/lempar/pijak: A; kucing: B; ujung kerb: C; simpang, validasi, RNG, salin, `.import`: D, S; paket dan pemindai: E).
+
+### Commit bagian E
+5011058 (test: paket ekspor dan pemindai AC-22), 70ddc51 (docs: DATA_SCHEMA dan ROUTE_DESIGN), 05652a9 (docs: ART_DIRECTION dan README alat), f0f4523 (docs: status, SETUP_ANDROID 8.14, AGENTS, rule), commit LOG ini (+ `dev_ukur/mutan_e.py`, `dev_ukur/cek_paket_5c.gd`). Tidak di-push.
