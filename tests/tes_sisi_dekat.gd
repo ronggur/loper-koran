@@ -26,6 +26,11 @@ const PENUTUP_DEKAT: Dictionary = {
 const TERAS_DEKAT: Array[float] = [-1.8125, -1.375, 0.875, 0.9375]
 ## Checksum 1000 lemparan acak berseed ke rute seed 20261016 dihitung di commit 41cc11b (sebelum run 5B; tes tembok lama): [lemparan, jumlah zona, tertutup, checksum].
 const GOLDEN_LEMPAR: Array[int] = [1000, 11137, 339, 992255826]
+## Run 5D bagian B (AC-10): zona dekat jadi cermin seberang (kotak surat 1,0 lebar, halaman sampai badan rumah, teras dari geometri teras baru) dan kotak tertutup rumah dekat = sprite nyata, jadi hanya lemparan di sisi
+## dekat (titik lateral >= 0) yang berubah: 45 dari 1000 lemparan beda hasil dan 92 beda tertutup, 0 di sisi seberang (banding pustaka HEAD bagian A vs bagian B per lemparan, LOG). Dihitung ulang oleh skrip dari kode: sisi seberang
+## (titik lateral < 0) [lemparan, jumlah zona, tertutup, checksum] sama persis dengan nilai sebelum run 5B, sisi dekat nilai baru.
+const GOLDEN_SEBERANG: Array[int] = [494, 5508, 143, 809075394]
+const GOLDEN_DEKAT: Array[int] = [506, 5629, 104, 648143202]
 ## Batas regresi AC-6 (angka terukur 2026-10-22, `UkurSisiDekat`, kasus terburuk antarjenis dan antartetangga): zona kotak surat cermin, zona dekat lama, halaman, teras.
 const BATAS_ZONA_KOTAK: float = 0.0258
 const BATAS_ZONA_KOTAK_LAMA: float = 0.0
@@ -112,7 +117,7 @@ func _test_geometri() -> void:
 
 
 func _test_lemparan_identik() -> void:
-	_judul.call("1000 lemparan acak berseed ke rute nyata: penilaian dan tertutup identik dengan sebelum tembok (geometri logika tidak berubah, AC-4)")
+	_judul.call("1000 lemparan acak berseed ke rute nyata: sisi seberang identik dengan sebelum run 5B, sisi dekat nilai baru (AC-4, AC-10)")
 	var rute: RouteBuilder.Rute = RouteBuilder.bangun(SEED_DEV, PemuatRute.muat_folder(FOLDER_RUTE).segmen).rute
 	var medan: MedanKoran = MedanKoran.dari_rute(rute)
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
@@ -120,6 +125,7 @@ func _test_lemparan_identik() -> void:
 	var jumlah_zona: int = 0
 	var tertutup: int = 0
 	var checksum: int = 0
+	var sisi: Array = [[0, 0, 0, 0], [0, 0, 0, 0]]
 	for i: int in range(1000):
 		var r: RouteBuilder.RumahRute = rute.rumah[rng.randi_range(0, rute.rumah.size() - 1)]
 		var titik: Vector2 = Vector2(rng.randf_range(-4.5, 4.5), -(r.maju_ubin + rng.randf_range(-1.0, 3.5)))
@@ -132,7 +138,14 @@ func _test_lemparan_identik() -> void:
 		if tutup:
 			tertutup += 1
 		checksum = (checksum * 31 + kode + (1 if tutup else 0)) % 2147483647
-	check(jumlah_zona == GOLDEN_LEMPAR[1] and tertutup == GOLDEN_LEMPAR[2] and checksum == GOLDEN_LEMPAR[3], "zona %d, tertutup %d, checksum %d = nilai sebelum run 5B %s" % [jumlah_zona, tertutup, checksum, GOLDEN_LEMPAR])
+		var bagian: Array = sisi[0 if titik.x < 0.0 else 1]
+		bagian[0] += 1
+		bagian[1] += zona.size()
+		bagian[2] += 1 if tutup else 0
+		bagian[3] = (int(bagian[3]) * 31 + kode + (1 if tutup else 0)) % 2147483647
+	check(sisi[0] == (GOLDEN_SEBERANG as Array), "sisi seberang (lateral < 0): [lemparan, zona, tertutup, checksum] %s = nilai sebelum run 5B %s (tidak berubah)" % [sisi[0], GOLDEN_SEBERANG])
+	check(sisi[1] == (GOLDEN_DEKAT as Array), "sisi dekat (lateral >= 0): %s = nilai baru run 5D bagian B %s (zona cermin seberang, kotak tertutup sprite nyata)" % [sisi[1], GOLDEN_DEKAT])
+	check(jumlah_zona == GOLDEN_LEMPAR[1], "jumlah zona kandidat total %d = nilai sebelum run 5B (%d; tiga zona per rumah dekat tetap)" % [jumlah_zona, GOLDEN_LEMPAR[1]])
 
 
 func _test_ukur_sasaran() -> void:

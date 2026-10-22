@@ -6,7 +6,7 @@ extends Node
 ## - Saat siap: memuat data misi dan headline (`PemuatMisi`, `PemuatHeadline`), membaca save dari `SaveManager` SEBELUM layar koran dibuat
 ##   (hari, flag, jeda, pengaturan), lalu menampilkan koran hari itu.
 ## - Berangkat: `RuteMain` dibuat tepat sekali per hari (peristiwa ganda ditolak `MesinHari`), seed rute = `SeedHari.rute(hari)` disuntik SEBELUM
-##   rute masuk pohon (tanpa `main_lagi`), mode hari (tombol layar hasil = "Hari berikutnya"), lalu kidal dan mode bantu dari save diterapkan.
+##   rute masuk pohon (tanpa `main_lagi`), nomor hari diteruskan lewat `RuteMain.atur_hari` (run fase5d-sisi-dekat bagian B: pelanggan sisi dekat sejak hari 3, tip hari 3), mode hari (tombol layar hasil = "Hari berikutnya"), lalu kidal dan mode bantu dari save diterapkan.
 ##   Misi yang diambil di koran (S-7) diaktifkan di rute (`RuteMain.atur_misi`, run fase4b-misi-kucing AC-11); dilewati atau Berangkat tanpa memilih
 ##   = rute tanpa kucing dan tanpa HUD misi.
 ## - "Hari berikutnya": angka `HasilRute.Angka` yang sama dengan layar hasil + misi diambil + jeda + sakelar jeda dicatat dan DISIMPAN tepat satu
@@ -142,6 +142,7 @@ func _saat_berangkat() -> void:
 		_misi_diambil = _halaman.misi.misi_id
 	var pengaturan: Dictionary = simpanan.pengaturan()
 	_rute = ADEGAN_RUTE.instantiate() as RuteMain
+	_rute.atur_hari(_mesin.hari)
 	_rute.atur_benih_awal(SeedHari.rute(_mesin.hari))
 	_rute.atur_sepeda(simpanan.state, _mesin.hari, _toko.upgrade)
 	_rute.atur_misi(_data_misi(_misi_diambil))

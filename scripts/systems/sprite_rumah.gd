@@ -3,9 +3,8 @@ extends RefCounted
 ## Sprite rumah rute: nama berkas, titik pijak, dan letak gambar dari data rute, logika murni (AC-12 run fase3a-rute, usulan).
 ##
 ## Aset dari PR #27 (`tools/env_art/fase3.py`, `assets/sprites/houses/perumahan/`), dipakai apa adanya: `house_perumahan_<jenis>_<pelanggan|bukan>`.
-## Aturan varian (K-3, D-4 run 3A): rumah `seberang` yang dipilih jadi pelanggan memakai `_pelanggan`; rumah `seberang` yang tidak
-## dipilih (juga yang `pelanggan_boleh`) memakai `_bukan`; rumah `dekat` selalu `_bukan` (cara menampilkan sisi dekat belum diputuskan,
-## ROADMAP 5). Titik pijak (`ground_anchor` di JSON aset) = tengah tapak rumah; ditulis sebagai tabel di `Config` (`RUTE_RUMAH_SPRITE`, `RUTE_RUMAH_PIJAK_PX`) supaya entitas tidak
+## Aturan varian (K-3, D-4 run 3A; run fase5d-sisi-dekat bagian B): rumah yang dipilih jadi pelanggan (kedua sisi) memakai `_pelanggan`; yang tidak
+## dipilih (juga yang `pelanggan_boleh`) memakai `_bukan`. Titik pijak (`ground_anchor` di JSON aset) = tengah tapak rumah; ditulis sebagai tabel di `Config` (`RUTE_RUMAH_SPRITE`, `RUTE_RUMAH_PIJAK_PX`) supaya entitas tidak
 ## membaca JSON saat jalan, dan tes membandingkan tabel dengan JSON dan ukuran PNG-nya. Rumah digambar dengan titik pijak itu di tengah
 ## tapak yang SAMA dengan aturan penutup (`PenutupPemain.tapak_rumah`), bukan dari `maju_ubin` langsung.
 
@@ -20,10 +19,9 @@ static func nama(jenis: String, pelanggan: bool) -> String:
 	return "%s%s_%s" % [AWALAN, jenis, "pelanggan" if pelanggan else "bukan"]
 
 
-## Nama sprite untuk rumah rute: pelanggan hanya di sisi `seberang` dan hanya bila dipilih (rumah `dekat` selalu `_bukan`).
+## Nama sprite untuk rumah rute: varian `_pelanggan` bila rumah dipilih jadi pelanggan, selain itu `_bukan`. Sejak run fase5d-sisi-dekat bagian B rumah `dekat` juga bisa pelanggan (hari >= `RUTE_DEKAT_HARI_MULAI`).
 static func nama_rumah(rumah: RouteBuilder.RumahRute) -> String:
-	var pelanggan: bool = rumah.pelanggan and rumah.sisi == LoperAnim.Sisi.SEBERANG
-	return nama(rumah.jenis, pelanggan)
+	return nama(rumah.jenis, rumah.pelanggan)
 
 
 ## Jalur PNG sprite bernama `nama_sprite`.
@@ -54,10 +52,11 @@ static func pusat_gambar_dunia(rumah: RouteBuilder.RumahRute) -> Vector2:
 	return pusat
 
 
-## Titik pijak gambar kotak surat sasaran rumah pelanggan di dunia (ubin; y dunia = -maju): sama dengan kotak surat jalan uji
-## (`JALAN_UJI_KOTAK_SURAT_*`, di tengah zona kotak surat), digeser ke awal kavling rumah.
+## Titik pijak gambar kotak surat rumah di dunia (ubin; y dunia = -maju): seberang sama dengan kotak surat jalan uji (`JALAN_UJI_KOTAK_SURAT_*`, di tengah zona kotak surat); sisi `dekat` cermin seberang di lateral
+## positif (`RUTE_DEKAT_KOTAK_SURAT_X_UBIN`, run fase5d-sisi-dekat bagian B, D-3); maju sama (`JALAN_UJI_KOTAK_SURAT_MAJU_UBIN`), digeser ke awal kavling rumah.
 static func titik_kotak_surat_dunia(rumah: RouteBuilder.RumahRute) -> Vector2:
-	return Vector2(Config.JALAN_UJI_KOTAK_SURAT_X_UBIN, -(rumah.maju_ubin + Config.JALAN_UJI_KOTAK_SURAT_MAJU_UBIN))
+	var lateral: float = Config.RUTE_DEKAT_KOTAK_SURAT_X_UBIN if rumah.sisi == LoperAnim.Sisi.DEKAT else Config.JALAN_UJI_KOTAK_SURAT_X_UBIN
+	return Vector2(lateral, -(rumah.maju_ubin + Config.JALAN_UJI_KOTAK_SURAT_MAJU_UBIN))
 
 
 ## Titik tengah zona teras rumah di dunia (ubin; y dunia = -maju): tempat koran terlipat rumah yang sudah terantar (run fase5a bagian B, D-3d). Tanpa zona teras (sisi `TIDAK_ADA`) = pusat tapak.

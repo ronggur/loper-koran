@@ -277,8 +277,8 @@ func _test_sambungan_scene() -> void:
 	check(scene_teks.find("Color(") == -1 and scene_teks.find("modulate") == -1 and scene_teks.find("Shader") == -1, "scene kotak surat tanpa warna literal, modulate, atau shader (warna ada di PNG)")
 
 
-## Kotak surat per jenis rumah di jendela sekarang: [pelanggan seberang, bukan pelanggan seberang, dekat] dan daftar pelanggaran.
-## Pelanggan seberang = oranye saja, bukan pelanggan seberang = abu-abu saja di titik yang sama (titik kotak surat di zona), dekat = tidak ada.
+## Kotak surat per jenis rumah di jendela sekarang: [oranye (pelanggan), abu-abu (bukan pelanggan), rumah dekat] dan daftar pelanggaran.
+## Pelanggan = oranye saja, bukan pelanggan = abu-abu saja di titik yang sama (titik kotak surat di zona), di KEDUA sisi (run 5D bagian B, D-3: dekat cermin seberang di lateral +2,125).
 func _periksa_kotak_per_rumah(daur: RumahDaurRute, rute: RouteBuilder.Rute, objek: Node, salah: Array[String]) -> Vector3i:
 	var hitung: Vector3i = Vector3i.ZERO
 	for indeks: int in daur.indeks_tampil():
@@ -287,9 +287,6 @@ func _periksa_kotak_per_rumah(daur: RumahDaurRute, rute: RouteBuilder.Rute, obje
 		var abu: Sprite2D = daur.kotak_surat_bukan(indeks) as Sprite2D
 		if rumah.sisi == LoperAnim.Sisi.DEKAT:
 			hitung.z += 1
-			if oranye != null or abu != null:
-				salah.append("%s: rumah dekat punya kotak surat" % rumah.id)
-			continue
 		var dipakai: Sprite2D = oranye if rumah.pelanggan else abu
 		var lain: Sprite2D = abu if rumah.pelanggan else oranye
 		var berkas: String = BERKAS_PNG if rumah.pelanggan else BERKAS_PNG_BUKAN
@@ -309,17 +306,19 @@ func _periksa_kotak_per_rumah(daur: RumahDaurRute, rute: RouteBuilder.Rute, obje
 		# dengan kotak surat pelanggan dan jalan uji), di dalam zona kotak surat lateral -2,75..-1,75, maju pos + 1,25..pos + 2,5.
 		var lateral: float = (dipakai.position.x / SKALA + dipakai.position.y / SETENGAH) / 2.0
 		var maju: float = (dipakai.position.x / SKALA - dipakai.position.y / SETENGAH) / 2.0
-		if not is_equal_approx(lateral, -2.125) or not is_equal_approx(maju, rumah.maju_ubin + 1.75):
-			salah.append("%s: pijak (%.3f, %.3f), bukan titik kotak surat (-2,125; %.3f)" % [rumah.id, lateral, maju, rumah.maju_ubin + 1.75])
+		var lateral_harap: float = 2.125 if rumah.sisi == LoperAnim.Sisi.DEKAT else -2.125
+		if not is_equal_approx(lateral, lateral_harap) or not is_equal_approx(maju, rumah.maju_ubin + 1.75):
+			salah.append("%s: pijak (%.3f, %.3f), bukan titik kotak surat (%.3f; %.3f)" % [rumah.id, lateral, maju, lateral_harap, rumah.maju_ubin + 1.75])
 	return hitung
 
 
 func _test_kotak_bukan_di_scene(akar: RuteMain, rute: RouteBuilder.Rute) -> void:
-	_judul.call("Scene rute: kotak surat abu-abu di rumah bukan pelanggan seberang, oranye di pelanggan, dekat tanpa kotak surat, jendela daur")
+	_judul.call("Scene rute: kotak surat abu-abu di rumah bukan pelanggan, oranye di pelanggan, kedua sisi (dekat cermin seberang), jendela daur")
 	var daur: RumahDaurRute = akar.daur()
 	var objek: Node = akar.find_child("Objek", true, false)
 	var total: Vector3i = Vector3i.ZERO
 	var maks_node: int = 0
+	var maks_rumah: int = 0
 	var salah: Array[String] = []
 	var jendela_salah: Array[String] = []
 	for jarak: float in [0.0, 40.0, 90.0, 140.0, 200.0, 240.0, 90.0, 0.0]:
@@ -329,10 +328,12 @@ func _test_kotak_bukan_di_scene(akar: RuteMain, rute: RouteBuilder.Rute) -> void
 		if daur.jumlah_kotak_surat() != h.x or daur.jumlah_kotak_surat_bukan() != h.y:
 			jendela_salah.append("jarak %.0f: oranye %d/%d, abu %d/%d" % [jarak, daur.jumlah_kotak_surat(), h.x, daur.jumlah_kotak_surat_bukan(), h.y])
 		maks_node = maxi(maks_node, daur.jumlah_node_kotak())
-	check(total.x > 0 and total.y > 0 and total.z > 0, "kontrol: jendela yang diperiksa memuat pelanggan seberang (%d), bukan pelanggan seberang (%d), dan rumah dekat (%d)" % [total.x, total.y, total.z])
-	check(salah.is_empty(), "pelanggan seberang = oranye saja, bukan pelanggan seberang = abu-abu saja di titik kotak surat yang sama, dekat = tanpa kotak surat: %s" % [salah.slice(0, 3)])
+		maks_rumah = maxi(maks_rumah, daur.jumlah_rumah())
+	check(total.x > 0 and total.y > 0 and total.z > 0, "kontrol: jendela yang diperiksa memuat kotak surat oranye (%d), abu-abu (%d), dan rumah dekat (%d)" % [total.x, total.y, total.z])
+	check(salah.is_empty(), "pelanggan = oranye saja, bukan pelanggan = abu-abu saja di titik kotak surat yang sama (seberang lateral -2,125, dekat +2,125; rute hari 1: semua rumah dekat abu-abu): %s" % [salah.slice(0, 3)])
 	check(jendela_salah.is_empty(), "jendela daur: jumlah kotak surat oranye dan abu-abu = rumah di jendela: %s" % [jendela_salah.slice(0, 3)])
-	check(maks_node <= 20, "node kotak surat dipakai ulang dari kolam (paling banyak %d dibuat)" % maks_node)
+	# Sejak run 5D bagian B semua rumah (kedua sisi) punya kotak surat, jadi simpul kotak sebanyak rumah di jendela (dulu hanya seberang, batas 20); kolam oranye dan abu-abu terpisah, selisih beberapa simpul wajar.
+	check(maks_node <= maks_rumah + 4, "node kotak surat dipakai ulang dari kolam (paling banyak %d dibuat untuk paling banyak %d rumah di jendela)" % [maks_node, maks_rumah])
 	# Penilaian dan mode bantu tidak berubah: rumah bukan pelanggan tetap BUKAN_PELANGGAN, mode bantu hanya membidik pelanggan.
 	var bukan: RouteBuilder.RumahRute = null
 	for r: RouteBuilder.RumahRute in rute.rumah:

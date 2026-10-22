@@ -10,12 +10,15 @@ extends RefCounted
 ## - `panjang` bilangan bulat 24 sampai 40 ubin; `pos` bilangan bulat dan tidak di tepi (`RUTE_TEPI_UBIN` dari tiap ujung);
 ## - segmen `pembuka` dan `penutup` bertingkat `tenang`;
 ## - rumah: jenis dikenal untuk sisinya, satu rumah per `pos` (id rumah `<id_segmen>@<pos>` unik tanpa sisi), dua rumah sesisi
-##   berjarak paling sedikit satu petak (`RUTE_PETAK_UBIN`), pelanggan hanya di sisi `seberang` untuk distrik satu sisi (GDD 9.1);
+##   berjarak paling sedikit satu petak (`RUTE_PETAK_UBIN`); tag `sisi_pelanggan` konsisten dengan isi (sejak run fase5d-sisi-dekat bagian B rumah `dekat` boleh `pelanggan_boleh`, pelanggan dekat dipilih
+##   `RouteBuilder` hanya sejak hari `RUTE_DEKAT_HARI_MULAI`): `seberang` bila tidak ada rumah dekat yang boleh, `dekat` bila tidak ada rumah seberang yang boleh, `dua_sisi` bila keduanya ada;
 ## - rintangan (aturan adil ROUTE_DESIGN 4): bukan di jalur `tengah` (jalur utama bersih), paling dekat `RUTE_RINTANGAN_TEPI_UBIN` dari
 ##   tepi, tanda paling sedikit `RUTE_TANDA_MIN_UBIN`, dan dalam jendela `RUTE_RINTANGAN_JENDELA_UBIN` ubin maksimal satu;
 ## - rintangan tidak memotong tapak rumah mana pun di segmen (`rintangan_memotong_rumah`, ROUTE_DESIGN 4 aturan 7): mobil garasi di
 ##   celah samping rumah sepanjang seluruh lintasannya (parkir sampai berhenti), anjing penjaga di posisi diamnya; tepi yang hanya
 ##   bersentuhan boleh (`Tabrakan.bertumpuk`). Rumah segmen tetangga tidak terjangkau karena rintangan paling dekat 3 ubin ke tepi;
+## - rintangan tidak menimpa zona kotak surat atau teras rumah DEKAT yang `pelanggan_boleh` (`rintangan_menimpa_zona_dekat`, run fase5d-sisi-dekat bagian B, AC-7): sasaran pelanggan dekat harus terbaca, seperti
+##   dekor dan pita simpang (yang diperiksa untuk SEMUA rumah). Rumah dekat yang bukan kandidat pelanggan boleh berbagi halaman dengan anjing (kotak surat abu-abu hiasan; dicatat di LOG bagian B);
 ## - titik misi berdiri di rumah (pos dan sisi sama) dan di luar jendela rintangan (ROUTE_DESIGN 6);
 ## - dekor (bidang `dekor` OPSIONAL, run fase5b-tembok-dekor bagian B2, AC-9): tiap butir `{jenis, pos, sisi, varian}` semuanya wajib dan tanpa field lain, jenis dan varian
 ##   dari `DekorRute`, `pos` bilangan bulat `RUTE_DEKOR_TEPI_UBIN` sampai `panjang - RUTE_DEKOR_TEPI_UBIN`, tapak kaki di luar lajur sepeda, tidak menimpa zona teras atau
@@ -46,8 +49,6 @@ const JENIS_RUMAH_SEBERANG: Array[String] = ["limasan", "pelana", "sayap"]
 const JENIS_RUMAH_DEKAT: Array[String] = ["dekat_limasan", "dekat_pelana_lintang", "dekat_pelana_sejajar"]
 ## Jenis objek yang dikenal (rintangan prototype 3, ROUTE_DESIGN 4): `obs_anjing_sheet` dan `obs_mobil_garasi_sheet`.
 const JENIS_OBJEK: Array[String] = ["anjing_penjaga", "mobil_garasi"]
-## Distrik yang pelanggannya hanya di sisi `seberang` (GDD 9.1, ROADMAP 5: rumah sisi dekat belum diputuskan).
-const DISTRIK_SATU_SISI: Array[String] = ["perumahan"]
 
 const _FIELD_SEGMEN: Array[String] = ["id", "distrik", "panjang", "tag", "rumah", "objek", "titik_misi", "dekor", "simpang"]
 const _FIELD_TAG: Array[String] = ["tingkat", "sisi_pelanggan", "posisi"]
@@ -159,6 +160,7 @@ static func parse(data: Dictionary) -> Hasil:
 	_parse_titik_misi(data, segmen, label, ada_panjang, g)
 	_parse_dekor(data, segmen, label, ada_panjang, g)
 	_parse_simpang(data, segmen, label, ada_panjang, g)
+	_periksa_sisi_pelanggan(segmen, label, g)
 	if g.is_empty():
 		hasil.segmen = segmen
 	return hasil
@@ -197,6 +199,22 @@ static func rintangan_memotong_rumah(jenis: String, pos_objek: float, sisi_objek
 	if sisi_rumah == LoperAnim.Sisi.TIDAK_ADA:
 		return false
 	return Tabrakan.bertumpuk(bentuk_rintangan_diam(jenis, pos_objek, sisi_objek), PenutupPemain.tapak_rumah(sisi_rumah, pos_rumah))
+
+
+## True bila bentuk rintangan diam `jenis` di `pos_objek` jalur `sisi_objek` beririsan dengan zona kotak surat atau teras rumah `sisi_rumah` di `pos_rumah` (`ZonaSasaran.zona_rumah`; pos keduanya
+## relatif ke awal segmen yang sama; run fase5d-sisi-dekat bagian B, AC-7). Hanya rumah `dekat` (selain itu false). Tepi yang hanya bersentuhan = false. Jalan masuk garasi (`bentuk_jalan_masuk`) hanya ada di
+## lateral negatif (seberang) jadi tidak pernah menjangkau zona dekat (lateral positif); itu dijaga tes, bukan cabang di sini.
+static func rintangan_menimpa_zona_dekat(jenis: String, pos_objek: float, sisi_objek: LoperAnim.Sisi, pos_rumah: float, sisi_rumah: LoperAnim.Sisi) -> bool:
+	if sisi_rumah != LoperAnim.Sisi.DEKAT:
+		return false
+	var bentuk: Rect2 = bentuk_rintangan_diam(jenis, pos_objek, sisi_objek)
+	var rr: RouteBuilder.RumahRute = RouteBuilder.RumahRute.new()
+	rr.sisi = sisi_rumah
+	rr.maju_ubin = pos_rumah
+	for zona: ZonaSasaran.Zona in ZonaSasaran.zona_rumah(rr):
+		if (zona.jenis == ZonaSasaran.Jenis.KOTAK_SURAT or zona.jenis == ZonaSasaran.Jenis.TERAS) and Tabrakan.bertumpuk(bentuk, zona.persegi):
+			return true
+	return false
 
 
 ## Pita larangan simpang di `pos` (maju dari titik acuan yang sama dengan `pos`): Vector2(maju awal, maju akhir) = baris `pos + RUTE_SIMPANG_PITA_BARIS[0]` sampai
@@ -293,8 +311,6 @@ static func _parse_tag(data: Dictionary, segmen: SegmenRute, label: String, g: A
 	segmen.sisi_pelanggan = _teks_wajib(tag, "sisi_pelanggan", label + " tag", g)
 	if not segmen.sisi_pelanggan.is_empty() and not NAMA_SISI_PELANGGAN.has(segmen.sisi_pelanggan):
 		g.append("%s: sisi_pelanggan '%s' bukan %s" % [label, segmen.sisi_pelanggan, "/".join(NAMA_SISI_PELANGGAN)])
-	elif DISTRIK_SATU_SISI.has(segmen.distrik) and not segmen.sisi_pelanggan.is_empty() and segmen.sisi_pelanggan != NAMA_SISI[0]:
-		g.append("%s: distrik %s hanya punya pelanggan di sisi seberang, sisi_pelanggan '%s'" % [label, segmen.distrik, segmen.sisi_pelanggan])
 	if idx_posisi >= 0 and idx_posisi != Posisi.TENGAH and idx_tingkat >= 0 and idx_tingkat != Tingkat.TENANG:
 		g.append("%s: segmen %s harus bertingkat tenang (ROUTE_DESIGN 5), dapat '%s'" % [label, nama_posisi, nama_tingkat])
 
@@ -328,8 +344,6 @@ static func _parse_rumah(data: Dictionary, segmen: SegmenRute, label: String, ad
 			g.append("%s: 'pelanggan_boleh' harus true atau false" % nama)
 		else:
 			rumah.pelanggan_boleh = d["pelanggan_boleh"]
-		if rumah.pelanggan_boleh and rumah.sisi == LoperAnim.Sisi.DEKAT and DISTRIK_SATU_SISI.has(segmen.distrik):
-			g.append("%s: rumah sisi dekat tidak boleh jadi pelanggan di distrik %s (GDD 9.1)" % [nama, segmen.distrik])
 		if ok_pos:
 			for lain: Rumah in segmen.rumah:
 				if lain.pos == rumah.pos:
@@ -377,6 +391,10 @@ static func _parse_objek(data: Dictionary, segmen: SegmenRute, label: String, ad
 			for rumah: Rumah in segmen.rumah:
 				if rintangan_memotong_rumah(objek.jenis, float(objek.pos), sisi_objek, float(rumah.pos), rumah.sisi):
 					g.append("%s: %s di pos %d (jalur %s) memotong tapak rumah %s di pos %d (mobil di celah samping rumah, ROUTE_DESIGN 4)" % [nama, objek.jenis, objek.pos, objek.jalur, NAMA_SISI[0] if rumah.sisi == LoperAnim.Sisi.SEBERANG else NAMA_SISI[1], rumah.pos])
+		if ok_pos and JENIS_OBJEK.has(objek.jenis) and sisi_objek != LoperAnim.Sisi.TIDAK_ADA:
+			for rumah_dekat: Rumah in segmen.rumah:
+				if rumah_dekat.pelanggan_boleh and rintangan_menimpa_zona_dekat(objek.jenis, float(objek.pos), sisi_objek, float(rumah_dekat.pos), rumah_dekat.sisi):
+					g.append("%s: %s di pos %d (jalur %s) menimpa zona kotak surat atau teras rumah dekat pelanggan di pos %d (sasaran dekat harus terbaca, AC-7)" % [nama, objek.jenis, objek.pos, objek.jalur, rumah_dekat.pos])
 		if ok_pos:
 			for lain: Objek in segmen.objek:
 				if memaksa_pindah(lain.jenis) and memaksa_pindah(objek.jenis) and absi(lain.pos - objek.pos) < Config.RUTE_RINTANGAN_JENDELA_UBIN:
@@ -513,6 +531,32 @@ static func _periksa_tempat_dekor(dekor: Dekor, segmen: SegmenRute, nama: String
 	for lain: Dekor in segmen.dekor:
 		if lain.sisi == dekor.sisi and absi(lain.pos - dekor.pos) < Config.RUTE_DEKOR_JARAK_MIN_UBIN:
 			g.append("%s: pos %d hanya %d ubin dari dekor sesisi di pos %d (paling dekat %d ubin)" % [nama, dekor.pos, absi(lain.pos - dekor.pos), lain.pos, Config.RUTE_DEKOR_JARAK_MIN_UBIN])
+
+
+## Tag `sisi_pelanggan` harus sama dengan isi rumah (run fase5d-sisi-dekat bagian B, AC-7): `dua_sisi` bila ada rumah seberang DAN dekat yang `pelanggan_boleh`, `seberang` bila tidak ada rumah dekat yang boleh,
+## `dekat` bila tidak ada rumah seberang yang boleh.
+static func _periksa_sisi_pelanggan(segmen: SegmenRute, label: String, g: Array[String]) -> void:
+	if not NAMA_SISI_PELANGGAN.has(segmen.sisi_pelanggan):
+		return
+	var ada_seberang: bool = false
+	var ada_dekat: bool = false
+	for rumah: Rumah in segmen.rumah:
+		if not rumah.pelanggan_boleh:
+			continue
+		if rumah.sisi == LoperAnim.Sisi.SEBERANG:
+			ada_seberang = true
+		elif rumah.sisi == LoperAnim.Sisi.DEKAT:
+			ada_dekat = true
+	var salah: bool = false
+	match segmen.sisi_pelanggan:
+		"dua_sisi":
+			salah = not (ada_seberang and ada_dekat)
+		"seberang":
+			salah = ada_dekat
+		"dekat":
+			salah = ada_seberang
+	if salah:
+		g.append("%s: sisi_pelanggan '%s' tidak sesuai isi (ada rumah seberang yang boleh: %s, ada rumah dekat yang boleh: %s)" % [label, segmen.sisi_pelanggan, ada_seberang, ada_dekat])
 
 
 # --- Pembantu ---

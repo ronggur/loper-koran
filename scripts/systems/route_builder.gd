@@ -9,7 +9,9 @@ extends RefCounted
 ## 1. Segmen: satu `pembuka`, `RUTE_SEGMEN_PER_RUTE - RUTE_SEGMEN_PENGAPIT` segmen `tengah` berbeda, satu `penutup`, tanpa ulang. Urutan tengah dikocok
 ##    (Fisher-Yates dari RNG rute) sampai tidak ada dua segmen `padat` berurutan (ROUTE_DESIGN 5).
 ## 2. Rumah, rintangan, dan titik misi diberi posisi maju dari awal rute (awal segmen + `pos`). Id rumah `<id_segmen>@<pos>` (K-3).
-## 3. Pelanggan: tepat `RUTE_PELANGGAN` rumah `seberang` yang `pelanggan_boleh`. Target posisi disebar rata dari kandidat pertama ke
+## 3. Pelanggan: tepat `RUTE_PELANGGAN` rumah yang `pelanggan_boleh`. Hari < `RUTE_DEKAT_HARI_MULAI` (termasuk `bangun` tanpa hari = hari 1): semuanya rumah `seberang`, RNG dikonsumsi persis seperti
+##    sebelum run fase5d-sisi-dekat (rute hari 1 dan 2 identik). Hari >= `RUTE_DEKAT_HARI_MULAI` (P-4, D-2): kuota dekat 8 atau 9 (`RUTE_DEKAT_KUOTA_MIN`/`MAKS`, dipilih dengan RNG rute yang sama) dari rumah `dekat`
+##    yang boleh, sisanya seberang; keduanya disebar dengan pencocokan yang sama, lalu celah GABUNGAN (dua sisi, urut maju) dibatasi `RUTE_PELANGGAN_JARAK_MAKS_UBIN`. Target posisi disebar rata dari kandidat pertama ke
 ##    terakhir dengan goyangan acak `RUTE_PELANGGAN_GOYANG_UBIN`; pencocokan berurutan terbaik (pemrograman dinamis, jumlah selisih
 ##    mutlak terkecil) memilih kandidat, jadi jarak rata-rata sekitar sebaran rata tetapi ada rumah berurutan lalu sela panjang
 ##    (ROUTE_DESIGN 3). Celah terpanjang dibatasi `RUTE_PELANGGAN_JARAK_MAKS_UBIN`; bila terlampaui, goyangan diundi ulang.
@@ -97,6 +99,8 @@ class SimpangItem extends RefCounted:
 ## Satu rute jadi.
 class Rute extends RefCounted:
 	var benih: int = 0
+	## Nomor hari yang menyusun rute ini (`bangun`; bawaan hari 1): menentukan ada tidaknya pelanggan sisi dekat (`RUTE_DEKAT_HARI_MULAI`) dan diperiksa `periksa_rute`.
+	var hari: int = Config.HARI_AWAL
 	## Segmen terpakai, urut dari awal ke akhir rute.
 	var segmen: Array[SegmenRute] = []
 	## Awal tiap segmen dari awal rute, ubin, sejajar dengan `segmen`.
@@ -111,7 +115,7 @@ class Rute extends RefCounted:
 	var dekor: Array[DekorItem] = []
 	## Simpang T hiasan, urut maju (baca lewat `RouteBuilder.simpang_di`).
 	var simpang: Array[SimpangItem] = []
-	## Rumah pelanggan, urut maju.
+	## Rumah pelanggan kedua sisi, urut maju (celah antar pelanggan dihitung dari daftar gabungan ini).
 	var pelanggan: Array[RumahRute] = []
 	## Koran di awal rute (pelanggan + cadangan).
 	var koran_awal: int = 0
@@ -128,9 +132,9 @@ class Hasil extends RefCounted:
 		return galat.is_empty() and rute != null
 
 
-## Susun satu rute dari `benih` dan `pustaka` segmen sah. Rute null dan galat terisi bila pustaka tidak cukup atau tidak ada susunan
-## yang memenuhi aturan (tanpa dua `padat` berurutan, celah pelanggan, jumlah pelanggan).
-static func bangun(benih: int, pustaka: Array[SegmenRute]) -> Hasil:
+## Susun satu rute dari `benih`, `pustaka` segmen sah, dan nomor `hari` (bawaan hari 1 = perilaku sebelum pelanggan dekat). Rute null dan galat terisi bila pustaka tidak cukup atau tidak ada susunan
+## yang memenuhi aturan (tanpa dua `padat` berurutan, celah pelanggan, jumlah pelanggan, kuota dekat). Tidak ada RNG di luar `benih` (seed hari dari `SeedHari.rute`).
+static func bangun(benih: int, pustaka: Array[SegmenRute], hari: int = Config.HARI_AWAL) -> Hasil:
 	var hasil: Hasil = Hasil.new()
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = benih
@@ -139,6 +143,7 @@ static func bangun(benih: int, pustaka: Array[SegmenRute]) -> Hasil:
 		return hasil
 	var rute: Rute = Rute.new()
 	rute.benih = benih
+	rute.hari = hari
 	_isi_segmen(rute, urutan)
 	if not _pilih_pelanggan(rute, rng, hasil.galat):
 		return hasil
@@ -177,6 +182,20 @@ static func jumlah_pemberi_tip(jumlah_pelanggan: int) -> int:
 ## True bila rumah `id_rumah` pelanggan pemberi tip di `rute`.
 static func pemberi_tip(rute: Rute, id_rumah: String) -> bool:
 	return rute != null and rute.id_pemberi_tip.has(id_rumah)
+
+
+## True bila pelanggan sisi `dekat` dipilih pada hari `hari` (P-4): hari >= `RUTE_DEKAT_HARI_MULAI`.
+static func hari_ada_pelanggan_dekat(hari: int) -> bool:
+	return hari >= Config.RUTE_DEKAT_HARI_MULAI
+
+
+## Jumlah pelanggan sisi `dekat` di `rute`.
+static func jumlah_dekat(rute: Rute) -> int:
+	var n: int = 0
+	for rumah: RumahRute in rute.pelanggan:
+		if rumah.sisi == LoperAnim.Sisi.DEKAT:
+			n += 1
+	return n
 
 
 ## Selisih maju antara pelanggan berturut-turut, ubin (jumlah pelanggan - 1 nilai).
@@ -226,9 +245,16 @@ static func periksa_rute(rute: Rute) -> Array[String]:
 		if id_terlihat.has(rumah.id):
 			galat.append("id rumah '%s' ganda" % rumah.id)
 		id_terlihat[rumah.id] = true
+	var ada_dekat: bool = hari_ada_pelanggan_dekat(rute.hari)
 	for pelanggan: RumahRute in rute.pelanggan:
-		if pelanggan.sisi != LoperAnim.Sisi.SEBERANG or not pelanggan.pelanggan_boleh:
-			galat.append("pelanggan '%s' bukan rumah seberang yang boleh" % pelanggan.id)
+		var sisi_sah: bool = pelanggan.sisi == LoperAnim.Sisi.SEBERANG or (ada_dekat and pelanggan.sisi == LoperAnim.Sisi.DEKAT)
+		if not sisi_sah or not pelanggan.pelanggan_boleh:
+			galat.append("pelanggan '%s' bukan rumah yang boleh untuk hari %d (seberang, atau dekat sejak hari %d)" % [pelanggan.id, rute.hari, Config.RUTE_DEKAT_HARI_MULAI])
+	var dekat: int = jumlah_dekat(rute)
+	if not ada_dekat and dekat != 0:
+		galat.append("hari %d punya %d pelanggan dekat, seharusnya 0 (pelanggan dekat sejak hari %d)" % [rute.hari, dekat, Config.RUTE_DEKAT_HARI_MULAI])
+	if ada_dekat and (dekat < Config.RUTE_DEKAT_KUOTA_MIN or dekat > Config.RUTE_DEKAT_KUOTA_MAKS):
+		galat.append("hari %d punya %d pelanggan dekat, seharusnya %d sampai %d" % [rute.hari, dekat, Config.RUTE_DEKAT_KUOTA_MIN, Config.RUTE_DEKAT_KUOTA_MAKS])
 	var jarak: Array[float] = jarak_pelanggan(rute)
 	for j: float in jarak:
 		if j > Config.RUTE_PELANGGAN_JARAK_MAKS_UBIN:
@@ -420,8 +446,11 @@ static func _lebih_awal(a: RumahRute, b: RumahRute) -> bool:
 	return a.id < b.id
 
 
-## Pilih tepat `RUTE_PELANGGAN` pelanggan dari rumah seberang yang boleh. False + galat bila kandidat kurang atau celah tak bisa dipenuhi.
+## Pilih tepat `RUTE_PELANGGAN` pelanggan dari rumah yang boleh: hari < `RUTE_DEKAT_HARI_MULAI` hanya seberang (RNG persis seperti sebelum pelanggan dekat), sejak itu dua sisi (`_pilih_pelanggan_dua_sisi`).
+## False + galat bila kandidat kurang atau celah tak bisa dipenuhi.
 static func _pilih_pelanggan(rute: Rute, rng: RandomNumberGenerator, galat: Array[String]) -> bool:
+	if hari_ada_pelanggan_dekat(rute.hari):
+		return _pilih_pelanggan_dua_sisi(rute, rng, galat)
 	var kandidat: Array[RumahRute] = []
 	for rumah: RumahRute in rute.rumah:
 		if rumah.sisi == LoperAnim.Sisi.SEBERANG and rumah.pelanggan_boleh:
@@ -448,6 +477,56 @@ static func _pilih_pelanggan(rute: Rute, rng: RandomNumberGenerator, galat: Arra
 			rute.pelanggan.append(kandidat[i])
 		return true
 	galat.append("tidak ada pilihan pelanggan dengan celah di bawah %.1f ubin dalam %d percobaan" % [Config.RUTE_PELANGGAN_JARAK_MAKS_UBIN, Config.RUTE_SUSUN_PERCOBAAN_MAKS])
+	return false
+
+
+## Kandidat pelanggan sisi `sisi` (rumah yang `pelanggan_boleh`), urut maju.
+static func _kandidat_sisi(rute: Rute, sisi: LoperAnim.Sisi) -> Array[RumahRute]:
+	var kandidat: Array[RumahRute] = []
+	for rumah: RumahRute in rute.rumah:
+		if rumah.sisi == sisi and rumah.pelanggan_boleh:
+			kandidat.append(rumah)
+	return kandidat
+
+
+## Pelanggan hari >= `RUTE_DEKAT_HARI_MULAI` (P-4, D-2): kuota dekat (`RUTE_DEKAT_KUOTA_MIN` sampai `MAKS`) diundi dari RNG rute SESUDAH susunan segmen, lalu tiap sisi disebar dengan `_cocokkan` (kandidat tiap sisi
+## terpisah), digabung dan diurut maju; celah gabungan dibatasi `RUTE_PELANGGAN_JARAK_MAKS_UBIN`, goyangan diundi ulang bila terlampaui.
+static func _pilih_pelanggan_dua_sisi(rute: Rute, rng: RandomNumberGenerator, galat: Array[String]) -> bool:
+	var dekat: Array[RumahRute] = _kandidat_sisi(rute, LoperAnim.Sisi.DEKAT)
+	var seberang: Array[RumahRute] = _kandidat_sisi(rute, LoperAnim.Sisi.SEBERANG)
+	var jumlah_dekat_dipilih: int = rng.randi_range(Config.RUTE_DEKAT_KUOTA_MIN, Config.RUTE_DEKAT_KUOTA_MAKS)
+	var jumlah_seberang: int = Config.RUTE_PELANGGAN - jumlah_dekat_dipilih
+	if dekat.size() < jumlah_dekat_dipilih or seberang.size() < jumlah_seberang:
+		galat.append("kandidat pelanggan dekat %d (butuh %d) atau seberang %d (butuh %d) kurang" % [dekat.size(), jumlah_dekat_dipilih, seberang.size(), jumlah_seberang])
+		return false
+	var maju_dekat: PackedFloat64Array = PackedFloat64Array()
+	for rumah: RumahRute in dekat:
+		maju_dekat.append(rumah.maju_ubin)
+	var maju_seberang: PackedFloat64Array = PackedFloat64Array()
+	for rumah: RumahRute in seberang:
+		maju_seberang.append(rumah.maju_ubin)
+	for percobaan: int in range(Config.RUTE_SUSUN_PERCOBAAN_MAKS):
+		var indeks_dekat: PackedInt32Array = _cocokkan(maju_dekat, jumlah_dekat_dipilih, rng)
+		var indeks_seberang: PackedInt32Array = _cocokkan(maju_seberang, jumlah_seberang, rng)
+		if indeks_dekat.size() != jumlah_dekat_dipilih or indeks_seberang.size() != jumlah_seberang:
+			break
+		var terpilih: Array[RumahRute] = []
+		for i: int in indeks_dekat:
+			terpilih.append(dekat[i])
+		for i: int in indeks_seberang:
+			terpilih.append(seberang[i])
+		terpilih.sort_custom(_lebih_awal)
+		var celah_sah: bool = true
+		for i: int in range(1, terpilih.size()):
+			if terpilih[i].maju_ubin - terpilih[i - 1].maju_ubin > Config.RUTE_PELANGGAN_JARAK_MAKS_UBIN:
+				celah_sah = false
+		if not celah_sah:
+			continue
+		for rumah: RumahRute in terpilih:
+			rumah.pelanggan = true
+			rute.pelanggan.append(rumah)
+		return true
+	galat.append("tidak ada pilihan pelanggan dua sisi dengan celah gabungan di bawah %.1f ubin dalam %d percobaan" % [Config.RUTE_PELANGGAN_JARAK_MAKS_UBIN, Config.RUTE_SUSUN_PERCOBAAN_MAKS])
 	return false
 
 

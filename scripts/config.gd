@@ -1253,3 +1253,25 @@ const RUTE_DEKOR_TEPI_UBIN: int = 1
 ## Sprite dekor terpasang (PNG di `assets/sprites/props/`), sejajar dengan `RUTE_DEKOR_SPRITE_DATA` (lima angka tiap sprite: lebar sel, tinggi sel, frame, pijak x, pijak y, piksel; sama dengan JSON aset dan ukuran PNG, dijaga tes).
 const RUTE_DEKOR_SPRITE: Array[String] = ["prop_tong_sampah_logam", "prop_pohon_rindang", "prop_pohon_glodokan", "prop_pohon_ketapang", "prop_lampu_lengan_seberang", "prop_lampu_lengan_dekat"]
 const RUTE_DEKOR_SPRITE_DATA: Array[int] = [20, 30, 1, 10, 25, 151, 119, 1, 41, 63, 121, 126, 1, 25, 77, 141, 124, 1, 35, 70, 85, 104, 1, 9, 63, 85, 104, 1, 22, 69]
+
+## --- Pelanggan sisi dekat, sasaran dekat, dan tip hari 3 (run fase5d-sisi-dekat bagian B, P-4, P-5, P-6, D-2, D-3, D-4; usulan, dinilai di HP) ---
+## Hari pertama yang punya pelanggan sisi dekat (P-4): hari 1 dan 2 hanya seberang, rute identik run sebelumnya (RNG sama). Juga hari tip singkat (P-6).
+const RUTE_DEKAT_HARI_MULAI: int = 3
+## Jumlah pelanggan sisi dekat per rute sejak `RUTE_DEKAT_HARI_MULAI`: paling sedikit dan paling banyak (8 atau 9 dari `RUTE_PELANGGAN` = sekitar 35%); total tetap `RUTE_PELANGGAN`.
+const RUTE_DEKAT_KUOTA_MIN: int = 8
+const RUTE_DEKAT_KUOTA_MAKS: int = 9
+## Zona kotak surat rumah dekat di rute = cermin zona seberang (`JALAN_UJI_SEBERANG_KOTAK_SURAT_UBIN` -> lateral positif): [lateral_min, maju_min, lebar_lateral, panjang_maju], ubin, maju relatif awal kavling. Lebih lebar dari zona dekat jalan uji (0,75) karena teras dekat kini di lateral >= 3,19 (tidak lagi di lateral 2,5).
+const RUTE_DEKAT_KOTAK_SURAT_UBIN: Array[float] = [1.75, 1.25, 1.0, 1.25]
+## Inti "tepat" zona kotak surat dekat rute: 0,5 x 0,5 di pusat zona (cermin `JALAN_UJI_SEBERANG_KOTAK_SURAT_INTI_UBIN`).
+const RUTE_DEKAT_KOTAK_SURAT_INTI_UBIN: Array[float] = [2.0, 1.625, 0.5, 0.5]
+## Zona halaman rumah dekat di rute: rumput dari tepi trotoar dekat (lateral 2,0) sampai tepi badan rumah (pusat gambar 5,0 + `RUTE_RUMAH_DEKAT_PENUTUP_LATERAL_UBIN` -1,09375 = 3,90625), maju -0,5 sampai 2,5 relatif awal kavling. Dijaga tes terhadap JSON aset.
+const RUTE_DEKAT_HALAMAN_UBIN: Array[float] = [2.0, -0.5, 1.90625, 3.0]
+## Letak sprite kotak surat rumah dekat: lateral (cermin `JALAN_UJI_KOTAK_SURAT_X_UBIN` -2,125); maju relatif awal kavling sama dengan seberang (`JALAN_UJI_KOTAK_SURAT_MAJU_UBIN`).
+const RUTE_DEKAT_KOTAK_SURAT_X_UBIN: float = 2.125
+## Tip hari 3 (P-6): lama tampil sejak rute dimulai (detik waktu game, beku saat jeda), letak panel (kolom kiri di bawah kartu misi, sama dengan petunjuk tutorial) dan lebarnya, piksel game.
+const TIP_SISI_DEKAT_DETIK: float = 6.0
+const TIP_SISI_DEKAT_X_PX: int = 26
+const TIP_SISI_DEKAT_Y_PX: int = 88
+const TIP_SISI_DEKAT_LEBAR_PX: int = 150
+## Koran terlipat di teras rumah dekat (AC-9): teras dekat ada di belakang titik pijak sprite rumahnya menurut Y-sort, jadi pembungkus Y-sort sprite terlipat diletakkan sekian piksel game di DEPAN titik pijak rumah supaya digambar sesudah sprite rumah.
+const RUTE_RUMAH_DEKAT_URUT_TERLIPAT_PX: int = 1
