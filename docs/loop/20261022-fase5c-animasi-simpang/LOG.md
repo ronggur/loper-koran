@@ -1,7 +1,7 @@
 # Loop Log — 20261022-fase5c-animasi-simpang
 Scope: Run 5C, Fase 5, verifikasi animasi pemain PR #51 (jatuh/terjerembab lima arah, bangkit, berhenti), pose kucing ditangkap, ujung kerb jalan masuk (C-F1), simpang T hiasan; hanya tampilan dan data segmen  ·  Branch: feat/fase5c-animasi-simpang  ·  Mulai: 2026-10-22  ·  Godot: 4.7.2
 
-## Status: IN_PROGRESS   (iterasi saat ini: 1/2)
+## Status: PASS   (iterasi 1/2; QA iterasi 1 PASS, QA-001/QA-003 diperbaiki orchestrator; gerbang sesudah rebase ke `main` 3bb39f8: import 0 ERROR/WARNING, 19052 lolos 0 gagal, pemeriksa lolos, `--quit-after 2` bersih, 13 `uji_*.py` exit 0, sha256 save tetap)
 
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
@@ -42,6 +42,7 @@ Lihat SPEC bagian NEEDS-MANUAL dan SETUP_ANDROID 8.14.
 ## Keputusan & catatan
 - Putusan P-1..P-5 dan D-1..D-4: SPEC.
 - Bagian 6i LOOP-DEV-QA ada di branch `docs/perintah-run-5c` (belum di-merge); run ini hanya menyentuh tabel 6g.
+- Izin pemilik 2026-10-22 (khusus run ini): sesudah QA PASS orchestrator langsung push, membuka PR, dan squash merge setelah CI hijau.
 - **Putusan orchestrator P-6 (D-F1, 2026-10-22):** rekomendasi Dev diterima. Hapus rumah seberang `per_buka_02@18` (`pelanggan_boleh` false, kandidat pelanggan tidak berubah) dan pasang simpang `{ "pos": 18, "sisi": "seberang" }`; `SIMPANG_SISI_DIPASANG` = `['dekat', 'seberang']`, 16 ubin seberang lewat `--salin`. Alasan: AC-17 mewajibkan >= 1 simpang seberang; celah seberang maksimum 1 ubin di semua segmen sehingga D-4 (a)/(b) mustahil; rumah yang dihapus bukan pelanggan, jadi pemain kehilangan satu rumah hiasan saja. Syarat: (1) golden yang berubah (`tes_rute` hitungan rumah, GOLDEN_RUTE `tes_dekor` dan `tes_simpang`, hitungan berkas tanpa simpang, literal konten/persen) dihitung ulang oleh skrip dari kode, bukan tangan, dan LOG mencatat per golden bahwa SATU-SATUNYA perbedaan adalah rumah `per_buka_02@18` (31 seed) beserta turunannya yang dijelaskan; pelanggan, rintangan, titik misi, dekor, tenggat, skor lain identik atau dijelaskan satu per satu; (2) tes misi 600 hari, pelanggan, tip, tenggat, rintangan tetap lulus tanpa diubah; (3) tidak ada segmen baru, tidak ada dekor dipindah. D-F2 dan D-F3 diterima sebagai NEEDS-MANUAL.
 
 ## Iterasi 1, bagian AB (Dev)
