@@ -4,8 +4,9 @@ extends RefCounted
 ##
 ## Kapan efek tampil TIDAK dihitung ulang di sini: selalu dari `UmpanBalikKecepatan` (debu tampil tepat bila `laju_debu` > 0, garis tepat bila `kekuatan_garis` > 0), jadi ambang, rem,
 ## kecepatan 0, dan kurangi efek sama dengan placeholder partikel. Di sini hanya: alpha, frame animasi debu (loop), dan acak varian garis (RNG berseed, diganti tiap 2 sampai 3 frame game).
-## Posisi: debu dengan titik pijak (roda belakang) di `UMPAN_DEBU_ASAL_*`, garis dengan ujung kepala di `UMPAN_GARIS_ASAL_*` digeser tegak lurus jalan (sebaran `UMPAN_GARIS_SEBARAN_PX`), semua di ruang
-## lokal sepeda (sprite ikut sepeda; gerak mundur debu dipanggang di sprite).
+## Posisi: debu dengan titik pijak (roda belakang) di `UMPAN_DEBU_ASAL_*`, garis dengan ujung kepala di `UMPAN_GARIS_SPRITE_KEPALA_*` digeser tegak lurus jalan (sebaran `UMPAN_GARIS_SEBARAN_PX`), semua di
+## ruang lokal sepeda (sprite ikut sepeda; gerak mundur debu dipanggang di sprite). Kepala garis BUKAN `UMPAN_GARIS_ASAL_*`: itu titik muncul partikel yang lalu melaju mundur 60 px, jadi sprite diam di
+## sana berada sekitar 13,5 px di depan posisi garis lama (umpan balik HP pemilik 2026-10-22); kepala sprite dipilih supaya pusat garis = pusat rata-rata waktu garis partikel.
 
 const SPRITE_DEBU: String = "vfx_debu_roda"
 const SPRITE_GARIS: Array[String] = ["vfx_garis_kecepatan_a", "vfx_garis_kecepatan_b", "vfx_garis_kecepatan_c"]
@@ -88,7 +89,7 @@ static func item_garis(kecepatan_ud: float, kurangi_efek: bool, k: GarisKeadaan)
 	var hasil: Array[DefSprite.Item] = []
 	if not garis_tampil(kecepatan_ud, kurangi_efek):
 		return hasil
-	var kepala: Vector2 = Vector2(Config.UMPAN_GARIS_ASAL_X_PX, Config.UMPAN_GARIS_ASAL_Y_PX) + arah_tegak() * k.geser_px
+	var kepala: Vector2 = Vector2(Config.UMPAN_GARIS_SPRITE_KEPALA_X_PX, Config.UMPAN_GARIS_SPRITE_KEPALA_Y_PX) + arah_tegak() * k.geser_px
 	var nama: String = SPRITE_GARIS[posmod(k.varian, SPRITE_GARIS.size())]
 	hasil.append(DefSprite.Item.buat(nama, 0, DefSprite.pojok(nama, kepala), garis_alfa(kecepatan_ud, kurangi_efek)))
 	return hasil

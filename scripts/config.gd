@@ -1162,6 +1162,12 @@ const UMPAN_GARIS_GANTI_MIN_FRAME: int = 2
 const UMPAN_GARIS_GANTI_MAKS_FRAME: int = 3
 ## Benih RNG garis kecepatan sprite (acak berseed, tetap).
 const UMPAN_GARIS_SPRITE_BENIH: int = 3
+## Garis kecepatan sprite: titik kepala (pijak sprite) dari titik pijak sepeda, sebelum geseran tegak lurus jalan, piksel game (datar, positif = ke kanan). Dipilih supaya pusat piksel garis
+## (rata-rata tiga varian) jatuh di pusat rata-rata garis partikel run 1B seperti tergambar di 60 fps (11,7; -13,8): muncul di (30, -24), mundur 200 px/d, umur 0 sampai 17 frame. Run 5A memakai
+## `UMPAN_GARIS_ASAL_*` (titik muncul) sebagai kepala, jadi garis diam sekitar 13,5 px lebih ke depan sepanjang jalan (umpan balik HP pemilik 2026-10-22; usulan, dinilai di HP).
+const UMPAN_GARIS_SPRITE_KEPALA_X_PX: float = 20.0
+## Garis kecepatan sprite: titik kepala dari titik pijak sepeda, tegak, piksel game (negatif = ke atas). Lihat `UMPAN_GARIS_SPRITE_KEPALA_X_PX`.
+const UMPAN_GARIS_SPRITE_KEPALA_Y_PX: float = -14.0
 ## Bintang kena sekali main sekian frame per detik.
 const UMPAN_BINTANG_FPS: float = 15.0
 ## Koin tip sekali main sekian frame per detik.
