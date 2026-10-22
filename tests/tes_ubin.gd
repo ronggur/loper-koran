@@ -509,15 +509,20 @@ func _test_tanpa_referensi_tak_dipasang() -> void:
 		for kata: String in TERLARANG:
 			if teks.contains(kata):
 				temuan.append("%s memuat %s" % [jalur, kata])
-		var regex: RegEx = RegEx.new()
-		regex.compile("tile_perumahan_(aspal_[0-9]|rumput_[02-9]|[a-z_]*_masuk|[a-z_]*_simbol)")
-		for hasil: RegExMatch in regex.search_all(teks):
-			# Run fase5b-tembok-dekor bagian C (AC-18): hanya enam nama yang kini dipasang yang sah dirujuk (`UBIN_5B`); aspal_N, rumput_[04-9], *_dekat_masuk, dan nama lain tetap terlarang.
-			if UBIN_5B.has(hasil.get_string() + ".png") or UBIN_5C.has(hasil.get_string() + ".png"):
-				continue
-			temuan.append("%s memuat %s" % [jalur, hasil.get_string()])
+		for nama: String in _rujukan_ubin_tak_dipasang(teks):
+			temuan.append("%s memuat %s" % [jalur, nama])
 	check(berkas.size() > 100, "pemindai membaca banyak berkas sumber (%d)" % berkas.size())
 	check(temuan.is_empty(), "tidak ada rujukan ke aset yang belum dipasang: %s" % [temuan])
+	# Run fase5c-animasi-simpang (AC-22): pemindai diperluas ke ubin simpang dan ujung kerb. Contoh buruk sintetis (nama disambung supaya
+	# berkas ini sendiri tidak memuatnya) harus tertangkap; nama yang dipasang (`UBIN_5B`, `UBIN_5C`) tidak.
+	var awal: String = "tile_perumahan_"
+	for buruk: String in ["simpang_dekat_aspal_dekat_depan_2", "simpang_seberang_aspal_seberang_depan_1", "simpang_dekat_lengan_mulut_3", "trotoar_dekat_masuk_ujung", "rumput_dekat_masuk_ujung", "aspal_2", "trotoar_dekat_masuk"]:
+		var dapat: Array[String] = _rujukan_ubin_tak_dipasang("var t = \"res://assets/sprites/tiles/perumahan/" + awal + buruk + ".png\"")
+		check(dapat.size() == 1 and dapat[0] == awal + buruk,"pemindai menandai ubin tak dipasang %s, dapat %s" % [buruk, dapat])
+	var sah: String = ""
+	for nama: String in UBIN_5B + UBIN_5C:
+		sah += "res://assets/sprites/tiles/perumahan/" + nama + "\n"
+	check(_rujukan_ubin_tak_dipasang(sah).is_empty(), "pemindai tidak menandai %d ubin 5B/5C yang dipasang: %s" % [UBIN_5B.size() + UBIN_5C.size(), _rujukan_ubin_tak_dipasang(sah)])
 	# Ubin yang dipasang: tujuh PNG run 5A, enam PNG run 5B, dan satu JSON di folder (hasil salin, selain .import/.uid).
 	var isi: Array[String] = []
 	for nama: String in DirAccess.get_files_at(FOLDER_UBIN):
@@ -529,6 +534,20 @@ func _test_tanpa_referensi_tak_dipasang() -> void:
 	harapan_isi.append_array(UBIN_5C)
 	harapan_isi.sort()
 	check(isi == harapan_isi, "folder tiles/perumahan hanya berisi ubin yang dipasang: %s" % [isi])
+
+
+## Nama ubin (tanpa .png) di `teks` yang tidak dipasang: aspal_N, rumput_[02-9] selain rumput_2/3, *_masuk, *_simbol, *_masuk_ujung, dan
+## simpang_* yang tidak ada di `UBIN_5B`/`UBIN_5C`. Run fase5b-tembok-dekor bagian C (AC-18): hanya enam nama 5B sah; run fase5c (AC-22): hanya
+## 36 nama 5C sah (ujung kerb seberang, simpang yang dipasang). Alternatif simpang dan ujung ditulis lebih dulu supaya tidak terpotong `_masuk`.
+func _rujukan_ubin_tak_dipasang(teks: String) -> Array[String]:
+	var hasil_nama: Array[String] = []
+	var regex: RegEx = RegEx.new()
+	regex.compile("tile_perumahan_(simpang_[a-z0-9_]*[0-9]|[a-z_]*_masuk_ujung|aspal_[0-9]|rumput_[02-9]|[a-z_]*_masuk|[a-z_]*_simbol)")
+	for hasil: RegExMatch in regex.search_all(teks):
+		if UBIN_5B.has(hasil.get_string() + ".png") or UBIN_5C.has(hasil.get_string() + ".png"):
+			continue
+		hasil_nama.append(hasil.get_string())
+	return hasil_nama
 
 
 func _kumpulkan(folder: String, hasil: Array[String]) -> void:
