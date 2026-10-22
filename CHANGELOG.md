@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/ronggur/loper-koran/compare/loper-koran-v0.4.0...loper-koran-v0.5.0) (2026-10-22)
+
+
+### Fitur
+
+* pelanggan sisi dekat mulai hari 3, halaman terbuka, dan rumah dekat dengan teras menjorok (Fase 5, run 5D) ([#56](https://github.com/ronggur/loper-koran/issues/56)) ([c2f0a18](https://github.com/ronggur/loper-koran/commit/c2f0a18a61c101a30b82d609cfaa3772ca6ef5e6))
+
 ## [0.4.0](https://github.com/ronggur/loper-koran/compare/loper-koran-v0.3.0...loper-koran-v0.4.0) (2026-10-22)
 
 
