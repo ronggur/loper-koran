@@ -140,6 +140,7 @@ File: `assets/data/routes/<distrik>/<id>.json`, satu file per segmen, **JSON bua
 | `objek` | Rintangan yang ditandai: `jenis`, `pos`, `jalur` (`seberang`/`dekat`; **tidak pernah `tengah`**), `tanda_ubin` (jarak tanda terlihat sebelum rintangan, paling sedikit 9) |
 | `titik_misi` | Tempat yang boleh dipakai misi: `nama` (mis. `atap`, `balik_pot`), `pos`, `sisi`; harus berdiri di rumah (pos dan sisi sama dengan sebuah rumah) |
 | `dekor` | **Opsional** (run `20261021-fase5b-tembok-dekor`, usulan): hiasan pinggir jalan. Daftar butir `{ "jenis", "pos", "sisi", "varian" }`, keempat field wajib dan tidak ada field lain. Tabel jenis dan aturan di bawah. Berkas tanpa `dekor` tetap sah |
+| `simpang` | **Opsional** (run `20261022-fase5c-animasi-simpang`, usulan): simpang T hiasan (jalan samping). Daftar butir `{ "pos", "sisi" }`, kedua field wajib dan tidak ada field lain; `sisi` `seberang` atau `dekat`, `pos` bilangan bulat. Aturan di bawah. Berkas tanpa `simpang` tetap sah |
 
 Contoh dari berkas nyata (`assets/data/routes/perumahan/per_tengah_02.json`):
 
@@ -197,13 +198,35 @@ Contoh dari berkas nyata (`assets/data/routes/perumahan/per_tengah_02.json`):
 
 Akibat langsung geometri rumah (petak 4 ubin, rumah 3 ubin): dekor di halaman rumah sisi yang sama hanya muat di celah satu ubin di antara tapak rumah, yaitu `pos` rumah + 3 untuk rumah di `pos` (mis. rumah seberang di 6 dan 10 memberi celah di 9). Tong sampah ditaruh di celah sesudah rumah (dekat kotak surat dan gerbang), pohon di halaman (celah atau kavling kosong), lampu di tepi trotoar. Konvensi isi set perumahan (dijaga tes, bukan validasi): tiap berkas 2 sampai 8 butir, paling banyak satu butir per 4 ubin per sisi, tidak di `pos` kurang dari 2 atau lebih dari `panjang` - 2; seluruh set sedikitnya 3 tong sampah, 6 pohon (ketiga varian di kedua sisi), dan 6 lampu jalan (kedua sisi). Penempatan diperiksa lagi dengan pengukur piksel: sprite dekor tidak menimpa badan kotak surat atau zona kotak surat dan teras rumah seberang yang `pelanggan_boleh` (0%, `tests/ukur_dekor.gd`).
 
+**Simpang T** (run `20261022-fase5c-animasi-simpang`, usulan; `SegmenRute`, `PemuatRute`, `RouteBuilder`, `UbinKhusus`, `TanahDaur`): jalan samping ke sisi `sisi` yang **hanya hiasan** (keputusan pemilik 2026-10-22, ROUTE_DESIGN 8): tanpa lalu lintas, rintangan, atau sasaran; tidak masuk gerak, tabrakan, zona, penilaian lemparan, `MedanKoran`, skor, atau tenggat. Contoh dari berkas nyata (`per_tengah_05.json` dan `per_buka_02.json`):
+
+```json
+  "simpang": [
+    { "pos": 3, "sisi": "dekat" }
+  ]
+```
+
+```json
+  "simpang": [
+    { "pos": 18, "sisi": "seberang" }
+  ]
+```
+
+`pos` = ubin dari awal segmen ke pusat baris mulut `mulut_2` (baris mulut yang lebih dekat ke awal segmen). Lebar mulut dan pita tidak ada di data, tetapi konstanta `config.gd` yang dites sama dengan JSON renderer `tile_perumahan.json` (D-3): mulut 2 ubin (`RUTE_SIMPANG_LEBAR_MULUT_UBIN`, maju `pos` − 0,5 sampai `pos` + 1,5, `RUTE_SIMPANG_MULUT_AWAL_UBIN`); **pita** = semua baris yang ubinnya diganti renderer (mulut dan sudut kerb, `RUTE_SIMPANG_PITA_BARIS` −1 sampai 3), maju `pos` − 1,5 sampai `pos` + 3,5 (5 ubin). Pita sisi simpang membentang dari garis tengah jalan ke luar tanpa batas (lengan jalan samping berulang sampai tepi layar); sisi lain jalan tetap lurus. Di rute (`RouteBuilder`, tanpa RNG baru) tiap simpang menjadi `SimpangItem` dengan id `<id_segmen>:simpang:<sisi>@<pos>`, maju mutlak, sisi, lebar mulut, dan awal mulut, dibaca hanya lewat `RouteBuilder.simpang_di(rute)` (titik pakai lalu lintas berbelok kelak, M3; sekarang hanya `TanahDaur`). Aturan penempatan (ditolak bila dilanggar; tepi yang bersentuhan boleh):
+
+- pita seluruhnya di dalam segmen (`pos` − 1,5 >= 0 dan `pos` + 3,5 <= `panjang`; jadi `pos` 2 sampai `panjang` − 4);
+- pita tidak memotong, di sisi simpang, kavling rumah mana pun (tapak logika, tapak gambar rumah dekat yang mundur, dan tembok belakang rumah dekat `pos` sampai `pos` + 3), zona kotak surat, teras, halaman, atau jendela, dekor, rintangan (posisi diam anjing dan seluruh lintasan mobil garasi), atau baris jalan masuk garasi beserta baris ujung kerbnya;
+- pita dua simpang (sisi mana pun) tidak bertumpuk, di segmen dan di rute utuh (`RouteBuilder.periksa_rute` memeriksa juga isi segmen tetangga di sambungan).
+
+Akibat geometri rumah (petak 4 ubin, kavling 3 ubin): celah antar rumah sesisi paling lebar 1 ubin, jadi simpang hanya muat di rentang tanpa rumah di sisi itu. Isi set perumahan sekarang: simpang dekat di `per_buka_01@3`, `per_tengah_05@3`, `per_tutup_01@2`, dan satu simpang seberang di `per_buka_02@18`, tempat rumah seberang bukan pelanggan dihapus (P-6 run 5C). Titik kucing misi (`RencanaMisi`) tidak pernah jatuh di pita (dites 600 hari).
+
 **Id rumah** di rute = `<id_segmen>@<pos>` (mis. `per_tengah_02@18`). Satu `pos` hanya boleh dipakai satu rumah per segmen (kedua sisi), supaya id unik tanpa sisi. Ini id sementara untuk rute dan penilaian zona; pemetaan ke id rumah tetap di save (`per_r014`, bagian 4) ditunda ke Fase 6 (bagian 5).
 
 **Geometri.** `pos` adalah awal kavling: zona kotak surat, halaman, teras, dan jendela dihitung relatif terhadap `pos` dengan angka `Config.JALAN_UJI_*` yang sama dengan jalan uji (BALANCING 5), jadi rumah di `pos` p memakai kotak surat sebagai area di halaman, maju p + 1,25 sampai p + 2,5 (seberang 1,0 × 1,25 di lateral −2,75 sampai −1,75, dekat 0,75 × 1,25 di lateral 1,75 sampai 2,5; pusat maju p + 1,875; sebagian halaman tertimpa, kotak surat menang; teras dan jendela tidak tertimpa). Rumah sesisi berjarak paling sedikit satu petak (4 ubin). Dua ubin di tiap ujung segmen kosong (tidak ada rumah, objek, atau titik misi dengan `pos` kurang dari 2 atau lebih dari `panjang` - 2); rintangan paling dekat 3 ubin ke tepi supaya dua segmen yang disambung tidak menumpuk keputusan.
 
 **Rumah mana yang jadi pelanggan** ditentukan saat rute disusun (seed rute, `RouteBuilder`), bukan di segmen. Segmen hanya menyatakan rumah mana yang **boleh** jadi pelanggan. Distrik pertama: `pelanggan_boleh: true` hanya di sisi `seberang` (GDD 9.1).
 
-**Validasi** (`SegmenRute.parse`, `PemuatRute.periksa_kumpulan`; dijalankan tes pada semua berkas nyata): field wajib ada dan bertipe benar, field tidak dikenal ditolak, sisi hanya `seberang` atau `dekat`, id unik dan sama dengan nama berkas, panjang 24 sampai 40, tepi 2 ubin kosong, pelanggan hanya di seberang, rintangan tidak di jalur `tengah` (jalur utama bersih), tanda rintangan paling sedikit 9 ubin (1,5 detik pada ngebut), dalam jendela 6 ubin maksimal satu rintangan, rintangan tidak memotong tapak rumah mana pun di segmen (mobil garasi seluruh lintasannya, jadi parkir di celah samping rumah: `pos` rumah sesisi − 1; anjing di posisi diamnya; tepi bersentuhan boleh; ROUTE_DESIGN 4 aturan 7, usulan), titik misi di rumah dan di luar jendela rintangan, dekor (bila ada): keempat field wajib dan tanpa field lain, `jenis`, `sisi`, dan `varian` dari tabel, `pos` bilangan bulat `1` sampai `panjang - 1`, aturan penempatan di atas, sekurangnya 2 segmen `pembuka`, 2 `penutup`, dan 5 `tengah` per distrik (satu rute memakai 7 segmen).
+**Validasi** (`SegmenRute.parse`, `PemuatRute.periksa_kumpulan`; dijalankan tes pada semua berkas nyata): field wajib ada dan bertipe benar, field tidak dikenal ditolak, sisi hanya `seberang` atau `dekat`, id unik dan sama dengan nama berkas, panjang 24 sampai 40, tepi 2 ubin kosong, pelanggan hanya di seberang, rintangan tidak di jalur `tengah` (jalur utama bersih), tanda rintangan paling sedikit 9 ubin (1,5 detik pada ngebut), dalam jendela 6 ubin maksimal satu rintangan, rintangan tidak memotong tapak rumah mana pun di segmen (mobil garasi seluruh lintasannya, jadi parkir di celah samping rumah: `pos` rumah sesisi − 1; anjing di posisi diamnya; tepi bersentuhan boleh; ROUTE_DESIGN 4 aturan 7, usulan), titik misi di rumah dan di luar jendela rintangan, dekor (bila ada): keempat field wajib dan tanpa field lain, `jenis`, `sisi`, dan `varian` dari tabel, `pos` bilangan bulat `1` sampai `panjang - 1`, aturan penempatan di atas, simpang (bila ada): kedua field wajib dan tanpa field lain, `sisi` `seberang`/`dekat`, `pos` bilangan bulat, pita di dalam segmen dan tidak memotong isi segmen atau pita simpang lain (aturan simpang di atas), sekurangnya 2 segmen `pembuka`, 2 `penutup`, dan 5 `tengah` per distrik (satu rute memakai 7 segmen).
 
 ## 4. Save
 
