@@ -496,7 +496,7 @@ func _test_jatuh_di_bike_motion() -> void:
 
 
 func _test_frame_jatuh() -> void:
-	_judul.call("Pemilihan frame jatuh: jatuh_normal 10 fps sekali lalu terjerembab_normal 3 fps berulang, semua arah (pemilik 2026-10-17)")
+	_judul.call("Pemilihan frame jatuh: jatuh_<arah> 10 fps sekali lalu terjerembab_<arah> 3 fps berulang (pemilik 2026-10-17; per arah sejak Fase 5C)")
 	# [lewat detik, nama, frame] dengan fps dan jumlah frame dari README jatuh (4 frame 10 fps, 2 frame 3 fps), dihitung tangan.
 	var kasus: Array = [[0.0, &"jatuh_normal", 0], [0.05, &"jatuh_normal", 0], [0.1, &"jatuh_normal", 1], [0.25, &"jatuh_normal", 2],
 		[0.35, &"jatuh_normal", 3], [0.3999, &"jatuh_normal", 3], [0.4, &"terjerembab_normal", 0], [0.7, &"terjerembab_normal", 0],
@@ -506,15 +506,30 @@ func _test_frame_jatuh() -> void:
 	for arah: int in range(-2, 3):
 		for k: Array in kasus:
 			var f: LoperAnim.FrameJatuh = LoperAnim.frame_jatuh(k[0], arah, 10.0, 4, 3.0, 2)
-			if f.nama != k[1] or f.frame != k[2]:
+			var harapan: StringName = StringName(String(k[1]).replace("_normal", "_" + String(LoperAnim.NAMA_ARAH[arah])))
+			if f.nama != harapan or f.frame != k[2]:
 				semua = false
 				beda.append("arah %d t %.4f: %s f%d" % [arah, k[0], f.nama, f.frame])
 	check(semua, "12 saat x 5 arah: nama dan frame sesuai (tepat 0,4 = terjerembab frame 0); beda: %s" % [beda])
 	var tengah: LoperAnim.FrameJatuh = LoperAnim.frame_jatuh(0.05, 0, 10.0, 4, 3.0, 2)
 	check(is_equal_approx(tengah.progres, 0.5), "0,05 detik: progres frame 0,5")
-	check(LoperAnim.frame_jatuh(NAN, 1, 10.0, 4, 3.0, 2).nama == &"jatuh_normal" and LoperAnim.frame_jatuh(-1.0, 1, 10.0, 4, 3.0, 2).frame == 0, "NaN atau negatif = awal jatuh")
+	check(LoperAnim.frame_jatuh(NAN, 1, 10.0, 4, 3.0, 2).nama == &"jatuh_serong_kanan" and LoperAnim.frame_jatuh(-1.0, 1, 10.0, 4, 3.0, 2).frame == 0, "NaN atau negatif = awal jatuh")
 	check(LoperAnim.frame_jatuh(0.9, 0, 0.0, 4, 3.0, 2).nama == &"jatuh_normal" and LoperAnim.frame_jatuh(0.9, 0, 10.0, 0, 3.0, 2).frame == 0, "fps atau jumlah frame tidak sah: frame 0 jatuh (tanpa bagi nol)")
-	check(LoperAnim.nama_jatuh(-2) == &"jatuh_normal" and LoperAnim.nama_terjerembab(2) == &"terjerembab_normal", "arah diabaikan: semua arah memakai normal (aset arah lain Fase 5)")
+	check(LoperAnim.nama_jatuh(-2) == &"jatuh_kiri" and LoperAnim.nama_terjerembab(2) == &"terjerembab_kanan" and LoperAnim.nama_bangkit(9) == &"bangkit_kanan" and LoperAnim.nama_jatuh(-9) == &"jatuh_kiri",
+		"nama per arah (Fase 5C): jatuh_kiri, terjerembab_kanan, arah di luar jangkauan dijepit (bangkit_kanan, jatuh_kiri)")
+	# Bangkit (Fase 5C): 6 frame 10 fps di 0,6 detik terakhir jatuh 1,2 detik; frame terakhir ditahan. Dihitung tangan.
+	var kasus_b: Array = [[0.39, &"jatuh_serong_kiri", 3], [0.4, &"terjerembab_serong_kiri", 0], [0.5999, &"terjerembab_serong_kiri", 0], [0.6, &"bangkit_serong_kiri", 0],
+		[0.85, &"bangkit_serong_kiri", 2], [1.1, &"bangkit_serong_kiri", 5], [1.2, &"bangkit_serong_kiri", 5], [3.0, &"bangkit_serong_kiri", 5]]
+	var beda_b: Array[String] = []
+	for k: Array in kasus_b:
+		var f: LoperAnim.FrameJatuh = LoperAnim.frame_jatuh(k[0], -1, 10.0, 4, 3.0, 2, 10.0, 6, 1.2)
+		if f.nama != k[1] or f.frame != k[2]:
+			beda_b.append("t %.4f: %s f%d" % [k[0], f.nama, f.frame])
+	check(beda_b.is_empty(), "bangkit mulai 1,2 - 0,6 = 0,6 detik, frame terakhir ditahan sampai bangun; beda: %s" % [beda_b])
+	check(LoperAnim.frame_jatuh(1.0, 1, 10.0, 4, 3.0, 2, 10.0, 6, 0.5).nama == &"bangkit_serong_kanan" and LoperAnim.frame_jatuh(0.39, 1, 10.0, 4, 3.0, 2, 10.0, 6, 0.5).nama == &"jatuh_serong_kanan",
+		"jatuh lebih pendek dari jatuh + bangkit: bangkit mulai paling cepat sesudah jatuh selesai (0,4)")
+	check(LoperAnim.frame_jatuh(1.0, 0, 10.0, 4, 3.0, 2, 0.0, 6, 1.2).nama == &"terjerembab_normal" and LoperAnim.frame_jatuh(1.0, 0, 10.0, 4, 3.0, 2, 10.0, 6).nama == &"terjerembab_normal",
+		"tanpa fps bangkit atau tanpa total waktu: tanpa bangkit (perilaku sebelum Fase 5C)")
 
 
 ## Pemain yang jatuh di dalam bentuk mobil yang sudah berhenti di garis tengah tidak terkunci (keputusan pemilik 2026-10-17): sesudah bangun

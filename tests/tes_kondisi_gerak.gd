@@ -10,7 +10,9 @@ extends RefCounted
 ## Tes ini TIDAK menyentuh berkas.
 
 ## Sidik emas: sha256 dari bit 64-bit hasil `BikeMotion.langkah` kode SEBELUM efek untuk `SimProfilKondisi.masukan_acak(500, 20261020)`.
-const SIDIK_EMAS_GERAK: String = "885da896ef96fd6f01d014fd034076ce86a39707ae82ff491e9ee2a187ac4404"
+## Fase 5C: pose `BERHENTI` (rem aktif dan kecepatan 0) menggantikan `REM` di 33 dari 500 hasil; sidik lama 885da896... diperoleh kembali
+## bila `BERHENTI` dipetakan ke `REM`, jadi nilai gerak lainnya tidak berubah.
+const SIDIK_EMAS_GERAK: String = "7c18cdf87d66de289d16e8aabff8ba34729558d19e21d001a4a18626ecb746bb"
 const DT: float = 1.0 / 60.0
 const TOLERANSI: float = 0.000000001
 

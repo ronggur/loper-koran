@@ -84,7 +84,9 @@ def main():
     periksa(berkas_aset == [NAMA + '.json', NAMA + '.png'], f'assets/sprites/npc hanya berisi sheet kucing misi (png + json), dapat {berkas_aset}')
     periksa(os.path.isfile(os.path.join(HASIL_REPO, NAMA + '.png.import')), 'sheet kucing punya .import hasil Godot')
     data = json.loads(baca(os.path.join(HASIL_REPO, NAMA + '.json')))
-    periksa(data['cell'] == [46, 38] and data['ground_anchor'] == [18, 21] and data['columns'] == 7 and data['rows'] == 4, 'JSON: sel 46x38, titik pijak (18, 21), 7 kolom, 4 baris')
+    periksa(data['cell'] == [46, 38] and data['ground_anchor'] == [18, 21] and data['columns'] == 9 and data['rows'] == 4, 'JSON: sel 46x38, titik pijak (18, 21), 9 kolom (Fase 5C: + ditangkap_1/_2), 4 baris')
+    periksa(data['frames'][7:] == ['ditangkap_1', 'ditangkap_2'] and data['anim'].get('ditangkap') == ['ditangkap_1', 'ditangkap_2'] and data['fps'].get('ditangkap') == 3,
+            'JSON: kolom 7-8 = ditangkap_1/_2, animasi ditangkap 3 fps (Fase 5C), tujuh kolom lama tidak bergeser')
     periksa(data['frames'][0] == 'duduk' and data['row_names'][1] == 'masuk', 'JSON: kolom 0 = duduk, baris 1 = masuk (menghadap rumah seberang)')
     # Kontrol: berkas yang diubah satu byte terdeteksi berbeda dari hasil skrip.
     asli = bytearray(baca(os.path.join(HASIL_REPO, NAMA + '.png')))

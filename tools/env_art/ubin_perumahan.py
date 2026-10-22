@@ -137,6 +137,85 @@ def build_jalan(s, varian=0, marka=True, simbol=None, masuk=None, y_range=(-400,
         PR.kerb_with_gaps(s, a, b, 2.6, P['kerb'], gaps)
 
 
+
+# ------------------------------------------------------------ simpang T (Fase 5C, usulan) ----
+# Jalan samping (aspal 2 ubin, tanpa marka) keluar tegak lurus dari jalan utama ke satu sisi, di antara dua baris ubin
+# (y -48..16, baris berpusat y = -32 dan 0). Trotoar jalan utama (kerb dalam, lajur sepeda, kerb luar) membelok siku
+# ke jalan samping, jadi tiap mulut simpang punya sudut luar (di tepi aspal) dan sudut dalam (di sisi rumput).
+SIMPANG_Y = (-48.0, 16.0)
+
+
+def _d_trotoar(x, y, sg):
+    """Jarak ke tepi aspal terdekat (jalan utama atau jalan samping) untuk titik di sisi simpang."""
+    ya, yb = SIMPANG_Y
+    dm = sg * x - A
+    ds = np.where(y < ya, ya - y, np.where(y > yb, y - yb, 0.0))
+    return np.where(sg * x >= A, np.minimum(dm, ds), dm)
+
+
+def region_simpang(sg):
+    base = region_fn()
+    ya, yb = SIMPANG_Y
+
+    def region(x, y):
+        mi, sh = base(x, y)
+        xw, yw = _w(x), _w(y)
+        mulut = (sg * x >= A - 4) & (y > ya) & (y < yb)          # mulut simpang + garis tepi yang terputus
+        mi = np.where(mulut, 1, mi)
+        sh = np.where(mulut, 1 + speckle(xw, yw, 5, 0.03, 0.05, 1), sh)
+        return mi, sh
+    return region
+
+
+def lajur_tex_simpang(sg):
+    """Seperti lajur_tex(), tetapi garis tepi luar mengikuti belokan siku ke jalan samping."""
+    def tex(Pw, Nw):
+        x, y = Pw[:, 0], Pw[:, 1]
+        top = Nw[:, 2] > 0.5
+        d = _d_trotoar(x, y, sg)
+        mi = np.zeros(len(x), int)
+        sh = np.where(top, 1, 0)
+        sh = np.where(top & (hash2(np.floor(_w(x)), np.floor(_w(y)), 11) > 0.93), 2, sh)
+        line = top & (d > LAJUR[1] - 2.2 - A) & (d < LAJUR[1] - 1.0 - A)
+        mi = np.where(line, 1, mi)
+        return mi, sh
+    return tex
+
+
+def _xs(sg, a, b):
+    """Rentang x [a, b] (jarak dari garis tengah) di sisi sg, terurut."""
+    return (a, b) if sg > 0 else (-b, -a)
+
+
+def build_simpang(s, sg):
+    """sg = +1: simpang ke sisi dekat, -1: ke sisi seberang. Sisi lain jalan utama tetap lurus."""
+    s.add(ground_prim(region_simpang(sg), MATS))
+    ya, yb = SIMPANG_Y
+    # sisi tanpa simpang: sama dengan build_jalan
+    o = -sg
+    PR.kerb_with_gaps(s, *_xs(o, *KERB_D), 3, P['kerb'], [])
+    s.add(box(*_xs(o, *LAJUR), -900, 900, 0, 2, [PR.BIKE_MAT, P['mark']], lajur_tex(), outline=False, cast=False))
+    PR.kerb_with_gaps(s, *_xs(o, *KERB_L), 2.6, P['kerb'], [])
+    # sisi simpang: dua blok (depan y < ya, belakang y > yb), trotoar membelok siku ke jalan samping
+    lt = lajur_tex_simpang(sg)
+    for blk in (-1, 1):
+        def yr(off_main):
+            """rentang y lengan jalan utama yang berhenti `off_main` unit sebelum tepi jalan samping."""
+            return (-900, ya - off_main) if blk < 0 else (yb + off_main, 900)
+
+        def ys(d0, d1):
+            """rentang y lengan jalan samping, d0..d1 unit dari tepi aspalnya."""
+            return (ya - d1, ya - d0) if blk < 0 else (yb + d0, yb + d1)
+        k0 = KERB_D[0] - A; k1 = KERB_D[1] - A; l1 = LAJUR[1] - A; e1 = KERB_L[1] - A
+        # jalan utama
+        s.add(box(*_xs(sg, *KERB_D), *yr(0), 0, 3, P['kerb'], outline=False, cast=False))
+        s.add(box(*_xs(sg, *LAJUR), *yr(k1), 0, 2, [PR.BIKE_MAT, P['mark']], lt, outline=False, cast=False))
+        s.add(box(*_xs(sg, *KERB_L), *yr(l1), 0, 2.6, P['kerb'], outline=False, cast=False))
+        # jalan samping
+        s.add(box(*_xs(sg, KERB_D[0], 900), *ys(k0, k1), 0, 3, P['kerb'], outline=False, cast=False))
+        s.add(box(*_xs(sg, LAJUR[0], 900), *ys(k1, l1), 0, 2, [PR.BIKE_MAT, P['mark']], lt, outline=False, cast=False))
+        s.add(box(*_xs(sg, KERB_L[0], 900), *ys(l1, e1), 0, 2.6, P['kerb'], outline=False, cast=False))
+
 # ------------------------------------------------------------ potong ubin ----
 W_ADEGAN, H_ADEGAN = 768, 448
 OX, OY = W_ADEGAN // 2, H_ADEGAN // 2
@@ -288,9 +367,71 @@ def cek_sambungan(ubin):
     return beda
 
 
+# ------------------------------------------------------------ ekspor simpang T ----
+SIMPANG_BARIS = {-3: 'depan_2', -2: 'depan_1', -1: 'mulut_1', 0: 'mulut_2', 1: 'belakang_1', 2: 'belakang_2'}
+
+
+def ekspor_simpang():
+    """Ubin simpang T ke sisi dekat dan sisi seberang: hanya ubin yang berbeda dari ubin jalan lurus.
+    Kolom di luar rumput (|x| >= 3,5 ubin) adalah lengan jalan samping yang berulang tiap 1 ubin ke luar."""
+    out_dir = OUT_DIR / 'simpang'
+    out_dir.mkdir(parents=True, exist_ok=True)
+    lurus, _ = render_adegan(lambda s: build_jalan(s))
+    meta = {'tile': [64, 32], 'ground_anchor': [32, 16], 'status': 'usulan Fase 5C',
+            'note': 'Simpang T: jalan samping aspal 2 ubin di antara baris y = -1 (mulut_1) dan y = 0 (mulut_2) ubin. '
+                    'Pasang ubin ini di posisi (kolom_x_ubin, baris_y_ubin) relatif ke ubin jalan lurus baris 0; '
+                    'kolom lengan berulang ke luar tiap 1 ubin. Sel lain tetap ubin jalan lurus.',
+            'sisi': {}}
+    hasil = {}
+    for sg, sisi in ((1, 'dekat'), (-1, 'seberang')):
+        img, _ = render_adegan(lambda s, sg=sg: build_simpang(s, sg))
+        nama_kolom = {0.5 * sg: 'aspal_' + sisi, 1.5 * sg: 'trotoar_' + sisi, 2.5 * sg: 'rumput_' + sisi}
+        daftar = []
+        for cy in sorted(SIMPANG_BARIS):
+            lengan = [potong(img, cx * U, cy * U) for cx in (3.5 * sg, 4.5 * sg, 5.5 * sg)]
+            assert all((t == lengan[0]).all() for t in lengan), 'lengan simpang tidak berulang'
+            for cxu in (0.5 * sg, 1.5 * sg, 2.5 * sg, 3.5 * sg):
+                a = potong(img, cxu * U, cy * U)
+                if (a == potong(lurus, cxu * U, cy * U)).all():
+                    continue
+                kol = nama_kolom.get(cxu, 'lengan')
+                nm = 'simpang_%s_%s_%s' % (sisi, kol, SIMPANG_BARIS[cy])
+                Image.fromarray(a, 'RGBA').save(out_dir / ('tile_perumahan_%s.png' % nm))
+                hasil[nm] = a
+                daftar.append({'file': 'tile_perumahan_%s.png' % nm, 'kolom_x_ubin': cxu, 'baris_y_ubin': cy,
+                               'berulang_ke_luar': kol == 'lengan'})
+        meta['sisi'][sisi] = daftar
+    with open(out_dir / 'tile_perumahan_simpang.json', 'w') as f:
+        json.dump(meta, f, indent=1, ensure_ascii=False); f.write('\n')
+    return hasil, meta
+
+
+def cek_simpang(meta):
+    """Susun ulang potongan simpang dari ubin (baru + lurus) dan bandingkan dengan adegannya: harus identik."""
+    lurus, _ = render_adegan(lambda s: build_jalan(s))
+    beda = 0
+    for sg, sisi in ((1, 'dekat'), (-1, 'seberang')):
+        img, _ = render_adegan(lambda s, sg=sg: build_simpang(s, sg))
+        pos = {(d['kolom_x_ubin'], d['baris_y_ubin']): d for d in meta['sisi'][sisi]}
+        for cy in range(-4, 4):
+            for k in range(-6, 6):          # kedua sisi jalan, sampai 3 ubin lengan ke luar
+                cxu = sg * (k + 0.5)
+                key = (cxu, cy)
+                if key in pos:
+                    t = np.array(Image.open(OUT_DIR / 'simpang' / pos[key]['file']))
+                elif sg * cxu >= 3.5 and (sg * 3.5, cy) in pos:
+                    t = np.array(Image.open(OUT_DIR / 'simpang' / pos[(sg * 3.5, cy)]['file']))
+                else:
+                    t = potong(lurus, cxu * U, cy * U)
+                beda += int(np.abs(t.astype(int) - potong(img, cxu * U, cy * U).astype(int)).sum())
+    return beda
+
+
 if __name__ == '__main__':
     u = ekspor_ubin()
     print('beda sambungan:', cek_sambungan(u))
+    _, meta_simpang = ekspor_simpang()
+    print('beda sambungan simpang:', cek_simpang(meta_simpang))
     print('selesai ->', OUT_DIR)
     if '--salin' in sys.argv[1:]:
         salin(u)

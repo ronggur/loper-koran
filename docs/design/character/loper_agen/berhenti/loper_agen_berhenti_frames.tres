@@ -1,0 +1,101 @@
+[gd_resource type="SpriteFrames" load_steps=12 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/loper/loper_agen_berhenti.png" id="1_sheet"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s1"]
+atlas = ExtResource("1_sheet")
+region = Rect2(0, 0, 46, 58)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s2"]
+atlas = ExtResource("1_sheet")
+region = Rect2(46, 0, 46, 58)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s3"]
+atlas = ExtResource("1_sheet")
+region = Rect2(0, 58, 46, 58)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s4"]
+atlas = ExtResource("1_sheet")
+region = Rect2(46, 58, 46, 58)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s5"]
+atlas = ExtResource("1_sheet")
+region = Rect2(0, 116, 46, 58)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s6"]
+atlas = ExtResource("1_sheet")
+region = Rect2(46, 116, 46, 58)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s7"]
+atlas = ExtResource("1_sheet")
+region = Rect2(0, 174, 46, 58)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s8"]
+atlas = ExtResource("1_sheet")
+region = Rect2(46, 174, 46, 58)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s9"]
+atlas = ExtResource("1_sheet")
+region = Rect2(0, 232, 46, 58)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s10"]
+atlas = ExtResource("1_sheet")
+region = Rect2(46, 232, 46, 58)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s2")
+}],
+"loop": true,
+"name": &"berhenti_normal",
+"speed": 3.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s4")
+}],
+"loop": true,
+"name": &"berhenti_serong_kanan",
+"speed": 3.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s6")
+}],
+"loop": true,
+"name": &"berhenti_kanan",
+"speed": 3.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s8")
+}],
+"loop": true,
+"name": &"berhenti_serong_kiri",
+"speed": 3.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s9")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s10")
+}],
+"loop": true,
+"name": &"berhenti_kiri",
+"speed": 3.0
+}]

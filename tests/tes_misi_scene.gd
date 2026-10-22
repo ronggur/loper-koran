@@ -216,10 +216,10 @@ func _test_kucing_di_scene() -> void:
 	var pijak: Array = info["ground_anchor"]
 	check(tekstur != null and tekstur.get_width() == int(sel[0]) * Config.MISI_KUCING_KOLOM and tekstur.get_height() == int(sel[1]) * Config.MISI_KUCING_BARIS, "sheet kucing %dx%d = %d kolom x %d baris sel" % [tekstur.get_width(), tekstur.get_height(), Config.MISI_KUCING_KOLOM, Config.MISI_KUCING_BARIS])
 	check(Config.MISI_KUCING_SEL_PX == [int(sel[0]), int(sel[1])] and Config.MISI_KUCING_PIJAK_PX == [int(pijak[0]), int(pijak[1])], "Config sel %s dan titik pijak %s sama dengan JSON sheet" % [Config.MISI_KUCING_SEL_PX, Config.MISI_KUCING_PIJAK_PX])
-	check(int(info["columns"]) == Config.MISI_KUCING_KOLOM and int(info["rows"]) == Config.MISI_KUCING_BARIS and info["frames"][Config.MISI_KUCING_KOLOM_DUDUK] == "duduk" and info["row_names"][Config.MISI_KUCING_BARIS_HADAP] == "masuk", "JSON: 7 kolom, 4 baris, kolom 0 'duduk', baris 1 'masuk' (menghadap rumah seberang)")
+	check(int(info["columns"]) == Config.MISI_KUCING_KOLOM and int(info["rows"]) == Config.MISI_KUCING_BARIS and info["frames"][Config.MISI_KUCING_KOLOM_DUDUK] == "duduk" and info["row_names"][Config.MISI_KUCING_BARIS_HADAP] == "masuk", "JSON: 9 kolom, 4 baris, kolom 0 'duduk', baris 1 'masuk' (menghadap rumah seberang)")
 	var impor: String = FileAccess.get_file_as_string("res://assets/sprites/npc/mission_kucing_sheet.png.import")
 	check(impor.contains("compress/mode=0") and impor.contains("mipmaps/generate=false") and kucing.badan().texture_filter == CanvasItem.TEXTURE_FILTER_NEAREST, "impor Lossless, tanpa mipmap, filter Nearest")
-	check(kucing.badan().frame == KucingMisi.frame_duduk() and kucing.badan().hframes == 7 and kucing.badan().vframes == 4 and kucing.badan().offset == Vector2(-18, -21) and not kucing.badan().centered, "sprite: frame duduk baris masuk (7), titik pijak (18, 21) di titik asal")
+	check(kucing.badan().frame == KucingMisi.frame_duduk() and kucing.badan().hframes == 9 and kucing.badan().vframes == 4 and kucing.badan().offset == Vector2(-18, -21) and not kucing.badan().centered, "sprite: frame duduk baris masuk (9 kolom sejak Fase 5C), titik pijak (18, 21) di titik asal")
 	var t1: RencanaMisi.Titik = rencana.titik[0]
 	_di(akar, maxf(t1.maju_ubin - 11.9, 0.0))
 	check(kucing.tampil() and kucing.titik() == t1, "dalam jarak tampil sebelum kucing: kucing titik 1 tampil (MISI_TAMPIL_JARAK_UBIN)")

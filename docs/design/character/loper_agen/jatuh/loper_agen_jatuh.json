@@ -1,79 +1,339 @@
 {
  "sprite": "loper_agen_jatuh.png",
  "cell": [
-  114,
-  68
+  140,
+  88
  ],
  "columns": 5,
- "rows": 1,
+ "rows": 5,
  "ground_anchor": [
-  57,
-  51
+  70,
+  61
  ],
  "godot_offset": [
-  0,
+  0.0,
   -17.0
  ],
- "status": "usulan",
- "note": "Titik pijak = posisi sepeda saat menabrak. Offset sama dengan sheet kayuh, jadi animasi ini bisa masuk SpriteFrames yang sama.",
+ "status": "usulan Fase 5C",
+ "note": "Titik pijak = posisi sepeda saat menabrak. Sel 140x88 untuk kelima arah (arah normal = sheet 114x68 lama, piksel sama, dipotong ulang). Offset sama dengan sheet kayuh (0, -17). serong_kiri: tubuh diputar 30 derajat di tanah supaya tengkurapnya terbaca.",
  "animations": [
   {
    "name": "jatuh_normal",
+   "heading": "normal",
+   "row": 0,
+   "fps": 10,
+   "loop": false,
    "frames": [
     0,
     1,
     2,
     3
    ],
-   "fps": 10,
-   "loop": false,
    "regions": [
     [
      0,
      0,
-     114,
-     68
+     140,
+     88
     ],
     [
-     114,
+     140,
      0,
-     114,
-     68
+     140,
+     88
     ],
     [
-     228,
+     280,
      0,
-     114,
-     68
+     140,
+     88
     ],
     [
-     342,
+     420,
      0,
-     114,
-     68
+     140,
+     88
     ]
    ]
   },
   {
    "name": "terjerembab_normal",
+   "heading": "normal",
+   "row": 0,
+   "fps": 3,
+   "loop": true,
    "frames": [
     3,
     4
    ],
-   "fps": 3,
-   "loop": true,
    "regions": [
     [
-     342,
+     420,
      0,
-     114,
-     68
+     140,
+     88
     ],
     [
-     456,
+     560,
      0,
-     114,
-     68
+     140,
+     88
+    ]
+   ]
+  },
+  {
+   "name": "jatuh_serong_kanan",
+   "heading": "serong_kanan",
+   "row": 1,
+   "fps": 10,
+   "loop": false,
+   "frames": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "regions": [
+    [
+     0,
+     88,
+     140,
+     88
+    ],
+    [
+     140,
+     88,
+     140,
+     88
+    ],
+    [
+     280,
+     88,
+     140,
+     88
+    ],
+    [
+     420,
+     88,
+     140,
+     88
+    ]
+   ]
+  },
+  {
+   "name": "terjerembab_serong_kanan",
+   "heading": "serong_kanan",
+   "row": 1,
+   "fps": 3,
+   "loop": true,
+   "frames": [
+    3,
+    4
+   ],
+   "regions": [
+    [
+     420,
+     88,
+     140,
+     88
+    ],
+    [
+     560,
+     88,
+     140,
+     88
+    ]
+   ]
+  },
+  {
+   "name": "jatuh_kanan",
+   "heading": "kanan",
+   "row": 2,
+   "fps": 10,
+   "loop": false,
+   "frames": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "regions": [
+    [
+     0,
+     176,
+     140,
+     88
+    ],
+    [
+     140,
+     176,
+     140,
+     88
+    ],
+    [
+     280,
+     176,
+     140,
+     88
+    ],
+    [
+     420,
+     176,
+     140,
+     88
+    ]
+   ]
+  },
+  {
+   "name": "terjerembab_kanan",
+   "heading": "kanan",
+   "row": 2,
+   "fps": 3,
+   "loop": true,
+   "frames": [
+    3,
+    4
+   ],
+   "regions": [
+    [
+     420,
+     176,
+     140,
+     88
+    ],
+    [
+     560,
+     176,
+     140,
+     88
+    ]
+   ]
+  },
+  {
+   "name": "jatuh_serong_kiri",
+   "heading": "serong_kiri",
+   "row": 3,
+   "fps": 10,
+   "loop": false,
+   "frames": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "regions": [
+    [
+     0,
+     264,
+     140,
+     88
+    ],
+    [
+     140,
+     264,
+     140,
+     88
+    ],
+    [
+     280,
+     264,
+     140,
+     88
+    ],
+    [
+     420,
+     264,
+     140,
+     88
+    ]
+   ]
+  },
+  {
+   "name": "terjerembab_serong_kiri",
+   "heading": "serong_kiri",
+   "row": 3,
+   "fps": 3,
+   "loop": true,
+   "frames": [
+    3,
+    4
+   ],
+   "regions": [
+    [
+     420,
+     264,
+     140,
+     88
+    ],
+    [
+     560,
+     264,
+     140,
+     88
+    ]
+   ]
+  },
+  {
+   "name": "jatuh_kiri",
+   "heading": "kiri",
+   "row": 4,
+   "fps": 10,
+   "loop": false,
+   "frames": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "regions": [
+    [
+     0,
+     352,
+     140,
+     88
+    ],
+    [
+     140,
+     352,
+     140,
+     88
+    ],
+    [
+     280,
+     352,
+     140,
+     88
+    ],
+    [
+     420,
+     352,
+     140,
+     88
+    ]
+   ]
+  },
+  {
+   "name": "terjerembab_kiri",
+   "heading": "kiri",
+   "row": 4,
+   "fps": 3,
+   "loop": true,
+   "frames": [
+    3,
+    4
+   ],
+   "regions": [
+    [
+     420,
+     352,
+     140,
+     88
+    ],
+    [
+     560,
+     352,
+     140,
+     88
     ]
    ]
   }

@@ -1,0 +1,286 @@
+{
+ "sprite": "loper_agen_bangkit.png",
+ "cell": [
+  140,
+  88
+ ],
+ "columns": 6,
+ "rows": 5,
+ "ground_anchor": [
+  70,
+  61
+ ],
+ "godot_offset": [
+  0.0,
+  -17.0
+ ],
+ "status": "usulan Fase 5C",
+ "note": "Dari terjerembab: bertumpu tangan, berlutut (topi dipungut), berdiri dan kembali ke sepeda, meraih setang, menegakkan sepeda, lalu kayuh santai frame 0 (piksel sama dengan sheet kayuh). 0,6 detik. Koran yang berserakan hilang di frame terakhir. Lanjut ke santai_<arah> tanpa geser titik pijak.",
+ "animations": [
+  {
+   "name": "bangkit_normal",
+   "heading": "normal",
+   "row": 0,
+   "fps": 10,
+   "loop": false,
+   "frames": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "regions": [
+    [
+     0,
+     0,
+     140,
+     88
+    ],
+    [
+     140,
+     0,
+     140,
+     88
+    ],
+    [
+     280,
+     0,
+     140,
+     88
+    ],
+    [
+     420,
+     0,
+     140,
+     88
+    ],
+    [
+     560,
+     0,
+     140,
+     88
+    ],
+    [
+     700,
+     0,
+     140,
+     88
+    ]
+   ]
+  },
+  {
+   "name": "bangkit_serong_kanan",
+   "heading": "serong_kanan",
+   "row": 1,
+   "fps": 10,
+   "loop": false,
+   "frames": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "regions": [
+    [
+     0,
+     88,
+     140,
+     88
+    ],
+    [
+     140,
+     88,
+     140,
+     88
+    ],
+    [
+     280,
+     88,
+     140,
+     88
+    ],
+    [
+     420,
+     88,
+     140,
+     88
+    ],
+    [
+     560,
+     88,
+     140,
+     88
+    ],
+    [
+     700,
+     88,
+     140,
+     88
+    ]
+   ]
+  },
+  {
+   "name": "bangkit_kanan",
+   "heading": "kanan",
+   "row": 2,
+   "fps": 10,
+   "loop": false,
+   "frames": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "regions": [
+    [
+     0,
+     176,
+     140,
+     88
+    ],
+    [
+     140,
+     176,
+     140,
+     88
+    ],
+    [
+     280,
+     176,
+     140,
+     88
+    ],
+    [
+     420,
+     176,
+     140,
+     88
+    ],
+    [
+     560,
+     176,
+     140,
+     88
+    ],
+    [
+     700,
+     176,
+     140,
+     88
+    ]
+   ]
+  },
+  {
+   "name": "bangkit_serong_kiri",
+   "heading": "serong_kiri",
+   "row": 3,
+   "fps": 10,
+   "loop": false,
+   "frames": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "regions": [
+    [
+     0,
+     264,
+     140,
+     88
+    ],
+    [
+     140,
+     264,
+     140,
+     88
+    ],
+    [
+     280,
+     264,
+     140,
+     88
+    ],
+    [
+     420,
+     264,
+     140,
+     88
+    ],
+    [
+     560,
+     264,
+     140,
+     88
+    ],
+    [
+     700,
+     264,
+     140,
+     88
+    ]
+   ]
+  },
+  {
+   "name": "bangkit_kiri",
+   "heading": "kiri",
+   "row": 4,
+   "fps": 10,
+   "loop": false,
+   "frames": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "regions": [
+    [
+     0,
+     352,
+     140,
+     88
+    ],
+    [
+     140,
+     352,
+     140,
+     88
+    ],
+    [
+     280,
+     352,
+     140,
+     88
+    ],
+    [
+     420,
+     352,
+     140,
+     88
+    ],
+    [
+     560,
+     352,
+     140,
+     88
+    ],
+    [
+     700,
+     352,
+     140,
+     88
+    ]
+   ]
+  }
+ ]
+}

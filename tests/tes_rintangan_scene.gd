@@ -411,7 +411,7 @@ func _test_tabrakan_dari_scene() -> void:
 	_langkah(akar, 17)
 	check(sepeda.nama_animasi() == &"terjerembab_normal" and sepeda.frame_sprite() == 0, "0,4 detik: terjerembab_normal frame 0 (3 fps), dapat %s f%d" % [sepeda.nama_animasi(), sepeda.frame_sprite()])
 	_langkah(akar, 47)
-	check(Tabrakan.jatuh(akar.rintangan().tabrakan) and sepeda.sedang_jatuh() and sepeda.nama_animasi() == &"terjerembab_normal", "1,183 detik (71 langkah): masih jatuh, terjerembab")
+	check(Tabrakan.jatuh(akar.rintangan().tabrakan) and sepeda.sedang_jatuh() and sepeda.nama_animasi() == &"bangkit_normal" and sepeda.frame_sprite() == 5, "1,183 detik (71 langkah): masih jatuh, bangkit_normal frame terakhir (Fase 5C: bangkit di 0,6 detik terakhir), dapat %s f%d" % [sepeda.nama_animasi(), sepeda.frame_sprite()])
 	check(sepeda.kecepatan_ud == 0.0 and sepeda.jarak_ubin == jarak_jatuh and sepeda.lateral_ubin == lateral_jatuh, "selama jatuh: kecepatan 0, jarak dan lateral tidak berubah walau stick penuh ditahan")
 	check(not _hud(akar).putus_tampil(), "label PUTUS hilang sesudah 0,8 detik")
 	_langkah(akar, 1)

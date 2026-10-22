@@ -11,7 +11,9 @@ Nama dan latar tokoh ada di `docs/STORY.md` bagian 3. Desain baju dan aturan gay
 | [`loper_agen/`](./loper_agen/) | Sprite sheet kayuh 15 animasi (3 kecepatan × 5 arah), SpriteFrames, scene, skrip Godot | **Produksi** |
 | [`loper_agen/base/`](./loper_agen/base/) | Papan base model: 5 arah santai dan 3 pose kecepatan (normal dan samping) | Acuan |
 | `loper_agen/loper_agen_fullbody.png` | Gambar full body skala besar 240×292 dari konversi gambar AI (sejak 2026-10-08), kepala terpisah tanpa leher | Resmi |
-| [`loper_agen/jatuh/`](./loper_agen/jatuh/) | Animasi jatuh terjerembab, arah normal | Usulan |
+| [`loper_agen/jatuh/`](./loper_agen/jatuh/) | Animasi jatuh terjerembab, lima arah (sel 140×88 sejak Fase 5C) | Usulan |
+| [`loper_agen/bangkit/`](./loper_agen/bangkit/) | Animasi bangkit sesudah jatuh, lima arah (Fase 5C) | Usulan |
+| [`loper_agen/berhenti/`](./loper_agen/berhenti/) | Berhenti dengan kaki kanan turun, lima arah (Fase 5C) | Usulan |
 | [`loper_agen/lempar/`](./loper_agen/lempar/) | Animasi lempar koran kiri dan kanan, 3 kecepatan, arah normal dan dua serong (18 animasi); 90° belum ada | Usulan, dipakai di jalan uji sejak 2026-10-09 |
 | [`loper_agen/melambat/`](./loper_agen/melambat/) | Tingkat kecepatan di bawah santai: frame santai yang sama, diputar 4 fps | Usulan, dipakai di jalan uji sejak 2026-10-09 |
 | [`loper_agen/rem_meluncur/`](./loper_agen/rem_meluncur/) | Animasi meluncur (pedal datar) dan rem (badan sedikit mundur), 5 arah × 4 frame | Usulan, dipakai di jalan uji sejak 2026-10-13 (pose dari fisika, BALANCING 2) |
