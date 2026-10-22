@@ -19,13 +19,15 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 |---|---|---|---|---|
 | 0 | Fondasi teknis | M0 | ✅ run 0A (PR #12), 0B+0C (PR #14), uji HP di A54 lolos | 2026-10-13 |
 | 1 | Gerak sepeda & kecepatan (prototype 1) | M1 | ✅ run 1A (PR #20), 1B (PR #21), 1C (PR #23) lolos QA; uji HP oleh pemilik lolos | 2026-10-14 |
-| 2 | Lemparan koran (prototype 2) | M1 | 🟨 kode selesai: run 2A (PR #24), arah bebas (PR #25), 2B (PR #26) lolos QA; uji HP penutup (`SETUP_ANDROID.md` 8.5) menunggu pemilik | |
-| 3 | Satu rute perumahan (prototype 3) | M2 | 🟨 kode selesai: run 3A (PR #28), 3B (PR #32), 3C (PR #33: radar, HUD rute, tenggat, layar hasil, keputusan sisi dekat tembok rendah) lolos QA; uji HP penutup (`SETUP_ANDROID.md` 8.8, juga 8.6 dan 8.7) menunggu pemilik | |
-| 4 | Halaman depan koran & misi kucing (prototype 4) | M2 | 🟨 kode selesai: run 4A (PR #39: halaman depan koran, format dan pemuat misi dan headline, `HeadlineManager`, save v1, alur hari) dan 4B (PR #40: misi kucing P1, HUD misi, save v2, tutorial hari 1) lolos QA; uji HP penutup (`SETUP_ANDROID.md` 8.9 dan 8.10) menunggu pemilik; belum dicentang | |
-| 5 | Aset gelombang 1 *(paralel)* | M2–M3 | 🟡 sprite pemain selesai; usulan gelombang 1 dirender 2026-10-20 (`tools/env_art/gelombang1/`, belum dipasang) | |
-| 6 | Hari demi hari: reputasi, bengkel, ekonomi | M3 | 🟡 run 6A1 (kondisi sepeda, bengkel, koin sebagai saldo) dikerjakan 2026-10-20; 6A2 (reputasi, pelanggan) dan 6B menyusul; belum dicentang | |
+| 2 | Lemparan koran (prototype 2) | M1 | ✅ run 2A (PR #24), arah bebas (PR #25), 2B (PR #26) lolos QA; uji HP pemilik 2026-10-22: "untuk uji hp sejauh ini oke semua" | 2026-10-22 |
+| 3 | Satu rute perumahan (prototype 3) | M2 | ✅ run 3A (PR #28), 3B (PR #32), 3C (PR #33) lolos QA; uji HP pemilik 2026-10-22: "untuk uji hp sejauh ini oke semua" | 2026-10-22 |
+| 4 | Halaman depan koran & misi kucing (prototype 4) | M2 | ✅ run 4A (PR #39) dan 4B (PR #40) lolos QA; uji HP pemilik 2026-10-22: "untuk uji hp sejauh ini oke semua" | 2026-10-22 |
+| 5 | Aset gelombang 1 *(paralel)* | M2–M3 | 🟡 run 5A (PR #42/#43), 5B (PR #49), 5C (PR #52) di-merge; 5A dan 5B lolos uji HP pemilik 2026-10-22; 5C (8.14, 8.15) belum diuji; Run 5D (pelanggan sisi dekat, halaman terbuka, `LOOP-DEV-QA.md` 6j) berikutnya | |
+| 6 | Hari demi hari: reputasi, bengkel, ekonomi | M3 | 🟡 run 6A1 (PR #43) lolos QA dan uji HP pemilik 2026-10-22: "untuk uji hp sejauh ini oke semua"; 6A2 (reputasi, pelanggan) sesudah Run 5D, lalu 6B | |
 | 7 | Vertical slice perumahan & audio dasar | M3 | ⬜ | |
 | 8 | Distrik berikutnya, iklan, rilis | M4 | ⬜ | |
+
+**Pembaruan 2026-10-22:** pemilik menguji HP ("untuk uji hp sejauh ini oke semua"), jadi Fase 2, 3, dan 4 selesai dan M1 serta M2 tercapai; butir aset 5A/5B dan 6A1 yang hanya menunggu uji HP dicentang. Run 5C (PR #52) belum diuji di HP (8.14, 8.15). Berikutnya **Run 5D** (pelanggan sisi dekat mulai hari 3, tembok sisi dekat diganti halaman terbuka, rumah dekat mundur 0,5; `LOOP-DEV-QA.md` 6j, dimajukan dari Fase 8), lalu 6A2. Catatan lama di bawah dipertahankan sebagai riwayat.
 
 **Fase aktif: Fase 6, bagian 6A** (pemilik melompat ke 6A dengan sadar 2026-10-20; Fase 5 berjalan paralel dan belum selesai). Run 6A1 (kondisi sepeda, bengkel, koin sebagai saldo) dikerjakan lewat loop Dev↔QA, `docs/loop/20261020-fase6a1-bengkel-kondisi/`. Fase 2, 3, dan 4 sudah **kode selesai** (run 4A PR #39 dan 4B PR #40 lolos QA 2026-10-18) dan **menunggu uji HP pemilik** (`SETUP_ANDROID.md` 8.5 sampai 8.10); Fase 4 dan M2 tidak dicentang sebelum itu. Riwayat Fase 3: (satu rute perumahan; run 3C PR #33 lolos QA 2026-10-17 di iterasi 2: radar, HUD rute final, tenggat, layar hasil; tampilan rumah sisi dekat diputuskan pemilik 2026-10-17 = tembok/pagar belakang rendah; Fase 3 baru selesai sesudah uji HP pemilik `SETUP_ANDROID.md` 8.8; run 3B PR #32 lolos QA 2026-10-16 dan APK-nya terpasang di vivo V2108, uji HP 3B di `SETUP_ANDROID.md` 8.7 belum dilakukan; run 3A PR #28, uji HP 3A di `SETUP_ANDROID.md` 8.6, APK dengan trotoar bisa dilalui dan kotak surat di halaman (PR #30) terpasang di vivo V2108 2026-10-16, belum diuji pemilik; 3B dan 3C menyusul). Fase 2 (lemparan koran) tinggal menunggu uji HP pemilik, dan jalan uji tetap tersedia sebagai scene dev. Riwayat Fase 2:  Run 2A (inti lemparan) lolos QA 2026-10-14 di iterasi 2 (PR #24) dan terpasang di vivo V2108; mode bantu, audio lempar/mendarat, uji HP Fase 2, dan QA-008 (DEFERRED) di Run 2B. Fase 1 selesai 2026-10-14: run 1A, 1B, dan 1C (perapian temuan Run 1B, PR #23) lolos QA, dan uji di HP dinyatakan oke oleh pemilik 2026-10-14. Uji HP dilakukan pemilik sendiri, bukan 3-5 orang (keputusan pemilik 2026-10-14: uji HP cukup oleh pemilik sendiri, tanpa 3-5 penguji lain; tidak ada penguji lain). Riwayat Fase 1: dikerjakan lewat loop Dev↔QA (`LOOP-DEV-QA.md` Bagian 6). Run 1A (logika gerak inti) lolos QA 2026-10-14 di iterasi 1 (PR #20). Run 1B (umpan balik, audio placeholder, layar jeda, penyetelan, probe render) lolos QA 2026-10-14 di iterasi 1 (PR #21); APK terpasang di vivo V2108 (Android 12, 2400×1080) 2026-10-14. Yang tersisa: bukti probe render di A54 dan uji 3-5 orang (`SETUP_ANDROID.md` 8.2). Fase 0 selesai 2026-10-13: run 0A dan 0B+0C lolos QA 2026-10-09, dan uji HP di A54 (checklist `SETUP_ANDROID.md` bagian 8) dinyatakan lolos oleh pemilik 2026-10-13. Cek light 2D/glow/partikel/shader di Compatibility dipindah ke Fase 1 (Run 1B) karena butuh scene uji yang belum ada.
 
@@ -84,8 +86,8 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 - [x] Zona sasaran placeholder: kotak surat, teras, halaman, jendela (nilai di BALANCING 5) (run 2A, PR #24, 2026-10-14; jendela lewat sakelar `Config`, bawaan penalti ringan, keputusan akhir ROADMAP 5; sisi dekat datar placeholder)
 - [x] Sisa koran terbatas dan tampil di HUD (run 2A, PR #24, 2026-10-14; jeda antar lempar 0,35 detik; isi ulang khusus jalan uji)
 - [x] Mode bantu: tap sisi layar untuk lempar otomatis ke kotak surat terdekat; kecepatan otomatis (run 2B, PR #26, 2026-10-15: tap di zona lempar, sisi dari garis jalan, kotak surat pelanggan terdekat di depan selalu kena lewat `ThrowSolver`, santai otomatis dengan stick opsional, sakelar di HUD dev; bunyi lempar dan mendarat placeholder ikut di PR yang sama; rasa dinilai di uji HP)
-- [ ] Animasi lempar pemain ke sisi seberang dan sisi dekat (aset Fase 5)
-- [ ] Uji di HP: ketelitian swipe pendek di layar kecil, lemparan saat ngebut
+- [x] Animasi lempar pemain ke sisi seberang dan sisi dekat (aset Fase 5; sheet `loper_agen_lempar`, uji HP pemilik 2026-10-22: "untuk uji hp sejauh ini oke semua")
+- [x] Uji di HP: ketelitian swipe pendek di layar kecil, lemparan saat ngebut (uji HP pemilik 2026-10-22: "untuk uji hp sejauh ini oke semua")
 
 **Selesai kalau:** pemain bisa mengenai kotak surat dengan sengaja di ketiga kecepatan, dan pertanyaan kontrol di GDD 17 terjawab. **M1 selesai.**
 
@@ -118,12 +120,14 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 
 **Tujuan:** satu hari utuh: baca koran, ambil misi, antar, lihat hasil.
 
-- [ ] Layar halaman depan: berita utama, misi sampingan (Ambil/Lewati), berita ringan (desain di DESIGN_SPEC 4) (run 4A: kode dan tes selesai, `HalamanKoran`; belum dicentang sebelum uji HP `SETUP_ANDROID.md` 8.9 dan QA)
-- [ ] Format misi dan headline (`DATA_SCHEMA.md` 1–2), contoh headline hari 1–3 (`CONTENT_GUIDE.md`) (run 4A: format dan pemuat, 8 berita utama, 8 ringan, 2 lanjutan, misi P1, tabel hari 1–3 di `CONTENT_GUIDE.md` 8; belum dicentang, QA dan keputusan orchestrator)
-- [ ] Template Cari dan misi P1 Kucing Bu Ratmi: tiga titik, petunjuk dari lemparan tepat, menepi 1,5 detik, batas 12 rumah
-- [ ] HUD misi ("Kucing 0/1", sisa rumah) dan banner selesai/gagal
-- [ ] Flag lanjutan disimpan; headline hari berikutnya membaca flag (run 4A: save menyimpan `flag` dan `HeadlineManager` membacanya dan memprioritaskan lanjutan; flag hasil misi ditulis di 4B)
-- [ ] Save sederhana (`user://save.json`) (run 4A: `SaveManager` v1, tulis atomik, simpan hanya di akhir hari, `DataSave.migrasi`; belum dicentang)
+- [x] Layar halaman depan: berita utama, misi sampingan (Ambil/Lewati), berita ringan (desain di DESIGN_SPEC 4) (run 4A: kode dan tes selesai, `HalamanKoran`; belum dicentang sebelum uji HP `SETUP_ANDROID.md` 8.9 dan QA)
+- [x] Format misi dan headline (`DATA_SCHEMA.md` 1–2), contoh headline hari 1–3 (`CONTENT_GUIDE.md`) (run 4A: format dan pemuat, 8 berita utama, 8 ringan, 2 lanjutan, misi P1, tabel hari 1–3 di `CONTENT_GUIDE.md` 8; belum dicentang, QA dan keputusan orchestrator)
+- [x] Template Cari dan misi P1 Kucing Bu Ratmi: tiga titik, petunjuk dari lemparan tepat, menepi 1,5 detik, batas 12 rumah
+- [x] HUD misi ("Kucing 0/1", sisa rumah) dan banner selesai/gagal
+- [x] Flag lanjutan disimpan; headline hari berikutnya membaca flag (run 4A: save menyimpan `flag` dan `HeadlineManager` membacanya dan memprioritaskan lanjutan; flag hasil misi ditulis di 4B)
+- [x] Save sederhana (`user://save.json`) (run 4A: `SaveManager` v1, tulis atomik, simpan hanya di akhir hari, `DataSave.migrasi`; belum dicentang)
+
+Dicentang 2026-10-22: run 4A (PR #39) dan 4B (PR #40) lolos QA, uji HP pemilik 2026-10-22: "untuk uji hp sejauh ini oke semua".
 
 **Selesai kalau:** satu hari bisa dimainkan dari koran sampai hasil, dan hari berikutnya menampilkan headline lanjutan sesuai hasil misi. **M2 selesai.**
 
@@ -137,14 +141,16 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 
 - [x] Sprite pemain Kemeja Agen: 5 arah × 3 kecepatan × 4 frame kayuh (2026-10-07)
 - [ ] Animasi pemain: lempar ke sisi seberang dan sisi dekat, meluncur, rem, berhenti dengan kaki turun, tabrakan = jatuh (ART_DIRECTION 3.4; sejak 2026-10-17 `jatuh_normal` dan `terjerembab_normal` arah normal dipakai untuk semua arah; sisa: empat arah lain dan animasi bangkit)
-- [ ] Koran: proyektil berputar, mendarat, terlipat di teras
-- [ ] Ubin perumahan: jalan, marka, trotoar, kerb, rumput, polisi tidur
+- [x] Koran: proyektil berputar, mendarat, terlipat di teras (run 5A; uji HP pemilik 2026-10-22: "untuk uji hp sejauh ini oke semua")
+- [x] Ubin perumahan: jalan, marka, trotoar, kerb, rumput (run 5A/5B; uji HP pemilik 2026-10-22: "untuk uji hp sejauh ini oke semua"; ujung kerb jalan masuk dan simpang run 5C menunggu 8.14)
+- [ ] Polisi tidur (ditunda ke M3: butuh desain perilaku gameplay dulu, 2026-10-21)
 - [ ] Rumah modular perumahan (fasad sisi seberang, belakang sisi dekat, atap), kotak surat
-- [ ] Properti: tong sampah, pohon, portal satpam, mobil tamu
+- [x] Properti: tong sampah, pohon, lampu jalan (run 5B; uji HP pemilik 2026-10-22: "untuk uji hp sejauh ini oke semua")
+- [ ] Properti: portal satpam (M3), mobil tamu (Fase 7)
 - [ ] Rintangan: anjing penjaga (lari, berhenti), mobil keluar garasi (lampu mundur)
 - [ ] Misi: kucing (diam, kabur), jejak kaki, mangkuk
-- [ ] VFX dasar: debu roda, garis kecepatan, koran kena sasaran, tip
-- [ ] Ikon HUD
+- [x] VFX dasar: debu roda, garis kecepatan, koran kena sasaran, tip (run 5A; uji HP pemilik 2026-10-22: "untuk uji hp sejauh ini oke semua"; posisi garis kecepatan dikembalikan ke posisi lama di PR #52 atas permintaan pemilik)
+- [x] Ikon HUD (`tools/ui_art/hud_ikon.py`, dipasang sejak run 3C; uji HP pemilik 2026-10-22: "untuk uji hp sejauh ini oke semua")
 
 **Usulan dirender 2026-10-15 (belum dipasang, belum menggantikan placeholder):** rintangan anjing dan mobil garasi, rumah pelanggan dan bukan pelanggan di dua sisi, antena TV (`tools/env_art/fase3.py`), ikon HUD dan penanda radar (`tools/ui_art/hud_ikon.py`). Rincian di ART_DIRECTION 6.4–6.6 dan 6.8. Tugas di atas dicentang setelah asetnya dipasang di rute dan dinilai di HP.
 
@@ -163,7 +169,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 
 - [ ] Kepribadian pelanggan dan reputasi distrik (GDD 8)
 - [ ] Pelanggan baru dan berhenti
-- [ ] Komponen sepeda: aus, rusak dengan tanda peringatan, efek di rute (GDD 12) (run 6A1, PR #43: kode dan tes selesai; belum dicentang karena "terasa menghambat, bukan memblokir" dan frekuensi peringatan butuh uji HP, `SETUP_ANDROID.md` 8.11)
+- [x] Komponen sepeda: aus, rusak dengan tanda peringatan, efek di rute (GDD 12) (run 6A1, PR #43; uji HP pemilik 2026-10-22: "untuk uji hp sejauh ini oke semua", `SETUP_ANDROID.md` 8.11)
 - [x] Layar bengkel: servis dan upgrade (run 6A1, PR #43: `scenes/bengkel/`, `Economy`, `PemuatToko`, `upgrades.json`; dibuktikan tes smoke layar dan alur hari; keterbacaan dan harga di HP menunggu 8.11)
 - [ ] Ekonomi dari `config.gd` (GDD 14.1, BALANCING 7) (run 6A1: harga bengkel dan ongkos naik sudah di `Config`; setoran tiga pos dan ekonomi cerita di 6B, belum dicentang)
 - [ ] Milestone dasar (GDD 13)
