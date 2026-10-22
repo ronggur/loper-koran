@@ -8,7 +8,7 @@
    `trotoar_seberang_simbol`, `trotoar_dekat_simbol`, `rumput_2`, `rumput_3`), dan isi folder itu persis daftar D-1 ditambah isi 5A dan berkas lama
    (daftar ditulis eksplisit di sini). Tidak ada aset yang tidak dipasang (tong biru, pohon dan lampu jenis lain, bingkai nyala, `aspal_N`,
    `*_dekat_masuk`, polisi tidur, zebra, genangan, jejak, mangkuk, portal, pos, percikan).
-3. Isi pasangan 5A, kotak surat lama, dan rumah perumahan lama BYTE-identik dengan golden (`golden_aset_5b.json`, sha256 dihitung dari berkas
+3. Isi pasangan 5A, kotak surat lama, dan rumah perumahan seberang BYTE-identik dengan golden (rumah dekat sejak run 5D dijaga `uji_aset_fase3.py`) (`golden_aset_5b.json`, sha256 dihitung dari berkas
    sebelum run, commit d102d61): 61 berkas.
 4. JSON: tembok sel 46x46 pijak (41, 25), tong sampah 20x30 pijak (10, 25), pohon dan lampu `cell` = ukuran PNG, ubin 64x32 pijak (32, 16);
    `tile_perumahan.json` hanya memuat ubin yang dipasang, `tiles` = berkas PNG di folder, `ubin_khusus` dan `ubin_polos_luar` benar.
@@ -47,8 +47,9 @@ SPRITES = os.path.join(ROOT, 'assets', 'sprites')
 GOLDEN = os.path.join(FOLDER, 'golden_aset_5b.json')
 
 # Daftar D-1 run 5B (ditulis eksplisit, bukan dari skrip). Nilai: (sel lebar, sel tinggi, pijak x, pijak y, jumlah frame).
-TEMBOK = {'house_tembok_polos': (46, 46, 41, 25, 1), 'house_tembok_bata': (46, 46, 41, 25, 1), 'house_tembok_besi': (46, 46, 41, 25, 1),
-          'house_tembok_pot': (46, 46, 41, 25, 1), 'house_tembok_tiang': (46, 46, 41, 25, 1)}
+# Run fase5d-sisi-dekat (P-1): lima tembok sisi dekat (`house_tembok_{polos,bata,besi,pot,tiang}`, sel 46x46 pijak (41, 25)) dilepas dari rute dan
+# tidak lagi disalin ke assets/; daftar kosong supaya tiap pemeriksaan di bawah menuntut TIDAK ada tembok.
+TEMBOK = {}
 TONG = {'prop_tong_sampah_logam': (20, 30, 10, 25, 1)}
 POHON = ['prop_pohon_rindang', 'prop_pohon_glodokan', 'prop_pohon_ketapang']
 LAMPU = ['prop_lampu_lengan_seberang', 'prop_lampu_lengan_dekat']
@@ -371,10 +372,17 @@ def main():
         periksa(asing == [], 'aset yang tidak dipasang tidak ada di assets/ (%s): %s' % (pola, asing))
 
     # ---- golden 5A: byte-identik
+    dilewati_dekat = []
     for jalur, harapan in golden.items():
+        if jalur.startswith('houses/perumahan/house_perumahan_dekat_'):
+            # Run fase5d-sisi-dekat (AC-2, AC-3): rumah dekat dihasilkan ulang dan didesain ulang oleh tools/env_art/fase3.py; isinya dijaga
+            # uji_aset_fase3.py (piksel = keluaran skrip), bukan golden 5B. Golden lain (rumah seberang, kotak surat, isi 5A) tetap byte-identik.
+            dilewati_dekat.append(jalur)
+            continue
         repo = os.path.join(SPRITES, jalur)
         periksa(os.path.isfile(repo) and sha(baca(repo)) == harapan, 'isi 5A/lama byte-identik dengan golden: %s' % jalur)
     periksa(len(golden) == 61, 'golden memuat 61 berkas (dapat %d)' % len(golden))
+    periksa(len(dilewati_dekat) == 12, 'tepat 12 berkas rumah dekat (6 PNG + 6 JSON) diserahkan ke uji_aset_fase3.py (dapat %d)' % len(dilewati_dekat))
 
     # ---- JSON konsisten
     spesifik = dict(TEMBOK)
@@ -415,7 +423,7 @@ def main():
     png_baru = [os.path.join(SPRITES, 'houses', 'perumahan', n + '.png') for n in TEMBOK]
     png_baru += [os.path.join(SPRITES, 'props', n + '.png') for n in list(TONG) + POHON + LAMPU]
     png_baru += [os.path.join(SPRITES, 'tiles', 'perumahan', 'tile_perumahan_%s.png' % n) for n in UBIN_BARU + UBIN_5C]
-    periksa(len(png_baru) == 53, '53 PNG baru (17 run 5B + 36 run 5C; dapat %d)' % len(png_baru))
+    periksa(len(png_baru) == 48, '48 PNG baru (12 run 5B tanpa lima tembok yang dilepas run 5D + 36 run 5C; dapat %d)' % len(png_baru))
     for jalur in png_baru:
         nama = os.path.relpath(jalur, SPRITES)
         imp = jalur + '.import'
@@ -435,7 +443,7 @@ def main():
 
     # ---- kontrol: satu piksel, satu byte JSON, satu byte golden yang diubah terdeteksi
     from PIL import Image
-    sumber_png = os.path.join(SPRITES, 'houses', 'perumahan', 'house_tembok_bata.png')
+    sumber_png = os.path.join(SPRITES, 'props', 'prop_tong_sampah_logam.png')
     with tempfile.TemporaryDirectory() as sementara:
         rusak = os.path.join(sementara, 'rusak.png')
         with Image.open(sumber_png) as g:

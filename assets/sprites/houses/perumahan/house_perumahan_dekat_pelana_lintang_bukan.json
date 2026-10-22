@@ -1,12 +1,25 @@
 {
  "sprite": "house_perumahan_dekat_pelana_lintang_bukan.png",
  "size": [
-  247,
-  201
+  258,
+  204
  ],
  "ground_anchor": [
-  96,
-  122
+  110,
+  126
  ],
- "note": "Usulan, tools/env_art/fase3.py. Rumah sisi dekat (terlihat belakang), mundur 22 unit dari perumahan.py supaya kotak surat di tepi lajur tidak tertutup atap. Titik pijak = tengah tapak; kotak surat pelanggan ikut di sprite."
+ "note": "Usulan run fase5d, tools/env_art/fase3.py house_near_teras: rumah sisi dekat (terlihat belakang dan samping), badan di belakang tapak, atap sisi jalan rendah, teras menjorok ke jalan di ujung maju kecil, TANPA kotak surat (kotak surat = sprite terpisah). Titik pijak = tengah tapak gambar (game: tengah tapak logika + mundur 0,5 ubin). teras_ubin dan penutup_ubin: [lateral_min, maju_min, lebar_lateral, panjang_maju] ubin relatif titik pijak (lateral positif menjauh dari jalan); penutup_tinggi_ubin = puncak badan dan atap (tanpa teras dan antena).",
+ "teras_ubin": [
+  -1.8125,
+  -1.375,
+  0.875,
+  0.9375
+ ],
+ "penutup_ubin": [
+  -1.09375,
+  -1.40625,
+  3.1125,
+  2.8125
+ ],
+ "penutup_tinggi_ubin": 1.6875
 }

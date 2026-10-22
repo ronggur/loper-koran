@@ -4,9 +4,10 @@
 1. Deterministik: dua kali jalan (folder build berbeda) = piksel RGBA sama untuk semua PNG dan byte sama untuk semua JSON.
 2. Isi `assets/sprites/{houses/perumahan,obstacles,props}` yang berasal dari fase3 = keluaran skrip: PNG piksel-identik (bukan byte: pengodean
    zlib beda antar mesin), JSON byte-identik. Daftar sprite fase3 ditulis di sini (`DIPASANG`), bukan dibaca dari skrip.
-3. `--salin` (ke folder sementara lewat `ENV_ART_SALIN_KE`) hanya menyalin daftar itu (PNG + JSON) dan lima mock dokumen; `assets/sprites/houses/perumahan/`
+3. `--salin` (ke folder sementara lewat `ENV_ART_SALIN_KE`) hanya menyalin daftar itu (PNG + JSON) dan tujuh mock dokumen; `assets/sprites/houses/perumahan/`
    tidak memuat `house_perumahan_*` lain dan `obstacles/` hanya berisi anjing dan mobil.
-4. Mock dokumen `docs/design/environment/fase3_*.png` = keluaran skrip diperbesar x2 (tetangga terdekat).
+4. Mock dokumen `docs/design/environment/fase3_*.png` = keluaran skrip diperbesar x2 (tetangga terdekat), termasuk lembar banding rumah dekat dan
+   layar contoh run 5D; JSON rumah dekat run 5D memuat geometri teras dan kotak penutup (literal) dan catatan tanpa kotak surat terpanggang.
 5. Impor: tiap PNG fase3 di `assets/` punya `.png.import` Lossless, tanpa mipmap, bukan tekstur VRAM.
 6. Kontrol: satu byte PNG dan satu piksel yang diubah terdeteksi.
 
@@ -36,7 +37,17 @@ DIPASANG = {
     'props': ['prop_kotak_surat', 'prop_kotak_surat_bukan'],
 }
 MOCK_DOK = {'layar_fase3.png': 'fase3_perumahan.png', 'layar_dua_sisi.png': 'fase3_dua_sisi.png', 'antena_tv_contoh.png': 'fase3_antena_tv.png',
-            'obs_anjing_sheet.png': 'fase3_anjing.png', 'obs_mobil_garasi_sheet.png': 'fase3_mobil_garasi.png'}
+            'obs_anjing_sheet.png': 'fase3_anjing.png', 'obs_mobil_garasi_sheet.png': 'fase3_mobil_garasi.png',
+            # run fase5d (AC-3): lembar banding rumah dekat lama/baru dan layar contoh tata letak game
+            'banding_rumah_dekat.png': 'fase3_rumah_dekat_banding.png', 'layar_dekat_5d.png': 'fase3_layar_dekat_5d.png'}
+# Geometri rumah dekat run 5D di JSON (ubin relatif titik pijak gambar; dihitung tangan dari konstanta DEKAT_* fase3.py: unit / 32):
+# teras x -58..-30, y 14..44 -> [-1.8125, -1.375, 0.875, 0.9375]; penutup = badan + cucuran (x -35..45, y -45..45) dan belakang (toren/jemuran) tanpa
+# teras dan antena; tinggi = puncak atap / 32.
+GEOMETRI_DEKAT = {
+    'limasan': {'teras_ubin': [-1.8125, -1.375, 0.875, 0.9375], 'penutup_ubin': [-1.09375, -1.40625, 3.06875, 2.8125], 'penutup_tinggi_ubin': 1.625},
+    'pelana_lintang': {'teras_ubin': [-1.8125, -1.375, 0.875, 0.9375], 'penutup_ubin': [-1.09375, -1.40625, 3.1125, 2.8125], 'penutup_tinggi_ubin': 1.6875},
+    'pelana_sejajar': {'teras_ubin': [-1.8125, -1.375, 0.875, 0.9375], 'penutup_ubin': [-1.09375, -1.375, 3.1125, 2.75], 'penutup_tinggi_ubin': 1.5625},
+}
 
 gagal = 0
 lolos = 0
@@ -126,7 +137,7 @@ def main():
                     '--salin ke assets/sprites/%s hanya daftar fase3 (dapat %s)' % (folder, berkas_aset(os.path.join(tujuan, 'assets', 'sprites', folder))))
         periksa(sorted(os.listdir(os.path.join(tujuan, 'assets', 'sprites'))) == sorted(f.split('/')[0] for f in DIPASANG),
                 '--salin tidak membuat folder sprite lain')
-        periksa(berkas_aset(os.path.join(tujuan, 'docs', 'design', 'environment')) == sorted(MOCK_DOK.values()), '--salin menyalin tepat lima mock dokumen')
+        periksa(berkas_aset(os.path.join(tujuan, 'docs', 'design', 'environment')) == sorted(MOCK_DOK.values()), '--salin menyalin tepat tujuh mock dokumen')
         rumah_repo = [n for n in berkas_aset(os.path.join(SPRITES, 'houses', 'perumahan')) if n.startswith('house_perumahan_')]
         periksa(rumah_repo == sorted(n + e for n in DIPASANG['houses/perumahan'] for e in ('.png', '.json')),
                 'assets/sprites/houses/perumahan tidak memuat house_perumahan_* di luar daftar fase3 (dapat %s)' % rumah_repo)
@@ -136,8 +147,17 @@ def main():
         for sumber, tujuan_mock in MOCK_DOK.items():
             keluar = os.path.join(hasil_a, sumber)
             dok = os.path.join(MOCK, tujuan_mock)
-            periksa(os.path.isfile(keluar) and os.path.isfile(dok) and piksel(keluar, 2) == piksel(dok),
+            periksa(os.path.isfile(keluar) and os.path.isfile(dok) and piksel(keluar, 2) == piksel(dok, 1),
                     'docs/design/environment/%s = keluaran %s diperbesar x2' % (tujuan_mock, sumber))
+    # 4b. geometri rumah dekat di JSON (literal) dan catatan tanpa kotak surat terpanggang
+    import json
+    for jenis, harap in GEOMETRI_DEKAT.items():
+        for p in ('pelanggan', 'bukan'):
+            jalur = os.path.join(SPRITES, 'houses', 'perumahan', 'house_perumahan_dekat_%s_%s.json' % (jenis, p))
+            data = json.loads(baca(jalur)) if os.path.isfile(jalur) else {}
+            periksa(all(data.get(k) == v for k, v in harap.items()), 'JSON rumah dekat %s_%s: teras, penutup, tinggi = literal (dapat %s)' % (
+                jenis, p, {k: data.get(k) for k in harap}))
+            periksa('TANPA kotak surat' in data.get('note', ''), 'JSON rumah dekat %s_%s: catatan tanpa kotak surat terpanggang' % (jenis, p))
     # 5. impor Lossless
     for folder, nama_nama in DIPASANG.items():
         for nama in nama_nama:

@@ -610,6 +610,115 @@ def house_near_v(s, yc, wall, roof, seed=0, pelanggan=True, kotak=True, antena_k
         antena_v(s, antena_kind, x0 + 50, yc - 8, az0, 68, seed=seed + 20)
 
 
+# ------------------------------------------- rumah sisi dekat run 5D (teras menjorok) ----
+# Koordinat lokal = tengah tapak gambar di (0, 0, 0): x positif menjauh dari jalan (sisi dekat), y positif = mundur sepanjang jalan
+# (maju negatif), 32 unit = 1 ubin. Game menaruh titik pijak ini di tengah tapak logika + RUTE_RUMAH_DEKAT_MUNDUR_UBIN (0,5), jadi
+# lateral dunia = 5,0 + x / 32. Kamera melihat muka +x (belakang rumah), +y (samping, sisi maju kecil), dan atap; muka -x (depan, ke jalan)
+# tersembunyi. Aturan bentuk (run fase5d, AC-3, AC-6): setiap titik rumah (lateral L, tinggi H, ubin) memenuhi L - H >= sekitar 2,8 supaya
+# tidak ada piksel yang jatuh di atas zona kotak surat dekat (lateral 1,75..2,75) atau pemain di trotoar dekat (lateral 1..2): sinar ke kamera dari
+# titik tanah (l, m) naik satu ubin per ubin lateral. Karena itu badan rumah mundur ke belakang tapak, atap sisi jalan rendah (pelana lintang
+# dibuat perisai di ujung jalan; segitiga pelana hanya di belakang), dan teras menjorok ke jalan beratap sandar rendah di ujung maju kecil
+# (sisi +y yang terlihat kamera) sehingga lantai, tiang, dan atapnya terbaca dari samping.
+DEKAT_BADAN = (-30, 40, -40, 40)          # x0, x1, y0, y1 badan rumah
+DEKAT_DINDING_Z = 30                      # tinggi dinding
+DEKAT_TERAS = (-58, -30, 14, 44)          # lantai teras: x0 (ujung ke jalan), x1 (kaki dinding depan), y0, y1
+DEKAT_TERAS_Z = 2.5                       # tinggi lantai teras
+DEKAT_TERAS_ATAP = (27, 21)               # atap sandar teras: tinggi di dinding, tinggi di ujung jalan
+DEKAT_ATAP = {'limasan': 52, 'pelana_lintang': 54, 'pelana_sejajar': 50}   # puncak atap per jenis
+DEKAT_CUCURAN = 5                         # cucuran atap melewati dinding
+
+
+def _perisai_jalan(prim, x_ujung, run, z_puncak, z_cucur):
+    """Tambah bidang miring di ujung -x prisma pelana lintang: atap perisai (limasan) di sisi jalan, segitiga pelana tinggal di belakang."""
+    k = (z_puncak - z_cucur) / run
+    n = np.array([-k, 0.0, 1.0])
+    d = z_puncak - k * (x_ujung + run)
+    prim.planes.append((nrm(n), float(d) / panjang(n)))
+
+
+def house_near_teras(s, wall, roof, jenis='limasan', seed=0, pelanggan=True, belakang='toren', antena_kind='yagi'):
+    """Rumah sisi dekat run 5D (usulan): badan rumah di belakang tapak, atap sisi jalan rendah, teras menjorok ke jalan beratap sandar
+    di ujung maju kecil (terbaca dari samping), TANPA kotak surat (kotak surat = sprite terpisah). Pelanggan: warna dinding/atap palet,
+    keset merah, pot; bukan pelanggan: kusam abu-abu (BUKAN_WALL, BUKAN_ROOF, tirai), lantai abu-abu, tanpa keset. Kembali: dict geometri
+    (unit lokal) untuk JSON: teras, penutup."""
+    if pelanggan:
+        W, R, glass = P[wall], P[roof], P['glass']
+    else:
+        W, R, glass = BUKAN_WALL, BUKAN_ROOF, TIRAI
+    x0, x1, y0, y1 = DEKAT_BADAN
+    zd = DEKAT_DINDING_Z
+    feats = [
+        dict(face='+x', u=(-6, 4), v=(2, 21), mat=1, frame=2, kind='door', handle=4),
+        dict(face='+x', u=(14, 26), v=(12, 21), mat=3, frame=2, kind='nako'),
+        dict(face='+x', u=(-30, -20), v=(14, 21), mat=3, frame=2, kind='nako'),
+        dict(face='+y', u=(x0 + 8, x0 + 20), v=(9, 22), mat=1, frame=2, kind='door', handle=4),   # pintu samping ke teras
+        dict(face='+y', u=(x0 + 32, x0 + 46), v=(11, 22), mat=3, frame=2),
+        dict(face='+y', u=(x0 + 54, x0 + 66), v=(11, 22), mat=3, frame=2),
+    ]
+    mats = [W, P['wood'] if pelanggan else P['wood_dk'], P['white'] if pelanggan else P['conc'], glass, P['metal_dk'], P['conc']]
+    tex = wall_tex(feats, plinth=(3.5, 5))
+    s.add(box(x0, x1, y0, y1, 0, zd, mats, tex))
+    rt = roof_tex('genteng', seed + 9, wall=True)
+    c = DEKAT_CUCURAN
+    zt = DEKAT_ATAP[jenis]
+    if jenis == 'limasan':
+        s.add(hip(x0 - c, x1 + c, y0 - c, y1 + c, zd - 1, zt, mats=[R, W], tex=rt))
+    elif jenis == 'pelana_lintang':
+        s.add(gable(x0 - c, x1 + c, y0 - c, y1 + c, zd, zt, 'x', mats=[R, W], tex=rt))
+        atap = s.prims[-1]
+        run = (y1 - y0) / 2 + c
+        _perisai_jalan(atap, x0 - c, run, zt, zd)
+        s.add(gable(x0, x1, y0, y1, zd, zt - 3, 'x', mats=W, tex=tex, part=atap.part))
+        _perisai_jalan(s.prims[-1], x0, run - c, zt - 3, zd)
+    else:
+        s.add(gable(x0 - c, x1 + c, y0 - c + 1, y1 + c - 1, zd, zt, 'y', mats=[R, W], tex=rt))
+        s.add(gable(x0, x1, y0, y1, zd, zt - 2, 'y', mats=W, tex=tex, part=s.prims[-1].part))
+    # teras menjorok ke jalan di ujung +y: lantai, keset, tiga tiang, atap sandar rendah, lampu
+    tx0, tx1, ty0, ty1 = DEKAT_TERAS
+    awal_teras = len(s.prims)
+    lantai = P['paper'] if pelanggan else BUKAN_TERAS
+    s.add(box(tx0, tx1, ty0, ty1, 0, DEKAT_TERAS_Z, lantai,
+              lambda Pw, Nw: (0, np.where((np.mod(Pw[:, 0], 5) < 0.8) | (np.mod(Pw[:, 1], 5) < 0.8), 1, 0)),
+              outline=True, cast=False))
+    yc = (ty0 + ty1) / 2
+    if pelanggan:
+        s.add(box(tx1 - 9, tx1 - 3, yc - 3, yc + 5, DEKAT_TERAS_Z, 3.2, P['red'], outline=False, cast=False))   # keset di depan pintu samping
+    za, zb = DEKAT_TERAS_ATAP
+    tiang = P['white'] if pelanggan else P['conc']
+    for px, py in ((tx0 + 1, ty1 - 3), (tx0 + 1, ty0 + 1), ((tx0 + tx1) / 2, ty1 - 3)):
+        s.add(box(px, px + 2, py, py + 2, DEKAT_TERAS_Z, zb + (za - zb) * (px - tx0) / (tx1 - tx0) - 1, tiang))
+    s.add(shed(tx0 - 2, tx1, ty0 - 2, ty1 + 2, za, zb, '-x', 2, mats=R, tex=roof_tex('flat')))
+    s.add(box(tx1 - 2.5, tx1 - 0.5, yc - 1, yc + 1, za - 6, za - 4, P['lamp']))
+    if pelanggan:
+        pot_plant(s, tx0 + 5, ty1 - 6, 2.4, seed=seed)
+    for p_ in s.prims[awal_teras:]:
+        p_.tag = 'teras'
+    # belakang: kanopi seng di atas pintu belakang, toren dan/atau jemuran (seperti house_near_v)
+    s.add(shed(x1, x1 + 12, -12, 10, 25, 22, '+x', 1.5, mats=P['metal'], tex=roof_tex('seng')))
+    for py in (-11, 8):
+        s.add(box(x1 + 10, x1 + 11.5, py, py + 1.5, 0, 22, P['metal_dk']))
+    if belakang in ('toren', 'keduanya'):
+        tx, ty = x1 + 18, 26
+        for dx in (-4, 4):
+            for dy in (-4, 4):
+                s.add(box(tx + dx - 0.7, tx + dx + 0.7, ty + dy - 0.7, ty + dy + 0.7, 0, 16, P['metal_dk']))
+        s.add(box(tx - 5, tx + 5, ty - 5, ty + 5, 16, 17.5, P['metal_dk']))
+        s.add(cyl((tx, ty), 5.2, 17.5, 28, mats=TOREN_O if (seed % 2) else TOREN))
+        s.add(cyl((tx, ty), 2.2, 28, 29.5, mats=TOREN_O if (seed % 2) else TOREN, part=s.prims[-1].part))
+    if belakang in ('jemuran', 'keduanya'):
+        jx = x1 + 24
+        ya, yb = -34, (6 if belakang == 'keduanya' else 30)
+        for py in (ya, yb):
+            s.add(box(jx - 0.6, jx + 0.6, py - 0.6, py + 0.6, 0, 22, P['metal_dk']))
+        items = [(0.15, 6, 9, JEMUR[(seed + 0) % 5], 'kaus'), (0.38, 4, 11, JEMUR[(seed + 1) % 5], 'celana'),
+                 (0.6, 7, 10, JEMUR[(seed + 2) % 5], 'handuk'), (0.82, 5, 8, JEMUR[(seed + 3) % 5], 'kaus')]
+        clothes_line(s, (jx, ya, 21), (jx, yb, 21), items)
+    if antena_kind:
+        az0 = zd + (2 if antena_kind.startswith('parabola') else 0)
+        antena_v(s, antena_kind, x0 + 52, -8, az0, 66, seed=seed + 20)
+    return dict(teras=(tx0, tx1, ty0, ty1), badan=(x0 - c, x1 + c, y0 - c, y1 + c), puncak=zt)
+
+
 # ------------------------------------------------------------- layar contoh ----
 # status rumah sisi seberang, urutan PR.FAR_YC = [-448, -320, -192, -64, 64, 192, 320, 448]
 PELANGGAN = [True, False, True, True, False, True, True, False]
@@ -754,10 +863,34 @@ def pack(frames, names, fname, meta):
     return sheet
 
 
-def _single(a, o, fname, note):
+def _single(a, o, fname, note, extra=None):
     Image.fromarray(a, 'RGBA').save(OUT_DIR / (fname + '.png'))
-    _json(OUT_DIR / (fname + '.json'), {'sprite': fname + '.png', 'size': [a.shape[1], a.shape[0]],
-                                    'ground_anchor': list(o), 'note': note})
+    data = {'sprite': fname + '.png', 'size': [a.shape[1], a.shape[0]], 'ground_anchor': list(o), 'note': note}
+    data.update(extra or {})
+    _json(OUT_DIR / (fname + '.json'), data)
+
+
+UBIN = 32.0
+
+
+def _persegi_ubin(x0, x1, y0, y1):
+    """Persegi lokal renderer (x lateral, y = -maju, unit) -> [lateral_min, maju_min, lebar, panjang] ubin."""
+    return [x0 / UBIN, -y1 / UBIN, (x1 - x0) / UBIN, (y1 - y0) / UBIN]
+
+
+def penutup_dekat(prims):
+    """Kotak penutup rumah dekat dari primitif nyata: AABB semua primitif kecuali teras dan antena (unit lokal)."""
+    pakai = [p for p in prims if p.tag not in ('teras', 'antena')]
+    lo = np.min([p.lo for p in pakai], 0)
+    hi = np.max([p.hi for p in pakai], 0)
+    return (float(lo[0]), float(hi[0]), float(lo[1]), float(hi[1]), float(hi[2]))
+
+
+def geometri_dekat_json(geo):
+    x0, x1, y0, y1 = geo['teras']
+    p = geo['penutup']
+    return {'teras_ubin': _persegi_ubin(x0, x1, y0, y1), 'penutup_ubin': _persegi_ubin(p[0], p[1], p[2], p[3]),
+            'penutup_tinggi_ubin': p[4] / UBIN}
 
 
 # Tiga nada oranye = KOTAK_SURAT di tools/env_art/graybox.py (atas, samping, fasad): warna sasaran yang sudah dikenal pemain.
@@ -819,19 +952,21 @@ def ekspor_sprite():
                     'digambar scene di pusat zona kotak surat, run 3A QA-005).')
     for nm, seed, wall, roof, bel, antk in RUMAH_DEKAT:
         for pel in (True, False):
-            def b(s, seed=seed, wall=wall, roof=roof, bel=bel, antk=antk, pel=pel):
+            geo = {}
+
+            def b(s, seed=seed, wall=wall, roof=roof, bel=bel, antk=antk, pel=pel, nm=nm):
                 st = len(s.prims)
-                cx = -(PR.NX0 + PR.NX1) / 2 - MUNDUR_DEKAT
-                house_near_v(s, 0, wall, roof, seed=seed, pelanggan=pel, mundur=MUNDUR_DEKAT, belakang=bel,
-                             antena_kind=antk)
-                shift_prims(s.prims[st:], cx, 0)
-                s.ropes = [(p0 + np.array([cx, 0, 0]), p1 + np.array([cx, 0, 0])) for p0, p1 in getattr(s, 'ropes', [])]
+                geo.update(house_near_teras(s, wall, roof, jenis=nm, seed=seed, pelanggan=pel, belakang=bel, antena_kind=antk))
+                geo['penutup'] = penutup_dekat(s.prims[st:])
                 _no_cast_antena(s, st)
             a, o, _, _ = render_sprite(b, pad=4, extra_px=(34, 18))
             _single(a, o, 'house_perumahan_dekat_%s_%s' % (nm, 'pelanggan' if pel else 'bukan'),
-                    'Usulan, tools/env_art/fase3.py. Rumah sisi dekat (terlihat belakang), mundur %d unit dari '
-                    'perumahan.py supaya kotak surat di tepi lajur tidak tertutup atap. Titik pijak = tengah tapak; '
-                    'kotak surat pelanggan ikut di sprite.' % MUNDUR_DEKAT)
+                    'Usulan run fase5d, tools/env_art/fase3.py house_near_teras: rumah sisi dekat (terlihat belakang dan samping), '
+                    'badan di belakang tapak, atap sisi jalan rendah, teras menjorok ke jalan di ujung maju kecil, TANPA kotak surat '
+                    '(kotak surat = sprite terpisah). Titik pijak = tengah tapak gambar (game: tengah tapak logika + mundur 0,5 ubin). '
+                    'teras_ubin dan penutup_ubin: [lateral_min, maju_min, lebar_lateral, panjang_maju] ubin relatif titik pijak '
+                    '(lateral positif menjauh dari jalan); penutup_tinggi_ubin = puncak badan dan atap (tanpa teras dan antena).',
+                    extra=geometri_dekat_json(geo))
     a, o, _, _ = render_sprite(kotak_surat_oranye, pad=4, extra_px=(10, 6))
     _single(a, o, 'prop_kotak_surat',
             'Usulan, tools/env_art/fase3.py. Kotak surat sasaran scene rute: bentuk lib.kotak_surat() (tiang dan badan dengan '
@@ -855,9 +990,90 @@ def ekspor_sprite():
         'note': 'Usulan, lembar contoh (bukan sprite game): antena ikut dirender bersama rumah.'})
 
 
+def _rumah_dekat_lama(s, seed, wall, roof, bel, antk, pel):
+    """Rumah dekat sebelum run 5D (house_near_v, mundur 22, kotak surat pelanggan terpanggang): hanya untuk lembar banding."""
+    st = len(s.prims)
+    cx = -(PR.NX0 + PR.NX1) / 2 - MUNDUR_DEKAT
+    house_near_v(s, 0, wall, roof, seed=seed, pelanggan=pel, mundur=MUNDUR_DEKAT, belakang=bel, antena_kind=antk)
+    shift_prims(s.prims[st:], cx, 0)
+    s.ropes = [(p0 + np.array([cx, 0, 0]), p1 + np.array([cx, 0, 0])) for p0, p1 in getattr(s, 'ropes', [])]
+    _no_cast_antena(s, st)
+
+
+def _rumah_dekat_baru(s, seed, wall, roof, bel, antk, pel, nm):
+    st = len(s.prims)
+    house_near_teras(s, wall, roof, jenis=nm, seed=seed, pelanggan=pel, belakang=bel, antena_kind=antk)
+    _no_cast_antena(s, st)
+
+
+def ekspor_banding():
+    """Lembar banding rumah dekat lama (atas) dan baru run 5D (bawah), tiga jenis x pelanggan/bukan, di atas rumput (mock dokumen x2)."""
+    sel_w, sel_h = 330, 250
+    lembar = Image.new('RGBA', (sel_w * 6, sel_h * 2), (111, 174, 79, 255))
+    for baris, baru in enumerate((False, True)):
+        kol = 0
+        for nm, seed, wall, roof, bel, antk in RUMAH_DEKAT:
+            for pel in (True, False):
+                if baru:
+                    b = lambda s, a=(seed, wall, roof, bel, antk, pel, nm): _rumah_dekat_baru(s, *a)
+                else:
+                    b = lambda s, a=(seed, wall, roof, bel, antk, pel): _rumah_dekat_lama(s, *a)
+                a, o, _, _ = render_sprite(b, pad=4, extra_px=(34, 18))
+                im = Image.fromarray(a, 'RGBA')
+                lembar.alpha_composite(im, (kol * sel_w + 150 - o[0], baris * sel_h + 160 - o[1]))
+                kol += 1
+    lembar = lembar.convert('RGB')
+    lembar.save(OUT_DIR / 'banding_rumah_dekat.png')
+
+
+def _region_game(x, y):
+    """Tanah tata letak game (config.gd): aspal 2 ubin (lateral -1..1), trotoar 1 ubin tiap sisi, rumput di luar. 32 unit = 1 ubin."""
+    n = len(x)
+    mi = np.zeros(n, int)
+    sh = np.ones(n, int) + grass_tufts(x, y)
+    ax = np.abs(x)
+    road = ax < 32
+    mi = np.where(road, 1, mi)
+    sh = np.where(road, 1 + speckle(x, y, 5, 0.03, 0.05, 1), sh)
+    dash = road & (ax < 1.2) & ((np.mod(y, 32)) < 16)
+    mi = np.where(dash, 2, mi); sh = np.where(dash, 1, sh)
+    walk = (ax >= 32) & (ax < 64)
+    mi = np.where(walk, 3, mi); sh = np.where(walk, 1, sh)
+    return mi, sh
+
+
+def ekspor_layar_dekat():
+    """Layar contoh run 5D dengan tata letak game: sisi dekat halaman terbuka, rumah dekat baru di tengah tapak + mundur 0,5 ubin
+    (lateral 5,0), kotak surat oranye/abu-abu cermin seberang (lateral 2,125, maju kavling + 1,75), pemain di trotoar dekat."""
+    s = Scene(640, 360, 300, 150)
+    s.add(ground_prim(_region_game, [P['grass'], P['asph'], P['mark'], P['conc']]))
+    pasang_antena_varian()
+    urut = [(0, True), (1, False), (2, True), (0, False), (1, True), (2, False)]
+    for i, (j, pel) in enumerate(urut):
+        nm, seed, wall, roof, bel, antk = RUMAH_DEKAT[j]
+        m = (i - 3) * 4                       # awal kavling, ubin
+        st = len(s.prims)
+        tali = len(getattr(s, 'ropes', []))
+        _rumah_dekat_baru(s, seed, wall, roof, bel, antk, pel, nm)
+        geser = np.array([160, -(m + 1.0) * 32, 0])
+        shift_prims(s.prims[st:], geser[0], geser[1])
+        if hasattr(s, 'ropes'):
+            s.ropes = s.ropes[:tali] + [(p0 + geser, p1 + geser) for p0, p1 in s.ropes[tali:]]
+        st = len(s.prims)
+        (kotak_surat_oranye if pel else kotak_surat_bukan)(s)
+        shift_prims(s.prims[st:], 68, -(m + 1.75) * 32)
+    s.render(TIMES['siang'])
+    sprites = [(PR.loper_frame(5, 1), (23, 46), (48.0, -2.0 * 32, 0))]
+    img = finish_with_sprites(s, sprites)
+    img = draw_ropes(s, img)
+    Image.fromarray(np.clip(img, 0, 255).astype(np.uint8), 'RGB').save(OUT_DIR / 'layar_dekat_5d.png')
+
+
 def ekspor_layar():
     render(out='layar_fase3.png')
     render(out='layar_dua_sisi.png', dua_sisi=True)
+    ekspor_banding()
+    ekspor_layar_dekat()
 
 
 # ------------------------------------------------------------- salin ke repo ----
@@ -873,6 +1089,8 @@ SALIN_SPRITE = {
 SALIN_MOCK = {'layar_fase3.png': 'fase3_perumahan.png', 'layar_dua_sisi.png': 'fase3_dua_sisi.png',
               'antena_tv_contoh.png': 'fase3_antena_tv.png', 'obs_anjing_sheet.png': 'fase3_anjing.png',
               'obs_mobil_garasi_sheet.png': 'fase3_mobil_garasi.png'}
+# lembar banding dan layar contoh run 5D, disalin dengan pembesaran tetangga terdekat (kali)
+SALIN_MOCK_5D = {'banding_rumah_dekat.png': ('fase3_rumah_dekat_banding.png', 2), 'layar_dekat_5d.png': ('fase3_layar_dekat_5d.png', 2)}
 
 
 def salin():
@@ -887,6 +1105,9 @@ def salin():
     for src, dst in SALIN_MOCK.items():
         im = Image.open(OUT_DIR / src)
         im.resize((im.width * 2, im.height * 2), Image.NEAREST).save(d / dst)
+    for src, (dst, kali) in SALIN_MOCK_5D.items():
+        im = Image.open(OUT_DIR / src)
+        im.resize((im.width * kali, im.height * kali), Image.NEAREST).save(d / dst)
 
 
 if __name__ == '__main__':
