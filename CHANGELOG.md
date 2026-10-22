@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.4.0](https://github.com/ronggur/loper-koran/compare/loper-koran-v0.3.0...loper-koran-v0.4.0) (2026-10-22)
+
+
+### Fitur
+
+* animasi pemain lima arah, kucing ditangkap, ujung kerb, dan simpang T hiasan (Fase 5, run 5C) ([#52](https://github.com/ronggur/loper-koran/issues/52)) ([53408cf](https://github.com/ronggur/loper-koran/commit/53408cf04ff538bbeb085e5ec5fd8f7a9251a70e))
+
+
+### Perbaikan
+
+* renderer env_art tanpa BLAS supaya uji golden lampu_pohon lolos di CI ([#53](https://github.com/ronggur/loper-koran/issues/53)) ([86864d1](https://github.com/ronggur/loper-koran/commit/86864d124619091ce6fc09a414c231aec1b19bd4))
+
+
+### Dokumentasi
+
+* perintah Run 5D, arsip perintah Run 5C, dan catatan uji HP pemilik 2026-10-22 ([#55](https://github.com/ronggur/loper-koran/issues/55)) ([f42e22e](https://github.com/ronggur/loper-koran/commit/f42e22e0132eaf9cfc53fc5dfe3ab340f9c55ca0))
+
 ## [0.3.0](https://github.com/ronggur/loper-koran/compare/loper-koran-v0.2.0...loper-koran-v0.3.0) (2026-10-22)
 
 
