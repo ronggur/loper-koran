@@ -178,9 +178,11 @@ const GARIS_BIDIK_SAMPEL: int = 96
 const GARIS_BIDIK_TERTUTUP_ALPHA: float = 0.5
 ## Alpha garis tepi halaman dan isi zona placeholder di jalan uji.
 const ZONA_GARIS_ALPHA: float = 0.7
-## Alpha isi area kotak surat rumah pelanggan seberang di scene rute (`AreaKotakGambar`): tipis supaya rumput halaman dan trotoar tetap terbaca.
+## Alpha isi persegi zona kotak surat di scene dev spike sisi dekat (tidak ikut paket): tipis supaya tanah tetap terbaca.
+## Scene rute TIDAK lagi menggambar area kotak surat (keputusan pemilik 2026-10-22: persegi membuat pemain mengira hanya area itu yang
+## dinilai); konstanta ini tinggal hanya untuk spike.
 const AREA_KOTAK_ISI_ALPHA: float = 0.28
-## Alpha garis tepi area kotak surat di scene rute: tegas (bentuk terbaca tanpa bergantung warna isi).
+## Alpha garis tepi persegi zona kotak surat di scene dev spike sisi dekat: tegas (bentuk terbaca tanpa bergantung warna isi).
 const AREA_KOTAK_TEPI_ALPHA: float = 0.9
 
 ## --- Umpan balik kecepatan (GDD 15; usulan run fase1b-umpan-balik, dinilai di HP) ---

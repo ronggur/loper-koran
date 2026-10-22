@@ -318,25 +318,20 @@ func _test_kotak_bukan_di_scene(akar: RuteMain, rute: RouteBuilder.Rute) -> void
 	_judul.call("Scene rute: kotak surat abu-abu di rumah bukan pelanggan seberang, oranye di pelanggan, dekat tanpa kotak surat, jendela daur")
 	var daur: RumahDaurRute = akar.daur()
 	var objek: Node = akar.find_child("Objek", true, false)
-	var area: AreaKotakGambar = akar.find_child("AreaKotak", true, false) as AreaKotakGambar
 	var total: Vector3i = Vector3i.ZERO
 	var maks_node: int = 0
 	var salah: Array[String] = []
 	var jendela_salah: Array[String] = []
 	for jarak: float in [0.0, 40.0, 90.0, 140.0, 200.0, 240.0, 90.0, 0.0]:
 		daur.perbarui(jarak)
-		if area != null:
-			area.perbarui(jarak)
 		var h: Vector3i = _periksa_kotak_per_rumah(daur, rute, objek, salah)
 		total += h
 		if daur.jumlah_kotak_surat() != h.x or daur.jumlah_kotak_surat_bukan() != h.y:
 			jendela_salah.append("jarak %.0f: oranye %d/%d, abu %d/%d" % [jarak, daur.jumlah_kotak_surat(), h.x, daur.jumlah_kotak_surat_bukan(), h.y])
-		if area != null and area.jumlah_area() != h.x:
-			jendela_salah.append("jarak %.0f: area tanah %d, pelanggan seberang %d" % [jarak, area.jumlah_area(), h.x])
 		maks_node = maxi(maks_node, daur.jumlah_node_kotak())
 	check(total.x > 0 and total.y > 0 and total.z > 0, "kontrol: jendela yang diperiksa memuat pelanggan seberang (%d), bukan pelanggan seberang (%d), dan rumah dekat (%d)" % [total.x, total.y, total.z])
 	check(salah.is_empty(), "pelanggan seberang = oranye saja, bukan pelanggan seberang = abu-abu saja di titik kotak surat yang sama, dekat = tanpa kotak surat: %s" % [salah.slice(0, 3)])
-	check(area != null and jendela_salah.is_empty(), "jendela daur: jumlah kotak surat = rumah di jendela, area oranye di tanah hanya untuk pelanggan (tidak untuk abu-abu): %s" % [jendela_salah.slice(0, 3)])
+	check(jendela_salah.is_empty(), "jendela daur: jumlah kotak surat oranye dan abu-abu = rumah di jendela: %s" % [jendela_salah.slice(0, 3)])
 	check(maks_node <= 20, "node kotak surat dipakai ulang dari kolam (paling banyak %d dibuat)" % maks_node)
 	# Penilaian dan mode bantu tidak berubah: rumah bukan pelanggan tetap BUKAN_PELANGGAN, mode bantu hanya membidik pelanggan.
 	var bukan: RouteBuilder.RumahRute = null
@@ -365,7 +360,7 @@ func _test_kotak_bukan_di_scene(akar: RuteMain, rute: RouteBuilder.Rute) -> void
 
 
 func _test_rute_di_scene() -> void:
-	_judul.call("Scene rute berjalan: sprite kotak surat di pusat zona, di atas area dan di depan rumahnya")
+	_judul.call("Scene rute berjalan: sprite kotak surat di pusat zona dan di depan rumahnya, tanpa persegi area di tanah (keputusan pemilik 2026-10-22)")
 	_tree.root.size = Vector2i(2340, 1080)
 	var akar: RuteMain = (load(BERKAS_RUTE) as PackedScene).instantiate() as RuteMain
 	_tree.root.add_child(akar)
@@ -373,9 +368,8 @@ func _test_rute_di_scene() -> void:
 	await _tree.process_frame
 	akar.set_process(false)
 	var daur: RumahDaurRute = akar.daur()
-	var area: Node = akar.find_child("AreaKotak", true, false)
 	var objek: Node = akar.find_child("Objek", true, false)
-	check(area != null and objek != null and area.get_index() < objek.get_index(), "AreaKotak digambar sebelum Objek (area di bawah kotak surat)")
+	check(objek != null and akar.find_child("AreaKotak", true, false) == null, "kotak surat digambar di Objek; tidak ada simpul AreaKotak (persegi area dihapus, keputusan pemilik 2026-10-22)")
 	var rute: RouteBuilder.Rute = RouteBuilder.bangun(Config.RUTE_SEED_DEV, PemuatRute.muat_folder().segmen).rute
 	var jumlah: int = 0
 	var salah: Array[String] = []

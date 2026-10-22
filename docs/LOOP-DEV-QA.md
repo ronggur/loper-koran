@@ -575,7 +575,9 @@ CATATAN DARI RUN 3A (sudah di main sesudah PR #28 di-merge; baca LOG.md dan SPEC
     Zona halaman/teras/jendela tidak digambar di tanah rute (D-20).
   - Kotak surat sekarang AREA di RUMPUT HALAMAN (PR #30, 2026-10-16): seberang 1,0 x 1,25 dan
     dekat 0,75 x 1,25 ubin, menempel trotoar, digambar di tanah rute (`AreaKotakGambar`;
-    tindak lanjut review pemilik, LOG 3A D-28 sampai D-32). Sepeda boleh naik trotoar: batas
+    tindak lanjut review pemilik, LOG 3A D-28 sampai D-32; DIGANTI 2026-10-22: persegi area
+    tidak digambar lagi di rute karena pemain mengira hanya area itu yang dinilai, zona dan
+    penilaian tidak berubah, `AreaKotakGambar` dihapus). Sepeda boleh naik trotoar: batas
     lateral +-2,0 ubin (tepi trotoar), bukan lagi +-1,0 (revisi D-4, BALANCING 2 dan 5);
     rintangan (anjing, mobil garasi) harus diuji dari posisi sepeda di trotoar juga.
     Pertimbangkan "inti" 0,5 x 0,5 di pusat (zona lama) sebagai kandidat bonus "tepat" di

@@ -1,4 +1,4 @@
-[gd_scene load_steps=76 format=3]
+[gd_scene load_steps=75 format=3]
 
 [ext_resource type="Script" path="res://scripts/entities/rute_main.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/entities/tanah_daur.gd" id="2_tanah"]
@@ -17,7 +17,6 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/hud_rute.tscn" id="11_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/layar_jeda.tscn" id="12_jeda"]
 [ext_resource type="Script" path="res://scripts/entities/koran_gambar.gd" id="14_koran"]
-[ext_resource type="Script" path="res://scripts/entities/area_kotak_gambar.gd" id="18_area"]
 [ext_resource type="Script" path="res://scripts/ui/garis_bidik.gd" id="15_bidik"]
 [ext_resource type="Script" path="res://scripts/entities/penerap_penutup.gd" id="16_penerap"]
 [ext_resource type="PackedScene" path="res://scenes/ui/panel_akhir_rute.tscn" id="17_akhir"]
@@ -99,10 +98,6 @@ tekstur_ujung_trotoar_seberang = ExtResource("36_ujung_trotoar")
 tekstur_ujung_rumput_seberang = ExtResource("37_ujung_rumput")
 tekstur_simpang_dekat = Array[Texture2D]([ExtResource("38_simpang_dekat_0"), ExtResource("39_simpang_dekat_1"), ExtResource("40_simpang_dekat_2"), ExtResource("41_simpang_dekat_3"), ExtResource("42_simpang_dekat_4"), ExtResource("43_simpang_dekat_5"), ExtResource("44_simpang_dekat_6"), ExtResource("45_simpang_dekat_7"), ExtResource("46_simpang_dekat_8"), ExtResource("47_simpang_dekat_9"), ExtResource("48_simpang_dekat_10"), ExtResource("49_simpang_dekat_11"), ExtResource("50_simpang_dekat_12"), ExtResource("51_simpang_dekat_13"), ExtResource("52_simpang_dekat_14"), ExtResource("53_simpang_dekat_15"), ExtResource("54_simpang_dekat_16"), ExtResource("55_simpang_dekat_17")])
 tekstur_simpang_seberang = Array[Texture2D]([ExtResource("56_simpang_seberang_0"), ExtResource("57_simpang_seberang_1"), ExtResource("58_simpang_seberang_2"), ExtResource("59_simpang_seberang_3"), ExtResource("60_simpang_seberang_4"), ExtResource("61_simpang_seberang_5"), ExtResource("62_simpang_seberang_6"), ExtResource("63_simpang_seberang_7"), ExtResource("64_simpang_seberang_8"), ExtResource("65_simpang_seberang_9"), ExtResource("66_simpang_seberang_10"), ExtResource("67_simpang_seberang_11"), ExtResource("68_simpang_seberang_12"), ExtResource("69_simpang_seberang_13"), ExtResource("70_simpang_seberang_14"), ExtResource("71_simpang_seberang_15")])
-
-[node name="AreaKotak" type="Node2D" parent="."]
-unique_name_in_owner = true
-script = ExtResource("18_area")
 
 [node name="KoranTanah" type="Node2D" parent="."]
 unique_name_in_owner = true

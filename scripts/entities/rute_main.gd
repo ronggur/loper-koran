@@ -13,8 +13,8 @@ extends AdeganJalan
 ## - Penutup pemain (AC-15): SATU penerap (`PenerapPenutup`) memanggil `PenutupPemain` tiap langkah untuk semua rumah di jendela daur.
 ## - "Main lagi" (tombol layar hasil sejak run fase3c-hud-hasil, O-11; tombol banner hanya untuk galat muat): seed + 1, rute baru, sepeda,
 ##   sisa koran, koran terbang, skor, tenggat, radar, progres, rintangan, bel, dan oleng dikembalikan ke awal (`_susun`, `_kembalikan_awal`).
-## - Area kotak surat (tindak lanjut uji HP 2026-10-16): `AreaKotakGambar` menggambar persegi zona kotak surat rumah pelanggan seberang di
-##   tanah (jendela daur yang sama dengan rumah), supaya area yang dinilai terlihat.
+## - Tanpa area kotak surat di tanah (keputusan pemilik 2026-10-22, mengganti tindak lanjut uji HP 2026-10-16): persegi zona kotak surat
+##   tidak digambar lagi karena membuat pemain mengira hanya area itu yang dinilai. Penilaian (`ZonaSasaran`, `MedanKoran`) tidak berubah.
 ## - Rintangan (run fase3b-rintangan-skor bagian B, AC-20): `RintanganRute.dari_rute` (kait `_rintangan_awal`, juga tiap "Main lagi"),
 ##   perilaku dan tabrakan di `AdeganJalan`; digambar `RintanganDaur` (anak induk Y-sort rumah, jendela daur, penutup lewat penerap yang
 ##   SAMA dengan rumah).
@@ -97,7 +97,6 @@ var _sepeda_hari: int = Config.HARI_AWAL
 var _daftar_upgrade: Array[DataToko] = []
 
 @onready var _daur: RumahDaurRute = %Objek
-@onready var _area_kotak: AreaKotakGambar = %AreaKotak
 @onready var _penerap: PenerapPenutup = %PenerapPenutup
 @onready var _panel_akhir: PanelAkhirRute = %PanelAkhir
 @onready var _rintangan_daur: RintanganDaur = %Rintangan
@@ -127,7 +126,6 @@ func _perbarui_dunia(jarak_ubin: float) -> void:
 	_langkah_tutorial()
 	_daur.perbarui(jarak_ubin)
 	_daur.atur_terantar(_skor.terantar)
-	_area_kotak.perbarui(jarak_ubin)
 	_rintangan_daur.perbarui(_rintangan, jarak_ubin)
 	_dekor_daur.perbarui(jarak_ubin)
 	_umpan_gambar.tampilkan(_umpan)
@@ -274,7 +272,6 @@ func _susun(benih: int) -> void:
 	_daur.atur_rute(_rute)
 	_tanah.atur_baris_masuk(UbinKhusus.himpunan_baris_masuk(_rute.objek))
 	_tanah.atur_simpang(UbinKhusus.himpunan_baris_simpang(RouteBuilder.simpang_di(_rute)))
-	_area_kotak.atur_rute(_rute)
 	_rintangan_daur.lepas_semua()
 	_dekor_daur.atur_rute(_rute)
 	_penerap.terapkan(_sepeda.posisi_dunia())
