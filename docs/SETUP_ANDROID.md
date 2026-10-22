@@ -718,3 +718,35 @@ Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build 
 8. Save lama utuh ya / tidak
 Catatan (bentuk, warna, angka yang ingin diubah dan alasannya): ____
 ```
+
+### 8.14 Uji animasi pemain, kucing ditangkap, ujung kerb, dan simpang T (run `20261022-fase5c-animasi-simpang`, belum diuji)
+
+Penguji: pemilik sendiri (rule `testing`), di vivo V2108 dan A54. Semua bentuk, angka animasi, dan letak simpang usulan (ART_DIRECTION 3.4, 6.3, 6.7, 11; ROUTE_DESIGN 4c): catat yang ingin diubah beserta alasannya, jangan diubah di sesi uji. Run ini hanya tampilan dan data segmen; skor, lemparan, zona, tenggat, gerak (angka rem dan kecepatan), lama jatuh, rintangan, syarat tangkap misi, kondisi, bengkel, dan save tidak berubah (butir 10). **Pasang tanpa menghapus apa pun** (`adb install -r builds/kring-kring-debug.apk`, hanya setelah izin pemilik; HP dipakai bersama project lain). **Jangan uninstall.** Hasil uji HP run 4A, 4B, 6A1, 5A, dan 5B (8.9 sampai 8.13) belum ada per 2026-10-22; Fase 2, 3, 4, 5, dan M2 tidak dicentang sebelum QA PASS dan uji ini. Bukti desktop: tangkapan `docs/loop/20261022-fase5c-animasi-simpang/shots/iter1/` (`<lebar>x<tinggi>_animasi_*.png`, `*_misi_tangkap_progres*.png`, `*_simpang_*.png` di 2340x1080, 1920x1080, 2400x1080, 1600x720) dari `tests/probe_animasi_pemain_jendela.gd`, `tests/probe_misi_jendela.gd`, dan `tests/probe_simpang_jendela.gd`.
+
+1. [ ] **Jatuh lima arah terbaca dan pijak tidak melompat.** Tabrak anjing atau mobil sambil menyetir lurus, serong kiri, serong kanan, dan penuh ke tiap sisi: pemain jatuh ke arah ia bergerak, lalu terjerembab di tempat yang sama tanpa sprite meloncat. Keraguan yang diketahui (I2-F3, DEFERRED): sprite jatuh lebih lebar dari kotak penutup dekor, jadi pohon atau lampu dekat bisa menutup sebagian pemain yang sedang jatuh tanpa memudar (terukur paling banyak 284 piksel game di lateral 0, misalnya `per_tengah_05` pohon dekat @8 lawan mobil seberang @9). Hasil: arah terbaca ya / tidak, pijak melompat ya / tidak, tertutup dekor mengganggu ya / tidak.
+2. [ ] **Bangkit mulus ke kayuh.** Sesudah 1,2 detik pemain bangkit (bertumpu, berlutut, berdiri, meraih setang) lalu langsung mengayuh tanpa lompatan piksel. Keraguan yang diketahui (A-F4): bila stick masih ditahan ke samping saat bangun, sprite berganti arah satu langkah sesudah bangun (arah jatuh lalu arah stick), bukan lompatan pijak. Hasil: mulus ya / tidak, ganti arah sesudah bangun mengganggu ya / tidak.
+3. [ ] **Terjerembab 0,2 detik cukup atau terlalu singkat** (P-4: lama jatuh tetap 1,2 detik = jatuh 0,4 + terjerembab 0,2 + bangkit 0,6). Hasil: cukup / terlalu singkat / terlalu lama.
+4. [ ] **Berhenti dengan kaki kanan turun terbaca saat menangkap kucing.** Menepi di dekat kucing misi, tahan rem sampai diam: kaki kanan turun ke tanah, sepeda condong. Keraguan yang diketahui (A-F3): tangkapan juga bisa berhasil dengan rem diketuk berulang tanpa pernah berhenti penuh, jadi pose berhenti tidak selalu muncul saat menangkap. Hasil: kaki turun terbaca ya / tidak, menangkap tanpa berhenti terasa janggal ya / tidak.
+5. [ ] **Kucing ditangkap terbaca sebagai dielus, bukan diam seperti mati.** Selama bar progres tangkap berjalan, kucing duduk dengan mata terpejam dan kepala menunduk bergantian (3 fps); berhenti saat jeda. Keraguan yang diketahui (B-F1): bila berhenti sangat dekat, badan pemain menutup sebagian besar kucing (hanya telinga terlihat); berhenti sekitar 1,5 ubin sebelumnya kucing terlihat utuh. Hasil: terbaca dielus ya / tidak, tertutup pemain mengganggu ya / tidak.
+6. [ ] **Ujung kerb jalan masuk garasi rapi.** Di jalan masuk beton di bawah mobil garasi seberang, kerb dan lajur sepeda berhenti rapi di tepi jalan masuk tanpa potongan kerb menggantung (C-F1 run 5B). Hasil: ya / tidak.
+7. [ ] **Simpang terbaca sebagai jalan samping dan tidak dikira jalur yang harus dibelok.** Simpang dekat (kanan bawah) ada di setiap rute (`per_tengah_05`, D-F3) dan kadang di awal atau akhir rute; simpang seberang (kiri atas, di antara dua rumah) di sekitar separuh rute (`per_buka_02`). Lengan jalan samping sampai tepi layar. Keraguan yang diketahui: (D-F2) di `per_tengah_05` mobil garasi seberang mundur ke jalan sekitar 1,5 ubin sesudah simpang dekat dan bisa terbaca seperti keluar dari simpang; (D-F3) simpang dekat di posisi yang sama tiap hari bisa terasa berulang. Hasil: terbaca jalan samping ya / tidak, terasa harus dibelok ya / tidak, mobil terbaca keluar simpang ya / tidak, terasa berulang ya / tidak.
+8. [ ] **Tembok dekat terputus wajar di simpang dekat.** Tembok belakang dan rumah dekat berhenti sebelum mulut simpang dan mulai lagi sesudahnya; sudut kerb dan lajur hijau membelok siku. Hasil: ya / tidak.
+9. [ ] **60 fps tidak turun dan piksel tetap tajam.** Sheet jatuh/bangkit 140x88 dan ubin simpang (wadah tekstur bertambah 36) tidak menurunkan fps di HP menengah; tidak ada blur atau celah transparan di sekitar simpang. Hasil: ya / tidak.
+10. [ ] **Save lama tetap jalan.** Run ini tidak mengubah save: buka app dengan save v3 yang ada; hari, koin, kondisi sepeda, dan misi utuh. Hasil: ya / tidak.
+
+**Lembar hasil 8.14 (animasi pemain, kucing ditangkap, ujung kerb, simpang T, run 5C):**
+
+```
+Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build (commit): ____
+1. Jatuh lima arah terbaca ya / tidak   pijak melompat ya / tidak   tertutup dekor mengganggu ya / tidak
+2. Bangkit -> kayuh mulus ya / tidak   ganti arah sesudah bangun mengganggu ya / tidak
+3. Terjerembab 0,2 detik cukup / terlalu singkat / terlalu lama
+4. Kaki kanan berhenti terbaca ya / tidak   menangkap tanpa berhenti janggal ya / tidak
+5. Kucing ditangkap terbaca dielus ya / tidak   tertutup pemain mengganggu ya / tidak
+6. Ujung kerb jalan masuk rapi ya / tidak
+7. Simpang terbaca jalan samping ya / tidak   terasa harus dibelok ya / tidak   mobil seperti keluar simpang ya / tidak   berulang ya / tidak
+8. Tembok dekat terputus wajar ya / tidak
+9. 60 fps tetap ya / tidak   piksel tajam ya / tidak
+10. Save lama utuh ya / tidak
+Catatan (bentuk, angka, letak yang ingin diubah dan alasannya): ____
+```
