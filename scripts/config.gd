@@ -911,9 +911,13 @@ const MISI_KUCING_JAUH_MOBIL_UBIN: float = 6.0
 const MISI_KUCING_SEL_PX: Array[int] = [46, 38]
 ## Titik pijak kucing di dalam sel, piksel (sama dengan `ground_anchor` di JSON).
 const MISI_KUCING_PIJAK_PX: Array[int] = [18, 21]
-## Kolom dan baris sheet (9 pose x 4 arah moncong; kolom 7-8 = ditangkap_1/_2 sejak Fase 5C, usulan, belum dipakai rute).
+## Kolom dan baris sheet (9 pose x 4 arah moncong; kolom 7-8 = ditangkap_1/_2 sejak Fase 5C, usulan).
 const MISI_KUCING_KOLOM: int = 9
 const MISI_KUCING_BARIS: int = 4
+## Kolom pose ditangkap (duduk tenang dielus, dua frame bergantian; `frames` 7 dan 8 = `anim.ditangkap` di JSON sheet, dijaga tes). Tampil selama langkah `tangkap` dengan progres > 0 (P-3 run 5C, usulan).
+const MISI_KUCING_KOLOM_DITANGKAP: Array[int] = [7, 8]
+## Laju pose ditangkap, frame per detik dari waktu animasi misi (membeku saat jeda); sama dengan `fps.ditangkap` di JSON sheet (dijaga tes).
+const MISI_KUCING_DITANGKAP_FPS: float = 3.0
 ## Baris "masuk" (moncong kiri atas, menghadap rumah sisi seberang) dan kolom pose duduk: placeholder untuk semua titik (M-10: pose intip khusus ada di Fase 5).
 const MISI_KUCING_BARIS_HADAP: int = 1
 const MISI_KUCING_KOLOM_DUDUK: int = 0
