@@ -33,7 +33,7 @@ const UBIN_5B: Array[String] = [
 	"tile_perumahan_rumput_2.png", "tile_perumahan_rumput_3.png", "tile_perumahan_trotoar_seberang_masuk.png", "tile_perumahan_rumput_seberang_masuk.png",
 	"tile_perumahan_trotoar_seberang_simbol.png", "tile_perumahan_trotoar_dekat_simbol.png",
 ]
-## Ubin tambahan run fase5c-animasi-simpang (C-F1 dan simpang T, D-2): dua ujung kerb jalan masuk seberang dan 18 ubin simpang sisi dekat (sisi seberang tidak dipasang). Ditulis literal;
+## Ubin tambahan run fase5c-animasi-simpang (C-F1 dan simpang T, D-2, P-6): dua ujung kerb jalan masuk seberang, 18 ubin simpang sisi dekat, dan 16 sisi seberang. Ditulis literal;
 ## letak dan pilihannya diuji `tes_ubin_5b.gd` (ujung) dan `tes_simpang.gd` (simpang).
 const UBIN_5C: Array[String] = [
 	"tile_perumahan_trotoar_seberang_masuk_ujung.png", "tile_perumahan_rumput_seberang_masuk_ujung.png", "tile_perumahan_simpang_dekat_trotoar_dekat_depan_2.png",
@@ -43,6 +43,12 @@ const UBIN_5C: Array[String] = [
 	"tile_perumahan_simpang_dekat_lengan_mulut_1.png", "tile_perumahan_simpang_dekat_aspal_dekat_mulut_2.png", "tile_perumahan_simpang_dekat_trotoar_dekat_mulut_2.png",
 	"tile_perumahan_simpang_dekat_rumput_dekat_mulut_2.png", "tile_perumahan_simpang_dekat_lengan_mulut_2.png", "tile_perumahan_simpang_dekat_trotoar_dekat_belakang_1.png",
 	"tile_perumahan_simpang_dekat_rumput_dekat_belakang_1.png", "tile_perumahan_simpang_dekat_lengan_belakang_1.png",
+	"tile_perumahan_simpang_seberang_rumput_seberang_depan_2.png", "tile_perumahan_simpang_seberang_lengan_depan_2.png", "tile_perumahan_simpang_seberang_trotoar_seberang_depan_1.png",
+	"tile_perumahan_simpang_seberang_rumput_seberang_depan_1.png", "tile_perumahan_simpang_seberang_lengan_depan_1.png", "tile_perumahan_simpang_seberang_aspal_seberang_mulut_1.png",
+	"tile_perumahan_simpang_seberang_trotoar_seberang_mulut_1.png", "tile_perumahan_simpang_seberang_rumput_seberang_mulut_1.png", "tile_perumahan_simpang_seberang_lengan_mulut_1.png",
+	"tile_perumahan_simpang_seberang_aspal_seberang_mulut_2.png", "tile_perumahan_simpang_seberang_trotoar_seberang_mulut_2.png", "tile_perumahan_simpang_seberang_rumput_seberang_mulut_2.png",
+	"tile_perumahan_simpang_seberang_lengan_mulut_2.png", "tile_perumahan_simpang_seberang_trotoar_seberang_belakang_1.png", "tile_perumahan_simpang_seberang_rumput_seberang_belakang_1.png",
+	"tile_perumahan_simpang_seberang_lengan_belakang_1.png",
 ]
 ## Jumlah ubin tanah per lebar viewport (tinggi 360) dari `JalanDaur.sel_tanah` SEBELUM run ini (dihitung dari kode lama, ditulis literal)
 ## beserta checksum letaknya: sum(int((x + 10) * 2) * 1009 + int(y + 100)).

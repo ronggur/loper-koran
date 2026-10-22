@@ -314,8 +314,8 @@ PASANG_KHUSUS = ['trotoar_seberang_masuk', 'rumput_seberang_masuk', 'trotoar_seb
 # tetangga sisi seberang (diperiksa `ekspor_ubin`): kerb dalam dan luar yang berhenti di tepi jalan masuk.
 UJUNG_SEL = [('trotoar_seberang', 1), ('rumput_seberang', 1)]
 PASANG_UJUNG = [nm + '_masuk_ujung' for nm, _ in UJUNG_SEL]
-# Sisi simpang T yang dipasang (D-2 run 5C: hanya ubin yang dipakai data segmen). Sisi seberang belum dipakai data (lihat LOG run 5C, D-4), jadi ubinnya hanya di build/.
-SIMPANG_SISI_DIPASANG = ['dekat']
+# Sisi simpang T yang dipasang (D-2 run 5C: hanya ubin yang dipakai data segmen). Sisi seberang dipakai `per_buka_02` pos 18 (putusan orchestrator P-6 run 5C).
+SIMPANG_SISI_DIPASANG = ['dekat', 'seberang']
 
 
 def meta_terpasang(meta_simpang):

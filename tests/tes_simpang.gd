@@ -19,20 +19,24 @@ const REFERENSI: String = "res://tests/data/ubin_potongan_simpang.png"
 const SEED_DEV: int = 20261016
 const DT: float = 1.0 / 60.0
 const TINGGI: int = 360
-## Sidik uraian rute untuk seed 20261016 + 7 i (i = 0 sampai 59), dihitung di commit 7f30557 sebelum simpang ada.
+## Sidik uraian rute untuk seed 20261016 + 7 i (i = 0 sampai 59), dihitung di commit 7f30557 sebelum simpang ada, lalu dihitung ulang oleh `dev_ukur/banding_p6.gd` sesudah
+## putusan P-6 (rumah seberang per_buka_02@18 dihapus: 31 seed berubah, satu-satunya beda baris rumah itu).
 const GOLDEN_RUTE: Array[int] = [
-	787429315, 1010000893, 2509059553, 1298105833, 2666367495, 1151121750, 199584191, 3131231930, 3629114281, 974293504, 1397555308, 2279295908, 3413059366, 4076530032, 2437328349,
-	3203188802, 4155938710, 3710110710, 1830223789, 2872891789, 3407493537, 3208893, 2168349946, 3724147882, 141505599, 3493020025, 2147907895, 3941599785, 185710293, 1242152092,
-	966023073, 2550286561, 3615622760, 1039691335, 452277531, 564354651, 2160167374, 87482360, 660862019, 1866767906, 4280486702, 3115369828, 2875833547, 426497110, 2098832746,
-	2019441770, 1378485406, 2032062344, 1026062768, 546980315, 3247909931, 2154799341, 716224248, 1367572084, 3152274768, 1174692204, 4071557683, 2044913528, 1995182979, 181890830,
+	787429315, 1010000893, 2509059553, 2843112192, 1605680166, 1151121750, 1661875782, 3131231930, 3285505556, 1316760559, 1397555308, 2279295908, 2775117527, 4131684987, 871861744,
+	3691547057, 4155938710, 3710110710, 3306192752, 2115639810, 2767204748, 1420455734, 2632772655, 3219740329, 141505599, 4171333910, 2147907895, 3941599785, 185710293, 1242152092,
+	966023073, 1997523208, 288002903, 1889750654, 495727508, 564354651, 2160167374, 1860545369, 2873512312, 1866767906, 4280486702, 3115369828, 1274396490, 426497110, 3383079795,
+	3923584847, 782848207, 3750156739, 533850641, 546980315, 3247909931, 2154799341, 716224248, 4162062903, 3152274768, 711360289, 4071557683, 4014883803, 1995182979, 181890830,
 ]
 ## Tabel sel simpang sisi dekat (baris relatif maju dari pos, kolom 0 aspal 1 trotoar 2 rumput pertama 3 lengan), ditulis literal dari ekspor renderer.
 const SEL_DEKAT: Array = [[3, 1], [3, 2], [3, 3], [2, 0], [2, 1], [2, 2], [2, 3], [1, 0], [1, 1], [1, 2], [1, 3], [0, 0], [0, 1], [0, 2], [0, 3], [-1, 1], [-1, 2], [-1, 3]]
 const SEL_SEBERANG: Array = [[3, 2], [3, 3], [2, 1], [2, 2], [2, 3], [1, 0], [1, 1], [1, 2], [1, 3], [0, 0], [0, 1], [0, 2], [0, 3], [-1, 1], [-1, 2], [-1, 3]]
 const NAMA_BARIS: Dictionary = {3: "depan_2", 2: "depan_1", 1: "mulut_1", 0: "mulut_2", -1: "belakang_1"}
 const NAMA_KOLOM_DEKAT: Array[String] = ["aspal_dekat", "trotoar_dekat", "rumput_dekat", "lengan"]
+const NAMA_KOLOM_SEBERANG: Array[String] = ["aspal_seberang", "trotoar_seberang", "rumput_seberang", "lengan"]
 ## Simpang di data segmen (dihitung dari berkas dengan skrip lain, ditulis literal): [berkas, pos, sisi].
-const SIMPANG_DATA: Array = [["per_buka_01", 3, "dekat"], ["per_tengah_05", 3, "dekat"], ["per_tutup_01", 2, "dekat"]]
+## Putusan P-6 run 5C: simpang seberang di per_buka_02 pos 18 (rumah seberang di pos itu dihapus).
+const SIMPANG_DATA: Array = [["per_buka_01", 3, "dekat"], ["per_buka_02", 18, "seberang"], ["per_tengah_05", 3, "dekat"], ["per_tutup_01", 2, "dekat"]]
+const REFERENSI_SEBERANG: String = "res://tests/data/ubin_potongan_simpang_seberang.png"
 
 var _cek: Callable
 var _judul: Callable
@@ -66,6 +70,7 @@ func jalankan() -> void:
 	_test_sel_simpang_literal()
 	_test_tanah_pasang()
 	_test_susunan_referensi()
+	_test_susunan_referensi_seberang()
 	_test_tanpa_celah()
 	_test_medan_identik()
 	await _test_scene()
@@ -74,7 +79,9 @@ func jalankan() -> void:
 
 # --- Pembantu ---
 
-func _nama_sel(rel: int, kolom: int) -> String:
+func _nama_sel(rel: int, kolom: int, sisi: LoperAnim.Sisi = LoperAnim.Sisi.DEKAT) -> String:
+	if sisi == LoperAnim.Sisi.SEBERANG:
+		return "simpang_seberang_%s_%s" % [NAMA_KOLOM_SEBERANG[kolom], NAMA_BARIS[rel]]
 	return "simpang_dekat_%s_%s" % [NAMA_KOLOM_DEKAT[kolom], NAMA_BARIS[rel]]
 
 
@@ -118,7 +125,7 @@ func _tekstur(nama: String) -> Texture2D:
 	return load(FOLDER_UBIN + "tile_perumahan_%s.png" % nama) as Texture2D
 
 
-## TanahDaur lengkap seperti rute.tscn: enam kolom, rumput polos, enam khusus 5B, dua ujung kerb, dan 18 ubin simpang dekat (urut tabel literal).
+## TanahDaur lengkap seperti rute.tscn: enam kolom, rumput polos, enam khusus 5B, dua ujung kerb, 18 ubin simpang dekat dan 16 seberang (urut tabel literal).
 func _buat_tanah(simpang: bool = true) -> TanahDaur:
 	var tanah: TanahDaur = TanahDaur.new()
 	tanah.tekstur_kolom_rumput_seberang = _tekstur("rumput_seberang")
@@ -141,6 +148,10 @@ func _buat_tanah(simpang: bool = true) -> TanahDaur:
 		for p: Array in SEL_DEKAT:
 			daftar.append(_tekstur(_nama_sel(p[0] as int, p[1] as int)))
 		tanah.tekstur_simpang_dekat = daftar
+		var seb: Array[Texture2D] = []
+		for p: Array in SEL_SEBERANG:
+			seb.append(_tekstur(_nama_sel(p[0] as int, p[1] as int, LoperAnim.Sisi.SEBERANG)))
+		tanah.tekstur_simpang_seberang = seb
 	return tanah
 
 
@@ -254,7 +265,15 @@ func _test_config_json() -> void:
 	var seb: Array = []
 	for i: int in range(Config.RUTE_SIMPANG_SEL_SEBERANG.size() / 2):
 		seb.append([Config.RUTE_SIMPANG_SEL_SEBERANG[2 * i], Config.RUTE_SIMPANG_SEL_SEBERANG[2 * i + 1]])
-	check(seb == SEL_SEBERANG and not (sp["sisi"] as Dictionary).has("seberang"), "tabel sel seberang = literal (JSON build dicek uji_aset_simpang.py); ubin seberang tidak dipasang (D-2)")
+	var seb_json: Array = []
+	var seb_nama: Array[String] = []
+	for d: Dictionary in sp["sisi"].get("seberang", []):
+		seb_json.append([int(d["baris_relatif"]), int(kolom[d["kolom"]])])
+		seb_nama.append(String(d["nama"]))
+	var seb_harap: Array[String] = []
+	for p: Array in SEL_SEBERANG:
+		seb_harap.append(_nama_sel(p[0] as int, p[1] as int, LoperAnim.Sisi.SEBERANG))
+	check(seb == SEL_SEBERANG and seb_json == SEL_SEBERANG and seb_nama == seb_harap, "tabel sel seberang: config = JSON terpasang (P-6) = literal (16 sel), nama sejajar")
 
 
 # --- AC-15: data dan validasi ---
@@ -267,7 +286,7 @@ func _test_parse_sah_dan_lama() -> void:
 	for s: SegmenRute in k.segmen:
 		if s.simpang.is_empty():
 			tanpa += 1
-	check(tanpa == 6, "enam berkas tanpa bidang simpang tetap sah")
+	check(tanpa == 5, "lima berkas tanpa bidang simpang tetap sah (P-6: per_buka_02 kini bersimpang)")
 	check(SegmenRute.parse(_segmen({})).sah(), "segmen sintetis tanpa simpang sah")
 	var h: SegmenRute.Hasil = SegmenRute.parse(_segmen({"simpang": [{"pos": 5, "sisi": "dekat"}, {"pos": 15, "sisi": "seberang"}]}))
 	check(h.sah() and h.segmen.simpang.size() == 2 and h.segmen.simpang[0].pos == 5 and h.segmen.simpang[0].sisi == LoperAnim.Sisi.DEKAT and h.segmen.simpang[1].sisi == LoperAnim.Sisi.SEBERANG, "dua simpang sah di segmen kosong: pos dan sisi terbaca")
@@ -395,7 +414,7 @@ func _test_rute_identik_golden() -> void:
 			salah.append(i)
 		if hasil.sah() and hasil.rute.pelanggan.size() == 25:
 			pelanggan_25 += 1
-	check(GOLDEN_RUTE.size() == 60 and cocok == 60, "60 rute: sidik uraian = golden commit 7f30557 (%d cocok, salah di %s)" % [cocok, salah])
+	check(GOLDEN_RUTE.size() == 60 and cocok == 60, "60 rute: sidik uraian = golden 7f30557 dihitung ulang sesudah P-6 (%d cocok, salah di %s)" % [cocok, salah])
 	check(pelanggan_25 == 60, "25 pelanggan di tiap rute (%d dari 60)" % pelanggan_25)
 
 
@@ -477,8 +496,8 @@ func _test_konten_dan_persen() -> void:
 		ada += 1 if not rute.simpang.is_empty() else 0
 		dekat += 1 if d2 else 0
 		seberang += 1 if b2 else 0
-	check(ada == 100 and dekat == 100 and seberang == 0, "100 rute hari: bersimpang %d, dekat %d, seberang %d (literal 100/100/0; per_tengah_05 selalu terpakai)" % [ada, dekat, seberang])
-	check(total >= 100 and total <= 300, "1 sampai 3 simpang per rute (total %d di 100 rute)" % total)
+	check(ada == 100 and dekat == 100 and seberang == 56, "100 rute hari: bersimpang %d, dekat %d, seberang %d (literal 100/100/56, dihitung dev_ukur/ukur_simpang.gd; per_tengah_05 selalu terpakai)" % [ada, dekat, seberang])
+	check(total >= 100 and total <= 400, "1 sampai 3 simpang per rute (total %d di 100 rute)" % total)
 
 
 func _test_kucing_600_hari() -> void:
@@ -521,19 +540,20 @@ func _test_sel_simpang_literal() -> void:
 	check(_indeks_sel(SEL_DEKAT, 0, 0) == 11 and _indeks_sel(SEL_DEKAT, 3, 1) == 0 and _indeks_sel(SEL_DEKAT, -1, 2) == 16 and _indeks_sel(SEL_SEBERANG, 1, 0) == 5, "indeks tabel literal")
 
 
-## Nama tekstur harapan sel (x, baris) dengan simpang dekat di baris `pos`: tabel literal bila di pita dan sisi dekat, selain itu `bawaan` (tekstur sel sama di tanah tanpa simpang).
-func _harapan_sel(x: float, baris: int, pos: int, bawaan: String) -> String:
+## Nama tekstur harapan sel (x, baris) dengan simpang sisi `sisi` di baris `pos`: tabel literal bila di pita dan di sisi simpang, selain itu `bawaan` (tekstur sel sama di tanah tanpa simpang).
+func _harapan_sel(x: float, baris: int, pos: int, bawaan: String, sisi: LoperAnim.Sisi = LoperAnim.Sisi.DEKAT) -> String:
 	var rel: int = baris - pos
-	if x > 0.0 and rel >= -1 and rel <= 3:
+	var jarak: float = x if sisi == LoperAnim.Sisi.DEKAT else -x
+	if jarak > 0.0 and rel >= -1 and rel <= 3:
 		var kolom: int = 3
-		if x < 1.0:
+		if jarak < 1.0:
 			kolom = 0
-		elif x < 2.0:
+		elif jarak < 2.0:
 			kolom = 1
-		elif x < 3.0:
+		elif jarak < 3.0:
 			kolom = 2
-		if _indeks_sel(SEL_DEKAT, rel, kolom) >= 0:
-			return _nama_sel(rel, kolom)
+		if _indeks_sel(SEL_DEKAT if sisi == LoperAnim.Sisi.DEKAT else SEL_SEBERANG, rel, kolom) >= 0:
+			return _nama_sel(rel, kolom, sisi)
 	return bawaan
 
 
@@ -541,17 +561,20 @@ func _test_tanah_pasang() -> void:
 	_judul.call("TanahDaur: ubin simpang di baris dan kolom yang benar, lengan berulang sampai kolom terjauh, sisi lain lurus (AC-18)")
 	var tanah: TanahDaur = _buat_tanah(true)
 	var polos: TanahDaur = _buat_tanah(false)
-	check(tanah.mode_simpang(LoperAnim.Sisi.DEKAT) and not tanah.mode_simpang(LoperAnim.Sisi.SEBERANG) and not polos.mode_simpang(LoperAnim.Sisi.DEKAT), "mode simpang dekat aktif hanya dengan 18 tekstur; seberang tanpa tekstur tidak aktif")
+	check(tanah.mode_simpang(LoperAnim.Sisi.DEKAT) and tanah.mode_simpang(LoperAnim.Sisi.SEBERANG) and not polos.mode_simpang(LoperAnim.Sisi.DEKAT) and not polos.mode_simpang(LoperAnim.Sisi.SEBERANG), "mode simpang aktif dengan 18 tekstur dekat dan 16 seberang; tanpa tekstur tidak aktif")
 	var pos: int = 12
 	var masuk: Dictionary = {30: true}
 	var total_salah: int = 0
 	var contoh: String = ""
-	for lebar: int in [640, 667, 780, 800, Config.LAYAR_LEBAR_MAKS_PX]:
+	for kasus: int in range(10):
+		var lebar: int = ([640, 667, 780, 800, Config.LAYAR_LEBAR_MAKS_PX] as Array[int])[kasus % 5]
+		var sisi: LoperAnim.Sisi = LoperAnim.Sisi.DEKAT if kasus < 5 else LoperAnim.Sisi.SEBERANG
+		var arah: float = 1.0 if sisi == LoperAnim.Sisi.DEKAT else -1.0
 		tanah.bangun(lebar, TINGGI)
 		polos.bangun(lebar, TINGGI)
 		tanah.atur_baris_masuk(masuk)
 		polos.atur_baris_masuk(masuk)
-		tanah.atur_simpang(UbinKhusus.himpunan_baris_simpang([_simpang_item(float(pos), LoperAnim.Sisi.DEKAT)] as Array[RouteBuilder.SimpangItem]))
+		tanah.atur_simpang(UbinKhusus.himpunan_baris_simpang([_simpang_item(float(pos), sisi)] as Array[RouteBuilder.SimpangItem]))
 		var lengan_maks: float = 0.0
 		var x_maks_pita: float = 0.0
 		for jarak: float in [0.0, 5.5, 9.99, 12.0, 14.3, 20.0]:
@@ -564,17 +587,17 @@ func _test_tanah_pasang() -> void:
 			for u: Sprite2D in _sprite_ubin(tanah):
 				var d: Vector2 = _dunia_dari_layar(u.position)
 				var b: int = int(round(-d.y)) + blok
-				var harap: String = _harapan_sel(d.x, b, pos, String(bawaan[u.position]))
+				var harap: String = _harapan_sel(d.x, b, pos, String(bawaan[u.position]), sisi)
 				if _nama_tekstur(u) != harap:
 					total_salah += 1
 					if contoh.is_empty():
 						contoh = "lebar %d jarak %s x %s baris %d: %s harapan %s" % [lebar, jarak, d.x, b, _nama_tekstur(u), harap]
-				if b >= pos - 1 and b <= pos + 3 and d.x > 3.0:
-					x_maks_pita = maxf(x_maks_pita, d.x)
-					if _nama_tekstur(u).begins_with("simpang_dekat_lengan"):
-						lengan_maks = maxf(lengan_maks, d.x)
-		check(lengan_maks > 3.0 and lengan_maks == x_maks_pita, "lebar %d: lengan sampai kolom terjauh yang ada di blok (x %s = %s)" % [lebar, lengan_maks, x_maks_pita])
-	check(total_salah == 0, "tiap sprite di 5 lebar x 6 jarak = harapan (tabel literal di pita sisi dekat, sama dengan tanah tanpa simpang di luar): %s" % contoh)
+				if b >= pos - 1 and b <= pos + 3 and arah * d.x > 3.0:
+					x_maks_pita = maxf(x_maks_pita, arah * d.x)
+					if _nama_tekstur(u).begins_with("simpang_%s_lengan" % ("dekat" if sisi == LoperAnim.Sisi.DEKAT else "seberang")):
+						lengan_maks = maxf(lengan_maks, arah * d.x)
+		check(lengan_maks > 3.0 and lengan_maks == x_maks_pita, "lebar %d sisi %s: lengan sampai kolom terjauh yang ada di blok (|x| %s = %s)" % [lebar, sisi, lengan_maks, x_maks_pita])
+	check(total_salah == 0, "tiap sprite di 5 lebar x 6 jarak x 2 sisi = harapan (tabel literal di pita sisi simpang, sama dengan tanah tanpa simpang di luar): %s" % contoh)
 	var wadah: Array[String] = []
 	for w: Node in tanah.get_children():
 		wadah.append(String(w.name))
@@ -583,7 +606,7 @@ func _test_tanah_pasang() -> void:
 			tekstur[(a as Sprite2D).texture.resource_path] = true
 		if tekstur.size() > 1:
 			check(false, "wadah %s lebih dari satu tekstur" % w.name)
-	check(wadah.size() == 33 and wadah[15] == "SimpangDekat0" and wadah[32] == "SimpangDekat17", "33 wadah (15 + 18 simpang, naik tepat sebanyak tekstur baru), satu tekstur per wadah")
+	check(wadah.size() == 49 and wadah[15] == "SimpangSeberang0" and wadah[30] == "SimpangSeberang15" and wadah[31] == "SimpangDekat0" and wadah[48] == "SimpangDekat17", "49 wadah (15 + 16 simpang seberang + 18 dekat, naik tepat sebanyak tekstur baru), satu tekstur per wadah")
 	check(_sprite_ubin(tanah).size() == _sprite_ubin(polos).size(), "jumlah sprite ubin sama dengan tanpa simpang")
 	tanah.atur_simpang({})
 	tanah.perbarui(12.0)
@@ -593,13 +616,18 @@ func _test_tanah_pasang() -> void:
 		if _nama_tekstur(u).begins_with("simpang_"):
 			sisa += 1
 	check(sisa == 0, "atur_simpang({}) menghapus semua ubin simpang")
-	# Simpang seberang tanpa tekstur seberang: tanah tetap lurus (tidak ada ubin dekat yang salah sisi).
-	tanah.atur_simpang(UbinKhusus.himpunan_baris_simpang([_simpang_item(13.0, LoperAnim.Sisi.SEBERANG)] as Array[RouteBuilder.SimpangItem]))
+	# Simpang seberang dengan tekstur dekat saja (tanah tanpa tekstur seberang): tanah tetap lurus, tidak ada ubin dekat yang salah sisi.
+	var dekat_saja: TanahDaur = _buat_tanah(true)
+	dekat_saja.tekstur_simpang_seberang = []
+	dekat_saja.bangun(Config.LAYAR_LEBAR_MAKS_PX, TINGGI)
+	dekat_saja.atur_simpang(UbinKhusus.himpunan_baris_simpang([_simpang_item(13.0, LoperAnim.Sisi.SEBERANG)] as Array[RouteBuilder.SimpangItem]))
+	dekat_saja.perbarui(12.0)
 	var salah_sisi: int = 0
-	for u: Sprite2D in _sprite_ubin(tanah):
+	for u: Sprite2D in _sprite_ubin(dekat_saja):
 		if _nama_tekstur(u).begins_with("simpang_"):
 			salah_sisi += 1
-	check(salah_sisi == 0, "simpang seberang tanpa tekstur seberang: tidak ada ubin simpang terpasang")
+	check(salah_sisi == 0 and dekat_saja.get_child_count() == 33, "simpang seberang tanpa tekstur seberang: tidak ada ubin simpang terpasang, 33 wadah")
+	dekat_saja.free()
 	tanah.free()
 	polos.free()
 
@@ -640,6 +668,40 @@ func _test_susunan_referensi() -> void:
 	tanah.free()
 
 
+func _test_susunan_referensi_seberang() -> void:
+	_judul.call("TanahDaur: susunan simpang seberang piksel-identik dengan referensi Python dari assets/ (AC-19, P-6)")
+	var tanah: TanahDaur = _buat_tanah(true)
+	tanah.bangun(Config.LAYAR_LEBAR_MAKS_PX, Config.LAYAR_TINGGI_DASAR_PX)
+	tanah.atur_simpang(UbinKhusus.himpunan_baris_simpang([_simpang_item(3.0, LoperAnim.Sisi.SEBERANG)] as Array[RouteBuilder.SimpangItem]))
+	tanah.perbarui(0.0)
+	var ref: Image = Image.load_from_file(ProjectSettings.globalize_path(REFERENSI_SEBERANG))
+	check(ref != null and not ref.is_empty(), "referensi tests/data/ubin_potongan_simpang_seberang.png terbaca")
+	if ref == null or ref.is_empty():
+		tanah.free()
+		return
+	ref.convert(Image.FORMAT_RGBA8)
+	var terpilih: Array[Sprite2D] = []
+	var x_min: int = 1 << 30
+	var y_min: int = 1 << 30
+	var simpang: int = 0
+	for u: Sprite2D in _sprite_ubin(tanah):
+		var d: Vector2 = _dunia_dari_layar(u.position)
+		if d.x > -6.0 and d.x < 5.0 and d.y <= 0.001 and d.y >= -8.001:
+			terpilih.append(u)
+			x_min = mini(x_min, int(u.position.x) - 32)
+			y_min = mini(y_min, int(u.position.y) - 16)
+			if _nama_tekstur(u).begins_with("simpang_seberang_"):
+				simpang += 1
+	check(terpilih.size() == 99 and simpang == 26, "potongan 11 kolom x 9 baris = 99 ubin, 26 ubin simpang seberang (16 sel + lengan kolom -4,5 dan -5,5 di 5 baris; dapat %d, %d)" % [terpilih.size(), simpang])
+	var kanvas: Image = Image.create(ref.get_width(), ref.get_height(), false, Image.FORMAT_RGBA8)
+	kanvas.fill(Color(0, 0, 0, 0))
+	for u: Sprite2D in terpilih:
+		var g: Image = _gambar_tekstur(u.texture)
+		kanvas.blend_rect(g, Rect2i(Vector2i.ZERO, g.get_size()), Vector2i(int(u.position.x) - 32 - x_min, int(u.position.y) - 16 - y_min))
+	check(kanvas.get_size() == ref.get_size() and kanvas.get_data() == ref.get_data(), "susunan TanahDaur simpang seberang di baris 3 piksel-identik dengan referensi (mulut, sudut, lengan, simbol, variasi rumput)")
+	tanah.free()
+
+
 func _test_tanpa_celah() -> void:
 	_judul.call("TanahDaur: tanpa piksel transparan di seluruh viewport di sekitar simpang (AC-19)")
 	var tanah: TanahDaur = _buat_tanah(true)
@@ -648,7 +710,7 @@ func _test_tanpa_celah() -> void:
 	var simpang_terlihat: int = 0
 	for lebar: int in [640, 667, 780, 800, Config.LAYAR_LEBAR_MAKS_PX]:
 		tanah.bangun(lebar, TINGGI)
-		tanah.atur_simpang(UbinKhusus.himpunan_baris_simpang([_simpang_item(10.0, LoperAnim.Sisi.DEKAT)] as Array[RouteBuilder.SimpangItem]))
+		tanah.atur_simpang(UbinKhusus.himpunan_baris_simpang([_simpang_item(10.0, LoperAnim.Sisi.DEKAT), _simpang_item(16.0, LoperAnim.Sisi.SEBERANG)] as Array[RouteBuilder.SimpangItem]))
 		for jarak_ubin: float in [6.0, 9.5, 11.25, 13.0]:
 			tanah.perbarui(jarak_ubin)
 			for u: Sprite2D in _sprite_ubin(tanah):
@@ -724,36 +786,73 @@ func _taruh(akar: RuteMain, lateral: float, maju: float) -> void:
 
 
 func _test_scene() -> void:
-	_judul.call("Scene rute: ubin simpang dari rute nyata, rute.tscn memuat 18 tekstur dekat, tembok dan rumah tidak di pita (AC-18)")
+	_judul.call("Scene rute: ubin simpang dari rute nyata kedua sisi, rute.tscn memuat 18 tekstur dekat dan 16 seberang, tembok dan rumah tidak di pita (AC-18)")
 	var akar: RuteMain = await _siapkan()
 	var tanah: TanahDaur = akar.find_child("Tanah", true, false) as TanahDaur
-	check(tanah.mode_simpang(LoperAnim.Sisi.DEKAT) and tanah.get_child_count() == 33, "rute.tscn: mode simpang dekat, 33 wadah")
+	check(tanah.mode_simpang(LoperAnim.Sisi.DEKAT) and tanah.mode_simpang(LoperAnim.Sisi.SEBERANG) and tanah.get_child_count() == 49, "rute.tscn: mode simpang kedua sisi, 49 wadah")
+	var urut_seb: bool = tanah.tekstur_simpang_seberang.size() == 16
+	for i: int in range(mini(16, tanah.tekstur_simpang_seberang.size())):
+		var q: Array = SEL_SEBERANG[i]
+		if tanah.tekstur_simpang_seberang[i].resource_path != FOLDER_UBIN + "tile_perumahan_%s.png" % _nama_sel(q[0] as int, q[1] as int, LoperAnim.Sisi.SEBERANG):
+			urut_seb = false
+	check(urut_seb, "tekstur_simpang_seberang di rute.tscn sejajar tabel sel")
 	var urut: bool = tanah.tekstur_simpang_dekat.size() == 18
 	for i: int in range(mini(18, tanah.tekstur_simpang_dekat.size())):
 		var p: Array = SEL_DEKAT[i]
 		if tanah.tekstur_simpang_dekat[i].resource_path != FOLDER_UBIN + "tile_perumahan_%s.png" % _nama_sel(p[0] as int, p[1] as int):
 			urut = false
 	check(urut, "tekstur_simpang_dekat di rute.tscn sejajar tabel sel")
-	var rute: RouteBuilder.Rute = akar.get("_rute") as RouteBuilder.Rute
-	check(not rute.simpang.is_empty(), "rute dev memuat simpang (%d)" % rute.simpang.size())
 	var salah: int = 0
 	var simpang_sprite: int = 0
-	for it: RouteBuilder.SimpangItem in rute.simpang:
-		_taruh(akar, 0.0, it.maju_ubin)
-		var blok: int = int(floor(it.maju_ubin))
-		for u: Sprite2D in _sprite_ubin(tanah):
-			var d: Vector2 = _dunia_dari_layar(u.position)
-			var b: int = int(round(-d.y)) + blok
-			var harap: String = _harapan_sel(d.x, b, roundi(it.maju_ubin), "")
-			var nama: String = _nama_tekstur(u)
-			if not harap.is_empty():
-				simpang_sprite += 1
-				if nama != harap:
-					salah += 1
-			elif nama.begins_with("simpang_") and absi(b - roundi(it.maju_ubin) - 1) > 2:
+	var sisi_terlihat: Dictionary = {}
+	for benih: int in [SEED_DEV, _benih_seberang()]:
+		akar.call("_susun", benih)
+		var rute: RouteBuilder.Rute = akar.get("_rute") as RouteBuilder.Rute
+		check(not rute.simpang.is_empty(), "rute seed %d memuat simpang (%d)" % [benih, rute.simpang.size()])
+		for it: RouteBuilder.SimpangItem in rute.simpang:
+			sisi_terlihat[it.sisi] = true
+			salah += _periksa_scene_simpang(akar, tanah, it, rute.simpang)
+			simpang_sprite += 1
+	check(salah == 0 and simpang_sprite >= 3 and sisi_terlihat.size() == 2, "simpang rute dev dan rute bersimpang seberang (kedua sisi): sel pita = tabel literal (%d simpang, %d salah)" % [simpang_sprite, salah])
+	_cek_tembok_rumah_100()
+	_bersihkan(akar)
+
+
+## Seed pertama (20261016 + i) yang rutenya memuat simpang seberang (per_buka_02, putusan P-6).
+func _benih_seberang() -> int:
+	for i: int in range(60):
+		for it: RouteBuilder.SimpangItem in RouteBuilder.bangun(SEED_DEV + i, _pustaka()).rute.simpang:
+			if it.sisi == LoperAnim.Sisi.SEBERANG:
+				return SEED_DEV + i
+	return -1
+
+
+## Jumlah sel salah di blok tanah dengan sepeda di baris `pos` simpang `it`: tiap sel = tabel literal simpang rute mana pun yang pitanya memuat sel itu (sisi simpang),
+## dan tidak ada ubin simpang di luar pita simpang rute (`semua`).
+func _periksa_scene_simpang(akar: RuteMain, tanah: TanahDaur, it: RouteBuilder.SimpangItem, semua: Array[RouteBuilder.SimpangItem]) -> int:
+	var salah: int = 0
+	var diperiksa: int = 0
+	_taruh(akar, 0.0, it.maju_ubin)
+	var blok: int = int(floor(it.maju_ubin))
+	for u: Sprite2D in _sprite_ubin(tanah):
+		var d: Vector2 = _dunia_dari_layar(u.position)
+		var b: int = int(round(-d.y)) + blok
+		var harap: String = ""
+		for lain: RouteBuilder.SimpangItem in semua:
+			if harap.is_empty():
+				harap = _harapan_sel(d.x, b, roundi(lain.maju_ubin), "", lain.sisi)
+		var nama: String = _nama_tekstur(u)
+		if not harap.is_empty():
+			diperiksa += 1
+			if nama != harap:
 				salah += 1
-	check(salah == 0 and simpang_sprite > 50, "di tiap simpang rute dev: sel pita = tabel literal (%d sel diperiksa, %d salah)" % [simpang_sprite, salah])
-	# Tembok dan rumah dekat tidak ada di pita simpang dekat (100 rute hari).
+		elif nama.begins_with("simpang_"):
+			salah += 1
+	return salah if diperiksa > 50 else salah + 1
+
+
+## Tembok dan rumah (tapak gambar) sisi simpang tidak ada di pita simpang (100 rute hari, kedua sisi).
+func _cek_tembok_rumah_100() -> void:
 	var di_pita: int = 0
 	for i: int in range(100):
 		var r: RouteBuilder.Rute = RouteBuilder.bangun(SeedHari.rute(i + 1), _pustaka()).rute
@@ -769,23 +868,26 @@ func _test_scene() -> void:
 				var tapak: Rect2 = PenutupPemain.tapak_rumah_gambar(rumah.sisi, rumah.maju_ubin)
 				if tapak.position.y < pita.y and tapak.end.y > pita.x:
 					di_pita += 1
-	check(di_pita == 0, "100 rute: tidak ada modul tembok, tiang, atau tapak gambar rumah dekat di pita simpang dekat (%d)" % di_pita)
-	_bersihkan(akar)
+	check(di_pita == 0, "100 rute: tidak ada modul tembok, tiang, atau tapak gambar rumah sisi simpang di pita simpang (%d)" % di_pita)
 
 
 func _test_scene_gerak_identik() -> void:
 	_judul.call("Scene rute: sepeda melintasi mulut simpang tanpa tabrakan, jejak gerak identik dengan simpang tidak digambar (AC-20)")
 	var jejak: Array = []
 	var tabrak_total: int = 0
-	for mode: int in range(2):
+	for mode: int in range(4):
 		var akar: RuteMain = await _siapkan()
 		var tanah: TanahDaur = akar.find_child("Tanah", true, false) as TanahDaur
+		var segmen_uji: String = "per_tengah_05"
+		if mode >= 2:
+			akar.call("_susun", _benih_seberang())
+			segmen_uji = "per_buka_02"
 		var rute: RouteBuilder.Rute = akar.get("_rute") as RouteBuilder.Rute
 		var it: RouteBuilder.SimpangItem = null
 		for s: RouteBuilder.SimpangItem in rute.simpang:
-			if s.id_segmen == "per_tengah_05":
+			if s.id_segmen == segmen_uji:
 				it = s
-		if mode == 1:
+		if mode % 2 == 1:
 			tanah.atur_simpang({})
 		var tabrak: Array[String] = []
 		akar.tabrakan.connect(func(j: String) -> void: tabrak.append(j))
@@ -802,7 +904,7 @@ func _test_scene_gerak_identik() -> void:
 		tabrak_total += tabrak.size()
 		jejak.append("\n".join(teks))
 		_bersihkan(akar)
-	check(jejak.size() == 2 and jejak[0] == jejak[1] and (jejak[0] as String).length() > 1000, "5 lateral x 150 langkah: jejak gerak (jarak, lateral, kecepatan, stamina, jatuh, pose) identik bit demi bit dengan dan tanpa simpang tergambar")
+	check(jejak.size() == 4 and jejak[0] == jejak[1] and jejak[2] == jejak[3] and (jejak[0] as String).length() > 1000 and jejak[0] != jejak[2], "simpang dekat dan seberang, 5 lateral x 150 langkah: jejak gerak (jarak, lateral, kecepatan, stamina, jatuh, pose) identik bit demi bit dengan dan tanpa simpang tergambar")
 	check(tabrak_total == 0, "tanpa tabrakan saat melintasi mulut simpang di lateral -2 .. 2 (%d)" % tabrak_total)
 
 

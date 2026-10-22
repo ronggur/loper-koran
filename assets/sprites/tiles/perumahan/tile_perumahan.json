@@ -171,6 +171,120 @@
      "baris_relatif": -1,
      "berulang_ke_luar": true
     }
+   ],
+   "seberang": [
+    {
+     "nama": "simpang_seberang_rumput_seberang_depan_2",
+     "kolom": "rumput",
+     "kolom_x_ubin": -2.5,
+     "baris_relatif": 3,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_seberang_lengan_depan_2",
+     "kolom": "lengan",
+     "kolom_x_ubin": -3.5,
+     "baris_relatif": 3,
+     "berulang_ke_luar": true
+    },
+    {
+     "nama": "simpang_seberang_trotoar_seberang_depan_1",
+     "kolom": "trotoar",
+     "kolom_x_ubin": -1.5,
+     "baris_relatif": 2,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_seberang_rumput_seberang_depan_1",
+     "kolom": "rumput",
+     "kolom_x_ubin": -2.5,
+     "baris_relatif": 2,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_seberang_lengan_depan_1",
+     "kolom": "lengan",
+     "kolom_x_ubin": -3.5,
+     "baris_relatif": 2,
+     "berulang_ke_luar": true
+    },
+    {
+     "nama": "simpang_seberang_aspal_seberang_mulut_1",
+     "kolom": "aspal",
+     "kolom_x_ubin": -0.5,
+     "baris_relatif": 1,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_seberang_trotoar_seberang_mulut_1",
+     "kolom": "trotoar",
+     "kolom_x_ubin": -1.5,
+     "baris_relatif": 1,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_seberang_rumput_seberang_mulut_1",
+     "kolom": "rumput",
+     "kolom_x_ubin": -2.5,
+     "baris_relatif": 1,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_seberang_lengan_mulut_1",
+     "kolom": "lengan",
+     "kolom_x_ubin": -3.5,
+     "baris_relatif": 1,
+     "berulang_ke_luar": true
+    },
+    {
+     "nama": "simpang_seberang_aspal_seberang_mulut_2",
+     "kolom": "aspal",
+     "kolom_x_ubin": -0.5,
+     "baris_relatif": 0,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_seberang_trotoar_seberang_mulut_2",
+     "kolom": "trotoar",
+     "kolom_x_ubin": -1.5,
+     "baris_relatif": 0,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_seberang_rumput_seberang_mulut_2",
+     "kolom": "rumput",
+     "kolom_x_ubin": -2.5,
+     "baris_relatif": 0,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_seberang_lengan_mulut_2",
+     "kolom": "lengan",
+     "kolom_x_ubin": -3.5,
+     "baris_relatif": 0,
+     "berulang_ke_luar": true
+    },
+    {
+     "nama": "simpang_seberang_trotoar_seberang_belakang_1",
+     "kolom": "trotoar",
+     "kolom_x_ubin": -1.5,
+     "baris_relatif": -1,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_seberang_rumput_seberang_belakang_1",
+     "kolom": "rumput",
+     "kolom_x_ubin": -2.5,
+     "baris_relatif": -1,
+     "berulang_ke_luar": false
+    },
+    {
+     "nama": "simpang_seberang_lengan_belakang_1",
+     "kolom": "lengan",
+     "kolom_x_ubin": -3.5,
+     "baris_relatif": -1,
+     "berulang_ke_luar": true
+    }
    ]
   }
  },
@@ -202,6 +316,22 @@
   "tile_perumahan_simpang_dekat_trotoar_dekat_depan_2.png",
   "tile_perumahan_simpang_dekat_trotoar_dekat_mulut_1.png",
   "tile_perumahan_simpang_dekat_trotoar_dekat_mulut_2.png",
+  "tile_perumahan_simpang_seberang_aspal_seberang_mulut_1.png",
+  "tile_perumahan_simpang_seberang_aspal_seberang_mulut_2.png",
+  "tile_perumahan_simpang_seberang_lengan_belakang_1.png",
+  "tile_perumahan_simpang_seberang_lengan_depan_1.png",
+  "tile_perumahan_simpang_seberang_lengan_depan_2.png",
+  "tile_perumahan_simpang_seberang_lengan_mulut_1.png",
+  "tile_perumahan_simpang_seberang_lengan_mulut_2.png",
+  "tile_perumahan_simpang_seberang_rumput_seberang_belakang_1.png",
+  "tile_perumahan_simpang_seberang_rumput_seberang_depan_1.png",
+  "tile_perumahan_simpang_seberang_rumput_seberang_depan_2.png",
+  "tile_perumahan_simpang_seberang_rumput_seberang_mulut_1.png",
+  "tile_perumahan_simpang_seberang_rumput_seberang_mulut_2.png",
+  "tile_perumahan_simpang_seberang_trotoar_seberang_belakang_1.png",
+  "tile_perumahan_simpang_seberang_trotoar_seberang_depan_1.png",
+  "tile_perumahan_simpang_seberang_trotoar_seberang_mulut_1.png",
+  "tile_perumahan_simpang_seberang_trotoar_seberang_mulut_2.png",
   "tile_perumahan_trotoar_dekat.png",
   "tile_perumahan_trotoar_dekat_simbol.png",
   "tile_perumahan_trotoar_seberang.png",

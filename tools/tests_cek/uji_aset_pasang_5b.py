@@ -141,7 +141,11 @@ UBIN_SIMPANG_DEKAT = ['simpang_dekat_%s' % n for n in (
     'trotoar_dekat_depan_2', 'rumput_dekat_depan_2', 'lengan_depan_2', 'aspal_dekat_depan_1', 'trotoar_dekat_depan_1', 'rumput_dekat_depan_1', 'lengan_depan_1',
     'aspal_dekat_mulut_1', 'trotoar_dekat_mulut_1', 'rumput_dekat_mulut_1', 'lengan_mulut_1', 'aspal_dekat_mulut_2', 'trotoar_dekat_mulut_2', 'rumput_dekat_mulut_2',
     'lengan_mulut_2', 'trotoar_dekat_belakang_1', 'rumput_dekat_belakang_1', 'lengan_belakang_1')]
-UBIN_5C = UBIN_UJUNG + UBIN_SIMPANG_DEKAT
+# Putusan P-6 run 5C: simpang seberang di per_buka_02, 16 ubin seberang ikut dipasang.
+UBIN_SIMPANG_SEBERANG = ['simpang_seberang_%s' % n for n in (
+    'rumput_seberang_depan_2', 'lengan_depan_2', 'trotoar_seberang_depan_1', 'rumput_seberang_depan_1', 'lengan_depan_1', 'aspal_seberang_mulut_1', 'trotoar_seberang_mulut_1', 'rumput_seberang_mulut_1',
+    'lengan_mulut_1', 'aspal_seberang_mulut_2', 'trotoar_seberang_mulut_2', 'rumput_seberang_mulut_2', 'lengan_mulut_2', 'trotoar_seberang_belakang_1', 'rumput_seberang_belakang_1', 'lengan_belakang_1')]
+UBIN_5C = UBIN_UJUNG + UBIN_SIMPANG_DEKAT + UBIN_SIMPANG_SEBERANG
 
 
 def fnv_dua_int(a, b):
@@ -411,7 +415,7 @@ def main():
     png_baru = [os.path.join(SPRITES, 'houses', 'perumahan', n + '.png') for n in TEMBOK]
     png_baru += [os.path.join(SPRITES, 'props', n + '.png') for n in list(TONG) + POHON + LAMPU]
     png_baru += [os.path.join(SPRITES, 'tiles', 'perumahan', 'tile_perumahan_%s.png' % n) for n in UBIN_BARU + UBIN_5C]
-    periksa(len(png_baru) == 37, '37 PNG baru (17 run 5B + 20 run 5C; dapat %d)' % len(png_baru))
+    periksa(len(png_baru) == 53, '53 PNG baru (17 run 5B + 36 run 5C; dapat %d)' % len(png_baru))
     for jalur in png_baru:
         nama = os.path.relpath(jalur, SPRITES)
         imp = jalur + '.import'

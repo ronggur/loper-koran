@@ -2,12 +2,14 @@ extends SceneTree
 ## Probe simpang T hiasan dan ujung kerb jalan masuk di jendela asli, non-headless (AC-21 dan AC-12 run 20261022-fase5c-animasi-simpang): memuat `scenes/rute/rute.tscn`, memajukan
 ## simulasi dengan langkah tetap `perbarui(1/60)` (bukan waktu dinding), lalu menyimpan tangkapan layar.
 ##
-## Skenario (rute nyata seed dev; tiap simpang rute = simpang sisi `dekat`, simpang seberang belum ada di data, lihat LOG run 5C D-4):
+## Skenario (rute nyata seed dev untuk simpang `dekat`; seed pertama yang memakai `per_buka_02` untuk simpang `seberang`, putusan P-6):
 ## - `dekat_<id segmen>`: sepeda di jalur tengah 3 ubin sebelum mulut tiap simpang: mulut, sudut, lengan ke luar; tembok rumah dekat tetangga berhenti sebelum pita.
 ## - `mulut_lat<lateral>`: sepeda melintas mulut simpang per_tengah_05 di lateral -2, 0, 1, dan 2 (trotoar dekat): tanpa tabrakan, pose bukan jatuh.
 ## - `lengan_tepi`: sepeda di lateral -2 (layar bergeser ke kiri): lengan berulang sampai kolom terjauh blok di semua baris pita.
 ## - `ujung_kerb`: jalan masuk garasi mobil seberang pertama dan ujung kerb di baris depannya.
 ## - `kidal`: simpang per_tengah_05 dengan tata letak kidal.
+## - `seberang_per_buka_02`, `seberang_mulut_lat<lateral>`, `seberang_lengan_tepi`, `seberang_kidal`: simpang seberang (per_buka_02 pos 18): mulut, sudut, lengan ke kiri atas,
+##   melintas mulut di lateral -2 (trotoar seberang), -1, 0, 2, lengan sampai kolom terjauh dengan sepeda di lateral 2, kidal.
 ## Mencetak data tiap keadaan dan keadaan yang tidak sesuai (nol bila baik): ubin pita tidak sesuai tabel `Config.RUTE_SIMPANG_SEL_DEKAT`, lengan berhenti sebelum kolom terjauh,
 ## tembok atau tapak rumah dekat di pita, tabrakan atau jatuh saat melintas, ujung kerb tidak di baris maju + 1. Keluar lewat `ProbeKeluar`; tidak menulis `user://save.json`.
 ##
@@ -74,6 +76,7 @@ func _initialize() -> void:
 		_periksa_pita(utama)
 		await _foto("kidal")
 		_akar.atur_kidal(false)
+	await _foto_seberang()
 	await _foto_ujung()
 	print("probe selesai, %d keadaan tidak sesuai" % _gagal)
 	await ProbeKeluar.keluar(self, 0 if _gagal == 0 else 1)
@@ -109,7 +112,7 @@ func _tanah() -> TanahDaur:
 	return _akar.find_child("Tanah", true, false) as TanahDaur
 
 
-## Ubin pita simpang dekat `it` di blok sekarang: sel tabel = tekstur tabel; lengan sampai kolom terjauh di tiap baris pita.
+## Ubin pita simpang `it` (sisi mana pun) di blok sekarang: sel tabel = tekstur tabel sisi itu; lengan sampai kolom terjauh di tiap baris pita.
 func _periksa_pita(it: RouteBuilder.SimpangItem) -> void:
 	var tanah: TanahDaur = _tanah()
 	var blok: int = floori(_sepeda.jarak_ubin)
@@ -124,19 +127,20 @@ func _periksa_pita(it: RouteBuilder.SimpangItem) -> void:
 			var gx: float = (u.position.y / 16.0 + u.position.x / 32.0) / 2.0
 			var gy: float = (u.position.y / 16.0 - u.position.x / 32.0) / 2.0
 			var rel: int = roundi(-gy) + blok - dasar
-			if rel < Config.RUTE_SIMPANG_PITA_BARIS[0] or rel > Config.RUTE_SIMPANG_PITA_BARIS[1] or gx < 0.0:
+			var arah: float = 1.0 if it.sisi == LoperAnim.Sisi.DEKAT else -1.0
+			if rel < Config.RUTE_SIMPANG_PITA_BARIS[0] or rel > Config.RUTE_SIMPANG_PITA_BARIS[1] or arah * gx < 0.0:
 				continue
 			var nama: String = u.texture.resource_path.get_file()
 			var sel: Vector2i = UbinKhusus.sel_simpang(gx, dasar + rel, UbinKhusus.himpunan_baris_simpang([it] as Array[RouteBuilder.SimpangItem]))
 			if sel != UbinKhusus.TANPA_SIMPANG:
-				if u.texture == tanah.tekstur_simpang_dekat[sel.y]:
+				if u.texture == tanah.tekstur_simpang(it.sisi)[sel.y]:
 					sel_cocok += 1
 				else:
 					sel_salah += 1
-			if gx > 3.0:
-				x_maks[rel] = maxf(float(x_maks.get(rel, 0.0)), gx)
-				if nama.begins_with("tile_perumahan_simpang_dekat_lengan"):
-					lengan_maks[rel] = maxf(float(lengan_maks.get(rel, 0.0)), gx)
+			if arah * gx > 3.0:
+				x_maks[rel] = maxf(float(x_maks.get(rel, 0.0)), arah * gx)
+				if nama.begins_with("tile_perumahan_simpang_%s_lengan" % ("dekat" if arah > 0.0 else "seberang")):
+					lengan_maks[rel] = maxf(float(lengan_maks.get(rel, 0.0)), arah * gx)
 	print("pita %s (sepeda maju %.2f lateral %.2f): %d sel simpang cocok, %d salah, kolom terjauh %s, lengan terjauh %s" % [it.id, _sepeda.jarak_ubin, _sepeda.lateral_ubin, sel_cocok, sel_salah, x_maks, lengan_maks])
 	_cek(sel_cocok > 20 and sel_salah == 0, "ubin pita %s = tabel sel (%d cocok, %d salah)" % [it.id, sel_cocok, sel_salah])
 	_cek(x_maks == lengan_maks and not x_maks.is_empty(), "lengan %s sampai kolom terjauh di tiap baris pita" % it.id)
@@ -161,7 +165,7 @@ func _periksa_tembok(it: RouteBuilder.SimpangItem) -> void:
 	_cek(di_pita == 0, "tembok terputus di pita %s" % it.id)
 
 
-func _lintas(it: RouteBuilder.SimpangItem, lateral: float) -> void:
+func _lintas(it: RouteBuilder.SimpangItem, lateral: float, awalan: String = "") -> void:
 	var tabrak: Array[String] = []
 	var sambung: Callable = func(j: String) -> void: tabrak.append(j)
 	_akar.tabrakan.connect(sambung)
@@ -175,10 +179,61 @@ func _lintas(it: RouteBuilder.SimpangItem, lateral: float) -> void:
 		if not foto and _sepeda.jarak_ubin >= it.mulut_awal_ubin + it.lebar_mulut_ubin / 2:
 			foto = true
 			await _tunggu(2)
-			await _foto("mulut_lat%s" % str(lateral).replace(".", "_").replace("-", "m"))
+			await _foto("%smulut_lat%s" % [awalan, str(lateral).replace(".", "_").replace("-", "m")])
 	_akar.tabrakan.disconnect(sambung)
 	print("lintas %s lateral %.1f: sampai maju %.2f, tabrakan %d, langkah jatuh %d, pose %s" % [it.id, lateral, _sepeda.jarak_ubin, tabrak.size(), jatuh, LoperAnim.Pose.keys()[_sepeda.pose()]])
 	_cek(tabrak.is_empty() and jatuh == 0 and foto, "melintas mulut di lateral %.1f tanpa tabrakan atau jatuh" % lateral)
+
+
+## Simpang seberang (putusan P-6): rute seed pertama yang memakai per_buka_02.
+func _foto_seberang() -> void:
+	var it: RouteBuilder.SimpangItem = null
+	for i: int in range(60):
+		_akar.call("_susun", Config.RUTE_SEED_DEV + i)
+		for s: RouteBuilder.SimpangItem in RouteBuilder.simpang_di(_akar.rute()):
+			if s.sisi == LoperAnim.Sisi.SEBERANG:
+				it = s
+		if it != null:
+			break
+	_cek(it != null, "ada rute dengan simpang seberang (60 seed)")
+	if it == null:
+		return
+	print("simpang seberang: seed %d, %s" % [_akar.benih(), _uraian_simpang(_akar.rute())])
+	_taruh(3.0, 0.0, it.maju_ubin + MAJU_FOTO)
+	await _maju(0.25)
+	_periksa_pita(it)
+	_periksa_rumah_seberang(it)
+	await _foto("seberang_%s" % it.id_segmen)
+	for lat: float in [-2.0, -1.0, 0.0, 2.0]:
+		await _lintas(it, lat, "seberang_")
+	_taruh(3.0, -LATERAL_TEPI, it.maju_ubin)
+	await _maju(0.1)
+	_periksa_pita(it)
+	await _foto("seberang_lengan_tepi")
+	_akar.atur_kidal(true)
+	await _tunggu(3)
+	_taruh(3.0, 0.0, it.maju_ubin + MAJU_FOTO)
+	await _maju(0.25)
+	_periksa_pita(it)
+	await _foto("seberang_kidal")
+	_akar.atur_kidal(false)
+
+
+## Tapak rumah seberang tidak di pita simpang seberang `it` (kavling tetangga per_buka_02@14 dan @22 berhenti di tepi pita).
+func _periksa_rumah_seberang(it: RouteBuilder.SimpangItem) -> void:
+	var pita: Vector2 = SegmenRute.pita_maju(it.maju_ubin)
+	var di_pita: int = 0
+	var tetangga: PackedStringArray = PackedStringArray()
+	for r: RouteBuilder.RumahRute in _akar.rute().rumah:
+		if r.sisi != LoperAnim.Sisi.SEBERANG:
+			continue
+		var kav: Rect2 = SegmenRute.kavling_rumah(r.sisi, r.maju_ubin)
+		if absf(kav.get_center().y - (pita.x + pita.y) / 2) < 6.0:
+			tetangga.append("%s %.1f..%.1f" % [r.id, kav.position.y, kav.end.y])
+		if kav.position.y < pita.y and kav.end.y > pita.x:
+			di_pita += 1
+	print("rumah seberang sekitar %s (pita %.1f..%.1f): %s; di pita %d" % [it.id, pita.x, pita.y, tetangga, di_pita])
+	_cek(di_pita == 0, "tidak ada rumah seberang di pita %s" % it.id)
 
 
 func _foto_ujung() -> void:

@@ -489,7 +489,8 @@ func _test_berkas_nyata_oracle_mentah() -> void:
 			var titik: Dictionary = t
 			var pos: int = int(titik["pos"])
 			check(pos_rumah.has(pos) and pos_rumah[pos] == titik["sisi"], "%s: titik misi '%s' pos %d berdiri di rumah sisi yang sama" % [id, titik["nama"], pos])
-	check(total_rumah == 109, "total rumah di 9 segmen = 109 (73 seberang: 7+8+9+8+10+9+9+6+7, 36 dekat: 3+4+5+4+6+5+4+2+3): %d" % total_rumah)
+	# Run 5C putusan P-6: rumah seberang per_buka_02@18 dihapus untuk simpang seberang (109 -> 108; dihitung skrip dev_ukur/banding_p6.gd).
+	check(total_rumah == 108, "total rumah di 9 segmen = 108 (72 seberang: 7+7+9+8+10+9+9+6+7, 36 dekat: 3+4+5+4+6+5+4+2+3): %d" % total_rumah)
 	check(total_objek == 11, "total rintangan di 9 segmen = 11 (1 + 2 + 2 + 3 + 3): %d" % total_objek)
 	check(total_boleh == 3 + 3 + 5 + 5 + 6 + 5 + 5 + 2 + 3, "total rumah pelanggan_boleh = 37: %d" % total_boleh)
 

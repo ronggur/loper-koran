@@ -3,15 +3,16 @@
 
 1. `tools/env_art/ubin_perumahan.py --salin` deterministik untuk ubin simpang dan ujung kerb: dua kali jalan = piksel RGBA sama, JSON byte sama
    (tujuan dialihkan lewat ENV_ART_SALIN_KE dan ENV_ART_OUT; folder repo tidak disentuh), dan isi `assets/sprites/tiles/perumahan/` = keluaran itu.
-2. Hanya ubin yang dipakai yang dipasang (D-2): 18 ubin simpang sisi `dekat` (daftar ditulis eksplisit di sini), tidak ada ubin simpang sisi `seberang`
-   (data segmen belum memakainya), tidak ada `aspal_N` atau `*_dekat_masuk`.
+2. Hanya ubin yang dipakai yang dipasang (D-2): 18 ubin simpang sisi `dekat` dan 16 sisi `seberang` (putusan P-6: per_buka_02 pos 18; daftar ditulis
+   eksplisit di sini), tidak ada `aspal_N` atau `*_dekat_masuk`.
 3. Konstanta `scripts/config.gd` (dibaca dari baris literal, bukan lewat Godot) = JSON renderer: lebar mulut, tepi mulut, pita baris, tabel sel kedua sisi
    (`RUTE_SIMPANG_SEL_SEBERANG` dibandingkan JSON lengkap di build), baris ujung kerb. Tabel sel juga = tabel literal di sini.
-4. Susunan (AC-19, oracle terpisah dari kode game): ubin dari assets/ (sisi dekat) dan dari build/ (sisi seberang, tidak dipasang) disusun dengan pemilihan
+4. Susunan (AC-19, oracle terpisah dari kode game): ubin dari assets/ (kedua sisi) disusun dengan pemilihan
    yang ditulis ulang di sini (pita, kolom, lengan berulang ke luar sampai kolom terjauh) = adegan renderer `build_simpang` piksel-identik pada 12 kolom
    x 9 baris (mulut, sudut, dan lengan tiga kolom ke luar); tanpa celah transparan. Kontrol: lengan berhenti satu kolom terlalu awal, ubin simpang di baris
    salah, dan sisi salah terdeteksi.
-5. Referensi `tests/data/ubin_potongan_simpang.png` = susunan potongan rute dengan simpang dekat di baris 3 dan variasi rumput (FNV-1a, `struct`) dari assets/;
+5. Referensi `tests/data/ubin_potongan_simpang.png` (simpang dekat) dan `tests/data/ubin_potongan_simpang_seberang.png` (simpang seberang) = susunan potongan rute
+   dengan simpang di baris 3, simbol sepeda, dan variasi rumput (FNV-1a, `struct`) dari assets/;
    dibandingkan scene Godot oleh `tests/tes_simpang.gd`. `--perbarui-referensi` menulis ulang berkas dari assets/ (bukan diedit tangan).
 6. Impor: tiap PNG baru `.png.import` Lossless, tanpa mipmap, bukan tekstur VRAM, uid ada.
 
@@ -33,6 +34,7 @@ SKRIP_UBIN = os.path.join(ROOT, 'tools', 'env_art', 'ubin_perumahan.py')
 UBIN = os.path.join(ROOT, 'assets', 'sprites', 'tiles', 'perumahan')
 CONFIG = os.path.join(ROOT, 'scripts', 'config.gd')
 REFERENSI = os.path.join(ROOT, 'tests', 'data', 'ubin_potongan_simpang.png')
+REFERENSI_SEBERANG = os.path.join(ROOT, 'tests', 'data', 'ubin_potongan_simpang_seberang.png')
 
 # Tabel sel literal (baris relatif maju dari `pos`, kolom: 0 aspal, 1 trotoar, 2 rumput pertama, 3 lengan), urut ekspor renderer.
 SEL_DEKAT = [(3, 1), (3, 2), (3, 3), (2, 0), (2, 1), (2, 2), (2, 3), (1, 0), (1, 1), (1, 2), (1, 3), (0, 0), (0, 1), (0, 2), (0, 3), (-1, 1), (-1, 2), (-1, 3)]
@@ -48,6 +50,7 @@ def nama_sel(sisi, rel, kol):
 
 
 UBIN_SIMPANG_DEKAT = [nama_sel('dekat', r, k) for r, k in SEL_DEKAT]
+UBIN_SIMPANG_SEBERANG = [nama_sel('seberang', r, k) for r, k in SEL_SEBERANG]
 UBIN_UJUNG = ['trotoar_seberang_masuk_ujung', 'rumput_seberang_masuk_ujung']
 
 gagal = 0
@@ -170,7 +173,7 @@ def main():
     import ubin_perumahan as UP
 
     # ---- 1-2. deterministik, isi assets/ = keluaran, hanya yang dipakai
-    baru = UBIN_SIMPANG_DEKAT + UBIN_UJUNG
+    baru = UBIN_SIMPANG_DEKAT + UBIN_SIMPANG_SEBERANG + UBIN_UJUNG
     for nm in baru:
         f = 'tile_perumahan_%s.png' % nm
         pa, pb, repo = os.path.join(sal_a, f), os.path.join(sal_b, f), os.path.join(UBIN, f)
@@ -183,12 +186,12 @@ def main():
     periksa(baca(os.path.join(sal_a, 'tile_perumahan.json')) == baca(os.path.join(sal_b, 'tile_perumahan.json')) == baca(os.path.join(UBIN, 'tile_perumahan.json')),
             'tile_perumahan.json byte-identik: dua kali jalan dan assets/')
     isi = sorted(n for n in os.listdir(UBIN) if n.startswith('tile_perumahan_simpang_') and n.endswith('.png'))
-    periksa(isi == sorted('tile_perumahan_%s.png' % n for n in UBIN_SIMPANG_DEKAT), 'assets/ hanya memuat 18 ubin simpang dekat (D-2): %s' % sorted(set(isi) ^ {'tile_perumahan_%s.png' % n for n in UBIN_SIMPANG_DEKAT}))
-    periksa(not any('simpang_seberang' in n for n in os.listdir(UBIN)), 'tidak ada ubin simpang seberang di assets/ (belum dipakai data)')
+    harap_isi = {'tile_perumahan_%s.png' % n for n in UBIN_SIMPANG_DEKAT + UBIN_SIMPANG_SEBERANG}
+    periksa(isi == sorted(harap_isi), 'assets/ memuat tepat 34 ubin simpang (18 dekat + 16 seberang, D-2 dan P-6): %s' % sorted(set(isi) ^ harap_isi))
     periksa(not any(re.search(r'^tile_perumahan_(aspal_[0-9]|.*_dekat_masuk)', n) for n in os.listdir(UBIN)), 'tidak ada aspal_N atau *_dekat_masuk di assets/')
     lengkap = json.loads(baca(os.path.join(out_a, 'ubin', 'simpang', 'tile_perumahan_simpang.json')))
     nama_build = {d['file'][len('tile_perumahan_'):-4] for l in lengkap['sisi'].values() for d in l}
-    periksa(len(nama_build) == 34 and set(UBIN_SIMPANG_DEKAT) < nama_build, 'renderer mengekspor 34 ubin simpang (18 dekat + 16 seberang), hanya yang dekat disalin')
+    periksa(len(nama_build) == 34 and set(UBIN_SIMPANG_DEKAT + UBIN_SIMPANG_SEBERANG) == nama_build, 'renderer mengekspor 34 ubin simpang (18 dekat + 16 seberang), semuanya dipakai data dan disalin')
 
     # ---- 3. config = JSON renderer = tabel literal
     meta = json.loads(baca(os.path.join(UBIN, 'tile_perumahan.json')))
@@ -203,6 +206,8 @@ def main():
     dari_json = [(d['baris_relatif'], kol[d['kolom']]) for d in sp['sisi']['dekat']]
     periksa(pasangan(config_literal('RUTE_SIMPANG_SEL_DEKAT')) == dari_json == SEL_DEKAT, 'RUTE_SIMPANG_SEL_DEKAT = JSON terpasang = tabel literal')
     periksa([d['nama'] for d in sp['sisi']['dekat']] == UBIN_SIMPANG_DEKAT, 'urutan nama ubin simpang dekat di JSON = urutan tabel sel')
+    seb_json = [(d['baris_relatif'], kol[d['kolom']]) for d in sp['sisi'].get('seberang', [])]
+    periksa(seb_json == SEL_SEBERANG and [d['nama'] for d in sp['sisi']['seberang']] == UBIN_SIMPANG_SEBERANG, 'JSON terpasang sisi seberang = tabel literal dan urutan nama')
     kol_x = {0.5: 0, 1.5: 1, 2.5: 2, 3.5: 3}
     seb_build = [(-d['baris_y_ubin'], kol_x[abs(d['kolom_x_ubin'])]) for d in lengkap['sisi']['seberang']]
     periksa(pasangan(config_literal('RUTE_SIMPANG_SEL_SEBERANG')) == seb_build == SEL_SEBERANG, 'RUTE_SIMPANG_SEL_SEBERANG = JSON renderer lengkap (build) = tabel literal')
@@ -211,7 +216,7 @@ def main():
 
     # ---- 4. susunan = adegan renderer (varian mati), kedua sisi
     def folder_ubin(nm):
-        return UBIN if os.path.isfile(os.path.join(UBIN, 'tile_perumahan_%s.png' % nm)) else os.path.join(out_a, 'ubin', 'simpang')
+        return UBIN
     baris_uji, kolom_uji = range(-4, 5), range(-6, 6)
     for sg, sisi in ((1, 'dekat'), (-1, 'seberang')):
         adegan, _ = UP.render_adegan(lambda s, sg=sg: UP.build_simpang(s, sg))
@@ -247,6 +252,16 @@ def main():
         periksa(False, 'berkas referensi tidak ada: tests/data/ubin_potongan_simpang.png (jalankan --perbarui-referensi)')
     jumlah_simpang = sum(1 for m in range(0, 9) for ic in range(-5, 6) if nama_sel_rute(ic, m, {3: 'dekat'}).startswith('simpang_'))
     periksa(jumlah_simpang == 18 + 5 * 2, 'potongan referensi memuat 28 ubin simpang (18 sel tabel + lengan berulang di kolom 4 dan 5 untuk 5 baris), dapat %d' % jumlah_simpang)
+    kanvas_s, _ = susun(lambda ic, m: nama_sel_rute(ic, m, {3: 'seberang'}), range(0, 9), range(-6, 5), lambda nm: UBIN)
+    if '--perbarui-referensi' in sys.argv:
+        Image.fromarray(kanvas_s, 'RGBA').save(REFERENSI_SEBERANG)
+    if os.path.isfile(REFERENSI_SEBERANG):
+        ref_s = rgba(REFERENSI_SEBERANG)
+        periksa(ref_s.shape == kanvas_s.shape and bool((ref_s == kanvas_s).all()), 'tests/data/ubin_potongan_simpang_seberang.png = susunan dari assets/ (jalankan --perbarui-referensi)')
+    else:
+        periksa(False, 'berkas referensi tidak ada: tests/data/ubin_potongan_simpang_seberang.png (jalankan --perbarui-referensi)')
+    jumlah_s = sum(1 for m in range(0, 9) for ic in range(-6, 5) if nama_sel_rute(ic, m, {3: 'seberang'}).startswith('simpang_seberang_'))
+    periksa(jumlah_s == 16 + 5 * 2, 'potongan referensi seberang memuat 26 ubin simpang seberang (16 sel + lengan kolom -4,5 dan -5,5 di 5 baris), dapat %d' % jumlah_s)
     rusak = kanvas_r.copy()
     rusak[rusak.shape[0] // 2, rusak.shape[1] // 2, 0] ^= 1
     periksa(not (rusak == kanvas_r).all(), 'kontrol: pembanding referensi mendeteksi satu piksel berbeda')

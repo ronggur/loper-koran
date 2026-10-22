@@ -588,7 +588,7 @@ func _test_scene_rute() -> void:
 		return
 	var sprite: Array[Sprite2D] = _sprite_ubin(tanah)
 	check(sprite.size() == JalanDaur.sel_tanah(Config.LAYAR_LEBAR_MAKS_PX, Config.LAYAR_TINGGI_DASAR_PX).size(), "scene rute: jumlah sprite ubin tetap = sel_tanah lebar maksimal (%d)" % sprite.size())
-	check(tanah.get_child_count() == 33, "scene rute: 33 wadah ubin (7 lama + 6 run 5B + 2 ujung kerb + 18 simpang dekat run 5C), dapat %d" % tanah.get_child_count())
+	check(tanah.get_child_count() == 49, "scene rute: 49 wadah ubin (7 lama + 6 run 5B + 2 ujung kerb + 18 simpang dekat + 16 simpang seberang run 5C), dapat %d" % tanah.get_child_count())
 	# Cari seed yang rutenya punya mobil garasi seberang, lalu susun rute itu di scene.
 	var kumpulan: PemuatRute.Kumpulan = PemuatRute.muat_folder()
 	var benih: int = -1

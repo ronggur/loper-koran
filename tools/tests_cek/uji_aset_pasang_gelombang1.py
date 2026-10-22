@@ -55,6 +55,9 @@ UBIN_5C = ['trotoar_seberang_masuk_ujung', 'rumput_seberang_masuk_ujung'] + ['si
     'trotoar_dekat_depan_2', 'rumput_dekat_depan_2', 'lengan_depan_2', 'aspal_dekat_depan_1', 'trotoar_dekat_depan_1', 'rumput_dekat_depan_1', 'lengan_depan_1',
     'aspal_dekat_mulut_1', 'trotoar_dekat_mulut_1', 'rumput_dekat_mulut_1', 'lengan_mulut_1', 'aspal_dekat_mulut_2', 'trotoar_dekat_mulut_2', 'rumput_dekat_mulut_2',
     'lengan_mulut_2', 'trotoar_dekat_belakang_1', 'rumput_dekat_belakang_1', 'lengan_belakang_1')]
+UBIN_5C += ['simpang_seberang_%s' % n for n in (
+    'rumput_seberang_depan_2', 'lengan_depan_2', 'trotoar_seberang_depan_1', 'rumput_seberang_depan_1', 'lengan_depan_1', 'aspal_seberang_mulut_1', 'trotoar_seberang_mulut_1', 'rumput_seberang_mulut_1',
+    'lengan_mulut_1', 'aspal_seberang_mulut_2', 'trotoar_seberang_mulut_2', 'rumput_seberang_mulut_2', 'lengan_mulut_2', 'trotoar_seberang_belakang_1', 'rumput_seberang_belakang_1', 'lengan_belakang_1')]   # putusan P-6 run 5C
 # Run 5B (D-1): keluaran tambahan render.py --salin (isi pasangan 5A di atas tidak berubah) dan keluaran lampu_pohon.py --salin.
 PASANG_SPRITE_5B = {
     'houses/perumahan': ['house_tembok_polos', 'house_tembok_bata', 'house_tembok_besi', 'house_tembok_pot', 'house_tembok_tiang'],
