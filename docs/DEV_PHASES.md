@@ -22,7 +22,7 @@ Status: ⬜ belum mulai · 🟡 sedang dikerjakan · 🟨 kode selesai, uji HP m
 | 2 | Lemparan koran (prototype 2) | M1 | ✅ run 2A (PR #24), arah bebas (PR #25), 2B (PR #26) lolos QA; uji HP pemilik 2026-10-22: "untuk uji hp sejauh ini oke semua" | 2026-10-22 |
 | 3 | Satu rute perumahan (prototype 3) | M2 | ✅ run 3A (PR #28), 3B (PR #32), 3C (PR #33) lolos QA; uji HP pemilik 2026-10-22: "untuk uji hp sejauh ini oke semua" | 2026-10-22 |
 | 4 | Halaman depan koran & misi kucing (prototype 4) | M2 | ✅ run 4A (PR #39) dan 4B (PR #40) lolos QA; uji HP pemilik 2026-10-22: "untuk uji hp sejauh ini oke semua" | 2026-10-22 |
-| 5 | Aset gelombang 1 *(paralel)* | M2–M3 | 🟡 run 5A (PR #42/#43), 5B (PR #49), 5C (PR #52) di-merge; 5A dan 5B lolos uji HP pemilik 2026-10-22; 5C (8.14, 8.15) belum diuji; Run 5D (pelanggan sisi dekat, halaman terbuka, `LOOP-DEV-QA.md` 6j) berikutnya | |
+| 5 | Aset gelombang 1 *(paralel)* | M2–M3 | 🟡 run 5A (PR #42/#43), 5B (PR #49), 5C (PR #52) di-merge; 5A dan 5B lolos uji HP pemilik 2026-10-22; 5C (8.14, 8.15) belum diuji; Run 5D (pelanggan sisi dekat, halaman terbuka, `LOOP-DEV-QA.md` 6j) lolos QA iterasi 1 (`docs/loop/20261022-fase5d-sisi-dekat/`), menunggu uji HP 8.16 | |
 | 6 | Hari demi hari: reputasi, bengkel, ekonomi | M3 | 🟡 run 6A1 (PR #43) lolos QA dan uji HP pemilik 2026-10-22: "untuk uji hp sejauh ini oke semua"; 6A2 (reputasi, pelanggan) sesudah Run 5D, lalu 6B | |
 | 7 | Vertical slice perumahan & audio dasar | M3 | ⬜ | |
 | 8 | Distrik berikutnya, iklan, rilis | M4 | ⬜ | |
@@ -186,5 +186,7 @@ Dicentang 2026-10-22: run 4A (PR #39) dan 4B (PR #40) lolos QA, uji HP pemilik 2
 **Selesai kalau:** seminggu dalam game di distrik perumahan bisa dimainkan tanpa kebuntuan. **M3 selesai.**
 
 ## Fase 8 — Distrik berikutnya, iklan, rilis (M4)
+
+**Catatan 2026-10-22:** butir pelanggan di dua sisi jalan (sebelumnya direncanakan di fase ini) **dimajukan ke Run 5D** oleh pemilik (mulai hari 3, 8 atau 9 dari 25 pelanggan di sisi dekat); butir aset Fase 5 tidak dicentang sebelum uji HP 8.16.
 
 Dirinci setelah M3. Isinya: distrik perkampungan dan ruko, misi per distrik, iklan hadiah, kebijakan privasi dan Data Safety, store listing, uji tertutup.

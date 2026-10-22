@@ -79,6 +79,10 @@ Skala dipilih Ronggur; sisanya didelegasikan ke agent dengan alasan tertulis. Bi
 | Distrik bebas dipilih atau berurutan, syarat reputasi tiap distrik (GDD 9.5) | M3 |
 | Misi lintas hari, efek gagal ke pelanggan tertentu (GDD 10.9) | Fase 4 |
 | Efek kerusakan, ongkos servis, laju aus (GDD 12.5): angka usulan run 6A1 ada di BALANCING 8, menunggu uji HP. **Kerusakan di mode bantu diputuskan pemilik 2026-10-20: tidak mengubah keausan atau kerusakan.** | M3 (bengkel) |
+| **Usulan pemilik 2026-10-22 (belum dikerjakan):** (1) koran yang dilempar lalu meleset atau terbuang dipotong ganti rugi per koran, hasil hari boleh minus, koran cadangan yang tidak dilempar tidak dipotong; usulan 5 koin per koran (1/3 `KOIN_ONGKOS_ANTAR`, satu `KOIN_TIP`), konstanta `KOIN_POTONGAN_KORAN_MELESET`, disetel di BALANCING; hukuman tambahan pelanggan terlewat belum diputuskan | Fase 6A2 (ekonomi dan pelanggan) |
+| **Usulan pemilik 2026-10-22:** anjing berhenti mengejar terlalu cepat, terutama di rumah dekat (ukur jarak kejar dulu, run tuning kecil) | sesudah Run 5D |
+| **Usulan pemilik 2026-10-22:** sebagian mobil keluar garasi lanjut berbelok dan melaju (data simpang run 5C sudah disiapkan) | M3 (lalu lintas) |
+| **Usulan pemilik 2026-10-22:** garis finish: sepeda otomatis melaju keluar viewport menggantikan animasi berhenti, dengan penanda di dunia (mungkin portal); kontrol dikunci lurus, lempar nonaktif, banner saat hampir keluar; menyentuh `AkhirRute` dan kamera | run kecil bersama aset portal (M3) |
 | Iklan satu-satunya pemasukan atau ada "hapus iklan", besar bonus iklan (GDD 14.3) | M4 |
 | Target usia dan pasar | M4 (kebijakan privasi, aturan iklan) |
 | Musik atau hanya ambience | M3 (audio) |
