@@ -2,7 +2,8 @@ extends SceneTree
 ## Probe misi kucing di jendela asli, non-headless (AC-22 run fase4b-misi-kucing): memuat `scenes/rute/rute.tscn` dengan misi P1 nyata (`atur_misi`) dan tutorial
 ## (`atur_tutorial`), memajukan simulasi dengan langkah tetap `perbarui(1/60)` (bukan waktu dinding), lalu memotret: HUD misi awal (kartu, tutorial langkah 1),
 ## HUD dengan 8 rumah tersisa, kucing tampil (kilau) di tiap titik, petunjuk dari lemparan tepat sungguhan (gelembung teks), menepi dan tangkap (bar progres),
-## banner selesai, banner gagal, layar hasil dengan rekap (selesai dan gagal), tutorial tiap langkah, dan kidal. Mencetak data tiap keadaan dan jumlah keadaan
+## banner selesai, banner gagal, layar hasil dengan rekap (selesai dan gagal), tutorial tiap langkah, dan kidal. Run 5C (AC-11): pose kucing ditangkap (dua frame) saat bar
+## progres tangkap berjalan, juga dalam mode kidal (`*_tangkap_progres_frame2`, `kidal_tangkap_progres*`). Mencetak data tiap keadaan dan jumlah keadaan
 ## yang tidak sesuai (teks terpotong, tumpang tindih dengan elemen HUD lain, di luar layar). Tidak interaktif: keluar lewat `ProbeKeluar`.
 ##
 ## Pakai (jendela harus muat di layar monitor):
@@ -111,6 +112,7 @@ func _jalankan_skenario(_nama: String) -> void:
 	var progres: float = _akar.keadaan_misi().timer_detik / t3.lama_berhenti_detik
 	print("progres tangkap: %.2f (timer %.2f detik)" % [progres, _akar.keadaan_misi().timer_detik])
 	_harap("progres tangkap berjalan", progres > 0.4 and progres < 0.9, str(progres))
+	await _cek_pose_ditangkap("tangkap_progres")
 	await _maju(t3.lama_berhenti_detik * 0.6, false)
 	_tahan_jarak = -1.0
 	await _maju(0.2)
@@ -167,6 +169,19 @@ func _jalankan_skenario(_nama: String) -> void:
 	await _foto("kidal")
 	_cek_tumpang_tindih("kidal")
 	_cek_tutorial_lewati("kidal")
+
+	# --- 10. Kidal: menangkap dengan pose ditangkap (run 5C, AC-11) ---
+	var rencana4: RencanaMisi.Rencana = _akar.rencana_misi()
+	for t: RencanaMisi.Titik in [rencana4.titik[0], rencana4.titik[1]]:
+		_letakkan(t.maju_ubin + 0.5, 0.5)
+		await _maju(DT, false)
+	var t3_kidal: RencanaMisi.Titik = rencana4.titik[2]
+	_tahan_jarak = t3_kidal.maju_ubin - 1.2
+	await _maju(t3_kidal.lama_berhenti_detik * 0.4)
+	await _foto("kidal_tangkap_progres")
+	_cek_tumpang_tindih("kidal_tangkap_progres")
+	await _cek_pose_ditangkap("kidal_tangkap_progres")
+	_tahan_jarak = -1.0
 
 
 # --- Pemasangan ---
@@ -241,6 +256,26 @@ func _cek_tumpang_tindih(keadaan: String) -> void:
 				salah += 1
 	print("tata letak [%s]: %d elemen misi/tutorial diperiksa, %d tidak sesuai" % [keadaan, elemen.size(), salah])
 	_gagal += salah
+
+
+## Pose kucing ditangkap (run 5C, AC-11): frame badan = kolom ditangkap selama progres > 0, lalu 1/3 detik kemudian frame ditangkap yang lain (dua frame 3 fps)
+## dipotret sebagai `<keadaan>_frame2`; posisi dunia dan offset badan tidak berubah antar frame.
+func _cek_pose_ditangkap(keadaan: String) -> void:
+	var kucing: KucingMisi = _akar.kucing()
+	var t: RencanaMisi.Titik = kucing.titik()
+	var timer: float = _akar.keadaan_misi().timer_detik
+	var f1: int = kucing.badan().frame
+	var r1: Array = [kucing.position, kucing.badan().offset]
+	var ditangkap: Array[int] = [Config.MISI_KUCING_BARIS_HADAP * Config.MISI_KUCING_KOLOM + Config.MISI_KUCING_KOLOM_DITANGKAP[0], Config.MISI_KUCING_BARIS_HADAP * Config.MISI_KUCING_KOLOM + Config.MISI_KUCING_KOLOM_DITANGKAP[1]]
+	_harap("[%s] kucing tangkap tampil dengan progres > 0" % keadaan, kucing.tampil() and t != null and t.jenis == "tangkap" and timer > 0.0, "timer %.2f" % timer)
+	_harap("[%s] pose ditangkap (frame %d)" % [keadaan, f1], ditangkap.has(f1), str(f1))
+	await _maju(1.0 / Config.MISI_KUCING_DITANGKAP_FPS)
+	await _foto(keadaan + "_frame2")
+	var f2: int = kucing.badan().frame
+	var r2: Array = [kucing.position, kucing.badan().offset]
+	print("pose kucing [%s]: frame %d lalu %d, timer %.2f -> %.2f, posisi dunia dan offset %s -> %s" % [keadaan, f1, f2, timer, _akar.keadaan_misi().timer_detik, r1, r2])
+	_harap("[%s] frame ditangkap kedua berbeda dari yang pertama" % keadaan, ditangkap.has(f2) and f2 != f1, "%d -> %d" % [f1, f2])
+	_harap("[%s] posisi dunia dan offset badan kucing tidak bergeser antar pose (kamera boleh bergerak)" % keadaan, r2 == r1, "%s -> %s" % [r1, r2])
 
 
 func _cek_tutorial_lewati(keadaan: String) -> void:
