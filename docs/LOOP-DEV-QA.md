@@ -923,7 +923,8 @@ Disimpan 2026-10-21, sesudah PR #42 (aset gelombang 1 dirender) dan PR #43 (run 
 |---|---|---|
 | 5A | Salin lewat skrip dan pasang tampilan: enam ubin kolom jalan, koran (putar, bayangan, tiga permukaan mendarat, terlipat), VFX sepeda (debu, garis kecepatan, bintang kena, koin tip), kilau misi; tiga penyesuaian renderer (kilau, tong abu-abu, satu polisi tidur) | PR #42 dan #43 di-merge |
 | 5B | Tembok sisi dekat dan komposisi rumah dekat, jenis dekor di data segmen (tong sampah, pohon, lampu jalan; DATA_SCHEMA 3), ubin jalan masuk garasi dan simbol, polisi tidur, zebra, genangan. **Status (2026-10-22): di-merge PR #49** (`docs/loop/20261021-fase5b-tembok-dekor/`, QA PASS sesudah iterasi 2: kotak penutup dekor sisi dekat = sprite nyata, dibuktikan piksel; uji HP 8.13 belum ada): isi nyata = tembok empat varian + tiang dan rumah dekat digambar mundur 1,25 ubin, dekor `tong_sampah`/`pohon`/`lampu_jalan` di sembilan segmen, ubin jalan masuk garasi (sisi seberang), simbol sepeda, variasi rumput luar (`rumput_2`, `rumput_3`). **Tidak dikerjakan:** polisi tidur, zebra, genangan (M3, butuh desain gameplay), `aspal_N` (D-4), tong biru, lampu nyala | 5A di-merge |
-| 5C | Animasi pemain yang kurang (berhenti dengan kaki turun, bangkit, jatuh dan terjerembab empat arah lain) lewat `tools/loper_art`, pose kucing ditangkap, ubin ujung kerb dan sudut trotoar. **Status (2026-10-22): aset dirender di PR #51 (di-merge); verifikasi dan pemasangan dikerjakan Run 5C** (`docs/loop/20261022-fase5c-animasi-simpang/`, branch `feat/fase5c-animasi-simpang`, belum di-merge): Dev iterasi 1 bagian AB (animasi pemain diverifikasi, dua perbaikan tampilan, pose kucing ditangkap), CD (ujung kerb jalan masuk, simpang T hiasan tiga dekat dan satu seberang sesudah putusan P-6), dan E (paket ekspor, dokumen, gerbang) selesai; menunggu QA iterasi 1 dan uji HP 8.14 | 5A di-merge (boleh paralel dengan 5B) |
+| 5C | Animasi pemain yang kurang (berhenti dengan kaki turun, bangkit, jatuh dan terjerembab empat arah lain) lewat `tools/loper_art`, pose kucing ditangkap, ubin ujung kerb dan sudut trotoar. **Status (2026-10-22): di-merge PR #52** (`docs/loop/20261022-fase5c-animasi-simpang/`, QA PASS iterasi 1): animasi pemain PR #51 diverifikasi (arah jatuh ditahan, kayuh sesudah bangkit tanpa lompatan), pose kucing ditangkap, ujung kerb jalan masuk, simpang T hiasan (tiga dekat, satu seberang, P-6); sesudah QA juga area persegi kotak surat dihapus dan garis kecepatan dikembalikan ke posisi lama (permintaan pemilik). Uji HP 8.14 dan 8.15 belum diisi | 5A di-merge (boleh paralel dengan 5B) |
+| 5D | Pelanggan sisi dekat (dimajukan dari Fase 8 oleh pemilik 2026-10-22, mulai hari 3, 8-9 dari 25), tembok sisi dekat dihapus jadi halaman terbuka, rumah dekat mundur 0,5 ubin dan didesain ulang dengan teras menjorok (Bagian 6j) | 5C di-merge (PR #52) dan PR #53 |
 
 Perintah di bawah hanya untuk **5A**. Perintah 5B ada di Bagian 6h (ditulis sesudah 5A di-merge, dengan usulan pengubahan cakupan); 5C ditulis sesudah 5B.
 
@@ -1109,6 +1110,293 @@ IZIN HP: boleh memasang APK ke vivo V2108 (adb 12d8c9da) setelah QA PASS dengan 
   uji di setiap PR (artifact build-apk, tanda tangan sama dengan keystore lokal, SETUP_ANDROID 4b).
   Push, PR, dan merge tetap menunggu konfirmasi pemilik.
 RUN_ID: <YYYYMMDD>-fase5b-tembok-dekor   (tanggal hari run dimulai)
+```
+
+## 6i. Fase 5: perintah Run 5C (tempel di sesi baru)
+
+Disimpan 2026-10-22, sesudah Run 5B di-merge (PR #49) dan PR #51 masuk ke `main`. PR #51 dikerjakan di luar loop (kanvas Claude Design "Animasi Pemain Fase 5C" dan satu sesi kode) dan sudah memuat: `tools/loper_art/fase5c.py` (jatuh dan terjerembab lima arah, sel 140×88, titik pijak 70,61; bangkit lima arah, 6 frame; berhenti kaki kanan lima arah), `LoperAnim`/`LoperSprite` yang memakainya (jatuh per arah, bangkit di 0,6 detik terakhir dari jatuh 1,2 detik, `rem` dengan kecepatan 0 = `Pose.BERHENTI`), pose kucing `ditangkap_1/_2` di `mission_kucing_sheet` (`MISI_KUCING_KOLOM` 9, belum dipakai rute), dan ubin simpang T di `ubin_perumahan.py` (hanya di `build/`). Hasilnya **belum pernah dilihat QA independen** dan belum diuji di HP. Maka 5C tidak membuat aset animasi lagi: 5C memeriksa dan menyelesaikan pemasangannya.
+
+**Putusan orchestrator Bagian 6i (usulan, bisa ditolak di review PR; jangan ditanyakan ulang):**
+
+- **P-1 Simpang T dipasang sebagai hiasan** (keputusan pemilik 2026-10-22, menjawab ROUTE_DESIGN 8 "persimpangan: hanya dekorasi, atau ada lalu lintas yang memotong" untuk sekarang: hiasan dulu). Jalan samping tanpa lalu lintas, tanpa rintangan, tanpa sasaran; data simpang di segmen disusun supaya kelak mobil/motor bisa berbelok masuk atau keluar dari simpang (M3) tanpa mengubah format: tiap simpang punya posisi, sisi, dan lebar mulut yang bisa dibaca sistem lain. Ubin simpang dari `ubin_perumahan.py ekspor_simpang` disalin lewat `--salin` (sudut trotoar ikut terpasang lewat ubin ini).
+- **P-2 Ujung kerb jalan masuk** (temuan C-F1 run 5B, 22 piksel) dikerjakan terpisah dari simpang: ubin ujung kerb di tepi `*_masuk`.
+- **P-3 Pose kucing ditangkap** tampil selama bar progres tangkap > 0 (kucing sedang ditahan), dua frame 3 fps dari waktu animasi misi (membeku saat jeda); progres 0 = duduk seperti sekarang. `MissionManager`, `RencanaMisi`, syarat tangkap, dan angka misi tidak berubah.
+- **P-4 Lama jatuh tidak berubah** (`TABRAKAN_JATUH_DETIK` 1,2 detik); akibatnya terjerembab hanya tampil 0,2 detik sebelum bangkit (jatuh 0,4 + bangkit 0,6). Itu bukan cacat untuk run ini, hanya dicatat dan masuk checklist HP.
+- **P-5 Lempar 90°** (animasi lempar arah kiri/kanan) tetap tidak ada dan di luar scope.
+
+### Run 5C — verifikasi animasi pemain, pose kucing ditangkap, ujung kerb jalan masuk, simpang hiasan
+
+Prasyarat: **PR #49 (Run 5B) dan PR #51 sudah di-merge ke `main`.** Kalau belum, berhenti dan minta pemilik merge dulu.
+
+```text
+Kamu adalah ORCHESTRATOR loop Dev↔QA untuk repo Loper Koran. Ikuti docs/LOOP-DEV-QA.md
+secara ketat (Bagian 1, Bagian 0c, Bagian 6g dan 6i). Mulai dari main terbaru yang sudah memuat
+Run 5B (PR #49) dan PR #51. Baca dulu: docs/loop/20261021-fase5b-tembok-dekor/{SPEC,LOG}.md
+(pola --salin, UbinKhusus, tes piksel, temuan C-F1 dan I2-F3, pelajaran: tekstur dimuat di _init/_ready
+bukan di _draw, jangan menjalankan dua proses Godot sekaligus), `git show b69fc1f --stat` (isi PR #51),
+ART_DIRECTION 3.4 dan 11 dan Changelog 2026-10-22, docs/design/character/loper_agen/{jatuh,bangkit,berhenti}/README.md,
+tools/loper_art/fase5c.py, scripts/systems/loper_anim.gd, scripts/entities/{loper_sprite,kucing_misi,kucing_hiasan}.gd,
+tools/env_art/ubin_perumahan.py dan kendaraan.py, rule art-assets, gdscript, testing: keputusan yang
+sudah ada berlaku, jangan ditanyakan ulang. Bagian 6i mungkin belum ada di main; putusan di bawah
+berlaku walaupun begitu.
+
+PUTUSAN (usulan, bisa ditolak di review PR; jangan ditanyakan ulang):
+  P-1 Simpang T dipasang sebagai hiasan (keputusan pemilik 2026-10-22): tanpa lalu lintas, rintangan,
+      atau sasaran; data simpang disiapkan supaya kelak mobil/motor bisa berbelok (M3).
+  P-2 Ujung kerb jalan masuk (C-F1 run 5B, 22 piksel) dikerjakan terpisah dari simpang.
+  P-3 Pose kucing ditangkap tampil selama progres tangkap > 0, dua frame 3 fps; progres 0 = duduk.
+  P-4 Lama jatuh tetap 1,2 detik; terjerembab hanya tampil 0,2 detik, dicatat untuk checklist HP.
+  P-5 Lempar 90° di luar scope.
+
+SCOPE: Run 5C — Fase 5, pasang dan buktikan animasi pemain, pose kucing ditangkap, ujung kerb
+  jalan masuk, dan simpang T hiasan. Perubahan tampilan dan data segmen; ThrowSolver, skor, zona, tenggat, gerak (BikeMotion, angka rem
+  dan kecepatan), tabrakan (lama jatuh), rintangan, save, MissionManager/RencanaMisi (syarat dan
+  angka), kondisi sepeda, dan bengkel tidak berubah, dan semua tes lama lulus tanpa diubah
+  angkanya. Satu-satunya perubahan tes lama yang boleh: yang sudah dibuat PR #51 (pose REM->BERHENTI
+  pada sidik emas gerak, 68 animasi), dan catat setiap perubahan tes lama di LOG.
+  A. Verifikasi dan penyempurnaan animasi pemain dari PR #51 (kode itu belum melewati QA):
+     (1) Catat baseline di LOG: jumlah tes, pemeriksa, semua uji_*.py (uji_bangun_frames, uji_aset_kucing)
+     di main sebelum mengubah apa pun.
+     (2) Tambahkan probe jendela `tests/probe_animasi_pemain_jendela.gd` (pola probe_rintangan_jendela):
+     jatuh, terjerembab, dan bangkit untuk kelima arah (-2..2) di 2340x1080, 1920x1080, 2400x1080,
+     1600x720, dengan titik pijak sprite tetap sama sepanjang urutan (tidak melompat saat sel 114x68
+     berganti 140x88), pose berhenti saat rem + kecepatan 0 (juga di titik tangkap kucing), serta
+     transisi bangkit -> kayuh tanpa lompatan piksel; probe mencetak keadaan tidak sesuai. Tangkapan layar
+     DILIHAT QA.
+     (3) Tes yang menutup celah, dengan mutan nyata: waktu mulai bangkit = total - n/fps (batas
+     inklusif dan toleransi), terjerembab 0,2 detik, arah dijepit, bangkit tidak mengubah lama jatuh
+     (Tabrakan), berhenti hanya saat rem aktif dan kecepatan <= POSE_MELUNCUR_TOLERANSI_UD (NaN = REM),
+     lempar dari BERHENTI memakai tingkat santai, jeda membekukan bangkit, jatuh di dalam jendela
+     daur tidak menyimpan keadaan.
+     (4) Periksa berhenti di skenario tangkap kucing nyata (menepi lalu rem): bila syarat tangkap
+     (kecepatan <= MISI_TANGKAP_KECEPATAN_MAKS_UD tanpa rem) terpenuhi tanpa pose berhenti, LAPORKAN
+     sebagai temuan Nit dan jangan ubah syarat tangkap atau gerak.
+     (5) I2-F3 (pose jatuh vs kotak penutup pohon/lampu) tetap DEFERRED: ukur ulang dengan sel 140x88
+     pada kombinasi data nyata (lampu dekat 24 / pohon 11 / pohon 8 lawan mobil seberang) dan catat
+     angkanya; ubah hanya bila perbaikannya satu konstanta tanpa efek ke pose berkendara.
+  B. Pose kucing ditangkap (P-3): KucingMisi/KucingHiasan menampilkan `ditangkap_1/_2` (kolom 7 dan 8,
+     sheet `mission_kucing_sheet`, 3 fps) selama progres tangkap > 0 pada langkah `tangkap`, baris
+     "masuk" seperti duduk; progres 0 = duduk; bar progres dan kilau tetap. Tampilan saja, tanpa
+     mengubah titik pijak, kotak penutup, atau zona. Tes: frame benar menurut progres dan waktu,
+     titik pijak tetap, tidak muncul di langkah bukan tangkap, jeda membeku, pembaca sheet memakai
+     MISI_KUCING_KOLOM 9 (cek JSON = konstanta), tes misi lama lulus tanpa diubah. Perluas probe_misi_jendela
+     (bar progres tangkap dengan pose ditangkap di empat ukuran, kidal).
+  C. Ujung kerb jalan masuk (C-F1, P-2): tambahkan ubin ujung kerb ke tools/env_art/ubin_perumahan.py
+     (keluaran deterministik, `--salin` memasangnya hanya untuk dua baris tetangga jalan masuk di
+     sisi seberang), perluas `UbinKhusus`/`TanahDaur` agar memasangnya (posisi lain, batas jalan, dan
+     sel_tanah tidak berubah), dan buat `cek_sambungan` untuk jalan masuk menjadi **0 piksel**
+     (sekarang 22; hapus pengecualian C-F1 dari tes dan dokumen). Bukti: uji_aset_pasang_5b.py dan
+     tes_ubin_5b.gd diperluas (susunan di game = adegan renderer, piksel-identik; referensi
+     tests/data/ubin_potongan_5b.png diperbarui lewat skrip, bukan tangan); ubin yang tidak dipakai
+     (aspal_N, *_dekat_masuk) TIDAK disalin; impor Nearest, Lossless, tanpa mipmap.
+  D. Simpang T hiasan (P-1): (1) data: bidang opsional `simpang` di segmen (DATA_SCHEMA 3, usulan),
+     daftar {pos, sisi: seberang|dekat}; validasi di SegmenRute (sisi dikenal, mulut simpang di dalam
+     panjang segmen, tidak ada rumah/kavling, kotak surat, zona, dekor, rintangan, jalan masuk garasi,
+     atau titik kucing misi di lebar mulut dan sudutnya); berkas segmen lama tanpa `simpang` tetap sah.
+     RouteBuilder meneruskan simpang ke rute (posisi maju mutlak dan sisi) lewat satu fungsi baca yang
+     kelak dipakai lalu lintas berbelok (M3), tanpa lalu lintas sekarang. (2) konten: tulis simpang di
+     segmen baru atau segmen yang ada, secukupnya (minimal satu simpang seberang dan satu simpang dekat;
+     ukur dan catat berapa persen rute dari 100 seed memuat simpang), tanpa mengurangi 25 pelanggan per rute. (3) tampilan:
+     `--salin` ubin simpang (hanya yang dipakai), `UbinKhusus`/`TanahDaur` memasangnya termasuk lengan
+     jalan samping yang berulang ke luar sejauh kolom yang tampil; sisi dekat: tembok dan rumah dekat
+     terputus di mulut simpang; penutup pemain tidak berubah. Bukti: susunan simpang di game = adegan
+     renderer piksel-identik (pola cek_simpang, oracle terpisah), ubin simpang deterministik di
+     tools/tests_cek, sepeda bisa melintasi mulut simpang tanpa tabrakan dan tanpa perubahan gerak,
+     zona tidak berubah. (4) tes lama: bila menambah segmen atau data mengubah susunan rute dari seed
+     (pemilihan segmen, posisi rumah) dan karena itu angka tes lama berubah, utamakan cara yang
+     mempertahankan susunan lama; bila tidak bisa, catat setiap tes yang angkanya berubah beserta
+     alasannya di LOG dan minta putusan orchestrator, tanpa mengubah logika skor, lemparan, atau zona.
+     Perluas probe_sisi_dekat_jendela atau buat probe simpang (simpang seberang, simpang dekat dengan
+     tembok terputus, sepeda melintas, kidal, empat ukuran).
+  E. Dokumen: ART_DIRECTION (3.4, 6.3, 11, Changelog; ganti "Dinilai di HP" bila perlu, jangan klaim
+     sudah dinilai), DATA_SCHEMA 3 (bidang `simpang`), ROUTE_DESIGN (aturan simpang; bagian 8:
+     persimpangan = hiasan dulu, keputusan pemilik 2026-10-22, lalu lintas berbelok M3), DEV_PHASES Fase 5 (perbarui catatan
+     pembagian 5C; JANGAN mencentang butir aset sebelum dinilai di HP), LOOP-DEV-QA 6g (baris 5B =
+     di-merge PR #49, baris 5C = status), AGENTS.md, docs/README.md, tools/loper_art/README.md bila
+     perlu, SETUP_ANDROID 8.14 (checklist HP: jatuh lima arah terbaca dan pijak tidak melompat,
+     bangkit mulus ke kayuh, terjerembab 0,2 detik terlalu singkat atau cukup, berhenti dengan kaki
+     kanan terbaca saat menangkap kucing, kucing ditangkap terbaca bukan "mati", ujung kerb jalan
+     masuk rapi, simpang terbaca sebagai jalan samping dan tidak dikira jalur yang harus dibelok,
+     tembok dekat terputus wajar, 60 fps).
+  Di LUAR scope (jangan dikerjakan atau diputuskan): lalu lintas di simpang (mobil/motor berbelok
+  atau memotong, M3; hanya data simpangnya yang disiapkan), pemain berbelok masuk jalan samping,
+  rute bercabang (ROUTE_DESIGN 8), lempar 90° (P-5), mengubah lama jatuh, syarat tangkap, atau gerak, polisi tidur, zebra, genangan,
+  percikan, portal, pos satpam, tong biru (M3), aset M3 (hujan, jendela menyala, lampu nyala/malam,
+  mobil tamu), audio, menggambar ulang sprite pemain (PNG hanya lewat renderer, jangan diedit tangan),
+  Fase 6A2.
+  Tes: semua di atas, ditambah seluruh keluaran 5B tetap hijau (tes tembok/dekor/ubin), paket
+  --export-pack memuat sheet kucing 9 kolom dan frames.tres 68 animasi, real save sha256 tidak
+  berubah, mutan nyata (satu perubahan, tes penuh, git checkout), probe empat ukuran dengan
+  tangkapan layar yang DILIHAT QA; tes tidak boleh menulis save sungguhan.
+  Keputusan terbuka yang mungkin menghambat: tidak ada (angka animasi, kaki kanan, 0,6 detik bangkit,
+  dan letak simpang usulan sampai uji HP). Run ini lebih besar dari 5B: pecah Dev iterasi 1 menjadi
+  bagian A+B, C+D, E (pola 5B), satu PR. Jangan mengunci palet induk. Bila ada hal baru, tanyakan SEKALI
+  dengan satu rekomendasi.
+  Git: judul PR memakai Conventional Commits (feat:, art:, ...); release-please membacanya (git-workflow
+  bagian Rilis). Jangan mengedit CHANGELOG.md, .release-please-manifest.json, atau membuat tag.
+  PENUTUP: DEV_PHASES Fase 5 tidak dicentang penuh (butir aset menunggu uji HP; polisi tidur, zebra,
+  genangan, portal, pos satpam, aset M3 tetap M3); Fase 2, 3, 4, dan M2 tidak dicentang tanpa catatan
+  uji HP pemilik. Satu PR.
+HASIL UJI HP RUN 4A, 4B, 6A1, 5A, DAN 5B: BELUM ADA per 2026-10-22 (lembar SETUP_ANDROID 8.9 sampai
+  8.13 belum diisi pemilik, tidak ada HP tersambung). Jadi Fase 2, 3, 4, M2, dan Fase 5 tidak dicentang;
+  bila pemilik menempelkan catatan sebelum run, pakai catatan itu sebagai pengganti baris ini.
+DESIGN: docs/design/character/loper_agen/{jatuh,bangkit,berhenti}/ (README, pratinjau, GIF), ubin simpang
+  dari `python3 tools/env_art/ubin_perumahan.py` (build/env_art/ubin/simpang/, JSON posisi), dan
+  docs/design/DESIGN_SPEC.md (token bagian 1); tidak ada layar baru.
+IZIN HP: boleh memasang APK ke vivo V2108 (adb 12d8c9da) setelah QA PASS dengan `adb install -r`
+  (izin tetap pemilik 2026-10-17, tanpa bertanya lagi); A54 (RRCWA05E2NN) hanya bila tersambung.
+  Hanya orchestrator yang menyentuh HP; cek layar menyala dan tidak sedang dipakai; tidak ada
+  uninstall/logcat -c. Edit save.json lewat run-as lebih disukai daripada pm clear, dan pm clear
+  com.rmh.kring boleh bila perlu (izin pemilik 2026-10-18), tetapi catat save yang dipakai di LOG.
+  APK debug lokal dibangun dengan `godot --headless --export-debug "Android"`; CI juga membuat APK
+  uji di setiap PR (artifact build-apk, SETUP_ANDROID 4b).
+  Push, PR, dan merge tetap menunggu konfirmasi pemilik.
+RUN_ID: 20261022-fase5c-animasi-simpang
+```
+
+## 6j. Fase 5: perintah Run 5D (tempel di sesi baru)
+
+Disimpan 2026-10-22, sesudah Run 5C di-merge (PR #52) dan perbaikan CI (PR #53). Pemilik menguji HP 2026-10-22 ("untuk uji hp sejauh ini oke semua"; revisi garis kecepatan sudah masuk #52), lalu memutuskan tiga hal yang mengubah keputusan lama: tembok sisi dekat (ROADMAP 4b, 2026-10-17) **dihapus** karena membuat sisi dekat terlihat berbeda dari sisi jauh; pelanggan di sisi dekat **dimajukan** dari Fase 8 ke Fase 5 (sebelum 6A2, supaya model pelanggan 6A2 dibangun di atas dua sisi); dan rumah dekat **mundur 0,5 ubin** sesudah melihat tangkapan mundur 0,25 sampai 1,5 tanpa tembok.
+
+Angka ukur mundur tanpa tembok (oracle piksel `UkurPenutupPiksel`, sprite rumah dekat `_bukan` nyata, kasus terburuk antarjenis, hampir selalu `dekat_pelana_lintang`; tangkapan di `build/` sesi orchestrator, tidak dikomit):
+
+| Mundur (ubin) | Badan kotak surat dekat tertutup | Zona kotak surat (cermin seberang / zona dekat sekarang) | Pemain di trotoar dekat, maks | Halaman terlihat, median |
+|---|---|---|---|---|
+| 0,25 | 97,3% | 90,6% / 87,5% | 45,0% | 0,22 |
+| **0,5 (dipilih)** | **44,3%** | **68,5% / 58,0%** | **27,3%** | **0,47** |
+| 0,75 | 1,4% | 43,5% / 24,8% | 10,5% | 0,72 |
+| 1,0 | 0% | 18,6% / 3,9% | 1,9% | 0,97 |
+| 1,25 (sekarang) | 0% | 2,9% / 0% | 0% | 1,22 |
+
+Pemain di lajur dekat 0% mulai mundur 0,5. Rumah dekat yang lewat masuk ke bawah panel HUD bawah di semua nilai mundur (bukan efek mundur). Varian sprite rumah dekat `_pelanggan` punya kotak surat merah terpanggang di gambarnya.
+
+**Putusan orchestrator Bagian 6j (usulan, bisa ditolak di review PR; jangan ditanyakan ulang):**
+
+- **P-1 Halaman terbuka sisi dekat** (pemilik 2026-10-22): tembok dan tiang sisi dekat tidak lagi dipasang di rute; kavling dekat = halaman rumput terbuka seperti sisi jauh (jalan setapak, kotak surat di tepi trotoar). Rumah dekat digambar mundur **0,5 ubin** (`RUTE_RUMAH_DEKAT_MUNDUR_UBIN` 1,25 -> 0,5, pilihan pemilik). Aset tembok yang tidak dipakai lagi tidak disalin ke `assets/` (pola `--salin` hanya yang dipasang); kode `TembokDekat`/`VarianTembok` dihapus atau dilepas dari rute, keputusan Dev dicatat. ROADMAP 4b ditandai diganti, riwayat lama tetap.
+- **P-2 Rumah dekat didesain ulang lewat renderer** (pemilik: "teras seharusnya terlihat dari samping, teras lebih panjang menjorok ke depan"): rumah dekat punya teras yang menjorok ke arah jalan sehingga terbaca dari samping walau kamera melihat rumah dari belakang; bentuk atap di sisi jalan boleh dibuat lebih rendah atau landai bila itu mengurangi penutupan; tanpa kotak surat terpanggang di sprite (kotak surat = sprite terpisah). Prasyarat: `fase3.py --salin` harus dulu menghasilkan ulang isi `assets/` yang sekarang (temuan PR #53: rumah `dekat_pelana_lintang` beda 40 piksel, sheet mobil garasi beda 9 piksel, tanpa tes penjaga); perbaiki dan tambahkan uji `tools/tests_cek` untuk rumah dan rintangan fase3 sebelum menggambar ulang.
+- **P-3 Pudar hanya sebagai pelengkap, khusus rumah pelanggan dekat yang belum terantar** (menjawab pertanyaan pemilik "atau dibikin opacity aja, khusus yang pelanggan"): rumah tidak dibuat semi-transparan permanen (pendekatan "penuh semi-transparan" di spike run 3C paling buruk: 40%/78% sasaran tertutup dan layar ramai). Urutan: (a) desain P-2 sampai sasaran terlihat; (b) bila angka di bawah belum tercapai, rumah pelanggan dekat yang belum terantar memudar lewat SATU penerap yang ada (`PenerapPenutup`) hanya saat menutupi kotak surat sasaran yang sedang dalam jangkauan, garis bidik, koran terbang, atau pemain; rumah bukan pelanggan dan pelanggan yang sudah terantar memakai aturan penutup pemain biasa.
+- **P-4 Pelanggan dekat mulai hari 3, sekitar 35%** (pemilik 2026-10-22): hari 1 dan 2 tetap hanya pelanggan seberang (tutorial alami GDD 9.1, diubah jadi "mulai hari 3"); sejak hari 3, 8 atau 9 dari 25 pelanggan di sisi dekat; total 25 per rute tetap, jadi tenggat dan skor tidak bergeser karena jumlah. Hari masuk ke `RouteBuilder` dari `HariMain`/`SeedHari` (tanpa RNG baru di luar seed hari); `rute.tscn` dan probe yang berjalan sendiri memakai perilaku hari 1 kecuali diberi hari. Titik kucing misi P1 tetap di rumah seberang.
+- **P-5 Sasaran dekat = cermin sasaran seberang**: kotak surat oranye pelanggan dan abu-abu bukan pelanggan di tepi trotoar dekat, zona kotak surat, teras (mengikuti teras baru P-2), dan halaman dengan aturan penilaian, prioritas, dan angka skor yang sama (BALANCING 5); zona dekat placeholder jalan uji boleh tetap. Sasaran yang terlihat = yang dinilai (prediksi = hasil). Lempar ke sisi dekat memakai animasi yang sudah ada (`lempar_kanan_*`); lempar 90° tetap di luar scope.
+- **P-6 Satu tip sekali di hari 3**: hari pertama ada pelanggan dekat, satu tip singkat (kunci terjemahan baru di `translations/ui.csv`) memberi tahu bahwa pelanggan kini juga ada di sisi dekat. Ditentukan dari nomor hari, tanpa bidang save baru.
+
+### Run 5D — pelanggan sisi dekat, halaman terbuka, rumah dekat dengan teras menjorok
+
+Prasyarat: **PR #52 (Run 5C) dan PR #53 sudah di-merge ke `main`.** Kalau belum, berhenti dan minta pemilik merge dulu.
+
+```text
+Kamu adalah ORCHESTRATOR loop Dev↔QA untuk repo Loper Koran. Ikuti docs/LOOP-DEV-QA.md
+secara ketat (Bagian 1, Bagian 0c, Bagian 6g dan 6j). Mulai dari main terbaru yang sudah memuat
+Run 5C (PR #52) dan perbaikan CI (PR #53). Baca dulu: docs/loop/20261022-fase5c-animasi-simpang/{SPEC,LOG}.md
+dan docs/loop/20261021-fase5b-tembok-dekor/{SPEC,LOG}.md (pola --salin, oracle piksel
+tests/ukur_penutup_piksel.gd, PenerapPenutup, golden rute dihitung skrip), spike sisi dekat run 3C
+(docs/loop/20261018-fase3c-hud-hasil/, shots/spike_sisi_dekat/), ROADMAP 4b, GDD 4.2 dan 9.1,
+ROUTE_DESIGN, BALANCING 5, DATA_SCHEMA 3, ART_DIRECTION 6.4-6.6, tools/env_art/fase3.py,
+scripts/systems/{route_builder,segmen_rute,zona_sasaran,medan_koran,bantu_lempar,radar_rute,
+sprite_rumah,tembok_dekat,penutup_pemain,seed_hari}.gd, scripts/entities/{rumah_daur_rute,rute_main,
+hari_main,penerap_penutup}.gd, rule art-assets, content-data, gdscript, balancing, testing, ui-scenes:
+keputusan yang sudah ada berlaku, jangan ditanyakan ulang. Bagian 6j mungkin belum ada di main;
+putusan di bawah berlaku walaupun begitu.
+
+PUTUSAN (usulan, bisa ditolak di review PR; jangan ditanyakan ulang):
+  P-1 Tembok sisi dekat dihapus (pemilik 2026-10-22): kavling dekat = halaman terbuka seperti sisi
+      jauh; rumah dekat digambar mundur 0,5 ubin (RUTE_RUMAH_DEKAT_MUNDUR_UBIN 1,25 -> 0,5).
+  P-2 Rumah dekat didesain ulang lewat renderer: teras menjorok ke arah jalan, terbaca dari samping;
+      atap sisi jalan boleh lebih rendah/landai; tanpa kotak surat terpanggang di sprite.
+  P-3 Tidak ada semi-transparan permanen. Bila desain belum cukup, HANYA rumah pelanggan dekat yang
+      belum terantar memudar lewat PenerapPenutup saat menutupi sasaran dalam jangkauan, garis bidik,
+      koran terbang, atau pemain.
+  P-4 Pelanggan dekat mulai hari 3, 8 atau 9 dari 25 pelanggan (sekitar 35%); hari 1-2 hanya seberang;
+      total 25 tetap; titik kucing misi tetap di seberang.
+  P-5 Sasaran dekat = cermin seberang (kotak surat oranye/abu-abu di tepi trotoar dekat, zona kotak
+      surat, teras, halaman; aturan dan angka skor sama). Lempar ke dekat memakai lempar_kanan_*.
+  P-6 Satu tip sekali di hari 3 (kunci terjemahan baru), dari nomor hari, tanpa bidang save baru.
+
+SCOPE: Run 5D — Fase 5 (dimajukan dari Fase 8 oleh pemilik 2026-10-22): pelanggan di sisi dekat,
+  halaman terbuka, rumah dekat dengan teras menjorok. ThrowSolver (lintasan), BikeMotion, tabrakan,
+  tenggat (rumus), skor (angka), MissionManager/RencanaMisi, kondisi sepeda, bengkel, Economy, dan
+  format save tidak berubah. Perubahan tes lama hanya bila disebabkan langsung oleh putusan di atas;
+  catat SETIAP tes lama yang angkanya berubah beserta alasannya di LOG, dan golden rute yang berubah
+  dihitung ulang oleh skrip (bukan tangan) dengan bukti per golden bahwa perbedaannya hanya akibat
+  P-1/P-4/P-5 (pola banding P-6 run 5C).
+  A. Rumah dekat dan halaman terbuka (P-1, P-2, P-3):
+     (1) Baseline di LOG: jumlah tes, pemeriksa, semua uji_*.py, sha256 save asli, di main sebelum
+     mengubah apa pun.
+     (2) Perbaiki dulu reproduksi fase3.py: `--salin` harus menghasilkan isi assets/ yang sekarang
+     piksel demi piksel (sekarang rumah dekat_pelana_lintang beda 40 piksel, obs_mobil_garasi_sheet
+     9 piksel); tambahkan uji di tools/tests_cek (deterministik, isi assets/ = keluaran, juga di CI
+     Linux; pakai mm()/panjang() dari engine sesuai tools/env_art/README). Bila assets/ yang sekarang
+     ternyata tidak bisa dihasilkan ulang tanpa mengubah piksel, putuskan versi skrip sebagai sumber
+     kebenaran dan catat bedanya.
+     (3) Desain ulang rumah dekat (semua jenis dekat, pelanggan dan bukan) di fase3.py: teras menjorok
+     ke arah jalan terbaca dari samping, atap sisi jalan boleh lebih rendah, tanpa kotak surat
+     terpanggang; mock di docs/design/environment/; titik pijak JSON; --salin hanya yang dipakai.
+     (4) Lepas tembok dari rute, mundur 0,5, halaman terbuka (jalan setapak boleh lewat ubin atau
+     sprite yang ada; tidak ada aset tembok tersisa di assets/ bila tidak dipakai). Simpang: logika
+     "tembok terputus" ikut disederhanakan, data simpang tetap sah.
+     (5) Ukur dengan oracle piksel (pola run 5B/5C, semua jenis rumah dekat baru, tetangga, Y-sort):
+     badan kotak surat dekat, zona kotak surat dekat, teras dekat, pemain di lajur dan trotoar dekat,
+     koran terbang ke sasaran dekat. SASARAN: badan kotak surat dekat 0% tertutup, zona kotak surat
+     dekat <= 5%, pemain di lajur dekat 0%, pemain di trotoar dekat 0% sesudah aturan pudar. Bila
+     desain (3) tidak mencapainya, terapkan P-3 (pudar khusus pelanggan dekat yang belum terantar)
+     lewat PenerapPenutup dan ukur lagi; kotak penutup = sprite nyata (pelajaran P-6 run 5B).
+  B. Pelanggan dan sasaran sisi dekat (P-4, P-5, P-6):
+     (1) Data: rumah dekat `pelanggan_boleh` di segmen secukupnya supaya tiap rute hari >= 3 bisa
+     memilih 8-9 pelanggan dekat dari 25 dengan jarak antar pelanggan wajar; validasi SegmenRute
+     (kotak surat dekat tidak bertumpuk dengan dekor, rintangan, jalan masuk, simpang); DATA_SCHEMA 3.
+     (2) RouteBuilder: kuota sisi dari nomor hari (hari 1-2: 0 dekat; >= 3: 8 atau 9), deterministik
+     dari seed hari, tanpa RNG baru di luar seed; hari masuk dari HariMain; rute.tscn/probe sendiri =
+     perilaku hari 1 kecuali diberi hari. Ukur dan catat untuk 100 hari (3..102): jumlah dekat per rute
+     (harus 8 atau 9), jarak, dan persentase.
+     (3) Sasaran dekat: kotak surat oranye pelanggan dan abu-abu bukan pelanggan di tepi trotoar dekat,
+     zona (ZonaSasaran/MedanKoran) cermin seberang dengan teras baru, prediksi = hasil (oracle gambar
+     independen seperti QA-008), mode bantu ke sisi dekat (sisi tap, sasaran terdekat di depan), radar
+     dan progres menampilkan pelanggan dekat, koran terlipat di teras dekat, tip dan skor sama aturannya.
+     Bot bantu menyelesaikan 25 pelanggan di 20 seed hari >= 3 tanpa lewat tenggat.
+     (4) Tip hari 3 (P-6): satu tip singkat, kunci baru di translations/ui.csv, tidak muncul di hari lain,
+     tanpa save baru; tutorial hari 1 tidak berubah.
+     (5) Probe: perluas probe_sisi_dekat_jendela atau buat probe baru: halaman terbuka, rumah dekat baru
+     (semua jenis), teras dari samping, bidik dan lempar ke kotak surat dekat (kena, meleset, teras,
+     halaman), mode bantu dekat, radar, pudar P-3 bila dipakai, hari 2 tanpa pelanggan dekat, hari 3 dengan
+     tip, kidal, empat ukuran (2340x1080, 1920x1080, 2400x1080, 1600x720); mencetak keadaan tidak sesuai;
+     tangkapan DILIHAT QA.
+  C. Dokumen dan penutup: GDD 4.2 dan 9.1 (pelanggan dekat mulai hari 3), ROADMAP 4b (tembok diganti
+     halaman terbuka, mundur 0,5, keputusan pemilik 2026-10-22, riwayat tetap), ROUTE_DESIGN, BALANCING 5
+     (zona dekat), DATA_SCHEMA 3, ART_DIRECTION (6.x rumah dekat, Changelog), DEV_PHASES (catatan;
+     butir pelanggan dua sisi Fase 8 ditandai dimajukan ke 5D; jangan mencentang aset sebelum uji HP),
+     LOOP-DEV-QA 6g (baris 5D), AGENTS.md, docs/README.md, tools/env_art/README.md, SETUP_ANDROID 8.16
+     (checklist HP: halaman dekat terbaca seperti sisi jauh, teras dekat terbaca dari samping, kotak surat
+     dekat mudah dibidik, rumah dekat tidak menutupi sepeda, pudar tidak mengganggu bila dipakai, hari 3
+     tip terbaca, 8-9 pelanggan dekat terasa adil terhadap tenggat, rumah dekat di bawah panel HUD bawah
+     mengganggu atau tidak, 60 fps).
+  Di LUAR scope (jangan dikerjakan atau diputuskan): reputasi, kepribadian, pelanggan tetap/berhenti,
+  milestone (6A2), save baru, mengubah ThrowSolver/BikeMotion/tenggat/angka skor, lempar 90°, misi
+  kucing di sisi dekat, mengubah HUD bawah (hanya diukur dan dicatat), polisi tidur, zebra, genangan,
+  portal, pos satpam, tong biru, aset M3, audio baru, menggambar ulang sprite pemain.
+  Tes: semua di atas, ditambah keluaran 5A/5B/5C tetap hijau kecuali yang disebabkan P-1/P-2/P-4/P-5
+  (dicatat), paket --export-pack memuat rumah dekat baru dan tidak memuat aset tembok bila tidak
+  dipakai, real save sha256 tidak berubah, mutan nyata (satu perubahan, tes penuh, git checkout;
+  Dev >= 30, QA mengulang >= 10 pilihannya sendiri), probe empat ukuran dengan tangkapan yang DILIHAT
+  QA; tes tidak boleh menulis save sungguhan; satu proses Godot sekaligus.
+  Keputusan terbuka yang mungkin menghambat: bila desain P-2 tidak mencapai sasaran A(5) dan pudar P-3
+  terasa mengganggu di tangkapan, berhenti dan tanyakan SEKALI dengan satu rekomendasi (misalnya
+  mundur 0,75). Run ini besar: pecah Dev iterasi 1 menjadi bagian A, B, C (pola 5B/5C), satu PR.
+  Git: judul PR memakai Conventional Commits; jangan mengedit CHANGELOG.md, .release-please-manifest.json,
+  atau membuat tag.
+  PENUTUP: butir aset Fase 5 tidak dicentang sebelum uji HP 8.16; butir pelanggan dua sisi di Fase 8
+  diberi catatan "dimajukan ke Run 5D".
+HASIL UJI HP: pemilik 2026-10-22 "untuk uji hp sejauh ini oke semua"; revisi garis kecepatan sudah
+  diperbaiki di PR #52. Checklist 8.14 dan 8.15 (Run 5C dan hapus area kotak surat) belum diisi.
+DESIGN: spike sisi dekat run 3C (tangkapan), mock rumah dekat baru dibuat di run ini
+  (docs/design/environment/), docs/design/DESIGN_SPEC.md (token bagian 1); tidak ada layar baru selain tip.
+IZIN HP: boleh memasang APK ke vivo V2108 (adb 12d8c9da) setelah QA PASS dengan `adb install -r`
+  (izin tetap pemilik 2026-10-17, tanpa bertanya lagi); A54 (RRCWA05E2NN) hanya bila tersambung.
+  Hanya orchestrator yang menyentuh HP; cek layar menyala dan tidak sedang dipakai; tidak ada
+  uninstall/logcat -c. Edit save.json lewat run-as lebih disukai daripada pm clear, dan pm clear
+  com.rmh.kring boleh bila perlu (izin pemilik 2026-10-18), tetapi catat save yang dipakai di LOG.
+  APK debug lokal dibangun dengan `godot --headless --export-debug "Android"`; CI juga membuat APK
+  uji di setiap PR (artifact build-apk, SETUP_ANDROID 4b).
+  Push, PR, dan merge tetap menunggu konfirmasi pemilik.
+RUN_ID: 20261022-fase5d-sisi-dekat
 ```
 
 ## 7. Batasan yang perlu diketahui
