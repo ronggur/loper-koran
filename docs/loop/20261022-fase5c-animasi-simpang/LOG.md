@@ -38,6 +38,7 @@ Lihat SPEC bagian NEEDS-MANUAL dan SETUP_ANDROID 8.14.
 ## Keputusan & catatan
 - Putusan P-1..P-5 dan D-1..D-4: SPEC.
 - Bagian 6i LOOP-DEV-QA ada di branch `docs/perintah-run-5c` (belum di-merge); run ini hanya menyentuh tabel 6g.
+- **Putusan orchestrator P-6 (D-F1, 2026-10-22):** rekomendasi Dev diterima. Hapus rumah seberang `per_buka_02@18` (`pelanggan_boleh` false, kandidat pelanggan tidak berubah) dan pasang simpang `{ "pos": 18, "sisi": "seberang" }`; `SIMPANG_SISI_DIPASANG` = `['dekat', 'seberang']`, 16 ubin seberang lewat `--salin`. Alasan: AC-17 mewajibkan >= 1 simpang seberang; celah seberang maksimum 1 ubin di semua segmen sehingga D-4 (a)/(b) mustahil; rumah yang dihapus bukan pelanggan, jadi pemain kehilangan satu rumah hiasan saja. Syarat: (1) golden yang berubah (`tes_rute` hitungan rumah, GOLDEN_RUTE `tes_dekor` dan `tes_simpang`, hitungan berkas tanpa simpang, literal konten/persen) dihitung ulang oleh skrip dari kode, bukan tangan, dan LOG mencatat per golden bahwa SATU-SATUNYA perbedaan adalah rumah `per_buka_02@18` (31 seed) beserta turunannya yang dijelaskan; pelanggan, rintangan, titik misi, dekor, tenggat, skor lain identik atau dijelaskan satu per satu; (2) tes misi 600 hari, pelanggan, tip, tenggat, rintangan tetap lulus tanpa diubah; (3) tidak ada segmen baru, tidak ada dekor dipindah. D-F2 dan D-F3 diterima sebagai NEEDS-MANUAL.
 
 ## Iterasi 1, bagian AB (Dev)
 
