@@ -171,6 +171,7 @@ func jalankan() -> void:
 	_test_aset_5c_ikut_paket()
 	_test_aset_5d_ikut_paket()
 	_test_rujukan_5d_tak_dipasang()
+	_test_dokumen_5d()
 	_test_probe_tidak_ikut()
 	_test_spike_tidak_ikut()
 	_test_ikon_sementara()
@@ -612,6 +613,33 @@ func _test_rujukan_5d_tak_dipasang() -> void:
 	for nama: String in RUMAH_DEKAT_5D + RUMAH_SEBERANG_5D:
 		sah += "res://assets/sprites/houses/perumahan/" + nama + ".png\n"
 	check(_rujukan_rumah_tak_dipasang(sah).is_empty(), "pemindai tidak menandai 12 rumah dan 2 kotak surat yang dipasang: %s" % [_rujukan_rumah_tak_dipasang(sah)])
+
+
+## Dokumen run 5D (AC-17): checklist HP 8.16 lengkap (sebelas butir bernomor dan lembar hasil), 8.13 menandai tembok tidak berlaku, dan dokumen lain tidak lagi menyebut tembok sebagai tampilan sisi dekat yang berlaku.
+func _test_dokumen_5d() -> void:
+	_judul.call("Dokumen run 5D: SETUP_ANDROID 8.16, rujukan silang, dan AGENTS.md tanpa kelas tembok yang sudah dihapus (AC-17 run 5D)")
+	var setup: String = _baca_jika_ada(BERKAS_SETUP)
+	var awal: int = setup.find("### 8.16 ")
+	check(awal >= 0, "SETUP_ANDROID.md punya bagian 8.16 (uji pelanggan sisi dekat)")
+	var bagian: String = setup.substr(awal) if awal >= 0 else ""
+	var nomor: int = 0
+	for baris: String in bagian.split("\n"):
+		if baris.begins_with("%d. [ ] **" % (nomor + 1)):
+			nomor += 1
+	check(nomor == 11, "8.16 punya 11 butir bernomor bercentang kosong, dapat %d" % nomor)
+	check(bagian.contains("**Lembar hasil 8.16") and bagian.contains("11. Save lama utuh"), "8.16 punya lembar hasil dengan 11 baris")
+	for kata: String in ["hari 3", "teras", "kotak surat dekat", "panel HUD bawah", "Anjing dekat", "60 fps"]:
+		check(bagian.contains(kata), "8.16 menyebut '%s'" % kata)
+	check(setup.contains("Catatan Run 5D") and setup.contains("tidak berlaku lagi"), "8.13 menandai butir tembok tidak berlaku sejak run 5D")
+	var readme: String = _baca_jika_ada(BERKAS_README_DOCS)
+	check(readme.contains("8.16") and readme.contains("20261022-fase5d-sisi-dekat"), "docs/README.md menyebut run 5D dan checklist 8.16")
+	var agents: String = _baca_jika_ada("res://AGENTS.md")
+	check(agents.contains("uji_aset_fase3.py") and agents.contains("tes_sisi_dekat_scene") and agents.contains("TipSisiDekat"), "AGENTS.md memuat uji dan kelas run 5D")
+	check(not agents.contains("`TembokDekat`, `VarianTembok`") and not agents.contains("varian_" + "tembok (") and not agents.contains("tembok_dekat (`"), "AGENTS.md tidak lagi mendaftar kelas tembok sebagai ada")
+	var gdd: String = _baca_jika_ada("res://docs/GDD.md")
+	check(gdd.contains("mulai hari 3") and gdd.contains("8 atau 9 dari 25"), "GDD memuat pelanggan sisi dekat mulai hari 3 (8 atau 9 dari 25)")
+	var roadmap: String = _baca_jika_ada("res://docs/ROADMAP.md")
+	check(roadmap.contains("menggantikan") and roadmap.contains("Riwayat (diganti, tetap dicatat)") and roadmap.contains("0,5 ubin"), "ROADMAP 4b menandai tembok diganti halaman terbuka mundur 0,5 dengan riwayat tetap")
 
 
 func _kumpulkan_sumber(folder: String, hasil: Array[String]) -> void:
