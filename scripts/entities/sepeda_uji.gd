@@ -14,6 +14,10 @@ extends Node2D
 ## visual tabrakan (AC-8): sprite pemain memutar jatuh lalu terjerembab selama jatuh (`LoperSprite.atur_jatuh` dengan
 ## `Tabrakan.lewat_jatuh_detik`), berkedip selama kebal sesudah bangun (`Tabrakan.alfa_kebal`), ikon kilatan di atas kepala selama jatuh
 ## (`EfekSepeda`). Efek bel (AC-16): garis getar `GetarBel` (di bawah sprite pemain) di titik bel dan teks "KRING!" (`EfekSepeda`, di atas).
+## Arah sprite selama jatuh (run 20261022-fase5c-animasi-simpang, AC-2): selama sprite menampilkan jatuh, terjerembab, atau bangkit, `gerak` tidak
+## mengganti `steer`, jadi pemain jatuh ke arah geraknya pada langkah tabrakan dan tetap ke arah itu sampai bangun (sepeda yang dibekukan tidak bergerak,
+## sehingga `BikeMotion` melapor arah 0). Langkah bangun juga masih memakai arah itu, jadi frame terakhir `bangkit_<arah>` disusul kayuh arah yang sama;
+## langkah sesudahnya arah kembali dari gerak.
 
 ## Keadaan gerak saat ini (kecepatan, lateral, stamina, rem, lelah). Diganti objek baru tiap langkah, tidak diubah di tempat.
 var keadaan: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
@@ -65,7 +69,8 @@ func gerak(stick: Vector2, dt: float, beku_detik: float = 0.0, efek: EfekKondisi
 	lateral_ud = hasil.lateral_ud
 	_sprite.pose = hasil.pose
 	_sprite.speed_level = hasil.tingkat_sprite
-	_sprite.steer = hasil.arah_sprite
+	if not _sprite.sedang_jatuh():
+		_sprite.steer = hasil.arah_sprite
 	_sprite.pedal_rate = hasil.pedal_rate
 	_umpan.perbarui(keadaan.kecepatan_ud, keadaan.rem_aktif)
 	position = Iso.posisi_gambar(posisi_dunia())
@@ -87,6 +92,8 @@ func atur_ulang() -> void:
 	jarak_ubin = 0.0
 	lateral_ud = 0.0
 	batalkan_lempar()
+	# Keluar dari jatuh lebih dulu supaya arah dan animasi dipasang dari keadaan awal, bukan arah jatuh lama (AC-5 run 5C).
+	_sprite.atur_jatuh(false, 0.0)
 	gerak(Vector2.ZERO, 0.0)
 
 

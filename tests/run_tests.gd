@@ -181,6 +181,12 @@ func _initialize() -> void:
 	await alur_misi.jalankan()
 	var scene_misi: TesMisiScene = TesMisiScene.new(check, _judul, self)
 	await scene_misi.jalankan()
+	# Run 20261022-fase5c-animasi-simpang bagian A: celah LoperAnim, titik pijak, bangkit -> kayuh piksel, arah jatuh ditahan, lama jatuh, jeda, Main lagi, BERHENTI di tangkap.
+	var animasi_5c: TesAnimasi5c = TesAnimasi5c.new(check, _judul, self)
+	await animasi_5c.jalankan()
+	# Run 20261022-fase5c-animasi-simpang bagian B: pose kucing ditangkap (PoseKucing, JSON = konstanta, scene).
+	var kucing_ditangkap: TesKucingDitangkap = TesKucingDitangkap.new(check, _judul, self)
+	await kucing_ditangkap.jalankan()
 	# Run fase6a1-bengkel-kondisi bagian B: kondisi sepeda di scene rute, HUD kondisi, peringatan berpasangan, layar hasil, layar bengkel, dan alur Hasil -> Bengkel -> Hari berikutnya.
 	var scene_kondisi: TesKondisiScene = TesKondisiScene.new(check, _judul, self)
 	await scene_kondisi.jalankan()
