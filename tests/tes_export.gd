@@ -175,6 +175,7 @@ func jalankan() -> void:
 	_test_aset_5b_ikut_paket()
 	_test_aset_5c_ikut_paket()
 	_test_aset_5d_ikut_paket()
+	_test_aset_ui1_ikut_paket()
 	_test_rujukan_5d_tak_dipasang()
 	_test_dokumen_5d()
 	_test_probe_tidak_ikut()
@@ -430,6 +431,72 @@ func _test_aset_5b_ikut_paket() -> void:
 		check(not FileAccess.file_exists("res://" + jalur), "aset tak dipasang tidak ada di repo (tidak ikut paket): %s" % jalur)
 	for nama: String in DirAccess.get_files_at("res://assets/sprites/tiles/perumahan"):
 		check(not nama.contains("aspal_1") and not nama.contains("aspal_2") and not nama.contains("aspal_3") and not nama.contains("_dekat_masuk"), "tiles/perumahan tanpa aspal_N dan *_dekat_masuk: %s" % nama)
+
+
+# --- Run ui1-komponen-bengkel bagian B (AC-12): aset komponen dan bengkel redesain yang dipasang ikut paket; yang tidak dipasang tidak ada di assets/ ---
+
+## Aset UI redesain yang dipasang (nama dasar tanpa ekstensi di `assets/sprites/ui/`; ditulis literal, bukan dibaca dari `pasang.py`): tombol, panel, kartu, chip, ikon 24, glif 12, dan tiga aset bengkel.
+const UI1_PNG_DIPASANG: Array[String] = [
+	"ui_btn_utama", "ui_btn_utama_tekan", "ui_btn_biasa", "ui_btn_biasa_tekan", "ui_btn_sakelar_nyala", "ui_btn_tenang", "ui_btn_tenang_tekan", "ui_btn_nonaktif", "ui_arsir_nonaktif",
+	"ui_panel_layar", "ui_kartu_biasa", "ui_kartu_menonjol", "ui_kartu_redup", "ui_chip_gelap", "ui_chip_ok", "ui_chip_warn", "ui_chip_netral", "ui_chip_aksen",
+	"ui_bengkel_papan_alat", "ui_bengkel_sepeda_kecil", "ui_bengkel_latar_800", "ui_icon24_ban", "ui_icon24_rem", "ui_icon24_rantai",
+	"ui_glif_seru_warn", "ui_glif_centang_ok", "ui_glif_centang_teks2", "ui_glif_kunci_terang", "ui_glif_panah_gelap",
+]
+## Skrip dan scene bengkel tata C yang ikut paket.
+const UI1_SKRIP_IKUT: Array[String] = [
+	"scripts/systems/tampil_bengkel.gd", "scripts/systems/komponen_ui.gd", "scripts/systems/tampil_kondisi_besar.gd", "scripts/ui/chip_ui.gd", "scripts/ui/panggung_sepeda.gd", "scripts/ui/gaya_hud.gd",
+	"scripts/ui/kotak_kondisi_besar.gd", "scripts/ui/layar_bengkel.gd", "scenes/bengkel/bengkel.tscn", "assets/sprites/ui/ui_bengkel_sepeda.json",
+]
+## Awalan nama aset redesain yang TIDAK dipasang (koran, struk, foto, lencana 32, sepeda besar, latar 640, sheet ikon dan glif, panel HUD, lembar pratinjau); tidak boleh ada di `assets/`.
+const UI1_AWALAN_TAK_DIPASANG: Array[String] = ["ui_koran_", "ui_struk", "ui_foto_", "ui_lencana32", "ui_bengkel_sepeda_besar", "ui_bengkel_latar_640", "ui_bengkel_latar.", "ui_kertas_tile", "ui_lembar_", "ui_ikon24", "ui_glif12", "ui_panel_hud.", "ui_sepeda_besar"]
+
+
+func _test_aset_ui1_ikut_paket() -> void:
+	_judul.call("Aset UI redesain (bengkel tata C) yang dipasang ikut paket dengan impor Lossless dan yang tidak dipasang tidak ada di assets/ (AC-12 run ui1-komponen-bengkel)")
+	var cfg: ConfigFile = ConfigFile.new()
+	cfg.load(BERKAS_PRESET)
+	var kecuali: Array[String] = []
+	for bagian_filter: String in str(cfg.get_value("preset.0", "exclude_filter", "")).split(","):
+		kecuali.append(bagian_filter.strip_edges())
+	for nama: String in UI1_PNG_DIPASANG:
+		var jalur: String = "assets/sprites/ui/%s.png" % nama
+		var teks_import: String = _baca_jika_ada("res://" + jalur + ".import")
+		check(FileAccess.file_exists("res://" + jalur) and not teks_import.is_empty(), "%s dan remap .import ada (ikut paket)" % jalur)
+		check(teks_import.contains("compress/mode=0") and teks_import.contains("mipmaps/generate=false"), "%s: impor Lossless tanpa mipmap" % jalur)
+		check(not _dikecualikan(jalur, kecuali) and not _dikecualikan(jalur + ".import", kecuali), "%s tidak dikecualikan filter preset" % jalur)
+	for jalur: String in UI1_SKRIP_IKUT:
+		check(FileAccess.file_exists("res://" + jalur) and not _dikecualikan(jalur, kecuali), "%s ada dan ikut paket" % jalur)
+	var semua: Array[String] = []
+	for nama: String in DirAccess.get_files_at("res://assets/sprites/ui"):
+		if nama.ends_with(".png"):
+			semua.append(nama.get_basename())
+	var terpasang_redesain: Array[String] = []
+	for nama: String in semua:
+		for awalan: String in ["ui_btn_", "ui_chip_", "ui_kartu_", "ui_glif_", "ui_icon24_", "ui_bengkel_", "ui_arsir_", "ui_panel_layar"]:
+			if nama.begins_with(awalan):
+				terpasang_redesain.append(nama)
+	terpasang_redesain.sort()
+	var harapan: Array[String] = UI1_PNG_DIPASANG.duplicate()
+	harapan.sort()
+	check(terpasang_redesain == harapan, "himpunan PNG UI redesain di assets/sprites/ui tepat yang dipasang (tidak lebih, tidak kurang): selisih %s" % [_selisih(terpasang_redesain, harapan)])
+	for nama: String in DirAccess.get_files_at("res://assets/sprites/ui"):
+		for awalan: String in UI1_AWALAN_TAK_DIPASANG:
+			check(not nama.begins_with(awalan), "aset redesain tak dipasang tidak ada di assets/sprites/ui: %s" % nama)
+	for contoh: String in ["ui_koran_kotak.png", "ui_struk.png", "ui_bengkel_sepeda_besar.png", "ui_foto_jalan.png", "ui_lencana32.png"]:
+		check(not FileAccess.file_exists("res://assets/sprites/ui/" + contoh), "contoh %s tidak ada di assets/" % contoh)
+	check(not FileAccess.file_exists("res://assets/sprites/ui/ui_bengkel_latar_640.png"), "latar 640 tidak dipasang (potongan tengah latar 800)")
+
+
+## Elemen yang hanya ada di salah satu daftar (untuk pesan kegagalan).
+func _selisih(a: Array[String], b: Array[String]) -> Array[String]:
+	var hasil: Array[String] = []
+	for x: String in a:
+		if not b.has(x):
+			hasil.append("+" + x)
+	for y: String in b:
+		if not a.has(y):
+			hasil.append("-" + y)
+	return hasil
 
 
 # --- AC-22 run fase5c-animasi-simpang: animasi pemain, sheet kucing 9 kolom, ubin ujung kerb dan simpang ikut paket; ubin tak dipasang tidak ada ---

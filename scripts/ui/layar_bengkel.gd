@@ -255,7 +255,6 @@ func _segarkan_upgrade(kartu: KartuUpgrade, level_dimiliki: int, saldo: int, pem
 		var angka: String = tr(TampilBengkel.kunci_tingkat(tingkat[i])).format({"n": tingkat[i]})
 		var glif: String = "glif_centang_teks2" if status == TampilBengkel.StatusJejak.DIMILIKI else ""
 		kartu.jejak[i].atur(KomponenUi.chip(TampilBengkel.status_chip_jejak(status)).gaya, angka, KomponenUi.UkuranChip.KECIL, glif)
-		kartu.jejak[i].modulate.a = Config.BENGKEL_JEJAK_MENUNGGU_ALFA if status == TampilBengkel.StatusJejak.MENUNGGU else 1.0
 	_tampil_chip(kartu.chip_dimiliki, info.dimiliki)
 	_tampil_chip(kartu.chip_harga, info.aksi != TampilBengkel.Aksi.TIDAK_ADA)
 	kartu.tombol.visible = info.aksi != TampilBengkel.Aksi.TIDAK_ADA

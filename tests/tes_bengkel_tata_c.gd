@@ -267,11 +267,11 @@ func _test_tingkat_bertingkat() -> void:
 	check(layar.jumlah_upgrade_tampil() == 3 and layar.kartu_upgrade("ban_anti_selip_2") == kartu and layar.kartu_upgrade("ban_anti_selip_3") == kartu, "tetap tiga kartu; tiga tingkat ban satu kartu")
 	check(kartu.baris_jejak.visible and kartu.jejak.size() == 3 and kartu.panel.custom_minimum_size.y == 72.0 and layar.kartu_upgrade("rem_pakem").panel.custom_minimum_size.y == 62.0, "kartu ban memakai jejak tiga chip dan tinggi 72; kartu rem tanpa jejak 62")
 	check(kartu.jejak[0].teks() == "I" and kartu.jejak[1].teks() == "II" and kartu.jejak[2].teks() == "III" and kartu.chip_tingkat.teks() == "I", "jejak I, II, III dan chip tingkat 'I'")
-	check(is_equal_approx(kartu.jejak[2].modulate.a, 0.55) and is_equal_approx(kartu.jejak[1].modulate.a, 0.55) and kartu.jejak[0].modulate.a == 1.0 and layar.tombol_beli("ban_anti_selip") != null and layar.tombol_beli("ban_anti_selip_2") == null, "tingkat II dan III beralfa 0,55 (menunggu), tingkat I (aktif) penuh; tombol Beli hanya untuk tingkat yang dijual")
+	check(kartu.jejak[2].modulate.a == 1.0 and kartu.jejak[1].modulate.a == 1.0 and not kartu.jejak[2].glif_tampil() and kartu.jejak[0].glif_tampil() == false and layar.tombol_beli("ban_anti_selip") != null and layar.tombol_beli("ban_anti_selip_2") == null, "chip jejak tidak diredupkan (teks tetap >= 7:1; kanvas opacity .55 ditolak); tombol Beli hanya untuk tingkat yang dijual")
 	layar.tombol_beli("ban_anti_selip").pressed.emit()
 	await _tree.process_frame
 	check(kartu.data.id == "ban_anti_selip_2" and kartu.chip_tingkat.teks() == "II" and kartu.harga.text == "900 koin" and layar.state()["koin"] == 4400 and not kartu.info.dimiliki, "sesudah beli I: kartu berganti ke tingkat II, harga 900, saldo 4.400")
-	check(kartu.jejak[0].label().text == "I" and kartu.jejak[0].modulate.a == 1.0 and kartu.info.jejak == [TampilBengkel.StatusJejak.DIMILIKI, TampilBengkel.StatusJejak.AKTIF, TampilBengkel.StatusJejak.MENUNGGU], "jejak [dimiliki, aktif, menunggu]")
+	check(kartu.jejak[0].label().text == "I" and kartu.jejak[0].glif_tampil() and kartu.info.jejak == [TampilBengkel.StatusJejak.DIMILIKI, TampilBengkel.StatusJejak.AKTIF, TampilBengkel.StatusJejak.MENUNGGU], "jejak [dimiliki, aktif, menunggu]")
 	layar.tombol_beli("ban_anti_selip_2").pressed.emit()
 	await _tree.process_frame
 	layar.tombol_beli("ban_anti_selip_3").pressed.emit()

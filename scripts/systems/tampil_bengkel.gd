@@ -135,7 +135,7 @@ static func status_chip_tingkat(dimiliki: bool, jumlah: int) -> KomponenUi.Statu
 	return KomponenUi.StatusChip.TINGKAT_LAIN
 
 
-## Status chip satu tingkat pada jejak: DIMILIKI netral bercentang, AKTIF aksen, MENUNGGU netral redup (alfa `Config.BENGKEL_JEJAK_MENUNGGU_ALFA` oleh pemanggil).
+## Status chip satu tingkat pada jejak: DIMILIKI netral bercentang, AKTIF aksen, MENUNGGU netral tanpa centang (kanvas meredupkannya dengan opacity .55, tetapi teks redup < 7:1; dibedakan dari DIMILIKI lewat centang dan dari AKTIF lewat gaya).
 static func status_chip_jejak(status: StatusJejak) -> KomponenUi.StatusChip:
 	if status == StatusJejak.AKTIF:
 		return KomponenUi.StatusChip.TINGKAT_AKTIF

@@ -129,7 +129,6 @@ func _test_tingkat_chip_dan_kunci() -> void:
 	check(TampilBengkel.status_chip_jejak(TampilBengkel.StatusJejak.AKTIF) == KomponenUi.StatusChip.TINGKAT_AKTIF and TampilBengkel.status_chip_jejak(TampilBengkel.StatusJejak.DIMILIKI) == KomponenUi.StatusChip.TINGKAT_LAIN and TampilBengkel.status_chip_jejak(TampilBengkel.StatusJejak.MENUNGGU) == KomponenUi.StatusChip.TINGKAT_LAIN, "jejak: aktif aksen, dimiliki dan menunggu netral")
 	check(TampilBengkel.kunci_tingkat(1) == "BENGKEL_TINGKAT_1" and TampilBengkel.kunci_tingkat(2) == "BENGKEL_TINGKAT_2" and TampilBengkel.kunci_tingkat(3) == "BENGKEL_TINGKAT_3", "tingkat 1, 2, 3 = kunci I, II, III")
 	check(TampilBengkel.kunci_tingkat(4) == "BENGKEL_TINGKAT_LAIN" and TampilBengkel.kunci_tingkat(0) == "BENGKEL_TINGKAT_LAIN" and TampilBengkel.kunci_tingkat(-1) == "BENGKEL_TINGKAT_LAIN", "di luar 1..3 = angka biasa")
-	check(Config.BENGKEL_JEJAK_MENUNGGU_ALFA == 0.55, "tingkat yang menunggu beralfa 0,55 (kanvas opacity .55)")
 
 
 # --- Geometri ---

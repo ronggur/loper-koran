@@ -54,6 +54,11 @@ func label() -> Label:
 	return _label
 
 
+## True bila glif (mis. centang) tampil di chip.
+func glif_tampil() -> bool:
+	return _glif.visible
+
+
 func teks() -> String:
 	return _label.text
 

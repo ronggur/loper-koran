@@ -1210,11 +1210,10 @@ const BENGKEL_KARTU_STATUS_JARAK_PX: int = 5
 ## Jarak antar baris bila teks status turun ke bawah kotak kondisi (kolom teks sempit), piksel game.
 const BENGKEL_KARTU_STATUS_BARIS_PX: int = 2
 const BENGKEL_JEJAK_JARAK_PX: int = 2
-## Tampilan: ikon komponen (`ui_icon24_*`), glif (`ui_glif_*`), dan ikon koin di chip, sisi persegi piksel game. Alfa chip jejak tingkat yang belum dicapai (kanvas opacity .55).
+## Tampilan: ikon komponen (`ui_icon24_*`), glif (`ui_glif_*`), dan ikon koin di chip, sisi persegi piksel game.
 const BENGKEL_IKON_PX: int = 24
 const BENGKEL_GLIF_PX: int = 12
 const BENGKEL_KOIN_PX: int = 14
-const BENGKEL_JEJAK_MENUNGGU_ALFA: float = 0.55
 ## Panel galat data upgrade: jarak isi ke tepi di luar garis kartu (kanvas padding 8), jarak glif ke teks.
 const BENGKEL_GALAT_PAD_PX: int = 8
 ## Panggung sepeda: tinggi minimum bila ruang sempit, ukuran sepeda kecil (`ui_bengkel_sepeda_kecil.png`) dan papan alat (`ui_bengkel_papan_alat.png`), jarak sepeda dari bawah panggung, lebar latar.
