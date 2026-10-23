@@ -57,6 +57,10 @@ extends AdeganJalan
 ## sendiri, probe, dan tes lama) masuk ke `RouteBuilder.bangun`: hari 1 dan 2 hanya pelanggan seberang (rute identik run sebelumnya), sejak hari 3 sebanyak 8 atau 9 dari 25 pelanggan di sisi dekat. Sasaran dekat
 ## (zona, kotak surat oranye/abu-abu, teras, mode bantu, radar, progres, skor) lewat kode yang sama dengan seberang. Hari 3: tip singkat sekali (`TipSisiDekat`, `PanelTipSisiDekat`, beku saat jeda).
 ##
+## Run fase6a2-reputasi-pelanggan bagian A (O-7, AC-4, AC-6; usulan, tanpa tampilan): keadaan pelanggan tetap dari save (`atur_pelanggan`, dipanggil `HariMain` SEBELUM scene masuk pohon) diteruskan ke `RouteBuilder.bangun`.
+## Saat layar hasil terbuka catatan pelanggan hari itu dan hasil `ReputationManager` (dari state save yang sama) disimpan dan bisa diambil (`catatan_pelanggan`, `hasil_reputasi`); `HariMain` memasukkan catatan itu ke
+## `CatatanHari` saat "Hari berikutnya", jadi `DataSave.catat_hari` menerapkannya tepat sekali. Rute yang dijalankan sendiri (tanpa `atur_pelanggan`) tidak punya keadaan, catatan, atau hasil reputasi.
+##
 ## Sepeda mencapai garis akhir rute (tepat sekali per rute; diulang hanya sesudah "Main lagi").
 signal rute_selesai
 ## Rute baru disusun (saat scene siap dan tiap "Main lagi").
@@ -104,6 +108,13 @@ var _sepeda_kondisi: Dictionary = BikeCondition.baru()
 var _sepeda_level: Dictionary = {}
 var _sepeda_hari: int = Config.HARI_AWAL
 var _daftar_upgrade: Array[DataToko] = []
+## Keadaan pelanggan tetap rute ini (`atur_pelanggan`; null = rute tanpa keadaan), state save asalnya, dan pustaka kepribadian.
+var _pelanggan_rute: PelangganRute = null
+var _state_pelanggan: Dictionary = {}
+var _kepribadian: Array[KepribadianPelanggan.Entri] = []
+## Catatan pelanggan hari ini dan hasil reputasinya; diisi saat layar hasil terbuka (null sebelum itu, dan bila rute tanpa keadaan).
+var _catatan_pelanggan: ReputationManager.Catatan = null
+var _hasil_reputasi: ReputationManager.Hasil = null
 
 @onready var _daur: RumahDaurRute = %Objek
 @onready var _penerap: PenerapPenutup = %PenerapPenutup
@@ -170,6 +181,9 @@ func _buka_hasil() -> void:
 	_hasil_tampil = true
 	_angka_hasil = HasilRute.dari(_skor, _rute, _tenggat, _keadaan_misi)
 	var perlu: Array[String] = BikeCondition.perlu_bengkel(_kondisi.kondisi) if _kondisi != null else []
+	if _pelanggan_rute != null:
+		_catatan_pelanggan = ReputationManager.catat(_rute, _skor, _hari, _misi, _keadaan_misi)
+		_hasil_reputasi = ReputationManager.terapkan(_state_pelanggan, _catatan_pelanggan, _kepribadian)
 	_layar_hasil.isi(_angka_hasil, _misi if _keadaan_misi != null else null, perlu)
 	_layar_hasil.tampilkan(true)
 	_panel_akhir.tampilkan(false)
@@ -262,7 +276,7 @@ func _susun(benih: int) -> void:
 		var kumpulan: PemuatRute.Kumpulan = PemuatRute.muat_folder()
 		_galat.append_array(kumpulan.galat)
 		_pustaka = kumpulan.segmen
-	var hasil: RouteBuilder.Hasil = RouteBuilder.bangun(benih, _pustaka, _hari)
+	var hasil: RouteBuilder.Hasil = RouteBuilder.bangun(benih, _pustaka, _hari, _pelanggan_rute)
 	_galat.append_array(hasil.galat)
 	var gagal: bool = false
 	if hasil.rute != null and _galat.is_empty():
@@ -277,6 +291,8 @@ func _susun(benih: int) -> void:
 	_tenggat = TenggatRute.awal(_rute.panjang_ubin)
 	_hasil_tampil = false
 	_angka_hasil = null
+	_catatan_pelanggan = null
+	_hasil_reputasi = null
 	_layar_hasil.tampilkan(false)
 	_hud.visible = true
 	_tutorial_node.visible = true
@@ -407,6 +423,32 @@ func atur_hari(hari_baru: int) -> void:
 		_tip_sudah = false
 		_susun(_benih)
 		perbarui(0.0)
+
+
+## Mengatur keadaan pelanggan tetap dari state save `state` (`pelanggan`) dan pustaka kepribadian `kepribadian` (kosong = dimuat `PemuatPelanggan`). Dipanggil SEBELUM scene masuk pohon (`HariMain`);
+## bila sudah siap, rute disusun ulang dengan seed yang sedang dipakai. Tanpa panggilan ini rute disusun tanpa keadaan (perilaku sebelum run fase6a2).
+func atur_pelanggan(state: Dictionary, kepribadian: Array[KepribadianPelanggan.Entri] = []) -> void:
+	_state_pelanggan = state.duplicate(true)
+	_kepribadian = kepribadian if not kepribadian.is_empty() else PemuatPelanggan.muat().entri
+	_pelanggan_rute = PelangganRute.dari_state(_state_pelanggan, _kepribadian)
+	if is_node_ready():
+		_susun(_benih)
+		perbarui(0.0)
+
+
+## Keadaan pelanggan rute ini (null = tanpa keadaan).
+func pelanggan_rute() -> PelangganRute:
+	return _pelanggan_rute
+
+
+## Catatan pelanggan hari ini (null sebelum layar hasil terbuka atau bila rute tanpa keadaan).
+func catatan_pelanggan() -> ReputationManager.Catatan:
+	return _catatan_pelanggan
+
+
+## Hasil `ReputationManager` hari ini (null sebelum layar hasil terbuka atau bila rute tanpa keadaan); sama dengan yang diterapkan `DataSave.catat_hari`.
+func hasil_reputasi() -> ReputationManager.Hasil:
+	return _hasil_reputasi
 
 
 ## Nomor hari rute (bawaan hari 1).

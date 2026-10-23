@@ -19,6 +19,9 @@ extends RefCounted
 ## jadi santai di bawah sekitar 3,99 u/d, cepat sampai 5,4, ngebut di atasnya; melambat = santai.
 
 enum Status { TIDAK_SAH, ANTAR, ULANG }
+## Kualitas antaran sah pertama ke sebuah rumah (run fase6a2-reputasi-pelanggan, O-8): dicatat per id rumah untuk kredit reputasi (`ReputationManager`). `TEPAT` = inti kotak surat; `KOTAK_SURAT`
+## = kotak surat di luar inti; `HALAMAN` = rumput; `JENDELA` = jendela dengan sakelar bonus. Hanya pencatat: tidak mengubah skor, koin, atau combo.
+enum Kualitas { KOTAK_SURAT, TEPAT, TERAS, HALAMAN, JENDELA }
 
 
 ## Keadaan skor satu rute.
@@ -34,6 +37,8 @@ class Keadaan extends RefCounted:
 	var jumlah_tip: int = 0
 	## Bagian `koin` yang berasal dari tip (untuk layar hasil, run fase3c-hud-hasil).
 	var koin_tip: int = 0
+	## Kualitas antaran sah tiap rumah yang terantar (id -> `Kualitas`), dicatat untuk reputasi (pencatat saja).
+	var kualitas: Dictionary = {}
 
 	func salin() -> Keadaan:
 		var baru: Keadaan = Keadaan.new()
@@ -45,6 +50,7 @@ class Keadaan extends RefCounted:
 		baru.jumlah_tepat = jumlah_tepat
 		baru.jumlah_tip = jumlah_tip
 		baru.koin_tip = koin_tip
+		baru.kualitas = kualitas.duplicate()
 		return baru
 
 
@@ -154,6 +160,7 @@ static func nilai(k: Keadaan, hasil: ZonaSasaran.Hasil, id_rumah: String, tepat:
 		s.koin_tip += h.tip
 	if id_rumah != "":
 		s.terantar[id_rumah] = true
+		s.kualitas[id_rumah] = kualitas_antaran(hasil, h.tepat)
 	return h
 
 
@@ -162,6 +169,23 @@ static func nilai(k: Keadaan, hasil: ZonaSasaran.Hasil, id_rumah: String, tepat:
 static func nilai_koran(k: Keadaan, koran: KoranLempar.Koran, rute: RouteBuilder.Rute, jendela_bonus: bool, tenggat_lewat: bool = false) -> Hasil:
 	var kecepatan: float = koran.lintasan.kecepatan_maju_ud if koran.lintasan != null else 0.0
 	return nilai(k, koran.hasil, koran.id_rumah, koran.tepat, kecepatan, RouteBuilder.pemberi_tip(rute, koran.id_rumah), jendela_bonus, tenggat_lewat)
+
+
+## Kualitas antaran sah untuk hasil zona `hasil` dan `tepat` (hanya bermakna untuk hasil yang sah).
+static func kualitas_antaran(hasil: ZonaSasaran.Hasil, tepat: bool) -> Kualitas:
+	match hasil:
+		ZonaSasaran.Hasil.KOTAK_SURAT:
+			return Kualitas.TEPAT if tepat else Kualitas.KOTAK_SURAT
+		ZonaSasaran.Hasil.TERAS:
+			return Kualitas.TERAS
+		ZonaSasaran.Hasil.JENDELA:
+			return Kualitas.JENDELA
+	return Kualitas.HALAMAN
+
+
+## Kualitas antaran rumah `id_rumah` (`Kualitas` sebagai bilangan bulat), atau -1 bila rumah belum terantar.
+static func kualitas_rumah(k: Keadaan, id_rumah: String) -> int:
+	return int(k.kualitas[id_rumah]) if k.kualitas.has(id_rumah) else -1
 
 
 ## Combo putus karena tabrakan (AC-6): rangkaian kembali 0 (pengali x1,0). Skor, koin, dan rumah terantar tetap. Masukan tidak diubah.

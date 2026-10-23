@@ -777,8 +777,8 @@ const SEED_KONDISI_DASAR: int = 27182818
 const SEED_KONDISI_NOMOR_LANGKAH: int = 7907
 ## Selisih seed antar slot halaman koran (utama, misi, ringan) supaya tiap slot punya aliran acak sendiri.
 const SEED_HEADLINE_SLOT_LANGKAH: int = 7919
-## Versi format save (DATA_SCHEMA 4); naik bersama langkah migrasi di `DataSave.migrasi`. v2 (run 4B): arti `flag` berubah (menunggu tampil, dikonsumsi), `misi_hasil`, `tutorial`. v3 (run 6A1): `koin` menjadi saldo, `koin_total`, `sepeda`.
-const SAVE_VERSI: int = 3
+## Versi format save (DATA_SCHEMA 4); naik bersama langkah migrasi di `DataSave.migrasi`. v2 (run 4B): arti `flag` berubah (menunggu tampil, dikonsumsi), `misi_hasil`, `tutorial`. v3 (run 6A1): `koin` menjadi saldo, `koin_total`, `sepeda`. v4 (run 6A2): `reputasi` per distrik dan `pelanggan` (status pelanggan tetap).
+const SAVE_VERSI: int = 4
 ## Berkas save (satu slot, rule save-system); ditulis atomik lewat berkas sementara di folder yang sama.
 const SAVE_BERKAS: String = "user://save.json"
 ## Ekstensi berkas sementara penulisan atomik (`user://save.tmp`).
@@ -828,6 +828,51 @@ const MISI_HARI_TUTORIAL: int = 1
 const MISI_ID_TUTORIAL: String = "p1_kucing"
 ## Reputasi pemain di 4A (reputasi belum ada, Fase 6A): dipakai syarat `rep_min` misi.
 const REPUTASI_BAWAAN: int = 0
+
+## --- Pelanggan tetap, kepribadian, dan reputasi (run 6A2 bagian A, GDD 8 dan 10.5, BALANCING 7.2; semua usulan, dinilai lewat uji HP) ---
+
+## Reputasi per distrik, bilangan bulat: batas bawah, batas atas, dan nilai awal save baru.
+const REPUTASI_MIN: int = 0
+const REPUTASI_MAKS: int = 100
+const REPUTASI_AWAL: int = 0
+## Kredit reputasi satu antaran sah menurut kualitasnya (poin kredit, bukan poin reputasi): tepat di inti kotak surat, teras, kotak surat, halaman (rumput). Pelanggan `cerewet` tidak memberi kredit untuk halaman.
+const REPUTASI_KREDIT_TEPAT: int = 4
+const REPUTASI_KREDIT_TERAS: int = 3
+const REPUTASI_KREDIT_KOTAK_SURAT: int = 2
+const REPUTASI_KREDIT_HALAMAN: int = 1
+## Poin kredit satu hari per 1 poin reputasi (pembagian bulat ke bawah, tanpa sisa yang dibawa ke hari lain).
+const REPUTASI_KREDIT_PER_POIN: int = 30
+## Poin reputasi misi selesai menurut tingkat hadiah, sejajar dengan `MISI_TINGKAT_HADIAH` (kecil, sedang, besar; GDD 10.5).
+const REPUTASI_MISI_POIN: Array[int] = [1, 2, 3]
+## Poin reputasi yang hilang per pelanggan yang berhenti hari itu.
+const REPUTASI_BERHENTI_POIN: int = 1
+## Batas atas `gagal.reputasi` di data misi (GDD 10.5: paling berat satu poin).
+const REPUTASI_MISI_GAGAL_MAKS: int = 1
+## Kenaikan reputasi paling banyak dalam satu hari (kredit antaran + misi); pagar, bukan pembentuk kurva.
+const REPUTASI_NAIK_MAKS_PER_HARI: int = 6
+## Status pelanggan tetap yang sah di save dan penghitung paling besar (antar, meleset).
+const PELANGGAN_STATUS: Array[String] = ["aktif", "setia", "berhenti"]
+const PELANGGAN_HITUNG_MAKS: int = 999
+## `aktif` menjadi `setia` sesudah sekian antaran sah (sejak masuk atau sejak kembali).
+const PELANGGAN_SETIA_ANTAR: int = 5
+## Pelanggan `sensitif` berhenti sesudah sekian hari berturut-turut tidak terantar saat masuk rute; pelanggan `setia` lebih sabar satu hari.
+const PELANGGAN_BERHENTI_MELESET: int = 2
+const PELANGGAN_SETIA_BERHENTI_MELESET: int = 3
+## Pelanggan `berhenti` boleh dipilih lagi ("calon kembali") sesudah sekian hari sejak berhenti, paling banyak sekian per rute (ikut dihitung dalam 25).
+const PELANGGAN_KEMBALI_JEDA_HARI: int = 3
+const PELANGGAN_KEMBALI_MAKS_PER_RUTE: int = 1
+## Pelanggan `setia` diprioritaskan sampai sekian persen kuota tiap sisi; pelanggan baru (belum pernah masuk rute) paling banyak sekian per rute bila pelanggan dikenal cukup.
+const PELANGGAN_SETIA_MAKS_PERSEN: int = 60
+const PELANGGAN_BARU_MAKS_PER_RUTE: int = 6
+## Kandidat dikenal (bukan berhenti, sudah pernah masuk rute) per sisi harus paling sedikit kuota sisi + sekian supaya batas pelanggan baru berlaku di sisi itu.
+const PELANGGAN_KANDIDAT_CADANGAN: int = 4
+## Percobaan pencocokan per tingkat pelepasan prioritas di `RouteBuilder` dengan keadaan pelanggan.
+const PELANGGAN_PERCOBAAN_PER_TINGKAT: int = 60
+## Bonus biaya (ubin) bagi pelanggan prioritas (setia, calon kembali) dalam pencocokan: jauh di atas selisih terbesar mana pun, jadi mereka selalu terpilih selama ada susunan sah.
+const PELANGGAN_BONUS_PRIORITAS_UBIN: float = 1000000.0
+## Id kepribadian pelanggan (permanen) dan berkas datanya (`assets/data/customers/kepribadian.json`, DATA_SCHEMA 4b).
+const PELANGGAN_KEPRIBADIAN_ID: Array[String] = ["biasa", "cerewet", "pemberi_tip", "sensitif"]
+const PELANGGAN_KEPRIBADIAN_BERKAS: String = "res://assets/data/customers/kepribadian.json"
 
 ## --- Layar halaman depan koran (DESIGN_SPEC 4, 1.2; rule ui-scenes; run 4A, usulan; dinilai lewat uji HP) ---
 

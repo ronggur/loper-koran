@@ -121,6 +121,10 @@ class Rute extends RefCounted:
 	var koran_awal: int = 0
 	## Id rumah pelanggan pemberi tip (id -> true), untuk `SkorRute` (O-3).
 	var id_pemberi_tip: Dictionary = {}
+	## Diagnosa pemilihan dengan keadaan pelanggan (run fase6a2-reputasi-pelanggan, O-7; 0 / false untuk rute tanpa keadaan): tingkat pelepasan prioritas yang dipakai (0 = semua aturan berlaku),
+	## dan true bila di salah satu sisi pelanggan dikenal kurang dari kuota + `PELANGGAN_KANDIDAT_CADANGAN` sehingga batas pelanggan baru dilonggarkan di sisi itu.
+	var pelepasan: int = 0
+	var dikenal_kurang: bool = false
 
 
 ## Hasil `bangun`: rute (null bila ada galat) dan daftar galat.
@@ -132,9 +136,11 @@ class Hasil extends RefCounted:
 		return galat.is_empty() and rute != null
 
 
-## Susun satu rute dari `benih`, `pustaka` segmen sah, dan nomor `hari` (bawaan hari 1 = perilaku sebelum pelanggan dekat). Rute null dan galat terisi bila pustaka tidak cukup atau tidak ada susunan
+## Susun satu rute dari `benih`, `pustaka` segmen sah, dan nomor `hari` (bawaan hari 1 = perilaku sebelum pelanggan dekat). `pelanggan` (run fase6a2-reputasi-pelanggan, O-7): keadaan pelanggan tetap
+## dari save; null, atau hari < `RUTE_DEKAT_HARI_MULAI`, memberi rute IDENTIK dengan sebelum run ini (golden `tests/data/golden_rute_main.json`). Sejak hari 3 dengan keadaan, segmen dan kuota dekat sama,
+## tetapi pelanggan dipilih menurut status (lihat `_pilih_pelanggan_keadaan`) dan pemberi tip mengikuti kepribadian. Rute null dan galat terisi bila pustaka tidak cukup atau tidak ada susunan
 ## yang memenuhi aturan (tanpa dua `padat` berurutan, celah pelanggan, jumlah pelanggan, kuota dekat). Tidak ada RNG di luar `benih` (seed hari dari `SeedHari.rute`).
-static func bangun(benih: int, pustaka: Array[SegmenRute], hari: int = Config.HARI_AWAL) -> Hasil:
+static func bangun(benih: int, pustaka: Array[SegmenRute], hari: int = Config.HARI_AWAL, pelanggan: PelangganRute = null) -> Hasil:
 	var hasil: Hasil = Hasil.new()
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = benih
@@ -145,10 +151,15 @@ static func bangun(benih: int, pustaka: Array[SegmenRute], hari: int = Config.HA
 	rute.benih = benih
 	rute.hari = hari
 	_isi_segmen(rute, urutan)
-	if not _pilih_pelanggan(rute, rng, hasil.galat):
+	var pakai_keadaan: bool = pelanggan != null and hari_ada_pelanggan_dekat(hari)
+	var terpilih: bool = _pilih_pelanggan_keadaan(rute, rng, pelanggan, hasil.galat) if pakai_keadaan else _pilih_pelanggan(rute, rng, hasil.galat)
+	if not terpilih:
 		return hasil
 	rute.koran_awal = koran_awal(rute.pelanggan.size())
-	_pilih_pemberi_tip(rute, rng)
+	if pakai_keadaan:
+		_pilih_pemberi_tip_keadaan(rute, rng, pelanggan)
+	else:
+		_pilih_pemberi_tip(rute, rng)
 	var salah: Array[String] = periksa_rute(rute)
 	if not salah.is_empty():
 		hasil.galat.append_array(salah)
@@ -530,6 +541,215 @@ static func _pilih_pelanggan_dua_sisi(rute: Rute, rng: RandomNumberGenerator, ga
 	return false
 
 
+## Pelanggan hari >= `RUTE_DEKAT_HARI_MULAI` dengan keadaan pelanggan `p` (O-7, run fase6a2-reputasi-pelanggan, usulan). Kuota dekat diundi dari RNG rute persis seperti `_pilih_pelanggan_dua_sisi`, lalu:
+## (a) rumah `berhenti` tidak masuk, kecuali paling banyak `PELANGGAN_KEMBALI_MAKS_PER_RUTE` "calon kembali" (sudah `PELANGGAN_KEMBALI_JEDA_HARI` hari sejak berhenti; satu-satunya jalan kembali lewat antaran);
+## (b) pelanggan `setia` diprioritaskan sampai `PELANGGAN_SETIA_MAKS_PERSEN` kuota tiap sisi (yang terpilih tersebar rata di rute, titik pertamanya diundi RNG rute; setia di luar prioritas tetap kandidat biasa);
+## (c) pelanggan baru (belum punya entri) paling banyak `PELANGGAN_BARU_MAKS_PER_RUTE` per rute di sisi yang pelanggan dikenalnya cukup (sisi dengan pelanggan dikenal kurang dari kuota + `PELANGGAN_KANDIDAT_CADANGAN`
+##     dilonggarkan: semua rumah baru boleh, `Rute.dikenal_kurang`);
+## (d) pemberi tip: lihat `_pilih_pemberi_tip_keadaan`; (e) kuota dekat, total, celah gabungan, dan `periksa_rute` tidak berubah.
+## Prioritas (calon kembali dulu, lalu setia) masuk pencocokan sebagai bonus biaya, jadi selalu terpilih selama ada susunan sah. Bila tidak ada susunan sah, prioritas dilepas bertahap (seperempat dari ekor daftar prioritas tiap
+## tingkat, calon kembali terakhir; ekor daftar prioritas = setia yang paling berdekatan dengan yang lain). Urutan pelepasan: batas pelanggan baru dulu (tingkat 1), lalu prioritas sedikit demi sedikit, lalu larangan `berhenti` (semua boleh): `Rute.pelepasan` mencatat tingkatnya. Tanpa entri apa pun, urutan konsumsi RNG sama
+## dengan `_pilih_pelanggan_dua_sisi`, jadi pelanggan sama dengan rute tanpa keadaan. False + galat hanya bila rute tanpa keadaan pun gagal (kandidat kurang atau celah tak terpenuhi).
+static func _pilih_pelanggan_keadaan(rute: Rute, rng: RandomNumberGenerator, p: PelangganRute, galat: Array[String]) -> bool:
+	var semua: Array = [_kandidat_sisi(rute, LoperAnim.Sisi.DEKAT), _kandidat_sisi(rute, LoperAnim.Sisi.SEBERANG)]
+	var kuota_dekat: int = rng.randi_range(Config.RUTE_DEKAT_KUOTA_MIN, Config.RUTE_DEKAT_KUOTA_MAKS)
+	var kuota: Array[int] = [kuota_dekat, Config.RUTE_PELANGGAN - kuota_dekat]
+	if (semua[0] as Array).size() < kuota[0] or (semua[1] as Array).size() < kuota[1]:
+		galat.append("kandidat pelanggan dekat %d (butuh %d) atau seberang %d (butuh %d) kurang" % [(semua[0] as Array).size(), kuota[0], (semua[1] as Array).size(), kuota[1]])
+		return false
+	# Calon kembali (paling banyak `PELANGGAN_KEMBALI_MAKS_PER_RUTE` di seluruh rute).
+	var calon: Array[RumahRute] = []
+	for sisi: int in range(2):
+		for r: RumahRute in semua[sisi]:
+			if p.calon_kembali(r.id, rute.hari):
+				calon.append(r)
+	if calon.size() > Config.PELANGGAN_KEMBALI_MAKS_PER_RUTE:
+		_kocok_rumah(rng, calon)
+	var kembali: Dictionary = {}
+	for i: int in range(mini(calon.size(), Config.PELANGGAN_KEMBALI_MAKS_PER_RUTE)):
+		kembali[calon[i].id] = true
+	# Setia per sisi: diprioritaskan sampai batas persen kuota sisi. Urutan prioritas "tersebar": titik terjauh dari yang sudah dipilih dulu (satu undian RNG untuk titik pertama), jadi melepas ekor daftar
+	# selalu melepas setia yang paling berdekatan dengan yang lain; kedua sisi digilir supaya awalan daftar seimbang.
+	var prioritas: Array[String] = []
+	for id: String in kembali:
+		prioritas.append(id)
+	var jumlah_dikenal: Array[int] = [0, 0]
+	var urut_setia: Array = [[], []]
+	for sisi: int in range(2):
+		var setia: Array[RumahRute] = []
+		for r: RumahRute in semua[sisi]:
+			var st: String = p.status(r.id)
+			if st == PelangganRute.SETIA:
+				setia.append(r)
+			elif st == PelangganRute.AKTIF:
+				jumlah_dikenal[sisi] += 1
+		var batas: int = floori(float(kuota[sisi] * Config.PELANGGAN_SETIA_MAKS_PERSEN) / float(Config.RUTE_KORAN_PERSEN_PENUH))
+		var urut: Array[RumahRute] = _urut_tersebar(setia, rng)
+		urut_setia[sisi] = urut.slice(0, batas)
+		jumlah_dikenal[sisi] += setia.size()
+	for i: int in range(maxi((urut_setia[0] as Array).size(), (urut_setia[1] as Array).size())):
+		for sisi: int in range(2):
+			if i < (urut_setia[sisi] as Array).size():
+				prioritas.append((urut_setia[sisi] as Array)[i].id)
+	for id: String in kembali:
+		for sisi: int in range(2):
+			for r: RumahRute in semua[sisi]:
+				if r.id == id:
+					jumlah_dikenal[sisi] += 1
+	# Batas pelanggan baru: hanya di sisi yang pelanggan dikenalnya cukup.
+	var ketat: Array[bool] = [false, false]
+	var baru_ketat: Array[RumahRute] = []
+	for sisi: int in range(2):
+		ketat[sisi] = jumlah_dikenal[sisi] >= kuota[sisi] + Config.PELANGGAN_KANDIDAT_CADANGAN
+		if not ketat[sisi]:
+			rute.dikenal_kurang = true
+			continue
+		for r: RumahRute in semua[sisi]:
+			if p.status(r.id) == PelangganRute.BARU:
+				baru_ketat.append(r)
+	if baru_ketat.size() > Config.PELANGGAN_BARU_MAKS_PER_RUTE:
+		_kocok_rumah(rng, baru_ketat)
+	var boleh_baru: Dictionary = {}
+	for i: int in range(mini(baru_ketat.size(), Config.PELANGGAN_BARU_MAKS_PER_RUTE)):
+		boleh_baru[baru_ketat[i].id] = true
+	# Tingkat pelepasan: jumlah prioritas dipakai menurun separuh-separuh, lalu tanpa batas baru, lalu berhenti boleh.
+	var jumlah_prioritas: Array[int] = [prioritas.size()]
+	while jumlah_prioritas[jumlah_prioritas.size() - 1] > 0:
+		var sekarang: int = jumlah_prioritas[jumlah_prioritas.size() - 1]
+		jumlah_prioritas.append(sekarang - maxi(1, floori(float(sekarang) / 4.0)))
+	var tingkat: Array = [{"prioritas": prioritas.size(), "batas_baru": true, "berhenti": false}]
+	for k: int in jumlah_prioritas:
+		tingkat.append({"prioritas": k, "batas_baru": false, "berhenti": false})
+	tingkat.append({"prioritas": 0, "batas_baru": false, "berhenti": true})
+	for t: int in range(tingkat.size()):
+		var cfg: Dictionary = tingkat[t]
+		var aktif: Dictionary = {}
+		for i: int in range(int(cfg["prioritas"])):
+			aktif[prioritas[i]] = true
+		var kolam: Array = []
+		var maju: Array = []
+		var bonus: Array = []
+		var cukup: bool = true
+		for sisi: int in range(2):
+			var daftar: Array[RumahRute] = []
+			for r: RumahRute in semua[sisi]:
+				if _boleh_masuk(r, p, cfg, aktif, boleh_baru, ketat[sisi]):
+					daftar.append(r)
+			var m: PackedFloat64Array = PackedFloat64Array()
+			var b: PackedFloat64Array = PackedFloat64Array()
+			for r: RumahRute in daftar:
+				m.append(r.maju_ubin)
+				b.append(Config.PELANGGAN_BONUS_PRIORITAS_UBIN if aktif.has(r.id) else 0.0)
+			kolam.append(daftar)
+			maju.append(m)
+			bonus.append(b)
+			if daftar.size() < kuota[sisi]:
+				cukup = false
+		if not cukup:
+			continue
+		for percobaan: int in range(Config.PELANGGAN_PERCOBAAN_PER_TINGKAT):
+			var indeks_dekat: PackedInt32Array = _cocokkan_bonus(maju[0], kuota[0], rng, bonus[0])
+			var indeks_seberang: PackedInt32Array = _cocokkan_bonus(maju[1], kuota[1], rng, bonus[1])
+			if indeks_dekat.size() != kuota[0] or indeks_seberang.size() != kuota[1]:
+				break
+			var terpilih: Array[RumahRute] = []
+			for i: int in indeks_dekat:
+				terpilih.append((kolam[0] as Array)[i])
+			for i: int in indeks_seberang:
+				terpilih.append((kolam[1] as Array)[i])
+			terpilih.sort_custom(_lebih_awal)
+			var celah_sah: bool = true
+			for i: int in range(1, terpilih.size()):
+				if terpilih[i].maju_ubin - terpilih[i - 1].maju_ubin > Config.RUTE_PELANGGAN_JARAK_MAKS_UBIN:
+					celah_sah = false
+			if not celah_sah:
+				continue
+			for rumah: RumahRute in terpilih:
+				rumah.pelanggan = true
+				rute.pelanggan.append(rumah)
+			rute.pelepasan = t
+			return true
+	galat.append("tidak ada pilihan pelanggan dengan keadaan dan celah gabungan di bawah %.1f ubin dalam %d tingkat pelepasan" % [Config.RUTE_PELANGGAN_JARAK_MAKS_UBIN, tingkat.size()])
+	return false
+
+
+## True bila rumah `r` boleh masuk kolam kandidat pada tingkat `cfg`: `berhenti` hanya bila calon kembali aktif (atau tingkat terakhir), `baru` hanya bila batas baru mati, di sisi yang dilonggarkan, atau termasuk yang diundi boleh.
+## Setia dan aktif selalu boleh (setia di luar prioritas hanyalah kandidat biasa).
+static func _boleh_masuk(r: RumahRute, p: PelangganRute, cfg: Dictionary, aktif: Dictionary, boleh_baru: Dictionary, sisi_ketat: bool) -> bool:
+	match p.status(r.id):
+		PelangganRute.BERHENTI:
+			return bool(cfg["berhenti"]) or aktif.has(r.id)
+		PelangganRute.BARU:
+			return not bool(cfg["batas_baru"]) or not sisi_ketat or boleh_baru.has(r.id)
+	return true
+
+
+## Urutan "tersebar" `daftar`: titik pertama diundi dari `rng` (tanpa undian bila kurang dari dua), berikutnya selalu yang jaraknya ke titik terpilih terdekat paling besar (seri: yang lebih awal di rute).
+static func _urut_tersebar(daftar: Array[RumahRute], rng: RandomNumberGenerator) -> Array[RumahRute]:
+	var sisa: Array[RumahRute] = daftar.duplicate()
+	var hasil: Array[RumahRute] = []
+	if sisa.is_empty():
+		return hasil
+	var awal: int = rng.randi_range(0, sisa.size() - 1) if sisa.size() > 1 else 0
+	hasil.append(sisa[awal])
+	sisa.remove_at(awal)
+	while not sisa.is_empty():
+		var terbaik: int = 0
+		var jarak_terbaik: float = -1.0
+		for i: int in range(sisa.size()):
+			var terdekat: float = INF
+			for t: RumahRute in hasil:
+				terdekat = minf(terdekat, absf(sisa[i].maju_ubin - t.maju_ubin))
+			if terdekat > jarak_terbaik:
+				jarak_terbaik = terdekat
+				terbaik = i
+		hasil.append(sisa[terbaik])
+		sisa.remove_at(terbaik)
+	return hasil
+
+
+## Kocok `daftar` rumah di tempat (Fisher-Yates dari RNG rute).
+static func _kocok_rumah(rng: RandomNumberGenerator, daftar: Array[RumahRute]) -> void:
+	for i: int in range(daftar.size() - 1, 0, -1):
+		var j: int = rng.randi_range(0, i)
+		var simpan: RumahRute = daftar[i]
+		daftar[i] = daftar[j]
+		daftar[j] = simpan
+
+
+## Pemberi tip dengan keadaan (O-7 d): jumlahnya tetap `jumlah_pemberi_tip`; pelanggan berkepribadian `pemberi_tip` didahulukan (diundi RNG rute bila lebih dari jumlahnya), sisanya dilengkapi dari pelanggan lain dengan RNG rute.
+static func _pilih_pemberi_tip_keadaan(rute: Rute, rng: RandomNumberGenerator, p: PelangganRute) -> void:
+	var jumlah: int = jumlah_pemberi_tip(rute.pelanggan.size())
+	var utama: Array[int] = []
+	var lain: Array[int] = []
+	for i: int in range(rute.pelanggan.size()):
+		if p.kepribadian_dari(rute.pelanggan[i].id) == KepribadianPelanggan.PEMBERI_TIP:
+			utama.append(i)
+		else:
+			lain.append(i)
+	var dipilih: Array[int] = []
+	dipilih.append_array(_ambil_acak(utama, mini(jumlah, utama.size()), rng))
+	if dipilih.size() < jumlah:
+		dipilih.append_array(_ambil_acak(lain, jumlah - dipilih.size(), rng))
+	for i: int in dipilih:
+		var rumah: RumahRute = rute.pelanggan[i]
+		rumah.pemberi_tip = true
+		rute.id_pemberi_tip[rumah.id] = true
+
+
+## `jumlah` indeks pertama dari `daftar` setelah Fisher-Yates sebagian dengan `rng`.
+static func _ambil_acak(daftar: Array[int], jumlah: int, rng: RandomNumberGenerator) -> Array[int]:
+	var salinan: Array[int] = daftar.duplicate()
+	var hasil: Array[int] = []
+	for i: int in range(mini(jumlah, salinan.size())):
+		var j: int = rng.randi_range(i, salinan.size() - 1)
+		var simpan: int = salinan[i]
+		salinan[i] = salinan[j]
+		salinan[j] = simpan
+		hasil.append(salinan[i])
+	return hasil
+
+
 ## Tandai `jumlah_pemberi_tip` pelanggan secara berseed: Fisher-Yates sebagian atas indeks pelanggan dengan `rng` rute (O-3).
 static func _pilih_pemberi_tip(rute: Rute, rng: RandomNumberGenerator) -> void:
 	var indeks: Array[int] = []
@@ -549,6 +769,12 @@ static func _pilih_pemberi_tip(rute: Rute, rng: RandomNumberGenerator) -> void:
 ## Pilih `jumlah` indeks dari `maju` (terurut menaik) yang paling dekat ke target tersebar rata + goyangan acak: pencocokan berurutan
 ## dengan jumlah selisih mutlak terkecil (DP O(jumlah x n)); seri = indeks lebih kecil. Kosong bila n < jumlah.
 static func _cocokkan(maju: PackedFloat64Array, jumlah: int, rng: RandomNumberGenerator) -> PackedInt32Array:
+	return _cocokkan_bonus(maju, jumlah, rng, PackedFloat64Array())
+
+
+## `_cocokkan` dengan `bonus` per kandidat (sejajar `maju`, kosong = tanpa bonus): bonus dikurangkan dari selisih kandidat yang dipilih, jadi kandidat berbonus besar selalu terpilih
+## (pelanggan prioritas, `PELANGGAN_BONUS_PRIORITAS_UBIN`). Tanpa bonus hasil dan konsumsi RNG sama dengan sebelum ada bonus.
+static func _cocokkan_bonus(maju: PackedFloat64Array, jumlah: int, rng: RandomNumberGenerator, bonus: PackedFloat64Array) -> PackedInt32Array:
 	var hasil: PackedInt32Array = PackedInt32Array()
 	var n: int = maju.size()
 	if n < jumlah or jumlah <= 0:
@@ -575,6 +801,8 @@ static func _cocokkan(maju: PackedFloat64Array, jumlah: int, rng: RandomNumberGe
 					terbaik = sebelum
 					idx_terbaik = j - 1
 			var selisih: float = absf(maju[j] - target[i])
+			if bonus.size() == n:
+				selisih -= bonus[j]
 			if i == 0:
 				biaya[i * n + j] = selisih
 				asal[i * n + j] = -1
