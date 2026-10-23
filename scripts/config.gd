@@ -1347,3 +1347,34 @@ const TIP_SISI_DEKAT_Y_PX: int = 88
 const TIP_SISI_DEKAT_LEBAR_PX: int = 150
 ## Koran terlipat di teras rumah dekat (AC-9): teras dekat ada di belakang titik pijak sprite rumahnya menurut Y-sort, jadi pembungkus Y-sort sprite terlipat diletakkan sekian piksel game di DEPAN titik pijak rumah supaya digambar sesudah sprite rumah.
 const RUTE_RUMAH_DEKAT_URUT_TERLIPAT_PX: int = 1
+
+## --- Komponen UI redesain bersama (run ui1-komponen-bengkel bagian A; docs/design/redesain/README.md 4, kanvas ui.css; usulan, dinilai lewat uji HP) ---
+## Tepi 9-slice bingkai tombol 12x16 (`ui_btn_*.png`): atas, bawah, dan samping, piksel game. Sama dengan `slice` di `docs/design/redesain/aset/meta.json` (urutan CSS atas/kanan/bawah/kiri = 6/4/6/4), dijaga `tools/tests_cek/uji_ui_redesain.py`.
+const UI_TOMBOL_SLICE_ATAS_PX: int = 6
+const UI_TOMBOL_SLICE_BAWAH_PX: int = 6
+const UI_TOMBOL_SLICE_SAMPING_PX: int = 4
+## Tepi 9-slice panel layar dan kartu 12x12 (`ui_panel_layar.png`, `ui_kartu_*.png`), piksel game.
+const UI_PANEL_SLICE_PX: int = 4
+## Tepi 9-slice chip 8x8 (`ui_chip_*.png`), piksel game.
+const UI_CHIP_SLICE_PX: int = 3
+## Wajah tombol utama dan biasa turun sekian piksel saat ditekan (teks ikut turun lewat margin isi; gambarnya `*_tekan`).
+const UI_TOMBOL_TEKAN_GESER_PX: int = 2
+## Tinggi tombol standar, lebar minimum (target sentuh, rule ui-scenes), dan lebar tombol aksi utama kanan bawah, piksel game.
+const UI_TOMBOL_TINGGI_PX: int = 42
+const UI_TOMBOL_LEBAR_MIN_PX: int = 84
+const UI_TOMBOL_LEBAR_UTAMA_PX: int = 140
+## Garis fokus tombol berada sekian piksel di luar tepi tombol (1 px jarak + 1 px garis; kanvas `outline-offset: 1px`).
+const UI_TOMBOL_FOKUS_JARAK_PX: int = 2
+## Isi sakelar: jarak tambahan kiri dan kanan di luar tepi 9-slice (CSS `padding: 0 4px 2px`).
+const UI_TOMBOL_SAKELAR_PAD_X_PX: int = 4
+## Tinggi chip kecil, normal, dan besar, serta jarak isi ke samping di luar tepi 9-slice, piksel game.
+const UI_CHIP_TINGGI_KECIL_PX: int = 14
+const UI_CHIP_TINGGI_PX: int = 18
+const UI_CHIP_TINGGI_BESAR_PX: int = 24
+const UI_CHIP_PAD_X_KECIL_PX: int = 1
+const UI_CHIP_PAD_X_PX: int = 2
+const UI_CHIP_PAD_X_BESAR_PX: int = 4
+## Kotak kondisi besar (kartu servis bengkel, `KotakKondisiBesar`): sisi kotak, jarak antar kotak, jarak kotak ketiga ke tanda "!", piksel game. HUD rute tetap memakai `KONDISI_HUD_KOTAK_PX`.
+const KONDISI_BESAR_KOTAK_PX: int = 8
+const KONDISI_BESAR_KOTAK_JARAK_PX: int = 2
+const KONDISI_BESAR_SERU_JARAK_PX: int = 2

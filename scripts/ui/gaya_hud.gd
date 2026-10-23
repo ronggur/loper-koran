@@ -7,6 +7,43 @@ extends RefCounted
 
 const TEKSTUR_PANEL_HUD: Texture2D = preload("res://assets/sprites/ui/ui_panel_hud_9slice.png")
 
+## Komponen redesain (run ui1-komponen-bengkel bagian A, usulan; docs/design/redesain/README.md 3 dan 4): bingkai 9-slice tombol, panel, kartu, chip, ikon 24, dan glif 12 yang terpasang,
+## kunci = nama berkas tanpa awalan `ui_` dan `.png`. Dimuat SEKALI di sini (bukan di `_draw`). Latar, sepeda, dan papan alat bengkel dimuat layar bengkel sendiri.
+const _TEKSTUR: Dictionary = {
+	"btn_utama": preload("res://assets/sprites/ui/ui_btn_utama.png"),
+	"btn_utama_tekan": preload("res://assets/sprites/ui/ui_btn_utama_tekan.png"),
+	"btn_biasa": preload("res://assets/sprites/ui/ui_btn_biasa.png"),
+	"btn_biasa_tekan": preload("res://assets/sprites/ui/ui_btn_biasa_tekan.png"),
+	"btn_sakelar_nyala": preload("res://assets/sprites/ui/ui_btn_sakelar_nyala.png"),
+	"btn_tenang": preload("res://assets/sprites/ui/ui_btn_tenang.png"),
+	"btn_tenang_tekan": preload("res://assets/sprites/ui/ui_btn_tenang_tekan.png"),
+	"btn_nonaktif": preload("res://assets/sprites/ui/ui_btn_nonaktif.png"),
+	"arsir_nonaktif": preload("res://assets/sprites/ui/ui_arsir_nonaktif.png"),
+	"panel_layar": preload("res://assets/sprites/ui/ui_panel_layar.png"),
+	"kartu_biasa": preload("res://assets/sprites/ui/ui_kartu_biasa.png"),
+	"kartu_menonjol": preload("res://assets/sprites/ui/ui_kartu_menonjol.png"),
+	"kartu_redup": preload("res://assets/sprites/ui/ui_kartu_redup.png"),
+	"chip_gelap": preload("res://assets/sprites/ui/ui_chip_gelap.png"),
+	"chip_ok": preload("res://assets/sprites/ui/ui_chip_ok.png"),
+	"chip_warn": preload("res://assets/sprites/ui/ui_chip_warn.png"),
+	"chip_netral": preload("res://assets/sprites/ui/ui_chip_netral.png"),
+	"chip_aksen": preload("res://assets/sprites/ui/ui_chip_aksen.png"),
+	"icon24_ban": preload("res://assets/sprites/ui/ui_icon24_ban.png"),
+	"icon24_rem": preload("res://assets/sprites/ui/ui_icon24_rem.png"),
+	"icon24_rantai": preload("res://assets/sprites/ui/ui_icon24_rantai.png"),
+	"glif_seru_warn": preload("res://assets/sprites/ui/ui_glif_seru_warn.png"),
+	"glif_centang_ok": preload("res://assets/sprites/ui/ui_glif_centang_ok.png"),
+	"glif_centang_teks2": preload("res://assets/sprites/ui/ui_glif_centang_teks2.png"),
+	"glif_kunci_terang": preload("res://assets/sprites/ui/ui_glif_kunci_terang.png"),
+	"glif_panah_gelap": preload("res://assets/sprites/ui/ui_glif_panah_gelap.png"),
+}
+## Variasi tema (`assets/ui/theme.tres`) teks tombol: SemiBold 10 untuk utama, biasa, sakelar; Regular 10 untuk tenang dan nonaktif.
+const VARIASI_TOMBOL_TEBAL: StringName = &"TombolPeran"
+const VARIASI_TOMBOL_TIPIS: StringName = &"TombolTipis"
+
+## Tekstur nonaktif yang tengahnya diganti ubin arsir 4x4 (dibangun sekali, lazy).
+static var _tekstur_nonaktif: Texture2D = null
+
 
 ## Kotak `StyleBoxFlat` berisi `isi`, garis luar 1 px `garis`, tanpa anti-alias, padding dari Config.
 static func kotak(isi: Color, garis: Color) -> StyleBoxFlat:
@@ -46,3 +83,156 @@ static func panel_hud(pad_x: int = Config.HUD_PANEL_PAD_X_PX) -> StyleBoxTexture
 	hasil.content_margin_top = float(Config.HUD_PANEL_PAD_Y_PX)
 	hasil.content_margin_bottom = float(Config.HUD_PANEL_PAD_Y_PX)
 	return hasil
+
+
+## Tekstur komponen terpasang menurut nama dasar (mis. `"btn_utama"`, `"icon24_ban"`, `"glif_seru_warn"`); null bila tidak ada.
+static func tekstur(nama: String) -> Texture2D:
+	return _TEKSTUR.get(nama, null)
+
+
+## Tombol aksi utama (`KomponenUi.Peran.UTAMA`): bingkai ACCENT, bibir 2 px, ditekan = wajah dan teks turun 2 px. Mengatur gaya semua keadaan, font, warna teks, dan `disabled = false`.
+static func tombol_utama(tombol: Button) -> void:
+	_terapkan_peran(tombol, KomponenUi.Peran.UTAMA, false)
+
+
+## Tombol aksi biasa (`KomponenUi.Peran.BIASA`): bingkai UI_PANEL_RAISED bersisi atas terang, ditekan = bingkai ACCENT dan wajah turun 2 px.
+static func tombol_biasa(tombol: Button) -> void:
+	_terapkan_peran(tombol, KomponenUi.Peran.BIASA, false)
+
+
+## Tombol sakelar (`KomponenUi.Peran.SAKELAR`): bingkai biasa saat mati, bingkai ACCENT saat `nyala`; isi diberi jarak samping tambahan untuk kenop atau teks nyala/mati buatan pemanggil.
+static func tombol_sakelar(tombol: Button, nyala: bool) -> void:
+	_terapkan_peran(tombol, KomponenUi.Peran.SAKELAR, nyala)
+
+
+## Tombol tenang (`KomponenUi.Peran.TENANG`): rata tanpa bibir, teks Regular TEXT_2 (Lewati, bahaya ringan); ditekan tidak bergeser.
+static func tombol_tenang(tombol: Button) -> void:
+	_terapkan_peran(tombol, KomponenUi.Peran.TENANG, false)
+
+
+## Tombol nonaktif: rata, tengah diarsir, teks Regular TEXT_2; mengatur `disabled = true`. Semua keadaan tampil nonaktif. Teks alasan ("Koin kurang") diberikan pemanggil lewat `KomponenUi.teks_tombol`.
+## Memanggil `tombol_utama`/`tombol_biasa`/... lagi memulihkan peran aktifnya.
+static func tombol_nonaktif(tombol: Button) -> void:
+	tombol.disabled = true
+	tombol.theme_type_variation = VARIASI_TOMBOL_TIPIS
+	var mati: StyleBoxTexture = _kotak_tombol(KomponenUi.Peran.BIASA, KomponenUi.KeadaanTombol.NONAKTIF, false)
+	for gaya: StringName in [&"normal", &"hover", &"pressed", &"hover_pressed", &"disabled"]:
+		tombol.add_theme_stylebox_override(gaya, mati)
+	tombol.add_theme_stylebox_override(&"focus", _kotak_fokus())
+	_warna_teks(tombol, Palette.TEXT_2, Palette.TEXT_2)
+
+
+## Kartu 9-slice menurut jenis (`KomponenUi.JenisKartu`); isi berjarak `UI_PANEL_SLICE_PX` ke semua sisi (pemanggil boleh menimpa `content_margin_*`).
+static func kartu(jenis: KomponenUi.JenisKartu) -> StyleBoxTexture:
+	return _panel_9slice(KomponenUi.nama_tekstur_kartu(jenis))
+
+
+static func kartu_biasa() -> StyleBoxTexture:
+	return kartu(KomponenUi.JenisKartu.BIASA)
+
+
+## Kartu butuh perhatian (garis dalam WARN); pasangkan dengan chip "!" + teks (`KomponenUi.chip`).
+static func kartu_menonjol() -> StyleBoxTexture:
+	return kartu(KomponenUi.JenisKartu.MENONJOL)
+
+
+## Kartu selesai atau sudah dimiliki: rata, tanpa garis luar gelap.
+static func kartu_redup() -> StyleBoxTexture:
+	return kartu(KomponenUi.JenisKartu.REDUP)
+
+
+## Panel layar penuh 9-slice.
+static func panel_layar() -> StyleBoxTexture:
+	return _panel_9slice("panel_layar")
+
+
+## Chip 9-slice untuk `status` (`KomponenUi.chip`) dan `ukuran`: tepi `UI_CHIP_SLICE_PX`, isi berjarak samping `KomponenUi.pad_x_chip`. Tinggi minimum (`KomponenUi.tinggi_chip`) diatur pemanggil lewat `custom_minimum_size`.
+static func chip(status: KomponenUi.StatusChip, ukuran: KomponenUi.UkuranChip = KomponenUi.UkuranChip.NORMAL) -> StyleBoxTexture:
+	var hasil: StyleBoxTexture = StyleBoxTexture.new()
+	hasil.texture = tekstur(KomponenUi.nama_tekstur_chip(KomponenUi.chip(status).gaya))
+	hasil.set_texture_margin_all(float(Config.UI_CHIP_SLICE_PX))
+	hasil.content_margin_left = float(Config.UI_CHIP_SLICE_PX + KomponenUi.pad_x_chip(ukuran))
+	hasil.content_margin_right = hasil.content_margin_left
+	hasil.content_margin_top = float(Config.UI_CHIP_SLICE_PX)
+	hasil.content_margin_bottom = float(Config.UI_CHIP_SLICE_PX)
+	return hasil
+
+
+static func _panel_9slice(nama: String) -> StyleBoxTexture:
+	var hasil: StyleBoxTexture = StyleBoxTexture.new()
+	hasil.texture = tekstur(nama)
+	hasil.set_texture_margin_all(float(Config.UI_PANEL_SLICE_PX))
+	hasil.set_content_margin_all(float(Config.UI_PANEL_SLICE_PX))
+	return hasil
+
+
+# Satu peran aktif: gaya normal/hover (sama, layar sentuh), pressed/hover_pressed, disabled, focus, warna teks, font, dan `disabled = false`.
+static func _terapkan_peran(tombol: Button, peran: KomponenUi.Peran, nyala: bool) -> void:
+	tombol.disabled = false
+	tombol.theme_type_variation = VARIASI_TOMBOL_TEBAL if KomponenUi.teks_tebal(peran, KomponenUi.KeadaanTombol.NORMAL) else VARIASI_TOMBOL_TIPIS
+	var normal: StyleBoxTexture = _kotak_tombol(peran, KomponenUi.KeadaanTombol.NORMAL, nyala)
+	var tekan: StyleBoxTexture = _kotak_tombol(peran, KomponenUi.KeadaanTombol.DITEKAN, nyala)
+	tombol.add_theme_stylebox_override(&"normal", normal)
+	tombol.add_theme_stylebox_override(&"hover", normal)
+	tombol.add_theme_stylebox_override(&"pressed", tekan)
+	tombol.add_theme_stylebox_override(&"hover_pressed", tekan)
+	tombol.add_theme_stylebox_override(&"disabled", _kotak_tombol(peran, KomponenUi.KeadaanTombol.NONAKTIF, nyala))
+	tombol.add_theme_stylebox_override(&"focus", _kotak_fokus())
+	_warna_teks(tombol, KomponenUi.warna_teks_tombol(peran, KomponenUi.KeadaanTombol.NORMAL), KomponenUi.warna_teks_tombol(peran, KomponenUi.KeadaanTombol.DITEKAN))
+	tombol.add_theme_color_override(&"font_disabled_color", KomponenUi.warna_teks_tombol(peran, KomponenUi.KeadaanTombol.NONAKTIF))
+
+
+static func _warna_teks(tombol: Button, normal: Color, tekan: Color) -> void:
+	tombol.add_theme_color_override(&"font_color", normal)
+	tombol.add_theme_color_override(&"font_hover_color", normal)
+	tombol.add_theme_color_override(&"font_focus_color", normal)
+	tombol.add_theme_color_override(&"font_pressed_color", tekan)
+	tombol.add_theme_color_override(&"font_hover_pressed_color", tekan)
+	tombol.add_theme_color_override(&"font_disabled_color", Palette.TEXT_2)
+
+
+# Bingkai 9-slice satu keadaan tombol. Tepi dari `Config.UI_TOMBOL_SLICE_*`; margin isi = tepi + geseran bibir (`KomponenUi.margin_isi_tombol`), sakelar + jarak samping.
+static func _kotak_tombol(peran: KomponenUi.Peran, keadaan: KomponenUi.KeadaanTombol, nyala: bool) -> StyleBoxTexture:
+	var hasil: StyleBoxTexture = StyleBoxTexture.new()
+	if keadaan == KomponenUi.KeadaanTombol.NONAKTIF:
+		hasil.texture = _tekstur_nonaktif_arsir()
+		hasil.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+		hasil.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+	else:
+		hasil.texture = tekstur(KomponenUi.nama_tekstur_tombol(peran, keadaan, nyala))
+	hasil.texture_margin_left = float(Config.UI_TOMBOL_SLICE_SAMPING_PX)
+	hasil.texture_margin_right = float(Config.UI_TOMBOL_SLICE_SAMPING_PX)
+	hasil.texture_margin_top = float(Config.UI_TOMBOL_SLICE_ATAS_PX)
+	hasil.texture_margin_bottom = float(Config.UI_TOMBOL_SLICE_BAWAH_PX)
+	var tambah: Vector2i = KomponenUi.margin_isi_tombol(peran, keadaan)
+	var pad_x: float = float(Config.UI_TOMBOL_SAKELAR_PAD_X_PX) if peran == KomponenUi.Peran.SAKELAR else 0.0
+	hasil.content_margin_left = float(Config.UI_TOMBOL_SLICE_SAMPING_PX) + pad_x
+	hasil.content_margin_right = hasil.content_margin_left
+	hasil.content_margin_top = float(Config.UI_TOMBOL_SLICE_ATAS_PX + tambah.x)
+	hasil.content_margin_bottom = float(Config.UI_TOMBOL_SLICE_BAWAH_PX + tambah.y)
+	return hasil
+
+
+# Fokus: garis ACCENT 1 px di luar tombol berjarak 1 px (kanvas: outline putus-putus; Godot tidak punya garis putus-putus, jadi lurus).
+static func _kotak_fokus() -> StyleBoxFlat:
+	var hasil: StyleBoxFlat = StyleBoxFlat.new()
+	hasil.draw_center = false
+	hasil.border_color = Palette.ACCENT
+	hasil.set_border_width_all(1)
+	hasil.set_expand_margin_all(float(Config.UI_TOMBOL_FOKUS_JARAK_PX))
+	hasil.anti_aliasing = false
+	return hasil
+
+
+# `ui_btn_nonaktif.png` dengan sel tengah 4x4 (di dalam tepi 9-slice) diganti ubin `ui_arsir_nonaktif.png`; dengan mode TILE tengah bingkai terarsir. Dibangun sekali.
+static func _tekstur_nonaktif_arsir() -> Texture2D:
+	if _tekstur_nonaktif != null:
+		return _tekstur_nonaktif
+	var dasar: Texture2D = tekstur("btn_nonaktif")
+	var gambar: Image = dasar.get_image()
+	var arsir: Image = tekstur("arsir_nonaktif").get_image()
+	gambar.convert(Image.FORMAT_RGBA8)
+	arsir.convert(Image.FORMAT_RGBA8)
+	gambar.blit_rect(arsir, Rect2i(Vector2i.ZERO, arsir.get_size()), Vector2i(Config.UI_TOMBOL_SLICE_SAMPING_PX, Config.UI_TOMBOL_SLICE_ATAS_PX))
+	_tekstur_nonaktif = ImageTexture.create_from_image(gambar)
+	return _tekstur_nonaktif
