@@ -217,6 +217,9 @@ func _initialize() -> void:
 	# Run fase6a2-reputasi-pelanggan bagian B: potongan koran terbuang di scene rute, layar hasil, HUD, dan alur hari.
 	var scene_potongan: TesPotonganScene = TesPotonganScene.new(check, _judul, self)
 	await scene_potongan.jalankan()
+	# Run fase6a2-reputasi-pelanggan bagian C: penanda reputasi HUD, kolom kanan layar hasil (empat ukuran), integrasi RuteMain, denting milestone, tiga alur hari.
+	var scene_reputasi: TesReputasiScene = TesReputasiScene.new(check, _judul, self)
+	await scene_reputasi.jalankan()
 	var tata_letak: TesTataLetak = TesTataLetak.new(check, _judul, self)
 	await tata_letak.jalankan()
 	var bunyi: TesBunyi = TesBunyi.new(check, _judul, self)

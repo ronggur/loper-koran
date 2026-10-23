@@ -1,5 +1,5 @@
 extends SceneTree
-## Probe reputasi, pelanggan, dan milestone di jendela asli, non-headless (AC-14 dan AC-16 run fase6a2-reputasi-pelanggan bagian C): memotret HUD rute dengan penanda reputasi (kanan, kidal, inset aman,
+## Probe reputasi, pelanggan, dan milestone di jendela asli, non-headless (AC-14 dan AC-16 run fase6a2-reputasi-pelanggan bagian C): memotret HUD rute dengan penanda reputasi (samping, kidal, inset aman,
 ## koin bersih negatif dan umpan "-5" dari lemparan nyata) dan layar hasil (hari biasa, hari minus karena potongan, pelanggan berhenti/kembali/setia, milestone baru tercapai, semua emas, kasus terpadat:
 ## potongan + rekap misi + tiga baris kondisi + saldo dijepit + reputasi + empat baris pelanggan + milestone + tiga tingkat baru + tenggat lewat, dan hasil dari rute nyata dengan state save).
 ## Mencetak data tiap keadaan dan jumlah keadaan yang tidak sesuai (penanda reputasi di luar layar atau menumpuk elemen HUD lain, panel hasil atau isinya keluar layar atau zona aman, tombol < 42 px,
@@ -205,7 +205,7 @@ func _hasil_dari_rute() -> void:
 	await _foto("hasil_dari_rute")
 	var rep: ReputationManager.Hasil = _akar.hasil_reputasi()
 	var ms: MilestoneTracker.Ringkasan = _akar.hasil_milestone()
-	_harap("rute nyata: hasil reputasi dan milestone terisi, kolom kanan tampil", rep != null and ms != null and _akar.layar_hasil().kanan_tampil(), "")
+	_harap("rute nyata: hasil reputasi dan milestone terisi, kolom samping tampil", rep != null and ms != null and _akar.layar_hasil().kanan_tampil(), "")
 	print("hasil dari rute: reputasi %s, pelanggan %s, target %s, baru %s" % [_akar.layar_hasil().teks_reputasi(), _akar.layar_hasil().teks_pelanggan(), _akar.layar_hasil().teks_target(), _akar.layar_hasil().teks_baru()])
 	_cek_hasil("hasil_dari_rute", _akar.layar_hasil(), Vector4.ZERO)
 	_akar.queue_free()
@@ -292,7 +292,7 @@ func _cek_hud(keadaan: String) -> void:
 	_gagal += salah
 
 
-## Panel hasil dan isinya di dalam layar dikurangi `inset` (kiri, atas, kanan, bawah), tombol >= 42 px dan terlihat penuh, label dan isi kolom kanan di dalam panel dan tidak menumpuk tombol atau satu sama lain.
+## Panel hasil dan isinya di dalam layar dikurangi `inset` (utama, atas, samping, bawah), tombol >= 42 px dan terlihat penuh, label dan isi kolom samping di dalam panel dan tidak menumpuk tombol atau satu sama lain.
 func _cek_hasil(keadaan: String, hasil: LayarHasil, inset: Vector4) -> void:
 	var layar: Rect2 = Rect2(Vector2(inset.x, inset.y), root.get_visible_rect().size - Vector2(inset.x + inset.z, inset.y + inset.w))
 	var salah: int = 0
@@ -314,10 +314,10 @@ func _cek_hasil(keadaan: String, hasil: LayarHasil, inset: Vector4) -> void:
 			print("TIDAK SESUAI [%s]: isi %s menumpuk tombol %s" % [keadaan, r, tombol])
 			salah += 1
 	if hasil.kanan_tampil():
-		var kanan: Rect2 = hasil.rect_panel_kanan()
+		var samping: Rect2 = hasil.rect_panel_kanan()
 		for r: Rect2 in hasil.rect_isi_kanan():
-			if not kanan.encloses(r):
-				print("TIDAK SESUAI [%s]: isi kolom kanan %s keluar dari panel kanan %s" % [keadaan, r, kanan])
+			if not samping.encloses(r):
+				print("TIDAK SESUAI [%s]: isi kolom samping %s keluar dari panel samping %s" % [keadaan, r, samping])
 				salah += 1
 	print("hasil [%s]: panel %s, tombol %s (%s), reputasi %s, pelanggan %s, target %s, baru %s, %d tidak sesuai" % [keadaan, panel, tombol, hasil.teks_tombol(), hasil.teks_reputasi(), hasil.teks_pelanggan(), hasil.teks_target(), hasil.teks_baru(), salah])
 	print("teks layar hasil: %s" % [" | ".join(hasil.teks_tampil())])
