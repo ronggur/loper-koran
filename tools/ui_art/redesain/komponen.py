@@ -1,9 +1,9 @@
 """Komponen UI redesain (usulan 2026-10-23, kanvas Claude Design "UI Loper Koran — Redesain").
 
 Merender semua aset gambar baru di kanvas sebagai PNG 1x: bingkai 9-slice tombol/panel/kartu/chip/struk
-(versi gelap dan versi koran), tile isi, ikon 24x24, lencana 32x32, glif 12x12 satu warna, sepeda loper
-tampak samping, papan alat bengkel, dan foto berita koran. Palet: token DESIGN_SPEC 1.1 + palet induk
-ART_DIRECTION 2.4, tanpa anti-aliasing. Bentuk digambar sebagai mask (supersampling lalu ambang 50 %),
+(versi gelap dan versi koran), tile isi, ikon 24x24, lencana 32x32, glif 12x12 satu warna, papan alat
+bengkel, dan foto berita koran (sepeda bengkel diambil dari gambar full body, lihat sepeda_fullbody.py).
+Palet: token DESIGN_SPEC 1.1 + palet induk ART_DIRECTION 2.4, tanpa anti-aliasing. Bentuk digambar sebagai mask (supersampling lalu ambang 50 %),
 diberi tiga nada dengan cahaya dari kiri atas, lalu garis luar 1 px #0E0A1C.
 
 Belum ada yang disalin ke assets/: porting ke Godot dikerjakan bertahap (docs/design/redesain/README.md).
@@ -452,79 +452,6 @@ def gen_nine():
     im.save(OUT / 'struk_takik.png'); META['struk_takik'] = dict(size=[6, 10], note='Takik tiket di garis sobek (dicerminkan untuk sisi kanan)')
 
 
-# ------------------------------------------------------------------ sepeda tampak samping
-def sepeda():
-    W, H = 124, 72
-    k = Kanvas(W, H)
-    RW, FW, BB = (28, 49), (96, 49), (58, 52)
-    tire = lambda c: annulus(k, c[0], c[1], 18.2, 21.4)
-    rim = lambda c: annulus(k, c[0], c[1], 16.6, 18.2)
-    for c in (RW,):
-        k.part(tire(c), LOGAM_G); k.part(rim(c), LOGAM)
-    k.part(k.mask(lambda d, ss: d.arc([(RW[0] - 23.6) * ss, (RW[1] - 23.6) * ss, (RW[0] + 23.6) * ss, (RW[1] + 23.6) * ss], 230, 330, fill=255, width=int(1.8 * ss))), HIJAU)
-    # rantai dan gir belakang (di belakang rangka)
-    k.part(k.mask(lambda d, ss: C(d, ss, RW[0], RW[1], 3.2)), LOGAM)
-    chain = k.mask(lambda d, ss: (L(d, ss, [(RW[0], RW[1] - 3.4), (BB[0], BB[1] - 6.4)], 1.4), L(d, ss, [(RW[0], RW[1] + 3.2), (BB[0], BB[1] + 6.4)], 1.4)))
-    k.part(chain, [LOGAM_G[0], LOGAM_G[1], LOGAM_G[2]], outline=False)
-    # tas pelana + koran (depan roda belakang)
-    k.part(k.mask(lambda d, ss: L(d, ss, [(10, 26), (46, 26)], 2)), LOGAM)                 # rak
-    k.part(k.mask(lambda d, ss: L(d, ss, [(16, 26), (RW[0], RW[1])], 1.6)), LOGAM)
-    for x, y0, h, tone in ((16, 13, 13, KREM), (22, 11, 15, LOGAM), (28, 14, 12, KREM)):
-        k.part(k.mask(lambda d, ss, x=x, y0=y0, h=h: R(d, ss, x, y0, x + 5, y0 + h, 1.5)), tone)
-    k.part(k.mask(lambda d, ss: R(d, ss, 9, 24, 38, 46, 2)), BATA)                         # tas
-    k.part(k.mask(lambda d, ss: R(d, ss, 9, 24, 38, 31, 2)), [BATA[0], BATA[0], BATA[2]])  # tutup tas
-    k.part(k.mask(lambda d, ss: R(d, ss, 22, 28, 25, 39, 0)), LOGAM_G)                       # tali
-    k.part(k.mask(lambda d, ss: R(d, ss, 21, 34, 26, 37, 0)), LOGAM)                         # gesper
-    # rangka hijau
-    G = HIJAU
-    tubes = [([BB, (52, 22)], 2.8), ([(52, 27), (85, 25)], 2.6), ([BB, (87, 34)], 3.0), ([BB, RW], 2.2), ([(52, 27), RW], 2.0)]
-    for pts, w in tubes:
-        k.part(k.mask(lambda d, ss, pts=pts, w=w: L(d, ss, pts, w)), G)
-    k.part(k.mask(lambda d, ss: L(d, ss, [(84, 22), (88, 35)], 3.4)), G)                   # head tube
-    k.part(k.mask(lambda d, ss: L(d, ss, [(88, 34), FW], 2.4)), G)                          # garpu
-    # sadel dan tiang
-    k.part(k.mask(lambda d, ss: L(d, ss, [(52, 23), (51, 18)], 1.8)), LOGAM)
-    k.part(k.mask(lambda d, ss: P(d, ss, [(42, 15.5), (58, 14.5), (60, 17.5), (53, 20), (44, 19)])), KAYU)
-    # gir depan + engkol + pedal
-    k.part(annulus(k, BB[0], BB[1], 2, 6.8), LOGAM)
-    k.part(k.mask(lambda d, ss: L(d, ss, [BB, (63, 60)], 2)), LOGAM)
-    k.part(k.mask(lambda d, ss: R(d, ss, 60, 59.5, 67, 62, 0.5)), LOGAM_G)
-    k.part(k.mask(lambda d, ss: L(d, ss, [(56, 54), (50, 65)], 1.6)), LOGAM_G)             # standar
-    # roda depan
-    k.part(tire(FW), LOGAM_G); k.part(rim(FW), LOGAM)
-    k.part(k.mask(lambda d, ss: L(d, ss, [(88, 34), FW], 2.4)), G)
-    # spatbor
-    for c, a0, a1 in ((FW, 215, 330),):
-        k.part(k.mask(lambda d, ss, c=c, a0=a0, a1=a1: d.arc([(c[0] - 23.6) * ss, (c[1] - 23.6) * ss, (c[0] + 23.6) * ss, (c[1] + 23.6) * ss], a0, a1, fill=255, width=int(1.8 * ss))), G)
-    # setang, pegangan, tuas rem, bel, rem depan
-    k.part(k.mask(lambda d, ss: L(d, ss, [(85, 23), (83, 14)], 2.2)), LOGAM)
-    k.part(k.mask(lambda d, ss: L(d, ss, [(83, 14), (77, 12.5), (72, 14)], 2)), LOGAM)
-    k.part(k.mask(lambda d, ss: R(d, ss, 68.5, 12.5, 74, 16, 1.2)), LOGAM_G)
-    k.part(k.mask(lambda d, ss: L(d, ss, [(78, 15), (72.5, 18.5)], 1.4)), LOGAM)
-    k.part(k.mask(lambda d, ss: C(d, ss, 80, 11, 1.8)), HANGAT)
-    k.part(k.mask(lambda d, ss: P(d, ss, [(88, 26), (93, 26.2), (94, 29.5), (87.5, 29.5)])), LOGAM)  # kaliper rem depan
-    k.outline()
-    # jari-jari tanpa garis luar
-    for c in (RW, FW):
-        for i in range(12):
-            a = math.radians(i * 30 + 8)
-            for t in range(3, 17):
-                p = (int(round(c[0] - .5 + t * math.cos(a))), int(round(c[1] - .5 + t * math.sin(a))))
-                if p not in k.px:
-                    k.put(*p, LOGAM[2])
-        for p in k.mask(lambda d, ss, c=c: C(d, ss, c[0], c[1], 2)):
-            k.put(*p, LOGAM[0])
-    # kabel rem depan
-    for p in k.mask(lambda d, ss: L(d, ss, [(76, 16.5), (82, 21), (88, 26)], 1)):
-        if p not in k.px:
-            k.put(*p, LOGAM_G[1])
-    im = k.image()
-    im.save(OUT / 'sepeda_samping.png')
-    titik = {'ban_belakang': [RW[0] - 21, RW[1]], 'ban_depan': [FW[0] + 21, FW[1]], 'rem': [91, 27], 'rantai': [42, 49]}
-    META['sepeda_samping'] = dict(size=[W, H], titik=titik, note='Sepeda loper tampak samping, hadap kanan, cahaya kiri atas. Titik tandai: ban, rem, rantai')
-    return titik
-
-
 # ------------------------------------------------------------------ papan alat bengkel
 def papan_alat(W=360, H=104):
     k = Kanvas(W, H)
@@ -658,7 +585,7 @@ gs.save(OUT / 'glif12.png')
 META['glif12'] = dict(size=list(gs.size), kolom=names, baris=[n for n, _ in GLIF_WARNA], note='Glif satu warna 12x12; di Godot satu PNG putih + modulate')
 
 gen_nine()
-sepeda(); papan_alat(); foto_jalan(); foto_lampu()
+papan_alat(); foto_jalan(); foto_lampu()
 (OUT / 'meta.json').write_text(json.dumps(META, indent=1, sort_keys=True) + '\n')
 
 
@@ -683,11 +610,11 @@ lembar('lembar_9slice_x6.png', [buka(n) for n in ('btn_utama', 'btn_utama_tekan'
        'chip_gelap', 'chip_ok', 'chip_warn', 'chip_netral', 'chip_aksen', 'koran_kotak', 'koran_btn_tinta', 'koran_btn_tinta_tekan',
        'koran_btn_tipis', 'koran_btn_terpilih', 'struk', 'struk_takik')], 6)
 lembar('lembar_ikon_x4.png', [buka('ikon24'), buka('lencana32'), buka('glif12')], 4)
-lembar('lembar_sepeda_x3.png', [buka('papan_alat'), buka('sepeda_samping'), buka('foto_jalan'), buka('foto_lampu')], 3)
+lembar('lembar_papan_foto_x3.png', [buka('papan_alat'), buka('foto_jalan'), buka('foto_lampu')], 3)
 
+BERKAS = sorted([f'{n}.png' for n in META] + ['meta.json', 'lembar_9slice_x6.png', 'lembar_ikon_x4.png', 'lembar_papan_foto_x3.png'])
 if ARGS.mock:
     MOCK.mkdir(parents=True, exist_ok=True)
-    for p in sorted(OUT.iterdir()):
-        if p.suffix in ('.png', '.json'):
-            shutil.copyfile(p, MOCK / p.name)
+    for n in BERKAS:
+        shutil.copyfile(OUT / n, MOCK / n)
 print('ok', len(META), 'aset ->', OUT, '(+ docs)' if ARGS.mock else '')

@@ -9,6 +9,9 @@
 5. Latar bengkel (`latar_bengkel.py`, langkah numerik bisa berbeda antar-mesin, jadi yang diuji sifatnya):
    640x360 dan 800x360 opak, bagian tengah versi 800 = versi 640, pratinjau x3 = versi 800 diperbesar tanpa penghalusan,
    paling banyak 40 warna, dan tidak ada piksel hijau daun di tiga kotak tanaman yang dihapus.
+6. Sepeda dari gambar full body (`sepeda_fullbody.py`): deterministik, docs = keluaran skrip, semua warna dari palet
+   gambar full body, tidak ada warna kulit/kemeja/celana di bekas tempat tokoh, versi kecil = setengah ukuran versi besar,
+   dan titik penanda kondisi jatuh di piksel sepeda yang opak.
 
 Butuh pillow dan numpy; bila tidak ada, uji berhenti dengan exit code 2.
 
@@ -34,6 +37,12 @@ except ImportError:
 FOLDER = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(FOLDER, '..', '..'))
 SKRIP = os.path.join(ROOT, 'tools', 'ui_art', 'redesain', 'komponen.py')
+SKRIP_SEPEDA = os.path.join(ROOT, 'tools', 'ui_art', 'redesain', 'sepeda_fullbody.py')
+FULLBODY = os.path.join(ROOT, 'docs', 'design', 'character', 'loper_agen', 'loper_agen_fullbody.png')
+BERKAS_SEPEDA = ['sepeda.json', 'sepeda_besar.png', 'sepeda_besar_x3.png', 'sepeda_kecil.png']
+# warna tokoh di gambar full body (kulit, kemeja, celana) yang tidak boleh tersisa di bekas tempat tokoh
+WARNA_TOKOH = [(239, 164, 98), (220, 118, 69), (199, 103, 61), (240, 165, 99), (132, 166, 186), (110, 138, 170),
+               (101, 121, 158), (127, 158, 182), (44, 48, 79), (58, 66, 94), (84, 96, 142), (36, 34, 61)]
 DOCS_ASET = os.path.join(ROOT, 'docs', 'design', 'redesain', 'aset')
 DOCS_LATAR = os.path.join(ROOT, 'docs', 'design', 'redesain', 'latar_bengkel')
 GPL = os.path.join(ROOT, 'assets', 'palette', 'loper_master.gpl')
@@ -54,8 +63,8 @@ def cek(syarat, pesan):
         print('  GAGAL', pesan)
 
 
-def render(out):
-    subprocess.run([sys.executable, SKRIP, '--out', out], check=True, stdout=subprocess.DEVNULL)
+def render(out, skrip=SKRIP):
+    subprocess.run([sys.executable, skrip, '--out', out], check=True, stdout=subprocess.DEVNULL)
     return {n: open(os.path.join(out, n), 'rb').read() for n in sorted(os.listdir(out))}
 
 
@@ -76,7 +85,7 @@ with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
     cek(ra.keys() == rb.keys() and all(ra[n] == rb[n] for n in ra), f'{len(ra)} berkas identik di dua kali jalan')
 
     print('2. docs/design/redesain/aset = keluaran skrip')
-    docs = sorted(n for n in os.listdir(DOCS_ASET) if n.endswith(('.png', '.json')))
+    docs = sorted(n for n in os.listdir(DOCS_ASET) if n.endswith(('.png', '.json')) and n not in BERKAS_SEPEDA)
     cek(docs == sorted(ra.keys()), f'daftar berkas sama ({len(docs)})')
     beda = []
     for n in docs:
@@ -123,7 +132,7 @@ with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
     cek(uk('glif12') == (12 * len(g['kolom']), 12 * len(g['baris'])), 'glif12 = 12 px per kolom dan per warna')
     cek(uk('ikon24') == (24 * len(meta['ikon24']['urutan']), 24), 'ikon24 = 24 px per ikon')
     cek(uk('lencana32') == (32 * len(meta['lencana32']['urutan']), 32), 'lencana32 = 32 px per lencana')
-    cek(uk('sepeda_samping') == (124, 72), 'sepeda tampak samping 124x72')
+    cek(uk('papan_alat')[1] == 104, 'papan alat setinggi 104')
 
 print('5. latar bengkel')
 l640 = np.asarray(Image.open(os.path.join(DOCS_LATAR, 'bengkel_latar_640.png')).convert('RGBA'))
@@ -140,6 +149,34 @@ rgb = l640[..., :3].astype(int)
 hijau = (rgb[..., 1] >= rgb[..., 0] + 5) & (rgb[..., 1] >= rgb[..., 2] + 12) & (rgb[..., 1] < 80)   # daun redup; abu kehijauan ambang (G 91) tidak terhitung
 sisa = {k: int(hijau[y0:y1, x0:x1].sum()) for k, (x0, y0, x1, y1) in TANAMAN.items()}
 cek(all(v == 0 for v in sisa.values()), f'tanpa hijau daun di kotak tanaman {sisa}')
+
+print('6. sepeda dari gambar full body')
+with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
+    ra, rb = render(a, SKRIP_SEPEDA), render(b, SKRIP_SEPEDA)
+    cek(ra.keys() == rb.keys() and all(ra[n] == rb[n] for n in ra), f'{len(ra)} berkas identik di dua kali jalan')
+    cek(sorted(ra.keys()) == BERKAS_SEPEDA, 'berkas keluaran: ' + ', '.join(sorted(ra.keys())))
+    beda = []
+    for n in BERKAS_SEPEDA:
+        if n.endswith('.json'):
+            if json.load(open(os.path.join(DOCS_ASET, n))) != json.loads(ra[n]):
+                beda.append(n)
+        elif Image.open(os.path.join(DOCS_ASET, n)).convert('RGBA').tobytes() != Image.open(os.path.join(a, n)).convert('RGBA').tobytes():
+            beda.append(n)
+    cek(not beda, 'docs/design/redesain/aset = keluaran skrip' + (f' (beda: {beda})' if beda else ''))
+besar = np.asarray(Image.open(os.path.join(DOCS_ASET, 'sepeda_besar.png')).convert('RGBA'))
+kecil = np.asarray(Image.open(os.path.join(DOCS_ASET, 'sepeda_kecil.png')).convert('RGBA'))
+meta = json.load(open(os.path.join(DOCS_ASET, 'sepeda.json')))
+fb = np.asarray(Image.open(FULLBODY).convert('RGBA'))
+palet_fb = {tuple(int(v) for v in p) for p in fb.reshape(-1, 4) if p[3] > 0}
+warna = {tuple(int(v) for v in p) for p in besar.reshape(-1, 4) if p[3] > 0}
+cek(warna <= palet_fb, f'{len(warna)} warna, semua dari palet gambar full body')
+x0, y0 = meta['potong_dari']
+bekas = besar[max(0, 108 - y0):250 - y0, 60 - x0:170 - x0]
+sisa = [c for c in WARNA_TOKOH if ((bekas[..., :3] == c).all(-1) & (bekas[..., 3] == 255)).any()]
+cek(not sisa, 'tanpa warna kulit/kemeja/celana di bekas tempat tokoh' + (f' (sisa: {sisa})' if sisa else ''))
+cek(kecil.shape[1] == (besar.shape[1] + 1) // 2 and kecil.shape[0] == (besar.shape[0] + 1) // 2, f'kecil {kecil.shape[1]}x{kecil.shape[0]} = setengah besar')
+titik_ok = all(kecil[y, x, 3] == 255 for x, y in meta['titik_kecil'].values())
+cek(titik_ok, 'titik penanda ban/rem/rantai di piksel sepeda opak')
 
 print()
 print('LOLOS' if not gagal else f'GAGAL: {gagal}')

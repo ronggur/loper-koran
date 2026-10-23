@@ -7,6 +7,7 @@ Hasil prompt [`../PROMPT_REDESAIN_UI.md`](../PROMPT_REDESAIN_UI.md) yang dijalan
 | Path | Isi | Dibuat oleh |
 |---|---|---|
 | `aset/` | Semua gambar baru di kanvas sebagai PNG 1×, plus `meta.json` (ukuran, slice, catatan) dan tiga lembar pratinjau (`lembar_*`) | `python3 tools/ui_art/redesain/komponen.py --mock` |
+| `aset/sepeda_*` | Sepeda panggung bengkel: `sepeda_besar.png` 232×155, `sepeda_kecil.png` 116×78 (dipakai di kanvas), pratinjau ×3, dan `sepeda.json` (ukuran, titik penanda ban, rem, rantai) | `python3 tools/ui_art/redesain/sepeda_fullbody.py --mock` (bagian 5b) |
 | `latar_bengkel/` | Latar layar bengkel pixel art 640×360 dan 800×360, pratinjau ×3, dan ilustrasi sumbernya | `python3 tools/ui_art/redesain/latar_bengkel.py --mock` (bagian 5) |
 | `kanvas/` | Sumber kanvas: `canvas.json` (tata letak 38 papan di enam halaman), satu `*.dc.html` per papan, dan `ui.css` (kelas komponen bersama) | Ditulis di kanvas, disalin apa adanya sebagai acuan angka |
 
@@ -32,7 +33,7 @@ Angka gameplay di papan (harga servis selain 105, skor, nama milestone "Pelangga
 ## 3. Keputusan desain (usulan, menunggu penilaian pemilik)
 
 1. **Bengkel tata C**: sepeda dan tiga baris servis di satu panel kiri, upgrade di kolom kanan. Tata A (sepeda di tengah) memaksa deskripsi upgrade terpotong satu baris di lebar 640; tata B menyembunyikan upgrade di balik tab.
-2. **Kondisi terbaca dari sepeda**: chip "! Ban" atau "Rantai aus" muncul di bagian sepeda yang bermasalah (titik dari `meta.json`, `sepeda_samping.titik`); sepeda baik tampil bersih tanpa penanda.
+2. **Kondisi terbaca dari sepeda**: chip "! Ban" atau "Rantai aus" muncul di bagian sepeda yang bermasalah (titik dari `aset/sepeda.json`, `titik_kecil`); sepeda baik tampil bersih tanpa penanda.
 3. **Harga selalu chip di sebelah tombolnya**; komponen PERLU SERVIS memakai kartu bergaris WARN, yang Baik atau Dimiliki memakai kartu redup.
 4. **Satu bahasa tombol untuk semua layar**: empat peran (utama, biasa, sakelar, tenang); sisi atas terang dan bibir bawah 2 px, ditekan = wajah turun 2 px; nonaktif rata, diarsir, dan teksnya berganti alasan (terbaca tanpa warna).
 5. **Aksi utama 140×42 selalu di kanan bawah** (Berangkat, Ke bengkel, Hari berikutnya).
@@ -72,6 +73,14 @@ Konversi mengikuti cara gambar skala besar (`konversi2`, ART_DIRECTION 3.5): ska
 
 k-means dan inpaint memakai pustaka numerik, jadi menjalankan ulang skrip di mesin lain bisa berbeda beberapa piksel. Berkas di folder ini adalah keluaran resmi; uji memeriksa sifatnya, bukan kecocokan piksel.
 
+## 5b. Sepeda bengkel
+
+Sepeda di panggung bengkel diambil dari gambar full body pemain (`docs/design/character/loper_agen/loper_agen_fullbody.png`, sama dengan artboard "Gambar AI baru jadi pixel art · versi 5" di artefak Design "Karakter Loper Koran"), atas permintaan pemilik 2026-10-23. Skrip `tools/ui_art/redesain/sepeda_fullbody.py` membuang tokoh (warna tubuh, garis luar gelap di sekitarnya, sepatu, kunci, bayangan lama), lalu menggambar ulang bagian sepeda yang tadinya tertutup tubuh hanya di piksel yang kosong: roda belakang dari profil elips radial dengan jari-jari tiap 30°, tabung rangka step-through, tabung sadel, sadel, gir dan engkol. Semua warna diambil dari palet gambar full body (diuji), garis luar `#1B1226` seperti gambar skala besar. Bayangan baru elips datar.
+
+`sepeda_besar.png` (232×155) adalah potongan 1×; `sepeda_kecil.png` (116×78) dibuat dengan blok 2×2 (blok penuh = warna terbanyak, garis tipis dan jari-jari = warna paling terang, garis luar hanya di sekeliling blok penuh) dan dipakai di kanvas, dekat ukuran sepeda prosedural lama 124×72. Titik penanda kondisi di `sepeda.json` (`titik_kecil`: ban, rem, rantai). Keluaran deterministik (tanpa pustaka acak), jadi uji memeriksa kecocokan piksel.
+
+Yang masih terlihat bila diamati: beberapa piksel krem dan hijau sisa di dekat tabung, dan setang di versi kecil agak menggumpal. Kepadatan detailnya juga lebih tinggi dari ikon 24 di sebelahnya; dinilai di HP.
+
 ## 6. Urutan porting yang disarankan
 
 1. **Komponen**: renderer `tools/ui_art/redesain/komponen.py` dipindah ke alur `--salin` ke `assets/sprites/ui/`, bentuk dipasang di `assets/ui/theme.tres` dan `scripts/ui/gaya_hud.gd`; tombol polos di semua layar diganti sekaligus.
@@ -94,9 +103,9 @@ k-means dan inpaint memakai pustaka numerik, jadi menjalankan ulang skrip di mes
 | `/_blob/98684303037eba551a7f7796438e9a19`, `df48d4009ee5bbb88103f90cb3703898`, `e830964809efbba3c566642bd9bdb0a0`, `87dc67e5338052466bc1aac551111379`, `81d789adb2123fb01971957f3f73f0fc` | `koran_kotak`, `koran_btn_tinta`, `koran_btn_tinta_tekan`, `koran_btn_tipis`, `koran_btn_terpilih` |
 | `/_blob/6ff6449167533e37b1201340a06e5e4e`, `2f6d4018a9ca280cd6dbf775e4ec204c`, `afbc131fc226ae494a5183644dccca52`, `c493d6bcb490bfaa6028c5c5ec03fd70` | `struk`, `struk_takik`, `arsir_nonaktif`, `kertas_tile` |
 | `/_blob/372c7f38efe88500b9954cf865bfb34b`, `a8fc11bcff0402de83219ac569df5491`, `6331f06c70ca2aa3a6a6e552dfe9ad79` | `ikon24`, `lencana32`, `glif12` |
-| `/_blob/af3437483605c4f53214bb9555dbab9e`, `7cb89d9a8ad08057e730fa7585a0ad93`, `7474ef878735646d976d01349198b272`, `a31678716a113eab1149137657ce2e0a` | `sepeda_samping`, `papan_alat`, `foto_jalan`, `foto_lampu` |
+| `/_blob/0351d78ef85ba2fd0e7d4b9da4e2e00c`, `7cb89d9a8ad08057e730fa7585a0ad93`, `7474ef878735646d976d01349198b272`, `a31678716a113eab1149137657ce2e0a` | `sepeda_kecil`, `papan_alat`, `foto_jalan`, `foto_lampu` |
 | `/_blob/0394a12fbc917b33a44355e7ebdde963` | `latar_bengkel/bengkel_latar_800.png` |
 | `/_blob/f69c513708dab5417f72e6f09771d7b4` | Tangkapan layar jalan run 5B diperkecil ke 640×360 (`docs/loop/20261021-fase5b-tembok-dekor/shots/iter1/1920x1080_dekat_dekor_jalur_utama.png`), latar papan Jeda, Tutorial, Banner, HUD |
 | `/_blob/1b8c69138f32cb9445bfef455e4dad11`, `e03f1bcfd5e463815d1be2eab707a584`, `8accfd5abc85c093f7ac098be585e921`, `972e215ef8cce3d49f3b1dbb217faafd`, `ae731af7a3e15ce2c89612c2e528318f`, `95fa34e99a2063540cf39d946e534094`, `97b23399af47af9a6ee68826f41c12bb` | `assets/sprites/ui/ui_icon_{koin,reputasi,ban,rem,rantai,misi_kucing}.png`, `ui_bel_tombol.png` (yang sudah ada) |
 
-Unggahan lama yang tidak dirujuk lagi: `f5c80e40e3992d10089aad6bc5490d1b` (`ui.css` versi pertama, teks tombol 16 px karena `font: inherit`), `69ef450186d7982468ce4c6f54fe2fa0` (latar bengkel prosedural sebelum latar konversi), `81d52c510b5d1bc715675a17de150433` (papan alat 236 lebar).
+Unggahan lama yang tidak dirujuk lagi: `f5c80e40e3992d10089aad6bc5490d1b` (`ui.css` versi pertama, teks tombol 16 px karena `font: inherit`), `69ef450186d7982468ce4c6f54fe2fa0` (latar bengkel prosedural sebelum latar konversi), `81d52c510b5d1bc715675a17de150433` (papan alat 236 lebar), `af3437483605c4f53214bb9555dbab9e` (sepeda tampak samping prosedural 124×72 sebelum sepeda dari gambar full body).
