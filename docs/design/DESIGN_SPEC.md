@@ -14,6 +14,7 @@ Spesifikasi visual untuk mengimplementasikan HUD dan layar game di Godot. Pasang
 | `design/character/loper_agen/` | Sprite pemain produksi untuk Godot | Lihat `ART_DIRECTION.md` 3 |
 | `design/bel/` | Tombol bel, efek "kring", ikon "!" (usulan) | Bagian 3.8 |
 | `design/hud/` | Pratinjau ikon HUD, penanda radar, contoh radar di layar (usulan); PNG 1× di `assets/sprites/ui/` | Bagian 1.3, 3.3, 3.4 |
+| `design/redesain/` | Redesain UI layar penuh dari kanvas Claude Design (usulan 2026-10-23): aset komponen 1×, latar bengkel, sumber kanvas, keputusan dan urutan porting; prompt di `design/PROMPT_REDESAIN_UI.md` | Bagian 4 (bengkel, koran, hasil, jeda) dan bahasa bentuk komponen |
 
 **Skala.** Kanvas dasar game tingginya 360 px dengan lebar 640–800 px tergantung rasio layar (ART_DIRECTION 7). **Semua angka di dokumen ini dalam piksel dasar (kanvas 800×360)**, kecuali ditulis lain. Mock digambar di 1600×720, jadi angka di source HTML dibagi 2. Di HP 1080p pembesarannya ×3.
 
@@ -270,6 +271,8 @@ Status: ⬜ belum · 🟡 sketsa · ✅ disetujui
 | Jeda | Fase 1 | 🟡 | Lanjut, pengaturan, keluar ke menu. Game benar-benar berhenti. **Versi sementara (usulan, run fase1b-umpan-balik 2026-10-14):** `scenes/ui/layar_jeda.tscn`, lapisan gelap `HUD_PANEL` penuh layar di atas jalan dan HUD, judul "JEDA" (`JudulLayar`, `TEXT`), tombol "Lanjut" (tinggi 42 px game, gaya tombol HUD). Dibuka oleh tombol jeda, app ke background atau kehilangan fokus, dan back Android; ditutup hanya oleh "Lanjut" atau back (tanpa lanjut otomatis). Pengaturan dan keluar ke menu belum ada. **Run 3C (usulan, O-6):** sakelar `Kidal: mati/nyala` dan `Bantu: mati/nyala` (96×42 px game, satu ketukan membalik, status dari teks dan bingkai `ACCENT`) di bawah "Lanjut", sampai layar pengaturan ada |
 | Pengaturan | Fase 3 | ⬜ | Opsi kidal, mode bantu, volume suasana dan efek suara (`SOUND_DESIGN.md` 6), getar |
 | Peta distrik | M3 | ⬜ | Tergantung keputusan distrik bebas dipilih atau berurutan (GDD 9.5) |
+
+**Redesain usulan (2026-10-23, belum dipasang):** uji HP pemilik 2026-10-23 menilai UI layar penuh terlalu kecil, terlalu kosong, dan tombolnya polos. Kanvas redesain untuk bengkel, halaman koran, hasil harian, jeda, tutorial, dan HUD (penyelarasan bentuk saja) ada di [`redesain/README.md`](./redesain/README.md): tombol empat peran dengan sisi atas terang dan bibir bawah, chip harga di sebelah tombol, kotak kondisi 8×8, teks layar penuh 10/9 px, bengkel dua kolom dengan sepeda yang menandai komponen rusak, hasil sebagai struk, koran dengan masthead dan foto berita. Angka di bagian ini tetap berlaku sampai redesain diporting dan dinilai di HP.
 
 Layar penuh memakai latar `UI_BG` dan panel `UI_PANEL` seperti papan mock, dengan judul Lilita One. Layar koran sebaiknya terasa seperti kertas koran (krem `#F2E7C9`, teks gelap), satu-satunya layar terang, supaya membaca headline jadi momen sendiri (usulan).
 

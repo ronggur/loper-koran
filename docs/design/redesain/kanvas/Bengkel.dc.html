@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Bengkel — tata C</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/b23e54cf59df17b596a06d402ed34bb2">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600&amp;family=Lilita+One&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="lk bg-gelap" style="width: {{W}}px; height: 360px; zoom: 3; font-family: 'Lexend', sans-serif; color: #FFF3E3">
+<img class="ab" src="/_blob/0394a12fbc917b33a44355e7ebdde963" alt="" style="left: {{bgx}}px; top: 0">
+
+<h1 class="ttl ab" style="left: {{mL}}px; top: 11px; font-size: 24px; color: #FFF3E3">Bengkel</h1>
+<div class="ab" style="right: {{mR}}px; top: 12px; display: flex; align-items: center; gap: 6px">
+<span class="lbl c-text2">Saldo</span>
+<span class="chip gelap besar num"><img class="i14" src="/_blob/1b8c69138f32cb9445bfef455e4dad11" alt="Koin">{{saldo}}</span>
+</div>
+
+<section class="pnl layar ab" aria-label="Servis" style="left: {{mL}}px; top: 46px; width: {{wl}}px; height: {{ph}}px; padding: 4px; display: flex; flex-direction: column; gap: 4px">
+<div class="bag lbl" style="height: 12px">Servis</div>
+<div style="position: relative; height: {{sh}}px; overflow: hidden; background: #2A1E17; box-shadow: 0 0 0 1px #0E0A1C">
+<img src="/_blob/7cb89d9a8ad08057e730fa7585a0ad93" alt="" style="position: absolute; left: {{papanX}}px; bottom: 0">
+<img src="/_blob/af3437483605c4f53214bb9555dbab9e" alt="Sepeda loper" style="position: absolute; left: {{bx}}px; top: {{by}}px">
+<sc-for list="{{penanda}}" as="m" hint-placeholder-count="2">
+<i style="position: absolute; left: {{m.dx}}px; top: {{m.dy}}px; width: 3px; height: 3px; background: {{m.warna}}; box-shadow: 0 0 0 1px #0E0A1C"></i>
+<span class="chip kecil {{m.cls}}" style="position: absolute; left: {{m.cx}}px; top: {{m.cy}}px">{{m.teks}}</span>
+</sc-for>
+</div>
+<sc-for list="{{servis}}" as="s" hint-placeholder-count="3">
+<div class="pnl {{s.kartu}}" style="height: 50px; display: flex; align-items: center; gap: 6px; padding: 0 0 0 4px">
+<i class="i24 {{s.ikon}}"></i>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<p class="t10">{{s.nama}}</p>
+<div style="display: flex; align-items: center; gap: 5px">
+<span class="kk"><sc-for list="{{s.kotak}}" as="k" hint-placeholder-count="3"><i class="{{k}}"></i></sc-for><sc-if value="{{s.perlu}}" hint-placeholder-val="{{false}}"><i class="g g-seru gc-warn"></i></sc-if></span>
+<span class="t8 {{s.statusCls}}">{{s.status}}</span>
+</div>
+</div>
+<sc-if value="{{s.baik}}" hint-placeholder-val="{{false}}">
+<span class="chip ok" style="margin-right: 4px"><i class="g g-centang gc-ok"></i>Baik</span>
+</sc-if>
+<sc-if value="{{s.aksi}}" hint-placeholder-val="{{true}}">
+<span class="chip gelap num"><img class="i14" src="/_blob/1b8c69138f32cb9445bfef455e4dad11" alt="">{{s.harga}} koin</span>
+<sc-if value="{{s.bisa}}" hint-placeholder-val="{{true}}"><button type="button" class="btn biasa w84"><i class="g g-kunci gc-terang"></i> Servis</button></sc-if>
+<sc-if value="{{s.kurang}}" hint-placeholder-val="{{false}}"><button type="button" class="btn nonaktif w84" disabled>Koin kurang</button></sc-if>
+</sc-if>
+</div>
+</sc-for>
+<div style="height: 12px; display: flex; align-items: center; gap: 2px">
+<sc-if value="{{catatan}}" hint-placeholder-val="{{false}}"><i class="g g-seru gc-warn"></i><span class="t9 c-text2" style="font-weight: 400">Banyak yang rusak: ongkos servis x1.25</span></sc-if>
+</div>
+</section>
+
+<section class="ab" aria-label="Upgrade" style="left: {{xr}}px; top: 46px; width: {{wr}}px; display: flex; flex-direction: column; gap: 6px">
+<div class="bag lbl" style="height: 12px; margin-top: 4px">Upgrade</div>
+<sc-if value="{{galat}}" hint-placeholder-val="{{false}}">
+<div class="pnl menonjol" style="padding: 8px; display: flex; gap: 6px; align-items: flex-start">
+<i class="g g-seru gc-warn"></i>
+<p class="t10 c-warn">Daftar upgrade tidak bisa dimuat; servis tetap bisa</p>
+</div>
+</sc-if>
+<sc-for list="{{upgrade}}" as="u" hint-placeholder-count="3">
+<div class="pnl {{u.kartu}}" style="height: 62px; display: flex; align-items: center; gap: 6px; padding: 0 0 0 4px">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px; width: 24px">
+<i class="i24 {{u.ikon}}"></i>
+<span class="chip kecil {{u.tingkatCls}}">I</span>
+</div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<p class="t10 {{u.namaCls}}">{{u.nama}}</p>
+<p class="t9 c-text2" style="font-weight: 400">{{u.desk}}</p>
+</div>
+<sc-if value="{{u.dimiliki}}" hint-placeholder-val="{{false}}"><span class="chip netral" style="margin-right: 4px"><i class="g g-centang gc-teks2"></i>Dimiliki</span></sc-if>
+<sc-if value="{{u.jual}}" hint-placeholder-val="{{true}}">
+<span class="chip gelap num"><img class="i14" src="/_blob/1b8c69138f32cb9445bfef455e4dad11" alt="">{{u.harga}} koin</span>
+<sc-if value="{{u.bisa}}" hint-placeholder-val="{{true}}"><button type="button" class="btn biasa w84">Beli</button></sc-if>
+<sc-if value="{{u.kurang}}" hint-placeholder-val="{{false}}"><button type="button" class="btn nonaktif w84" disabled>Koin kurang</button></sc-if>
+</sc-if>
+</div>
+</sc-for>
+</section>
+
+<button type="button" class="btn utama w140 ab" style="right: {{mR}}px; bottom: {{mB}}px">Hari berikutnya <i class="g g-panah gc-gelap"></i></button>
+
+<sc-if value="{{inset}}" hint-placeholder-val="{{false}}">
+<i class="notch" style="left: 0; top: 156px; width: 8px; height: 48px"></i>
+<i class="ab" style="left: 0; top: 0; width: 24px; height: 360px; border-right: 1px dashed #5F96C8"></i>
+<i class="ab" style="left: 0; bottom: 0; width: {{W}}px; height: 8px; border-top: 1px dashed #5F96C8"></i>
+<i class="ab" style="left: {{gestX}}px; bottom: 3px; width: 64px; height: 2px; background: #CDB9A3"></i>
+<p class="spec ab" style="left: 26px; top: 150px; width: 60px">inset kiri 24 + margin 12</p>
+<p class="spec ab" style="left: 300px; bottom: 9px">inset bawah 8 + margin 12</p>
+</sc-if>
+
+<sc-if value="{{ukur}}" hint-placeholder-val="{{false}}">
+<i class="redline" style="left: {{mL}}px; top: 46px; width: {{wl}}px; height: {{ph}}px"></i>
+<p class="spec ab" style="left: {{mL}}px; top: 38px">panel servis {{wl}}×{{ph}} · padding 4 · jarak 4</p>
+<p class="spec ab" style="left: {{xr}}px; top: 38px">kolom upgrade {{wr}} · kartu 62 · jarak 6</p>
+<i class="redline" style="right: {{mR}}px; bottom: {{mB}}px; width: 140px; height: 42px"></i>
+<p class="spec ab" style="right: {{mR}}px; bottom: 56px">140×42 · tetap di kanan bawah</p>
+<p class="spec ab" style="left: {{mL}}px; top: 2px">margin {{mL}} / {{mR}} · lebar {{W}}</p>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"keadaan":{"editor":"enum","options":["a","b","c","d","e","f","g"],"default":"a"},"lebar":{"editor":"enum","options":["640","800"],"default":"640"},"ukur":{"editor":"boolean","default":false},"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const k = this.props.keadaan ?? 'a';
+    const W = Number(this.props.lebar ?? '640');
+    const inset = k === 'g';
+    const inL = inset ? 24 : 0, inB = inset ? 8 : 0;
+    const mL = 12 + inL, mR = 12, mB = 12 + inB;
+    const total = W - mL - mR;
+    const wl = Math.round(total * 0.48);
+    const wr = total - wl - 8;
+    const xr = mL + wl + 8;
+    const ph = 360 - 46 - mB;
+    const inner = ph - 16;
+    const sh = inner - (12 + 150 + 12 + 20);
+    const sw = wl - 8 - 8;
+    const bx = Math.floor(sw / 2) - 62;
+    const by = sh - 6 - 72;
+    const papanX = Math.floor(sw / 2) - 180;
+    const D = {
+      a: { saldo: 375, s: [['baik', 0], ['baik', 0], ['baik', 0]], u: ['', '', ''] },
+      b: { saldo: 1000, s: [['perlu', 105], ['perlu', 80], ['aus', 47]], u: ['', '', ''] },
+      c: { saldo: 60, s: [['perlu', 105], ['aus', 40], ['baik', 0]], u: ['', '', ''] },
+      d: { saldo: 500, s: [['aus', 31], ['baik', 0], ['baik', 0]], u: ['', 'milik', ''] },
+      e: { saldo: 125480, s: [['perlu', 105], ['perlu', 80], ['perlu', 118]], u: ['', '', ''] },
+      f: { saldo: 1000, s: [['perlu', 105], ['perlu', 80], ['aus', 47]], u: null },
+      g: { saldo: 1000, s: [['perlu', 105], ['perlu', 80], ['aus', 47]], u: ['', '', ''] },
+    }[k];
+    const fmt = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const nama = ['Ban', 'Rem', 'Rantai'];
+    const ikon = ['i-ban', 'i-rem', 'i-rantai'];
+    const titik = [[10, 62, 'kiri'], [91, 27, 'kanan'], [44, 52, 'bawah']];
+    const penanda = [];
+    const servis = D.s.map(([t, h], i) => {
+      const baik = t === 'baik', perlu = t === 'perlu';
+      const bisa = !baik && D.saldo >= h;
+      if (!baik) {
+        const [px, py, arah] = titik[i];
+        const x = bx + px, y = by + py;
+        const teks = perlu ? '! ' + nama[i] : nama[i] + ' aus';
+        const lebarChip = teks.length * 5 + 6;
+        const cx = arah === 'kiri' ? Math.max(2, x - lebarChip - 4) : (arah === 'kanan' ? x + 5 : x - 10);
+        const cy = arah === 'bawah' ? y + 6 : y - 7;
+        penanda.push({ dx: x - 1, dy: y - 1, cx, cy, teks, cls: perlu ? 'warn' : 'netral', warna: perlu ? '#FF8A3D' : '#CDB9A3' });
+      }
+      return {
+        nama: nama[i], ikon: ikon[i], baik, perlu, aksi: !baik, bisa, kurang: !baik && !bisa, harga: fmt(h),
+        kartu: perlu ? 'menonjol' : (baik ? 'redup' : 'kartu'),
+        kotak: baik ? ['', '', ''] : (perlu ? ['w', 'h', 'h'] : ['', '', 'h']),
+        status: baik ? '' : (perlu ? 'Perlu servis' : 'Aus'),
+        statusCls: perlu ? 'c-warn' : 'c-text2',
+      };
+    });
+    const catatan = D.s.filter((x) => x[0] === 'perlu').length >= 2;
+    const U = [['Ban Anti-Selip', 'Belok lebih lincah (+15%)', 600, 'i-ban'], ['Rem Pakem', 'Berhenti lebih cepat (+20%)', 500, 'i-rem'], ['Rantai Hemat', 'Stamina awet dan rantai lebih tahan', 700, 'i-rantai']];
+    const upgrade = D.u ? U.map(([n, d, h, ic], i) => {
+      const milik = D.u[i] === 'milik';
+      const bisa = !milik && D.saldo >= h;
+      return { nama: n, desk: d, harga: fmt(h), ikon: ic, dimiliki: milik, jual: !milik, bisa, kurang: !milik && !bisa,
+        kartu: milik ? 'redup' : 'kartu', namaCls: milik ? 'c-text2' : 'c-text', tingkatCls: milik ? 'aksen' : 'netral' };
+    }) : [];
+    return {
+      W, mL, mR, mB, wl, wr, xr, ph, sh, bx, by, papanX, bgx: Math.round((W - 800) / 2),
+      saldo: fmt(D.saldo), servis, upgrade, penanda, catatan, galat: !D.u, inset, gestX: Math.round(W / 2 - 32),
+      ukur: this.props.ukur ?? false,
+    };
+  }
+}
+</script>
+</body>
+</html>

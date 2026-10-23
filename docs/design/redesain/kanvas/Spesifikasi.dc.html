@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Spesifikasi porting</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/b23e54cf59df17b596a06d402ed34bb2">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600&amp;family=Lilita+One&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.tb{width:100%;border-collapse:collapse;font-size:7px;line-height:9px}
+.tb th{text-align:left;font-weight:600;color:#FFB22E;letter-spacing:.06em;text-transform:uppercase;padding:2px 4px;border-bottom:1px solid #36281E}
+.tb td{padding:2px 4px;border-bottom:1px solid #2A1E17;vertical-align:top;font-weight:400;color:#FFF3E3}
+.tb td:first-child{font-weight:600;white-space:nowrap}
+.pre{font-family:ui-monospace,Menlo,monospace;font-size:6px;line-height:8px;color:#CDB9A3;white-space:pre;margin:0}
+</style>
+</helmet>
+<div class="lk bg-gelap" style="width: 800px; height: 900px; zoom: 3; padding: 16px; font-family: 'Lexend', sans-serif; color: #FFF3E3">
+<h1 class="ttl" style="font-size: 24px">Spesifikasi porting</h1>
+<p class="t8 c-text2" style="margin-top: 2px">Semua ukuran piksel game (kanvas 640–800 × 360). Warna hanya token DESIGN_SPEC 1.1 + palet induk. Usulan sampai dinilai di HP.</p>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; margin-top: 10px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<section>
+<div class="bag lbl" style="margin-bottom: 4px">Elemen, ukuran, token, font</div>
+<table class="tb">
+<thead><tr><th>Elemen</th><th>Ukuran</th><th>Warna</th><th>Font</th></tr></thead>
+<tbody>
+<sc-for list="{{elemen}}" as="e" hint-placeholder-count="12"><tr><td>{{e.n}}</td><td>{{e.u}}</td><td>{{e.w}}</td><td>{{e.f}}</td></tr></sc-for>
+</tbody>
+</table>
+</section>
+<section>
+<div class="bag lbl" style="margin-bottom: 4px">Jarak dan tata letak</div>
+<table class="tb"><tbody>
+<sc-for list="{{jarak}}" as="j" hint-placeholder-count="6"><tr><td>{{j.n}}</td><td>{{j.v}}</td></tr></sc-for>
+</tbody></table>
+</section>
+<section>
+<div class="bag lbl" style="margin-bottom: 4px">Urutan porting yang disarankan</div>
+<ol style="margin: 0; padding-left: 12px; display: flex; flex-direction: column; gap: 3px">
+<sc-for list="{{porting}}" as="p" hint-placeholder-count="6"><li class="t8" style="font-weight: 400">{{p}}</li></sc-for>
+</ol>
+</section>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<section>
+<div class="bag lbl" style="margin-bottom: 4px">Aset gambar baru (renderer tools/ui_art/, usulan nama)</div>
+<table class="tb">
+<thead><tr><th>Berkas</th><th>Ukuran</th><th>Catatan</th></tr></thead>
+<tbody>
+<sc-for list="{{aset}}" as="a" hint-placeholder-count="14"><tr><td>{{a.n}}</td><td>{{a.u}}</td><td>{{a.c}}</td></tr></sc-for>
+</tbody>
+</table>
+</section>
+<section>
+<div class="bag lbl" style="margin-bottom: 4px">Cukup dari kode (tanpa PNG)</div>
+<ul style="margin: 0; padding-left: 10px; display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{kode}}" as="c" hint-placeholder-count="8"><li class="t8" style="font-weight: 400">{{c}}</li></sc-for>
+</ul>
+</section>
+<section>
+<div class="bag lbl" style="margin-bottom: 4px">Urutan Container</div>
+<p class="pre">{{pohon}}</p>
+</section>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2400,"height":2700}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const elemen = [
+      ['Judul layar', '24 (Lilita One)', 'TEXT / KORAN_TINTA', 'Lilita One 24'],
+      ['Nama koran', '32', 'KORAN_TINTA', 'Lilita One 32'],
+      ['Angka utama hasil', '32', 'TEXT, Koin ACCENT', 'Lilita One 32'],
+      ['Headline utama / ringan', '24 / 16', 'KORAN_TINTA', 'Lilita One'],
+      ['Teks utama layar penuh', 'tinggi baris 12', 'TEXT', 'Lexend SemiBold 10'],
+      ['Teks kecil layar penuh', 'tinggi baris 11', 'TEXT_2 / KORAN_TINTA_2', 'Lexend Regular 9'],
+      ['Label KAPITAL', 'baris 10, spasi 0,1 em', 'ACCENT / TEXT_2', 'Lexend SemiBold 8'],
+      ['Tombol', '84 / 96 / 140 × 42', 'per peran (papan Komponen)', 'Lexend SemiBold 10'],
+      ['Chip', 'tinggi 18 (kecil 14, besar 24)', 'isi UI_BG, garis dalam per status', 'Lexend SemiBold 10 / 8 / 12'],
+      ['Kartu servis', 'lebar kolom × 50', 'kartu / menonjol (WARN) / redup', '—'],
+      ['Kartu upgrade', 'lebar kolom × 62', 'kartu / redup bila dimiliki', '—'],
+      ['Kotak kondisi', '8×8, jarak 2, "!" 3×9', 'TEXT / berongga TEXT_2 / WARN', '—'],
+      ['Bilah progres', 'tinggi 7', 'OUTLINE, UI_PANEL, ACCENT + #FFE08A', 'angka Lexend 9'],
+      ['Ikon besar', '24×24 (lencana 32)', 'palet induk, garis luar OUTLINE', '—'],
+      ['Glif', '12×12', 'satu warna, modulate', '—'],
+      ['Panel jeda', '232 lebar', 'panel layar di atas HUD_PANEL 72 %', '—'],
+    ].map(([n, u, w, f]) => ({ n, u, w, f }));
+    const jarak = [
+      ['Margin layar', '12 + inset aman (max), semua tepi'],
+      ['Header', 'judul y 11, isi mulai y 46 (bengkel, hasil) / y 56 (koran)'],
+      ['Kolom', 'bengkel: servis 48 % | jarak 8 | upgrade; hasil: struk | 10 | samping 236 (300 di lebar 800)'],
+      ['Koran', 'kolom berita | 6 + garis 1 + 6 | misi 236 (280 di 800)'],
+      ['Antar kartu', '4 (servis), 6 (upgrade, samping)'],
+      ['Aksi utama', '140×42 kanan bawah, selalu di tempat yang sama di semua layar penuh'],
+      ['Sentuh', 'tinggi min 42, lebar min 84, jarak min 6'],
+    ].map(([n, v]) => ({ n, v }));
+    const aset = [
+      ['ui_btn_{peran}[_tekan].png', '12×16', '9-slice 6/4/6/4; bibir bawah 2 px'],
+      ['ui_panel_layar, ui_kartu_{biasa,menonjol,redup}', '12×12', '9-slice 4'],
+      ['ui_chip_{gelap,ok,warn,netral,aksen}', '8×8', '9-slice 3, sudut 1 px'],
+      ['ui_koran_{kotak,btn_tinta,btn_tipis,btn_terpilih}', '12×12 / 12×16', 'versi terang'],
+      ['ui_struk + ui_struk_takik', '12×12 + 6×10', 'tepi bergerigi, mode tile'],
+      ['ui_arsir_nonaktif, ui_kertas_tile', '4×4', 'tile isi'],
+      ['ui_ikon24_sheet', '288×24', 'koin, bintang, ban, rem, rantai, kucing, kerucut, bohlam, lencana×4'],
+      ['ui_lencana32_sheet', '128×32', 'perunggu/perak/emas (1/2/3 titik), belum'],
+      ['ui_glif12', '108×12', 'panah, centang, lanjut, seru, naik, turun, jeda, silang, kunci; putih'],
+      ['ui_sepeda_samping', '124×72', 'titik penanda: ban (10,62), rem (91,27), rantai (44,52)'],
+      ['ui_bengkel_papan_alat', '360×104', 'latar panggung sepeda, dipotong tengah'],
+      ['ui_bengkel_latar', '640×360 + 800×360', 'konversi ilustrasi bengkel (tools/ui_art/redesain/latar_bengkel.py), tanpa tanaman'],
+      ['ui_koran_foto_{efek}', '100×62', 'satu per berita utama; jalan dan lampu dulu'],
+    ].map(([n, u, c]) => ({ n, u, c }));
+    const kode = [
+      'Teks, label, angka (Theme: JudulLayar, JudulBesar, TeksUtama, TeksKecil, Label)',
+      'Kotak kondisi 8×8 dan versi HUD 5×5 (KotakKondisi + PolaPiksel)',
+      'Bilah progres (StyleBoxFlat isi + baris atas)',
+      'Sakelar 22×12 (Control _draw, kenop kiri berongga / kanan terisi)',
+      'Judul bagian dan pemisah 1 px, garis ganda koran',
+      'Titik penanda di sepeda + chip (posisi dari titik sprite)',
+      'Garis titik-titik struk, garis sobek putus',
+      'Lapisan gelap jeda, sorotan tutorial',
+    ];
+    const porting = [
+      'Komponen: renderer tools/ui_art/komponen.py (tombol, panel, kartu, chip, glif) + uji deterministik; bentuk dipasang di assets/ui/theme.tres dan scripts/ui/gaya_hud.gd. Ganti tombol polos di semua layar sekaligus.',
+      'Bengkel (tata C): ikon 24, sepeda, papan alat, latar; tata letak dua kolom dari kode. Uji keadaan a–g di HP.',
+      'Hasil: struk 9-slice, angka besar, kolom samping (menunggu data reputasi/pelanggan/milestone run 6A2).',
+      'Koran: tekstur kertas, foto berita, iklan baris (kunci teks baru) — nilai silau di HP.',
+      'Jeda, tutorial, banner: panel + sakelar; tidak ada tata letak HUD yang berubah.',
+      'HUD: hanya tombol jeda berbentuk tombol biasa; sisanya tetap.',
+    ];
+    const pohon = [
+      'Bengkel  Control (layar penuh)',
+      ' ├ TextureRect latar (tengah, KEEP_CENTERED)',
+      ' ├ MarginContainer ZonaAman (12 + inset)',
+      ' │  └ VBox',
+      ' │     ├ HBox header: Label judul · spacer · HBox saldo',
+      ' │     └ HBox body (jarak 8)',
+      ' │        ├ PanelContainer servis (48 %) > VBox (4)',
+      ' │        │  label · Control panggung · 3× Panel baris · Label catatan',
+      ' │        └ VBox upgrade (6): label · 3× Panel kartu',
+      ' └ Button Hari berikutnya (anchor kanan bawah)',
+      '',
+      'Koran  MarginContainer > Control',
+      ' ├ HBox masthead · garis ganda',
+      ' ├ HBox: VBox berita | garis 1 | Panel misi (VBox)',
+      ' └ HBox bawah: iklan / notifikasi save · Berangkat',
+      '',
+      'Hasil  MarginContainer > HBox (10)',
+      ' ├ Panel struk > VBox: HBox angka besar · sobek ·',
+      ' │   baris berhasil · sobek · baris netral · kondisi',
+      ' └ VBox samping (6): reputasi · pelanggan · target · baru',
+      '   + Button Ke bengkel (anchor kanan bawah)',
+      '',
+      'Jeda  Control > ColorRect lapisan > CenterContainer',
+      '       > Panel (232) > VBox: judul · Lanjut · sakelar ×2 · cadangan',
+    ].join('\n');
+    return { elemen, jarak, aset, kode, porting, pohon };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Halaman depan koran</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/b23e54cf59df17b596a06d402ed34bb2">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600&amp;family=Lilita+One&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="lk bg-kertas" style="width: {{W}}px; height: 360px; zoom: 3; font-family: 'Lexend', sans-serif; color: #1C130F">
+
+<h1 class="ttl ab" style="left: {{mL}}px; top: 9px; font-size: 32px; color: #1C130F">Warta Kring</h1>
+<p class="t10 c-tinta2 ab" style="right: {{mR}}px; top: 26px">Hari {{hari}} · Perumahan Melati</p>
+<div class="k-ganda ab" style="left: {{mL}}px; top: 46px; width: {{lebarIsi}}px"></div>
+
+<section class="ab" aria-label="Berita" style="left: {{mL}}px; top: 56px; width: {{wl}}px; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 6px"><i class="i24 {{ikonEfek}}"></i><span class="lbl c-tinta2">Berita utama</span></div>
+<div style="display: flex; gap: 8px; align-items: flex-start">
+<sc-if value="{{fotoJalan}}" hint-placeholder-val="{{true}}"><img src="/_blob/7474ef878735646d976d01349198b272" alt="Foto: jalan diperbaiki" style="flex: none"></sc-if>
+<sc-if value="{{fotoLampu}}" hint-placeholder-val="{{false}}"><img src="/_blob/a31678716a113eab1149137657ce2e0a" alt="Foto: tiang listrik" style="flex: none"></sc-if>
+<h2 class="ttl" style="font-size: 24px; color: #1C130F; flex: 1">{{utama}}</h2>
+</div>
+<div class="k-pisah" style="margin-top: 2px"></div>
+<span class="lbl c-tinta2">Berita ringan</span>
+<h3 class="ttl" style="font-size: 16px; color: #1C130F">{{ringan}}</h3>
+<div aria-hidden="true" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 10px; row-gap: 3px; margin-top: 2px">
+<i style="height: 2px; background: #E6D8B1"></i><i style="height: 2px; background: #E6D8B1"></i>
+<i style="height: 2px; background: #E6D8B1"></i><i style="height: 2px; background: #E6D8B1; width: 80%"></i>
+<i style="height: 2px; background: #E6D8B1; width: 60%"></i><i style="height: 2px; background: #E6D8B1"></i>
+</div>
+</section>
+
+<i class="ab" style="left: {{xRule}}px; top: 56px; width: 1px; height: {{tinggiRule}}px; background: #7A6642"></i>
+
+<section class="pnl koran ab" aria-label="Misi sampingan" style="left: {{xr}}px; top: 56px; width: {{wr}}px; padding: 4px 6px 6px; display: flex; flex-direction: column; gap: 5px">
+<div style="display: flex; align-items: center; gap: 6px"><i class="i24 i-kucing"></i><span class="lbl c-tinta2">Misi sampingan</span></div>
+<sc-if value="{{adaMisi}}" hint-placeholder-val="{{true}}">
+<h3 class="ttl" style="font-size: 16px; color: #1C130F">{{misiJudul}}</h3>
+<p class="t9 c-tinta2">{{misiRingkas}}</p>
+<div style="display: flex; gap: 6px; margin-top: 2px">
+<button type="button" class="btn {{ambilCls}}" style="flex: 1" aria-pressed="{{ambilTekan}}"><sc-if value="{{diambil}}" hint-placeholder-val="{{false}}"><i class="g g-centang gc-gelap"></i></sc-if>Ambil</button>
+<button type="button" class="btn {{lewatiCls}}" style="flex: 1" aria-pressed="{{lewatiTekan}}"><sc-if value="{{dilewati}}" hint-placeholder-val="{{false}}"><i class="g g-centang gc-gelap"></i></sc-if>Lewati</button>
+</div>
+<p class="t8 c-tinta2" style="font-weight: 600">{{status}}</p>
+</sc-if>
+<sc-if value="{{tanpaMisi}}" hint-placeholder-val="{{false}}">
+<p class="t10 c-tinta2" style="padding: 6px 0 4px">Tidak ada misi sampingan hari ini</p>
+</sc-if>
+</section>
+
+<sc-if value="{{iklan}}" hint-placeholder-val="{{true}}">
+<aside class="ab" aria-label="Hiasan: iklan baris" style="left: {{xIklan}}px; top: {{yIklan}}px; width: {{wIklan}}px; border: 1px dashed #7A6642; padding: 4px 6px">
+<p class="lbl c-tinta2">Iklan baris</p>
+<p class="t8 c-tinta2" style="margin-top: 2px">Dijual sepeda onthel, ban baru, bel nyaring. Hubungi Pak Darto, Blok C.</p>
+</aside>
+</sc-if>
+
+<sc-if value="{{save}}" hint-placeholder-val="{{false}}">
+<div class="ab" role="status" style="left: {{mL}}px; bottom: {{mB}}px; width: {{wSave}}px; min-height: 42px; background: #E6D8B1; border: 1px solid #7A6642; padding: 5px 6px; display: flex; gap: 4px; align-items: flex-start">
+<i class="g g-seru gc-tinta2"></i>
+<p class="t9 c-tinta2">Data simpanan lama tidak terbaca; salinannya disimpan dan permainan mulai dari awal</p>
+</div>
+</sc-if>
+
+<button type="button" class="btn k-tinta w140 ab" style="right: {{mR}}px; bottom: {{mB}}px">Berangkat <i class="g g-panah gc-terang"></i></button>
+
+<sc-if value="{{inset}}" hint-placeholder-val="{{false}}">
+<i class="notch" style="left: 0; top: 156px; width: 8px; height: 48px"></i>
+<i class="ab" style="left: 0; top: 0; width: 24px; height: 360px; border-right: 1px dashed #5F96C8"></i>
+<i class="ab" style="left: 0; bottom: 0; width: {{W}}px; height: 8px; border-top: 1px dashed #5F96C8"></i>
+<i class="ab" style="left: {{gestX}}px; bottom: 3px; width: 64px; height: 2px; background: #4A3A2C"></i>
+</sc-if>
+<sc-if value="{{ukur}}" hint-placeholder-val="{{false}}">
+<i class="redline" style="left: {{mL}}px; top: 56px; width: {{wl}}px; height: 200px"></i>
+<i class="redline" style="left: {{xr}}px; top: 56px; width: {{wr}}px; height: 160px"></i>
+<p class="spec ab" style="left: {{mL}}px; top: 1px; color: #466E8C">margin {{mL}}/{{mR}} · kolom berita {{wl}} · garis tegak 1 · kolom misi {{wr}} · foto 100×62 · Berangkat 140×42</p>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"keadaan":{"editor":"enum","options":["belum","ambil","lewati","tanpa","lanjutan","terpanjang","save","inset"],"default":"belum"},"lebar":{"editor":"enum","options":["640","800"],"default":"640"},"ukur":{"editor":"boolean","default":false},"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const k = this.props.keadaan ?? 'belum';
+    const W = Number(this.props.lebar ?? '640');
+    const inset = k === 'inset';
+    const mL = 12 + (inset ? 24 : 0), mR = 12, mB = 12 + (inset ? 8 : 0);
+    const lebarIsi = W - mL - mR;
+    const wr = W >= 800 ? 280 : 236;
+    const wl = lebarIsi - wr - 13;
+    const xr = mL + wl + 13;
+    const misiStd = ['Kucing Bu Ratmi Hilang Sejak Semalam', 'Cari kucing di sisi seberang sebelum 12 rumah'];
+    let hari = 1, utama = 'Jalan Sedang Diperbaiki Hari Ini', ringan = 'Pohon Mangga Depan Rumah Berbuah Lebat';
+    let ikonEfek = 'i-kerucut', foto = '/_blob/7474ef878735646d976d01349198b272';
+    let misi = misiStd, pilih = '';
+    if (k === 'ambil') pilih = 'ambil';
+    if (k === 'lewati') pilih = 'lewati';
+    if (k === 'tanpa') { misi = null; ringan = 'Ayam Tetangga Juara Lomba Berkokok'; }
+    if (k === 'lanjutan') {
+      hari = 2; utama = 'Mati Lampu Semalam, Pagi Masih Redup'; ringan = 'Warung Bu Inah Kehabisan Gorengan Pagi';
+      ikonEfek = 'i-bohlam'; foto = '/_blob/a31678716a113eab1149137657ce2e0a';
+      misi = ['Kucing Bu Ratmi Belum Ditemukan', misiStd[1]];
+    }
+    if (k === 'terpanjang') {
+      hari = 14; utama = 'Hujan Deras Diperkirakan Turun Seharian!'; ikonEfek = 'i-kerucut'; ringan = 'Tukang Sayur Hafal Nama Semua Kucing';
+      misi = ['Kucing Bu Ratmi Kabur Sejak Kemarin Sore', 'Cari kucing di sisi seberang sebelum 12 rumah, dekat warung'];
+    }
+    const save = k === 'save';
+    const status = pilih === 'ambil' ? 'Misi diambil' : (pilih === 'lewati' ? 'Misi dilewati' : 'Belum dipilih; berangkat = dilewati');
+    const iklan = !save;
+    const yIklan = 360 - mB - 54;
+    return {
+      W, mL, mR, mB, lebarIsi, wl, wr, xr, xRule: mL + wl + 6, tinggiRule: 360 - mB - 56 - 54,
+      hari, utama, ringan, ikonEfek, fotoJalan: ikonEfek === 'i-kerucut' || ikonEfek === 'x', fotoLampu: ikonEfek === 'i-bohlam',
+      adaMisi: !!misi, tanpaMisi: !misi, misiJudul: misi ? misi[0] : '', misiRingkas: misi ? misi[1] : '',
+      diambil: pilih === 'ambil', dilewati: pilih === 'lewati',
+      ambilCls: pilih === 'ambil' ? 'k-pilih' : 'k-tipis', lewatiCls: pilih === 'lewati' ? 'k-pilih' : 'k-tipis',
+      ambilTekan: pilih === 'ambil' ? 'true' : 'false', lewatiTekan: pilih === 'lewati' ? 'true' : 'false',
+      status, save, wSave: lebarIsi - 140 - 12, iklan, xIklan: mL, yIklan, wIklan: Math.min(220, wl),
+      inset, gestX: Math.round(W / 2 - 32), ukur: this.props.ukur ?? false,
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Komponen bersama</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/b23e54cf59df17b596a06d402ed34bb2">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600&amp;family=Lilita+One&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="lk bg-gelap" style="width: 800px; height: 560px; zoom: 3; padding: 16px; display: flex; flex-direction: column; gap: 14px; font-family: 'Lexend', sans-serif; color: #FFF3E3">
+
+<header style="display: flex; align-items: flex-end; gap: 12px">
+<h1 class="ttl" style="font-size: 24px">Komponen bersama</h1>
+<p class="spec" style="padding-bottom: 3px; flex: 1">Usulan 2026-10-23 · angka dalam piksel game · papan ditampilkan ×3 tanpa penghalusan</p>
+<p class="spec" style="padding-bottom: 3px"><span class="tag9">9-SLICE</span> sprite baru  ·  <span class="tag9">KODE</span> StyleBox / teks / gambar kode</p>
+</header>
+
+<div style="display: grid; grid-template-columns: 466px 286px; column-gap: 16px; align-items: start">
+
+<div style="display: flex; flex-direction: column; gap: 14px">
+<section>
+<div class="bag lbl" style="margin-bottom: 6px">Tombol <span class="tag9">9-SLICE 12×16 · SLICE 6/4/6/4</span></div>
+<div style="display: grid; grid-template-columns: 54px repeat(4, 96px); column-gap: 8px; row-gap: 8px; align-items: center">
+<span></span><span class="spec">Normal</span><span class="spec">Ditekan</span><span class="spec">Nonaktif / nyala</span><span class="spec">Fokus</span>
+
+<span class="spec"><b>Utama</b><br>isi ACCENT</span>
+<button type="button" class="btn utama w96">Lanjut <i class="g g-lanjut gc-gelap"></i></button>
+<button type="button" class="btn utama tekan w96">Lanjut <i class="g g-lanjut gc-gelap"></i></button>
+<button type="button" class="btn nonaktif w96" disabled>Koin kurang</button>
+<button type="button" class="btn utama fokus w96">Lanjut <i class="g g-lanjut gc-gelap"></i></button>
+
+<span class="spec"><b>Biasa</b><br>UI_PANEL_RAISED</span>
+<button type="button" class="btn biasa w96"><i class="g g-kunci gc-terang"></i> Servis</button>
+<button type="button" class="btn biasa tekan w96"><i class="g g-kunci gc-aksen"></i> Servis</button>
+<button type="button" class="btn nonaktif w96" disabled>Koin kurang</button>
+<button type="button" class="btn biasa fokus w96"><i class="g g-kunci gc-terang"></i> Servis</button>
+
+<span class="spec"><b>Sakelar</b><br>teks + kenop</span>
+<button type="button" class="btn sakelar w96" aria-pressed="false">Bantu: mati <span class="sak"><i></i><s></s></span></button>
+<button type="button" class="btn biasa tekan w96" style="justify-content: space-between; padding-left: 4px; padding-right: 4px">Bantu: mati <span class="sak"><i></i><s></s></span></button>
+<button type="button" class="btn sakelar nyala w96" aria-pressed="true">Bantu: nyala <span class="sak on"><i></i><s></s></span></button>
+<button type="button" class="btn sakelar fokus w96" aria-pressed="false">Bantu: mati <span class="sak"><i></i><s></s></span></button>
+
+<span class="spec"><b>Tenang</b><br>lewati, rata</span>
+<button type="button" class="btn tenang w96">Lewati</button>
+<button type="button" class="btn tenang tekan w96">Lewati</button>
+<button type="button" class="btn nonaktif w96" disabled>Lewati</button>
+<button type="button" class="btn tenang fokus w96">Lewati</button>
+</div>
+<p class="spec" style="margin-top: 6px">Sisi atas terang + bibir bawah 2 px = terasa bisa ditekan. Ditekan: wajah turun 2 px, bibir hilang, bingkai ACCENT. Nonaktif: rata, garis redup, isi diarsir 4×4, teks berganti alasan (terbaca tanpa warna). Sakelar: kenop kiri berongga = mati, kenop kanan terisi = nyala, teks ikut berubah. Fokus: garis putus ACCENT 1 px di luar tombol.</p>
+</section>
+
+<section>
+<div class="bag lbl" style="margin-bottom: 6px">Ukuran standar <span class="tag9">KODE · TINGGI MIN 42, LEBAR MIN 84, JARAK 6</span></div>
+<div style="display: flex; gap: 8px; align-items: flex-start">
+<div style="display: flex; flex-direction: column; gap: 3px"><button type="button" class="btn biasa w84"><i class="g g-kunci gc-terang"></i> Servis</button><span class="spec">84×42</span></div>
+<div style="display: flex; flex-direction: column; gap: 3px"><button type="button" class="btn biasa w96">Beli</button><span class="spec">96×42</span></div>
+<div style="display: flex; flex-direction: column; gap: 3px"><button type="button" class="btn utama w140">Hari berikutnya <i class="g g-panah gc-gelap"></i></button><span class="spec">140×42 · aksi utama layar</span></div>
+<div style="display: flex; flex-direction: column; gap: 3px"><button type="button" class="btn biasa" style="width: 42px" aria-label="Jeda"><i class="g g-jeda gc-terang"></i></button><span class="spec">42×42 ikon</span></div>
+</div>
+</section>
+
+<section class="bg-kertas" style="padding: 8px; box-shadow: 0 0 0 1px #0E0A1C">
+<div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px"><span class="lbl c-tinta">Versi terang · halaman koran</span><span class="tag9" style="color: #466E8C; border-color: #466E8C">9-SLICE SUDUT 1 PX</span></div>
+<div class="k-ganda" style="margin-bottom: 8px"></div>
+<div style="display: grid; grid-template-columns: 104px 84px 84px 1fr; column-gap: 8px; align-items: start">
+<div style="display: flex; flex-direction: column; gap: 3px"><button type="button" class="btn k-tinta w104">Berangkat <i class="g g-panah gc-terang"></i></button><span class="spec" style="color: #466E8C">Aksi utama: tinta penuh, bayangan cetak 2 px</span></div>
+<div style="display: flex; flex-direction: column; gap: 3px"><button type="button" class="btn k-pilih w84" aria-pressed="true"><i class="g g-centang gc-gelap"></i> Ambil</button><span class="spec" style="color: #466E8C">Terpilih: berongga, bingkai 3 px</span></div>
+<div style="display: flex; flex-direction: column; gap: 3px"><button type="button" class="btn k-tipis w84" aria-pressed="false">Lewati</button><span class="spec" style="color: #466E8C">Tidak terpilih: garis 1 px</span></div>
+<div class="pnl koran" style="padding: 3px 5px"><p class="lbl c-tinta2">Misi sampingan</p><p class="t8 c-tinta2" style="margin-top: 2px">Kotak misi: garis ganda KORAN_GARIS, isi KORAN_KERTAS_2</p></div>
+</div>
+</section>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 12px">
+<section>
+<div class="bag lbl" style="margin-bottom: 6px">Panel dan kartu <span class="tag9">9-SLICE 12×12 · SLICE 4</span></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px">
+<div class="pnl layar" style="min-height: 46px; padding: 3px 5px"><p class="t9">Panel layar</p><p class="spec" style="margin-top: 2px">UI_PANEL, garis luar OUTLINE, garis dalam UI_PANEL_RAISED</p></div>
+<div class="pnl kartu" style="min-height: 46px; padding: 3px 5px"><p class="t9">Kartu biasa</p><p class="spec" style="margin-top: 2px">garis dalam atas #553428 memberi tepi terang</p></div>
+<div class="pnl menonjol" style="min-height: 46px; padding: 3px 5px"><p class="t9" style="display: flex; align-items: center; gap: 2px"><i class="g g-seru gc-warn"></i>Kartu menonjol</p><p class="spec" style="margin-top: 2px">garis dalam WARN + "!": butuh perhatian</p></div>
+<div class="pnl redup" style="min-height: 46px; padding: 3px 5px"><p class="t9 c-text2">Kartu redup</p><p class="spec" style="margin-top: 2px">rata: selesai / dimiliki</p></div>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 4px">
+<div class="bag lbl">Judul bagian <span class="tag9">KODE</span></div>
+<p class="spec">Label KAPITAL ACCENT 8 px + garis 1 px UI_PANEL_RAISED sampai tepi. Di bawah: pemisah 1 px.</p>
+<div class="pisah"></div>
+</section>
+
+<section>
+<div class="bag lbl" style="margin-bottom: 6px">Chip dan penanda <span class="tag9">9-SLICE 8×8 · SLICE 3</span></div>
+<div style="display: flex; flex-wrap: wrap; gap: 4px; align-items: center">
+<span class="chip gelap"><img class="i14" src="/_blob/1b8c69138f32cb9445bfef455e4dad11" alt="">105 koin</span>
+<span class="chip ok"><i class="g g-centang gc-ok"></i>Baik</span>
+<span class="chip warn"><i class="g g-seru gc-warn"></i>Perlu servis</span>
+<span class="chip netral"><i class="g g-centang gc-teks2"></i>Dimiliki</span>
+<span class="chip gelap besar"><img class="i14" src="/_blob/1b8c69138f32cb9445bfef455e4dad11" alt="">1.250</span>
+<span class="chip aksen kecil">I</span><span class="chip netral kecil">II</span><span class="chip netral kecil" style="opacity: .55">III</span>
+</div>
+<p class="spec" style="margin-top: 3px">Harga selalu chip di sebelah tombolnya. Tingkat: aktif ACCENT, berikutnya TEXT_2, terkunci redup 55 %.</p>
+</section>
+
+<section>
+<div class="bag lbl" style="margin-bottom: 6px">Kondisi sepeda <span class="tag9">KODE · KOTAK 8×8</span></div>
+<div style="display: flex; gap: 14px; align-items: flex-start">
+<div style="display: flex; flex-direction: column; gap: 2px"><span class="kk"><i></i><i></i><i></i></span><span class="t8">Baik</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span class="kk"><i></i><i></i><i class="h"></i></span><span class="t8">Aus</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span class="kk"><i class="w"></i><i class="h"></i><i class="h"></i><i class="g g-seru gc-warn"></i></span><span class="t8 c-warn">Perlu servis</span></div>
+<p class="spec" style="flex: 1">Kotak hilang = BERONGGA, bukan hanya redup. Tempat "!" selalu dipesan.</p>
+</div>
+</section>
+
+<section>
+<div class="bag lbl" style="margin-bottom: 6px">Bilah progres <span class="tag9">KODE · TINGGI 7</span></div>
+<div style="display: flex; align-items: center; gap: 6px"><span class="bar"><b style="width: 70%"></b></span><span class="t9 num">7/10</span></div>
+<p class="spec" style="margin-top: 3px">Garis luar OUTLINE, dasar UI_PANEL, isi ACCENT + baris atas #FFE08A, angka "n/target" di kanan.</p>
+</section>
+
+<section>
+<div class="bag lbl" style="margin-bottom: 6px">Ikon <span class="tag9">SPRITE BARU</span></div>
+<div style="display: grid; grid-template-columns: repeat(11, 24px); gap: 2px">
+<i class="i24 i-koin"></i><i class="i24 i-bintang"></i><i class="i24 i-ban"></i><i class="i24 i-rem"></i><i class="i24 i-rantai"></i><i class="i24 i-kucing"></i><i class="i24 i-kerucut"></i><i class="i24 i-bohlam"></i><i class="i24 i-l1"></i><i class="i24 i-l2"></i><i class="i24 i-l3"></i>
+</div>
+<div style="display: flex; gap: 8px; margin-top: 6px; align-items: center">
+<i class="l32 l-1"></i><i class="l32 l-2"></i><i class="l32 l-3"></i><i class="l32 l-0"></i>
+<div style="display: grid; grid-template-columns: repeat(5, 12px); gap: 2px"><i class="g g-panah gc-terang"></i><i class="g g-centang gc-ok"></i><i class="g g-lanjut gc-terang"></i><i class="g g-seru gc-warn"></i><i class="g g-naik gc-ok"></i><i class="g g-turun gc-teks2"></i><i class="g g-jeda gc-terang"></i><i class="g g-silang gc-teks2"></i><i class="g g-kunci gc-terang"></i></div>
+</div>
+<div style="display: flex; gap: 4px; margin-top: 6px"><img class="i14" src="/_blob/1b8c69138f32cb9445bfef455e4dad11" alt=""><img class="i14" src="/_blob/e03f1bcfd5e463815d1be2eab707a584" alt=""><img class="i14" src="/_blob/8accfd5abc85c093f7ac098be585e921" alt=""><img class="i14" src="/_blob/972e215ef8cce3d49f3b1dbb217faafd" alt=""><img class="i14" src="/_blob/ae731af7a3e15ce2c89612c2e528318f" alt=""><img class="i14" src="/_blob/95fa34e99a2063540cf39d946e534094" alt=""></div>
+<p class="spec" style="margin-top: 3px">Baris 1: ikon 24. Baris 2: lencana 32 (tingkat juga = 1/2/3 titik di pita; belum = siluet putus) dan glif 12 satu warna. Baris 3: ikon HUD 14 yang sudah ada.</p>
+</section>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2400,"height":1680}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

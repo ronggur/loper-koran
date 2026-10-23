@@ -1,0 +1,435 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-10-23T11:45:00Z"
+ },
+ "title": "UI Loper Koran — Redesain",
+ "launch": {
+  "view": "canvas",
+  "page": "komponen"
+ },
+ "pages": [
+  {
+   "id": "komponen",
+   "name": "1 Komponen"
+  },
+  {
+   "id": "bengkel",
+   "name": "2 Bengkel"
+  },
+  {
+   "id": "koran",
+   "name": "3 Koran"
+  },
+  {
+   "id": "hasil",
+   "name": "4 Hasil"
+  },
+  {
+   "id": "overlay",
+   "name": "5 Jeda, tutorial, HUD"
+  },
+  {
+   "id": "spesifikasi",
+   "name": "6 Spesifikasi"
+  }
+ ],
+ "boards": {
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 2400,
+   "h": 1680,
+   "title": "Komponen bersama",
+   "page": "komponen"
+  },
+  "Bengkel_TataA.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Bengkel · tata A (sepeda di tengah)",
+   "page": "bengkel"
+  },
+  "Bengkel_TataB.dc.html": {
+   "x": 2000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Bengkel · tata B (sepeda kiri atas, tab)",
+   "page": "bengkel"
+  },
+  "Bengkel.dc.html": {
+   "x": 4000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Bengkel · tata C (rekomendasi) · a. hari pertama",
+   "page": "bengkel"
+  },
+  "Bengkel_Tingkat.dc.html": {
+   "x": 6000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Bengkel · tempat upgrade tingkat 2–3",
+   "page": "bengkel"
+  },
+  "Bengkel_b.dc.html": {
+   "x": 0,
+   "y": 1400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Bengkel · b. ban dan rem perlu servis",
+   "page": "bengkel"
+  },
+  "Bengkel_c.dc.html": {
+   "x": 2000,
+   "y": 1400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Bengkel · c. saldo kurang",
+   "page": "bengkel"
+  },
+  "Bengkel_d.dc.html": {
+   "x": 4000,
+   "y": 1400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Bengkel · d. sesudah beli upgrade",
+   "page": "bengkel"
+  },
+  "Bengkel_e.dc.html": {
+   "x": 6000,
+   "y": 1400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Bengkel · e. terpadat",
+   "page": "bengkel"
+  },
+  "Bengkel_f.dc.html": {
+   "x": 0,
+   "y": 2800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Bengkel · f. galat data upgrade",
+   "page": "bengkel"
+  },
+  "Bengkel_g.dc.html": {
+   "x": 2000,
+   "y": 2800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Bengkel · g. inset aman",
+   "page": "bengkel"
+  },
+  "Bengkel_800.dc.html": {
+   "x": 4000,
+   "y": 2800,
+   "w": 2400,
+   "h": 1080,
+   "title": "Bengkel · lebar 800",
+   "page": "bengkel"
+  },
+  "Koran.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Koran · Hari 1, misi belum dipilih",
+   "page": "koran"
+  },
+  "Koran_ambil.dc.html": {
+   "x": 2000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Koran · Ambil terpilih",
+   "page": "koran"
+  },
+  "Koran_lewati.dc.html": {
+   "x": 4000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Koran · Lewati terpilih",
+   "page": "koran"
+  },
+  "Koran_tanpa.dc.html": {
+   "x": 6000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Koran · Tanpa misi",
+   "page": "koran"
+  },
+  "Koran_lanjutan.dc.html": {
+   "x": 0,
+   "y": 1400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Koran · Hari lanjutan",
+   "page": "koran"
+  },
+  "Koran_terpanjang.dc.html": {
+   "x": 2000,
+   "y": 1400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Koran · Teks terpanjang (40/60)",
+   "page": "koran"
+  },
+  "Koran_save.dc.html": {
+   "x": 4000,
+   "y": 1400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Koran · Notifikasi save rusak",
+   "page": "koran"
+  },
+  "Koran_inset.dc.html": {
+   "x": 6000,
+   "y": 1400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Koran · Inset aman",
+   "page": "koran"
+  },
+  "Koran_800.dc.html": {
+   "x": 0,
+   "y": 2800,
+   "w": 2400,
+   "h": 1080,
+   "title": "Koran · lebar 800",
+   "page": "koran"
+  },
+  "Hasil.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Hasil · Hari biasa",
+   "page": "hasil"
+  },
+  "Hasil_minus.dc.html": {
+   "x": 2000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Hasil · Hari minus",
+   "page": "hasil"
+  },
+  "Hasil_semua.dc.html": {
+   "x": 4000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Hasil · Semua terkirim",
+   "page": "hasil"
+  },
+  "Hasil_tenggat.dc.html": {
+   "x": 6000,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Hasil · Lewat tenggat",
+   "page": "hasil"
+  },
+  "Hasil_pelanggan.dc.html": {
+   "x": 0,
+   "y": 1400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Hasil · Pelanggan berhenti/kembali/setia",
+   "page": "hasil"
+  },
+  "Hasil_milestone.dc.html": {
+   "x": 2000,
+   "y": 1400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Hasil · Milestone baru",
+   "page": "hasil"
+  },
+  "Hasil_emas.dc.html": {
+   "x": 4000,
+   "y": 1400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Hasil · Semua emas",
+   "page": "hasil"
+  },
+  "Hasil_terpadat.dc.html": {
+   "x": 6000,
+   "y": 1400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Hasil · Kasus terpadat",
+   "page": "hasil"
+  },
+  "Hasil_tanpa.dc.html": {
+   "x": 0,
+   "y": 2800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Hasil · Tanpa data reputasi",
+   "page": "hasil"
+  },
+  "Hasil_inset.dc.html": {
+   "x": 2000,
+   "y": 2800,
+   "w": 1920,
+   "h": 1080,
+   "title": "Hasil · Inset aman",
+   "page": "hasil"
+  },
+  "Hasil_800.dc.html": {
+   "x": 4000,
+   "y": 2800,
+   "w": 2400,
+   "h": 1080,
+   "title": "Hasil · lebar 800",
+   "page": "hasil"
+  },
+  "Jeda.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1920,
+   "h": 1080,
+   "title": "Jeda",
+   "page": "overlay"
+  },
+  "Jeda_800.dc.html": {
+   "x": 2000,
+   "y": 0,
+   "w": 2400,
+   "h": 1080,
+   "title": "Jeda · lebar 800",
+   "page": "overlay"
+  },
+  "Tutorial.dc.html": {
+   "x": 0,
+   "y": 1400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Tutorial hari 1 + banner Rute selesai",
+   "page": "overlay"
+  },
+  "Banner.dc.html": {
+   "x": 2000,
+   "y": 1400,
+   "w": 1920,
+   "h": 1080,
+   "title": "Banner misi dan petunjuk (varian)",
+   "page": "overlay"
+  },
+  "HUD.dc.html": {
+   "x": 4000,
+   "y": 1400,
+   "w": 1920,
+   "h": 1080,
+   "title": "HUD saat mengantar · bahasa bentuk baru",
+   "page": "overlay"
+  },
+  "Spesifikasi.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 2400,
+   "h": 2700,
+   "title": "Spesifikasi porting",
+   "page": "spesifikasi"
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "Bengkel_TataA.dc.html",
+  "Bengkel_TataB.dc.html",
+  "Bengkel.dc.html",
+  "Bengkel_Tingkat.dc.html",
+  "Bengkel_b.dc.html",
+  "Bengkel_c.dc.html",
+  "Bengkel_d.dc.html",
+  "Bengkel_e.dc.html",
+  "Bengkel_f.dc.html",
+  "Bengkel_g.dc.html",
+  "Bengkel_800.dc.html",
+  "Koran.dc.html",
+  "Koran_ambil.dc.html",
+  "Koran_lewati.dc.html",
+  "Koran_tanpa.dc.html",
+  "Koran_lanjutan.dc.html",
+  "Koran_terpanjang.dc.html",
+  "Koran_save.dc.html",
+  "Koran_inset.dc.html",
+  "Koran_800.dc.html",
+  "Hasil.dc.html",
+  "Hasil_minus.dc.html",
+  "Hasil_semua.dc.html",
+  "Hasil_tenggat.dc.html",
+  "Hasil_pelanggan.dc.html",
+  "Hasil_milestone.dc.html",
+  "Hasil_emas.dc.html",
+  "Hasil_terpadat.dc.html",
+  "Hasil_tanpa.dc.html",
+  "Hasil_inset.dc.html",
+  "Hasil_800.dc.html",
+  "Jeda.dc.html",
+  "Jeda_800.dc.html",
+  "Tutorial.dc.html",
+  "Banner.dc.html",
+  "HUD.dc.html",
+  "Spesifikasi.dc.html"
+ ],
+ "notes": {
+  "n_b1": {
+   "x": 0,
+   "y": -300,
+   "text": "Bengkel — tiga tata letak dan tempat tingkat upgrade",
+   "kind": "title1",
+   "maxW": 7920,
+   "page": "bengkel"
+  },
+  "n_b2": {
+   "x": 0,
+   "y": 1100,
+   "text": "Bengkel tata C — keadaan",
+   "kind": "title1",
+   "maxW": 7920,
+   "page": "bengkel"
+  },
+  "n_k": {
+   "x": 0,
+   "y": -300,
+   "text": "Halaman depan koran \"Warta Kring\"",
+   "kind": "title1",
+   "maxW": 7920,
+   "page": "koran"
+  },
+  "n_h": {
+   "x": 0,
+   "y": -300,
+   "text": "Hasil harian",
+   "kind": "title1",
+   "maxW": 7920,
+   "page": "hasil"
+  },
+  "n_j1": {
+   "x": 0,
+   "y": -300,
+   "text": "Jeda",
+   "kind": "title1",
+   "maxW": 4400,
+   "page": "overlay"
+  },
+  "n_j2": {
+   "x": 0,
+   "y": 1100,
+   "text": "Tutorial, banner, HUD",
+   "kind": "title1",
+   "maxW": 5920,
+   "page": "overlay"
+  }
+ },
+ "designSystems": []
+}

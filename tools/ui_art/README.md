@@ -11,6 +11,9 @@ python3 tools/ui_art/bel.py --salin                   # juga aset game 1x ke ass
 python3 tools/ui_art/hud_ikon.py --salin              # ikon HUD, penanda radar, 9-slice ke assets/sprites/ui/ (usulan)
 python3 tools/ui_art/lencana.py --salin               # lencana milestone perunggu/perak/emas 14x14 ke assets/sprites/ui/ (run 6A2, usulan)
 python3 tools/tests_cek/uji_ui_lencana.py             # bukti lencana di assets/ = keluaran skrip, palet induk, tingkat terbaca tanpa warna
+python3 tools/ui_art/redesain/komponen.py --mock      # redesain UI (usulan 2026-10-23): aset komponen 1x ke build/ dan docs/design/redesain/aset/ (butuh pillow)
+python3 tools/ui_art/redesain/latar_bengkel.py --mock # redesain UI: latar bengkel 640/800 ke docs/design/redesain/latar_bengkel/ (butuh numpy, pillow, opencv-python, scikit-learn)
+python3 tools/tests_cek/uji_ui_redesain.py            # bukti komponen deterministik, docs = keluaran skrip, palet induk, ukuran bingkai; sifat latar bengkel
 ```
 
 ## File
@@ -19,4 +22,6 @@ python3 tools/tests_cek/uji_ui_lencana.py             # bukti lencana di assets/
 |---|---|
 | `hud_ikon.py` | Ikon HUD 14×14 (koin, reputasi, ban, rem, rantai, misi kucing), penanda radar 8×6 dan versi masuk jangkauan 10×8, bingkai strip radar dan panel HUD 9-slice, contoh radar di atas layar `tools/env_art/fase3.py`. Penjelasan di `docs/design/hud/README.md` |
 | `lencana.py` | Lencana milestone 14×14 (run fase6a2 bagian C, AC-15): medali bergantung pita biru, perunggu/perak/emas; tingkat dibedakan warna DAN jumlah garis di tengah (1, 2, 3). Hanya palet induk, deterministik, tanpa numpy. `--salin` menulis `ui_lencana_<tingkat>.png` ke `assets/sprites/ui/` |
+| `redesain/komponen.py` | Aset kanvas redesain UI (usulan 2026-10-23, `docs/design/redesain/README.md`): bingkai 9-slice tombol, panel, kartu, chip, struk (gelap dan versi koran), tile arsir dan kertas, ikon 24×24, lencana 32×32, glif 12×12, sepeda tampak samping, papan alat bengkel, foto berita. Hanya palet induk dan token UI, deterministik (pillow saja). `--mock` menyalin hasil ke `docs/design/redesain/aset/`; belum ada `--salin` ke `assets/` |
+| `redesain/latar_bengkel.py` | Latar layar bengkel dari ilustrasi AI (cara `konversi2`): k-means Lab 30 warna, rapikan tekstur, cahaya lampu jadi cincin, tanaman dihapus, versi 800 dengan pantulan tepi. Hasil numerik bisa beda beberapa piksel antar-mesin; berkas di `docs/design/redesain/latar_bengkel/` adalah keluaran resmi |
 | `bel.py` | Bel "Kring Kring!" (GDD 5.4): tombol bel 40×40 tiga keadaan, garis getar 4 frame, teks "KRING!" dan "KRING KRING!", ikon "!", pratinjau GIF di atas sprite rute dan penempatan di mock HUD. Penjelasan aset di `docs/design/bel/README.md`. `--salin` (run fase3b-rintangan-skor) menulis aset game ke `assets/sprites/ui/`: `ui_bel_tombol.png` (diam, ditekan, lalu 8 frame jeda dengan cincin berkurang 8/8 sampai 1/8), `ui_bel_getar.png`, `ui_ikon_seru.png`, dan `ui_bel.json`; teks "KRING!" tidak disalin karena di game teksnya kunci terjemahan |

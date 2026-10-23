@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Hasil harian</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/b23e54cf59df17b596a06d402ed34bb2">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600&amp;family=Lilita+One&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="lk bg-gelap" style="width: {{W}}px; height: 360px; zoom: 3; font-family: 'Lexend', sans-serif; color: #FFF3E3">
+
+<h1 class="ttl ab" style="left: {{xs}}px; top: 11px; font-size: 24px; color: #FFF3E3">Hasil antaran</h1>
+
+<section class="pnl struk ab" aria-label="Struk antaran" style="left: {{xs}}px; top: 44px; width: {{ws}}px; padding: 6px 8px 8px; display: flex; flex-direction: column; gap: 3px">
+<div style="display: flex; gap: 16px; align-items: flex-end">
+<div>
+<p class="lbl c-text2">Terkirim</p>
+<div style="display: flex; align-items: center; gap: 4px"><span class="ttl num" style="font-size: 32px; color: #FFF3E3">{{terkirim}}</span><i class="g {{terkirimGlif}}"></i></div>
+</div>
+<div>
+<p class="lbl c-text2">Koin</p>
+<div style="display: flex; align-items: center; gap: 4px"><i class="i24 i-koin"></i><span class="ttl num" style="font-size: 32px; color: #FFB22E">{{koin}}</span></div>
+</div>
+</div>
+<div style="position: relative; margin: 3px -8px; height: 10px">
+<i class="takik" style="left: -4px; top: 0"></i>
+<i class="sobek ab" style="left: 6px; right: 6px; top: 5px"></i>
+<i class="takik kanan" style="right: -4px; top: 0"></i>
+</div>
+<sc-for list="{{baris1}}" as="r" hint-placeholder-count="3">
+<div style="display: flex; align-items: baseline; gap: 4px; height: 13px">
+<span class="t10">{{r.label}}</span>
+<i style="flex: 1; border-bottom: 1px dotted #36281E; transform: translateY(-3px)"></i>
+<span class="t10 num {{r.cls}}">{{r.nilai}}</span>
+</div>
+</sc-for>
+<sc-if value="{{misiSelesai}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; align-items: center; gap: 4px; height: 14px"><i class="g g-centang gc-ok"></i><span class="t10 c-ok">Misi: Kucing ketemu! +75 koin</span></div>
+</sc-if>
+<div style="position: relative; margin: 3px -8px; height: 10px">
+<i class="takik" style="left: -4px; top: 0"></i>
+<i class="sobek ab" style="left: 6px; right: 6px; top: 5px"></i>
+<i class="takik kanan" style="right: -4px; top: 0"></i>
+</div>
+<sc-for list="{{baris2}}" as="r" hint-placeholder-count="3">
+<div style="display: flex; align-items: baseline; gap: 4px; height: 13px">
+<span class="t10 c-text2" style="font-weight: 400">{{r.label}}</span>
+<i style="flex: 1; border-bottom: 1px dotted #36281E; transform: translateY(-3px)"></i>
+<span class="t10 num {{r.cls}}">{{r.nilai}}</span>
+</div>
+</sc-for>
+<p class="t9 c-text2" style="font-weight: 400; height: 13px; display: flex; align-items: center">{{tenggat}}</p>
+<sc-if value="{{misiGagal}}" hint-placeholder-val="{{false}}">
+<p class="t9 c-text2" style="font-weight: 400; height: 13px">Misi: Kucingnya lolos hari ini</p>
+</sc-if>
+<sc-for list="{{kondisi}}" as="kd" hint-placeholder-count="0">
+<div style="display: flex; align-items: center; gap: 3px; height: 13px"><i class="g g-seru gc-warn"></i><span class="t9 c-warn">{{kd}} perlu servis</span></div>
+</sc-for>
+</section>
+
+<sc-if value="{{samping}}" hint-placeholder-val="{{true}}">
+<aside class="ab" aria-label="Reputasi, pelanggan, target" style="left: {{xk}}px; top: 44px; width: {{wk}}px; display: flex; flex-direction: column; gap: 6px">
+<div class="pnl kartu" style="height: 40px; padding: 0 6px; display: flex; align-items: center; gap: 6px">
+<i class="i24 i-bintang"></i>
+<span class="lbl c-text2" style="flex: 1">Reputasi</span>
+<span class="ttl num" style="font-size: 24px">{{rep}}</span>
+<span class="chip {{repCls}}"><i class="g {{repGlif}}"></i>{{repDelta}}</span>
+</div>
+<sc-if value="{{adaPelanggan}}" hint-placeholder-val="{{true}}">
+<div class="pnl kartu" style="padding: 4px 6px; display: flex; flex-direction: column; gap: 2px">
+<p class="lbl c-text2">Pelanggan</p>
+<sc-for list="{{pelanggan}}" as="p" hint-placeholder-count="1">
+<div style="display: flex; justify-content: space-between; height: 12px"><span class="t9" style="font-weight: 400">{{p.label}}</span><span class="t9 num">{{p.nilai}}</span></div>
+</sc-for>
+</div>
+</sc-if>
+<div class="pnl kartu" style="padding: 4px 6px; display: flex; flex-direction: column; gap: 3px">
+<p class="lbl c-text2">Target berikutnya</p>
+<div style="display: flex; align-items: center; gap: 6px">
+<i class="l32 {{targetLencana}}"></i>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 3px">
+<p class="t10">{{targetNama}}</p>
+<sc-if value="{{targetAda}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; align-items: center; gap: 5px"><span class="bar"><b style="width: {{targetPersen}}%"></b></span><span class="t9 num">{{targetAngka}}</span></div>
+</sc-if>
+</div>
+</div>
+</div>
+<sc-for list="{{baru}}" as="b" hint-placeholder-count="0">
+<div style="display: flex; align-items: center; gap: 6px; height: 24px"><i class="i24 {{b.l}}"></i><span class="t10 c-ok">Baru: {{b.nama}}</span></div>
+</sc-for>
+</aside>
+</sc-if>
+
+<button type="button" class="btn utama w140 ab" style="right: {{mR}}px; bottom: {{mB}}px"><i class="g g-kunci gc-gelap"></i> Ke bengkel</button>
+
+<sc-if value="{{inset}}" hint-placeholder-val="{{false}}">
+<i class="notch" style="left: 0; top: 156px; width: 8px; height: 48px"></i>
+<i class="ab" style="left: 0; top: 0; width: 24px; height: 360px; border-right: 1px dashed #5F96C8"></i>
+<i class="ab" style="left: 0; bottom: 0; width: {{W}}px; height: 8px; border-top: 1px dashed #5F96C8"></i>
+<i class="ab" style="left: {{gestX}}px; bottom: 3px; width: 64px; height: 2px; background: #CDB9A3"></i>
+</sc-if>
+<sc-if value="{{ukur}}" hint-placeholder-val="{{false}}">
+<p class="spec ab" style="left: {{xs}}px; top: 2px">struk {{ws}} (9-slice struk, tepi ulang) · kolom samping {{wk}} · jarak 10 · baris 13 · Ke bengkel 140×42</p>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"keadaan":{"editor":"enum","options":["biasa","minus","semua","tenggat","pelanggan","milestone","emas","terpadat","tanpa","inset"],"default":"biasa"},"lebar":{"editor":"enum","options":["640","800"],"default":"640"},"ukur":{"editor":"boolean","default":false},"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const k = this.props.keadaan ?? 'biasa';
+    const W = Number(this.props.lebar ?? '640');
+    const inset = k === 'inset';
+    const mL = 12 + (inset ? 24 : 0), mR = 12, mB = 12 + (inset ? 8 : 0);
+    const fmt = (n) => (n < 0 ? '-' : '') + String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const base = {
+      kirim: 22, tip: [25, 1], koin: 355, skor: 14780, tepat: 9, meleset: 3, buang: null, bersih: 355, lewat: null,
+      misi: null, kondisi: [], rep: [12, 2], pel: [['Pelanggan baru', '+1']], target: ['Pelanggan · Perak', 'l-2', 7, 10], baru: [],
+    };
+    const D = Object.assign({}, base, {
+      biasa: {}, inset: {},
+      minus: { kirim: 2, tip: [0, 0], koin: 30, skor: 1150, tepat: 0, meleset: 23, buang: [8, 40], bersih: -10, lewat: '2:05', kondisi: ['Ban'], rep: [9, -1], pel: [['Berhenti berlangganan', '1']], target: ['Pelanggan · Perak', 'l-2', 6, 10] },
+      semua: { kirim: 25, tip: [60, 3], koin: 510, skor: 21340, tepat: 18, meleset: 0, bersih: 510, misi: 'selesai', rep: [15, 3], pel: [['Jadi pelanggan tetap', '+2']], target: ['Pelanggan · Perak', 'l-2', 9, 10] },
+      tenggat: { kirim: 24, tip: [10, 1], koin: 370, skor: 15210, tepat: 7, meleset: 1, bersih: 370, lewat: '1:12', misi: 'gagal', rep: [13, 1] },
+      pelanggan: { pel: [['Pelanggan baru', '+1'], ['Jadi pelanggan tetap', '+2'], ['Berhenti berlangganan', '1'], ['Berlangganan lagi', '1']] },
+      milestone: { rep: [14, 2], baru: [['Pelanggan · Perak', 'i-l2']], target: ['Uang · Perak', 'l-2', 1240, 2000] },
+      emas: { rep: [48, 1], target: null, baru: [['Keahlian · Emas', 'i-l3']] },
+      terpadat: { kirim: 19, tip: [15, 2], koin: 375, skor: 12480, tepat: 6, meleset: 6, buang: [1, 5], bersih: 370, lewat: '1:12', misi: 'selesai', kondisi: ['Ban', 'Rem', 'Rantai'], rep: [16, -1],
+        pel: [['Pelanggan baru', '+1'], ['Jadi pelanggan tetap', '+2'], ['Berhenti berlangganan', '1'], ['Berlangganan lagi', '1']],
+        baru: [['Pelanggan · Perak', 'i-l2'], ['Uang · Perunggu', 'i-l1'], ['Keahlian · Perunggu', 'i-l1']], target: ['Cerita · Perunggu', 'l-1', 2, 5] },
+      tanpa: { rep: null },
+    }[k] || {});
+    const samping = !!D.rep;
+    const wk = W >= 800 ? 300 : 236;
+    const ws = samping ? W - mL - mR - wk - 10 : 360;
+    const xs = samping ? mL : Math.round((W - ws) / 2);
+    const baris1 = [];
+    if (D.tip[1] > 0) baris1.push({ label: 'Tip', nilai: '+' + D.tip[0] + ' dari ' + D.tip[1] + ' pelanggan', cls: 'c-ok' });
+    baris1.push({ label: 'Skor', nilai: fmt(D.skor), cls: 'c-text' });
+    baris1.push({ label: 'Tepat', nilai: String(D.tepat), cls: 'c-accent' });
+    const baris2 = [{ label: 'Meleset', nilai: String(D.meleset), cls: 'c-text2' }];
+    if (D.buang) baris2.push({ label: 'Koran terbuang', nilai: D.buang[0] + ' koran (-' + D.buang[1] + ')', cls: 'c-text2' });
+    baris2.push({ label: 'Koin bersih', nilai: fmt(D.bersih), cls: 'c-text' });
+    const t = D.target;
+    return {
+      W, mL, mR, mB, xs, ws, xk: mL + ws + 10, wk, samping,
+      terkirim: D.kirim + '/25', terkirimGlif: D.kirim === 25 ? 'g-centang gc-ok' : 'g-centang gc-teks2',
+      koin: '+' + fmt(D.koin), baris1, baris2,
+      tenggat: D.lewat ? 'Lewat tenggat +' + D.lewat + '; tip sesudahnya tidak ada' : 'Sampai sebelum tenggat',
+      misiSelesai: D.misi === 'selesai', misiGagal: D.misi === 'gagal', kondisi: D.kondisi,
+      rep: D.rep ? D.rep[0] : 0, repDelta: D.rep ? (D.rep[1] >= 0 ? '+' + D.rep[1] : String(D.rep[1]).replace('-', '−')) : '',
+      repCls: D.rep && D.rep[1] >= 0 ? 'ok' : 'netral', repGlif: D.rep && D.rep[1] >= 0 ? 'g-naik gc-ok' : 'g-turun gc-teks2',
+      adaPelanggan: D.pel.length > 0, pelanggan: D.pel.map(([label, nilai]) => ({ label, nilai })),
+      targetAda: !!t, targetNama: t ? t[0] : 'Semua target sudah emas', targetLencana: t ? t[1] : 'l-3',
+      targetPersen: t ? Math.round(t[2] / t[3] * 100) : 100, targetAngka: t ? fmt(t[2]) + '/' + fmt(t[3]) : '',
+      baru: D.baru.map(([nama, l]) => ({ nama, l })),
+      inset, gestX: Math.round(W / 2 - 32), ukur: this.props.ukur ?? false,
+    };
+  }
+}
+</script>
+</body>
+</html>
