@@ -158,6 +158,18 @@ static func chip(status: KomponenUi.StatusChip, ukuran: KomponenUi.UkuranChip = 
 	return hasil
 
 
+## Chip 9-slice menurut `gaya` (bukan status) dan `ukuran`, untuk `ChipUi`: tepi `UI_CHIP_SLICE_PX`, isi berjarak samping `KomponenUi.pad_x_chip` dan atas bawah `KomponenUi.pad_y_chip` (lebih kecil dari tepi supaya tinggi chip tetap menurut ukuran).
+static func chip_gaya(gaya: KomponenUi.GayaChip, ukuran: KomponenUi.UkuranChip = KomponenUi.UkuranChip.NORMAL) -> StyleBoxTexture:
+	var hasil: StyleBoxTexture = StyleBoxTexture.new()
+	hasil.texture = tekstur(KomponenUi.nama_tekstur_chip(gaya))
+	hasil.set_texture_margin_all(float(Config.UI_CHIP_SLICE_PX))
+	hasil.content_margin_left = float(Config.UI_CHIP_SLICE_PX + KomponenUi.pad_x_chip(ukuran))
+	hasil.content_margin_right = hasil.content_margin_left
+	hasil.content_margin_top = float(KomponenUi.pad_y_chip(ukuran))
+	hasil.content_margin_bottom = hasil.content_margin_top
+	return hasil
+
+
 static func _panel_9slice(nama: String) -> StyleBoxTexture:
 	var hasil: StyleBoxTexture = StyleBoxTexture.new()
 	hasil.texture = tekstur(nama)
