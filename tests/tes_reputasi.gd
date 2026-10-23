@@ -39,6 +39,7 @@ func jalankan() -> void:
 	_test_validasi_kepribadian()
 	_test_dari_id()
 	_test_transisi_status()
+	_test_antaran_rumah_berhenti()
 	_test_misi()
 	_test_reputasi()
 	_test_kemurnian()
@@ -265,6 +266,33 @@ func _test_transisi_status() -> void:
 	var sens2: String = _id("sensitif", 1)
 	var h10: ReputationManager.Hasil = _terapkan(_state({sens: _entri("aktif", 0, 1), sens2: _entri("aktif", 0, 1)}, 10), _catatan(5, [[sens, false], [sens2, false]]))
 	check(h10.jumlah(ReputationManager.Jenis.BERHENTI) == 2 and h10.reputasi_sesudah == 8 and h10.turun_berhenti == 2, "dua pelanggan berhenti = reputasi -2")
+
+
+# --- QA-003: antaran sah ke rumah berhenti memberi kredit ---
+
+func _test_antaran_rumah_berhenti() -> void:
+	_judul.call("Rumah berhenti yang terantar: kredit reputasi penuh, kembali aktif, satu peristiwa KEMBALI (O-6, O-8, QA-003)")
+	var sens: String = _id("sensitif")
+	var per_kualitas: Dictionary = {SkorRute.Kualitas.TEPAT: 4, SkorRute.Kualitas.TERAS: 3, SkorRute.Kualitas.KOTAK_SURAT: 2, SkorRute.Kualitas.HALAMAN: 1}
+	for q: int in per_kualitas:
+		var h: ReputationManager.Hasil = _terapkan(_state({sens: _entri("berhenti", 6, 2, 4)}, 10), _catatan(9, [[sens, true, q]]))
+		check(h.kredit == int(per_kualitas[q]), "rumah berhenti terantar kualitas %d: kredit %d (dapat %d)" % [q, per_kualitas[q], h.kredit])
+		check(_e(h, sens) == _entri("aktif", 0, 0, 0) and h.jumlah(ReputationManager.Jenis.KEMBALI) == 1 and h.peristiwa.size() == 1, "rumah berhenti terantar kualitas %d: aktif, penghitung 0, tepat satu peristiwa KEMBALI" % q)
+	# Kredit rumah berhenti ikut menentukan poin harian: tujuh rumah aktif tepat (28) + satu rumah berhenti tepat (4) = 32 = +1; tanpa kredit rumah berhenti 28 = 0.
+	var ids: Array = _per_kepribadian["biasa"]
+	var daftar: Array = _daftar(ids, 7, SkorRute.Kualitas.TEPAT)
+	daftar.append([sens, true, SkorRute.Kualitas.TEPAT])
+	var peta: Dictionary = {sens: _entri("berhenti", 6, 2, 4)}
+	var h8: ReputationManager.Hasil = _terapkan(_state(peta, 10), _catatan(9, daftar))
+	check(h8.kredit == 32 and h8.poin_antaran == 1 and h8.perubahan == 1 and _e(h8, sens)["status"] == "aktif", "7 antaran aktif tepat + 1 antaran rumah berhenti tepat = 32 kredit = +1 reputasi, rumah kembali aktif")
+	# Rumah berhenti yang tidak terantar: tanpa kredit, tetap berhenti.
+	var hn: ReputationManager.Hasil = _terapkan(_state(peta, 10), _catatan(9, [[sens, false]]))
+	check(hn.kredit == 0 and _e(hn, sens)["status"] == "berhenti", "rumah berhenti tidak terantar: tanpa kredit, tetap berhenti")
+	# Kembali lewat misi dan antaran hari yang sama: kredit antaran tetap diberikan satu kali.
+	var c: ReputationManager.Catatan = _catatan(9, [[sens, true, SkorRute.Kualitas.TEPAT]])
+	c.misi = _misi(true, sens, "kecil")
+	var hm: ReputationManager.Hasil = _terapkan(_state(peta, 10), c)
+	check(hm.kredit == 4 and hm.jumlah(ReputationManager.Jenis.KEMBALI) == 1 and _e(hm, sens) == _entri("aktif", 0, 0, 0), "kembali lewat misi dan antaran sekaligus: kredit antaran 4 tetap diberikan, satu KEMBALI")
 
 
 func _test_misi() -> void:
@@ -511,6 +539,12 @@ func _test_gagal_reputasi_misi() -> void:
 	var d3: Dictionary = data.duplicate(true)
 	d3["gagal"] = {}
 	check(DataMisi.parse(d3).sah() and DataMisi.parse(d3).misi.gagal_reputasi() == 0, "gagal tanpa reputasi = 0")
+	# Klem lapis kedua (QA-006): DataMisi dirakit tangan melewati validasi `parse`; nilai di luar 0..REPUTASI_MISI_GAGAL_MAKS dijepit, bukan bilangan = 0.
+	check(Config.REPUTASI_MISI_GAGAL_MAKS == 1, "REPUTASI_MISI_GAGAL_MAKS = 1 (misi gagal tidak pernah lebih berat dari -1)")
+	var rakit: DataMisi = asli.misi
+	for pasangan: Array in [[5, 1], [2, 1], [1, 1], [0, 0], [-4, 0], [0.4, 0], [1.0, 1], ["x", 0], [null, 0]]:
+		rakit.gagal = {"reputasi": pasangan[0]}
+		check(rakit.gagal_reputasi() == pasangan[1], "rakitan tangan gagal.reputasi %s dijepit menjadi %d (dapat %d)" % [str(pasangan[0]), pasangan[1], rakit.gagal_reputasi()])
 
 
 # --- AC-7: laju reputasi ---

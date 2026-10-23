@@ -292,6 +292,25 @@ func _test_catat_hari_sekali() -> void:
 	check(hari2["pelanggan"][lain]["antar"] == baru["pelanggan"][lain]["antar"] + 1, "hari berikutnya menerapkan sekali lagi (antar bertambah satu)")
 	# hari tidak mundur dan koin_total hanya naik
 	check(hari2["hari"] > baru["hari"] and hari2["koin_total"] >= baru["koin_total"], "hari dan koin_total hanya naik")
+	# QA-003: antaran sah ke rumah berhenti lewat catat_hari memberi kredit dan mengembalikannya aktif (7 aktif tepat + 1 berhenti tepat = 32 kredit = +1).
+	var pel_b: ReputationManager.Catatan = ReputationManager.Catatan.new()
+	pel_b.hari = 3
+	var awal_b: Dictionary = DataSave.templat()
+	awal_b["hari"] = 3
+	awal_b["reputasi"] = {"perumahan": 20}
+	awal_b["pelanggan"] = {sens: _entri("berhenti", 5, 2, 1)}
+	var daftar_b: Array[String] = [sens]
+	for id: String in _id_boleh:
+		if daftar_b.size() < 8 and id != sens:
+			daftar_b.append(id)
+	for id: String in daftar_b:
+		var rb: ReputationManager.CatatanRumah = ReputationManager.CatatanRumah.new()
+		rb.id = id
+		rb.terantar = true
+		rb.kualitas = SkorRute.Kualitas.TEPAT
+		pel_b.rumah.append(rb)
+	var baru_b: Dictionary = DataSave.catat_hari(awal_b, _catatan_hari(3, 100, pel_b))
+	check(baru_b["pelanggan"][sens] == _entri("aktif", 0, 0, 0) and baru_b["reputasi"]["perumahan"] == 21, "catat_hari: rumah berhenti terantar tepat kembali aktif dan kreditnya ikut dihitung (32 kredit = reputasi 20 -> 21)")
 	# reputasi tidak pernah di bawah 0 lewat catat_hari
 	var nol: Dictionary = awal.duplicate(true)
 	nol["reputasi"] = {"perumahan": 0}
