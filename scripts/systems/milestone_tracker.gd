@@ -161,10 +161,10 @@ static func nama_tingkat(tingkat_ke: int) -> String:
 
 ## True bila `a` lebih dekat tercapai dari `b` (pecahan lebih besar, lalu sisa lebih kecil; seri terakhir ditentukan urutan id oleh pemanggil yang menjaga yang lebih awal).
 static func _lebih_dekat(a: Status, b: Status) -> bool:
-	var kiri: int = a.nilai * b.target
-	var kanan: int = b.nilai * a.target
-	if kiri != kanan:
-		return kiri > kanan
+	var silang_a: int = a.nilai * b.target
+	var silang_b: int = b.nilai * a.target
+	if silang_a != silang_b:
+		return silang_a > silang_b
 	return a.sisa() < b.sisa()
 
 

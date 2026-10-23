@@ -115,6 +115,8 @@ var _kepribadian: Array[KepribadianPelanggan.Entri] = []
 ## Catatan pelanggan hari ini dan hasil reputasinya; diisi saat layar hasil terbuka (null sebelum itu, dan bila rute tanpa keadaan).
 var _catatan_pelanggan: ReputationManager.Catatan = null
 var _hasil_reputasi: ReputationManager.Hasil = null
+## Ringkasan milestone hari ini (`MilestoneTracker.ringkas`: state save sebelum hari dan hasil `DataSave.catat_hari` tanpa belanja bengkel); diisi saat layar hasil terbuka, null bila rute tanpa keadaan.
+var _hasil_milestone: MilestoneTracker.Ringkasan = null
 
 @onready var _daur: RumahDaurRute = %Objek
 @onready var _penerap: PenerapPenutup = %PenerapPenutup
@@ -171,6 +173,7 @@ func _perbarui_hud_rute(jarak_ubin: float) -> void:
 	if hud == null:
 		return
 	var lewat: bool = TenggatRute.lewat(_tenggat)
+	hud.tampilkan_reputasi(ReputationManager.reputasi_di(_state_pelanggan, Config.DISTRIK_AWAL) if _pelanggan_rute != null else -1)
 	hud.tampilkan_tenggat(_tenggat)
 	hud.tampilkan_radar(RadarRute.penanda(_rute, jarak_ubin, _skor.terantar, mode_bantu(), lewat))
 	hud.tampilkan_progres(ProgresRute.status(_rute, jarak_ubin, _skor.terantar, _selesai), ProgresRute.jumlah_terkirim(_rute, _skor.terantar), _rute.pelanggan.size())
@@ -184,8 +187,11 @@ func _buka_hasil() -> void:
 	if _pelanggan_rute != null:
 		_catatan_pelanggan = ReputationManager.catat(_rute, _skor, _hari, _misi, _keadaan_misi)
 		_hasil_reputasi = ReputationManager.terapkan(_state_pelanggan, _catatan_pelanggan, _kepribadian)
+		_hasil_milestone = MilestoneTracker.ringkas(_state_pelanggan, _state_sesudah_hari())
 	var saldo_lama: int = int(_state_pelanggan["koin"]) if _state_pelanggan.has("koin") else -1
-	_layar_hasil.isi(_angka_hasil, _misi if _keadaan_misi != null else null, perlu, saldo_lama)
+	_layar_hasil.isi(_angka_hasil, _misi if _keadaan_misi != null else null, perlu, saldo_lama, _hasil_reputasi, _hasil_milestone)
+	if _audio != null and _hasil_milestone != null and BunyiMilestone.berbunyi(_hasil_milestone.baru.size()):
+		_audio.putar_milestone()
 	_layar_hasil.tampilkan(true)
 	_panel_akhir.tampilkan(false)
 	_hud.visible = false
@@ -193,6 +199,16 @@ func _buka_hasil() -> void:
 	_kontrol.lepas_semua()
 	_kontrol.set_process_input(false)
 	hasil_dibuka.emit(_angka_hasil)
+
+
+## State save sesudah hari ini (pratinjau murni `DataSave.catat_hari` dari state awal dan catatan hari ini, tanpa belanja bengkel dan tanpa menulis apa pun): dasar progres milestone di layar hasil.
+func _state_sesudah_hari() -> Dictionary:
+	var catatan: DataSave.CatatanHari = DataSave.CatatanHari.new()
+	catatan.hari = _hari
+	catatan.angka = _angka_hasil
+	catatan.pelanggan = _catatan_pelanggan
+	catatan.kepribadian = _kepribadian
+	return DataSave.catat_hari(_state_pelanggan, catatan)
 
 
 func _langkah_waktu(langkah_dt: float) -> void:
@@ -294,6 +310,7 @@ func _susun(benih: int) -> void:
 	_angka_hasil = null
 	_catatan_pelanggan = null
 	_hasil_reputasi = null
+	_hasil_milestone = null
 	_layar_hasil.tampilkan(false)
 	_hud.visible = true
 	_tutorial_node.visible = true
@@ -450,6 +467,11 @@ func catatan_pelanggan() -> ReputationManager.Catatan:
 ## Hasil `ReputationManager` hari ini (null sebelum layar hasil terbuka atau bila rute tanpa keadaan); sama dengan yang diterapkan `DataSave.catat_hari`.
 func hasil_reputasi() -> ReputationManager.Hasil:
 	return _hasil_reputasi
+
+
+## Ringkasan milestone hari ini (null sebelum layar hasil terbuka atau bila rute tanpa keadaan).
+func hasil_milestone() -> MilestoneTracker.Ringkasan:
+	return _hasil_milestone
 
 
 ## Nomor hari rute (bawaan hari 1).

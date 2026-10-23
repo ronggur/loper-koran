@@ -13,6 +13,11 @@ extends CanvasLayer
 ## Run fase6a2-reputasi-pelanggan bagian B (AC-11, K-1, O-1, O-2, usulan): bila ada koran yang dilempar lalu terbuang, dua baris netral (`TEXT_2`, tanpa kata "gagal") tampil di daftar netral, terpisah dari ongkos dan tip:
 ## "Koran terbuang n koran (-potongan)" dan "Koin bersih" (boleh minus, tanda minus eksplisit); tanpa koran terbuang kedua baris tersembunyi. Baris "Saldo mulai lagi dari 0" tampil hanya bila saldo save benar-benar
 ## dijepit 0 (`isi` diberi `saldo_lama`, -1 = tidak diketahui). Baris "Koin" tetap koin kotor (`HasilRute.Angka.koin`); semua angka dari `HasilRute.Angka`.
+## Run fase6a2-reputasi-pelanggan bagian C (AC-13 dan AC-14, O-8 sampai O-10, usulan): kolom kanan di panel yang sama (`PanelKanan`, lebar `HASIL_KANAN_LEBAR_PX`), di samping kolom kiri yang sudah padat, sehingga tinggi panel
+## tidak bertambah: (1) reputasi saat ini dan perubahan hari itu ("12 (+2)", ikon `ui_icon_reputasi`; naik `OK`, selain itu `TEXT_2`, tanda plus atau minus eksplisit), (2) jumlah pelanggan baru, jadi tetap, berhenti
+## berlangganan, dan berlangganan lagi (hanya yang bukan nol, nada netral, tanpa nama pelanggan), (3) SATU milestone paling dekat tercapai (nama dan tingkat berikutnya dengan lencana, bilah `BilahMilestone` dan angka
+## "n/target": bukan warna saja), (4) tingkat yang baru tercapai hari itu ("Baru: Koin terkumpul · Perak", lencana, `OK`, paling banyak `MILESTONE_BARU_MAKS_TAMPIL`). Semua dari `ReputationManager.Hasil` dan
+## `MilestoneTracker.Ringkasan` (layar ini tidak menghitung apa pun). Tanpa keduanya (rute yang dijalankan sendiri) kolom kanan tersembunyi dan layar sama dengan sebelumnya.
 ## Latar menangkap sentuhan GUI (`MOUSE_FILTER_STOP`); HUD dan kontrol sentuh di bawahnya dimatikan adegan (`RuteMain`) selama layar ini
 ## tampil, karena keduanya membaca sentuhan lewat `_input`.
 
@@ -20,6 +25,13 @@ extends CanvasLayer
 signal main_lagi_diminta
 ## Tombol "Ke bengkel" ditekan (mode hari, `atur_mode_hari(true)`; run fase4a-koran-hari AC-17, run fase6a1-bengkel-kondisi AC-24: dulu "Hari berikutnya").
 signal bengkel_diminta
+
+## Lencana tiga tingkat (indeks 0 = perunggu), dimuat saat kompilasi (bukan di `_draw`).
+const LENCANA: Array[Texture2D] = [
+	preload("res://assets/sprites/ui/ui_lencana_perunggu.png"),
+	preload("res://assets/sprites/ui/ui_lencana_perak.png"),
+	preload("res://assets/sprites/ui/ui_lencana_emas.png"),
+]
 
 ## True bila tombol layar ini "Ke bengkel" (di dalam alur hari), false bila "Main lagi" (rute dijalankan sendiri: probe, tes lama, dev).
 var _mode_hari: bool = false
@@ -43,6 +55,28 @@ var _mode_hari: bool = false
 @onready var _rekap_misi: Label = %RekapMisi
 @onready var _tombol: TombolSentuh = %TombolMainLagi
 @onready var _kondisi: VBoxContainer = %KondisiHasil
+@onready var _kolom: VBoxContainer = %KolomHasil
+@onready var _badan: HBoxContainer = %BadanHasil
+@onready var _panel_kanan: PanelContainer = %PanelKanan
+@onready var _kanan: VBoxContainer = %KananHasil
+@onready var _ikon_reputasi: TextureRect = %IkonReputasiHasil
+@onready var _label_reputasi: Label = %LabelReputasi
+@onready var _nilai_reputasi: Label = %NilaiReputasi
+@onready var _bagian_pelanggan: VBoxContainer = %BagianPelanggan
+@onready var _judul_pelanggan: Label = %JudulPelanggan
+@onready var _daftar_pelanggan: GridContainer = %DaftarPelanggan
+@onready var _bagian_target: VBoxContainer = %BagianTarget
+@onready var _judul_target: Label = %JudulTarget
+@onready var _ikon_target: TextureRect = %IkonTarget
+@onready var _nama_target: Label = %NamaTarget
+@onready var _bilah_target: BilahMilestone = %BilahTarget
+@onready var _angka_target: Label = %AngkaTarget
+@onready var _teks_tamat: Label = %TeksTamat
+@onready var _bagian_baru: VBoxContainer = %BagianBaru
+## Baris tingkat baru tercapai (dibuat di `_ready`): ikon lencana dan teks.
+var _baris_baru: Array[HBoxContainer] = []
+var _ikon_baru: Array[TextureRect] = []
+var _teks_baru: Array[Label] = []
 
 
 func _ready() -> void:
@@ -51,6 +85,10 @@ func _ready() -> void:
 	_panel.add_theme_stylebox_override(&"panel", GayaHud.kotak(Palette.UI_PANEL, Palette.OUTLINE))
 	_panel.custom_minimum_size = Vector2(Config.HASIL_PANEL_LEBAR_PX, 0)
 	_isi.add_theme_constant_override(&"separation", Config.HUD_PANEL_PAD_Y_PX)
+	_isi.custom_minimum_size = Vector2(Config.HASIL_PANEL_LEBAR_PX - 2 * Config.HUD_PANEL_PAD_X_PX, 0)
+	_kolom.add_theme_constant_override(&"separation", Config.HUD_PANEL_PAD_Y_PX)
+	_badan.add_theme_constant_override(&"separation", Config.HASIL_KOLOM_JARAK_PX)
+	_terapkan_gaya_kanan()
 	for daftar: GridContainer in [_daftar_berhasil, _daftar_netral]:
 		daftar.add_theme_constant_override(&"v_separation", Config.HASIL_JARAK_BARIS_PX)
 		daftar.add_theme_constant_override(&"h_separation", Config.HUD_PANEL_PAD_X_PX)
@@ -77,6 +115,51 @@ func _ready() -> void:
 	tampilkan(false)
 
 
+## Gaya dan simpul kolom kanan (panel terangkat `UI_PANEL_RAISED`, label `HudLabel`, ikon 14 px, baris tingkat baru tercapai).
+func _terapkan_gaya_kanan() -> void:
+	_panel_kanan.add_theme_stylebox_override(&"panel", GayaHud.kotak(Palette.UI_PANEL_RAISED, Palette.OUTLINE))
+	_kanan.custom_minimum_size = Vector2(Config.HASIL_KANAN_LEBAR_PX, 0)
+	_kanan.add_theme_constant_override(&"separation", Config.HUD_PANEL_PAD_Y_PX)
+	_daftar_pelanggan.add_theme_constant_override(&"v_separation", Config.HASIL_JARAK_BARIS_PX)
+	_daftar_pelanggan.add_theme_constant_override(&"h_separation", Config.HUD_PANEL_PAD_X_PX)
+	_bagian_pelanggan.add_theme_constant_override(&"separation", Config.HASIL_JARAK_BARIS_PX)
+	_bagian_target.add_theme_constant_override(&"separation", Config.HASIL_JARAK_BARIS_PX)
+	_bagian_baru.add_theme_constant_override(&"separation", Config.HASIL_JARAK_BARIS_PX)
+	for label: Label in [_label_reputasi, _judul_pelanggan, _judul_target]:
+		label.add_theme_color_override(&"font_color", Palette.ACCENT)
+	for node: Node in _daftar_pelanggan.get_children():
+		(node as Label).add_theme_color_override(&"font_color", Palette.TEXT_2)
+	_nama_target.add_theme_color_override(&"font_color", Palette.TEXT)
+	_angka_target.add_theme_color_override(&"font_color", Palette.TEXT)
+	_teks_tamat.add_theme_color_override(&"font_color", Palette.TEXT_2)
+	_nilai_reputasi.add_theme_color_override(&"font_color", Palette.TEXT)
+	_ikon_reputasi.custom_minimum_size = Vector2(Config.HASIL_IKON_PX, Config.HASIL_IKON_PX)
+	_ikon_target.custom_minimum_size = Vector2(Config.HASIL_IKON_PX, Config.HASIL_IKON_PX)
+	for i: int in range(Config.MILESTONE_BARU_MAKS_TAMPIL):
+		var baris: HBoxContainer = HBoxContainer.new()
+		baris.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		baris.visible = false
+		var ikon: TextureRect = TextureRect.new()
+		ikon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		ikon.stretch_mode = TextureRect.STRETCH_KEEP
+		ikon.custom_minimum_size = Vector2(Config.HASIL_IKON_PX, Config.HASIL_IKON_PX)
+		ikon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ikon.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		var teks: Label = Label.new()
+		teks.theme_type_variation = &"HudLabel"
+		teks.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		teks.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		teks.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		teks.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		teks.add_theme_color_override(&"font_color", Palette.OK)
+		baris.add_child(ikon)
+		baris.add_child(teks)
+		_bagian_baru.add_child(baris)
+		_baris_baru.append(baris)
+		_ikon_baru.append(ikon)
+		_teks_baru.append(teks)
+
+
 ## Mengganti tombol layar ini: true = "Ke bengkel" (alur hari), false = "Main lagi" (bawaan).
 func atur_mode_hari(nilai: bool) -> void:
 	_mode_hari = nilai
@@ -98,8 +181,9 @@ func _saat_tombol() -> void:
 ## Mengisi angka dari `angka` (`HasilRute.dari`). Tidak menghitung ulang apa pun. `misi` (data misi hari ini, null = tanpa misi) memberi teks banner untuk
 ## baris rekap misi (run fase4b-misi-kucing, AC-16): satu baris bila `angka.misi_hasil` selesai atau gagal, tidak ada baris tanpa misi. `perlu_bengkel` = id komponen sepeda PERLU_BENGKEL
 ## (`BikeCondition.perlu_bengkel`): satu baris kondisi per komponen, tanpa komponen rusak tidak ada baris (AC-24). `saldo_lama` = saldo save sebelum hari ini (-1 = tidak diketahui, mis. rute yang
-## dijalankan sendiri): baris "Saldo mulai lagi dari 0" hanya bila `HasilRute.koin_dijepit` > 0.
-func isi(angka: HasilRute.Angka, misi: DataMisi = null, perlu_bengkel: Array[String] = [], saldo_lama: int = -1) -> void:
+## dijalankan sendiri): baris "Saldo mulai lagi dari 0" hanya bila `HasilRute.koin_dijepit` > 0. `reputasi` (`ReputationManager.Hasil` hari ini) dan `milestone` (`MilestoneTracker.Ringkasan`) mengisi kolom kanan (run 6A2 bagian C);
+## null = bagian itu tidak tampil, keduanya null = kolom kanan tersembunyi.
+func isi(angka: HasilRute.Angka, misi: DataMisi = null, perlu_bengkel: Array[String] = [], saldo_lama: int = -1, reputasi: ReputationManager.Hasil = null, milestone: MilestoneTracker.Ringkasan = null) -> void:
 	var pemisah: String = tr("HUD_PEMISAH_RIBUAN")
 	_nilai_terkirim.text = tr("HASIL_TERKIRIM_ANGKA").format({"n": angka.terkirim, "total": angka.pelanggan})
 	_nilai_tip.text = tr("HASIL_TIP_ANGKA").format({"koin": HasilRute.ribuan(angka.koin_tip, pemisah), "n": angka.jumlah_tip})
@@ -110,11 +194,65 @@ func isi(angka: HasilRute.Angka, misi: DataMisi = null, perlu_bengkel: Array[Str
 	_isi_potongan(angka, saldo_lama, pemisah)
 	_isi_rekap_misi(angka, misi)
 	_isi_kondisi(perlu_bengkel)
+	_isi_kanan(reputasi, milestone)
 	if angka.tenggat_lewat:
 		var md: Vector2i = TenggatRute.menit_detik(angka.detik_lewat)
 		_teks_tenggat.text = tr("HASIL_TENGGAT_LEWAT").format({"m": md.x, "s": "%02d" % md.y})
 	else:
 		_teks_tenggat.text = tr("HASIL_TENGGAT_SEMPAT")
+
+
+## Kolom kanan (AC-13): reputasi + perubahan, jumlah pelanggan (hanya yang bukan nol), milestone paling dekat, tingkat yang baru tercapai. Bagian tanpa data tersembunyi; tanpa keduanya seluruh kolom tersembunyi.
+func _isi_kanan(reputasi: ReputationManager.Hasil, milestone: MilestoneTracker.Ringkasan) -> void:
+	_panel_kanan.visible = reputasi != null or milestone != null
+	var pemisah: String = tr("HUD_PEMISAH_RIBUAN")
+	var baris_reputasi: Node = _nilai_reputasi.get_parent()
+	(baris_reputasi as HBoxContainer).visible = reputasi != null
+	_bagian_pelanggan.visible = false
+	if reputasi != null:
+		_nilai_reputasi.text = tr("HASIL_REPUTASI_ANGKA").format({"n": reputasi.reputasi_sesudah, "d": "%+d" % reputasi.perubahan})
+		_nilai_reputasi.add_theme_color_override(&"font_color", Palette.OK if reputasi.perubahan > 0 else Palette.TEXT_2)
+		var jenis: Array = [ReputationManager.Jenis.BARU, ReputationManager.Jenis.SETIA, ReputationManager.Jenis.BERHENTI, ReputationManager.Jenis.KEMBALI]
+		var ada: bool = false
+		var anak: Array[Node] = _daftar_pelanggan.get_children()
+		for i: int in range(jenis.size()):
+			var n: int = reputasi.jumlah(jenis[i])
+			(anak[i * 2] as Label).visible = n > 0
+			(anak[i * 2 + 1] as Label).visible = n > 0
+			(anak[i * 2 + 1] as Label).text = tr("HASIL_PELANGGAN_ANGKA").format({"n": n})
+			ada = ada or n > 0
+		_bagian_pelanggan.visible = ada
+	_bagian_target.visible = milestone != null
+	_bagian_baru.visible = false
+	if milestone == null:
+		return
+	var s: MilestoneTracker.Status = milestone.terdekat
+	_teks_tamat.visible = s == null
+	_bilah_target.get_parent().visible = s != null
+	_nama_target.get_parent().visible = s != null
+	if s != null:
+		_ikon_target.texture = LENCANA[s.tingkat]
+		_nama_target.text = tr("HASIL_TARGET_NAMA").format({"nama": tr(kunci_nama_milestone(s.id)), "tingkat": tr(kunci_tingkat(s.tingkat + 1))})
+		_bilah_target.atur(s.pecahan())
+		_angka_target.text = tr("HASIL_TARGET_ANGKA").format({"n": HasilRute.ribuan(s.nilai, pemisah), "target": HasilRute.ribuan(s.target, pemisah)})
+	var tampil: int = mini(milestone.baru.size(), _baris_baru.size())
+	_bagian_baru.visible = tampil > 0
+	for i: int in range(_baris_baru.size()):
+		_baris_baru[i].visible = i < tampil
+		if i < tampil:
+			var c: MilestoneTracker.Capaian = milestone.baru[i]
+			_ikon_baru[i].texture = LENCANA[c.tingkat - 1]
+			_teks_baru[i].text = tr("HASIL_TARGET_BARU").format({"nama": tr(kunci_nama_milestone(c.id)), "tingkat": tr(kunci_tingkat(c.tingkat))})
+
+
+## Kunci terjemahan nama milestone `id` ("HASIL_MILESTONE_NAMA_<ID>").
+static func kunci_nama_milestone(id: String) -> String:
+	return "HASIL_MILESTONE_NAMA_" + id.to_upper()
+
+
+## Kunci terjemahan nama tingkat 1..3 ("HASIL_MILESTONE_TINGKAT_<NAMA>").
+static func kunci_tingkat(tingkat_ke: int) -> String:
+	return "HASIL_MILESTONE_TINGKAT_" + MilestoneTracker.nama_tingkat(tingkat_ke).to_upper()
 
 
 ## Baris koran terbuang dan koin bersih (AC-11): tersembunyi bila tidak ada koran terbuang; baris saldo dijepit hanya bila saldo benar-benar dijepit 0 (O-2).
@@ -215,6 +353,97 @@ func teks_potongan() -> Array[String]:
 	return hasil
 
 
+## True bila kolom kanan (reputasi, pelanggan, milestone) tampil.
+func kanan_tampil() -> bool:
+	return _panel_kanan.visible
+
+
+## Teks reputasi "12 (+2)" ("" bila tersembunyi).
+func teks_reputasi() -> String:
+	return _nilai_reputasi.text if _panel_kanan.visible and (_nilai_reputasi.get_parent() as Control).visible else ""
+
+
+## Baris pelanggan yang tampil, "Label: n" urut baru, jadi tetap, berhenti, kembali (kosong bila tidak ada).
+func teks_pelanggan() -> Array[String]:
+	var hasil: Array[String] = []
+	if not _panel_kanan.visible or not _bagian_pelanggan.visible:
+		return hasil
+	var anak: Array[Node] = _daftar_pelanggan.get_children()
+	for i: int in range(0, anak.size(), 2):
+		if (anak[i] as Label).visible:
+			hasil.append("%s: %s" % [tr((anak[i] as Label).text), (anak[i + 1] as Label).text])
+	return hasil
+
+
+## Milestone paling dekat: "Nama · Tingkat 2/10" ("" bila tersembunyi); semua emas = teks tamat.
+func teks_target() -> String:
+	if not _panel_kanan.visible or not _bagian_target.visible:
+		return ""
+	if _teks_tamat.visible:
+		return tr(_teks_tamat.text)
+	return "%s %s" % [_nama_target.text, _angka_target.text]
+
+
+## Baris tingkat baru tercapai yang tampil, urut.
+func teks_baru() -> Array[String]:
+	var hasil: Array[String] = []
+	if not _panel_kanan.visible or not _bagian_baru.visible:
+		return hasil
+	for i: int in range(_baris_baru.size()):
+		if _baris_baru[i].visible:
+			hasil.append(_teks_baru[i].text)
+	return hasil
+
+
+## Pecahan bilah milestone yang tampil (-1 bila bilah tersembunyi; untuk tes).
+func pecahan_bilah() -> float:
+	if _panel_kanan.visible and _bagian_target.visible and _bilah_target.get_parent().visible:
+		return _bilah_target.pecahan()
+	return -1
+
+
+## Tekstur lencana target dan baris baru (untuk tes): indeks 0 = perunggu.
+func tekstur_target() -> Texture2D:
+	return _ikon_target.texture
+
+
+func tekstur_baru() -> Array[Texture2D]:
+	var hasil: Array[Texture2D] = []
+	for i: int in range(_baris_baru.size()):
+		if _baris_baru[i].visible:
+			hasil.append(_ikon_baru[i].texture)
+	return hasil
+
+
+## Persegi panel kanan dan semua simpul kontennya yang tampil (tes tata letak): panel, label, ikon, bilah.
+func rect_panel_kanan() -> Rect2:
+	return _panel_kanan.get_global_rect()
+
+
+func rect_isi_kanan() -> Array[Rect2]:
+	var hasil: Array[Rect2] = []
+	if not _panel_kanan.visible:
+		return hasil
+	var simpul: Array[Control] = [_label_reputasi, _nilai_reputasi, _ikon_reputasi]
+	if _bagian_pelanggan.visible:
+		simpul.append(_judul_pelanggan)
+		for node: Node in _daftar_pelanggan.get_children():
+			if (node as Label).visible:
+				simpul.append(node as Label)
+	if _bagian_target.visible:
+		simpul.append(_judul_target)
+		if _teks_tamat.visible:
+			simpul.append(_teks_tamat)
+		else:
+			simpul.append_array([_ikon_target, _nama_target, _bilah_target, _angka_target])
+	for i: int in range(_baris_baru.size()):
+		if _baris_baru[i].visible:
+			simpul.append_array([_ikon_baru[i], _teks_baru[i]])
+	for c: Control in simpul:
+		hasil.append(c.get_global_rect())
+	return hasil
+
+
 ## Teks yang tampil (sesudah terjemahan), urut dari atas (untuk tes): judul, lalu pasangan label dan nilai (yang tersembunyi dilewati), lalu teks tenggat.
 func teks_tampil() -> Array[String]:
 	var hasil: Array[String] = [tr(_judul.text)]
@@ -228,6 +457,13 @@ func teks_tampil() -> Array[String]:
 	if _rekap_misi.visible:
 		hasil.append(_rekap_misi.text)
 	hasil.append_array(teks_kondisi())
+	if _panel_kanan.visible:
+		if teks_reputasi() != "":
+			hasil.append("%s %s" % [tr(_label_reputasi.text), teks_reputasi()])
+		hasil.append_array(teks_pelanggan())
+		if teks_target() != "":
+			hasil.append(teks_target())
+		hasil.append_array(teks_baru())
 	return hasil
 
 

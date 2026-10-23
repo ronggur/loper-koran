@@ -760,6 +760,12 @@ const HASIL_BERHENTI_TOLERANSI_UD: float = 0.000001
 const HASIL_PANEL_LEBAR_PX: int = 300
 ## Panel layar hasil: jarak antar baris dan antar bagian, piksel game.
 const HASIL_JARAK_BARIS_PX: int = 2
+## Layar hasil, kolom kanan (run 6A2 bagian C: reputasi, pelanggan, milestone): lebar minimum isi kolom, jarak ke kolom kiri, tinggi dan lebar minimum bilah milestone, dan sisi ikon (lencana, reputasi), piksel game.
+const HASIL_KANAN_LEBAR_PX: int = 180
+const HASIL_KOLOM_JARAK_PX: int = 8
+const HASIL_BILAH_TINGGI_PX: int = 7
+const HASIL_BILAH_LEBAR_MIN_PX: int = 60
+const HASIL_IKON_PX: int = 14
 
 ## --- Hari, seed, dan save (Fase 4 run 4A, DATA_SCHEMA 4, rule save-system; usulan, alur hari berurutan ini prototype yang tidak mengunci struktur sesi ROADMAP 5) ---
 
