@@ -282,7 +282,9 @@ func _test_tingkat_bertingkat() -> void:
 	check(kartu.jejak[0].label().text == "I" and kartu.jejak[0].glif_tampil() and kartu.info.jejak == [TampilBengkel.StatusJejak.DIMILIKI, TampilBengkel.StatusJejak.AKTIF, TampilBengkel.StatusJejak.MENUNGGU], "jejak [dimiliki, aktif, menunggu]")
 	layar.tombol_beli("ban_anti_selip_2").pressed.emit()
 	await _tree.process_frame
-	layar.tombol_beli("ban_anti_selip_3").pressed.emit()
+	check(kartu.data.id == "ban_anti_selip_3" and kartu.chip_tingkat.teks() == "III" and kartu.harga.text == "1.200 koin" and layar.tombol_beli("ban_anti_selip_3") != null, "sesudah beli II: kartu berganti ke tingkat III, harga 1.200")
+	if layar.tombol_beli("ban_anti_selip_3") != null:
+		layar.tombol_beli("ban_anti_selip_3").pressed.emit()
 	await _tree.process_frame
 	check(layar.state()["koin"] == 5000 - 600 - 900 - 1200 and Economy.level_dari(layar.state())["ban"] == 3 and kartu.info.dimiliki and kartu.chip_dimiliki.visible and not kartu.tombol.visible and _jenis_kartu(kartu.panel) == GayaHud.tekstur("kartu_redup"), "sesudah beli tiga tingkat: saldo 2.300, level 3, kartu redup 'Dimiliki'")
 	_buang(layar)
