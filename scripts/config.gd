@@ -1216,6 +1216,8 @@ const BENGKEL_GLIF_PX: int = 12
 const BENGKEL_KOIN_PX: int = 14
 ## Panel galat data upgrade: jarak isi ke tepi di luar garis kartu (kanvas padding 8), jarak glif ke teks.
 const BENGKEL_GALAT_PAD_PX: int = 8
+## Deskripsi kartu upgrade paling banyak sekian baris; sisanya dipotong dengan elipsis supaya kartu tetap 62 tinggi dan tiga upgrade muat tanpa scroll (QA-001; data nyata 1 sampai 2 baris).
+const BENGKEL_DESKRIPSI_BARIS_MAKS: int = 2
 ## Panggung sepeda: tinggi minimum bila ruang sempit, ukuran sepeda kecil (`ui_bengkel_sepeda_kecil.png`) dan papan alat (`ui_bengkel_papan_alat.png`), jarak sepeda dari bawah panggung, lebar latar.
 const BENGKEL_PANGGUNG_MIN_PX: int = 40
 const BENGKEL_SEPEDA_LEBAR_PX: int = 116

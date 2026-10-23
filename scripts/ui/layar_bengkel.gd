@@ -301,7 +301,7 @@ func _bangun_kartu_servis(id: String) -> KartuServis:
 	teks.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	teks.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	baris.add_child(teks)
-	kartu.nama = _label(&"LayarTeksUtama", Palette.TEXT)
+	kartu.nama = _label_potong(&"LayarTeksUtama", Palette.TEXT)
 	teks.add_child(kartu.nama)
 	# Kotak kondisi dan teks status sebaris bila muat; kolom sempit membuat teks status turun ke bawah kotak (tanpa pecah per huruf).
 	var status: HFlowContainer = HFlowContainer.new()
@@ -374,10 +374,12 @@ func _bangun_kartu_upgrade(id: String, tingkat: Array[DataToko]) -> KartuUpgrade
 	teks.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	teks.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	baris.add_child(teks)
-	kartu.nama = _label(&"LayarTeksUtama", Palette.TEXT)
+	kartu.nama = _label_potong(&"LayarTeksUtama", Palette.TEXT)
 	teks.add_child(kartu.nama)
 	kartu.deskripsi = _label(&"LayarTeksKecil", Palette.TEXT_2)
 	kartu.deskripsi.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	kartu.deskripsi.max_lines_visible = Config.BENGKEL_DESKRIPSI_BARIS_MAKS
+	kartu.deskripsi.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	teks.add_child(kartu.deskripsi)
 	kartu.baris_jejak = _baris(Config.BENGKEL_JEJAK_JARAK_PX)
 	teks.add_child(kartu.baris_jejak)
@@ -437,6 +439,15 @@ func _tombol_aksi() -> TombolSentuh:
 	tombol.add_theme_constant_override(&"h_separation", Config.UI_CHIP_JARAK_BESAR_PX)
 	GayaHud.tombol_biasa(tombol)
 	return tombol
+
+
+## Label satu baris yang dipotong dengan elipsis bila kolomnya sempit (QA-001): lebar minimumnya tidak mengikuti teks, jadi nama panjang tidak melebarkan kartu, kolom, atau `Isi`.
+func _label_potong(varian: StringName, warna: Color) -> Label:
+	var label: Label = _label(varian, warna)
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	label.clip_text = true
+	return label
 
 
 func _label(varian: StringName, warna: Color) -> Label:

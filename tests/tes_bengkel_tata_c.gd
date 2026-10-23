@@ -3,7 +3,8 @@ extends RefCounted
 ## Tes layar bengkel tata C di scene (run ui1-komponen-bengkel bagian B, AC-6 sampai AC-9): `scenes/bengkel/bengkel.tscn` dengan state tulisan tes dan data upgrade nyata (`upgrades.json`) atau data uji bertingkat.
 ## Keadaan a sampai g dari kanvas (hari pertama, ada rusak, saldo kurang, sesudah beli, terpadat, galat data, inset aman), tingkat upgrade I, II, III (model tampilan, data uji), tombol nonaktif, ukuran minimum
 ## tombol (>= 42 tinggi dan >= 84 lebar), tanpa teks terpotong, tanpa tumpang tindih, chip di dalam kartu dan panggung sepeda, tanpa scroll, zona aman, enam ukuran jendela (lebar 640, 667, 700, 780, 800 dan 1600x720),
-## dan kontras token teks (>= 7:1) di atas isi bingkai yang terpasang. Harga literal dihitung tangan dari BALANCING 7 dan 8.5 (ban 120, rem 80, rantai 150; ongkos naik x1,25 untuk dua rusak, x1,5 untuk tiga).
+## kontras token teks (>= 7:1) di atas isi bingkai yang terpasang, chip harga yang tetap tampil di sebelah tombolnya (aktif, "Koin kurang") dan hilang saat penuh atau dimiliki (QA-002), dan teks terpanjang
+## yang diizinkan `DataToko` (nama 24 huruf, deskripsi 48 huruf) dengan saldo enam dan sepuluh digit di lebar 640, 700, 800 (QA-001). Harga literal dihitung tangan dari BALANCING 7 dan 8.5 (ban 120, rem 80, rantai 150; ongkos naik x1,25 untuk dua rusak, x1,5 untuk tiga).
 
 const BERKAS_BENGKEL: String = "res://scenes/bengkel/bengkel.tscn"
 ## [lebar jendela, tinggi jendela, lebar viewport game].
@@ -37,6 +38,8 @@ func jalankan() -> void:
 	await _test_tombol_nonaktif_gaya()
 	await _test_tingkat_bertingkat()
 	await _test_tingkat_bertingkat_tata_letak()
+	await _test_chip_harga_terlihat()
+	await _test_teks_panjang()
 	for jendela: Array in JENDELA:
 		for inset_pakai: bool in [false, true]:
 			await _test_tata_letak(jendela, inset_pakai, true)
@@ -321,9 +324,11 @@ func _teks_terpotong(layar: LayarBengkel) -> Array[String]:
 		var label: Label = simpul as Label
 		if not label.is_visible_in_tree() or label.text == "":
 			continue
-		if label.get_visible_line_count() != label.get_line_count():
+		# Label dengan `max_lines_visible` (deskripsi upgrade, QA-001) sengaja memotong baris ke-3 dan seterusnya dengan elipsis; baris yang dijatah harus tampil penuh.
+		var baris_jatah: int = label.get_line_count() if label.max_lines_visible <= 0 else mini(label.get_line_count(), label.max_lines_visible)
+		if label.get_visible_line_count() != baris_jatah:
 			hasil.append("baris terpotong: " + label.text)
-		var tinggi_perlu: float = float(label.get_line_count()) * float(label.get_line_height())
+		var tinggi_perlu: float = float(baris_jatah) * float(label.get_line_height())
 		if label.size.y + 0.5 < tinggi_perlu:
 			hasil.append("tinggi kurang: %s (%.1f < %.1f)" % [label.text, label.size.y, tinggi_perlu])
 		if label.autowrap_mode == TextServer.AUTOWRAP_OFF and label.size.x + 0.5 < label.get_minimum_size().x:
@@ -427,3 +432,129 @@ func _test_hari_berikutnya_dan_back() -> void:
 	for id: String in Config.KONDISI_KOMPONEN:
 		check(layar.tombol_servis(id).disabled and layar.tombol_servis(id).text == "Koin kurang" and layar.panggung().chip_tampil(id), "%s: nonaktif 'Koin kurang' dan chip penanda tampil" % id)
 	_buang(layar)
+
+
+# --- Chip harga di sebelah tombolnya (QA-002, SPEC U-1 "harga selalu chip di sebelah tombolnya") ---
+
+## Chip `chip` (beserta labelnya) tampil di pohon, berukuran nyata, berjarak <= `jarak_maks` di kiri `tombol` dan sejajar tegak dengannya.
+func _chip_di_sebelah(chip: ChipUi, tombol: TombolSentuh, jarak_maks: float) -> bool:
+	if not chip.is_visible_in_tree() or not chip.label().is_visible_in_tree() or not tombol.is_visible_in_tree():
+		return false
+	var c: Rect2 = chip.get_global_rect()
+	var t: Rect2 = tombol.get_global_rect()
+	if c.size.x <= 0.0 or c.size.y <= 0.0 or chip.label().text == "":
+		return false
+	var jarak: float = t.position.x - c.end.x
+	var tegak: bool = c.position.y < t.end.y and c.end.y > t.position.y
+	return jarak >= -0.5 and jarak <= jarak_maks and tegak
+
+
+func _test_chip_harga_terlihat() -> void:
+	_judul.call("Bengkel tata C: chip harga tampil di sebelah tombol saat aktif dan saat 'Koin kurang', hilang saat penuh (Baik) atau Dimiliki (QA-002, SPEC U-1)")
+	for lebar_jendela: Array in [[1920, 1080], [2400, 1080]]:
+		var tag: String = "lebar %d" % floori(float(lebar_jendela[0]) / 3.0)
+		var jendela: Vector2i = Vector2i(lebar_jendela[0], lebar_jendela[1])
+		# Saldo 60: ban PERLU harga 84 (kurang), rem AUS harga 32 (aktif), rantai penuh (Baik). Upgrade: semua kurang (600, 500, 700 > 60).
+		var layar: LayarBengkel = await _bengkel(_state(60, 0.30, 0.60, 1.0), jendela)
+		var ban: LayarBengkel.KartuServis = layar.kartu_servis("ban")
+		var rem: LayarBengkel.KartuServis = layar.kartu_servis("rem")
+		var rantai: LayarBengkel.KartuServis = layar.kartu_servis("rantai")
+		check(ban.tombol.disabled and ban.tombol.text == "Koin kurang" and _chip_di_sebelah(ban.chip_harga, ban.tombol, 8.0) and ban.harga.text == "84 koin", "%s servis KURANG: tombol 'Koin kurang' dan chip harga '84 koin' tampil, berukuran nyata, di sebelah tombol" % tag)
+		check(not rem.tombol.disabled and _chip_di_sebelah(rem.chip_harga, rem.tombol, 8.0) and rem.harga.text == "32 koin", "%s servis AKTIF: chip harga '32 koin' di sebelah tombol Servis" % tag)
+		check(not rantai.chip_harga.is_visible_in_tree() and not rantai.tombol.visible and rantai.chip_baik.is_visible_in_tree() and rantai.label_baik.is_visible_in_tree(), "%s servis penuh: chip harga dan tombol hilang, chip 'Baik' tampil" % tag)
+		for id: String in ["ban_anti_selip", "rem_pakem", "rantai_hemat"]:
+			var kartu_u: LayarBengkel.KartuUpgrade = layar.kartu_upgrade(id)
+			check(kartu_u.tombol.disabled and _chip_di_sebelah(kartu_u.chip_harga, kartu_u.tombol, 8.0) and not kartu_u.chip_dimiliki.is_visible_in_tree(), "%s upgrade %s KURANG: chip harga '%s' di sebelah tombol 'Koin kurang'" % [tag, id, kartu_u.harga.text])
+		_buang(layar)
+		# Saldo 1100 lalu beli ban_anti_selip (600): ban Dimiliki (tanpa chip harga), rem 500 aktif (saldo 500), rantai 700 kurang.
+		layar = await _bengkel(_state(1100, 1.0, 1.0, 1.0), jendela)
+		layar.tombol_beli("ban_anti_selip").pressed.emit()
+		await _tree.process_frame
+		await _tree.process_frame
+		var dimiliki: LayarBengkel.KartuUpgrade = layar.kartu_upgrade("ban_anti_selip")
+		check(dimiliki.info.dimiliki and not dimiliki.chip_harga.is_visible_in_tree() and not dimiliki.tombol.is_visible_in_tree() and dimiliki.chip_dimiliki.is_visible_in_tree() and dimiliki.label_dimiliki.is_visible_in_tree(), "%s upgrade Dimiliki: chip harga dan tombol hilang, chip 'Dimiliki' tampil" % tag)
+		var rem_u: LayarBengkel.KartuUpgrade = layar.kartu_upgrade("rem_pakem")
+		var rantai_u: LayarBengkel.KartuUpgrade = layar.kartu_upgrade("rantai_hemat")
+		check(not rem_u.tombol.disabled and _chip_di_sebelah(rem_u.chip_harga, rem_u.tombol, 8.0) and rem_u.harga.text == "500 koin", "%s upgrade AKTIF (saldo = harga): chip harga '500 koin' di sebelah tombol Beli" % tag)
+		check(rantai_u.tombol.disabled and _chip_di_sebelah(rantai_u.chip_harga, rantai_u.tombol, 8.0) and rantai_u.harga.text == "700 koin", "%s upgrade KURANG sesudah beli: chip harga '700 koin' tetap di sebelah 'Koin kurang'" % tag)
+		_buang(layar)
+
+
+# --- Teks terpanjang yang diizinkan (QA-001, SPEC AC-6/AC-9) ---
+
+## [nama, deskripsi, label]. Nama <= `TOKO_NAMA_PANJANG_MAKS` (24) dan deskripsi <= `TOKO_DESKRIPSI_PANJANG_MAKS` (48) huruf, sah di `DataToko`; huruf lebar ("W") dan tanpa spasi sebagai kasus terburuk.
+const KASUS_TEKS: Array = [
+	["Rem Pakem Racing Edition", "Berhenti lebih cepat (+20%)", "nama 24 huruf"],
+	["Ban Anti-Selip Super", "Belok lebih lincah (+15%)", "nama 20 huruf"],
+	["WWWWWWWWWWWWWWWWWWWWWWWW", "Stamina awet dan rantai lebih tahan", "nama 24 huruf lebar tanpa spasi"],
+	["Rem Pakem", "Belok lebih lincah dan tahan di jalan licin kota", "deskripsi 48 huruf"],
+	["Rem Pakem", "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW", "deskripsi 48 huruf lebar tanpa spasi"],
+	["Rem Pakem Racing Edition", "Belok lebih lincah dan tahan di jalan licin kota", "nama 24 dan deskripsi 48 huruf"],
+]
+
+
+func _toko_teks(nama: String, deskripsi: String) -> PemuatToko.Kumpulan:
+	var toko: PemuatToko.Kumpulan = PemuatToko.muat()
+	for u: DataToko in toko.upgrade:
+		u.nama = nama
+		u.deskripsi = deskripsi
+	return toko
+
+
+func _test_teks_panjang() -> void:
+	_judul.call("Bengkel tata C: nama 24 huruf, deskripsi 48 huruf, saldo enam dan sepuluh digit di lebar 640, 700, 800 tidak melebarkan Isi, tidak menimpa, tombol >= 42x84, tiga upgrade tanpa scroll (QA-001, AC-6, AC-9)")
+	var panjang_data: bool = true
+	for kasus: Array in KASUS_TEKS:
+		panjang_data = panjang_data and String(kasus[0]).length() <= Config.TOKO_NAMA_PANJANG_MAKS and String(kasus[1]).length() <= Config.TOKO_DESKRIPSI_PANJANG_MAKS
+	check(panjang_data and Config.TOKO_NAMA_PANJANG_MAKS == 24 and Config.TOKO_DESKRIPSI_PANJANG_MAKS == 48, "kasus uji memakai panjang tepat di batas DataToko (24 dan 48)")
+	for jendela: Array in [[1920, 1080, 640], [2100, 1080, 700], [2400, 1080, 800]]:
+		var lebar: int = jendela[2]
+		for kasus: Array in KASUS_TEKS:
+			for saldo: int in [125480, 2147483647]:
+				var tag: String = "lebar %d, %s, saldo %d" % [lebar, kasus[2], saldo]
+				# Terpadat: tiga PERLU (ongkos x1,5, tiga chip penanda); saldo besar membuat semua tombol aktif.
+				var layar: LayarBengkel = await _bengkel(_state(saldo, 0.1, 0.2, 0.3), Vector2i(jendela[0], jendela[1]), _toko_teks(kasus[0], kasus[1]))
+				var isi: Rect2 = layar.rect_isi()
+				check(absf(isi.position.x - 12.0) < 0.5 and absf(isi.size.x - float(lebar - 24)) < 0.5 and isi.end.x <= float(lebar) - 12.0 + 0.5 and isi.position.y >= 0.0 and isi.end.y <= 360.0 - 12.0 + 0.5, "%s: Isi %s tidak melebar (x 12, lebar %d) dan tidak keluar layar" % [tag, isi, lebar - 24])
+				var kolom: Vector2i = TampilBengkel.lebar_kolom(lebar - 24)
+				check(absf(layar.rect_panel_servis().size.x - float(kolom.x)) < 0.5 and absf(layar.rect_kolom_upgrade().size.x - float(kolom.y)) < 0.5, "%s: kolom servis %d dan upgrade %d tetap (dapat %.1f dan %.1f)" % [tag, kolom.x, kolom.y, layar.rect_panel_servis().size.x, layar.rect_kolom_upgrade().size.x])
+				check(_tumpuk(layar).is_empty() and _teks_terpotong(layar).is_empty(), "%s: tanpa tumpang tindih dan tanpa teks terpotong tanpa elipsis: %s %s" % [tag, _tumpuk(layar).slice(0, 3), _teks_terpotong(layar).slice(0, 3)])
+				var kecil: Array[String] = []
+				for tombol: TombolSentuh in layar.semua_tombol():
+					if tombol.is_visible_in_tree():
+						var r: Rect2 = tombol.get_global_rect()
+						if r.size.y < 42.0 or r.size.x < (140.0 if tombol == layar.tombol_hari_berikutnya() else 84.0):
+							kecil.append(str(r))
+				check(kecil.is_empty(), "%s: semua tombol >= 42 tinggi dan >= 84 lebar: %s" % [tag, kecil])
+				var kartu_terbawah: float = 0.0
+				var tinggi_salah: Array[String] = []
+				for kartu_u: LayarBengkel.KartuUpgrade in [layar.kartu_upgrade("ban_anti_selip"), layar.kartu_upgrade("rem_pakem"), layar.kartu_upgrade("rantai_hemat")]:
+					kartu_terbawah = maxf(kartu_terbawah, kartu_u.panel.get_global_rect().end.y)
+					if absf(kartu_u.panel.size.y - 62.0) > 0.5:
+						tinggi_salah.append("%s %.1f" % [kartu_u.komponen, kartu_u.panel.size.y])
+					check(kartu_u.nama.text_overrun_behavior == TextServer.OVERRUN_TRIM_ELLIPSIS and kartu_u.nama.autowrap_mode == TextServer.AUTOWRAP_OFF and kartu_u.nama.get_line_count() == 1, "%s: nama upgrade %s satu baris dengan elipsis" % [tag, kartu_u.komponen])
+				for id: String in Config.KONDISI_KOMPONEN:
+					if absf(layar.kartu_servis(id).panel.size.y - 50.0) > 0.5:
+						tinggi_salah.append("servis %s %.1f" % [id, layar.kartu_servis(id).panel.size.y])
+				check(tinggi_salah.is_empty(), "%s: kartu servis tetap 50 dan kartu upgrade tetap 62: %s" % [tag, tinggi_salah])
+				check(layar.find_children("*", "ScrollContainer", true, false).is_empty() and kartu_terbawah <= layar.rect_tombol_hari().position.y + 0.5 and kartu_terbawah <= 348.5, "%s: tiga upgrade tanpa scroll, kartu terbawah y %.1f di atas 'Hari berikutnya' (%.1f)" % [tag, kartu_terbawah, layar.rect_tombol_hari().position.y])
+				check(layar.teks_saldo() == HasilRute.ribuan(Economy.saldo(layar.state()), "."), "%s: saldo terbaca penuh '%s'" % [tag, layar.teks_saldo()])
+				_buang(layar)
+	# Data nyata: nama dan deskripsi tidak ikut terpotong di 640 sampai 800 (elipsis hanya untuk teks di luar data nyata).
+	for jendela: Array in [[1920, 1080, 640], [2100, 1080, 700], [2400, 1080, 800]]:
+		var layar: LayarBengkel = await _bengkel(_state(5000, 0.1, 0.2, 0.3), Vector2i(jendela[0], jendela[1]))
+		for id: String in ["ban_anti_selip", "rem_pakem", "rantai_hemat"]:
+			var nama: Label = layar.kartu_upgrade(id).nama
+			var lebar_teks: float = nama.get_theme_font(&"font").get_string_size(nama.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, nama.get_theme_font_size(&"font_size")).x
+			check(lebar_teks <= nama.size.x + 0.5, "lebar %d: nama nyata '%s' muat penuh tanpa elipsis (%.1f <= %.1f)" % [jendela[2], nama.text, lebar_teks, nama.size.x])
+			var deskripsi: Label = layar.kartu_upgrade(id).deskripsi
+			check(deskripsi.get_line_count() <= 2 and deskripsi.get_visible_line_count() == deskripsi.get_line_count(), "lebar %d: deskripsi nyata '%s' paling banyak dua baris, semua terlihat (%d baris)" % [jendela[2], deskripsi.text, deskripsi.get_line_count()])
+		_buang(layar)
+	# Nama komponen servis yang panjang (terjemahan lain) juga tidak melebarkan Isi.
+	var layar_servis: LayarBengkel = await _bengkel(_state(500, 0.1, 0.2, 0.3), Vector2i(1920, 1080))
+	for id: String in Config.KONDISI_KOMPONEN:
+		layar_servis.kartu_servis(id).nama.text = "WWWWWWWWWWWWWWWWWWWWWWWWWWWW"
+	for i: int in range(3):
+		await _tree.process_frame
+	check(absf(layar_servis.rect_isi().size.x - 616.0) < 0.5 and absf(layar_servis.rect_panel_servis().size.x - float(TampilBengkel.lebar_kolom(616).x)) < 0.5 and _tumpuk(layar_servis).is_empty(), "nama komponen servis 28 huruf lebar: Isi tetap 616, kolom servis tetap, tanpa tumpang tindih")
+	_buang(layar_servis)
