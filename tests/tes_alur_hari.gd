@@ -253,17 +253,23 @@ func _test_satu_hari_utuh() -> void:
 	var blok: String = contoh.substr(awal_blok + 7, contoh.find("```", awal_blok + 7) - awal_blok - 7)
 	var dari_dokumen: Variant = JSON.parse_string(blok)
 	var dari_berkas: Variant = JSON.parse_string(FileAccess.get_file_as_string(_jalur()))
-	var cocok: bool = typeof(dari_dokumen) == TYPE_DICTIONARY and typeof(dari_berkas) == TYPE_DICTIONARY and (dari_dokumen as Dictionary).size() == (dari_berkas as Dictionary).size()
-	var beda: Array[String] = []
+	var cocok: bool = typeof(dari_dokumen) == TYPE_DICTIONARY and typeof(dari_berkas) == TYPE_DICTIONARY
+	# Byte demi byte (QA-005): berkas nyata dengan `pelanggan` dipangkas ke id yang ditampilkan dokumen, dicetak `DataSave.ke_teks`, harus sama dengan blok dokumen. Hanya `pelanggan` yang dipangkas
+	# (25 rumah nyata, 3 ditampilkan); semua field lain dan format cetak harus persis sama.
+	var teks_pangkas: String = ""
+	var asing_di_dokumen: Array[String] = []
 	if cocok:
-		for kunci: Variant in (dari_dokumen as Dictionary):
-			if kunci == "pelanggan":
-				for id: Variant in (dari_dokumen as Dictionary)["pelanggan"]:
-					if not ((dari_berkas as Dictionary)["pelanggan"] as Dictionary).has(id) or ((dari_dokumen as Dictionary)["pelanggan"] as Dictionary)[id] != ((dari_berkas as Dictionary)["pelanggan"] as Dictionary)[id]:
-						beda.append("pelanggan." + str(id))
-			elif (dari_dokumen as Dictionary)[kunci] != (dari_berkas as Dictionary).get(kunci):
-				beda.append(str(kunci))
-	check(cocok and beda.is_empty(), "contoh save di DATA_SCHEMA 4 = isi berkas save nyata sesudah hari 1 (semua field sama; pelanggan: tiap entri contoh sama dengan berkas; selisih: %s)" % [beda])
+		# State dibaca lewat DataSave (bilangan bulat tetap bulat; JSON.parse_string membuatnya float sehingga tercetak "2.0").
+		var pangkas: Dictionary = DataSave.dari_teks(FileAccess.get_file_as_string(_jalur())).state.duplicate(true)
+		var kecil: Dictionary = {}
+		for id: Variant in ((dari_dokumen as Dictionary).get("pelanggan", {}) as Dictionary):
+			if (pangkas["pelanggan"] as Dictionary).has(id):
+				kecil[id] = (pangkas["pelanggan"] as Dictionary)[id]
+			else:
+				asing_di_dokumen.append(str(id))
+		pangkas["pelanggan"] = kecil
+		teks_pangkas = DataSave.ke_teks(pangkas).strip_edges()
+	check(cocok and asing_di_dokumen.is_empty() and teks_pangkas == blok.strip_edges(), "contoh save di DATA_SCHEMA 4 = isi berkas save nyata sesudah hari 1 byte demi byte (hanya `pelanggan` dipangkas ke 3 id yang ditampilkan; id asing di dokumen: %s)" % [asing_di_dokumen])
 	check(cocok and ((dari_berkas as Dictionary)["pelanggan"] as Dictionary).size() == 25 and int(((dari_berkas as Dictionary)["reputasi"] as Dictionary)["perumahan"]) == 2, "berkas nyata memuat 25 pelanggan rute hari 1 dan reputasi Perumahan 2 (misi sedang +2, kredit 9 < 30)")
 	check(hari.status().keadaan == MesinHari.Keadaan.KORAN and hari.status().hari == 2 and hari.koran().tampil() and hari.rute() == null, "kembali ke layar koran hari 2, rute dibuang")
 	check(hari.get_child_count() == 1 + (1 if m.get_parent() == hari else 0), "node rute dibuang dari scene hari (hanya koran yang tersisa)")
