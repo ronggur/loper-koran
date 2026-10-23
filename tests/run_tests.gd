@@ -139,6 +139,9 @@ func _initialize() -> void:
 	# Run fase6a2-reputasi-pelanggan bagian B: potongan koran terbuang (murni).
 	var potongan: TesPotongan = TesPotongan.new(check, _judul)
 	potongan.jalankan()
+	# Run fase6a2-reputasi-pelanggan bagian C: milestone dasar (murni).
+	var milestone: TesMilestone = TesMilestone.new(check, _judul)
+	milestone.jalankan()
 	var sprite: TesSprite = TesSprite.new(check, _judul, self)
 	sprite.jalankan()
 	var ekspor: TesExport = TesExport.new(check, _judul)

@@ -878,6 +878,19 @@ const PELANGGAN_BONUS_PRIORITAS_UBIN: float = 1000000.0
 const PELANGGAN_KEPRIBADIAN_ID: Array[String] = ["biasa", "cerewet", "pemberi_tip", "sensitif"]
 const PELANGGAN_KEPRIBADIAN_BERKAS: String = "res://assets/data/customers/kepribadian.json"
 
+## --- Milestone dasar (run 6A2 bagian C, O-9, GDD 8 dan 13, BALANCING 7.4; semua usulan, tanpa hadiah kosmetik; progres diturunkan dari save, tanpa field save baru) ---
+
+## Id milestone (permanen; urutan juga menjadi pemutus seri terakhir "paling dekat tercapai") dan nama tiga tingkatnya (perunggu, perak, emas).
+const MILESTONE_ID: Array[String] = ["pelanggan_tetap", "koin_total", "misi_selesai", "sepeda"]
+const MILESTONE_TINGKAT: Array[String] = ["perunggu", "perak", "emas"]
+## Target tiap tingkat (menaik): jumlah pelanggan `setia`; `koin_total` seumur hidup; misi dengan hasil `selesai` di `misi_hasil`; `servis_total` + jumlah level upgrade sepeda.
+const MILESTONE_TARGET_PELANGGAN_TETAP: Array[int] = [3, 10, 25]
+const MILESTONE_TARGET_KOIN_TOTAL: Array[int] = [1000, 5000, 15000]
+const MILESTONE_TARGET_MISI_SELESAI: Array[int] = [1, 3, 5]
+const MILESTONE_TARGET_SEPEDA: Array[int] = [1, 4, 10]
+## Layar hasil menampilkan paling banyak sekian tingkat yang baru tercapai hari itu (tertinggi dulu, lalu urutan `MILESTONE_ID`); sisanya tetap tercatat di progres.
+const MILESTONE_BARU_MAKS_TAMPIL: int = 3
+
 ## --- Layar halaman depan koran (DESIGN_SPEC 4, 1.2; rule ui-scenes; run 4A, usulan; dinilai lewat uji HP) ---
 
 ## Tepi layar koran ke isi, piksel game (sebelum zona aman).
