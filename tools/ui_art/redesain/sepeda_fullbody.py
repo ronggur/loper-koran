@@ -37,6 +37,7 @@ MOCK = ROOT / 'docs' / 'design' / 'redesain' / 'aset'
 GARIS = (27, 18, 38)
 HIJAU = [(89, 155, 95), (61, 127, 80), (46, 99, 70)]
 HIJAU_GELAP = (32, 75, 64)
+KREM_PIPA = [(230, 196, 137), (154, 131, 128)]     # sorot krem di pipa sumber
 LOGAM = [(201, 192, 198), (142, 130, 144), (92, 82, 98)]
 JARI = [(189, 179, 187), (125, 114, 128)]
 BAN = [(61, 47, 64), (43, 33, 51)]
@@ -195,12 +196,50 @@ def roda_depan(k, asli):
                     k.titik(x, y, c)
 
 
+# dua pipa step-through dari kepala setang: garis yang diukur dari bagian pipa sumber yang terlihat (pusat baris 157-171).
+# Pipa atas bertemu tabung sadel, pipa bawah lurus ke poros gir. (titik atas, titik bawah, tebal)
+TABUNG_STEP = [((153.4, 156), (103.7, 213), 5), ((164.9, 155), (110, 232), 6)]
+TABUNG_MULAI_Y = 160                            # di atas ini pipa sumber (dengan sorot krem) dipertahankan
+
+
+def tabung_step(img):
+    """Penilaian pemilik 2026-10-23: pipa step-through tampak bergerigi karena potongan sumber dan lanjutan yang digambar
+    ulang tidak segaris. Di bawah TABUNG_MULAI_Y, lorong tiap pipa (tebal + 1,5 px) dikosongkan lalu pipa digambar
+    lurus dari ujung ke ujung dengan garis luar."""
+    H, W = img.shape[:2]
+    lorong = np.zeros((H, W), bool)
+    for (x0, y0), (x1, y1), tebal in TABUNG_STEP:
+        dx, dy = x1 - x0, y1 - y0
+        L2 = dx * dx + dy * dy
+        for y in range(TABUNG_MULAI_Y, int(y1) + 1):
+            for x in range(int(min(x0, x1)) - 6, int(max(x0, x1)) + 7):
+                t = max(0.0, min(1.0, ((x - x0) * dx + (y - y0) * dy) / L2))
+                if math.hypot(x - (x0 + t * dx), y - (y0 + t * dy)) <= tebal / 2 + 1.5:
+                    lorong[y, x] = True
+    hijau = {GARIS, *HIJAU, HIJAU_GELAP}
+    for y, x in zip(*np.nonzero(lorong)):
+        c = tuple(int(v) for v in img[y, x, :3])
+        if img[y, x, 3] and (c in hijau or img[y, x, :3].astype(int).mean() < 60 or c in KREM_PIPA):
+            img[y, x] = 0
+    # sisa hijau lepas di kiri pipa atas (bekas sambungan lama yang tidak segaris), di atas sambungan tabung sadel
+    (x0, y0), (x1, y1), tebal = TABUNG_STEP[0]
+    for y in range(TABUNG_MULAI_Y, 205):
+        xt = x0 + (x1 - x0) * (y - y0) / (y1 - y0)
+        for x in range(int(xt - tebal / 2 - 7), int(xt - tebal / 2 - 1)):
+            c = tuple(int(v) for v in img[y, x, :3])
+            if img[y, x, 3] and c in hijau:
+                img[y, x] = 0
+    k = Kuas(img, lorong)
+    for p0, p1, tebal in TABUNG_STEP:
+        k.pipa(p0, p1, tebal)
+    k.garis_luar()
+
+
 def rangka(k):
     k.pipa((47, 216), DUDUKAN, 3)                   # seat stay
-    k.pipa((80, 214), (BB[0] - 2, BB[1] - 3), 4)    # chainstay menerus ke gir depan
     k.pipa(BB, DUDUKAN, 5)                          # seat tube
-    k.pipa((140, 171), (105, 213), 5)               # pipa step-through atas (lanjutan potongan di kanan)
-    k.pipa((140, 185), (108, 224), 5)               # pipa step-through bawah
+    for p0, p1, tebal in TABUNG_STEP:               # dua pipa step-through
+        k.pipa(p0, p1, tebal)
     k.pipa((86, 158), (82, 146), 2, LOGAM)          # tiang sadel
 
 
@@ -325,7 +364,51 @@ def penggerak(img):
             r = math.hypot(x - cx, y - cy)
             if GIR_BELAKANG_R - 1 < r <= GIR_BELAKANG_R + 1:
                 img[y, x] = (*(GARIS if r > GIR_BELAKANG_R else LOGAM[2]), 255)
+    tutup_rantai(img)
     return rantai
+
+
+TUTUP_RANTAI = ((55, 214), (111, 221.5), 6)   # tutup rantai: lanjutan batang hijau sumber di roda belakang sampai gir depan
+TUTUP_BUSUR = (10, 15, -105, -15)               # ujung depan melengkung di atas gir: jari-jari dalam, luar, sudut awal, akhir
+
+
+def tutup_rantai(img):
+    """Tutup rantai (penilaian pemilik 2026-10-23, menggantikan chainstay yang tampak menancap ke ban): batang hijau
+    yang separuhnya sudah ada di gambar sumber diteruskan sampai gir depan, ujungnya melengkung menutupi bagian atas
+    gir. Di depan rantai dan gir; rantai bawahnya tetap terlihat. Sorot di baris atas, sisi bawah gelap, garis luar."""
+    H, W = img.shape[:2]
+    ss = 6
+    m = Image.new('L', (W * ss, H * ss), 0)
+    d = ImageDraw.Draw(m)
+    (ax, ay), (bx2, by2), tebal = TUTUP_RANTAI
+    d.line([(ax * ss, ay * ss), (bx2 * ss, by2 * ss)], fill=255, width=tebal * ss)
+    bx, by = BB
+    r0, r1, s0, s1 = TUTUP_BUSUR
+    for i in range(0, 61):
+        t = math.radians(s0 + (s1 - s0) * i / 60)
+        rr = (r0 + r1) / 2
+        x, y = bx + rr * math.cos(t), by + rr * math.sin(t)
+        h = (r1 - r0) / 2
+        d.ellipse([(x - h) * ss, (y - h) * ss, (x + h) * ss, (y + h) * ss], fill=255)
+    m = np.asarray(m.resize((W, H), Image.BOX)) >= 128
+    pad = np.pad(m, 1)
+    atas = ~pad[:-2, 1:-1] & m
+    bawah = ~pad[2:, 1:-1] & m
+    ys, xs = np.nonzero(m)
+    for y, x in zip(ys, xs):
+        if atas[y, x]:
+            c = HIJAU[0]
+        elif bawah[y, x]:
+            c = HIJAU_GELAP
+        elif not m[y - 2, x]:
+            c = HIJAU[1]
+        else:
+            c = HIJAU[2]
+        img[y, x] = (*c, 255)
+    tepi = np.zeros_like(m)
+    for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+        tepi |= np.roll(np.roll(m, dy, 0), dx, 1)
+    img[tepi & ~m] = (*GARIS, 255)
 
 
 def rapikan_lepas(img, min_px=60):
@@ -434,6 +517,7 @@ def main():
     roda_depan(k, asli)
     rangka(k)
     k.garis_luar()
+    tabung_step(k.img)
     rantai = penggerak(k.img)
     sadel(k.img)
     tipiskan_kabel(k.img)
