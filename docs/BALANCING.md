@@ -426,6 +426,37 @@ Detail dan alasan ada di `STORY.md` bagian 4.1. Semua angka masuk `scripts/confi
 | Tabungan pemain rata-rata di akhir | sekitar 22.800 koin (91%) |
 | Ambang akhir (hari ke-120) | Mandiri 100%; Dibantu warga 70 sampai 99% dan reputasi rata-rata minimal 60; di bawah itu Tunda setahun |
 
+### 7.2 Reputasi dan pelanggan tetap (usulan run fase6a2-reputasi-pelanggan bagian A 2026-10-23, dinilai lewat uji HP)
+
+Semua angka di `scripts/config.gd` (awalan `REPUTASI_*` dan `PELANGGAN_*`); logika di `ReputationManager`, `RouteBuilder.bangun` (keadaan pelanggan), dan `DataSave.catat_hari`. Reputasi **belum memengaruhi pendapatan atau membuka distrik** di 6A2 (GDD 8 "menaikkan pendapatan" dan syarat buka distrik menunggu 6B/Fase 8).
+
+| Angka | Nilai | Catatan |
+|---|---|---|
+| Reputasi per distrik | 0 sampai 100, awal 0 (`REPUTASI_MIN`/`MAKS`/`AWAL`) | bilangan bulat; hanya `perumahan` yang dimainkan |
+| Kredit antaran sah | tepat 4, teras 3, kotak surat 2, halaman 1 (`REPUTASI_KREDIT_*`) | `cerewet` tidak memberi kredit halaman; jendela bonus dihitung seperti halaman |
+| Poin dari kredit | kredit hari itu / 30, bulat ke bawah (`REPUTASI_KREDIT_PER_POIN`) | tanpa sisa yang dibawa ke hari lain (tidak ada field save tambahan) |
+| Poin misi selesai | kecil 1, sedang 2, besar 3 (`REPUTASI_MISI_POIN`) | GDD 10.5 |
+| Misi gagal | `gagal.reputasi` data misi, 0 atau 1 (`REPUTASI_MISI_GAGAL_MAKS`) | P1 = 0 |
+| Pelanggan berhenti | -1 per pelanggan yang berhenti hari itu (`REPUTASI_BERHENTI_POIN`) | |
+| Pagar kenaikan harian | 6 (`REPUTASI_NAIK_MAKS_PER_HARI`) | kredit + misi; pagar, bukan pembentuk kurva (simulasi tidak menyentuhnya) |
+| Setia | 5 antaran sah (`PELANGGAN_SETIA_ANTAR`) atau hadiah misi `pelanggan_setia` | |
+| Berhenti | hanya `sensitif`: tidak terantar 2 hari berturut-turut (setia: 3) | `PELANGGAN_BERHENTI_MELESET` 2, `PELANGGAN_SETIA_BERHENTI_MELESET` 3 |
+| Kembali | antaran sah atau misi selesai di rumah itu; calon kembali di rute sesudah 3 hari, paling banyak 1 per rute | `PELANGGAN_KEMBALI_*` |
+| Rute: setia | diprioritaskan sampai 60% kuota tiap sisi; baru paling banyak 6 per rute | `PELANGGAN_SETIA_MAKS_PERSEN`, `PELANGGAN_BARU_MAKS_PER_RUTE`; batas baru hanya bila pelanggan dikenal di sisi itu >= kuota + `PELANGGAN_KANDIDAT_CADANGAN` (4) |
+| Kepribadian | biasa 55, cerewet 15, pemberi_tip 15, sensitif 15 (`kepribadian.json`) | 71 rumah nyata: 36, 14, 10, 11 |
+
+"Meleset" untuk status pelanggan = pelanggan rute yang tidak terantar saat rute selesai (definisi `HasilRute.Angka.meleset`), terpisah dari potongan koran terbuang. Pelanggan yang tidak masuk rute hari itu tidak berubah. Pemberi tip tetap 7 dari 25 (`RUTE_PEMBERI_TIP_PERSEN`), tetapi sejak hari 3 dengan keadaan pelanggan berkepribadian `pemberi_tip` didahulukan.
+
+**Laju reputasi (K-3, `tests/sim_ekonomi.gd`)**: simulasi berhari-hari di `RouteBuilder`, `SkorRute`, `RencanaMisi`, `ReputationManager`, dan `DataSave.catat_hari` nyata, 45 hari, 12 benih lemparan per profil. **Asumsi yang diumumkan** (bukan hasil ukur; fisika lemparan tidak disimulasikan): tiap profil melempar sekali ke tiap pelanggan dengan peluang tetap [tepat, kotak surat, teras, halaman] dan mengulang yang meleset dengan peluang tertentu bila masih ada koran cadangan; misi P1 muncul tiap 8 hari dan diselesaikan dengan peluang tertentu; tabrakan dan kondisi sepeda tidak memengaruhi reputasi.
+
+| Profil | Tepat / kotak / teras / halaman | Ulang saat meleset | Misi selesai | Hari mencapai reputasi 40 (12 benih) | Reputasi hari 30 | Perubahan harian |
+|---|---|---|---|---|---|---|
+| santai | 35 / 35 / 12 / 4 % (meleset 14%) | 100% | 80% | 17 sampai 20 (target K-3: 16 sampai 24) | 60 sampai 68 | 0 sampai +4 |
+| campuran | 20 / 35 / 13 / 7 % (meleset 25%) | 80% | 60% | 25 sampai 33 | 37 sampai 48 | 0 sampai +4 |
+| ngebut | 10 / 30 / 12 / 8 % (meleset 40%) | 50% | 40% | 40 sampai 45, atau belum dalam 45 hari (8 dari 12) | 18 sampai 31 | -2 sampai +3 |
+
+Pembacaan: pemain yang teliti naik sekitar 2 poin per hari (rata-rata 2,0 sampai 2,3 selama 30 hari; santai mencapai 40 sekitar hari 18, di dalam sasaran 16 sampai 24); campuran dan ngebut lebih lambat HANYA karena asumsi akurasi mereka lebih rendah (rumus kredit sama untuk semua), dan tidak ada profil yang turun di bawah 0 atau naik lebih dari 6 per hari (terbesar +4). Risiko yang perlu dinilai di HP: pemain yang sering meleset (asumsi ngebut) bisa memerlukan lebih dari 45 hari untuk reputasi 40, dan akan ada pelanggan sensitif yang berhenti (108 peristiwa berhenti di 12 x 45 hari ngebut, 1 di santai) sebelum kembali lewat antaran. Pelepasan prioritas di `RouteBuilder` (rute memenuhi semua aturan keadaan) terjadi di 3% sampai 6% hari simulasi dan tidak pernah gagal bangun.
+
 ## 8. Keausan sepeda (usulan run fase6a1-bengkel-kondisi 2026-10-20, dinilai lewat uji HP)
 
 Semua angka di bagian ini **usulan**; sumber kebenaran `scripts/config.gd` (awalan `KONDISI_`, `SERVIS_`, `TOKO_`) dan tes mengecek target di bawah. Keputusan pemilik 2026-10-20: **K-1** koin = saldo (bengkel dibayar langsung); **K-2** mode bantu TIDAK mengubah keausan atau kerusakan (satu ekonomi untuk semua pemain; mode bantu mengunci kecepatan santai 3,0 u/d, jadi aus dari ngebut praktis nol dengan sendirinya, dan `BikeCondition`/`Economy` tidak punya cabang mode bantu); **K-3** kejadian yang merusak di rute 6A1 hanya aus dan tabrakan; **K-4** bengkel boleh dilewati. Arah dari GDD 12: ngebut dan sering mengerem mempercepat aus, setiap kerusakan punya tanda peringatan, kerusakan hanya menghambat.
@@ -519,6 +550,7 @@ Paku, pecahan kaca, genangan, dan kerikil (kerusakan langsung dari objek jalan):
 
 ## 10. Catatan perubahan
 
+- **2026-10-23** — Run fase6a2-reputasi-pelanggan bagian A (logika murni, usulan, dinilai di HP): reputasi per distrik, pelanggan tetap (aktif/setia/berhenti), kepribadian, dan pemetaan pelanggan ke rute diacak (bagian 7.2). Angka baru di `scripts/config.gd`: `REPUTASI_*` (kredit 4/3/2/1, 30 per poin, misi 1/2/3, berhenti 1, pagar +6), `PELANGGAN_*` (setia 5 antaran, berhenti 2 atau 3 meleset, kembali sesudah 3 hari, setia 60%, baru 6, cadangan kandidat 4, percobaan 60 per tingkat, pelepasan 1/4, bonus prioritas), `SAVE_VERSI` 4. Dikalibrasi dengan `tests/sim_ekonomi.gd` (K-3): santai mencapai reputasi 40 pada hari 17 sampai 20. Tidak ada angka gerak, lemparan, skor, tenggat, atau kondisi sepeda yang berubah.
 - **2026-10-22** — Run fase5d-sisi-dekat (usulan, dinilai di HP; tidak ada angka skor, gerak, tenggat, atau penilaian seberang yang berubah): pelanggan sisi dekat mulai hari 3 (`RUTE_DEKAT_HARI_MULAI` 3, kuota `RUTE_DEKAT_KUOTA_MIN` 8 dan `RUTE_DEKAT_KUOTA_MAKS` 9 dari 25), zona sasaran dekat di rute sebagai cermin seberang (`RUTE_DEKAT_KOTAK_SURAT_UBIN`, `_INTI_UBIN`, `_X_UBIN`, `RUTE_DEKAT_HALAMAN_UBIN`, teras dari JSON; bagian 5), `RUTE_RUMAH_DEKAT_MUNDUR_UBIN` 1,25 menjadi 0,5 (tembok dilepas, kotak penutup rumah dekat = sprite nyata `RUTE_RUMAH_DEKAT_PENUTUP_*`), tip hari 3 (`TIP_SISI_DEKAT_*`, 6 detik waktu game). `RUTE_TEMBOK_*` dan `SPRITE_TEMBOK*` dibuang.
 - **2026-10-22** — Umpan balik uji HP pemilik (tampilan saja, tidak ada angka gerak, ambang, atau penilaian yang berubah): garis kecepatan sprite di scene rute "terlalu di depan loper, posisi sebelumnya sudah pas". Akar: run 5A (dacf1ca) menaruh kepala sprite diam di titik MUNCUL partikel (30, −24), padahal garis partikel lama melaju mundur 60 px selama hidupnya, jadi pusatnya rata-rata 28 px lebih ke belakang. Konstanta baru `UMPAN_GARIS_SPRITE_KEPALA_X_PX` 20 dan `UMPAN_GARIS_SPRITE_KEPALA_Y_PX` −14 (bagian 2) mengembalikan pusat garis ke posisi lama (selisih 0,4 px). `UMPAN_GARIS_ASAL_*` tetap untuk partikel jalan uji. Usulan, dinilai di HP.
 - **2026-10-22** — Keputusan pemilik (tampilan saja, tidak ada angka penilaian yang berubah): persegi area kotak surat di tanah scene rute dihapus (bagian 5, "Kotak surat sebagai area") karena membuat pemain mengira hanya area itu yang dinilai. Zona, skor, inti tepat, mode bantu, dan radar tidak berubah. Komentar `AREA_KOTAK_ISI_ALPHA` dan `AREA_KOTAK_TEPI_ALPHA` di `scripts/config.gd` diperbarui: kini hanya dipakai scene dev spike sisi dekat; nilainya tidak berubah.

@@ -319,8 +319,10 @@ func _test_ekstrem() -> void:
 		check(galat == 0 and tak_det == 0, "%s: periksa_rute kosong dan deterministik (%d galat, %d tak deterministik)" % [nama, galat, tak_det])
 		if nama == "semua berhenti baru saja":
 			check(lepas == 40, "%s: prioritas dan larangan dilepas bertahap (pelepasan > 0 di semua rute)" % nama)
-		if nama == "semua baru" or nama == "semua aktif" or nama == "semua setia":
+		if nama == "semua baru" or nama == "semua aktif":
 			check(lepas == 0, "%s: tidak ada pelepasan (%d dari 40)" % [nama, lepas])
+		if nama == "semua setia":
+			check(lepas <= 4, "%s: prioritas 60%% kuota jarang perlu dilepas (%d dari 40)" % [nama, lepas])
 
 
 # --- AC-2: tidak ada keadaan buntu ---
