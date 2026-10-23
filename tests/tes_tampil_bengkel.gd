@@ -86,6 +86,7 @@ func _test_aksi_dan_teks_alasan() -> void:
 	check(TampilBengkel.aksi(false, 99999, 1) == TampilBengkel.Aksi.TIDAK_ADA and TampilBengkel.aksi(true, 0, 0) == TampilBengkel.Aksi.AKTIF, "tidak tersedia = TIDAK_ADA walau saldo besar; harga 0 dengan saldo 0 = aktif")
 	check(TampilBengkel.kunci_tombol(TampilBengkel.Aksi.AKTIF, "BENGKEL_SERVIS") == "BENGKEL_SERVIS" and TampilBengkel.kunci_tombol(TampilBengkel.Aksi.KURANG, "BENGKEL_SERVIS") == "BENGKEL_KOIN_KURANG", "teks tombol: aktif = kunci aksi, kurang = BENGKEL_KOIN_KURANG")
 	check(TampilBengkel.kunci_tombol(TampilBengkel.Aksi.KURANG, "BENGKEL_BELI") == "BENGKEL_KOIN_KURANG" and TampilBengkel.kunci_tombol(TampilBengkel.Aksi.AKTIF, "BENGKEL_BELI") == "BENGKEL_BELI", "Beli: sama aturan")
+	check(TampilBengkel.kunci_tombol(TampilBengkel.Aksi.TIDAK_ADA, "BENGKEL_SERVIS") == "BENGKEL_SERVIS" and TampilBengkel.kunci_tombol(TampilBengkel.Aksi.TIDAK_ADA, "BENGKEL_BELI") == "BENGKEL_BELI", "teks tombol tanpa aksi (TIDAK_ADA): tetap kunci aksi, bukan alasan Koin kurang (QA-005)")
 	check(TampilBengkel.KUNCI_AKSI_SERVIS == "BENGKEL_SERVIS" and TampilBengkel.KUNCI_AKSI_BELI == "BENGKEL_BELI" and TampilBengkel.KUNCI_KURANG == "BENGKEL_KOIN_KURANG", "kunci teks aksi literal")
 
 
