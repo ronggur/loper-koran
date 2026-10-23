@@ -1,7 +1,7 @@
 # Loop Log — 20261023-ui1-komponen-bengkel
 Scope: Run UI-1 — redesain UI langkah 1-2 (komponen + bengkel tata C)  ·  Branch: feat/ui1-komponen-bengkel  ·  Mulai: 2026-10-23  ·  Godot: 4.7.2.stable.official.ed1daf0bf
 
-## Status: IN_PROGRESS   (iterasi saat ini: 1/2, Dev bagian A dan B selesai; bagian C berikutnya)
+## Status: IN_PROGRESS   (iterasi saat ini: 1/2, Dev bagian A, B, dan C selesai; menunggu QA)
 
 ## Lingkungan (orchestrator, awal run)
 - `main` = `origin/main` = `b99f5a9` (rilis 0.6.0; memuat PR #61, #62, #63). Branch dibuat dari sana.
@@ -13,7 +13,7 @@ Scope: Run UI-1 — redesain UI langkah 1-2 (komponen + bengkel tata C)  ·  Bra
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
 |---|---|---|---|---|---|
-| 1 | (bagian A, B, C belum) | | | | |
+| 1 | Dev: bagian A komponen (30 aset, `GayaHud`, `KomponenUi`, kotak kondisi besar), bagian B bengkel tata C (`TampilBengkel`, `PanggungSepeda`, `LayarBengkel`, probe, mutan 50/50), bagian C dokumen | import tanpa error, `--quit-after 2` tanpa ERROR/WARNING, `run_tests.gd` 23003 lolos 0 gagal + pemeriksa lolos, 17 `uji_*.py` exit 0, sha256 save asli tidak berubah | (menunggu QA) | (QA belum jalan) | (belum) |
 
 ## Temuan
 Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MANUAL | BLOCKED
@@ -68,6 +68,54 @@ Bagian B:
 
 ## Butir terbuka pemilik
 - **Lisensi latar bengkel** (`docs/design/redesain/latar_bengkel/sumber_ai.jpg`): generator dan ketentuan lisensi komersial belum dicatat. Latar dipasang untuk uji HP (U-4) tapi TIDAK boleh masuk rilis sebelum dicatat (ART_DIRECTION 9).
+- **Garis bingkai kartu dan tombol nonaktif < 3:1** (D-1): diterima apa adanya atau garis disorot (mengubah aset komponen dan `uji_ui_redesain.py`); putuskan sesudah uji HP 8.18.
+- **Margin dengan inset aman** `max(12, inset)` (D-2) atau `12 + inset` seperti papan kanvas g.
+- Butir redesain yang tetap terbuka dan di luar run ini: lapisan jeda 72%, kunci teks koran "Iklan baris" dan hasil "Pelanggan:".
+
+## Bagian C — dokumen dan penutup (Dev, iterasi 1)
+Semua dokumen memakai label **usulan**; tidak ada yang ditandai dikunci atau terpasang final. Kode, aset, dan tes tidak disentuh (hanya dokumen, README alat, dan satu baris perintah di rule). Isi diambil dari berkas nyata (nama kelas, skrip, perintah, daftar aset di `pasang.py`); `--salin` ketiga skrip dijalankan dengan `UI_ART_SALIN_KE` ke folder sementara untuk memastikan sintaks dan jumlah (27 + 2 + 1 = 30 berkas, `assets/` tidak ditimpa).
+
+| Dokumen | Perubahan |
+|---|---|
+| `docs/design/DESIGN_SPEC.md` | Baris Bengkel di bagian 4: "Sketsa run UI-1" (tata C, kolom, kartu servis dan upgrade, chip, tombol, latar, jejak tingkat, penyimpangan dari kanvas dengan angka kontras); 1.3: komponen layar penuh (tombol empat peran, kartu, chip, type variation, kelas); 3.3: catatan `KotakKondisiBesar` tanpa mengubah versi 14 px; paragraf "Redesain usulan" tidak lagi bertulis "belum dipasang". Keputusan lama tidak diubah |
+| `docs/ART_DIRECTION.md` | 6.8: paragraf redesain diperbarui dan blok "Dipasang run UI-1" (30 berkas, yang tidak dipasang, kotak kondisi dari kode, kontras terukur); Changelog entri baru 2026-10-23 dan entri redesain lama diberi keterangan waktu; bagian 9: butir lisensi latar bengkel (belum boleh masuk rilis) |
+| `docs/design/redesain/README.md` | Pembuka (status per 2026-10-23: sebagian terpasang), bagian 6 butir 1 dan 2 berstatus "terpasang (usulan, run UI-1, dinilai di HP)" beserta penyimpangan, catatan hanya latar 800 dan komponen bengkel yang dipasang, daftar "Butir terbuka (pemilik)" (lisensi latar, kontras garis kartu, lapisan jeda). Bagian 1 dan 7 tidak diubah (tidak ada fakta yang keliru; tabel bagian 1 menyebut `--mock`, tetap benar) |
+| `tools/ui_art/README.md` | Perintah tiga `--salin`, `UI_ART_SALIN_KE`, `pasang.py`, `tools/ukur_kontras_tangkapan.py`, uji baru; tabel File (`pasang.py`, pengukur kontras; baris `komponen.py` tidak lagi bertulis "belum ada --salin") |
+| `AGENTS.md` | Intro Fase 6A diperpanjang dengan run UI-1; perintah cepat (tiga `--salin`, `UI_ART_SALIN_KE`, `uji_ui_redesain.py` yang diperluas, `ukur_kontras_tangkapan.py`, probe bengkel diperbarui; baris `--mock` tidak lagi bertulis "belum ke assets/"); peta repo: paragraf "Run UI-1" (kelas baru, fungsi `GayaHud`, aset, tes, tools) dan baris `tools/ui_art/` |
+| `.cursor/rules/00-project-core.mdc` | Hanya bagian Perintah: baris probe bengkel diperbarui, dua baris baru (`komponen.py --salin` dengan catatan dua skrip lain, `uji_ui_redesain.py`). Tidak ada aturan baru (pola run 6A2/5x: bagian Perintah ikut diperbarui) |
+| `CLAUDE.md` | Tidak diedit (aturan hanya di `.cursor/rules/`) |
+| `docs/README.md` | Baris status ditambah paragraf run UI-1; baris `design/` (redesain tidak lagi "belum dipasang"); baris `LOOP-DEV-QA.md` menyebut 6k |
+| `docs/DEV_PHASES.md` | Fase 6: butir baru **belum dicentang** "Redesain UI layar penuh" (UI-1 dikerjakan Dev, menunggu QA dan uji HP 8.18); baris tabel Fase 6. Tidak ada butir aset UI yang dicentang |
+| `docs/SETUP_ANDROID.md` | Bagian 8.18 baru (10 butir checklist HP + lembar hasil kosong bergaya 8.17): terbaca sekilas, sepeda dan chip, tombol dan tiga keadaan, kartu menonjol vs redup, harga dekat tombol, latar, tiga upgrade tanpa scroll di vivo dan A54, Hari berikutnya, zona aman, 60 fps |
+| `docs/LOOP-DEV-QA.md` | Bagian 6k baru: tabel run (UI-1, UI-2 dst), putusan U-1..U-5, perintah run (scope A/B/C, di luar scope, tes, izin HP, RUN_ID) dan catatan pelajaran. **Catatan jujur:** teks perintah disusun dari SPEC (kontrak run); pesan asli pemilik tidak tersedia bagi Dev, jadi bukan salinan kata demi kata |
+| `docs/ROADMAP.md` | Bagian 5: butir terbuka lisensi latar bengkel (pemilik) dan butir redesain UI (langkah 3 sampai 6, lapisan jeda, garis kartu); satu kalimat pembaruan di status |
+
+**Dokumen yang diperiksa dan TIDAK diubah:** `docs/BALANCING.md`, `docs/DATA_SCHEMA.md`, `docs/GDD.md` (12.3/12.4 hanya menyebut bengkel dan HUD secara fungsional), `docs/ROUTE_DESIGN.md`, `docs/CONTENT_GUIDE.md`, `docs/TECH_PLAN.md`, `CHANGELOG.md`, `.release-please-manifest.json`, `version.txt`. Alasan: SPEC U-5, tidak ada angka ekonomi, aturan permainan, format data, atau format save yang berubah (`upgrades.json` tidak berubah; kunci terjemahan baru bukan data konten). `grep` untuk "redesain", "belum dipasang", dan "bengkel" di dokumen itu tidak menemukan klaim yang menjadi keliru.
+
+**Pemeriksaan konsistensi:** semua tautan relatif dan jalur berkas dalam backtick yang ditambah menunjuk ke berkas yang ada (dicek skrip pada diff); tidak ada kata "dikunci" atau "terpasang final" pada baris yang ditambah (kecuali kalimat penolakan); jumlah berkas terpasang (30), kelas, dan nama skrip dicocokkan dengan `pasang.py` dan `scripts/`.
+
+**Gerbang bagian C:** `godot --headless --import` tanpa error (satu baris "cannot connect to daemon at tcp:5037" dari editor yang mencari adb, bukan galat project); `--quit-after 2` tanpa ERROR/WARNING; `run_tests.gd` **23003 lolos, 0 gagal** (sama dengan akhir bagian B) + `cek_keluaran_tes.py` lolos (0 peringatan); 17 `tools/tests_cek/uji_*.py` exit 0 (termasuk `uji_ui_redesain.py` LOLOS dan `uji_aset_*` yang membandingkan mock docs); sha256 save asli `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` tidak berubah; `git status` hanya berisi berkas dokumen/README/rule yang diubah (selain `.claude/` yang bukan bagian run).
+
+## Keputusan Dev yang perlu diterima atau ditolak (review PR)
+Semuanya usulan; ditolak = diubah di iterasi berikutnya atau run berikutnya, tanpa menahan sisanya.
+
+| Id | Keputusan | Alasan singkat | Dampak bila ditolak |
+|---|---|---|---|
+| D-1 | Garis bingkai kartu (1,14..1,78:1) dan tombol nonaktif (1,14:1) tidak memenuhi AC-9 "garis komponen >= 3:1"; kartu dibedakan lewat isi dan garis WARN | Kanvas memakai garis luar `OUTLINE` gelap di atas latar gelap; teks semua >= 7,79:1, tombol aktif 8,53..13,48:1 | Sorot garis di aset komponen (`komponen.py`, mengubah `uji_ui_redesain.py` dan semua kartu) |
+| D-2 | Margin dengan inset = `max(12, inset)` (`ZonaAman.margin`), bukan `12 + inset` papan kanvas g | Satu aturan zona aman proyek, dipakai layar lain dan tes lama | Ubah rumus margin bengkel saja; tes keadaan g memakai angka kanvas dan perlu disesuaikan |
+| D-3 | Judul "Bengkel" di y 12 (margin), bukan y 11 | Mengikuti margin; isi tetap mulai y 46 | Satu konstanta |
+| D-4 | Ring luar panggung 1 px digambar di luar panggung (seperti `box-shadow` kanvas) | Ukuran panggung 92 tepat | Visual kecil |
+| D-5 | Panggung punya tinggi minimum 40; di bawah 78 sepeda terklip bawah (inset sangat besar) | Tidak ada perangkat nyata dengan inset sebesar itu | Perlu aturan skala sepeda bila ada |
+| K1 | Rect sepeda untuk AC-9 = panggung (papan + sepeda), bukan sprite 116x78 | Chip ban dan rem di kanvas berada di luar sprite | Perketat jadi sprite saja: chip harus digeser ke dalam |
+| K2 | Kartu servis BAIK-belum-penuh (kondisi 0,70..0,999) redup tetapi tetap membawa harga dan tombol Servis; penuh = chip "Baik" tanpa tombol | Aturan bagian A "BAIK = redup" dan servis tetap tersedia | Kartu menonjol untuk semua yang belum penuh |
+| K3 | Teks status turun di bawah kotak kondisi bila kolom sempit (`HFlowContainer`), sebaris bila muat (lebar 800) | "Perlu servis" 45 px tidak muat sebaris di 640 | Teks lebih pendek atau kotak di atas teks selalu |
+| K4 | Status "Perlu servis" dan pesan galat berwarna `TEXT`, bukan WARN | WARN di atas `UI_PANEL` 6,91:1 < 7:1 | Pakai WARN dan terima 6,91:1 (melanggar AC-9) |
+| K5 | Chip jejak tingkat "menunggu" tidak diredupkan | Opacity .55 kanvas = 3,65:1 | Terima kontras rendah untuk tingkat belum dibuka |
+| K6 | Pelat `HUD_PANEL` 3 px di belakang judul "UPGRADE" | Cahaya lampu menutupi judul di 640..800 | Judul tanpa pelat atau latar digeser |
+| P1 | Latar 640 dibuang dari paket (latar 800 di tengah, dipotong 80 px per sisi di 640, seperti kanvas) — **penyimpangan SPEC AC-2 ("640/800")** | Kanvas memakai satu latar 800 dengan `bgx = (W - 800) / 2`; 640 = potongan tengah 800, diuji; tidak ada aset tak terpakai di `assets/` | Satu baris di `pasang.py` lalu `--salin` |
+| P2 | Ikon 24 dan glif 12 dipasang per sel, bukan sheet utuh | SPEC: tidak ada aset redesain yang tak dipakai di `assets/`; piksel sama dengan sheet | Pasang sheet utuh dan potong di kode |
+| P3 | `UI_ART_SALIN_KE` = folder tujuan langsung, sama untuk tiga skrip; `latar_bengkel.py` memuat `cv2`/`sklearn` hanya saat membuat ulang | `--salin` tidak butuh pustaka berat dan tes bisa tidak menyentuh `assets/` | Nama variabel atau aturan impor |
+| P4 | Latar dipasang untuk uji HP walau lisensi generator belum dicatat (U-4) | Putusan orchestrator; tidak memblokir run | Ganti latar atau catat lisensi sebelum rilis (ART_DIRECTION 9) |
 
 ## NEEDS-MANUAL (uji di HP)
 - [ ] SETUP_ANDROID 8.18 (lihat SPEC): bengkel terbaca sekilas; sepeda dan chip kondisi jelas; tombol enak ditekan, tiga keadaan jelas bedanya; kartu menonjol vs redup; harga dekat tombol; latar tidak mengganggu teks; tiga upgrade tanpa scroll; 60 fps.
