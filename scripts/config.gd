@@ -607,6 +607,8 @@ const SKOR_TEPAT_PENGALI: float = 1.25
 const KOIN_ONGKOS_ANTAR: int = 15
 ## Tip dari pelanggan pemberi tip yang korannya mendarat di teras, koin (BALANCING 7).
 const KOIN_TIP: int = 5
+## Potongan tiap koran yang DILEMPAR lalu terbuang (meleset, rumah bukan pelanggan, rumah sudah terantar, jendela penalti), koin (K-1 pemilik 2026-10-22, 1/3 ongkos antar, usulan; BALANCING 7). Sisa koran yang tidak dilempar tidak dipotong.
+const KOIN_POTONGAN_KORAN_MELESET: int = 5
 ## Persen pelanggan rute yang memberi tip, dipilih berseed oleh `RouteBuilder` (O-3); dibulatkan ke bawah: 25 x 30% = 7.
 const RUTE_PEMBERI_TIP_PERSEN: int = 30
 ## Inti "tepat" kotak surat seberang [lateral_min, maju_min, lebar, panjang], ubin relatif awal kavling: 0,5 x 0,5 di pusat area

@@ -6,6 +6,8 @@ extends RefCounted
 ## - Meleset = pelanggan rute yang tidak terantar saat rute selesai = jumlah pelanggan - terkirim.
 ## - Koin, koin tip, jumlah pemberi tip yang memberi tip, skor, dan jumlah tepat langsung dari `SkorRute.Keadaan`. Hadiah misi (`koin_misi`, hanya bila
 ##   misi `selesai`, K-1 run fase4b-misi-kucing) ditambahkan ke `koin`; misi gagal tidak mengubah apa pun (prinsip 2). Satu sumber untuk HUD, layar hasil, dan save.
+## - Koran terbuang (run fase6a2-reputasi-pelanggan bagian B, K-1, K-2, O-1, O-2): `lempar_terbuang` = `SkorRute.Keadaan.terbuang` (lemparan nyata, BUKAN `meleset` di atas),
+##   `potongan` = `SkorRute.potongan`, `koin_bersih` = `koin` - `potongan` (boleh negatif). `koin` tetap koin kotor (ongkos + tip + hadiah misi). Satu sumber untuk HUD, layar hasil, dan save.
 ## - Tenggat lewat (bool) dan detik lewat (detik bulat tampilan, `TenggatRute.detik_tampil`; 0 bila tidak lewat) dari `TenggatRute`.
 ## - Layar hasil boleh terbuka (`siap_tampil`) sesudah garis akhir, saat sepeda sudah berhenti (kecepatan paling tinggi
 ##   `HASIL_BERHENTI_TOLERANSI_UD`) DAN tidak ada koran yang masih terbang (semua koran yang dilempar sudah mendarat dan dinilai).
@@ -33,6 +35,13 @@ class Angka extends RefCounted:
 	var misi_id: String = ""
 	var misi_hasil: String = ""
 	var koin_misi: int = 0
+	## Koran yang dilempar lalu terbuang (O-1), potongan koinnya, dan koin bersih hari ini = `koin` - `potongan` (boleh negatif).
+	var lempar_terbuang: int = 0
+	var potongan: int = 0
+	## Selalu `koin` - `potongan` (properti, jadi Angka yang dirakit tes ikut konsisten).
+	var koin_bersih: int:
+		get:
+			return koin - potongan
 
 
 ## Angka hasil dari skor `skor`, rute `rute`, dan jam tenggat `tenggat`. Rute null = 0 pelanggan; tenggat null = tidak lewat. `misi` (keadaan
@@ -55,7 +64,19 @@ static func dari(skor: SkorRute.Keadaan, rute: RouteBuilder.Rute, tenggat: Tengg
 		a.misi_hasil = MissionManager.nama_hasil(misi)
 		a.koin_misi = MissionManager.koin_misi(misi)
 		a.koin += a.koin_misi
+	a.lempar_terbuang = maxi(skor.terbuang, 0)
+	a.potongan = SkorRute.potongan(skor)
 	return a
+
+
+## Saldo sesudah hari: `max(0, saldo_lama + koin_bersih)` (O-2). Satu rumus untuk save (`DataSave.catat_hari`) dan saldo awal bengkel (`HariMain`).
+static func saldo_sesudah(saldo_lama: int, koin_bersih: int) -> int:
+	return clampi(maxi(saldo_lama, 0) + koin_bersih, 0, Config.SAVE_ANGKA_MAKS)
+
+
+## Koin yang hilang karena saldo dijepit 0 (0 bila saldo tidak tersentuh jepit).
+static func koin_dijepit(saldo_lama: int, koin_bersih: int) -> int:
+	return maxi(-(maxi(saldo_lama, 0) + koin_bersih), 0)
 
 
 ## True bila layar hasil boleh terbuka: rute `selesai`, kecepatan sepeda `kecepatan_ud` paling tinggi `HASIL_BERHENTI_TOLERANSI_UD`, dan

@@ -108,7 +108,7 @@ func _test_migrasi_save_4a() -> void:
 	check(s["pengaturan"] == {"kidal": false, "mode_bantu": false, "suara": 1.0, "musik": 1.0}, "pengaturan dipertahankan")
 	check(s["flag"] == [], "flag v1 dibiarkan apa adanya (kosong)")
 	check(s["misi_hasil"] == {} and s["tutorial"] == {"selesai": false}, "field v2 baru: misi_hasil kosong, tutorial.selesai false")
-	check(s["terakhir"] == {"hari": 1, "terkirim": 3, "meleset": 22, "koin": 120, "tip": 25, "skor": 1500, "koin_misi": 0, "misi_hasil": "", "misi_diambil": "p1_kucing"}, "terakhir dipertahankan dan mendapat koin_misi 0 dan misi_hasil ''; dapat %s" % [s["terakhir"]])
+	check(s["terakhir"] == {"hari": 1, "terkirim": 3, "meleset": 22, "koin": 120, "tip": 25, "skor": 1500, "koin_misi": 0, "potongan": 0, "misi_hasil": "", "misi_diambil": "p1_kucing"}, "terakhir dipertahankan dan mendapat koin_misi 0 dan misi_hasil ''; dapat %s" % [s["terakhir"]])
 	check(DataSave.dari_teks(DataSave.ke_teks(s)).state == s and DataSave.migrasi(s) == s, "hasil migrasi bulak-balik sama dan migrasi v2 idempoten")
 	# Save v1 yang punya flag (hanya dari tes, 4A tidak menulis flag): flag dibiarkan, tidak dikonsumsi, tidak dihapus.
 	var dengan_flag: Dictionary = JSON.parse_string(SAVE_4A)

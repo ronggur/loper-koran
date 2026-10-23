@@ -305,7 +305,7 @@ func _test_save_id_tak_dikenal_dan_nilai_tak_sah() -> void:
 	check(b["flag"] == ["a"], "flag: hanya teks tidak kosong, tanpa duplikat; dapat %s" % [b["flag"]])
 	check(b["misi_jeda"] == {"y": 5, "z": 0}, "jeda: nilai bukan angka dibuang, negatif dijepit 0; dapat %s" % [b["misi_jeda"]])
 	check(b["headline_jeda"] == {}, "jeda bernilai null dibuang")
-	check(b["terakhir"] == {"hari": 0, "terkirim": 0, "meleset": 0, "koin": 0, "tip": 0, "skor": 0, "koin_misi": 0, "misi_diambil": "", "misi_hasil": ""}, "terakhir tidak sah dibawa ke bawaan; dapat %s" % [b["terakhir"]])
+	check(b["terakhir"] == {"hari": 0, "terkirim": 0, "meleset": 0, "koin": 0, "tip": 0, "skor": 0, "koin_misi": 0, "potongan": 0, "misi_diambil": "", "misi_hasil": ""}, "terakhir tidak sah dibawa ke bawaan; dapat %s" % [b["terakhir"]])
 	check(b["pengaturan"] == {"kidal": false, "mode_bantu": false, "suara": 1.0, "musik": 1.0}, "pengaturan tidak sah: bool salah tipe -> false, volume 5 dijepit 1.0, teks -> 1.0; dapat %s" % [b["pengaturan"]])
 	check(typeof(DataSave.migrasi({"hari": NAN, "koin": INF})["hari"]) == TYPE_INT, "NaN dan tak hingga tidak crash (jadi bilangan bulat sah)")
 
@@ -350,7 +350,7 @@ func _test_catat_hari_dari_angka() -> void:
 	check(s["hari"] == 5, "hari = hari dimainkan + 1")
 	check(s["koin"] == 1000 + 120, "koin = 1000 + angka.koin (koin sudah termasuk tip)")
 	check(s["tip_total"] == 50 + 25, "tip_total = 50 + angka.koin_tip")
-	check(s["terakhir"] == {"hari": 4, "terkirim": 18, "meleset": 7, "koin": 120, "tip": 25, "skor": 1500, "koin_misi": 0, "misi_hasil": "", "misi_diambil": "p1_kucing"}, "terakhir = angka layar hasil + hari + misi_diambil; dapat %s" % [s["terakhir"]])
+	check(s["terakhir"] == {"hari": 4, "terkirim": 18, "meleset": 7, "koin": 120, "tip": 25, "skor": 1500, "koin_misi": 0, "potongan": 0, "misi_hasil": "", "misi_diambil": "p1_kucing"}, "terakhir = angka layar hasil + hari + misi_diambil; dapat %s" % [s["terakhir"]])
 	check(s["flag"] == ["lama", "baru"], "flag baru ditambahkan, flag lama tetap")
 	check(s["misi_jeda"] == {"p1_kucing": 11, "misi_baru": 5} and s["headline_jeda"] == {"utama_x": 9}, "jeda digabung (nilai terbesar menang)")
 	check(s["pengaturan"]["kidal"] == true and s["pengaturan"]["mode_bantu"] == true, "sakelar kidal dan bantu dari jeda ikut tersimpan (AC-13)")

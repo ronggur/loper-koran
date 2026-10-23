@@ -44,7 +44,7 @@ const _TIPE_KUNCI: Dictionary = {
 }
 const _PENGATURAN_BOOL: Array[String] = ["kidal", "mode_bantu"]
 const _PENGATURAN_VOLUME: Array[String] = ["suara", "musik"]
-const _TERAKHIR_ANGKA: Array[String] = ["hari", "terkirim", "meleset", "koin", "tip", "skor", "koin_misi"]
+const _TERAKHIR_ANGKA: Array[String] = ["hari", "terkirim", "meleset", "koin", "tip", "skor", "koin_misi", "potongan"]
 const _HASIL_MISI: Array[String] = ["selesai", "gagal"]
 ## Kunci angka `sepeda` selain komponen.
 const _SEPEDA_SERVIS_TOTAL: String = "servis_total"
@@ -208,8 +208,10 @@ static func catat_hari(state: Dictionary, catatan: CatatanHari) -> Dictionary:
 	var angka: HasilRute.Angka = catatan.angka if catatan.angka != null else HasilRute.Angka.new()
 	baru["hari"] = clampi(maxi(int(baru["hari"]), catatan.hari + 1), Config.HARI_AWAL, Config.SAVE_ANGKA_MAKS)
 	# v3 (K-1): koin hari ini masuk saldo DAN `koin_total` persis sekali; belanja bengkel hanya mengurangi saldo (tidak pernah di bawah 0), tidak `koin_total` atau `tip_total`.
+	# Run fase6a2 bagian B (O-2): `koin_total` naik koin KOTOR; saldo = max(0, saldo_lama + koin_bersih) - belanja (potongan koran terbuang, K-1).
 	var koin_hari: int = maxi(angka.koin, 0)
-	baru["koin"] = clampi(int(baru["koin"]) + koin_hari - maxi(catatan.belanja_koin, 0), 0, Config.SAVE_ANGKA_MAKS)
+	var saldo_hari: int = HasilRute.saldo_sesudah(int(baru["koin"]), koin_hari - maxi(angka.potongan, 0))
+	baru["koin"] = clampi(saldo_hari - maxi(catatan.belanja_koin, 0), 0, Config.SAVE_ANGKA_MAKS)
 	baru["koin_total"] = clampi(int(baru["koin_total"]) + koin_hari, 0, Config.SAVE_ANGKA_MAKS)
 	baru["tip_total"] = clampi(int(baru["tip_total"]) + maxi(angka.koin_tip, 0), 0, Config.SAVE_ANGKA_MAKS)
 	var flag: Array = baru["flag"]
@@ -238,6 +240,7 @@ static func catat_hari(state: Dictionary, catatan: CatatanHari) -> Dictionary:
 		"tip": angka.koin_tip,
 		"skor": angka.skor,
 		"koin_misi": angka.koin_misi if angka.misi_hasil == "selesai" else 0,
+		"potongan": maxi(angka.potongan, 0),
 		"misi_hasil": angka.misi_hasil if _HASIL_MISI.has(angka.misi_hasil) else "",
 		"misi_diambil": catatan.misi_diambil,
 	}

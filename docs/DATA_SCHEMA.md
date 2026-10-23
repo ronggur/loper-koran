@@ -314,6 +314,7 @@ Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur
 		"meleset": 22,
 		"misi_diambil": "p1_kucing",
 		"misi_hasil": "selesai",
+		"potongan": 0,
 		"skor": 1500,
 		"terkirim": 3,
 		"tip": 25

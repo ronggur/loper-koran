@@ -243,7 +243,7 @@ func _test_satu_hari_utuh() -> void:
 	var s: Dictionary = _baca_save()
 	check(s["hari"] == 2 and s["koin"] == 105 and s["koin_total"] == 195 and s["tip_total"] == 25, "isi save: hari 2, koin 105 (195 - servis 90), koin_total 195, tip_total 25 (dari Angka yang sama, termasuk hadiah misi)")
 	check(s["sepeda"]["rantai"] == {"kondisi": 1.0, "level": 0} and s["sepeda"]["servis_total"] == 1 and s["sepeda"]["ban"]["kondisi"] > 0.999 and s["sepeda"]["rem"]["kondisi"] > 0.999, "sepeda: rantai diservis (1,0), servis_total 1, ban dan rem hampir utuh")
-	check(s["terakhir"] == {"hari": 1, "terkirim": 3, "meleset": 22, "koin": 195, "tip": 25, "skor": 1500, "koin_misi": 75, "misi_hasil": "selesai", "misi_diambil": "p1_kucing"}, "terakhir = angka layar hasil + misi diambil + hasil misi; dapat %s" % [s["terakhir"]])
+	check(s["terakhir"] == {"hari": 1, "terkirim": 3, "meleset": 22, "koin": 195, "tip": 25, "skor": 1500, "koin_misi": 75, "potongan": 0, "misi_hasil": "selesai", "misi_diambil": "p1_kucing"}, "terakhir = angka layar hasil + misi diambil + hasil misi; dapat %s" % [s["terakhir"]])
 	check(s["misi_hasil"] == {"p1_kucing": {"hasil": "selesai", "hari": 1}} and s["tutorial"] == {"selesai": true}, "misi_hasil p1_kucing selesai di hari 1 (riwayat permanen); hari tutorial berakhir: tutorial.selesai true")
 	check(s["misi_jeda"] == {"p1_kucing": 8}, "misi P1 diambil hari 1 jeda 7: boleh lagi hari 8; dapat %s" % [s["misi_jeda"]])
 	check(s["headline_jeda"].has(halaman1[0]) and s["headline_jeda"].has(halaman1[2]) and s["headline_jeda"].size() == 2, "jeda headline utama dan ringan hari 1 tercatat: %s" % [s["headline_jeda"]])

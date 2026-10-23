@@ -177,7 +177,7 @@ func _saat_bengkel_diminta() -> void:
 	_mesin = baru
 	var angka: HasilRute.Angka = _rute.angka_hasil()
 	var kerja: Dictionary = simpanan.state.duplicate(true)
-	_saldo_awal_bengkel = clampi(int(kerja["koin"]) + maxi(angka.koin, 0), 0, Config.SAVE_ANGKA_MAKS)
+	_saldo_awal_bengkel = HasilRute.saldo_sesudah(int(kerja["koin"]), angka.koin_bersih)
 	kerja["koin"] = _saldo_awal_bengkel
 	var sepeda: Dictionary = kerja["sepeda"]
 	var akhir: Dictionary = _rute.kondisi_akhir()

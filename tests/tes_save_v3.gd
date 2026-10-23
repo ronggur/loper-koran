@@ -137,7 +137,7 @@ func _test_migrasi_4b() -> void:
 		"versi": Config.SAVE_VERSI, "hari": 2, "koin": 195, "koin_total": 195, "tip_total": 25, "sepeda": _sepeda_baru(), "reputasi": {"perumahan": 0}, "pelanggan": {}, "flag": ["kucing_ketemu"],
 		"misi_jeda": {"p1_kucing": 8}, "headline_jeda": {"ringan_mangga": 4, "utama_jalan_diperbaiki": 5},
 		"misi_hasil": {"p1_kucing": {"hasil": "selesai", "hari": 1}}, "tutorial": {"selesai": true},
-		"terakhir": {"hari": 1, "terkirim": 3, "meleset": 22, "koin": 195, "tip": 25, "skor": 1500, "koin_misi": 75, "misi_hasil": "selesai", "misi_diambil": "p1_kucing"},
+		"terakhir": {"hari": 1, "terkirim": 3, "meleset": 22, "koin": 195, "tip": 25, "skor": 1500, "koin_misi": 75, "potongan": 0, "misi_hasil": "selesai", "misi_diambil": "p1_kucing"},
 		"pengaturan": {"kidal": false, "mode_bantu": false, "suara": 1.0, "musik": 1.0},
 	}
 	check(s == harapan, "hasil migrasi 4B = oracle tangan: semua field v2 sama, koin_total = 195, sepeda baru; dapat %s" % [s])
