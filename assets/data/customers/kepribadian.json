@@ -1,0 +1,6 @@
+[
+	{ "id": "biasa", "bobot": 55 },
+	{ "id": "cerewet", "bobot": 15 },
+	{ "id": "pemberi_tip", "bobot": 15 },
+	{ "id": "sensitif", "bobot": 15 }
+]

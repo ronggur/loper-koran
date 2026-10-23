@@ -742,11 +742,11 @@ func _test_bintang_dan_koin_di_scene() -> void:
 	# 4. Koran ulang (netral): tidak menyalakan apa pun. Meleset (aspal, tidak sah): tidak menyalakan apa pun.
 	_langkah(akar, 60)
 	var ulang: KoranLempar.Koran = await _lempar_ke_kotak(akar, 1.0, "per_buka_01@6", mendarat)
-	check(ulang != null and ulang.penanda == ZonaSasaran.Penanda.NETRAL and gambar.item_sprite().is_empty() and gambar.teks_tampil().is_empty(), "koran ulang ke rumah terantar (netral): tidak ada bintang, koin, atau label")
+	check(ulang != null and ulang.penanda == ZonaSasaran.Penanda.NETRAL and gambar.item_sprite().is_empty() and gambar.teks_tampil() == ["-5"], "koran ulang ke rumah terantar (netral): tidak ada bintang atau koin; hanya label potongan -5 (run 6A2 B)")
 	_langkah(akar, 60)
 	var jumlah_skor: int = akar.skor().skor
 	var meleset: KoranLempar.Koran = await _lempar_ke_titik(akar, 4.0, Vector2(-0.5, 10.5), mendarat)
-	check(meleset != null and meleset.hasil == ZonaSasaran.Hasil.MELESET and akar.skor().skor == jumlah_skor and gambar.item_sprite().is_empty() and gambar.teks_tampil().is_empty(), "koran meleset (tidak sah): tidak ada bintang, koin, atau label")
+	check(meleset != null and meleset.hasil == ZonaSasaran.Hasil.MELESET and akar.skor().skor == jumlah_skor and gambar.item_sprite().is_empty() and gambar.teks_tampil() == ["-5"], "koran meleset (tidak sah): tidak ada bintang atau koin; hanya label potongan -5 (run 6A2 B)")
 	_bersihkan(akar)
 	# Entri dengan tip bukan 5 (KOIN_TIP berbeda): sprite koin tidak dipakai, baris tip label tampil.
 	var akar2: RuteMain = await _siapkan()

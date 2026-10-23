@@ -65,6 +65,9 @@ jobs:
       - name: Uji sintesis bunyi kondisi (5 WAV rantai berisik, rem berdecit, ban mendesis, servis, upgrade = hasil skrip, deterministik, tanpa klik)
         run: python3 tools/tests_cek/uji_sintesis_kondisi.py
 
+      - name: Uji sintesis bunyi milestone (1 WAV milestone tercapai = hasil skrip, deterministik, lembut, tanpa klik)
+        run: python3 tools/tests_cek/uji_sintesis_milestone.py
+
       - name: Uji aset kucing misi (sheet di assets/ = hasil tools/env_art/kendaraan.py, deterministik)
         run: |
           python3 -m pip install --quiet numpy pillow
@@ -87,6 +90,11 @@ jobs:
 
       - name: Uji aset fase 3 perumahan run 5D (rumah, rintangan, kotak surat = keluaran fase3.py, deterministik, hanya yang dipasang, mock docs, impor Lossless)
         run: python3 tools/tests_cek/uji_aset_fase3.py
+
+      - name: Uji lencana milestone run 6A2 (lencana.py deterministik, assets/ = keluaran, palet induk, 1/2/3 garis tanpa warna, impor Lossless)
+        run: |
+          python3 -m pip install --quiet pillow
+          python3 tools/tests_cek/uji_ui_lencana.py
 
       - name: Import project (tanpa error, tanpa berkas yang belum di-commit)
         run: |

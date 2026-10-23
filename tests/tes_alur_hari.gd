@@ -243,13 +243,34 @@ func _test_satu_hari_utuh() -> void:
 	var s: Dictionary = _baca_save()
 	check(s["hari"] == 2 and s["koin"] == 105 and s["koin_total"] == 195 and s["tip_total"] == 25, "isi save: hari 2, koin 105 (195 - servis 90), koin_total 195, tip_total 25 (dari Angka yang sama, termasuk hadiah misi)")
 	check(s["sepeda"]["rantai"] == {"kondisi": 1.0, "level": 0} and s["sepeda"]["servis_total"] == 1 and s["sepeda"]["ban"]["kondisi"] > 0.999 and s["sepeda"]["rem"]["kondisi"] > 0.999, "sepeda: rantai diservis (1,0), servis_total 1, ban dan rem hampir utuh")
-	check(s["terakhir"] == {"hari": 1, "terkirim": 3, "meleset": 22, "koin": 195, "tip": 25, "skor": 1500, "koin_misi": 75, "misi_hasil": "selesai", "misi_diambil": "p1_kucing"}, "terakhir = angka layar hasil + misi diambil + hasil misi; dapat %s" % [s["terakhir"]])
+	check(s["terakhir"] == {"hari": 1, "terkirim": 3, "meleset": 22, "koin": 195, "tip": 25, "skor": 1500, "koin_misi": 75, "potongan": 0, "misi_hasil": "selesai", "misi_diambil": "p1_kucing"}, "terakhir = angka layar hasil + misi diambil + hasil misi; dapat %s" % [s["terakhir"]])
 	check(s["misi_hasil"] == {"p1_kucing": {"hasil": "selesai", "hari": 1}} and s["tutorial"] == {"selesai": true}, "misi_hasil p1_kucing selesai di hari 1 (riwayat permanen); hari tutorial berakhir: tutorial.selesai true")
 	check(s["misi_jeda"] == {"p1_kucing": 8}, "misi P1 diambil hari 1 jeda 7: boleh lagi hari 8; dapat %s" % [s["misi_jeda"]])
 	check(s["headline_jeda"].has(halaman1[0]) and s["headline_jeda"].has(halaman1[2]) and s["headline_jeda"].size() == 2, "jeda headline utama dan ringan hari 1 tercatat: %s" % [s["headline_jeda"]])
 	check(s["flag"] == ["kucing_ketemu"] and s["pengaturan"] == {"kidal": false, "mode_bantu": false, "suara": 1.0, "musik": 1.0}, "flag kucing_ketemu menunggu tampil besok (M-6) dan pengaturan bawaan tersimpan")
 	var contoh: String = FileAccess.get_file_as_string("res://docs/DATA_SCHEMA.md")
-	check(contoh.contains(FileAccess.get_file_as_string(_jalur()).strip_edges()), "contoh save di DATA_SCHEMA 4 = isi berkas save nyata sesudah hari 1 (byte demi byte)")
+	var awal_blok: int = contoh.find("```json", contoh.find("Contoh save nyata setelah hari 1 selesai"))
+	var blok: String = contoh.substr(awal_blok + 7, contoh.find("```", awal_blok + 7) - awal_blok - 7)
+	var dari_dokumen: Variant = JSON.parse_string(blok)
+	var dari_berkas: Variant = JSON.parse_string(FileAccess.get_file_as_string(_jalur()))
+	var cocok: bool = typeof(dari_dokumen) == TYPE_DICTIONARY and typeof(dari_berkas) == TYPE_DICTIONARY
+	# Byte demi byte (QA-005): berkas nyata dengan `pelanggan` dipangkas ke id yang ditampilkan dokumen, dicetak `DataSave.ke_teks`, harus sama dengan blok dokumen. Hanya `pelanggan` yang dipangkas
+	# (25 rumah nyata, 3 ditampilkan); semua field lain dan format cetak harus persis sama.
+	var teks_pangkas: String = ""
+	var asing_di_dokumen: Array[String] = []
+	if cocok:
+		# State dibaca lewat DataSave (bilangan bulat tetap bulat; JSON.parse_string membuatnya float sehingga tercetak "2.0").
+		var pangkas: Dictionary = DataSave.dari_teks(FileAccess.get_file_as_string(_jalur())).state.duplicate(true)
+		var kecil: Dictionary = {}
+		for id: Variant in ((dari_dokumen as Dictionary).get("pelanggan", {}) as Dictionary):
+			if (pangkas["pelanggan"] as Dictionary).has(id):
+				kecil[id] = (pangkas["pelanggan"] as Dictionary)[id]
+			else:
+				asing_di_dokumen.append(str(id))
+		pangkas["pelanggan"] = kecil
+		teks_pangkas = DataSave.ke_teks(pangkas).strip_edges()
+	check(cocok and asing_di_dokumen.is_empty() and teks_pangkas == blok.strip_edges(), "contoh save di DATA_SCHEMA 4 = isi berkas save nyata sesudah hari 1 byte demi byte (hanya `pelanggan` dipangkas ke 3 id yang ditampilkan; id asing di dokumen: %s)" % [asing_di_dokumen])
+	check(cocok and ((dari_berkas as Dictionary)["pelanggan"] as Dictionary).size() == 25 and int(((dari_berkas as Dictionary)["reputasi"] as Dictionary)["perumahan"]) == 2, "berkas nyata memuat 25 pelanggan rute hari 1 dan reputasi Perumahan 2 (misi sedang +2, kredit 9 < 30)")
 	check(hari.status().keadaan == MesinHari.Keadaan.KORAN and hari.status().hari == 2 and hari.koran().tampil() and hari.rute() == null, "kembali ke layar koran hari 2, rute dibuang")
 	check(hari.get_child_count() == 1 + (1 if m.get_parent() == hari else 0), "node rute dibuang dari scene hari (hanya koran yang tersisa)")
 	check(hari.koran().teks_tampil()[1] == "Hari 2 · Perumahan Melati", "layar koran hari 2: 'Hari 2 · Perumahan Melati'")

@@ -804,3 +804,35 @@ Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build 
 11. Save lama utuh ya / tidak
 Catatan (bentuk, angka, letak yang ingin diubah dan alasannya): ____
 ```
+
+### 8.17 Uji reputasi, pelanggan tetap, potongan koran, dan milestone (run `20261023-fase6a2-reputasi-pelanggan`, belum diuji, NEEDS-MANUAL)
+
+Penguji: pemilik sendiri (rule `testing`), di vivo V2108 dan A54. Semua angka dan bentuk usulan (BALANCING 7.2, 7.3, 7.4; GDD 8, 13, 14.1; DESIGN_SPEC 3.3 dan layar Hasil): catat yang ingin diubah beserta alasannya, jangan diubah di sesi uji. Run ini menambah reputasi per distrik, pelanggan tetap (aktif, setia, berhenti, kembali) yang dipetakan ke rute yang diacak, potongan 5 koin per koran terbuang (hari boleh minus), dan milestone dasar; ThrowSolver, gerak, tabrakan, rumus tenggat, angka skor dan combo, kondisi sepeda, dan HUD bawah tidak berubah. Save lama (v3) dimigrasi ke v4 otomatis: mainkan dengan save yang ada dan, kalau mau mulai bersih, hapus data app Kring (izin pemilik 2026-10-18). Main paling sedikit 6 hari berturut-turut.
+
+1. [ ] **Reputasi terbaca.** Di rute ada penanda bintang dan angka di kanan atas, tepat di bawah kotak kondisi sepeda; di layar hasil ada baris "Reputasi n (+d)". Diharapkan: terbaca sekilas dan tidak menutupi radar, bel, kartu misi, atau sasaran lempar (di kanan dan kidal). Hasil: terbaca ya / tidak; menutupi ya / tidak.
+2. [ ] **Sekitar 2 poin per hari terasa.** Mainkan 6 hari dengan teliti (antar sebanyak mungkin, tanpa membuang koran). Diharapkan: reputasi naik sekitar 2 sampai 3 poin per hari; pelan tetapi terlihat, tanpa lonjakan. Hasil: kenaikan per hari __, terasa pas / terlalu pelan / terlalu cepat.
+3. [ ] **Pelanggan tetap muncul lagi.** Dari hari 3, rumah yang sudah pernah dilayani sering masuk rute lagi (maksimal sekitar 60% kuota tiap sisi), dan tiap hari tetap ada pelanggan baru. Diharapkan: terasa ada "langganan" tanpa membuat rute itu-itu saja. Hasil: ya / tidak; terlalu sering / pas / terlalu jarang.
+4. [ ] **Pelanggan berhenti tidak membuat jalan buntu.** Sengaja lewati beberapa hari (jangan antar banyak pelanggan); layar hasil mencatat "Berhenti berlangganan n" bila ada, tanpa nama. Diharapkan: rute tetap penuh 25 pelanggan, tidak ada hari tanpa pelanggan, dan rumah yang berhenti bisa kembali (muncul lagi sesudah beberapa hari, "Berlangganan lagi"). Apakah cukup tanpa nama atau penanda di rumah? Hasil: ya / tidak; cukup / kurang jelas.
+5. [ ] **Potongan 5 koin terasa adil.** Lempar sembarangan beberapa koran (ke aspal, ke rumah bukan pelanggan, ke rumah yang sudah terantar). Diharapkan: terasa wajar sebagai "ganti rugi koran" dan tidak membuat takut melempar; koran cadangan yang tidak dilempar tidak dipotong. Hasil: adil / terlalu berat / terlalu ringan.
+6. [ ] **"-5" dan koin bersih terbaca.** Saat koran terbuang muncul "-5" di titik mendarat dan angka koin di HUD turun (boleh negatif dengan tanda minus). Diharapkan: terbaca, netral (bukan merah besar), tidak mengganggu bidikan berikutnya. Hasil: terbaca ya / tidak; mengganggu ya / tidak.
+7. [ ] **Hari minus netral dan tidak menjebak.** Buang banyak koran sampai hasil hari minus. Diharapkan: layar hasil menulis "Koin bersih" minus dan "Saldo mulai lagi dari 0" tanpa kata gagal atau layar merah; bengkel tetap terbuka (upgrade "Koin kurang") dan "Hari berikutnya" tetap bisa. Hasil: netral ya / tidak; terjebak ya / tidak.
+8. [ ] **Milestone terbaca.** Layar hasil menampilkan satu "Target berikutnya" dengan lencana, bilah, dan angka "n/target", dan baris "Baru: ..." beserta satu denting lembut saat tingkat baru tercapai (mis. koin total 1.000, misi pertama selesai). Diharapkan: jelas apa tujuan berikutnya; denting tidak mengganggu. Hasil: terbaca ya / tidak; denting mengganggu ya / tidak; target cocok (terlalu mudah / pas / terlalu jauh).
+9. [ ] **Layar hasil tidak terlalu padat dan tidak menutupi apa pun.** Dua kolom: angka hari di kiri, reputasi dan target di kanan; tombol "Ke bengkel" tetap besar dan mudah ditekan. Cek di hari terpadat (potongan + misi + kondisi rusak + pelanggan berhenti + milestone baru). Hasil: terlalu padat ya / tidak; tombol mudah ya / tidak.
+10. [ ] **60 fps tidak turun, piksel tajam, save utuh.** Penanda reputasi dan layar hasil baru tidak menurunkan fps; migrasi save v3 -> v4 mempertahankan hari, koin, kondisi sepeda, dan misi. Hasil: ya / tidak.
+
+**Lembar hasil 8.17 (reputasi, pelanggan tetap, potongan koran, milestone, run 6A2):**
+
+```
+Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build (commit): ____
+1. Reputasi terbaca ya / tidak   menutupi apa pun ya / tidak
+2. Kenaikan per hari __   pas / terlalu pelan / terlalu cepat
+3. Pelanggan tetap muncul lagi ya / tidak   terlalu sering / pas / terlalu jarang
+4. Pelanggan berhenti: jalan buntu ya / tidak   kembali terbaca ya / tidak   tanpa nama cukup ya / tidak
+5. Potongan 5 koin: adil / terlalu berat / terlalu ringan
+6. "-5" terbaca ya / tidak   mengganggu ya / tidak
+7. Hari minus netral ya / tidak   terjebak ya / tidak
+8. Milestone terbaca ya / tidak   denting mengganggu ya / tidak   target terlalu mudah / pas / terlalu jauh
+9. Layar hasil terlalu padat ya / tidak   tombol mudah ya / tidak
+10. 60 fps tetap ya / tidak   save utuh ya / tidak
+Catatan (angka, bentuk, letak yang ingin diubah dan alasannya): ____
+```

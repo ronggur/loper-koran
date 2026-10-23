@@ -26,6 +26,8 @@ extends Node
 ##   dan upgrade ikut tertulis (`CatatanHari.sepeda`) dan belanja mengurangi saldo (`CatatanHari.belanja_koin`). Tidak ada simpan di layar hasil, di bengkel, atau saat app di-background di sana:
 ##   menutup app di layar hasil atau bengkel mengulang hari dari koran dengan save lama (juga pendapatan dan belanja hari itu), sama seperti aturan 4A.
 ## Rute menerima sepeda dari save (`RuteMain.atur_sepeda`): aus melanjutkan dari kondisi tersimpan dan efek memakai level upgrade tersimpan.
+## Run fase6a2-reputasi-pelanggan bagian A: state save dan pustaka kepribadian dikirim ke rute (`RuteMain.atur_pelanggan`, sebelum scene masuk pohon) dan catatan pelanggan hari itu masuk `CatatanHari` saat "Hari berikutnya"
+## (reputasi dan status pelanggan ditulis `DataSave.catat_hari` tepat sekali, bersama simpan akhir hari lainnya).
 ## Alur hari berurutan ini prototype yang tidak mengunci struktur sesi (ROADMAP 5): tanpa hari terakhir, game over, atau target harian.
 
 ## Skrip autoload `SaveManager`, hanya untuk tipe (autoload tidak diberi `class_name`, rule `gdscript`).
@@ -56,6 +58,8 @@ var _pustaka_headline: PemuatHeadline.Pustaka = PemuatHeadline.Pustaka.new()
 var _galat_data: Array[String] = []
 ## Data upgrade bengkel (`PemuatToko`, satu-satunya pembaca berkas upgrade); dimuat sekali.
 var _toko: PemuatToko.Kumpulan = PemuatToko.Kumpulan.new()
+## Pustaka kepribadian pelanggan (`PemuatPelanggan`, satu-satunya pembaca berkasnya); dimuat sekali (run fase6a2-reputasi-pelanggan).
+var _kepribadian: PemuatPelanggan.Kumpulan = PemuatPelanggan.Kumpulan.new()
 ## Layar bengkel yang sedang terbuka (null di luar keadaan BENGKEL) dan saldo awalnya (koin save + koin hari ini), untuk menghitung belanja.
 var _bengkel: LayarBengkel = null
 var _saldo_awal_bengkel: int = 0
@@ -98,8 +102,10 @@ func _muat_data() -> void:
 	_pustaka_misi = misi.misi
 	_pustaka_headline = PemuatHeadline.muat_folder()
 	_toko = PemuatToko.muat()
+	_kepribadian = PemuatPelanggan.muat()
 	_galat_data = []
 	_galat_data.append_array(_toko.galat)
+	_galat_data.append_array(_kepribadian.galat)
 	_galat_data.append_array(misi.galat)
 	_galat_data.append_array(_pustaka_headline.galat)
 	_galat_data.append_array(PemuatHeadline.periksa_silang(_pustaka_headline, _pustaka_misi))
@@ -145,6 +151,7 @@ func _saat_berangkat() -> void:
 	_rute.atur_hari(_mesin.hari)
 	_rute.atur_benih_awal(SeedHari.rute(_mesin.hari))
 	_rute.atur_sepeda(simpanan.state, _mesin.hari, _toko.upgrade)
+	_rute.atur_pelanggan(simpanan.state, _kepribadian.entri)
 	_rute.atur_misi(_data_misi(_misi_diambil))
 	_rute.atur_tutorial(TutorialLangkah.boleh_aktif(_mesin.hari, DataSave.tutorial_selesai(simpanan.state)))
 	_rute.hasil_dibuka.connect(_saat_hasil_dibuka)
@@ -170,7 +177,7 @@ func _saat_bengkel_diminta() -> void:
 	_mesin = baru
 	var angka: HasilRute.Angka = _rute.angka_hasil()
 	var kerja: Dictionary = simpanan.state.duplicate(true)
-	_saldo_awal_bengkel = clampi(int(kerja["koin"]) + maxi(angka.koin, 0), 0, Config.SAVE_ANGKA_MAKS)
+	_saldo_awal_bengkel = HasilRute.saldo_sesudah(int(kerja["koin"]), angka.koin_bersih)
 	kerja["koin"] = _saldo_awal_bengkel
 	var sepeda: Dictionary = kerja["sepeda"]
 	var akhir: Dictionary = _rute.kondisi_akhir()
@@ -209,6 +216,8 @@ func _saat_hari_berikutnya() -> void:
 	catatan.mode_bantu = _rute.mode_bantu()
 	catatan.sepeda = kerja["sepeda"]
 	catatan.belanja_koin = maxi(_saldo_awal_bengkel - Economy.saldo(kerja), 0)
+	catatan.pelanggan = _rute.catatan_pelanggan()
+	catatan.kepribadian = _kepribadian.entri
 	var hari_dimainkan: int = _mesin.hari
 	var tersimpan: bool = simpanan.akhiri_hari(catatan)
 	if not tersimpan and not simpanan.simpan_ditahan():

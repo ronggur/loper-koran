@@ -615,7 +615,7 @@ func _test_skor_di_scene() -> void:
 			k3 = mendarat[2]
 			break
 	check(k3 != null and k3.bantu and k3.id_rumah == "per_buka_01@10" and k3.penanda == ZonaSasaran.Penanda.CENTANG and not k3.tepat, "tap bantu ke kotak surat @10: centang, bukan tepat (O-4)")
-	check(akar.skor().skor == 235 and akar.skor().koin == 30 and hud.teks_skor() == "235" and hud.teks_combo() == "x1.2" and hud.teks_koin() == "30", "antaran ke-2 beruntun: +110 (x1,1), skor 235, koin 30, HUD x1.2")
+	check(akar.skor().skor == 235 and akar.skor().koin == 30 and hud.teks_skor() == "235" and hud.teks_combo() == "x1.2" and hud.teks_koin() == "25", "antaran ke-2 beruntun: +110 (x1,1), skor 235, koin kotor 30, HUD x1.2 dan koin bersih 25 (satu koran ulang terbuang -5)")
 	check(audio == null or absf(float(audio.call(&"pitch_mendarat_terakhir")) - PITCH_NADA_1) < 0.00001, "nada combo antaran ke-2: pitch 1,059463")
 	check(dinilai.size() == 3 and dinilai[0].status == SkorRute.Status.ANTAR and dinilai[1].status == SkorRute.Status.ULANG and dinilai[2].status == SkorRute.Status.ANTAR, "skor_dinilai tepat sekali per koran: antar, ulang, antar")
 	_bersihkan(akar)

@@ -10,7 +10,10 @@ extends RefCounted
 ##   terdekat, setengah ke atas. Koin = `KOIN_ONGKOS_ANTAR` (juga halaman, O-2) + `KOIN_TIP` bila teras ke pemberi tip (O-3) dan tenggat
 ##   belum lewat (K-1 run fase3c-hud-hasil: sesudah tenggat lewat ongkos, skor, dan combo tetap, tip 0 dan `jumlah_tip` tidak naik).
 ## - `ULANG`: koran ke zona rumah yang sudah terantar: 0 skor, 0 koin, combo tidak putus dan tidak naik, penanda netral (O-1).
-## - `TIDAK_SAH`: meleset, bukan pelanggan, jendela dengan sakelar penalti: 0 skor, 0 koin, combo putus. Koin tidak pernah berkurang.
+## - `TIDAK_SAH`: meleset, bukan pelanggan, jendela dengan sakelar penalti: 0 skor, 0 koin, combo putus.
+## Koran terbuang (run fase6a2-reputasi-pelanggan bagian B, K-1 dan K-2 pemilik 2026-10-22, O-1): tiap koran yang dilempar, mendarat, dan dinilai `TIDAK_SAH` atau `ULANG` menaikkan
+## `Keadaan.terbuang` satu; `ANTAR` tidak. Potongan koinnya (`potongan`) dibayar di layar hasil dan save, bukan di `Keadaan.koin` (koin kotor tetap, jadi skor, combo, dan angka lama tidak berubah). Koran yang
+## tidak dilempar dan pelanggan yang dilewati tanpa lemparan tidak dihitung.
 ## Combo (AC-10): pengali = `SKOR_COMBO_AWAL` + `SKOR_COMBO_LANGKAH` x antaran sah beruntun SEBELUM antaran ini, dijepit `SKOR_COMBO_MAKS`;
 ## antaran yang sedang dinilai memakai pengali sebelum naik, lalu rangkaian bertambah satu. Jadi antaran ke-1 x1,0, ke-2 x1,1, ke-11 dan
 ## seterusnya x2,0. Putus (`TIDAK_SAH`, atau tabrakan lewat `putus_combo`) mengembalikan ke x1,0.
@@ -19,6 +22,9 @@ extends RefCounted
 ## jadi santai di bawah sekitar 3,99 u/d, cepat sampai 5,4, ngebut di atasnya; melambat = santai.
 
 enum Status { TIDAK_SAH, ANTAR, ULANG }
+## Kualitas antaran sah pertama ke sebuah rumah (run fase6a2-reputasi-pelanggan, O-8): dicatat per id rumah untuk kredit reputasi (`ReputationManager`). `TEPAT` = inti kotak surat; `KOTAK_SURAT`
+## = kotak surat di luar inti; `HALAMAN` = rumput; `JENDELA` = jendela dengan sakelar bonus. Hanya pencatat: tidak mengubah skor, koin, atau combo.
+enum Kualitas { KOTAK_SURAT, TEPAT, TERAS, HALAMAN, JENDELA }
 
 
 ## Keadaan skor satu rute.
@@ -34,6 +40,10 @@ class Keadaan extends RefCounted:
 	var jumlah_tip: int = 0
 	## Bagian `koin` yang berasal dari tip (untuk layar hasil, run fase3c-hud-hasil).
 	var koin_tip: int = 0
+	## Kualitas antaran sah tiap rumah yang terantar (id -> `Kualitas`), dicatat untuk reputasi (pencatat saja).
+	var kualitas: Dictionary = {}
+	## Banyaknya koran yang dilempar lalu terbuang (`TIDAK_SAH` atau `ULANG`, O-1), dihitung dari lemparan nyata, bukan dari pelanggan yang tidak menerima.
+	var terbuang: int = 0
 
 	func salin() -> Keadaan:
 		var baru: Keadaan = Keadaan.new()
@@ -45,6 +55,8 @@ class Keadaan extends RefCounted:
 		baru.jumlah_tepat = jumlah_tepat
 		baru.jumlah_tip = jumlah_tip
 		baru.koin_tip = koin_tip
+		baru.kualitas = kualitas.duplicate()
+		baru.terbuang = terbuang
 		return baru
 
 
@@ -130,11 +142,13 @@ static func nilai(k: Keadaan, hasil: ZonaSasaran.Hasil, id_rumah: String, tepat:
 	if rumah_pelanggan and id_rumah != "" and s.terantar.has(id_rumah):
 		h.status = Status.ULANG
 		h.penanda = ZonaSasaran.Penanda.NETRAL
+		s.terbuang += 1
 		return h
 	if not ZonaSasaran.sah(antaran):
 		h.status = Status.TIDAK_SAH
 		h.penanda = ZonaSasaran.Penanda.SILANG
 		s.beruntun = 0
+		s.terbuang += 1
 		return h
 	h.status = Status.ANTAR
 	h.tepat = tepat and hasil == ZonaSasaran.Hasil.KOTAK_SURAT
@@ -154,6 +168,7 @@ static func nilai(k: Keadaan, hasil: ZonaSasaran.Hasil, id_rumah: String, tepat:
 		s.koin_tip += h.tip
 	if id_rumah != "":
 		s.terantar[id_rumah] = true
+		s.kualitas[id_rumah] = kualitas_antaran(hasil, h.tepat)
 	return h
 
 
@@ -162,6 +177,33 @@ static func nilai(k: Keadaan, hasil: ZonaSasaran.Hasil, id_rumah: String, tepat:
 static func nilai_koran(k: Keadaan, koran: KoranLempar.Koran, rute: RouteBuilder.Rute, jendela_bonus: bool, tenggat_lewat: bool = false) -> Hasil:
 	var kecepatan: float = koran.lintasan.kecepatan_maju_ud if koran.lintasan != null else 0.0
 	return nilai(k, koran.hasil, koran.id_rumah, koran.tepat, kecepatan, RouteBuilder.pemberi_tip(rute, koran.id_rumah), jendela_bonus, tenggat_lewat)
+
+
+## Kualitas antaran sah untuk hasil zona `hasil` dan `tepat` (hanya bermakna untuk hasil yang sah).
+static func kualitas_antaran(hasil: ZonaSasaran.Hasil, tepat: bool) -> Kualitas:
+	match hasil:
+		ZonaSasaran.Hasil.KOTAK_SURAT:
+			return Kualitas.TEPAT if tepat else Kualitas.KOTAK_SURAT
+		ZonaSasaran.Hasil.TERAS:
+			return Kualitas.TERAS
+		ZonaSasaran.Hasil.JENDELA:
+			return Kualitas.JENDELA
+	return Kualitas.HALAMAN
+
+
+## Kualitas antaran rumah `id_rumah` (`Kualitas` sebagai bilangan bulat), atau -1 bila rumah belum terantar.
+static func kualitas_rumah(k: Keadaan, id_rumah: String) -> int:
+	return int(k.kualitas[id_rumah]) if k.kualitas.has(id_rumah) else -1
+
+
+## Potongan koin koran terbuang rute ini: `terbuang` x `KOIN_POTONGAN_KORAN_MELESET` (K-1). Satu rumus untuk HUD, `HasilRute`, dan umpan "-5"; selalu >= 0.
+static func potongan(k: Keadaan) -> int:
+	return maxi(k.terbuang, 0) * Config.KOIN_POTONGAN_KORAN_MELESET
+
+
+## Apakah penilaian `h` menghasilkan koran terbuang (`TIDAK_SAH` atau `ULANG`, O-1).
+static func hasil_terbuang(h: Hasil) -> bool:
+	return h != null and (h.status == Status.TIDAK_SAH or h.status == Status.ULANG)
 
 
 ## Combo putus karena tabrakan (AC-6): rangkaian kembali 0 (pengali x1,0). Skor, koin, dan rumah terantar tetap. Masukan tidak diubah.

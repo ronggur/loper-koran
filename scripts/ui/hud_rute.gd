@@ -21,6 +21,9 @@ extends HudDasar
 ##   bersama baris 1), berisi `KotakKondisi` ban, rem, rantai (ikon 14 px + tiga kotak 5x5 + tanda "!" `WARN` untuk PERLU_BENGKEL; ikon bergetar dan kotak terisi `WARN` selama peringatan).
 ##   Hanya menampilkan `KondisiRute.Keadaan`; tidak menerima sentuhan; ikut zona aman bersama baris 1; tidak dicerminkan saat kidal. Panel ini berpotongan dengan zona swipe (y >= 48) tetapi
 ##   tidak menangkap sentuhan (seperti panel koran, DESIGN_SPEC 3.5): swipe yang dimulai di atasnya tetap melempar.
+## - Baris 3 kanan atas = penanda reputasi (DESIGN_SPEC 3.3, run fase6a2-reputasi-pelanggan bagian C, O-10, AC-13 dan AC-14, usulan): satu panel 9-slice di bawah panel kondisi, jarak 5, rata kanan dengannya
+##   (tepi kanan 28 + geseran zona aman), berisi ikon `ui_icon_reputasi` 14 px dan angka bulat 0..100 (reputasi Perumahan dari save; berubah hanya di akhir hari, jadi di rute nilainya tetap). Hanya ada bila rute
+##   punya keadaan pelanggan (`tampilkan_reputasi` >= 0); tidak menerima sentuhan; tidak dicerminkan saat kidal. Kolom kanan atas tetap di sebelah kanan panel progres dan di dalam strip radar kanan.
 ## - Kartu misi (DESIGN_SPEC 3.1, run fase4b-misi-kucing, usulan): kiri atas DI BAWAH area sentuh jeda (x `MISI_KARTU_X_PX`, y `MISI_KARTU_Y_PX`, bukan di y 40
 ##   seperti sketsa karena area sentuh jeda berakhir di y 46): label `MISI_LABEL_KARTU` (`ACCENT`) dan "Kucing 0/1 · 8 rumah" (`MISI_KARTU`). Hanya ada
 ##   selama misi aktif; saat selesai atau gagal berganti banner `MISI_BANNER_DETIK` (tengah atas di bawah panel progres; hadiah "+75" pada banner
@@ -35,6 +38,8 @@ var _terkirim_terakhir: Vector2i = Vector2i(-1, -1)
 var _kartu_terakhir: Array = []
 var _banner_terakhir: Array = []
 var _petunjuk_terakhir: String = ""
+## Reputasi yang sedang tampil (-1 = penanda tersembunyi).
+var _reputasi_terakhir: int = -1
 
 @onready var _radar_seberang: RadarStrip = %RadarSeberang
 @onready var _radar_dekat: RadarStrip = %RadarDekat
@@ -52,6 +57,9 @@ var _petunjuk_terakhir: String = ""
 @onready var _panel_skor: PanelContainer = %PanelSkor
 @onready var _panel_kondisi: PanelContainer = %PanelKondisi
 @onready var _kotak_kondisi: Dictionary = {"ban": %KotakBan, "rem": %KotakRem, "rantai": %KotakRantai}
+@onready var _panel_reputasi: PanelContainer = %PanelReputasi
+@onready var _ikon_reputasi: TextureRect = %IkonReputasi
+@onready var _angka_reputasi: Label = %AngkaReputasi
 @onready var _label_skor: Label = %LabelSkor
 @onready var _angka_skor: Label = %AngkaSkor
 @onready var _label_combo: Label = %LabelCombo
@@ -75,6 +83,7 @@ func _ready() -> void:
 	_panel_progres.custom_minimum_size = Vector2(Config.HUD_PROGRES_LEBAR_PX, 0)
 	_panel_skor.custom_minimum_size = Vector2(Config.HUD_SKOR_LEBAR_PX, 0)
 	_ikon_koin.custom_minimum_size = Vector2(Config.HUD_IKON_PX, Config.HUD_IKON_PX)
+	_ikon_reputasi.custom_minimum_size = Vector2(Config.HUD_IKON_PX, Config.HUD_IKON_PX)
 	_baris_kanan.add_theme_constant_override(&"separation", Config.HUD_PANEL_JARAK_PX)
 	(%KolomKanan as VBoxContainer).add_theme_constant_override(&"separation", Config.HUD_PANEL_JARAK_PX)
 	(%IsiKondisi as HBoxContainer).add_theme_constant_override(&"separation", Config.KONDISI_HUD_ANTAR_KOMPONEN_PX)
@@ -114,6 +123,32 @@ func tampilkan_kondisi(k: KondisiRute.Keadaan) -> void:
 	for id: String in Config.KONDISI_KOMPONEN:
 		var kotak: KotakKondisi = _kotak_kondisi[id]
 		kotak.tampilkan(float(k.kondisi.get(id, 1.0)), float(k.kedip.get(id, 0.0)))
+
+
+## Menampilkan reputasi distrik (baris 3 kanan atas): angka bulat dijepit 0..100; negatif = penanda tersembunyi (rute tanpa keadaan pelanggan). Diperbarui hanya bila berubah.
+func tampilkan_reputasi(nilai: int) -> void:
+	var kunci: int = -1 if nilai < 0 else clampi(nilai, Config.REPUTASI_MIN, Config.REPUTASI_MAKS)
+	if kunci == _reputasi_terakhir:
+		return
+	_reputasi_terakhir = kunci
+	_panel_reputasi.visible = kunci >= 0
+	if kunci >= 0:
+		_angka_reputasi.text = tr("HUD_REPUTASI_ANGKA").format({"n": kunci})
+
+
+## True bila penanda reputasi tampil.
+func reputasi_tampil() -> bool:
+	return _panel_reputasi.visible
+
+
+## Teks penanda reputasi ("" bila tersembunyi).
+func teks_reputasi() -> String:
+	return _angka_reputasi.text if _panel_reputasi.visible else ""
+
+
+## Persegi panel reputasi dalam koordinat viewport game (tes tata letak).
+func rect_panel_reputasi() -> Rect2:
+	return _panel_reputasi.get_global_rect()
 
 
 ## Satu komponen di panel kondisi (untuk tes dan probe).
@@ -368,6 +403,8 @@ func _terapkan_gaya() -> void:
 	_panel_koin.add_theme_stylebox_override(&"panel", GayaHud.panel_hud())
 	_panel_skor.add_theme_stylebox_override(&"panel", GayaHud.panel_hud())
 	_panel_kondisi.add_theme_stylebox_override(&"panel", GayaHud.panel_hud())
+	_panel_reputasi.add_theme_stylebox_override(&"panel", GayaHud.panel_hud())
+	_angka_reputasi.add_theme_color_override(&"font_color", Palette.TEXT)
 	_angka_terkirim.add_theme_color_override(&"font_color", Palette.ACCENT)
 	_angka_koin.add_theme_color_override(&"font_color", Palette.TEXT)
 	for label: Label in [_label_skor, _label_combo]:

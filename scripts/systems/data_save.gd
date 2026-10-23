@@ -1,6 +1,7 @@
 class_name DataSave
 extends RefCounted
-## Format save v3 dan aturannya (v3, run fase6a1-bengkel-kondisi, AC-1 sampai AC-3: `koin` menjadi SALDO yang boleh turun hanya karena belanja bengkel yang disengaja (K-1), `koin_total` (seumur
+## Format save v4 dan aturannya (v4, run fase6a2-reputasi-pelanggan, AC-5 dan AC-6: `reputasi` {distrik: bilangan bulat 0..100} dan `pelanggan` {id rumah: {status, antar, meleset, hari_berhenti}}, hanya penghitung dan bukan
+## riwayat; save v3 sampai v0 dimigrasi tanpa kehilangan field lama, `catat_hari` menerapkan `ReputationManager` tepat sekali per hari). Sebelumnya format save v3 dan aturannya (v3, run fase6a1-bengkel-kondisi, AC-1 sampai AC-3: `koin` menjadi SALDO yang boleh turun hanya karena belanja bengkel yang disengaja (K-1), `koin_total` (seumur
 ## hidup, hanya naik, awal = `koin` v2), `sepeda` = {ban, rem, rantai: {kondisi 0..1 dibulatkan 4 desimal, level upgrade}, servis_total}; save v2 dan v1 dimigrasi tanpa kehilangan apa pun,
 ## sepeda baru semua kondisi 1,0 dan level 0). Sebelum itu: format save v2 dan aturannya, logika murni (DATA_SCHEMA 4, rule `save-system`; AC-7 sampai AC-12 run fase4a-koran-hari, v2 AC-7 dan AC-8 run
 ## fase4b-misi-kucing). v2 (M-6, M-7): `flag` kini berarti "lanjutan menunggu tampil" (dikonsumsi di akhir hari bila halaman koran hari itu menampilkan
@@ -17,7 +18,7 @@ extends RefCounted
 ##   hari dengan koin 0 tidak mengurangi apa pun (prinsip 2). Flag (v2): flag yang lanjutannya tampil hari itu DIKONSUMSI dulu, flag baru dari hasil misi
 ##   ditambahkan SESUDAHNYA (flag baru hari ini tidak ikut terhapus). `misi_hasil[id]`: `selesai` tidak pernah ditimpa `gagal`. Angka koin (termasuk
 ##   tip dan koin misi), skor, dan hasil misi datang dari `HasilRute.Angka` yang sama dengan layar hasil (AC-12), tidak dihitung ulang.
-## Waktu dan RNG tidak dipakai. Field DATA_SCHEMA 4 yang belum dipakai (reputasi, pelanggan, sepeda, dst) tidak ditulis; bila ada di
+## Waktu dan RNG tidak dipakai. Field DATA_SCHEMA 4 yang belum dipakai (distrik_terbuka, kosmetik, milestone, dst) tidak ditulis; bila ada di
 ## berkas (save masa depan) dibiarkan. Usulan, belum dikunci.
 
 ## Hasil membaca teks save. `TIDAK_TERBACA` tidak pernah dihasilkan `dari_teks` (yang menerima teks): `SaveManager` memakainya bila berkas ada tetapi
@@ -31,6 +32,8 @@ const _TIPE_KUNCI: Dictionary = {
 	"koin_total": "angka",
 	"tip_total": "angka",
 	"sepeda": "kamus",
+	"reputasi": "kamus",
+	"pelanggan": "kamus",
 	"flag": "daftar",
 	"misi_jeda": "kamus",
 	"headline_jeda": "kamus",
@@ -41,7 +44,7 @@ const _TIPE_KUNCI: Dictionary = {
 }
 const _PENGATURAN_BOOL: Array[String] = ["kidal", "mode_bantu"]
 const _PENGATURAN_VOLUME: Array[String] = ["suara", "musik"]
-const _TERAKHIR_ANGKA: Array[String] = ["hari", "terkirim", "meleset", "koin", "tip", "skor", "koin_misi"]
+const _TERAKHIR_ANGKA: Array[String] = ["hari", "terkirim", "meleset", "koin", "tip", "skor", "koin_misi", "potongan"]
 const _HASIL_MISI: Array[String] = ["selesai", "gagal"]
 ## Kunci angka `sepeda` selain komponen.
 const _SEPEDA_SERVIS_TOTAL: String = "servis_total"
@@ -83,6 +86,10 @@ class CatatanHari extends RefCounted:
 	var sepeda: Dictionary = {}
 	## Koin yang dibelanjakan di bengkel hari ini (servis dan upgrade). Mengurangi `koin` (saldo), tidak `koin_total` dan tidak `tip_total` (K-1).
 	var belanja_koin: int = 0
+	## Catatan pelanggan hari ini (v4, `ReputationManager.catat`): bila ada, `catat_hari` menerapkan `ReputationManager.terapkan` TEPAT sekali ke `reputasi` dan `pelanggan`. null = reputasi dan pelanggan di save tidak berubah.
+	var pelanggan: ReputationManager.Catatan = null
+	## Pustaka kepribadian untuk `ReputationManager.terapkan` (`PemuatPelanggan`); kosong = semua pelanggan `biasa`.
+	var kepribadian: Array[KepribadianPelanggan.Entri] = []
 
 
 ## State bawaan (save baru): hari pertama, tanpa koin dan flag, pengaturan bawaan.
@@ -94,6 +101,8 @@ static func templat() -> Dictionary:
 		"koin_total": 0,
 		"tip_total": 0,
 		"sepeda": sepeda_baru(),
+		"reputasi": reputasi_baru(),
+		"pelanggan": {},
 		"flag": [],
 		"misi_jeda": {},
 		"headline_jeda": {},
@@ -116,6 +125,11 @@ static func sepeda_baru() -> Dictionary:
 		sepeda[k] = {"kondisi": 1.0, "level": 0}
 	sepeda[_SEPEDA_SERVIS_TOTAL] = 0
 	return sepeda
+
+
+## Reputasi baru (v4): distrik awal `Config.REPUTASI_AWAL`.
+static func reputasi_baru() -> Dictionary:
+	return {Config.DISTRIK_AWAL: Config.REPUTASI_AWAL}
 
 
 ## Teks state sebagai JSON berurut kunci (isi sama = teks sama, byte demi byte).
@@ -178,6 +192,11 @@ static func migrasi(data: Dictionary) -> Dictionary:
 		hasil["koin_total"] = clampi(_ke_bulat(hasil.get("koin", 0)), 0, Config.SAVE_ANGKA_MAKS)
 		hasil["sepeda"] = sepeda_baru()
 		versi = 3
+	if versi < 4:
+		# v3 -> v4 (run fase6a2-reputasi-pelanggan): reputasi awal `REPUTASI_AWAL` dan belum ada pelanggan tetap (riwayat antaran lama tidak bisa dipulihkan, jadi semua rumah "baru"); semua field v3 tetap.
+		hasil["reputasi"] = reputasi_baru()
+		hasil["pelanggan"] = {}
+		versi = 4
 	hasil["versi"] = versi
 	return _normalisasi(hasil)
 
@@ -189,8 +208,10 @@ static func catat_hari(state: Dictionary, catatan: CatatanHari) -> Dictionary:
 	var angka: HasilRute.Angka = catatan.angka if catatan.angka != null else HasilRute.Angka.new()
 	baru["hari"] = clampi(maxi(int(baru["hari"]), catatan.hari + 1), Config.HARI_AWAL, Config.SAVE_ANGKA_MAKS)
 	# v3 (K-1): koin hari ini masuk saldo DAN `koin_total` persis sekali; belanja bengkel hanya mengurangi saldo (tidak pernah di bawah 0), tidak `koin_total` atau `tip_total`.
+	# Run fase6a2 bagian B (O-2): `koin_total` naik koin KOTOR; saldo = max(0, saldo_lama + koin_bersih) - belanja (potongan koran terbuang, K-1).
 	var koin_hari: int = maxi(angka.koin, 0)
-	baru["koin"] = clampi(int(baru["koin"]) + koin_hari - maxi(catatan.belanja_koin, 0), 0, Config.SAVE_ANGKA_MAKS)
+	var saldo_hari: int = HasilRute.saldo_sesudah(int(baru["koin"]), koin_hari - maxi(angka.potongan, 0))
+	baru["koin"] = clampi(saldo_hari - maxi(catatan.belanja_koin, 0), 0, Config.SAVE_ANGKA_MAKS)
 	baru["koin_total"] = clampi(int(baru["koin_total"]) + koin_hari, 0, Config.SAVE_ANGKA_MAKS)
 	baru["tip_total"] = clampi(int(baru["tip_total"]) + maxi(angka.koin_tip, 0), 0, Config.SAVE_ANGKA_MAKS)
 	var flag: Array = baru["flag"]
@@ -201,6 +222,11 @@ static func catat_hari(state: Dictionary, catatan: CatatanHari) -> Dictionary:
 			flag.append(f)
 	_catat_misi_hasil(baru, angka, catatan.hari)
 	_catat_sepeda(baru, catatan.sepeda)
+	if catatan.pelanggan != null:
+		# v4: reputasi dan status pelanggan dihitung SEKALI per hari oleh `ReputationManager` (murni) dari state ini dan catatan hari ini.
+		var rep: ReputationManager.Hasil = ReputationManager.terapkan(baru, catatan.pelanggan, catatan.kepribadian)
+		baru["reputasi"] = rep.state["reputasi"]
+		baru["pelanggan"] = rep.state["pelanggan"]
 	if catatan.tutorial_selesai:
 		var tutorial: Dictionary = baru["tutorial"]
 		tutorial["selesai"] = true
@@ -214,6 +240,7 @@ static func catat_hari(state: Dictionary, catatan: CatatanHari) -> Dictionary:
 		"tip": angka.koin_tip,
 		"skor": angka.skor,
 		"koin_misi": angka.koin_misi if angka.misi_hasil == "selesai" else 0,
+		"potongan": maxi(angka.potongan, 0),
 		"misi_hasil": angka.misi_hasil if _HASIL_MISI.has(angka.misi_hasil) else "",
 		"misi_diambil": catatan.misi_diambil,
 	}
@@ -304,6 +331,8 @@ static func _normalisasi(data: Dictionary) -> Dictionary:
 	# `koin_total` tidak pernah di bawah saldo (saldo = pendapatan seumur hidup dikurangi belanja).
 	data["koin_total"] = clampi(maxi(_ke_bulat(data["koin_total"]), data["koin"]), 0, Config.SAVE_ANGKA_MAKS)
 	data["sepeda"] = _normalisasi_sepeda(data["sepeda"])
+	data["reputasi"] = _normalisasi_reputasi(data["reputasi"])
+	data["pelanggan"] = _normalisasi_pelanggan(data["pelanggan"])
 	var flag: Array = []
 	var daftar: Array = data["flag"]
 	for f: Variant in daftar:
@@ -317,6 +346,39 @@ static func _normalisasi(data: Dictionary) -> Dictionary:
 	data["terakhir"] = _normalisasi_terakhir(data["terakhir"])
 	data["pengaturan"] = _normalisasi_pengaturan(data["pengaturan"])
 	return data
+
+
+## `reputasi`: id distrik -> bilangan bulat `REPUTASI_MIN`..`REPUTASI_MAKS` (bukan angka berhingga = `REPUTASI_AWAL`). Id distrik yang tidak dikenal dibiarkan; distrik awal selalu ada.
+static func _normalisasi_reputasi(reputasi: Dictionary) -> Dictionary:
+	var hasil: Dictionary = {}
+	for id: Variant in reputasi:
+		if typeof(id) != TYPE_STRING or str(id).is_empty():
+			continue
+		var nilai: Variant = reputasi[id]
+		hasil[str(id)] = clampi(_ke_bulat(nilai), Config.REPUTASI_MIN, Config.REPUTASI_MAKS) if _angka(nilai) else Config.REPUTASI_AWAL
+	if not hasil.has(Config.DISTRIK_AWAL):
+		hasil[Config.DISTRIK_AWAL] = Config.REPUTASI_AWAL
+	return hasil
+
+
+## `pelanggan`: id rumah -> {status (aktif|setia|berhenti, lainnya aktif), antar, meleset (0..`PELANGGAN_HITUNG_MAKS`), hari_berhenti (0 bila bukan berhenti)}. Id yang tidak ada di data dibiarkan; entri
+## yang bukan objek dibuang (status tidak bisa ditebak). Field asing di dalam entri dibuang.
+static func _normalisasi_pelanggan(pelanggan: Dictionary) -> Dictionary:
+	var hasil: Dictionary = {}
+	for id: Variant in pelanggan:
+		var entri: Variant = pelanggan[id]
+		if typeof(id) != TYPE_STRING or str(id).is_empty() or typeof(entri) != TYPE_DICTIONARY:
+			continue
+		var d: Dictionary = entri
+		var status: Variant = d.get("status")
+		var rapi: String = str(status) if typeof(status) == TYPE_STRING and Config.PELANGGAN_STATUS.has(status) else PelangganRute.AKTIF
+		hasil[str(id)] = {
+			"status": rapi,
+			"antar": clampi(_ke_bulat(d.get("antar", 0)), 0, Config.PELANGGAN_HITUNG_MAKS),
+			"meleset": clampi(_ke_bulat(d.get("meleset", 0)), 0, Config.PELANGGAN_HITUNG_MAKS),
+			"hari_berhenti": clampi(_ke_bulat(d.get("hari_berhenti", 0)), 0, Config.SAVE_ANGKA_MAKS) if rapi == PelangganRute.BERHENTI else 0,
+		}
+	return hasil
 
 
 ## `sepeda`: tiga komponen {kondisi 0..1 dibulatkan 4 desimal, level >= 0} dan `servis_total` >= 0. Id komponen asing dibiarkan apa adanya (rule save-system); isi komponen yang

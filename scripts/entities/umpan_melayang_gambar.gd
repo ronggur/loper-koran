@@ -34,6 +34,7 @@ func tampilkan(daftar: Array[UmpanMelayang.Entri]) -> void:
 			continue
 		var e: UmpanMelayang.Entri = daftar[i]
 		label.text = teks(e)
+		label.add_theme_color_override(&"font_color", Palette.TEXT_2 if e.potongan > 0 else Palette.OK)
 		label.visible = true
 		label.modulate.a = UmpanMelayang.alfa(e)
 		var ukuran: Vector2 = label.get_combined_minimum_size()
@@ -41,8 +42,10 @@ func tampilkan(daftar: Array[UmpanMelayang.Entri]) -> void:
 		label.position = (kaki - Vector2(ukuran.x / 2, ukuran.y)).round()
 
 
-## Teks satu entri: "+<ongkos>", lalu tip dan "TEPAT" bila ada, satu per baris. Tip tidak ditulis di label bila ditampilkan sprite koin (`VfxAntaran.koin_sprite`).
+## Teks satu entri: potongan "-<n>" (`RUTE_UMPAN_POTONGAN`, nada netral `TEXT_2`) atau "+<ongkos>", lalu tip dan "TEPAT" bila ada, satu per baris. Tip tidak ditulis di label bila ditampilkan sprite koin (`VfxAntaran.koin_sprite`).
 func teks(e: UmpanMelayang.Entri) -> String:
+	if e.potongan > 0:
+		return tr("RUTE_UMPAN_POTONGAN").format({"n": e.potongan})
 	var bagian: PackedStringArray = PackedStringArray([tr("RUTE_UMPAN_KOIN").format({"n": e.ongkos})])
 	if e.tip > 0 and not VfxAntaran.koin_sprite(e.tip):
 		bagian.append(tr("RUTE_UMPAN_TIP").format({"n": e.tip}))

@@ -28,7 +28,7 @@ Game mobile bergaya pixel art isometrik yang memodernisasi Paperboy NES: pemain 
 > **Rangkuman, perlu dikonfirmasi (2026-10-07).** Prinsip di bawah tidak ditulis terpisah di dokumen ide, tapi muncul berulang di keputusan-keputusannya. Ditulis di sini supaya keputusan baru bisa dicek terhadapnya. Kalau disetujui, bagian ini jadi pilar resmi.
 
 1. **Kecepatan adalah pilihan dengan konsekuensi.** Ngebut menaikkan skor dan mengejar tenggat, tapi mempersempit waktu bereaksi, menguras stamina, dan mempercepat keausan sepeda. Santai lebih aman, tapi tenggat tidak menunggu (bagian 5, 6, 12).
-2. **Gagal tidak menghukum berlapis.** Misi gagal tidak mengurangi koin dan tidak menggagalkan hari, misi lanjutan lebih longgar, dan kerusakan sepeda hanya menghambat, tidak menghentikan permainan (bagian 10, 12).
+2. **Gagal tidak menghukum berlapis.** Misi gagal tidak mengurangi koin dan tidak menggagalkan hari, misi lanjutan lebih longgar, dan kerusakan sepeda hanya menghambat, tidak menghentikan permainan (bagian 10, 12). **Satu pengecualian disengaja (keputusan pemilik 2026-10-22, run 6A2, angka usulan):** koran yang DILEMPAR lalu terbuang memotong koin sedikit supaya melempar sembarangan tidak gratis (bagian 14.1); itu satu-satunya hukuman koin di luar belanja bengkel, tidak berlapis, tidak menggagalkan hari, dan tidak membuat game buntu.
 3. **Adil dan bisa dibaca.** Rintangan punya pola yang bisa dipelajari, kerusakan memberi tanda peringatan dulu, petunjuk misi punya penanda visual minimal 2 detik, jalur utama selalu bersih, dan objek yang menutupi pemain dibuat semi-transparan (bagian 7, 10, 12, 15).
 4. **Tanpa pay-to-win.** Satu mata uang yang hanya didapat dari bermain. Iklan selalu pilihan pemain, tidak pernah di tengah rute, dan seluruh game bisa dimainkan tanpa iklan (bagian 14).
 5. **Indonesia yang hidup.** Gang kampung, warung, pasar, sawah, sungai, hajatan, dan tujuh belasan adalah bahan utama dunia, rintangan, dan misi, bukan sekadar dekorasi (bagian 7, 9, 10).
@@ -186,6 +186,8 @@ Setiap rumah punya penghuni dengan kebiasaan sendiri, dan reputasi pemain di lin
 - **Kepribadian pelanggan:** ada yang cerewet kalau koran jatuh di rumput, ada yang memberi tip kalau koran mendarat tepat di teras, ada yang berhenti langganan kalau koran meleset dua kali.
 - **Reputasi:** akumulasi dari antaran yang tepat, misi sampingan yang berhasil, dan kejadian di rute. Reputasi tinggi menaikkan pendapatan dan membuka distrik baru.
 - **Hubungan dengan misi:** hasil misi sampingan membawa konsekuensi ke hari berikutnya (bagian 10.7).
+- **Penanda dan hasil reputasi (run 6A2 bagian C, usulan, dinilai di HP):** reputasi Perumahan (angka bulat 0 sampai 100, ikon bintang) tampil di HUD rute dan di layar hasil bersama perubahannya hari itu ("12 (+2)") serta jumlah pelanggan baru, jadi tetap, berhenti berlangganan, dan berlangganan lagi (hanya yang bukan nol, tanpa nama; pelanggan dikenali dari "kebiasaan", bukan identitas). Pemain yang teliti naik sekitar 2 sampai 3 poin per hari. Di 6A2 reputasi hanya ditampilkan dan dipakai milestone; efeknya ke pendapatan dan pembukaan distrik menunggu 6B dan Fase 8.
+- **Koran terbuang** (keputusan pemilik 2026-10-22, run 6A2): koran yang dilempar ke luar sasaran, ke rumah bukan pelanggan, atau ke rumah yang sudah terantar memotong koin (14.1); ini terpisah dari "meleset" untuk status pelanggan di atas, yang menghitung pelanggan rute yang tidak menerima koran.
 
 ---
 
@@ -455,6 +457,8 @@ Milestone adalah penanda pencapaian jangka panjang yang terbuka sepanjang perjal
 - **Hadiah:** koin, julukan (misalnya "Loper Andalan"), dan kosmetik sepeda seperti stiker, bel, dan warna. Tidak ada gems, dan hadiah tidak menutup akses ke kemampuan inti supaya tetap adil.
 - **Tampilan:** layar hasil harian menunjukkan milestone yang hampir tercapai, dan satu milestone bisa dipilih sebagai target aktif yang kemajuannya tampil di bengkel.
 
+**Diterapkan run 6A2 bagian C (usulan, dinilai lewat uji HP; `MilestoneTracker`, BALANCING 7.4):** empat milestone dasar masing-masing tiga tingkat (perunggu, perak, emas): pelanggan tetap 3/10/25, koin total 1.000/5.000/15.000, misi sampingan selesai 1/3/5, dan perawatan sepeda (servis + level upgrade) 1/4/10. Progres dihitung dari save tanpa field baru dan TANPA hadiah (tidak ada kosmetik atau julukan di 6A2). Layar hasil menampilkan SATU milestone yang paling dekat tercapai (pecahan terbesar menuju tingkat berikutnya; seri: sisa angka terkecil, lalu urutan pelanggan tetap, koin total, misi, sepeda), dengan bilah dan angka "n/target" (bukan warna saja) dan lencana tingkat, ditambah tingkat yang baru tercapai hari itu dengan satu denting lembut. "Target aktif di bengkel" dan milestone keahlian menyusul (Fase 13). Tingkat sepeda yang tercapai lewat belanja di bengkel tidak diumumkan (belanja terjadi sesudah layar hasil); progresnya tetap tampil di bilah hari berikutnya.
+
 ---
 
 ## 14. Ekonomi dan Monetisasi
@@ -469,6 +473,7 @@ Angka koin mengacu pada penghasilan loper koran sungguhan di Indonesia: komisi s
 - Ongkos satu pengantaran: 15 koin (Rp1.500), dengan rentang 6 sampai 20 koin tergantung jenis koran.
 - Rute awal sekitar 25 rumah, jadi pemasukan satu hari yang rapi sekitar 300 sampai 375 koin (Rp30.000 sampai Rp37.500), mendekati penghasilan nyata.
 - Hadiah misi mengikuti kelipatan ongkos: kecil 45 koin, sedang 75 koin, besar 120 koin.
+- **Potongan koran terbuang (keputusan pemilik 2026-10-22, angka usulan):** tiap koran yang dilempar dan mendarat di luar sasaran sah (meleset, rumah bukan pelanggan, rumah yang sudah terantar, jendela penalti) memotong 5 koin (`KOIN_POTONGAN_KORAN_MELESET`, sepertiga ongkos antar), supaya pemain tidak bebas membuang koran. Koran cadangan yang tidak dilempar dan pelanggan yang dilewati tanpa lemparan tidak dipotong. Pendapatan hari boleh minus di layar hasil (ditampilkan netral, tanpa kata gagal); saldo di save dijepit minimal 0 dan `koin_total` (seumur hidup) tetap koin kotor.
 - Harga di bengkel dan upgrade dibuat dalam skala yang sama, misalnya tambal ban sekitar 1 sampai 2 jam kerja harian, supaya terasa seperti uang loper sungguhan.
 - Di awal, jumlah pelanggan sedikit dan makin banyak seiring reputasi, mirip loper nyata yang pelanggannya naik turun.
 

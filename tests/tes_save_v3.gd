@@ -119,9 +119,9 @@ func _bersihkan_folder() -> void:
 
 func _test_config_dan_templat() -> void:
 	_judul.call("Save v3: SAVE_VERSI 3 dan templat memuat koin, koin_total, sepeda (AC-1)")
-	check(Config.SAVE_VERSI == 3, "Config.SAVE_VERSI = 3")
+	check(Config.SAVE_VERSI == 4, "Config.SAVE_VERSI = 4 (run 6A2 menaikkan dari 3; tes v3 menjaga migrasi dari v3, bukan versi sekarang)")
 	var t: Dictionary = DataSave.templat()
-	check(t["versi"] == 3 and t["koin"] == 0 and t["koin_total"] == 0 and t["sepeda"] == _sepeda_baru(), "templat v3: koin 0, koin_total 0, sepeda tiga komponen kondisi 1,0 level 0, servis_total 0; dapat %s" % [t])
+	check(t["versi"] == 4 and t["koin"] == 0 and t["koin_total"] == 0 and t["sepeda"] == _sepeda_baru(), "templat v3: koin 0, koin_total 0, sepeda tiga komponen kondisi 1,0 level 0, servis_total 0; dapat %s" % [t])
 	check(DataSave.sepeda_baru() == _sepeda_baru(), "DataSave.sepeda_baru() = sepeda baru")
 	check(DataSave.ke_teks(t).contains('"koin_total": 0') and DataSave.ke_teks(t).contains('"servis_total": 0'), "teks templat memuat koin_total dan servis_total")
 
@@ -134,10 +134,10 @@ func _test_migrasi_4b() -> void:
 	var s: Dictionary = hasil.state
 	check(hasil.status == DataSave.Status.SAH and not hasil.perlu_salinan(), "save 4B terbaca SAH, tidak perlu disalin (dimigrasi, tidak dihapus)")
 	var harapan: Dictionary = {
-		"versi": 3, "hari": 2, "koin": 195, "koin_total": 195, "tip_total": 25, "sepeda": _sepeda_baru(), "flag": ["kucing_ketemu"],
+		"versi": 4, "hari": 2, "koin": 195, "koin_total": 195, "tip_total": 25, "sepeda": _sepeda_baru(), "reputasi": {"perumahan": 0}, "pelanggan": {}, "flag": ["kucing_ketemu"],
 		"misi_jeda": {"p1_kucing": 8}, "headline_jeda": {"ringan_mangga": 4, "utama_jalan_diperbaiki": 5},
 		"misi_hasil": {"p1_kucing": {"hasil": "selesai", "hari": 1}}, "tutorial": {"selesai": true},
-		"terakhir": {"hari": 1, "terkirim": 3, "meleset": 22, "koin": 195, "tip": 25, "skor": 1500, "koin_misi": 75, "misi_hasil": "selesai", "misi_diambil": "p1_kucing"},
+		"terakhir": {"hari": 1, "terkirim": 3, "meleset": 22, "koin": 195, "tip": 25, "skor": 1500, "koin_misi": 75, "potongan": 0, "misi_hasil": "selesai", "misi_diambil": "p1_kucing"},
 		"pengaturan": {"kidal": false, "mode_bantu": false, "suara": 1.0, "musik": 1.0},
 	}
 	check(s == harapan, "hasil migrasi 4B = oracle tangan: semua field v2 sama, koin_total = 195, sepeda baru; dapat %s" % [s])
@@ -155,10 +155,10 @@ func _test_migrasi_4b() -> void:
 func _test_migrasi_4a_dan_v0() -> void:
 	_judul.call("Save v3: migrasi dari save 4A (v1) dan tanpa versi (v0) (AC-2)")
 	var a: Dictionary = DataSave.dari_teks(TesMisiSave.SAVE_4A).state
-	check(a["versi"] == 3 and a["hari"] == 2 and a["koin"] == 120 and a["koin_total"] == 120 and a["tip_total"] == 25 and a["sepeda"] == _sepeda_baru(), "4A (v1): hari 2, koin 120, koin_total 120, tip 25, sepeda baru")
+	check(a["versi"] == 4 and a["hari"] == 2 and a["koin"] == 120 and a["koin_total"] == 120 and a["tip_total"] == 25 and a["sepeda"] == _sepeda_baru(), "4A (v1): hari 2, koin 120, koin_total 120, tip 25, sepeda baru")
 	check(a["misi_jeda"] == {"p1_kucing": 8} and a["misi_hasil"] == {} and a["tutorial"] == {"selesai": false}, "4A: jeda dipertahankan, field v2 bawaan")
 	var v0: Dictionary = DataSave.dari_teks('{"hari": 7, "koin": 1500, "flag": ["kucing_belum", "flag_lama"], "pengaturan": {"kidal": true}}').state
-	check(v0["versi"] == 3 and v0["hari"] == 7 and v0["koin"] == 1500 and v0["koin_total"] == 1500 and v0["flag"] == ["kucing_belum", "flag_lama"] and v0["pengaturan"]["kidal"] == true and v0["sepeda"] == _sepeda_baru(), "v0: hari 7, koin 1500, koin_total 1500, flag dan kidal dipertahankan, sepeda baru; dapat %s" % [v0])
+	check(v0["versi"] == 4 and v0["hari"] == 7 and v0["koin"] == 1500 and v0["koin_total"] == 1500 and v0["flag"] == ["kucing_belum", "flag_lama"] and v0["pengaturan"]["kidal"] == true and v0["sepeda"] == _sepeda_baru(), "v0: hari 7, koin 1500, koin_total 1500, flag dan kidal dipertahankan, sepeda baru; dapat %s" % [v0])
 	var kosong: Dictionary = DataSave.dari_teks('{"versi": 2}').state
 	check(kosong["koin"] == 0 and kosong["koin_total"] == 0 and kosong["sepeda"] == _sepeda_baru(), "v2 minimal: koin 0, koin_total 0")
 	# Save v2 yang memuat sepeda liar (tidak pernah ditulis 4B): diganti sepeda baru, tidak ada upgrade gratis.
@@ -186,15 +186,15 @@ func _test_sepeda_tak_sah() -> void:
 
 func _test_versi_baru_tidak_ditimpa() -> void:
 	_judul.call("Save v3: versi > 3 TIDAK ditimpa, disalin dulu (AC-2, rule save-system)")
-	for versi: int in [4, 5, 99]:
+	for versi: int in [5, 6, 99]:
 		var h: DataSave.Hasil = DataSave.dari_teks('{"versi": %d, "koin": 777}' % versi)
 		check(h.status == DataSave.Status.TERLALU_BARU and h.perlu_salinan() and h.state == DataSave.templat(), "versi %d: TERLALU_BARU, perlu disalin, state bawaan" % versi)
-	check(DataSave.dari_teks('{"versi": 3, "koin": 777}').status == DataSave.Status.SAH, "versi 3 sah")
+	check(DataSave.dari_teks('{"versi": 3, "koin": 777}').status == DataSave.Status.SAH, "versi 3 sah (dimigrasi ke versi sekarang)")
 	# Lewat SaveManager jalur uji: berkas versi 4 disalin ke save.corrupt.<waktu>.json dan berkas asli tidak diubah sebelum simpan.
 	_bersihkan_folder()
 	DirAccess.make_dir_recursive_absolute(FOLDER_TES)
 	var jalur: String = FOLDER_TES.path_join("save.json")
-	var isi: String = '{"versi": 4, "koin": 777, "masa_depan": true}'
+	var isi: String = '{"versi": 5, "koin": 777, "masa_depan": true}'
 	var f: FileAccess = FileAccess.open(jalur, FileAccess.WRITE)
 	f.store_string(isi)
 	f.close()
@@ -203,8 +203,8 @@ func _test_versi_baru_tidak_ditimpa() -> void:
 	m.set(&"lapor_ke_log", false)
 	m.call(&"muat", 1234)
 	var salinan: String = str(m.get(&"jalur_salinan_rusak"))
-	check(m.get(&"status_muat") == DataSave.Status.TERLALU_BARU and not salinan.is_empty() and FileAccess.get_file_as_string(salinan) == isi, "versi 4: disalin utuh ke %s" % salinan)
-	check(FileAccess.get_file_as_string(jalur) == isi and (m.get(&"state") as Dictionary) == DataSave.templat(), "berkas versi 4 tidak diubah oleh muat; permainan mulai dari state bawaan")
+	check(m.get(&"status_muat") == DataSave.Status.TERLALU_BARU and not salinan.is_empty() and FileAccess.get_file_as_string(salinan) == isi, "versi 5: disalin utuh ke %s" % salinan)
+	check(FileAccess.get_file_as_string(jalur) == isi and (m.get(&"state") as Dictionary) == DataSave.templat(), "berkas versi 5 tidak diubah oleh muat; permainan mulai dari state bawaan")
 	check(m.call(&"ambil_notifikasi") == "KORAN_SAVE_RUSAK", "pemain diberi tahu satu kali")
 	m.free()
 	_bersihkan_folder()
@@ -337,14 +337,14 @@ func _test_save_manager_v3() -> void:
 	m.set(&"lapor_ke_log", false)
 	m.call(&"muat")
 	var state: Dictionary = m.get(&"state")
-	check(m.get(&"status_muat") == DataSave.Status.SAH and state["versi"] == 3 and state["koin_total"] == 195 and m.get(&"jumlah_simpan") == 0, "memuat save 4B: dimigrasi ke v3 di memori, nol simpan")
+	check(m.get(&"status_muat") == DataSave.Status.SAH and state["versi"] == 4 and state["koin_total"] == 195 and m.get(&"jumlah_simpan") == 0, "memuat save 4B: dimigrasi ke v3 di memori, nol simpan")
 	check(FileAccess.get_file_as_string(jalur) == SAVE_4B, "berkas 4B belum diubah sampai akhiri_hari")
 	var c: DataSave.CatatanHari = _catatan(2, 300, 20)
 	c.belanja_koin = 80
 	c.sepeda = {"ban": {"kondisi": 1.0, "level": 0}, "rem": {"kondisi": 1.0, "level": 1}, "rantai": {"kondisi": 0.6, "level": 0}, "servis_total": 1}
 	check(m.call(&"akhiri_hari", c) == true and m.get(&"jumlah_simpan") == 1, "akhiri_hari menulis tepat satu kali")
 	var terbaca: DataSave.Hasil = DataSave.dari_teks(FileAccess.get_file_as_string(jalur))
-	check(terbaca.status == DataSave.Status.SAH and terbaca.state["versi"] == 3 and terbaca.state["koin"] == 195 + 300 - 80 and terbaca.state["koin_total"] == 495 and terbaca.state["sepeda"]["rem"]["level"] == 1 and terbaca.state["sepeda"]["rantai"]["kondisi"] == 0.6 and terbaca.state["hari"] == 3, "berkas: v3, koin 415, koin_total 495, rem level 1, rantai 0,6, hari 3; dapat %s" % [terbaca.state])
+	check(terbaca.status == DataSave.Status.SAH and terbaca.state["versi"] == 4 and terbaca.state["koin"] == 195 + 300 - 80 and terbaca.state["koin_total"] == 495 and terbaca.state["sepeda"]["rem"]["level"] == 1 and terbaca.state["sepeda"]["rantai"]["kondisi"] == 0.6 and terbaca.state["hari"] == 3, "berkas: v3, koin 415, koin_total 495, rem level 1, rantai 0,6, hari 3; dapat %s" % [terbaca.state])
 	check(FileAccess.get_file_as_string(jalur) == DataSave.ke_teks(terbaca.state), "berkas yang ditulis sama byte demi byte dengan ke_teks(state)")
 	m.free()
 	_bersihkan_folder()

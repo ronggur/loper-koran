@@ -482,7 +482,7 @@ func perbarui(dt: float) -> void:
 	_kontrol.atur_rem(_sepeda.rem_aktif())
 	_sepeda.tampilkan_tabrakan(_rintangan.tabrakan)
 	_sepeda.tampilkan_bel(_bel)
-	_hud.tampilkan_skor(_skor.skor, _skor.beruntun, _skor.koin + _koin_tambahan(), putus_tampil())
+	_hud.tampilkan_skor(_skor.skor, _skor.beruntun, _koin_tampil(), putus_tampil())
 	_hud.tampilkan_kondisi(_kondisi)
 	_hud.tampilkan_bel(_kontrol.router.bel_ditahan(), Bel.sisa_jeda_pecahan(_bel))
 	_kontrol.router.geser_bel = _hud.geser_bel()
@@ -572,6 +572,8 @@ func _saat_koran_mendarat(k: KoranLempar.Koran) -> void:
 		_skor = hs.keadaan
 		k.penanda = hs.penanda
 		_umpan = UmpanMelayang.tambah(_umpan, UmpanMelayang.dari_hasil(hs, k.lintasan.titik_mendarat))
+		if SkorRute.hasil_terbuang(hs):
+			_umpan = UmpanMelayang.tambah(_umpan, UmpanMelayang.dari_potongan(Config.KOIN_POTONGAN_KORAN_MELESET, k.lintasan.titik_mendarat))
 	koran_mendarat.emit(k)
 	if hs != null:
 		skor_dinilai.emit(hs)
@@ -615,6 +617,11 @@ func atur_kondisi(k: KondisiRute.Keadaan) -> void:
 	_kondisi = k
 	if is_node_ready():
 		_hud.tampilkan_kondisi(_kondisi)
+
+
+## Koin bersih hari berjalan untuk HUD (O-3): koin kotor + hadiah misi - potongan koran terbuang; boleh negatif.
+func _koin_tampil() -> int:
+	return _skor.koin + _koin_tambahan() - SkorRute.potongan(_skor)
 
 
 ## Keadaan skor saat ini (untuk tes dan probe).
@@ -662,7 +669,7 @@ func _kembalikan_awal(koran_awal: int) -> void:
 	_hud.tampilkan_koran(koran.sisa, koran.penuh)
 	_sepeda.tampilkan_tabrakan(_rintangan.tabrakan)
 	_sepeda.tampilkan_bel(_bel)
-	_hud.tampilkan_skor(_skor.skor, _skor.beruntun, _skor.koin + _koin_tambahan(), false)
+	_hud.tampilkan_skor(_skor.skor, _skor.beruntun, _koin_tampil(), false)
 	_hud.tampilkan_kondisi(_kondisi)
 	_hud.tampilkan_bel(false, 0.0)
 

@@ -129,6 +129,19 @@ func _initialize() -> void:
 	toko.jalankan()
 	var save_v3: TesSaveV3 = TesSaveV3.new(check, _judul)
 	save_v3.jalankan()
+	# Run fase6a2-reputasi-pelanggan bagian A: kepribadian, ReputationManager, laju reputasi (SimEkonomi), RouteBuilder dengan keadaan pelanggan, save v4.
+	var reputasi: TesReputasi = TesReputasi.new(check, _judul)
+	reputasi.jalankan()
+	var rute_pelanggan: TesRutePelanggan = TesRutePelanggan.new(check, _judul)
+	rute_pelanggan.jalankan()
+	var save_v4: TesSaveV4 = TesSaveV4.new(check, _judul)
+	save_v4.jalankan()
+	# Run fase6a2-reputasi-pelanggan bagian B: potongan koran terbuang (murni).
+	var potongan: TesPotongan = TesPotongan.new(check, _judul)
+	potongan.jalankan()
+	# Run fase6a2-reputasi-pelanggan bagian C: milestone dasar (murni).
+	var milestone: TesMilestone = TesMilestone.new(check, _judul)
+	milestone.jalankan()
 	var sprite: TesSprite = TesSprite.new(check, _judul, self)
 	sprite.jalankan()
 	var ekspor: TesExport = TesExport.new(check, _judul)
@@ -201,6 +214,12 @@ func _initialize() -> void:
 	await scene_kondisi.jalankan()
 	var scene_bengkel: TesBengkelScene = TesBengkelScene.new(check, _judul, self)
 	await scene_bengkel.jalankan()
+	# Run fase6a2-reputasi-pelanggan bagian B: potongan koran terbuang di scene rute, layar hasil, HUD, dan alur hari.
+	var scene_potongan: TesPotonganScene = TesPotonganScene.new(check, _judul, self)
+	await scene_potongan.jalankan()
+	# Run fase6a2-reputasi-pelanggan bagian C: penanda reputasi HUD, kolom kanan layar hasil (empat ukuran), integrasi RuteMain, denting milestone, tiga alur hari.
+	var scene_reputasi: TesReputasiScene = TesReputasiScene.new(check, _judul, self)
+	await scene_reputasi.jalankan()
 	var tata_letak: TesTataLetak = TesTataLetak.new(check, _judul, self)
 	await tata_letak.jalankan()
 	var bunyi: TesBunyi = TesBunyi.new(check, _judul, self)

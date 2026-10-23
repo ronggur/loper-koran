@@ -1,0 +1,362 @@
+# Loop Log — 20261023-fase6a2-reputasi-pelanggan
+Scope: Run 6A2, Fase 6A bagian kedua: reputasi per distrik, pelanggan tetap (aktif/setia/berhenti, kepribadian), pemetaan pelanggan tetap ke rute yang diacak, potongan koran terbuang (K-1 pemilik), milestone dasar  ·  Branch: feat/fase6a2-reputasi-pelanggan  ·  Mulai: 2026-10-23  ·  Godot: 4.7.2
+
+## Status: PASSED   (iterasi 2/2; QA iterasi 2 PASS: 0 Blocker/Major OPEN; QA-001..003, 005..007 VERIFIED; DEFERRED: QA-004 (Minor, data hanya punya satu misi), QA-008 (Minor), QA-009 dan QA-010 (Nit) ditutup oleh orchestrator sebagai DEFERRED untuk run berikutnya; NEEDS-MANUAL: SETUP_ANDROID 8.17 dan sisa 8.16)
+
+## Ringkasan iterasi
+| Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
+|---|---|---|---|---|---|
+| 0 | Persiapan orchestrator: SPEC, baseline | ✅ | - | - | - |
+| 1A | Logika murni reputasi, pelanggan tetap, save v4, RouteBuilder dengan keadaan, sim_ekonomi | ✅ (19668 lolos, 0 gagal) | - | - | - |
+| 1B | Potongan koran terbuang: SkorRute/HasilRute/catat_hari, umpan "-5", HUD koin bersih, layar hasil | ✅ (19872 lolos, 0 gagal) | - | - | - |
+| 1C | Milestone (`MilestoneTracker`), penanda reputasi HUD, layar hasil dua kolom, lencana dan bunyi, probe jendela, dokumen penutup | ✅ (20328 lolos, 0 gagal) | FAIL (QA iterasi 1) | 7 (QA-001..007) | - |
+| 2 | Perbaikan QA-001..007: larangan berhenti eksak, tes batas jeda, tes kredit rumah berhenti, oracle ketat, konstanta bilah | ✅ (20371 lolos, 0 gagal) | PASS (QA iterasi 2) | 3 (QA-008 Minor, QA-009 dan QA-010 Nit; tidak memblokir) | QA-001, 002, 003, 005, 006, 007 |
+
+## Baseline (orchestrator, `main` = 726b59c, branch dari main terbaru, 2026-10-23)
+- `godot --headless --import`: 0 baris ERROR/WARNING. `godot --headless --path . --quit-after 2`: 0 baris ERROR/WARNING.
+- `run_tests.gd`: **19281 lolos, 0 gagal**; `tools/cek_keluaran_tes.py`: lolos (0 peringatan).
+- Semua `tools/tests_cek/uji_*.py` (14 berkas) exit 0.
+- sha256 `user://save.json` asli (`~/Library/Application Support/Godot/app_userdata/Kring Kring!/save.json`): `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e`.
+- HP: `adb devices` kosong (tidak ada perangkat tersambung saat persiapan).
+- Hasil uji HP Run 5D: **tidak diisi pemilik** (baris ISI kosong). QA-001/002/003 5D tidak ditutup; 8.16 NEEDS-MANUAL; butir aset Fase 5 tidak dicentang.
+- Fakta data: 9 segmen perumahan, 71 rumah `pelanggan_boleh` (37 seberang, 34 dekat); satu rute memakai 7 dari 9 segmen (sekitar 55 kandidat), jadi pelanggan tetap yang segmennya tidak terpilih hari itu memang tidak muncul hari itu.
+
+## Temuan
+Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MANUAL | BLOCKED
+
+| ID | Iter | Sev | Lokasi | Temuan & reproduksi/bukti | Status | Fix (file/commit) | Tes regresi |
+|---|---|---|---|---|---|---|---|
+| QA-001 | 1 | Major | `scripts/systems/route_builder.gd` `_pilih_pelanggan_keadaan` (tingkat pelepasan "berhenti": true); `tests/tes_rute_pelanggan.gd` ~baris 242 (`if rute.pelepasan > 0: continue`) | O-7(a)/AC-4(a): "`berhenti` tidak dipilih kecuali paling banyak 1 calon kembali". Kenyataan: bila tidak ada susunan sah tanpa rumah `berhenti`, larangan dicabut diam-diam (tingkat terakhir) dan pelanggan `berhenti` yang BELUM calon kembali masuk rute. Ada rumah "tak tergantikan" karena syarat celah gabungan <= 20 ubin (mis. `per_buka_01@18`, `per_tengah_01@6`). Ukuran QA (`qa_repro/berhenti_terpilih.gd`, 600 rute per sel, semua `berhenti` berkepribadian `sensitif`, belum calon kembali): 1 rumah berhenti -> 6 sampai 7 dari 600 rute memuat rumah berhenti (1%); 2 rumah -> 5 sampai 25 (1 sampai 4%); 5 rumah -> 22 sampai 55 (4 sampai 9%); 8 rumah -> 36 sampai 48 (6 sampai 8%). `qa_repro/berhenti_rumah_tak_tergantikan.gd`: berhenti = satu rumah dari rute dasar, 78 dari 3000 rute (2,6%) tetap memuatnya (pelepasan 2). Akibat: jeda `PELANGGAN_KEMBALI_JEDA_HARI` dan "tiap berhenti punya jalan kembali lewat calon kembali" bisa dilewati; tes (a) hanya memeriksa rute `pelepasan == 0`, jadi pelanggaran tidak terlihat. Tidak tercatat di SPEC/BALANCING sebagai pengecualian. Saran: coba segmen/seed lain atau tingkatkan percobaan sebelum mencabut larangan, atau catat pengecualian ini di SPEC/BALANCING dan uji batas frekuensinya (mis. <= x%) dan bahwa rumah berhenti yang terpaksa masuk dihitung sebagai calon kembali. | VERIFIED (QA iterasi 2) | `scripts/systems/route_builder.gd` (`_pilih_pelanggan_keadaan` tanpa tingkat pencabutan larangan; `_susun_pasti` eksak; `Rute.berhenti_terpaksa`); BALANCING 7.2; SPEC O-7 penyesuaian iterasi 2; commit bcafaf8 | `tests/tes_rute_pelanggan.gd`: `_test_kombinasi_acak` (aturan (a) dan (d) di SEMUA rute, termasuk `pelepasan > 0`; terpaksa == 0 pada keadaan acak), `_test_berhenti_terpaksa` (semua berhenti, lubang satu segmen dengan oracle DP independen, 300 rute realistis <= 1%), `_test_jalan_kembali` tanpa filter `pelepasan == 0` |
+| QA-002 | 1 | Major | `scripts/systems/pelanggan_rute.gd` `calon_kembali` (`hari - hari_berhenti(id) >= PELANGGAN_KEMBALI_JEDA_HARI`) | Mutan QA Q6 (`>=` diganti `>`) LOLOS: `run_tests.gd` penuh 20328 lolos, 0 gagal (juga `tes_reputasi` dan `tes_rute_pelanggan`). Batas jeda kembali (tepat 3 hari) tidak dites; AC-2 meminta tiap transisi/jalan kembali punya tes. Tambahkan tes batas: `hari_berhenti = hari - 3` calon kembali, `hari - 2` bukan. | VERIFIED (QA iterasi 2) | Hanya tes (kode `calon_kembali` sudah benar); commit bcafaf8 | `tests/tes_rute_pelanggan.gd` `_test_batas_jeda` (unit: hari-3 calon, hari-2 bukan, hari-4 calon, hari ini bukan, aktif/setia bukan; RouteBuilder 71 rumah x 2 seed: 118 dari 118 calon tepat jeda masuk, 0 satu hari kurang). Mutan Q6 dan D11 tertangkap |
+| QA-003 | 1 | Major | `scripts/systems/reputation_manager.gd` `terapkan` tahap 3 (`if r.terantar: kredit += kredit_antaran(...)`) | Mutan QA Q20 (kredit tidak diberikan bila rumah berstatus `berhenti` saat diantar) LOLOS: 20328 lolos, 0 gagal. Antaran sah ke pelanggan yang kembali tidak dites memberi kredit reputasi (AC-1/O-8: naik dari antaran tepat/teras). Tambahkan tes: rumah `berhenti` terantar tepat -> kredit 4, status `aktif`, peristiwa KEMBALI. | VERIFIED (QA iterasi 2) | Hanya tes (kode `ReputationManager.terapkan` sudah benar); commit 6814fe4 | `tests/tes_reputasi.gd` `_test_antaran_rumah_berhenti` (kredit 4/3/2/1, status `aktif` penghitung 0, tepat satu KEMBALI, 7+1 antaran = 32 kredit = +1, tidak terantar = 0, misi+antaran) dan `tests/tes_save_v4.gd` (lewat `catat_hari`: reputasi 20 -> 21). Mutan Q20 tertangkap |
+| QA-004 | 1 | Minor | `assets/data/missions/perumahan.json` (satu misi), `scripts/systems/milestone_tracker.gd` `_hitung_misi_selesai`, `Config.MILESTONE_TARGET_MISI_SELESAI` [1,3,5] | Milestone `misi_selesai` dihitung dari entri `misi_hasil` yang berkunci id misi; data hanya punya satu misi (`p1_kucing`), jadi nilai maksimum 1 dan tingkat perak/emas tidak mungkin tercapai sampai ada misi lain. Satu dari empat milestone di layar hasil macet di perunggu; milestone "paling dekat" bisa menyesatkan. Catat di BALANCING 7.4/ROADMAP atau hitung dari penghitung (bukan peta per id) di versi save berikut. | DEFERRED (diterima QA iterasi 2: terdokumentasi di BALANCING 7.4, Minor tidak memblokir) | Tidak ada perubahan kode. Catatan: BALANCING 7.4 ("Keterbatasan yang diketahui"), alasan: hanya satu misi di data; tingkat perak dan emas `misi_selesai` aktif saat misi ke-2 dan ke-3 ada. Tidak mengubah semantik progres (SPEC O-9: dari `misi_hasil`) tanpa alasan. | - |
+| QA-005 | 1 | Minor | `tests/tes_save_v3.gd`, `tests/tes_hari.gd` (oracle lama dilonggarkan) | (1) Tes "contoh save di DATA_SCHEMA 4 = isi berkas nyata" berubah dari `contains` byte demi byte menjadi perbandingan field (entri `pelanggan` per id) yang lebih longgar. (2) `Config.SAVE_VERSI == 3` menjadi `>= 3`. Perubahan wajar karena versi naik, tetapi oracle melemah (versi sekarang tidak lagi terkunci di tes itu; tes v4 mengunci 4). | VERIFIED (QA iterasi 2) | `tests/tes_alur_hari.gd` (contoh DATA_SCHEMA 4 dibandingkan byte demi byte: berkas nyata hanya dipangkas `pelanggan` ke 3 id dokumen, dicetak `DataSave.ke_teks`, sama dengan blok dokumen), `tests/tes_save_v3.gd` (`SAVE_VERSI == 4` dan literal 4, bukan `>= 3`/`Config.SAVE_VERSI`); commit da9159a | Tes itu sendiri (satu pembanding byte ke dokumen; lihat Iterasi 2 untuk satu batasan: `pelanggan` dipangkas karena dokumen hanya menampilkan 3 dari 25 rumah) |
+| QA-006 | 1 | Nit | `scripts/systems/data_misi.gd` `gagal_reputasi` | Mutan QA Q12 (batas atas klem 1 -> 5) lolos; ekuivalen praktis karena `DataMisi.parse` menolak `gagal.reputasi` > 1. Klem hanya pertahanan lapis kedua; bisa ditambah tes langsung pada `DataMisi` yang dirakit tangan. | VERIFIED (QA iterasi 2) | Hanya tes (klem tetap sebagai pertahanan lapis kedua); commit 6814fe4 | `tests/tes_reputasi.gd` `_test_gagal_reputasi_misi`: `DataMisi` rakitan tangan, nilai 5/2/1/0/-4/0,4/1,0/"x"/null dijepit 0..1; mutan Q12 tertangkap |
+| QA-007 | 1 | Nit | `scripts/ui/bilah_milestone.gd` | Angka literal 1 dan 2 (tepi bilah 1 px, `lebar - 2`) tidak lewat `Config` (rule `gdscript`: tanpa angka ajaib). Sepele. | VERIFIED (QA iterasi 2) | `scripts/config.gd` `HASIL_BILAH_TEPI_PX` = 1; `scripts/ui/bilah_milestone.gd` memakainya; commit 67ee939 | `tes_reputasi_scene`/`tes_milestone` (lebar isi bilah); mutan D8 (tepi 2) tertangkap |
+| QA-008 | 2 | Minor | `scripts/systems/route_builder.gd` `_susun_pasti` (DP, `butir[j].maju_ubin - butir[i].maju_ubin > Config.RUTE_PELANGGAN_JARAK_MAKS_UBIN`) | Mutan QA N6 (`>` -> `>=` pada batas celah di DP mundur) LOLOS: `tes_rute_pelanggan` 62 lolos 0 gagal. Batas tepat 20 ubin pada pencarian eksak tidak dites: celah tepat 20,0 yang sah akan ditolak DP (rute dengan susunan sah bisa dianggap tak ada, jadi `berhenti_terpaksa` terisi tanpa perlu atau rute gagal bangun) tetapi tidak ada tes yang menyentuh batas itu. Saran: tes DP dengan kandidat rakitan celah 20,0 dan 20,5 (atau uji `_susun_pasti` langsung). | DEFERRED (orchestrator: tidak memblokir PASS; tes tambahan di run berikutnya) | - | - |
+| QA-009 | 2 | Nit | `scripts/systems/route_builder.gd` `_susun_pasti` penelusuran maju (`dasar = awal + (akhir - awal) * float(langkah) / float(total - 1)`) | Mutan QA N5 (`dasar = awal`, semua target di awal rute) LOLOS (62 lolos, 0 gagal). Klaim Dev "sebaran tetap mirip" pada susunan terpaksa tidak punya tes (sebaran celah hasil tingkat terakhir). Dampak hanya bentuk susunan pada keadaan buatan yang jarang (0% di keadaan realistis). | DEFERRED (orchestrator: tidak memblokir PASS; tes tambahan di run berikutnya) | - | - |
+| QA-010 | 2 | Nit | `scripts/systems/pelanggan_rute.gd` `status` (`return AKTIF` untuk status tak dikenal) | Mutan QA N9 (`return AKTIF` -> `return BARU`) LOLOS (496 lolos, 0 gagal): entri berstatus tak dikenal dibaca `aktif` (komentar berkas) tidak punya tes langsung. Kode iterasi 1, bukan perubahan iterasi 2; pertahanan lapis kedua karena `DataSave` menormalisasi status. Saran: satu `check` pada `PelangganRute.status` untuk status "x", angka, dan null. | DEFERRED (orchestrator: tidak memblokir PASS; tes tambahan di run berikutnya) | - | - |
+
+## NEEDS-MANUAL (uji di HP)
+Lihat SPEC bagian NEEDS-MANUAL dan SETUP_ANDROID 8.17 (dibuat Dev di bagian C).
+
+## Keputusan & catatan
+- Keputusan pemilik K-1..K-4 dan keputusan orchestrator O-1..O-10: SPEC. K-4 (tiga keputusan terbuka) dipakai sebagai rekomendasi tunggal yang ditulis pemilik di perintah run, tidak ditanyakan ulang; dilaporkan di laporan akhir untuk ditolak di review PR bila perlu.
+- Izin pemilik (perintah run): sesudah QA PASS orchestrator boleh memasang APK ke vivo V2108 (`adb install -r`), push dan buka PR; merge menunggu konfirmasi pemilik.
+
+
+## Iterasi 1, bagian A (Dev)
+
+Cakupan: AC-1 sampai AC-7 (logika murni, save, RouteBuilder, simulasi), tanpa UI. Branch `feat/fase6a2-reputasi-pelanggan`, commit kecil, tidak push.
+
+### Gerbang (dijalankan sendiri, satu proses Godot sekaligus)
+- `godot --headless --import`: 0 baris ERROR/WARNING.
+- `run_tests.gd` + `tools/cek_keluaran_tes.py`: **19668 lolos, 0 gagal, 0 peringatan** (baseline `main` 19281; +387 pemeriksaan: `tes_reputasi` 185, `tes_rute_pelanggan` 43, `tes_save_v4` 66, sisanya perbaikan tes lama yang mengunci SAVE_VERSI 3 dan contoh DATA_SCHEMA).
+- `godot --headless --path . --quit-after 2`: 0 ERROR/WARNING.
+- 14 `tools/tests_cek/uji_*.py`: semua exit 0.
+- sha256 `user://save.json` asli: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` (tidak berubah; tes memakai `user://tes_save_v4/` dan `TesSaveV4` membandingkan jejak sebelum/sesudah).
+- `--export-pack "Android"`: `assets/data/customers/kepribadian.json` ikut paket (dicek dengan `strings`); `tes_export` menambah 5 jalur wajib.
+
+### Yang dibuat (ringkas)
+- `scripts/systems/`: `reputation_manager.gd` (`ReputationManager`: `terapkan`, `catat`, `catatan_misi`, struktur `Catatan`/`CatatanRumah`/`CatatanMisi`/`Peristiwa`/`Hasil`), `pelanggan_rute.gd` (`PelangganRute`), `kepribadian_pelanggan.gd` (`KepribadianPelanggan`: validasi, FNV-1a, `dari_id`), `pemuat_pelanggan.gd` (`PemuatPelanggan`, satu-satunya pembaca berkas). `route_builder.gd` (+ `bangun(..., pelanggan)`, `_pilih_pelanggan_keadaan`, `_pilih_pemberi_tip_keadaan`, `_cocokkan_bonus`, diagnosa `Rute.pelepasan`/`dikenal_kurang`), `skor_rute.gd` (+ `Kualitas`, `Keadaan.kualitas`, `kualitas_rumah`; pencatat saja), `data_save.gd` (v4), `data_misi.gd` (+ validasi dan `gagal_reputasi()`), `config.gd` (`REPUTASI_*`, `PELANGGAN_*`, `SAVE_VERSI` 4).
+- `scripts/entities/`: `rute_main.gd` (`atur_pelanggan`, `catatan_pelanggan()`, `hasil_reputasi()`, `pelanggan_rute()`), `hari_main.gd` (kirim state + pustaka kepribadian, isi `CatatanHari.pelanggan`/`kepribadian`). Tidak ada perubahan tampilan.
+- Data: `assets/data/customers/kepribadian.json`. Docs: DATA_SCHEMA 4 (tabel field, contoh nyata, aturan, migrasi v3 -> v4) dan bagian baru 4b (kepribadian), BALANCING 7.2 + catatan perubahan.
+- Tes: `tes_reputasi.gd`, `tes_rute_pelanggan.gd`, `tes_save_v4.gd`, `sim_ekonomi.gd` (+ `sim_ekonomi_laporan.gd`), `ukur_golden_rute.gd` + `tests/data/golden_rute_main.json`; terdaftar di `run_tests.gd`.
+
+### Keputusan teknis dan alasannya
+1. **Golden dari `main`, bukan angka tangan.** `tests/ukur_golden_rute.gd` dijalankan sekali pada commit yang `route_builder.gd`-nya identik dengan `main` (blob `ef5a6e183eb2...` dicatat di berkas JSON; baris pertama hari 1 sama dengan `GOLDEN_HARI1` lama di `tes_sisi_dekat_b`). `TesRutePelanggan` membandingkan sidik FNV-1a identitas rute untuk 60 seed x hari 1..5 tanpa keadaan (300 kombinasi) dan dengan keadaan kaya di hari 1-2 (120 kombinasi): selisih 0.
+2. **Desain pemilihan pelanggan (`_pilih_pelanggan_keadaan`).** Segmen dan undian kuota dekat persis seperti rute tanpa keadaan; setelah itu: (a) rumah `berhenti` keluar dari kolam kecuali satu "calon kembali" (sudah 3 hari; diundi bila lebih dari satu); (b) setia dan calon kembali menjadi **prioritas** lewat bonus biaya besar di DP pencocokan (`_cocokkan_bonus`, `PELANGGAN_BONUS_PRIORITAS_UBIN`), jadi pasti terpilih selama ada susunan sah; prioritas setia per sisi dibatasi lantai 60% kuota sisi; (c) rumah baru dibatasi 6 per rute di sisi yang pelanggan dikenalnya >= kuota + 4 (sisi yang kurang dikenal, mis. sisi dekat di hari 3, dilonggarkan); (d) pemberi tip: 7 tetap, kepribadian `pemberi_tip` didahulukan. Sifat yang dijaga: keadaan KOSONG memberi pelanggan yang SAMA dengan rute tanpa keadaan (konsumsi RNG tidak berubah bila tidak ada yang diundi), dites.
+3. **Penyimpangan kecil dari O-7 (b): setia di luar prioritas tidak dikeluarkan.** Versi pertama mengeluarkan setia kelebihan (di atas 60%) dari kolam; ternyata kolam terlalu sempit dan pelepasan prioritas terjadi di ~45% rute. Sekarang kelebihan setia tetap kandidat biasa: yang dijamin adalah >= min(tersedia, 60% kuota) setia per sisi, bukan batas atas keras. Urutan prioritas setia memakai "titik tersebar" (farthest-point sampling, satu undian RNG untuk titik pertama) supaya melepas ekor daftar melepas setia yang paling berdekatan; ini tafsir saya atas "setia terjauh dulu".
+4. **Pelepasan bertahap, tidak pernah gagal bangun.** Urutan: tingkat 0 semua aturan; tingkat 1 batas pelanggan baru dicabut; lalu prioritas dilepas seperempat demi seperempat (calon kembali terakhir); lalu larangan `berhenti` dicabut (prioritas penuh dulu, dilepas lagi bertahap). Tiap tingkat 60 percobaan jitter. `Rute.pelepasan` (tingkat) dan `Rute.dikenal_kurang` jadi diagnosa yang dites. Di 1200 kombinasi acak: 0 rute gagal; >= 800 tanpa pelepasan. Di simulasi 45 hari x 12 benih x 3 profil: pelepasan di 3% sampai 6% hari.
+5. **Struktur save v4.** `reputasi` {distrik: int} (distrik awal selalu ada) dan `pelanggan` {id: {status, antar, meleset, hari_berhenti}}; kepribadian tidak disimpan. `catat_hari` menerima **masukan** (`CatatanHari.pelanggan` + `kepribadian`) dan memanggil `ReputationManager.terapkan` sekali: fungsi murni, hasilnya identik dengan yang dihitung `RuteMain` untuk layar hasil (bagian C tidak perlu menyalin hasil). `RuteMain.hasil_reputasi()` tersedia sesudah layar hasil terbuka. Migrasi v3 -> v4 menimpa field v4 liar di berkas berversi 3 dengan awal. Saya TIDAK menyentuh baris koin `catat_hari` supaya bagian B bebas menambah potongan; blok reputasi ada di antara `_catat_sepeda` dan tutorial.
+6. **Rumus kredit.** Kredit per antaran: tepat 4, teras 3, kotak surat 2, halaman 1 (jendela bonus = halaman); poin harian = kredit / 30 bulat ke bawah (tanpa sisa dibawa, karena SPEC tidak mengizinkan field save tambahan) + poin misi (1/2/3), dipagari +6; turun -1 per pelanggan berhenti dan `gagal.reputasi`. Dipilih supaya hari rapi pemain teliti (sekitar 70 kredit) jatuh di tengah dataran +2 (60..89), sehingga laju mendekati 2 poin per hari tanpa tebing pembulatan.
+7. **Urutan tiga tahap di `ReputationManager`** (pelanggan baru dibuat -> misi -> antaran/meleset) supaya misi bisa menjadikan pelanggan baru hari itu `setia` dan rumah `berhenti` yang kebetulan titik kucing kembali lewat misi; rumah yang kembali lewat misi tidak dihitung lagi di tahap 3 (satu KEMBALI, penghitung 0). Rumah titik tangkap yang BUKAN pelanggan dan tanpa entri: tidak ada efek (sesuai O-6).
+8. **`DataMisi.gagal_reputasi()`** + validasi `gagal.reputasi` 0..1 (bilangan bulat); field `gagal` lain tetap longgar seperti sebelumnya. `REPUTASI_BAWAAN` (4A, dipakai `HeadlineManager`) tidak diubah; `REPUTASI_AWAL` baru untuk save. `rep_min` misi/headline belum membaca reputasi save (di luar scope A; catatan untuk C/6B).
+
+### Hasil `sim_ekonomi` (AC-7) — ringkas; tabel lengkap dan asumsi di BALANCING 7.2
+Asumsi diumumkan (akurasi lemparan tetap per profil, ulang saat meleset, misi P1 tiap 8 hari; fisika tidak disimulasikan). 12 benih x 45 hari: **santai mencapai reputasi 40 pada hari 17 sampai 20** (sasaran 16 sampai 24), rata-rata 2,0 sampai 2,3 poin per hari; campuran hari 25 sampai 33; ngebut 40 sampai 45 atau belum dalam 45 hari (8 dari 12 benih; akurasi 60% dan 40% sering meleset). Perubahan harian -2 sampai +4 (tidak ada yang melonjak > 6; kenaikan mentah sebelum pagar juga <= 6), reputasi tidak pernah < 0. Ini memenuhi AC-7, tetapi catatan untuk pemilik: pemain yang sering meleset (asumsi ngebut) bisa memerlukan > 45 hari untuk reputasi 40; dinilai di HP (SETUP_ANDROID 8.17 oleh bagian C).
+
+### Mutan (AC-18, bagian A): 34 mutan nyata, semuanya tertangkap
+Harness: `mutan.py` (di scratchpad, bukan di repo) memasang satu penggantian teks pada kode produksi, menjalankan `tes_reputasi` + `tes_rute_pelanggan` + `tes_save_v4`, memulihkan berkas. Hasil (tes penangkap pertama dalam kurung):
+M01 berhenti `>` bukan `>=` (transisi aktif -> berhenti); M02 setia `>` bukan `>=` (transisi aktif -> setia); M03 meleset tidak direset antaran; M04 kembali tidak mereset antar; M05 non-sensitif bisa berhenti; M06 setia tidak lebih sabar; M07 cerewet tetap dapat kredit halaman; M08 reputasi tidak dijepit; M09 pagar harian dibuang; M10 penalti berhenti 0; M11 misi tidak mengembalikan berhenti; M12 kredit tepat = kotak surat; M13 poin dibulatkan ke atas; M14 `terapkan` mengubah state masukan; M15 hadiah `pelanggan_setia` tidak menjadikan setia; M16 pengali FNV salah; M17 `dari_id` mengabaikan hash (semua di `tes_reputasi`); M18 rumah berhenti ikut terpilih; M19 setia tanpa bonus prioritas; M20 calon kembali tidak pernah; M22 pemberi tip acak tanpa kepribadian; M23 golden tanpa keadaan bergeser (goyangan target 1%, 6 dari 300 sidik berubah); M24 keadaan dipakai juga hari 1-2; M25 larangan berhenti tidak pernah dicabut (rute gagal bangun di 12 dari 1200); M33 batas baru dicabut di semua sisi; M34 kuota seberang kurang satu (semua di `tes_rute_pelanggan`/sim); M26 migrasi v3 tidak mengganti field v4 liar; M27 `catat_hari` menerapkan dua kali; M28 normalisasi reputasi tanpa jepit; M29 `hari_berhenti` non-berhenti tidak dinolkan; M30 `salin` tidak menyalin kualitas (itu `tes_reputasi`); M31 `catat_hari` melewati penerapan; M32 tipe kunci `reputasi`/`pelanggan` dilepas (di `tes_save_v4`/sim).
+- **M21 (batas pelanggan baru diabaikan) AWALNYA LOLOS**: tes (c) hanya menegaskan `baru <= 6 kecuali dikenal_kurang`, dan mutan membuat `dikenal_kurang` selalu true. Diperbaiki dengan `_test_batas_baru` (batas harus benar-benar mengikat di >= 60 rute, 0 pelanggaran, dan hari 3 sisi dekat dilonggarkan); M21 dan M33 kini tertangkap. Itu satu-satunya mutan lolos.
+
+### Menyimpang dari SPEC / catatan untuk bagian B dan C
+- BLOCKED: tidak ada.
+- Menyimpang dari O-7 (b): lihat keputusan 3 (kelebihan setia tidak ditunda). Menyimpang dari O-7 teks "setia terjauh dulu": lihat keputusan 3 (ekor daftar tersebar).
+- `Angka.meleset` dan potongan koran tidak disentuh; `SkorRute.Keadaan.terbuang` belum ada (bagian B). `Keadaan.salin` sudah menyalin `kualitas`, B perlu menambah `terbuang` ke `salin` juga.
+- Untuk C: `RuteMain.hasil_reputasi()` (`ReputationManager.Hasil`: `reputasi_sebelum/sesudah`, `perubahan`, `jumlah(Jenis.BARU/SETIA/BERHENTI/KEMBALI)`) siap dibaca setelah `hasil_dibuka`; HUD rute dapat membaca `ReputationManager.reputasi_di(state, "perumahan")` dari state save yang diberikan ke `atur_pelanggan`. `tes_alur_hari` kini membandingkan contoh DATA_SCHEMA 4 secara semantik (25 pelanggan nyata, 3 ditampilkan di dokumen).
+- `tests/sim_ekonomi.gd` adalah pembantu `class_name SimEkonomi` (dipanggil `TesReputasi`); `tests/sim_ekonomi_laporan.gd` mencetak laporan (`-- 45 rinci`).
+- Belum dikerjakan (bukan scope A): AC-8 sampai AC-16, AC-19 (dokumen selain DATA_SCHEMA/BALANCING), AGENTS.md, README docs, ROADMAP, GDD.
+
+
+## Iterasi 1, bagian B (Dev)
+
+Cakupan: AC-8 sampai AC-11 (potongan koran terbuang, K-1/K-2/O-1/O-2/O-3). Bagian C (milestone, penanda reputasi, ikon dan bunyi baru, probe jendela, dokumen penutup) tidak dikerjakan. Branch `feat/fase6a2-reputasi-pelanggan`, commit kecil, tidak push.
+
+### Gerbang (dijalankan sendiri, satu proses Godot sekaligus)
+- `godot --headless --import`: 0 baris ERROR/WARNING.
+- `run_tests.gd` + `tools/cek_keluaran_tes.py`: **19872 lolos, 0 gagal, 0 peringatan** (bagian A 19668; +204 pemeriksaan: `tes_potongan` murni, `tes_potongan_scene`, sisanya penyesuaian oracle lama).
+- `godot --headless --path . --quit-after 2`: 0 ERROR/WARNING.
+- 14 `tools/tests_cek/uji_*.py`: semua exit 0.
+- sha256 `user://save.json` asli: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` (tidak berubah; alur hari memakai `user://tes_potongan_scene/`, `TesPotonganScene` membandingkan jejak sebelum/sesudah, dan runner memeriksa lagi di akhir).
+- Paket ekspor: tidak ada berkas data atau aset baru di bagian B (hanya skrip, scene, terjemahan); `tes_export` hijau. Tidak menjalankan ulang `--export-pack`.
+
+### Yang dibuat (ringkas)
+- `scripts/config.gd`: `KOIN_POTONGAN_KORAN_MELESET` = 5 (satu baris literal).
+- `scripts/systems/skor_rute.gd`: `Keadaan.terbuang` (disalin di `salin`), naik untuk `TIDAK_SAH` dan `ULANG`, tidak untuk `ANTAR`; `SkorRute.potongan(k)` dan `SkorRute.hasil_terbuang(h)`. Skor, koin kotor, combo tidak disentuh.
+- `scripts/systems/hasil_rute.gd`: `Angka.lempar_terbuang`, `potongan`, `koin_bersih` (properti `koin - potongan`, jadi Angka rakitan tes ikut konsisten), `HasilRute.saldo_sesudah(saldo_lama, koin_bersih)` dan `koin_dijepit`. `Angka.koin` tetap bruto (ongkos + tip + hadiah misi).
+- `scripts/systems/data_save.gd`: saldo = `max(0, lama + (koin_kotor - potongan)) - belanja`; `koin_total` += koin kotor; `terakhir.potongan` (field angka baru di `_TERAKHIR_ANGKA`, bawaan 0 untuk save lama). Blok reputasi bagian A tidak diubah. `scripts/entities/hari_main.gd`: saldo awal bengkel lewat `HasilRute.saldo_sesudah` (satu rumus dengan save).
+- Tampilan: `UmpanMelayang.Entri.potongan` + `dari_potongan`; `VfxAntaran.item_entri` tidak memutar bintang/koin untuk entri potongan; `UmpanMelayangGambar` teks `-{n}` (kunci `RUTE_UMPAN_POTONGAN`) berwarna `TEXT_2`; `AdeganJalan._saat_koran_mendarat` menambah entri "-5" di titik mendarat bila terbuang, `_koin_tampil()` (koin bersih) ke panel koin HUD. Layar hasil: baris `LabelTerbuang`/`NilaiTerbuang` dan `LabelBersih`/`NilaiBersih` di daftar netral (hanya bila ada koran terbuang), `TeksSaldoNol` (hanya bila saldo benar-benar dijepit), `isi(..., saldo_lama)`; `RuteMain._buka_hasil` meneruskan `koin` dari state save. Kunci baru di `translations/ui.csv`: `RUTE_UMPAN_POTONGAN`, `HASIL_TERBUANG(_ANGKA)`, `HASIL_KOIN_BERSIH(_ANGKA)`, `HASIL_SALDO_NOL`.
+- Tes: `tests/tes_potongan.gd` (Config, status, 25/30/semua kena/tanpa lemparan, campuran, `catat_hari`, fuzz 10.000 hari vs oracle bilangan bulat, umpan, golden skor, 1000 urutan acak), `tests/tes_potongan_scene.gd` (lemparan nyata: meleset/ulang/antaran, "-5", HUD, mode bantu, jeda, Main lagi, HUD koin negatif di empat ukuran kanan dan kidal, layar hasil di empat ukuran termasuk kasus terpadat, hasil dari rute, dua alur `hari.tscn`), `tests/pembantu_golden_skor.gd`, `tests/ukur_golden_skor.gd`, `tests/data/golden_skor_main.json` (dibuat dari checkout `main` di worktree sementara, blob `skor_rute.gd` `0329ad5b...` dicatat; worktree sudah dihapus). Terdaftar di `run_tests.gd`.
+- Dokumen (hanya sejauh perlu): GDD 2 (pengecualian prinsip 2), 8, 14.1; BALANCING 5 (baris jendela), 7, bagian baru 7.3, 10; DATA_SCHEMA 4 (`koin`, `koin_total`, `terakhir.potongan`); rule `00-project-core` prinsip 2 dan `balancing`.
+
+### Keputusan teknis dan alasannya
+1. **`Angka.koin_bersih` properti, bukan field.** Banyak tes lama merakit `HasilRute.Angka` dengan `.koin = X`; sebagai properti turunan (`koin - potongan`) mereka tetap benar tanpa diubah, dan tidak ada dua sumber yang bisa melenceng.
+2. **Potongan di `Angka.potongan`, bukan di `Keadaan.koin`.** `SkorRute.Keadaan.koin` tetap koin kotor sehingga semua golden skor/koin lama utuh (dibuktikan golden dari `main`: 1000 urutan acak, sidik field lama sama persis).
+3. **`catat_hari` memakai `koin_hari - max(potongan, 0)`** (bukan `koin_bersih` mentah) supaya jaminan lama "angka koin negatif tidak pernah mengurangi saldo" (`tes_hari`) tetap berlaku untuk koin kotor negatif; `koin_total` tetap koin kotor.
+4. **`terakhir.potongan` tanpa kenaikan `SAVE_VERSI`.** `terakhir` dinormalisasi dari daftar field dengan bawaan 0, jadi save v4 lama terbaca tanpa migrasi. Oracle tes lama yang membandingkan dict `terakhir` persis (`tes_hari`, `tes_misi_save`, `tes_save_v3`, `tes_alur_hari`) dan contoh DATA_SCHEMA diberi `"potongan": 0`; tidak ada angka emas skor/combo/tenggat yang diubah.
+5. **Umpan "-5" memakai antrean `UmpanMelayang` yang sama** (maks 2 sekaligus, `UMPAN_MELAYANG_MAKS` tidak diubah). Dua tes lama yang menegaskan "meleset/ulang: tanpa label" (`tes_vfx_sprite` 546/547) dan HUD koin "30" (`tes_rintangan_scene` 618, sekarang "25" karena satu koran ulang terbuang) diperbarui ke perilaku baru; yang ditegaskan tetap tanpa bintang dan koin.
+6. **Baris layar hasil tersembunyi bila tidak ada koran terbuang**, jadi layar hari bersih identik dengan sebelumnya (tes lama tidak berubah). `teks_tampil`/`rect_label` kini melewati label tersembunyi. Baris "Saldo mulai lagi dari 0" memerlukan saldo lama; rute yang dijalankan sendiri (tanpa state save) tidak menampilkannya.
+7. **Satu rumus saldo** `HasilRute.saldo_sesudah` dipakai `DataSave.catat_hari` dan saldo awal bengkel di `HariMain`, jadi saldo bengkel (belanja) dan save tidak bisa berbeda.
+8. **Tes tahan error skrip.** Penjagaan `get_child(0)`/`back()` pada daftar kosong ditambahkan karena error skrip di dalam coroutine tes membuat runner menggantung bila umpan hilang (ditemukan saat mutan M14).
+
+### Mutan (AC-18, bagian B): 30 mutan nyata, semuanya tertangkap
+Harness: `mutan_b.py` + `runner_b.gd` (di scratchpad, bukan di repo) memasang satu penggantian teks pada kode produksi, menjalankan runner cepat (`TesPotongan`, `TesPotonganScene`, `TesSkor`, `TesHasil`, `TesHari`, `TesMisiSave`, `TesSaveV3/V4`, `TesVfxSprite`, `TesRintanganScene`; 1002 pemeriksaan, nol gagal pada kode asli), lalu memulihkan berkas (`git status` bersih sesudah tiap mutan). Penangkap pertama dalam kurung:
+M01 ULANG tidak dihitung terbuang; M02 TIDAK_SAH tidak dihitung; M03 ANTAR dihitung terbuang; M04 `salin` lupa `terbuang`; M05 potongan dari `Angka.meleset`; M06 `lempar_terbuang` dari `Angka.meleset`; M07 `koin_bersih` abaikan potongan; M08 `saldo_sesudah` tidak dijepit 0; M09 `koin_total` memakai bersih; M10 `catat_hari` abaikan potongan; M11 `terakhir.potongan` selalu 0; M12 potongan tidak ikut mode bantu (`tes_potongan_scene`); M13 HUD koin tanpa potongan; M14 umpan "-5" tidak ditambahkan; M15 saldo awal bengkel pakai koin kotor (alur hari minus); M16 konstanta 6 (literal Config); M17 potongan memutar bintang; M18 baris "saldo dijepit" mengabaikan saldo; M19 baris potongan selalu tampil; M20 potongan x3; M21 label potongan berwarna OK; M22 saldo lama tidak diteruskan ke layar hasil; M23 `hasil_terbuang` abaikan ULANG; M24 `koin_dijepit` salah; M25 belanja tidak dikurangi dari saldo; M26 potongan negatif tidak dijepit; M27 `dari_potongan` jumlah tetap 1; M28 `putus_combo` menghapus terbuang; M29 `terakhir.potongan` tidak dinormalisasi; M30 Main lagi tidak mereset terbuang. Semua di `tes_potongan` atau `tes_potongan_scene` kecuali M29 (`tes_hari`). Satu percobaan awal (M14 dengan baris dihapus) adalah mutan tidak sah (parse error: badan `if` kosong), diganti `pass`; tidak ada mutan yang lolos. Catatan: M08 dan M24 hanya tertangkap di tingkat fungsi pembantu karena `catat_hari` menjepit ulang; saldo bengkel tetap dijaga M15 dan alur hari minus.
+
+### Menyimpang dari SPEC / catatan untuk bagian C
+- BLOCKED: tidak ada. Penyimpangan dari SPEC: tidak ada pada isi AC-8 sampai AC-11.
+- Kekurangan yang perlu diketahui: **tangkapan layar belum dilihat** (probe jendela adalah bagian C, AC-16). Tata letak dites lewat geometri di empat ukuran (panel koin HUD negatif tidak menimpa panel skor/progres/kondisi/radar, kanan dan kidal; layar hasil kasus terpadat termasuk potongan + rekap misi + tiga baris kondisi + saldo dijepit muat di 360 px dan tombol >= 42 px), tetapi bagian C/QA sebaiknya melihat tangkapan hari minus dan kasus terpadat. `tes_potongan_scene` membangun kasus terpadat dengan angka tenggat lewat tetapi tanpa baris pelanggan/milestone bagian C: ruang vertikal baris baru bagian C (reputasi, pelanggan, milestone) perlu dicek ulang karena panel sudah sepadat itu.
+- Untuk C: `LayarHasil.isi(angka, misi, perlu_bengkel, saldo_lama)`; urutan node di `IsiHasil`: judul, daftar berhasil, daftar netral (meleset, terbuang, bersih), `TeksTenggat`... `TeksSaldoNol` berada tepat di bawah `TeksTenggat`. `HasilRute.Angka` kini punya `lempar_terbuang`, `potongan`, `koin_bersih`. Kunci terjemahan baru sudah ada; bunyi/ikon untuk potongan tidak ditambahkan (umpan "-5" tanpa bunyi, pilihan: potongan tidak menghukum dengan bunyi negatif; bisa dinilai di HP).
+- NEEDS-MANUAL untuk SETUP_ANDROID 8.17 (bagian C menulisnya): potongan 5 terasa adil, "-5" terbaca dan tidak mengganggu, hari minus terbaca netral, tidak membuat pemain takut melempar.
+- Belum disentuh (bagian C/penutup): DEV_PHASES, ROADMAP 5, LOOP-DEV-QA 6f/6g, docs/README, AGENTS.md peta, SETUP_ANDROID 8.17, DESIGN_SPEC layar hasil/HUD.
+
+
+## Iterasi 1, bagian C (Dev)
+
+Cakupan: AC-12 sampai AC-19 (milestone, penanda reputasi di HUD dan layar hasil, lencana dan bunyi, probe jendela, tes scene dan alur hari, mutan, dokumen penutup). Branch `feat/fase6a2-reputasi-pelanggan`, commit kecil, tidak push. `DEV_PHASES.md` TIDAK disentuh (dicentang orchestrator, commit terpisah sesudah PR dibuka). SPEC tidak diubah.
+
+### Gerbang (dijalankan sendiri, satu proses Godot sekaligus)
+- `godot --headless --import`: 0 baris ERROR/WARNING. `godot --headless --path . --quit-after 2`: 0 ERROR/WARNING.
+- `run_tests.gd` + `tools/cek_keluaran_tes.py`: **20328 lolos, 0 gagal, 0 peringatan** (bagian B 19872; +456: `tes_milestone` 100, `tes_reputasi_scene` 186, sisanya pemeriksaan gaya/terjemahan/paket yang ikut memindai berkas baru).
+- 16 `tools/tests_cek/uji_*.py`: semua exit 0 (14 lama + `uji_ui_lencana.py` 25 lolos + `uji_sintesis_milestone.py` 18 lolos), keduanya ditambahkan ke `.github/workflows/tes.yml`.
+- sha256 `user://save.json` asli sebelum dan sesudah semua gerbang dan probe: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` (tidak berubah; alur hari memakai `user://tes_reputasi_scene/`, runner memeriksa jejak di akhir).
+- `--export-pack "Android"` (`build/kring-uji.pck`): memuat `milestone_tracker`, `bilah_milestone`, `bunyi_milestone`, `sfx_milestone_tercapai_01`, `ui_lencana_*`, dan `kepribadian.json`; 0 jalur `res://tests/`, 0 `res://docs/`. `tes_export` mendapat jalur wajib baru.
+- Probe jendela di empat ukuran (2340x1080, 1920x1080, 2400x1080, 1600x720): `probe selesai, 0 keadaan tidak sesuai` tiap ukuran.
+
+### Yang dibuat (ringkas)
+- `scripts/systems/milestone_tracker.gd` (`MilestoneTracker`: `nilai`, `tingkat`, `status`, `semua`, `paling_dekat`, `baru_tercapai`, `ringkas`, `nama_tingkat`; murni, progres dari save, nilai asing = 0), `bunyi_milestone.gd` (`BunyiMilestone`), `scripts/ui/bilah_milestone.gd` (`BilahMilestone`). `Config`: `MILESTONE_*`, `AUDIO_MILESTONE_VOLUME_DB`, `HASIL_KANAN_LEBAR_PX`, `HASIL_KOLOM_JARAK_PX`, `HASIL_BILAH_*`, `HASIL_IKON_PX` (satu baris literal).
+- HUD rute: baris 3 kanan atas, `PanelReputasi` (ikon `ui_icon_reputasi` + angka) di `scenes/ui/hud_rute.tscn`, `HudRute.tampilkan_reputasi`; dipanggil `RuteMain._perbarui_hud_rute` dari state save (tersembunyi tanpa keadaan pelanggan).
+- Layar hasil dua kolom (`scenes/ui/layar_hasil.tscn`: `KolomHasil` > judul, `BadanHasil` [`IsiHasil` kolom utama, `PanelKanan` kolom samping], tombol): reputasi + perubahan, jumlah pelanggan bukan nol, SATU milestone paling dekat (lencana, nama dan tingkat berikutnya, bilah, "n/target"), sampai 3 baris "Baru: ...". `LayarHasil.isi(..., reputasi, milestone)`.
+- `RuteMain`: `hasil_milestone()`; di `_buka_hasil` ringkasan dihitung dari state save sebelum hari dan pratinjau murni `DataSave.catat_hari` (tanpa belanja, tanpa tulis), denting `Audio.putar_milestone()` hanya bila ada tingkat baru.
+- Aset: `tools/ui_art/lencana.py` (3 PNG 14x14, tingkat = warna DAN 1/2/3 garis), `tools/audio_art/sintesis_milestone.py` (1 WAV 0,65 detik, 4 dB lebih pelan dari misi selesai, `.import` loop_mode=1 compress/mode=0, `LICENSES.md`), uji di `tools/tests_cek/`, README alat. Terjemahan baru di `translations/ui.csv` (`HUD_REPUTASI_ANGKA`, `HASIL_REPUTASI*`, `HASIL_PELANGGAN_*`, `HASIL_TARGET_*`, `HASIL_MILESTONE_NAMA_*`, `HASIL_MILESTONE_TINGKAT_*`).
+- Tes: `tests/tes_milestone.gd`, `tests/tes_reputasi_scene.gd`, `tests/probe_reputasi_jendela.gd`; terdaftar di `run_tests.gd`; `tes_export` diperluas.
+- Dokumen: GDD 8 dan 13, BALANCING 7.4 + catatan perubahan, DATA_SCHEMA 4 + bagian baru 4c, DESIGN_SPEC 3.3 dan Hasil harian, ROADMAP 5, SETUP_ANDROID 8.17 (NEEDS-MANUAL), AGENTS.md (intro, perintah, peta), docs/README.md, LOOP-DEV-QA 6f (catatan run 6A2), README `tools/ui_art` dan `tools/audio_art`.
+
+### Keputusan teknis dan alasannya
+1. **Kolom samping, bukan baris tambahan.** Catatan bagian B: layar hasil kasus terpadat sudah penuh di 360 px. Menambah baris vertikal tidak muat, jadi data baru masuk kolom kedua di panel yang sama; tinggi panel kasus terpadat 262 px di semua ukuran (layar 360), lebar 502 (layar terkecil 640). Tanpa data reputasi kolom tersembunyi dan layar identik dengan sebelumnya (dites: daftar teks sama persis). Lebar kolom utama dijaga `_isi.custom_minimum_size` (tanpanya autowrap runtuh dan panel melar sampai 544 px; terbukti oleh mutan M20).
+2. **Penanda reputasi di baris 3, bukan baris 1.** DESIGN_SPEC 3.3 semula menaruhnya di baris 1, tetapi slot itu sudah dipakai panel skor/combo sejak run 3C. Baris 3 (di bawah panel kondisi, y 72 sampai 96, kolom yang sama, ikut inset) tidak berpotongan dengan elemen HUD mana pun dan tidak mengubah geometri HUD yang sudah ada (tes lama utuh). Penyimpangan dari teks DESIGN_SPEC lama, dicatat di sana.
+3. **Aturan "paling dekat tercapai"**: pecahan `nilai / target tingkat berikutnya` terbesar (perkalian silang bilangan bulat), seri: sisa angka terkecil, lalu urutan `MILESTONE_ID`. Ditulis di BALANCING 7.4 (bukan di SPEC) beserta contoh yang dites. State "sesudah" untuk layar hasil = pratinjau `DataSave.catat_hari`, fungsi yang sama dengan penulisan save, jadi tidak bisa berselisih.
+4. **Keterbatasan yang disengaja**: tingkat `sepeda` yang tercapai lewat belanja di bengkel tidak diumumkan "Baru" (belanja terjadi sesudah layar hasil dan tidak ada field save untuk membandingkan); progresnya tetap tampil di bilah. Dicatat di GDD 13 dan DATA_SCHEMA 4c. Baris "Baru" dibatasi 3 (`MILESTONE_BARU_MAKS_TAMPIL`), tertinggi dulu.
+5. **Tidak ada hadiah**, tidak ada field save, tidak ada target aktif di bengkel (O-9).
+6. **Satu bunyi saja** (milestone tercapai); tidak ada bunyi setia/berhenti (potongan dan berhenti tidak dihukum dengan bunyi). Denting dibunyikan `RuteMain` lewat `_audio` (pola `AdeganJalan`), karena skrip `class_name` tidak boleh merujuk nama autoload global (kompilasi `--script` gagal: ditemukan di percobaan pertama).
+7. **Hari pertama menampilkan "Pelanggan baru: 25"** karena semua pelanggan rute belum punya entri (sesuai O-6); kebisingan ini apa adanya, dinilai di HP (8.17 butir 4).
+
+### Mutan (AC-18, bagian C): 24 mutan nyata, semuanya tertangkap
+Harness `mutan_c.py` (di scratchpad, bukan di repo): satu penggantian teks pada kode produksi, jalankan `TesMilestone` lalu `TesReputasiScene`, pulihkan berkas (`git status` bersih sesudah tiap mutan). Penangkap pertama dalam kurung:
+M01 batas tepat target tidak tercapai (`tes_milestone`); M02 sepeda tanpa level; M03 pelanggan tetap menghitung `aktif`; M04 seri pecahan sisa terbesar menang; M05 pecahan terkecil menang; M06 baru tercapai `>=`; M07 misi gagal dihitung selesai; M08 terdekat dari state sebelum; M17 target emas pelanggan 20 (Config); M24 urutan baru terbalik (semua `tes_milestone`); M09 ringkasan tanpa pratinjau `catat_hari`; M10 denting selalu; M11 baris pelanggan nol tampil; M12 tanda plus hilang; M13 lencana baru selalu perunggu; M14 reputasi HUD tidak dijepit; M15 rute tanpa keadaan menampilkan reputasi 0; M16 warna OK untuk perubahan nol; M18 bilah dari tingkat bukan pecahan; M19 bilah tanpa minimum 1 px; M20 kolom utama tanpa lebar minimum; M21 nama tingkat target = tingkat sekarang; M22 pratinjau tanpa angka hari; M23 kolom samping selalu tampil (semua `tes_reputasi_scene`).
+Mutan yang AWALNYA lolos lalu diperbaiki testnya: M14 (tes hanya memakai 0, 37, 100; ditambah 150 dan -5), M16 (hanya +2 dan -1 diperiksa warna; ditambah nol), M20 (dua kali: kasus tanpa kolom samping tetapi dengan rekap misi tidak cukup; ditambah kasus tanpa rekap dengan lebar panel >= 296). M10, M16, M20 sempat tampak "tertangkap" oleh kegagalan dasar (driver audio Dummy di runner cepat) dan dijalankan ulang sesudah tes menyalakan `putar_di_driver_dummy` sendiri. Total mutan A+B+C = 34 + 30 + 24 = 88.
+
+### Cek AC-1 sampai AC-19 (bukti)
+- AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7: bagian A (`tes_reputasi`, `tes_rute_pelanggan`, `tes_save_v4`, `sim_ekonomi`, lihat "Iterasi 1, bagian A"); ketiganya masih hijau di 20328. AC-6 tambahan di C: alur hari tiga skenario (`tes_reputasi_scene`) membuktikan reputasi di HUD hari N+1 = save sesudah "Hari berikutnya" hari N, save ditulis hanya saat Hari berikutnya.
+- AC-8 sampai AC-11: bagian B (`tes_potongan`, `tes_potongan_scene`); tetap hijau. C menambah: hari minus di alur hari 2 (3 hari tanpa antaran, 25 koran terbuang: saldo 0, koin_total tetap, bengkel dan Hari berikutnya tetap jalan, teks tanpa kata "gagal"); tangkapan `*_hasil_hari_minus.png` dan `*_hud_koin_negatif_umpan.png` DILIHAT.
+- AC-12: `tests/tes_milestone.gd` (100 pemeriksaan): Config, batas tingkat di 31 titik (tepat, satu di bawah, di atas, nol, 2e9, id asing), progres dari state dan dari save nyata (fixture 6A1 v3, 4B v2, 4A v1, v0 yang dimigrasi, dan satu hari `catat_hari`), state kosong dan nilai asing (tipe salah, negatif, NaN, sangat besar), paling dekat (pecahan, seri sisa, seri urutan id, semua emas, batas 4999/5000), baru tercapai (loncat dua tingkat, mundur, urutan), tanpa efek samping, tanpa field save baru. Oracle: hitung dari bentuk save, bukan memanggil fungsi yang dites.
+- AC-13: `tes_reputasi_scene` `_test_layar_hasil_kanan` (teks literal: "12 (+2)", "Pelanggan baru: 3", "Pelanggan tetap · Perunggu 1/3", "Baru: Koin terkumpul · Perunggu", warna OK/TEXT_2, nol tidak tampil, tanpa id rumah, cap 3 baris tertinggi dulu, semua emas, pemisah ribuan), `_test_rute_nyata` (RuteMain nyata), `_test_hud_reputasi`. Teks lewat kunci `translations/ui.csv` (tes terjemahan memeriksa awalan dan keberadaan kunci).
+- AC-14: `_test_hud_reputasi` (empat ukuran x kanan, kidal, inset: di dalam layar dan tanpa tumpang tindih dengan 13 elemen: radar, progres, koin, skor, kondisi, jeda, bel, kecepatan, koran, stick, kartu misi, banner) dan `_test_layar_hasil_ukuran` (kasus terpadat di empat ukuran: panel dan 14+ isi kolom di dalam panel dan layar, tombol 96x42 tidak tertimpa, zona aman 20/16/24/18, tanpa kolom samping lebar tetap 300). Probe jendela mengulang di empat ukuran dengan layar sungguhan: 0 tidak sesuai.
+- AC-15: `tools/ui_art/lencana.py` + `uji_ui_lencana.py` (25 lolos); `tools/audio_art/sintesis_milestone.py` + `uji_sintesis_milestone.py` (18 lolos) + `LICENSES.md` + `.import`; kedua langkah di `.github/workflows/tes.yml`. Impor Lossless/Nearest (tekstur `texture_filter` nearest di scene dan kode). Tidak ada PNG hasil renderer yang diedit tangan, tidak ada aset yang tidak dipakai (3 lencana dan 1 WAV dipakai).
+- AC-16: `tests/probe_reputasi_jendela.gd` (pola `probe_kondisi_jendela.gd`, keluar lewat `ProbeKeluar`, mencetak keadaan tidak sesuai); 13 tangkapan per ukuran x 4 ukuran = 52 PNG di `docs/loop/20261023-fase6a2-reputasi-pelanggan/shots/iter1/`. Keadaan: HUD reputasi (37, 100), HUD koin negatif + umpan "-5" dari lemparan nyata, HUD kidal, HUD inset, layar hasil hari biasa, hari minus, berhenti/kembali/setia, milestone baru, semua emas, terpadat, dari rute nyata, terpadat dengan inset.
+- AC-17: gerbang di atas (sha256 save asli tidak berubah, import dan quit-after bersih, 20328 lolos, 16 uji Python exit 0, paket memuat data/aset baru dan tanpa tests/docs).
+- AC-18: 34 (A) + 30 (B) + 24 (C) mutan tertangkap; QA mengulang >= 10 pilihannya sendiri (belum, tugas QA).
+- AC-19: dokumen di daftar "Yang dibuat". `DEV_PHASES.md` sengaja tidak dicentang. Butir aset Fase 5 tidak dicentang. GDD 8/14 (pengecualian potongan) sudah dari bagian B. "LOOP-DEV-QA 6k" tidak dibuat: catatan run ditaruh di 6f (satu paragraf, hanya yang perlu).
+
+### Tangkapan layar yang DILIHAT (Read PNG) dan temuannya
+Dilihat: `2340x1080` terpadat, hari minus, milestone baru, HUD koin negatif dengan umpan "-5" dan penanda reputasi; `1600x720` HUD inset aman; `1920x1080` terpadat dengan inset. Temuan: (a) tidak ada tumpang tindih atau terpotong; kolom samping selaras, tombol "Ke bengkel" besar dan terlihat penuh; (b) penanda reputasi terbaca ("bintang 12") di bawah kotak kondisi, jauh dari strip radar kanan (x), tombol bel, dan kartu misi; (c) lencana 14 px terbaca sebagai medali dan 1/2/3 garis membedakan tingkat; (d) "Hari minus" netral (tanpa warna FAIL dan tanpa kata gagal). Tidak dilihat satu per satu (hanya diperiksa geometri dan "0 tidak sesuai" dari probe): tangkapan 2400x1080 dan sisa keadaan di 1920x1080 dan 1600x720 (semua variasi layar hasil kecuali yang disebut di atas) serta `hud_kidal`/`hud_reputasi_seratus`. Temuan selama pengerjaan yang diperbaiki sebelum tangkapan: (1) `Identifier not found: Audio` di `rute_main.gd` (lihat keputusan 6), (2) panel layar hasil melar 300 x 572 karena kolom utama tanpa lebar minimum (lihat keputusan 1), (3) lencana pertama berupa "mata" (garis pendek 2 px dibaca sebagai wajah), diganti garis hitungan selebar 6 px. Satu kesalahan proses: `git add -A` sempat memasukkan `.claude/worktrees` sebagai repo tertanam ke satu commit; dibatalkan (`reset --soft`) dan dikomit ulang tanpa itu (tidak pernah di-push).
+
+### Menyimpang dari SPEC dan catatan
+- BLOCKED: tidak ada.
+- O-10 "angka bulat 0..100 dengan ikon di HUD rute (DESIGN_SPEC 3.3)": ditaruh di baris 3, bukan baris 1 (keputusan 2). O-9 "tingkat baru tercapai": tidak untuk `sepeda` via bengkel (keputusan 4). Sisanya sesuai SPEC.
+- Aturan seri "paling dekat tercapai" (SPEC hanya "pecahan terbesar < 1") ditambahkan di BALANCING 7.4.
+- DEFERRED: target aktif milestone di bengkel dan hadiah (di luar scope); milestone keahlian; efek reputasi ke pendapatan/distrik (6B).
+- Belum dikerjakan/oleh orchestrator: DEV_PHASES, `rep_min` misi/headline yang membaca reputasi save (catatan bagian A, tidak diminta di C), APK uji ke vivo, QA-001/002/003 Run 5D.
+
+### NEEDS-MANUAL
+`docs/SETUP_ANDROID.md` 8.17 (10 butir + lembar hasil): reputasi terbaca, sekitar 2 sampai 3 poin per hari terasa, pelanggan tetap muncul lagi, pelanggan berhenti tidak menjebak dan tanpa nama cukup, potongan 5 adil, "-5" terbaca, hari minus netral, milestone terbaca dan target cocok, layar hasil tidak terlalu padat, denting tidak mengganggu, fps dan migrasi save. Plus sisa 8.16 (Run 5D).
+
+## Iterasi 1 (QA)
+
+Auditor independen. Tiap angka di bawah dijalankan sendiri oleh QA; klaim "sudah beres" di LOG Dev tidak dipakai. Skrip bantu QA ada di `docs/loop/20261023-fase6a2-reputasi-pelanggan/qa_repro/` (docs diabaikan Godot lewat `docs/.gdignore`; salin ke folder di luar repo dan jalankan dengan `godot --headless --path . --script <berkas> -- <argumen>`).
+
+### Gerbang objektif
+- `godot --headless --import`: exit 0, 0 baris ERROR/WARNING. `godot --headless --path . --quit-after 2`: 0 ERROR/WARNING.
+- `run_tests.gd` + `tools/cek_keluaran_tes.py`: **20328 lolos, 0 gagal, 0 peringatan**; tidak ada SCRIPT ERROR/ERROR/GAGAL di `build/tests.log`.
+- 16 `tools/tests_cek/uji_*.py`: semua exit 0 (termasuk `uji_sintesis_milestone.py` dan `uji_ui_lencana.py`, keduanya terdaftar di `.github/workflows/tes.yml`).
+- `--export-pack "Android"`: sukses; paket memuat `assets/data/customers/kepribadian.json`, lencana, bunyi milestone, 9 segmen rute, dan skrip baru; TIDAK memuat `res://tests/` atau `res://docs/`.
+- Kebersihan: 23 commit di `feat/fase6a2-reputasi-pelanggan` (tidak ada di `main`), semua `<tipe>: ringkasan` Indonesia dengan trailer `Claude-Session`, tanpa Co-Authored-By; tidak ada secret, keystore, `.godot/`, `build/`, APK, atau `.claude/` di diff; `.uid` dan `.import` hadir untuk berkas baru.
+- sha256 save asli `user://save.json`: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` sebelum dan sesudah (dicek setelah tes, probe empat ukuran, dan semua mutan). Tidak ada `godot --path .` biasa yang dijalankan.
+- Diff tidak menyentuh `throw_solver`, `bike_motion`, `tabrakan`, `tenggat_rute`, `bike_condition`, `economy`, `mesin_hari`, tuning anjing/mobil, HUD bawah/rumah dekat. Tidak ada 6B (setoran, kalender, game over, unlock distrik) maupun objek jalan baru. `DEV_PHASES.md` tidak disentuh. Keputusan K-4 sama dengan SPEC (saldo dijepit 0, id `<id_segmen>@<pos>`, berhenti bisa kembali).
+
+### AC per AC (bukti diverifikasi sendiri)
+- **AC-1** `ReputationManager` murni, masukan tidak diubah (`state.duplicate(true)`), reputasi dijepit 0..100; `tes_reputasi` 185 pemeriksaan. OK (tetapi lihat QA-003 untuk kredit antaran ke pelanggan kembali).
+- **AC-2** Transisi dites (mutan Q8, Q9, Q15 tertangkap). Batas jeda kembali tidak dites: QA-002. Jalan kembali dibuktikan dengan `RouteBuilder` nyata, tetapi lihat QA-001 (larangan berhenti dicabut diam-diam).
+- **AC-3** Pemuat kepribadian dan `dari_id` deterministik (mutan Q2 FNV tertangkap). OK.
+- **AC-4** Golden: QA membangun golden SENDIRI dari `main` (`git worktree` di scratchpad, 40 seed tetap + 40 seed acak x hari 1,2,3,4,7,12 = 480 rute, identitas penuh teks: segmen, pelanggan, pemberi tip, objek, titik misi, dekor, rumah, panjang, koran awal, tenggat). `bangun(benih, pustaka, hari)` dan `bangun(..., null)` di HEAD **identik byte demi byte** dengan `main` (semua hari). Hari 1 dan 2 dengan keadaan ekstrem acak (aktif/setia/berhenti campur) identik dengan `main` di 160 rute; hari >= 3 dengan keadaan berbeda (wajar). Aturan di 1500 keadaan acak (6 profil termasuk semua berhenti, semua setia, kebanyakan baru): 0 gagal bangun, 25 pelanggan, dekat 8..9, `periksa_rute` kosong, pelanggan baru <= 6 bila tidak dilonggarkan, setia diprioritaskan, pemberi tip tetap 7. Pengecualian: larangan `berhenti` dicabut pada sebagian rute (QA-001).
+- **AC-5** Migrasi: fixture Dev (6A1 v3 dari contoh DATA_SCHEMA, 4B, 4A, v0) lulus; QA menambah save NYATA pemilik (v1, salinan di scratchpad): terbaca SAH, tanpa kunci hilang, versi 4, `reputasi {perumahan: 0}`, `pelanggan {}`, idempoten dan `ke_teks` stabil. Save rusak/versi lebih baru tidak ditimpa (tes dan kode `TERLALU_BARU`/`RUSAK` -> disalin). OK.
+- **AC-6** `catat_hari` menerapkan `ReputationManager` sekali, hanya di "Hari berikutnya" (`HariMain._saat_hari_berikutnya`); layar hasil memakai pratinjau murni tanpa menulis. OK.
+- **AC-7** `sim_ekonomi_laporan.gd` dijalankan QA: santai mencapai reputasi 40 di hari 18 (perubahan 1..4, rata-rata 2,25/hari), campuran hari 33, ngebut belum (perubahan -1..3). Enam seed lain untuk santai: hari 18 sampai 20, tidak ada hari > +4 atau di bawah 0. Dalam target (16..24). Asumsi akurasi lemparan diumumkan di berkas. OK.
+- **AC-8/AC-9** `SkorRute` dibandingkan QA dengan `main`: 1000 urutan acak (22.863 langkah `nilai`/`putus_combo`, semua hasil zona, jendela bonus, tenggat lewat) mencetak skor, combo, koin, tepat, tip, `terantar`, status, penanda: **identik byte demi byte** dengan `main`. `terbuang` naik untuk TIDAK_SAH dan ULANG, bukan ANTAR (mutan Q4, Q18, Q19 tertangkap; Q18 membuktikan tidak dihitung dari `Angka.meleset`). 25 terbuang = -125, sisa koran tidak dikenai (lihat tes dan probe "terpadat").
+- **AC-10** Saldo `max(0, lama + bersih) - belanja`, `koin_total` bruto (Q3, Q5, Q17 tertangkap). OK.
+- **AC-11** Layar hasil dan HUD dilihat sendiri (di bawah): baris "Koran terbuang 25 koran (-125)", "Koin bersih" boleh minus dengan tanda, "Saldo mulai lagi dari 0" netral, HUD koin "-20", umpan "-5". OK (mutan Q11 umpan tertangkap).
+- **AC-12** `MilestoneTracker` murni, tanpa field save baru, tes batas (Q13, Q14 tertangkap). OK. Tetapi QA-004.
+- **AC-13/AC-14** Layar hasil dua kolom dan penanda HUD terlihat benar di empat ukuran; probe mencetak "0 tidak sesuai" di semua; tombol "Ke bengkel" 96 x 42 piksel game (tepat batas 42), terlihat penuh. Teks lewat kunci `translations/ui.csv` (semua kunci `tr()` baru ada, tidak ada teks pemain tertanam).
+- **AC-15** Lencana dan bunyi milestone lewat skrip + uji deterministik + langkah CI. OK.
+- **AC-16** Probe jendela dijalankan QA di 2340x1080, 1920x1080, 2400x1080, 1600x720: 0 keadaan tidak sesuai.
+- **AC-17** Semua gerbang hijau (lihat atas).
+- **AC-18** Dev >= 30 mutan; QA menjalankan 20 mutan sendiri (bawah): 17 tertangkap, 3 lolos (QA-002, QA-003, QA-006).
+- **AC-19** Dokumen: BALANCING 7.2/7.3/7.4, DATA_SCHEMA, GDD 8/13/14, ROADMAP 5, SETUP_ANDROID 8.17, DESIGN_SPEC, AGENTS.md, README, LOOP-DEV-QA diperbarui; DEV_PHASES sengaja tidak (tugas orchestrator). "LOOP-DEV-QA 6k" tidak dibuat (Dev mencatat alasannya).
+
+### Tangkapan layar yang QA lihat sendiri (folder `shots/iter1-qa/`, 2340x1080 dan satu 1600x720)
+- `2340x1080_reputasi_hasil_terpadat.png`: panel kiri (terkirim, tip, koin, skor, tepat, meleset, "Koran terbuang 25 koran (-125)", "Koin bersih 25", status tenggat, rekap misi, tiga baris kondisi) dan kolom kanan (reputasi 53 (-2), empat baris pelanggan, target dengan bilah dan "4/10", tiga lencana "Baru" perak) tidak bertumpuk, tidak terpotong; tombol "Ke bengkel" terlihat penuh di bawah panel. Versi `_inset` dan 1600x720 sama.
+- `2340x1080_reputasi_hasil_hari_minus.png`: "Koin bersih -95" dengan tanda minus, nada netral (tanpa kata gagal), "Saldo mulai lagi dari 0", milestone perunggu 730/1.000 dengan bilah.
+- `2340x1080_reputasi_hud_koin_negatif_umpan.png`: panel koin "-20", penanda reputasi (bintang, "12") di kolom kanan di bawah panel kondisi, tidak menutupi radar tepi, tombol bel, panel skor/kondisi; umpan "-5" abu-abu di titik mendarat.
+- `2340x1080_reputasi_hud_kidal.png` dan `_hud_inset_aman.png`: penanda reputasi tetap di kanan atas (tidak dicerminkan, O-10), tidak tumpang tindih dengan bel kidal di kiri bawah; inset aman menggeser semua dengan benar.
+- Berkas lain di folder itu (hari biasa, milestone baru, semua emas, berhenti/kembali/setia, dari rute) dihasilkan probe dan dicek lewat keluaran teks probe; yang tidak QA lihat sebagai gambar tidak dinilai visual. Catatan: umpan "-5" kecil dan kontrasnya rendah di atas rumput hijau (lihat NEEDS-MANUAL).
+
+### Mutan QA (20 mutan milik QA, bukan dari daftar Dev; harness `qa_repro/mutan_qa.py`, runner `qa_repro/mini_runner_mutan.gd`; berkas dipulihkan dan `git status` bersih setelah tiap mutan dan di akhir)
+| ID | Berkas | Mutasi | Hasil |
+|---|---|---|---|
+| Q1 | reputation_manager.gd | poin antaran `floori` -> `ceili` | tertangkap (8 gagal) |
+| Q2 | kepribadian_pelanggan.gd | FNV-1a `^` -> `+` | tertangkap (2) |
+| Q3 | data_save.gd | `koin_total` memakai koin bersih | tertangkap (8) |
+| Q4 | skor_rute.gd | ULANG tidak menaikkan `terbuang` | tertangkap (5) |
+| Q5 | hasil_rute.gd | saldo dijepit bawah dilepas | tertangkap (2) |
+| Q6 | pelanggan_rute.gd | jeda kembali `>=` -> `>` | **LOLOS** (juga di `run_tests.gd` penuh) = QA-002 |
+| Q7 | route_builder.gd | batas setia 60% -> 100% | tertangkap (3) |
+| Q8 | reputation_manager.gd | `_kembalikan` tidak mereset `hari_berhenti` | tertangkap (4) |
+| Q9 | reputation_manager.gd | berhenti `and` -> `or` | tertangkap (8) |
+| Q10 | config.gd | `REPUTASI_BERHENTI_POIN` 1 -> 2 | tertangkap (1) |
+| Q11 | adegan_jalan.gd | umpan "-5" dimatikan | tertangkap (6) |
+| Q12 | data_misi.gd | klem `gagal_reputasi` atas 1 -> 5 | LOLOS (ekuivalen praktis, QA-006) |
+| Q13 | milestone_tracker.gd | tingkat `>=` -> `>` | tertangkap (21) |
+| Q14 | milestone_tracker.gd | setia dihitung `!= berhenti` | tertangkap (6) |
+| Q15 | reputation_manager.gd | pengurangan berhenti dihapus | tertangkap (2) |
+| Q16 | route_builder.gd | prioritas setia dimatikan | tertangkap (1) |
+| Q17 | data_save.gd | `terakhir.potongan` selalu 0 | tertangkap (4) |
+| Q18 | hasil_rute.gd | `lempar_terbuang = meleset` | tertangkap (8) |
+| Q19 | skor_rute.gd | potongan +1 bila terbuang > 24 | tertangkap (6) |
+| Q20 | reputation_manager.gd | tanpa kredit antaran untuk rumah berhenti | **LOLOS** (juga di `run_tests.gd` penuh) = QA-003 |
+
+Catatan: mutan "pagar harian +6 dibuang" tidak dipakai karena tidak dapat dicapai (kredit maksimum 100/30 = 3, misi 3: tepat 6), jadi `REPUTASI_NAIK_MAKS_PER_HARI` praktis ekuivalen; dicatat sebagai informasi.
+
+### Regresi
+Tes lama lulus, tidak ada tes dihapus atau di-skip. Tes lama yang diubah (tes_alur_hari, tes_hari, tes_misi_save, tes_rintangan_scene, tes_save_v3, tes_vfx_sprite) hanya menyesuaikan versi save 4, kolom `potongan`, koin HUD bersih, dan label "-5"; QA-005 mencatat dua oracle yang dilonggarkan.
+
+### Keputusan QA
+FAIL iterasi 1: 3 Major (QA-001, QA-002, QA-003), 2 Minor, 2 Nit. Semua gerbang objektif hijau; Major menyangkut aturan pemilihan pelanggan `berhenti` yang dilanggar tanpa dicatat dan dua mutan logika reputasi/pelanggan yang lolos.
+
+### NEEDS-MANUAL (tambahan QA, selain SETIA_ANDROID 8.17)
+- [ ] Umpan "-5" di titik mendarat terbaca di HP (kecil, abu-abu di atas rumput hijau; pada tangkapan layar hampir tidak mencolok).
+- [ ] Pemain pemula yang hanya mengantar sebagian rute di hari 1 dan 2: pelanggan `sensitif` bisa `berhenti` di akhir hari 2 (dua hari tidak terantar, O-5). Rasa adil dan kejelasan tanpa nama pelanggan dinilai pemilik.
+- [ ] Hari minus (-95) terbaca netral dan tidak menjebak (saldo 0, bengkel dan "Hari berikutnya" tetap aktif).
+
+## Iterasi 2 (Dev)
+
+Cakupan: QA-001..QA-007. Tidak ada tambahan scope; `ThrowSolver`, `BikeMotion`, `Tabrakan`, tenggat, angka skor, `BikeCondition`, `Economy`, golden dari `main` tidak disentuh. Commit: bcafaf8, 6814fe4, da9159a, 67ee939, dan satu commit tes lubang; tidak push.
+
+### Gerbang (dijalankan sendiri, satu proses Godot sekaligus)
+- `godot --headless --import`: 0 baris ERROR/WARNING. `godot --headless --path . --quit-after 2`: 0 ERROR/WARNING.
+- `run_tests.gd` + `tools/cek_keluaran_tes.py`: **20371 lolos, 0 gagal, 0 peringatan** (iterasi 1: 20328; +43 pemeriksaan baru di `tes_rute_pelanggan`, `tes_reputasi`, `tes_save_v4`).
+- 16 `tools/tests_cek/uji_*.py`: semua exit 0. sha256 save asli sebelum dan sesudah semua gerbang dan mutan: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` (tidak berubah). `git status` bersih (hanya `.claude/` yang sudah ada).
+
+### QA-001: pilihan dan ukuran
+**Akar masalah.** Tingkat pelepasan terakhir mencabut larangan `berhenti` bila 60 percobaan goyangan per tingkat gagal. Dugaan QA bahwa rumah itu "tak tergantikan" ternyata hampir selalu salah: skrip QA `berhenti_rumah_tak_tergantikan.gd` menunjukkan 78 dari 3000 rute memuat rumah itu, tetapi setelah pencarian eksak 0 dari 3000: yang gagal adalah pencocokan acak (DP dengan target tersebar + goyangan), bukan keberadaan susunan sah. Hanya 11 dari 71 rumah berkepribadian `sensitif` sehingga hanya itu yang dapat berhenti; tanpa 11 rumah itu selalu ada susunan sah.
+
+**Perbaikan.** Tingkat-tingkat pelepasan biasa (batas baru, lalu prioritas dikurangi seperempat demi seperempat) tidak lagi mencabut larangan (kunci `berhenti` di konfigurasi tingkat dibuang). Bila semuanya gagal, tingkat terakhir `RouteBuilder._susun_pasti` menyelesaikan masalahnya secara eksak: DP mundur atas (butir terakhir, jumlah dekat, jumlah seberang) dengan biaya = jumlah rumah `berhenti` selain calon kembali, lalu penelusuran maju yang memilih, di antara butir yang mempertahankan biaya minimum, yang paling dekat dengan target tersebar rata + goyangan RNG rute (jadi sebaran tetap mirip). Hasil: nol rumah `berhenti` bila ada susunan sah tanpa mereka; hanya bila tidak ada, jumlah paling sedikit, dicatat di `Rute.berhenti_terpaksa` (id) dan `Rute.pelepasan` = jumlah tingkat biasa. Rute tanpa keadaan, hari 1-2, dan rute yang selesai di tingkat biasa (RNG tidak berubah sampai tingkat terakhir) tidak berubah: golden 60 seed dari `main` tetap hijau.
+
+**Pengecualian eksplisit** (O-7 penyesuaian iterasi 2 di SPEC, BALANCING 7.2): rumah `berhenti` yang terpaksa masuk diperlakukan sebagai calon kembali (antaran sah mengembalikannya `aktif`; `ReputationManager` tidak membedakan; dites di QA-003), diagnosa di `Rute.berhenti_terpaksa`.
+
+**Ukuran sebelum -> sesudah** (skrip QA yang sama, `qa_repro/berhenti_terpilih.gd`, 600 rute per sel, berhenti belum calon kembali, semuanya sensitif):
+- 1 rumah berhenti: 6 sampai 7 dari 600 rute (1%) -> 0.
+- 2 rumah: 5 sampai 25 (1 sampai 4%) -> 0. 5 rumah: 22 sampai 55 (4 sampai 9%) -> 0. 8 rumah: 36 sampai 48 (6 sampai 8%) -> 0 (semua 18 sel x 600 = 10.800 rute: 0).
+- Satu rumah dari rute dasar berhenti (`berhenti_rumah_tak_tergantikan.gd`): 78 dari 3000 -> 0 dari 3000.
+- Ukuran Dev (`ukur_terpaksa`, 400 rute per sel, berhenti 1/3/8/15/semua sensitif): `berhenti_terpaksa` kosong di 2000 dari 2000 rute; `pelepasan > 0` (tingkat apa pun) di 14 sampai 40 dari 400 rute, tetapi tidak satu pun memuat rumah berhenti baru-baru ini.
+- Lubang buatan (satu segmen seluruh rumahnya berhenti, 5 segmen x 16 seed): oracle tes (DP rekursif independen dengan memo) memastikan tidak ada susunan tanpa mereka di 12 rute, di rute itu rata-rata 2 rumah terpaksa (24 rumah di 12 rute); di 55 rute lain oracle menemukan susunan dan `berhenti_terpaksa` kosong. 0 salah di kedua arah.
+
+**Ambang tes yang jujur** (`tes_rute_pelanggan.gd`, konstanta di berkas): keadaan realistis paling banyak 1% rute dengan pengecualian (`BATAS_PERSEN_TERPAKSA`, terukur 0 dari 300), rata-rata rumah terpaksa per rute terpaksa <= 3 (`BATAS_TERPAKSA_RATA`, terukur 2,0). Tes (a) tidak lagi `continue` pada `pelepasan > 0`: aturan (a) dan (d) diperiksa di semua rute (224 dari 1200 rute acak memakai pelepasan, 0 pelanggaran); (b), (c), dan "tepat satu calon kembali" tetap hanya untuk `pelepasan == 0` karena memang dilepas oleh tingkat itu. `_test_jalan_kembali` kini tanpa filter `pelepasan == 0`.
+
+### Mutan baru (Dev iterasi 2) dan mutan QA ulang
+Harness `mutan_d.py` (di scratchpad, bukan di repo; pola `mutan_qa.py`: satu penggantian teks, `mini.gd` menjalankan `TesReputasi`, `TesSaveV4`, `TesPotongan`, `TesMilestone`, `TesRutePelanggan`, `TesPotonganScene`/`TesReputasiScene` menurut kelompok; berkas dipulihkan dan `git status` bersih sesudah tiap mutan).
+- Mutan QA yang dulu lolos, kini tertangkap: **Q6** (jeda `>=` -> `>`; 2 gagal), **Q20** (tanpa kredit untuk rumah berhenti; 6 gagal), **Q12** (klem `gagal_reputasi` 1 -> 5; 2 gagal).
+- Mutan baru milik Dev (semua tertangkap): D1 biaya berhenti 0 di DP (tes lubang/realistis), D2 batas celah DP dilipat dua (AWALNYA LOLOS: rute gagal bangun dilewati diam-diam oleh tes lubang; ditambah cek `gagal_lubang == 0`, kini tertangkap), D3 penelusuran maju mengabaikan biaya, D4 `berhenti_terpaksa` tidak diisi, D5 tingkat biasa membolehkan berhenti (larangan dicabut lagi), D6 `pelepasan` 0 di tingkat terakhir, D7 calon kembali tidak dikecualikan dari biaya (1 gagal), D8 `HASIL_BILAH_TEPI_PX` 2, D9 kuota dekat/seberang tertukar di DP, D10 butir seberang tidak boleh mulai, D11 jeda `- 1` (batas hari-2). Total 11 baru + 3 ulang QA = 14, semuanya tertangkap.
+
+### Perubahan lain dan penyimpangan
+- **QA-004 DEFERRED** (BALANCING 7.4): tidak menambah misi; perak dan emas `misi_selesai` aktif saat misi ke-2 dan ke-3 ada. Tidak ada perbaikan sederhana yang sah tanpa mengubah semantik progres (O-9).
+- **QA-005**: contoh DATA_SCHEMA kembali byte demi byte, dengan satu batasan yang tidak dapat dihilangkan: dokumen menampilkan 3 dari 25 rumah, jadi `pelanggan` berkas nyata dipangkas ke id yang ditampilkan dokumen sebelum dicetak oleh `DataSave.ke_teks` (state dibaca lewat `DataSave.dari_teks` agar bilangan bulat tidak jadi "2.0"); id asing di dokumen gagal. `SAVE_VERSI == 4` dikunci dengan literal, `tes_save_v3` memakai literal 4 dan versi terlalu baru 5, 6, 99.
+- **QA-006**: klem tetap sebagai pertahanan lapis kedua; ditambah tes langsung pada `DataMisi` rakitan tangan, bukan DISPUTED.
+- **QA-007**: `HASIL_BILAH_TEPI_PX` satu baris di `Config`.
+- Satu perubahan konfigurasi kecil di `RouteBuilder`: kunci `berhenti` di kamus tingkat dibuang (`_boleh_masuk` tidak lagi menerima pencabutan). Tidak ada perubahan antarmuka lain kecuali `Rute.berhenti_terpaksa`. DEV_PHASES, CHANGELOG, tag tidak disentuh.
+- BLOCKED: tidak ada. NEEDS-MANUAL: tetap yang di SETUP_ANDROID 8.17 dan tambahan QA iterasi 1; tambahan: tidak ada.
+
+## Iterasi 2 (QA)
+
+Auditor independen, konteks segar. Semua angka di bawah dijalankan sendiri oleh QA (satu proses Godot sekaligus); klaim LOG Dev tidak dipakai. Skrip QA baru di `qa_repro/`: `golden_iter2_head.gd`, `golden_iter2_main.gd`, `golden_iter2_hari12_keadaan.gd`, `stres_berhenti_iter2.gd`, `mutan_qa2.py` (jalankan dari salinan di luar repo, `godot --headless --path . --script <berkas> -- <argumen>`).
+
+### Gerbang objektif
+- `godot --headless --import`: 0 baris ERROR/WARNING. `godot --headless --path . --quit-after 2`: 0 ERROR/WARNING.
+- `run_tests.gd` + `tools/cek_keluaran_tes.py`: **20371 lolos, 0 gagal, 0 peringatan**; 0 `SCRIPT ERROR`/`GAGAL` di `build/tests.log`.
+- 16 `tools/tests_cek/uji_*.py`: semua exit 0.
+- `--export-pack "Android"`: sukses; paket memuat `assets/data/customers/kepribadian.json` dan 9 segmen rute; tidak memuat `tests/` maupun `docs/` (0 kecocokan).
+- Kebersihan: 31 commit di branch (0 di `main`), semua `<tipe>: ringkasan` dengan trailer `Claude-Session`, 0 Co-Authored-By; diff `main..HEAD` tanpa `.claude/`, `.godot/`, `build/`, APK, keystore atau secret. `git status` hanya `.claude/` (belum dilacak, sudah ada sebelum run).
+- sha256 `user://save.json` asli: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` sebelum dan sesudah semua tes, ekspor, ukuran, dan mutan. Tidak ada `godot --path .` biasa yang dijalankan.
+- Diff iterasi 2 (`d6d4421..HEAD`) hanya menyentuh `route_builder.gd`, `config.gd` (satu konstanta), `bilah_milestone.gd`, tes, BALANCING, SPEC, LOG. `throw_solver`, `bike_motion`, `tabrakan`, tenggat, `bike_condition`, `economy`, angka emas dan `tests/data/*` tidak berubah.
+
+### Verifikasi per temuan
+- **QA-001 VERIFIED.** (1) `qa_repro/berhenti_terpilih.gd` dijalankan ulang: 18 sel x 600 rute = 10.800 rute, 0 rute memuat rumah `berhenti` (iterasi 1: 1 sampai 9%); `berhenti_rumah_tak_tergantikan.gd`: 0 dari 3000 (iterasi 1: 78). (2) Regresi golden dari `main`, dibuat sendiri dari `git worktree` `main` (726b59c) dengan benih acak baru (31337), 150 rute x hari 1, 2, 3, 5, 9, 40 = 900 rute, identitas penuh (segmen, pelanggan, pemberi tip, objek, titik misi, dekor, rumah, panjang, koran awal): `bangun(benih, pustaka, hari)`, `bangun(..., null)`, dan `bangun(..., PelangganRute.new())` kosong IDENTIK byte demi byte dengan `main` (0 GALAT). Hari 1 dan 2 dengan keadaan ekstrem acak (aktif/setia/berhenti, semua berhenti) 300 rute: identik dengan `main`. (3) Uji beban `stres_berhenti_iter2.gd`, hari 3..80, 400 rute per profil, HEAD vs `d6d4421` (iterasi 1): 0 gagal bangun di semua profil, 25 pelanggan, dekat 8..9, celah gabungan <= 20, `periksa_rute` kosong di 2400 rute. Pengecualian `berhenti_terpaksa` terpakai: realistis (hanya sensitif berhenti, 0 sampai 11 rumah) 0 dari 400 (iterasi 1: larangan dilanggar 8 dari 400); lubang satu segmen 48 dari 400 (iterasi 1: 220), semua berhenti 400 dari 400 (keadaan buatan), 35% atau 50% rumah berhenti (tak realistis) tercatat; selalu tepat: tiap rumah berhenti non-calon yang masuk rute tercatat di `berhenti_terpaksa` (0 tak tercatat). Waktu bangun tidak melonjak: rata-rata 10 sampai 60 ms (iterasi 1: 10 sampai 51 ms), maksimum 85 sampai 115 ms (iterasi 1: 85 sampai 114 ms); hanya "semua berhenti" lebih lambat (2,6 -> 11,6 ms) karena selalu ke tingkat DP. (4) Pengecualian sempit dan tertulis: SPEC (O-7 penyesuaian iterasi 2), BALANCING 7.2 dan 10, komentar `RouteBuilder`; ambang tes jujur (`BATAS_PERSEN_TERPAKSA` 1% dengan 300 rute, `bocor_real == 0` ketat, oracle DP independen di tes, rata-rata terpaksa <= 3). Mutan N1, N2, N3, N4, N7, N14, N16, N17 menyerang kode ini dan semuanya tertangkap. Catatan batas: QA-008 dan QA-009 (di bawah).
+- **QA-002 VERIFIED.** `_test_batas_jeda` dan mutan Q6 (`>=` -> `>`): tertangkap (2 gagal, "berhenti 3 hari lalu (tepat jeda) = calon kembali"); mutan N8 (`!= BARU`) tertangkap.
+- **QA-003 VERIFIED.** `_test_antaran_rumah_berhenti` dan tes `catat_hari` di `tes_save_v4`: mutan Q20 tertangkap (6 gagal, "kredit 4 (dapat 0)"); mutan N11 (kembali lewat misi dan antaran, kredit tetap) tertangkap.
+- **QA-004 DEFERRED, diterima.** Hanya satu misi di data; keterbatasan tertulis di BALANCING 7.4 dan LOG. Minor, tidak memblokir; tidak ada perbaikan sah tanpa mengubah semantik progres (O-9).
+- **QA-005 VERIFIED.** Contoh DATA_SCHEMA kini dibandingkan byte demi byte lewat `DataSave.ke_teks` (hanya `pelanggan` dipangkas ke 3 id dokumen dan id asing digagalkan) dan `SAVE_VERSI == 4` dengan literal; semua `check` lama yang diganti di diff diganti dengan yang sama atau lebih ketat (0 `check` dihapus tanpa pengganti). Mutan dokumen M18 (`"antar": 1` -> 2 di blok contoh DATA_SCHEMA): tertangkap (`20370 lolos, 1 gagal`). Catatan: 22 dari 25 entri `pelanggan` tidak dibandingkan (dokumen hanya menampilkan 3), batas yang dijelaskan Dev dan wajar.
+- **QA-006 VERIFIED.** Mutan Q12 (klem 1 -> 5) tertangkap (2 gagal) oleh tes `DataMisi` rakitan tangan.
+- **QA-007 VERIFIED.** `HASIL_BILAH_TEPI_PX` satu baris literal di `Config`, dipakai `bilah_milestone.gd`; mutan N15 (tepi 0) tertangkap (3 gagal).
+
+### Mutan baru milik QA (20 percobaan; harness `qa_repro/mutan_qa2.py`; berkas dipulihkan dan `git status` bersih setelah tiap mutan dan di akhir)
+Tiga mutan lama QA iterasi 1 diulang (Q6, Q12, Q20: semuanya tertangkap), lalu 17 mutan baru pada kode iterasi 2 (`_susun_pasti`, pelepasan, `pelanggan_rute`, `reputation_manager`, config):
+
+| ID | Berkas | Mutasi | Hasil |
+|---|---|---|---|
+| N1 | route_builder.gd | DP: syarat akhir `d == k0 and s == k1` -> `or` | tertangkap (8 gagal) |
+| N2 | route_builder.gd | biaya DP: berhenti -> bukan aktif (setia/baru ikut berbiaya) | tertangkap (4) |
+| N3 | route_builder.gd | pencatatan terpaksa tanpa pengecualian calon kembali | tertangkap (1) |
+| N4 | route_builder.gd | `_boleh_masuk`: berhenti boleh bila prioritas 0 | tertangkap (8) |
+| N5 | route_builder.gd | penelusuran maju: target sebaran = awal rute | **LOLOS** = QA-009 |
+| N6 | route_builder.gd | DP: batas celah `>` -> `>=` | **LOLOS** = QA-008 |
+| N7 | route_builder.gd | penelusuran maju: batas celah + 5 | tertangkap (2) |
+| N8 | pelanggan_rute.gd | `calon_kembali`: `== BERHENTI` -> `!= BARU` | tertangkap (2) |
+| N9 | pelanggan_rute.gd | status tak dikenal `AKTIF` -> `BARU` | **LOLOS** = QA-010 |
+| N10 | reputation_manager.gd | `_kembalikan` tanpa reset `meleset` | tertangkap (9) |
+| N11 | reputation_manager.gd | rumah kembali lewat misi diproses ganda | tertangkap (2) |
+| N12 | reputation_manager.gd | setia `>=` -> `>` | tertangkap (1) |
+| N13 | reputation_manager.gd | batas berhenti setia dan aktif ditukar | tertangkap (5) |
+| N14 | config.gd | `PELANGGAN_KEMBALI_MAKS_PER_RUTE` 1 -> 2 | tertangkap (2) |
+| N15 | config.gd | `HASIL_BILAH_TEPI_PX` 0 | tertangkap (3) |
+| N16 | route_builder.gd | `pelepasan` tingkat terakhir = 0 | tertangkap (5) |
+| N17 | route_builder.gd | DP: nilai tak hingga 3 | tertangkap (5) |
+| M18 | DATA_SCHEMA.md | contoh save: `antar` 1 -> 2 (run_tests penuh) | tertangkap (1) |
+
+Ringkasan: 3 mutan lama + 18 baru = 21 percobaan, 18 tertangkap, 3 lolos (N5, N6, N9) dicatat sebagai QA-008 (Minor), QA-009 dan QA-010 (Nit). Ketiganya batas/sebaran/pertahanan lapis kedua pada jalur yang jarang atau berisiko rendah; tidak ada yang mengubah perilaku nyata pemain.
+
+### Regresi
+Tidak ada tes dihapus atau di-skip (0 `check` hilang tanpa pengganti; semuanya diganti dengan yang sama atau lebih ketat); `tests/data/` dan angka emas tidak berubah; `Config` hanya bertambah `HASIL_BILAH_TEPI_PX`.
+
+### Keputusan QA
+PASS iterasi 2 (bukan status PASSED final; itu hak orchestrator). Semua gerbang objektif hijau; QA-001, 002, 003 (Major) VERIFIED; tidak ada Blocker atau Major berstatus OPEN, FIXED, atau DISPUTED. OPEN tersisa: QA-008 (Minor), QA-009 (Nit), QA-010 (Nit); DEFERRED: QA-004 (Minor). NEEDS-MANUAL: tidak ada tambahan selain iterasi 1 dan SETUP_ANDROID 8.17.

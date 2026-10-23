@@ -118,6 +118,8 @@ static func parse(data: Dictionary, penerjemah: Callable = Callable()) -> Hasil:
 		if typeof(tingkat) != TYPE_STRING or not Config.MISI_TINGKAT_HADIAH.has(tingkat):
 			g.append("%s: hadiah.tingkat harus salah satu dari %s (GDD 10.5)" % [label, Config.MISI_TINGKAT_HADIAH])
 	misi.gagal = ParseData.kamus_wajib(data, "gagal", label, g)
+	if misi.gagal.has("reputasi") and (not ParseData.bulat(misi.gagal["reputasi"]) or int(roundf(float(misi.gagal["reputasi"]))) < 0 or int(roundf(float(misi.gagal["reputasi"]))) > Config.REPUTASI_MISI_GAGAL_MAKS):
+		g.append("%s: gagal.reputasi harus bilangan bulat 0 sampai %d (GDD 10.5: paling berat satu poin)" % [label, Config.REPUTASI_MISI_GAGAL_MAKS])
 	if misi.template == "cari":
 		_periksa_cari(misi, label, g)
 	_parse_flag(data, misi, label, g)
@@ -189,6 +191,14 @@ func batas_rumah() -> int:
 ## Jumlah target yang harus ditangkap (`target.jumlah`), 0 bila tidak ada.
 func target_jumlah() -> int:
 	return int(roundf(float(target.get("jumlah", 0))))
+
+
+## Poin reputasi yang hilang bila misi gagal (`gagal.reputasi`, 0 bila tidak ada), dijepit 0 sampai `REPUTASI_MISI_GAGAL_MAKS` (run fase6a2-reputasi-pelanggan, O-8).
+func gagal_reputasi() -> int:
+	var nilai: Variant = gagal.get("reputasi", 0)
+	if not ParseData.bulat(nilai):
+		return 0
+	return clampi(int(roundf(float(nilai))), 0, Config.REPUTASI_MISI_GAGAL_MAKS)
 
 
 ## Koin hadiah misi menurut tingkatnya (`Config.MISI_HADIAH_KOIN`), 0 bila tingkat tidak dikenal.

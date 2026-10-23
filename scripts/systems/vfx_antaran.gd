@@ -35,6 +35,8 @@ static func frame_koin(e: UmpanMelayang.Entri) -> int:
 ## Item gambar entri `e` di ruang gambar dunia: bintang (pijak = pusat di titik mendarat) lalu koin (pijak di titik mendarat, naik di dalam sel), yang sudah selesai dilewati.
 static func item_entri(e: UmpanMelayang.Entri) -> Array[DefSprite.Item]:
 	var hasil: Array[DefSprite.Item] = []
+	if e.potongan > 0:
+		return hasil
 	var titik: Vector2 = Iso.posisi_gambar(e.titik_dunia)
 	var bintang: int = frame_bintang(e)
 	if bintang >= 0:
