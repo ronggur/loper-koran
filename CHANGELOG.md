@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/ronggur/loper-koran/compare/loper-koran-v0.6.0...loper-koran-v0.7.0) (2026-10-23)
+
+
+### Fitur
+
+* komponen UI bersama dan layar bengkel tata C (run UI-1) ([#64](https://github.com/ronggur/loper-koran/issues/64)) ([37603a3](https://github.com/ronggur/loper-koran/commit/37603a37884b9cd671bd84f887bd5664fea64e1c))
+
 ## [0.6.0](https://github.com/ronggur/loper-koran/compare/loper-koran-v0.5.0...loper-koran-v0.6.0) (2026-10-23)
 
 
