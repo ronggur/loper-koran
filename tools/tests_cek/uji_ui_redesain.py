@@ -12,6 +12,10 @@
 6. Sepeda dari gambar full body (`sepeda_fullbody.py`): deterministik, docs = keluaran skrip, semua warna dari palet
    gambar full body, tidak ada warna kulit/kemeja/celana di bekas tempat tokoh, versi kecil = setengah ukuran versi besar,
    dan titik penanda kondisi jatuh di piksel sepeda yang opak.
+7. Pemasangan ke `assets/sprites/ui/` (run ui1-komponen-bengkel, `pasang.py`): set berkas redesain TEPAT sama dengan daftar yang dipakai
+   (tidak ada aset redesain lain), isi = keluaran `--salin` (komponen: piksel sama dengan keluaran `komponen.py`; sepeda dan latar: sama
+   dengan berkas resmi di docs/), ikon 24 dan glif 12 = sel sheet, impor Lossless/tanpa mipmap/bukan VRAM, ukuran dan slice = `meta.json`
+   (dan `Config.UI_*` = slice meta.json), warna dari palet induk atau token UI, tidak ada aset docs yang tidak dipasang ikut tersalin.
 
 Butuh pillow dan numpy; bila tidak ada, uji berhenti dengan exit code 2.
 
@@ -43,6 +47,12 @@ BERKAS_SEPEDA = ['sepeda.json', 'sepeda_besar.png', 'sepeda_besar_x3.png', 'sepe
 # warna tokoh di gambar full body (kulit, kemeja, celana) yang tidak boleh tersisa di bekas tempat tokoh
 WARNA_TOKOH = [(239, 164, 98), (220, 118, 69), (199, 103, 61), (240, 165, 99), (132, 166, 186), (110, 138, 170),
                (101, 121, 158), (127, 158, 182), (44, 48, 79), (58, 66, 94), (84, 96, 142), (36, 34, 61)]
+sys.path.insert(0, os.path.join(ROOT, 'tools', 'ui_art', 'redesain'))
+import pasang  # noqa: E402  (data murni: daftar aset yang dipasang)
+
+SKRIP_LATAR = os.path.join(ROOT, 'tools', 'ui_art', 'redesain', 'latar_bengkel.py')
+ASET_UI = os.path.join(ROOT, 'assets', 'sprites', 'ui')
+CONFIG_GD = os.path.join(ROOT, 'scripts', 'config.gd')
 DOCS_ASET = os.path.join(ROOT, 'docs', 'design', 'redesain', 'aset')
 DOCS_LATAR = os.path.join(ROOT, 'docs', 'design', 'redesain', 'latar_bengkel')
 GPL = os.path.join(ROOT, 'assets', 'palette', 'loper_master.gpl')
@@ -177,6 +187,103 @@ cek(not sisa, 'tanpa warna kulit/kemeja/celana di bekas tempat tokoh' + (f' (sis
 cek(kecil.shape[1] == (besar.shape[1] + 1) // 2 and kecil.shape[0] == (besar.shape[0] + 1) // 2, f'kecil {kecil.shape[1]}x{kecil.shape[0]} = setengah besar')
 titik_ok = all(kecil[y, x, 3] == 255 for x, y in meta['titik_kecil'].values())
 cek(titik_ok, 'titik penanda ban/rem/rantai di piksel sepeda opak')
+
+print('7. pemasangan ke assets/sprites/ui/')
+
+
+def piksel(jalur):
+    im = Image.open(jalur).convert('RGBA')
+    return im.size, im.tobytes()
+
+
+def konstanta_config(nama):
+    m = re.search(r'^const ' + nama + r'\b[^=]*=\s*(-?\d+)\s*$', open(CONFIG_GD, encoding='utf-8').read(), re.M)
+    return int(m.group(1)) if m else None
+
+
+ada = sorted(n for n in os.listdir(ASET_UI) if n.startswith(pasang.AWALAN) and not n.endswith('.import'))
+cek(ada == pasang.nama_semua(), f'set berkas redesain di assets/sprites/ui tepat {len(pasang.nama_semua())} (hanya yang dipakai)'
+    + ('' if ada == pasang.nama_semua() else f' (lebih: {sorted(set(ada) - set(pasang.nama_semua()))}, kurang: {sorted(set(pasang.nama_semua()) - set(ada))})'))
+with tempfile.TemporaryDirectory() as keluar, tempfile.TemporaryDirectory() as tujuan:
+    env = dict(os.environ, UI_ART_SALIN_KE=tujuan)
+    for skrip, args in ((SKRIP, ['--out', keluar]), (SKRIP_SEPEDA, []), (SKRIP_LATAR, [])):
+        r = subprocess.run([sys.executable, skrip, '--salin'] + args, env=env, capture_output=True, text=True)
+        cek(r.returncode == 0, f'{os.path.basename(skrip)} --salin berhasil' + ('' if r.returncode == 0 else f': {r.stderr[-200:]}'))
+    hasil = sorted(os.listdir(tujuan))
+    cek(hasil == pasang.nama_semua(), '--salin menulis tepat daftar yang dipasang')
+    beda = [n for n in pasang.nama_komponen() if n in hasil and os.path.isfile(os.path.join(ASET_UI, n)) and piksel(os.path.join(ASET_UI, n)) != piksel(os.path.join(tujuan, n))]
+    cek(not beda, 'komponen di assets/ piksel-identik dengan keluaran --salin (tidak diedit tangan)' + (f' (beda: {beda})' if beda else ''))
+    beda = []
+    for berkas, folder in ((pasang.SEPEDA, pasang.FOLDER_SEPEDA), (pasang.LATAR, pasang.FOLDER_LATAR)):
+        for sumber, dst in berkas.items():
+            resmi = os.path.join(ROOT, folder, sumber)
+            if dst.endswith('.json'):
+                ok = json.load(open(os.path.join(ASET_UI, dst))) == json.load(open(resmi)) == json.load(open(os.path.join(tujuan, dst)))
+            else:
+                ok = piksel(os.path.join(ASET_UI, dst)) == piksel(resmi) == piksel(os.path.join(tujuan, dst))
+            if not ok:
+                beda.append(dst)
+    cek(not beda, 'sepeda dan latar di assets/ = berkas resmi di docs/' + (f' (beda: {beda})' if beda else ''))
+
+meta = json.load(open(os.path.join(DOCS_ASET, 'meta.json')))
+ikon_sheet = Image.open(os.path.join(DOCS_ASET, 'ikon24.png')).convert('RGBA')
+salah = []
+for nama, dst in pasang.IKON24.items():
+    i = meta['ikon24']['urutan'].index(nama)
+    if piksel(os.path.join(ASET_UI, dst + '.png')) != ((24, 24), ikon_sheet.crop((i * 24, 0, i * 24 + 24, 24)).tobytes()):
+        salah.append(dst)
+glif_sheet = Image.open(os.path.join(DOCS_ASET, 'glif12.png')).convert('RGBA')
+for (nama, warna), dst in pasang.GLIF12.items():
+    c, r = meta['glif12']['kolom'].index(nama), meta['glif12']['baris'].index(warna)
+    if piksel(os.path.join(ASET_UI, dst + '.png')) != ((12, 12), glif_sheet.crop((c * 12, r * 12, c * 12 + 12, r * 12 + 12)).tobytes()):
+        salah.append(dst)
+cek(not salah, f'{len(pasang.IKON24)} ikon 24 dan {len(pasang.GLIF12)} glif 12 = sel sheet di docs' + (f' (salah: {salah})' if salah else ''))
+
+salah = []
+for sumber, dst in {**pasang.TOMBOL, **pasang.PANEL, **pasang.PAPAN}.items():
+    if Image.open(os.path.join(ASET_UI, dst + '.png')).size != tuple(meta[sumber]['size']):
+        salah.append(dst)
+cek(not salah, 'ukuran bingkai/papan di assets/ = meta.json' + (f' (salah: {salah})' if salah else ''))
+cek(Image.open(os.path.join(ASET_UI, 'ui_arsir_nonaktif.png')).size == (4, 4), 'arsir nonaktif 4x4 = tengah bingkai tombol (lebar 12 - 2x4, tinggi 16 - 2x6)')
+
+# slice (atas, kanan, bawah, kiri; urutan CSS) di meta.json = konstanta Config yang dipakai GayaHud
+slice_tombol = {tuple(meta[n]['slice']) for n in pasang.TOMBOL if 'slice' in meta[n]}
+slice_panel = {tuple(meta[n]['slice']) for n in pasang.PANEL if n.startswith(('panel_', 'kartu_'))}
+slice_chip = {tuple(meta[n]['slice']) for n in pasang.PANEL if n.startswith('chip_')}
+cek(len(slice_tombol) == 1 and len(slice_panel) == 1 and len(slice_chip) == 1, 'slice seragam per jenis (tombol, panel/kartu, chip) di meta.json')
+if len(slice_tombol) == 1 and len(slice_panel) == 1 and len(slice_chip) == 1:
+    t, r, b, k = next(iter(slice_tombol))
+    p_ = next(iter(slice_panel))
+    c_ = next(iter(slice_chip))
+    cfg = {n: konstanta_config(n) for n in ('UI_TOMBOL_SLICE_ATAS_PX', 'UI_TOMBOL_SLICE_BAWAH_PX', 'UI_TOMBOL_SLICE_SAMPING_PX', 'UI_PANEL_SLICE_PX', 'UI_CHIP_SLICE_PX')}
+    cek(cfg == {'UI_TOMBOL_SLICE_ATAS_PX': t, 'UI_TOMBOL_SLICE_BAWAH_PX': b, 'UI_TOMBOL_SLICE_SAMPING_PX': r,
+                'UI_PANEL_SLICE_PX': p_[0], 'UI_CHIP_SLICE_PX': c_[0]} and r == k and p_ == (p_[0],) * 4 and c_ == (c_[0],) * 4,
+        f'slice meta.json (tombol {t}/{r}/{b}/{k}, panel {p_[0]}, chip {c_[0]}) = Config.UI_*_SLICE_PX ({cfg})')
+
+salah = []
+for n in pasang.nama_semua():
+    if not n.endswith('.png'):
+        continue
+    teks = open(os.path.join(ASET_UI, n + '.import'), encoding='utf-8').read() if os.path.isfile(os.path.join(ASET_UI, n + '.import')) else ''
+    if not ('compress/mode=0\n' in teks and 'mipmaps/generate=false\n' in teks and '"vram_texture": false' in teks and 'uid="uid://' in teks):
+        salah.append(n)
+cek(not salah, 'setiap PNG punya .import Lossless, tanpa mipmap, bukan VRAM, uid ada' + (f' (salah: {salah})' if salah else ''))
+
+boleh = palet_boleh()
+asing = {}
+for n in pasang.nama_komponen():
+    arr = np.asarray(Image.open(os.path.join(ASET_UI, n)).convert('RGBA'))
+    for px in {tuple(int(v) for v in p) for p in arr.reshape(-1, 4)}:
+        if px[3] == 255 and px[:3] not in boleh:
+            asing.setdefault(n, set()).add(px[:3])
+cek(not asing, 'warna opak komponen terpasang dari palet induk atau token UI' + (f' (asing: {asing})' if asing else ''))
+
+# tidak ada aset docs yang tidak dipasang ikut tersalin (bandingkan piksel dengan setiap PNG baru di assets/)
+dipasang_sumber = set(pasang.TOMBOL) | set(pasang.PANEL) | set(pasang.PAPAN) | {'ikon24', 'glif12'} | {os.path.splitext(n)[0] for n in pasang.SEPEDA}
+tak_dipasang = [n for n in sorted(os.listdir(DOCS_ASET)) if n.endswith('.png') and not n.startswith('lembar_') and os.path.splitext(n)[0] not in dipasang_sumber and not n.endswith('_x3.png')]
+sidik = {piksel(os.path.join(ASET_UI, n)) for n in ada if n.endswith('.png')}
+bocor = [n for n in tak_dipasang if piksel(os.path.join(DOCS_ASET, n)) in sidik]
+cek(not bocor, f'{len(tak_dipasang)} aset docs yang belum dipasang tidak ada di assets/' + (f' (bocor: {bocor})' if bocor else ''))
 
 print()
 print('LOLOS' if not gagal else f'GAGAL: {gagal}')
