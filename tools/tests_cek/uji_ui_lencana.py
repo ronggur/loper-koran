@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Uji `tools/ui_art/lencana.py` (lencana milestone 14x14, run 6A2 bagian C, AC-15). Butuh pillow.
 
-Membuktikan: (1) skrip deterministik (dua kali jalan = byte sama), (2) tiga PNG di `assets/sprites/ui/` byte-identik dengan keluaran skrip (tidak diedit tangan),
+Membuktikan: (1) skrip deterministik (dua kali jalan = byte sama), (2) tiga PNG di `assets/sprites/ui/` piksel-identik dengan keluaran skrip (bukan byte: pengodean PNG berbeda antar mesin) (tidak diedit tangan),
 (3) ukuran 14x14 RGBA, (4) hanya warna palet induk (`assets/palette/loper_master.gpl`) dan garis luar OUTLINE, (5) tingkat terbaca TANPA warna: jumlah garis hitungan
 di tengah medali 1, 2, 3 dan bentuk (mask alfa) pita + cakram sama, (6) tiga lencana berbeda nyata, (7) `.png.import` Lossless tanpa mipmap bukan VRAM, (8) pemeriksaan
 menolak contoh buruk.
@@ -37,6 +37,13 @@ def periksa(kondisi, label):
     else:
         gagal += 1
         print('GAGAL:', label)
+
+
+def piksel(jalur):
+    """Piksel RGBA (bukan byte berkas): pengodean PNG berbeda antar mesin (macOS dan Linux CI), pikselnya tidak."""
+    with Image.open(jalur) as gambar:
+        gambar = gambar.convert('RGBA')
+        return gambar.size, gambar.tobytes()
 
 
 def baca(jalur):
@@ -95,7 +102,7 @@ def main():
             nama = 'ui_lencana_%s.png' % t
             ja, jb, jr = os.path.join(a, nama), os.path.join(b, nama), os.path.join(ASET, nama)
             periksa(os.path.isfile(ja) and os.path.isfile(jb) and baca(ja) == baca(jb), '%s: dua kali jalan byte sama (deterministik)' % nama)
-            periksa(os.path.isfile(jr) and baca(jr) == baca(ja), '%s: berkas di assets/ byte-identik dengan keluaran skrip (tidak diedit tangan)' % nama)
+            periksa(os.path.isfile(jr) and os.path.isfile(ja) and piksel(jr) == piksel(ja), '%s: berkas di assets/ piksel-identik dengan keluaran skrip (tidak diedit tangan)' % nama)
             if not os.path.isfile(jr):
                 continue
             im = Image.open(jr).convert('RGBA')
