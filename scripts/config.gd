@@ -765,6 +765,8 @@ const HASIL_KANAN_LEBAR_PX: int = 180
 const HASIL_KOLOM_JARAK_PX: int = 8
 const HASIL_BILAH_TINGGI_PX: int = 7
 const HASIL_BILAH_LEBAR_MIN_PX: int = 60
+## Tebal garis luar bilah milestone (px game) di tiap sisi.
+const HASIL_BILAH_TEPI_PX: int = 1
 const HASIL_IKON_PX: int = 14
 
 ## --- Hari, seed, dan save (Fase 4 run 4A, DATA_SCHEMA 4, rule save-system; usulan, alur hari berurutan ini prototype yang tidak mengunci struktur sesi ROADMAP 5) ---
