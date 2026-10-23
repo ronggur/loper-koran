@@ -40,6 +40,7 @@ func jalankan() -> void:
 	_test_golden()
 	_test_keadaan_kosong_sama_tanpa_keadaan()
 	_test_kombinasi_acak()
+	_test_batas_baru()
 	_test_ekstrem()
 	_test_jalan_kembali()
 	_test_pemberi_tip()
@@ -274,6 +275,48 @@ func _test_kombinasi_acak() -> void:
 	check(ada_setia_lebih > 50 and langgar_b == 0, "(b) setia terpilih paling sedikit min(tersedia, 60%% kuota) per sisi (%d rute dengan setia melebihi batas, %d pelanggaran)" % [ada_setia_lebih, langgar_b])
 	check(langgar_c == 0, "(c) pelanggan baru paling banyak 6 kecuali pelanggan dikenal kurang (%d pelanggaran)" % langgar_c)
 	check(langgar_d == 0, "(d) pemberi tip tepat 7 dan berkepribadian pemberi_tip didahulukan (%d pelanggaran)" % langgar_d)
+
+
+# --- AC-4: batas pelanggan baru mengikat bila pelanggan dikenal cukup ---
+
+func _test_batas_baru() -> void:
+	_judul.call("Batas pelanggan baru (c): mengikat bila pelanggan dikenal cukup, dilonggarkan bila kurang (O-7)")
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 31337
+	var mengikat: int = 0
+	var langgar: int = 0
+	var longgar_dipakai: int = 0
+	for n: int in range(150):
+		var hari: int = rng.randi_range(3, 60)
+		var p: PelangganRute = _keadaan(rng, [2, 6, 2, 0] as Array[int], hari)
+		var h: RouteBuilder.Hasil = _bangun(rng.randi_range(1, 2000000000), hari, p)
+		if not h.sah() or h.rute.pelepasan > 0:
+			continue
+		var calon_baru: int = 0
+		for r: RouteBuilder.RumahRute in h.rute.rumah:
+			if r.pelanggan_boleh and p.status(r.id) == "baru":
+				calon_baru += 1
+		var baru: int = 0
+		for r: RouteBuilder.RumahRute in h.rute.pelanggan:
+			if p.status(r.id) == "baru":
+				baru += 1
+		if h.rute.dikenal_kurang:
+			longgar_dipakai += 1
+			continue
+		if calon_baru > 6:
+			mengikat += 1
+		if baru > 6:
+			langgar += 1
+	check(mengikat >= 60, "batas baru benar-benar mengikat: %d rute punya lebih dari 6 rumah baru di segmennya, tanpa pelanggan dikenal kurang" % mengikat)
+	check(langgar == 0, "pelanggan baru paling banyak 6 di semua rute yang pelanggan dikenalnya cukup (%d pelanggaran)" % langgar)
+	# Hari 3 dengan sisi dekat belum dikenal sama sekali: batas dilonggarkan di sisi dekat, jadi rute tetap sah dengan 8 atau 9 pelanggan dekat baru.
+	var peta: Dictionary = {}
+	for id: String in _id_boleh:
+		if not _id_dekat[id]:
+			peta[id] = {"status": "aktif", "antar": 1, "meleset": 0, "hari_berhenti": 0}
+	var p3: PelangganRute = PelangganRute.dari_state({"pelanggan": peta}, _kepribadian)
+	var h3: RouteBuilder.Hasil = _bangun(SeedHari.rute(3), 3, p3)
+	check(h3.sah() and h3.rute.dikenal_kurang and _jumlah_sisi(h3.rute, LoperAnim.Sisi.DEKAT) >= 8, "hari 3: sisi dekat belum dikenal = batas baru dilonggarkan, 8 atau 9 pelanggan dekat tetap terpilih")
 
 
 # --- AC-4: keadaan ekstrem ---
