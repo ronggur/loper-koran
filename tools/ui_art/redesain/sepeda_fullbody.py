@@ -235,8 +235,65 @@ def tabung_step(img):
     k.garis_luar()
 
 
+# seat stay (penilaian pemilik 2026-10-23): dari tabung sadel sedikit di bawah dudukan lurus ke tengah poros roda belakang,
+# tipis, di belakang tas, poros, rantai, dan tutup rantai, di depan jari-jari
+STAY_ATAS_Y = 166
+STAY_TEBAL = 2
+TAS = (27, 168, 66, 204)                         # kotak tas boncengan (x0, y0, x1, y1): stay lewat di belakangnya
+STAY_BERSIH = (58, 146, 97, 216)                 # kotak tempat sisa stay dan potongan hijau sumber dibuang
+WARNA_GARIS_HIJAU = {GARIS, (19, 36, 32), (23, 13, 20), (26, 20, 34), (38, 29, 44)}
+
+
+def titik_tabung_sadel(y):
+    (x0, y0), (x1, y1) = BB, DUDUKAN
+    return x0 + (x1 - x0) * (y - y0) / (y1 - y0)
+
+
+def seat_stay(img):
+    """Satu seat stay bersih menggantikan potongan stay sumber (separuh tertutup lengan tokoh) dan stay lama."""
+    H, W = img.shape[:2]
+    x0, y0, x1, y1 = STAY_BERSIH
+    jarak_tabung = lambda x, y: abs((x - titik_tabung_sadel(y)) * 0.95)
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            if TAS[0] <= x < TAS[2] and TAS[1] <= y < TAS[3]:
+                continue
+            if y >= DUDUKAN[1] - 1 and jarak_tabung(x, y) <= 3.5:
+                continue
+            r, g, b = (int(v) for v in img[y, x, :3])
+            if img[y, x, 3] and g > r + 10 and g > b:
+                img[y, x] = 0
+    for _ in range(2):                              # garis luar hijau yang kini yatim
+        for y in range(y0, y1):
+            for x in range(x0, x1):
+                if img[y, x, 3] and tuple(int(v) for v in img[y, x, :3]) in WARNA_GARIS_HIJAU:
+                    tetangga = [img[y + dy, x + dx] for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))]
+                    if not any(t[3] and tuple(int(v) for v in t[:3]) not in WARNA_GARIS_HIJAU for t in tetangga):
+                        img[y, x] = 0
+    cx, cy, R = RODA_BELAKANG
+    for y in range(y0, y1):                         # ban dan pelek yang tadinya tertutup potongan hijau sumber
+        for x in range(x0, x1):
+            if img[y, x, 3] == 0:
+                c = warna_ban(x, y, cx, cy, R)
+                if c is not None:
+                    img[y, x] = (*c, 255)
+    boleh = np.ones((H, W), bool)
+    boleh[TAS[1]:TAS[3], TAS[0]:TAS[2]] = False
+    for y in range(H):
+        for x in range(W):
+            if math.hypot(x - cx, y - cy) < 4.5 or (y >= DUDUKAN[1] and jarak_tabung(x, y) <= 2.5):
+                boleh[y, x] = False
+    atas = (titik_tabung_sadel(STAY_ATAS_Y), STAY_ATAS_Y)
+    k = Kuas(img, boleh)
+    k.pipa(atas, (cx, cy), STAY_TEBAL)
+    for y, x in zip(*np.nonzero(k.padat)):          # garis luar menimpa jari-jari dan ban di sebelahnya
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            xx, yy = x + dx, y + dy
+            if boleh[yy, xx] and not k.padat[yy, xx]:
+                img[yy, xx] = (*GARIS, 255)
+
+
 def rangka(k):
-    k.pipa((47, 216), DUDUKAN, 3)                   # seat stay
     k.pipa(BB, DUDUKAN, 5)                          # seat tube
     for p0, p1, tebal in TABUNG_STEP:               # dua pipa step-through
         k.pipa(p0, p1, tebal)
@@ -517,6 +574,7 @@ def main():
     roda_depan(k, asli)
     rangka(k)
     k.garis_luar()
+    seat_stay(k.img)
     tabung_step(k.img)
     rantai = penggerak(k.img)
     sadel(k.img)
