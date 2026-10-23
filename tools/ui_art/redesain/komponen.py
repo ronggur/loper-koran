@@ -6,15 +6,20 @@ bengkel, dan foto berita koran (sepeda bengkel diambil dari gambar full body, li
 Palet: token DESIGN_SPEC 1.1 + palet induk ART_DIRECTION 2.4, tanpa anti-aliasing. Bentuk digambar sebagai mask (supersampling lalu ambang 50 %),
 diberi tiga nada dengan cahaya dari kiri atas, lalu garis luar 1 px #0E0A1C.
 
-Belum ada yang disalin ke assets/: porting ke Godot dikerjakan bertahap (docs/design/redesain/README.md).
+`--salin` (run ui1-komponen-bengkel) memasang ke assets/sprites/ui/ HANYA yang dipakai layar yang sudah dipasang
+(daftar di pasang.py: tombol, panel, kartu, chip, papan alat, ikon 24 dan glif 12 yang dipakai bengkel). Aset lain belum dipasang;
+porting ke Godot dikerjakan bertahap (docs/design/redesain/README.md).
 
 Menjalankan (dari root repo, butuh pillow):
     python3 tools/ui_art/redesain/komponen.py                 # tulis ke build/ui_art/redesain/
     python3 tools/ui_art/redesain/komponen.py --mock          # juga salin ke docs/design/redesain/aset/ + lembar pratinjau
+    python3 tools/ui_art/redesain/komponen.py --salin         # juga pasang yang dipakai ke assets/sprites/ui/ (lalu godot --headless --import)
+`UI_ART_SALIN_KE` mengganti folder tujuan `--salin` (bawaan assets/sprites/ui/; dipakai uji).
 """
 import argparse
 import json
 import math
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -22,9 +27,14 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import pasang
+
+SALIN_KE = Path(os.environ.get('UI_ART_SALIN_KE', ROOT / 'assets' / 'sprites' / 'ui'))
 _ap = argparse.ArgumentParser(description='Komponen UI redesain (usulan)')
 _ap.add_argument('--out', default=str(ROOT / 'build' / 'ui_art' / 'redesain'))
 _ap.add_argument('--mock', action='store_true', help='salin hasil ke docs/design/redesain/aset/ dan tulis lembar pratinjau')
+_ap.add_argument('--salin', action='store_true', help='pasang HANYA yang dipakai (pasang.py) ke assets/sprites/ui/')
 ARGS = _ap.parse_args()
 OUT = Path(ARGS.out)
 OUT.mkdir(parents=True, exist_ok=True)
@@ -617,4 +627,27 @@ if ARGS.mock:
     MOCK.mkdir(parents=True, exist_ok=True)
     for n in BERKAS:
         shutil.copyfile(OUT / n, MOCK / n)
+
+
+def salin_ke_assets(dst=SALIN_KE):
+    """Pasang aset yang dipakai ke `dst`: bingkai apa adanya, ikon 24 dan glif 12 dipotong per sel dari sheet (piksel sama dengan sheet)."""
+    dst = Path(dst)
+    dst.mkdir(parents=True, exist_ok=True)
+    for sumber, tujuan in {**pasang.TOMBOL, **pasang.PANEL, **pasang.PAPAN}.items():
+        shutil.copyfile(OUT / f'{sumber}.png', dst / f'{tujuan}.png')
+    ikon = Image.open(OUT / 'ikon24.png').convert('RGBA')
+    urutan = META['ikon24']['urutan']
+    for nama, tujuan in pasang.IKON24.items():
+        i = urutan.index(nama)
+        ikon.crop((i * 24, 0, i * 24 + 24, 24)).save(dst / f'{tujuan}.png')
+    glif = Image.open(OUT / 'glif12.png').convert('RGBA')
+    kolom, baris = META['glif12']['kolom'], META['glif12']['baris']
+    for (nama, warna), tujuan in pasang.GLIF12.items():
+        c, r = kolom.index(nama), baris.index(warna)
+        glif.crop((c * 12, r * 12, c * 12 + 12, r * 12 + 12)).save(dst / f'{tujuan}.png')
+    print('disalin', len(pasang.nama_komponen()), 'aset ->', dst)
+
+
+if ARGS.salin:
+    salin_ke_assets()
 print('ok', len(META), 'aset ->', OUT, '(+ docs)' if ARGS.mock else '')

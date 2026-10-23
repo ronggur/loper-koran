@@ -1177,18 +1177,67 @@ const AUDIO_KONDISI_TRANSAKSI_VOLUME_DB: float = -3.0
 
 ## Layar bengkel (DESIGN_SPEC 4): margin minimum dari tepi layar, piksel game (dipakai max dengan inset aman perangkat).
 const BENGKEL_MARGIN_PX: int = 12
-## Jarak antar elemen di layar bengkel, piksel game.
-const BENGKEL_JARAK_PX: int = 6
-## Lebar minimum tombol Servis dan Beli, piksel game (tinggi `HUD_TOMBOL_TINGGI_PX` 42, >= 44 dp di A54).
-const BENGKEL_TOMBOL_LEBAR_PX: int = 84
-## Lebar minimum tombol "Hari berikutnya" di bengkel, piksel game.
+## Lebar tombol "Hari berikutnya" di bengkel, piksel game (aksi utama kanan bawah; sama dengan `UI_TOMBOL_LEBAR_UTAMA_PX`).
 const BENGKEL_HARI_LEBAR_PX: int = 140
-## Lebar minimum label harga, piksel game (tiga digit berpemisah ribuan tidak melompat).
-const BENGKEL_HARGA_LEBAR_PX: int = 40
-## Perbandingan lebar kolom servis (komponen) terhadap kolom upgrade di layar bengkel.
-const BENGKEL_KOLOM_SERVIS_RASIO: float = 1.0
-## Lihat `BENGKEL_KOLOM_SERVIS_RASIO`.
-const BENGKEL_KOLOM_UPGRADE_RASIO: float = 1.0
+
+## --- Bengkel tata C (run ui1-komponen-bengkel bagian B; kanvas Bengkel.dc.html, ui.css, README redesain 4; usulan, dinilai lewat uji HP) ---
+## Tinggi baris judul dan saldo: isi mulai di y = margin atas + ini (12 + 34 = 46 di kanvas, tanpa inset).
+const BENGKEL_BARIS_ATAS_PX: int = 34
+## Lebar kolom servis sebagai pecahan lebar isi (kanvas 48 %), jarak antar kolom servis dan upgrade, piksel game.
+const BENGKEL_KOLOM_SERVIS_FRAKSI: float = 0.48
+const BENGKEL_KOLOM_JARAK_PX: int = 8
+## Isi panel servis berjarak sekian piksel dari tepi (garis 4 + padding 4), jarak antar anak panel servis, tinggi baris judul bagian dan baris catatan ongkos, piksel game.
+const BENGKEL_PANEL_PAD_PX: int = 8
+const BENGKEL_PANEL_JARAK_PX: int = 4
+const BENGKEL_BAGIAN_TINGGI_PX: int = 12
+## Judul bagian Upgrade berada di atas latar (bukan di dalam panel): diberi pelat `HUD_PANEL` dengan jarak samping sekian piksel supaya kontras teksnya tidak bergantung pada lampu di latar.
+const BENGKEL_BAGIAN_PELAT_PAD_PX: int = 3
+const BENGKEL_CATATAN_TINGGI_PX: int = 12
+## Jarak antar kartu upgrade dan geseran ke bawah judul bagian Upgrade, piksel game.
+const BENGKEL_UPGRADE_JARAK_PX: int = 6
+const BENGKEL_UPGRADE_ATAS_PX: int = 4
+## Tinggi kartu servis, kartu upgrade tingkat tunggal, dan kartu upgrade dengan jejak tingkat I, II, III (komponen bertingkat), piksel game.
+const BENGKEL_KARTU_SERVIS_PX: int = 50
+const BENGKEL_KARTU_UPGRADE_PX: int = 62
+const BENGKEL_KARTU_UPGRADE_JEJAK_PX: int = 72
+## Isi kartu: jarak antar kolom, jarak tepi kiri (garis 4 + padding 4) dan kanan (garis 4), jarak antar baris teks servis dan upgrade, jarak kotak kondisi ke teks status, jarak antar chip, piksel game.
+const BENGKEL_KARTU_JARAK_PX: int = 6
+const BENGKEL_KARTU_PAD_AWAL_PX: int = 8
+const BENGKEL_KARTU_PAD_AKHIR_PX: int = 4
+const BENGKEL_KARTU_TEKS_JARAK_SERVIS_PX: int = 3
+const BENGKEL_KARTU_TEKS_JARAK_UPGRADE_PX: int = 2
+const BENGKEL_KARTU_STATUS_JARAK_PX: int = 5
+## Jarak antar baris bila teks status turun ke bawah kotak kondisi (kolom teks sempit), piksel game.
+const BENGKEL_KARTU_STATUS_BARIS_PX: int = 2
+const BENGKEL_JEJAK_JARAK_PX: int = 2
+## Tampilan: ikon komponen (`ui_icon24_*`), glif (`ui_glif_*`), dan ikon koin di chip, sisi persegi piksel game.
+const BENGKEL_IKON_PX: int = 24
+const BENGKEL_GLIF_PX: int = 12
+const BENGKEL_KOIN_PX: int = 14
+## Panel galat data upgrade: jarak isi ke tepi di luar garis kartu (kanvas padding 8), jarak glif ke teks.
+const BENGKEL_GALAT_PAD_PX: int = 8
+## Deskripsi kartu upgrade paling banyak sekian baris; sisanya dipotong dengan elipsis supaya kartu tetap 62 tinggi dan tiga upgrade muat tanpa scroll (QA-001; data nyata 1 sampai 2 baris).
+const BENGKEL_DESKRIPSI_BARIS_MAKS: int = 2
+## Panggung sepeda: tinggi minimum bila ruang sempit, ukuran sepeda kecil (`ui_bengkel_sepeda_kecil.png`) dan papan alat (`ui_bengkel_papan_alat.png`), jarak sepeda dari bawah panggung, lebar latar.
+const BENGKEL_PANGGUNG_MIN_PX: int = 40
+const BENGKEL_SEPEDA_LEBAR_PX: int = 116
+const BENGKEL_SEPEDA_TINGGI_PX: int = 78
+const BENGKEL_PAPAN_LEBAR_PX: int = 360
+const BENGKEL_PAPAN_TINGGI_PX: int = 104
+const BENGKEL_SEPEDA_BAWAH_PX: int = 4
+const BENGKEL_LATAR_LEBAR_PX: int = 800
+## Titik penanda kondisi di sepeda kecil (`titik_kecil` di `assets/sprites/ui/ui_bengkel_sepeda.json`; tes membandingkan): x lalu y per komponen urut `KONDISI_KOMPONEN` (ban, rem, rantai).
+const BENGKEL_SEPEDA_TITIK: Array[int] = [5, 68, 74, 4, 33, 54]
+## Penanda kondisi di sepeda (sisi chip per komponen ada di `TampilBengkel.SISI_PENANDA`): sisi titik 3x3, jarak chip dari titik (di depan dan sesudah titik), geseran chip bawah (mendatar dan tegak), geseran atas, dan tepi minimum ke tepi panggung, piksel game.
+const BENGKEL_PENANDA_TITIK_PX: int = 3
+const BENGKEL_PENANDA_JARAK_AWAL_PX: int = 4
+const BENGKEL_PENANDA_JARAK_AKHIR_PX: int = 5
+const BENGKEL_PENANDA_BAWAH_X_PX: int = 10
+const BENGKEL_PENANDA_BAWAH_Y_PX: int = 6
+const BENGKEL_PENANDA_ATAS_Y_PX: int = 7
+const BENGKEL_PENANDA_TEPI_PX: int = 2
+## Tingkat upgrade tertinggi yang punya angka romawi sendiri (I, II, III); di atasnya angka biasa.
+const BENGKEL_TINGKAT_ROMAWI_MAKS: int = 3
 
 ## --- Aset gelombang 1 terpasang di rute (run fase5a bagian B, D-3 sampai D-6; usulan, dinilai di HP) ---
 ## Tiap sprite = [lebar sel, tinggi sel, jumlah frame, titik pijak x, titik pijak y], piksel; frame berjajar kiri ke kanan. Sama dengan `cell`, `frames`, dan `ground_anchor` di JSON
@@ -1347,3 +1396,42 @@ const TIP_SISI_DEKAT_Y_PX: int = 88
 const TIP_SISI_DEKAT_LEBAR_PX: int = 150
 ## Koran terlipat di teras rumah dekat (AC-9): teras dekat ada di belakang titik pijak sprite rumahnya menurut Y-sort, jadi pembungkus Y-sort sprite terlipat diletakkan sekian piksel game di DEPAN titik pijak rumah supaya digambar sesudah sprite rumah.
 const RUTE_RUMAH_DEKAT_URUT_TERLIPAT_PX: int = 1
+
+## --- Komponen UI redesain bersama (run ui1-komponen-bengkel bagian A; docs/design/redesain/README.md 4, kanvas ui.css; usulan, dinilai lewat uji HP) ---
+## Tepi 9-slice bingkai tombol 12x16 (`ui_btn_*.png`): atas, bawah, dan samping, piksel game. Sama dengan `slice` di `docs/design/redesain/aset/meta.json` (urutan CSS atas/kanan/bawah/kiri = 6/4/6/4), dijaga `tools/tests_cek/uji_ui_redesain.py`.
+const UI_TOMBOL_SLICE_ATAS_PX: int = 6
+const UI_TOMBOL_SLICE_BAWAH_PX: int = 6
+const UI_TOMBOL_SLICE_SAMPING_PX: int = 4
+## Tepi 9-slice panel layar dan kartu 12x12 (`ui_panel_layar.png`, `ui_kartu_*.png`), piksel game.
+const UI_PANEL_SLICE_PX: int = 4
+## Tepi 9-slice chip 8x8 (`ui_chip_*.png`), piksel game.
+const UI_CHIP_SLICE_PX: int = 3
+## Wajah tombol utama dan biasa turun sekian piksel saat ditekan (teks ikut turun lewat margin isi; gambarnya `*_tekan`).
+const UI_TOMBOL_TEKAN_GESER_PX: int = 2
+## Tinggi tombol standar, lebar minimum (target sentuh, rule ui-scenes), dan lebar tombol aksi utama kanan bawah, piksel game.
+const UI_TOMBOL_TINGGI_PX: int = 42
+const UI_TOMBOL_LEBAR_MIN_PX: int = 84
+const UI_TOMBOL_LEBAR_UTAMA_PX: int = 140
+## Garis fokus tombol berada sekian piksel di luar tepi tombol (1 px jarak + 1 px garis; kanvas `outline-offset: 1px`).
+const UI_TOMBOL_FOKUS_JARAK_PX: int = 2
+## Tebal garis 1 piksel game: garis kotak `GayaHud`, garis fokus, cincin gelap titik penanda sepeda dan ring luar panggung bengkel (QA-006: tanpa angka ajaib).
+const UI_GARIS_PX: int = 1
+## Isi sakelar: jarak tambahan kiri dan kanan di luar tepi 9-slice (CSS `padding: 0 4px 2px`).
+const UI_TOMBOL_SAKELAR_PAD_X_PX: int = 4
+## Tinggi chip kecil, normal, dan besar, serta jarak isi ke samping di luar tepi 9-slice, piksel game.
+const UI_CHIP_TINGGI_KECIL_PX: int = 14
+const UI_CHIP_TINGGI_PX: int = 18
+const UI_CHIP_TINGGI_BESAR_PX: int = 24
+const UI_CHIP_PAD_X_KECIL_PX: int = 1
+const UI_CHIP_PAD_X_PX: int = 2
+const UI_CHIP_PAD_X_BESAR_PX: int = 4
+## Chip: jarak isi ke atas dan bawah di luar tepi 9-slice per ukuran (lebih kecil dari tepi: tinggi chip tetap 14, 18, 24 walau tinggi baris teks Lexend 10, 13, 15), dan jarak antar isi (glif, ikon, teks), piksel game.
+const UI_CHIP_PAD_Y_KECIL_PX: int = 2
+const UI_CHIP_PAD_Y_PX: int = 2
+const UI_CHIP_PAD_Y_BESAR_PX: int = 3
+const UI_CHIP_JARAK_PX: int = 3
+const UI_CHIP_JARAK_BESAR_PX: int = 4
+## Kotak kondisi besar (kartu servis bengkel, `KotakKondisiBesar`): sisi kotak, jarak antar kotak, jarak kotak ketiga ke tanda "!", piksel game. HUD rute tetap memakai `KONDISI_HUD_KOTAK_PX`.
+const KONDISI_BESAR_KOTAK_PX: int = 8
+const KONDISI_BESAR_KOTAK_JARAK_PX: int = 2
+const KONDISI_BESAR_SERU_JARAK_PX: int = 2

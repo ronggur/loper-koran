@@ -64,7 +64,7 @@ RUMAH_LAMA = ['house_perumahan_%s' % n for n in (
     'sayap_bukan', 'sayap_pelanggan')]
 # Nama (awalan) yang TIDAK boleh ada di assets/ (tidak dipasang, D-1 dan D-4).
 TIDAK_DIPASANG_REGEX = [
-    r'^prop_tong_sampah_biru', r'^prop_pohon_(?!rindang\.|glodokan\.|ketapang\.)', r'^prop_lampu_(?!lengan_seberang\.|lengan_dekat\.)', r'nyala',
+    r'^prop_tong_sampah_biru', r'^prop_pohon_(?!rindang\.|glodokan\.|ketapang\.)', r'^prop_lampu_(?!lengan_seberang\.|lengan_dekat\.)', r'^prop_lampu_.*nyala',
     r'^tile_perumahan_aspal_[0-9]\.', r'^tile_perumahan_.*_dekat_masuk\.', r'^tile_perumahan_rumput_([04-9])\.', r'polisi', r'zebra', r'genangan',
     r'^mission_jejak', r'^mission_mangkuk', r'^prop_portal', r'^prop_pos', r'^vfx_percikan',
 ]

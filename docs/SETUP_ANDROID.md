@@ -836,3 +836,35 @@ Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build 
 10. 60 fps tetap ya / tidak   save utuh ya / tidak
 Catatan (angka, bentuk, letak yang ingin diubah dan alasannya): ____
 ```
+
+### 8.18 Uji bengkel tata C dan komponen UI baru (run `20261023-ui1-komponen-bengkel`, belum diuji, NEEDS-MANUAL)
+
+Penguji: pemilik sendiri (rule `testing`), di vivo V2108 dan A54. Semua bentuk, ukuran, dan warna usulan (DESIGN_SPEC 1.3 dan 4 baris Bengkel; `design/redesain/README.md` 3 dan 4): catat yang ingin diubah beserta alasannya, jangan diubah di sesi uji. Run ini menggantikan tampilan layar bengkel (tombol empat peran, kartu menonjol dan redup, chip harga di sebelah tombol, sepeda dengan chip kondisi, latar ilustrasi); angka ekonomi, harga, aturan servis dan upgrade, save, dan alur Hasil -> Bengkel -> Hari berikutnya tidak berubah, dan layar hasil, koran, jeda, tutorial, banner, serta HUD rute tidak berubah tampilannya. Save lama dipakai apa adanya (tidak ada migrasi). Cara membuat keadaan uji: main sampai tamat satu hari, lalu "Ke bengkel"; untuk komponen rusak biarkan sepeda menabrak beberapa kali di rute; untuk "Koin kurang" belanja sampai saldo kecil. Edit `save.json` lewat `run-as` lebih disukai daripada `pm clear` (izin pemilik 2026-10-18); catat save yang dipakai.
+
+1. [ ] **Terbaca sekilas.** Buka bengkel dengan sepeda yang sebagian rusak. Diharapkan: dalam sekitar tiga detik tahu bagian mana yang bermasalah, berapa ongkosnya, dan tombol mana yang ditekan; tidak terasa kosong atau terlalu kecil dibanding layar bengkel sebelumnya (8.11). Hasil: terbaca ya / tidak; terlalu kecil / pas / terlalu besar.
+2. [ ] **Sepeda dan chip kondisi jelas.** Chip "! Ban", "! Rem", atau "Rantai aus" muncul tepat di bagian sepeda yang bermasalah dan tidak menutupi bagian lain; sepeda yang baik tampil bersih tanpa chip. Kotak kondisi besar di kartu servis terbaca (tiga kotak 8x8, berongga = aus, "!" = perlu servis) tanpa mengandalkan warna. Hasil: chip di tempat yang benar ya / tidak; sepeda terbaca sebagai sepeda ya / tidak; kotak berongga terbedakan ya / tidak.
+3. [ ] **Tombol enak ditekan dan tiga keadaan jelas bedanya.** Tekan "Servis", "Beli", dan "Hari berikutnya": wajah tombol turun 2 px saat ditekan dan terasa responsif, target mudah dikenai jempol. Bandingkan tiga keadaan: aktif, ditekan, dan nonaktif (rata, diarsir, teksnya "Koin kurang"). Diharapkan: tombol nonaktif tidak salah dikira aktif dan menekannya tidak melakukan apa pun. Hasil: nyaman ya / tidak; tiga keadaan jelas ya / tidak; nonaktif dikira aktif ya / tidak.
+4. [ ] **Kartu menonjol vs redup terbaca.** Komponen PERLU SERVIS berkartu menonjol dengan garis `WARN`; Baik dan Dimiliki berkartu redup. Diharapkan: perhatian langsung tertuju ke yang perlu ditangani. Catatan: garis bingkai kartu tipis dan berkontras rendah terhadap latar (keputusan terbuka D-1 di LOG); nilai apakah kartu terpisah jelas dari latar tanpa garis yang lebih terang. Hasil: menonjol terbaca ya / tidak; garis kartu perlu disorot ya / tidak.
+5. [ ] **Harga dekat tombolnya.** Chip harga ada di sebelah tombol "Servis" dan "Beli", tidak tertukar antar baris. Diharapkan: jelas harga mana untuk tombol mana, termasuk saat ongkos naik x1,25 (catatan ongkos tampil). Saldo besar di kanan atas terbaca. Hasil: jelas ya / tidak.
+6. [ ] **Latar tidak mengganggu teks.** Ilustrasi bengkel di belakang kolom: judul "UPGRADE" (berpelat), nama, deskripsi, harga, dan status tetap terbaca di cahaya lampu dan di tepi. Diharapkan: latar memberi suasana tanpa mengurangi keterbacaan, juga di bawah sinar matahari. Hasil: terbaca ya / tidak; latar mengganggu ya / tidak; latar terlalu ramai ya / tidak. (Lisensi latar belum dicatat; ini penilaian tampilan, bukan izin rilis: ART_DIRECTION 9.)
+7. [ ] **Tiga upgrade tanpa scroll di HP asli.** Ketiga kartu upgrade dan ketiga kartu servis, catatan ongkos, dan "Hari berikutnya" muat di satu layar tanpa digulir di vivo V2108 dan A54, termasuk deskripsi dua baris tanpa terpotong. Hasil: muat ya / tidak (per HP); terpotong ya / tidak.
+8. [ ] **"Hari berikutnya" selalu aktif dan mudah dijangkau.** Tombol 140x42 di kanan bawah selalu bisa ditekan (juga saat saldo kosong), satu ketukan menyimpan dan lanjut; back Android = Hari berikutnya. Diharapkan: terjangkau jempol kanan. Hasil: ya / tidak.
+9. [ ] **Lebar layar dan zona aman.** Di HP dengan notch atau lengkung (A54): tidak ada teks atau tombol tertutup tepi, margin terasa wajar. Hasil: ya / tidak.
+10. [ ] **60 fps tidak turun dan piksel tajam.** Layar bengkel baru (latar 800, papan, sepeda, banyak komponen 9-slice) tidak menurunkan fps dan gambar tidak buram atau berkedip. Hasil: ya / tidak.
+
+**Lembar hasil 8.18 (bengkel tata C dan komponen UI, run UI-1):**
+
+```
+Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build (commit): ____
+1. Terbaca sekilas ya / tidak   ukuran terlalu kecil / pas / terlalu besar
+2. Chip kondisi di tempat benar ya / tidak   sepeda terbaca ya / tidak   kotak berongga terbedakan ya / tidak
+3. Tombol nyaman ya / tidak   tiga keadaan jelas ya / tidak   nonaktif dikira aktif ya / tidak
+4. Kartu menonjol terbaca ya / tidak   garis kartu perlu disorot ya / tidak
+5. Harga dekat tombol jelas ya / tidak
+6. Latar mengganggu ya / tidak   terlalu ramai ya / tidak
+7. Tiga upgrade tanpa scroll: vivo ya / tidak   A54 ya / tidak   terpotong ya / tidak
+8. Hari berikutnya mudah dijangkau ya / tidak   back = Hari berikutnya ya / tidak
+9. Zona aman (notch, lengkung) beres ya / tidak
+10. 60 fps tetap ya / tidak   piksel tajam ya / tidak
+Catatan (angka, bentuk, letak yang ingin diubah dan alasannya): ____
+```

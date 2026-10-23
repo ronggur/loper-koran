@@ -20,17 +20,25 @@ Koordinat khusus untuk gambar sumber ini. Deterministik (numpy dan pillow saja).
 
   python3 tools/ui_art/redesain/sepeda_fullbody.py            # ke build/ui_art/redesain/
   python3 tools/ui_art/redesain/sepeda_fullbody.py --mock     # juga ke docs/design/redesain/aset/
+  python3 tools/ui_art/redesain/sepeda_fullbody.py --salin    # HANYA menyalin keluaran resmi di docs/ (sepeda_kecil.png, sepeda.json) ke assets/sprites/ui/; tidak membuat ulang
+`UI_ART_SALIN_KE` mengganti folder tujuan `--salin` (bawaan assets/sprites/ui/; dipakai uji).
 """
 import argparse
 import json
 import math
+import os
 import shutil
+import sys
 from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import pasang
+
+SALIN_KE = Path(os.environ.get('UI_ART_SALIN_KE', ROOT / 'assets' / 'sprites' / 'ui'))
 SUMBER = ROOT / 'docs' / 'design' / 'character' / 'loper_agen' / 'loper_agen_fullbody.png'
 MOCK = ROOT / 'docs' / 'design' / 'redesain' / 'aset'
 
@@ -564,7 +572,14 @@ def main():
     ap = argparse.ArgumentParser(description='Sepeda dari gambar full body (usulan)')
     ap.add_argument('--out', default=str(ROOT / 'build' / 'ui_art' / 'redesain'))
     ap.add_argument('--mock', action='store_true', help='juga salin ke docs/design/redesain/aset/')
+    ap.add_argument('--salin', action='store_true', help='HANYA salin keluaran resmi di docs/ ke assets/sprites/ui/ (tidak membuat ulang)')
     a = ap.parse_args()
+    if a.salin:
+        SALIN_KE.mkdir(parents=True, exist_ok=True)
+        for sumber, tujuan in pasang.SEPEDA.items():
+            shutil.copyfile(ROOT / pasang.FOLDER_SEPEDA / sumber, SALIN_KE / tujuan)
+        print('disalin', len(pasang.SEPEDA), 'berkas ->', SALIN_KE)
+        return
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     asli = np.asarray(Image.open(SUMBER).convert('RGBA')).copy()

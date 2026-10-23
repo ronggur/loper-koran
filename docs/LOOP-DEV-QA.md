@@ -1401,6 +1401,91 @@ IZIN HP: boleh memasang APK ke vivo V2108 (adb 12d8c9da) setelah QA PASS dengan 
 RUN_ID: 20261022-fase5d-sisi-dekat
 ```
 
+## 6k. Redesain UI: perintah Run UI-1 (tempel di sesi baru)
+
+Disimpan 2026-10-23, sesudah Run 6A2 di-merge (PR #58, `main` = rilis 0.6.0). Pemilik menguji HP 2026-10-23 dan menilai UI layar penuh terlalu kecil, terlalu kosong, dan tombolnya polos; kanvas Claude Design "UI Loper Koran — Redesain" ([`design/redesain/README.md`](design/redesain/README.md)) menjawabnya. Porting dipecah per layar, satu PR per run (README redesain bagian 6). Run ini hanya langkah 1 dan 2:
+
+| Run | Isi | Prasyarat |
+|---|---|---|
+| UI-1 | Komponen UI bersama (tombol empat peran, kartu, panel layar, chip, kotak kondisi besar) dan layar bengkel tata C. **Status (2026-10-23): dikerjakan Dev iterasi 1 (bagian A, B, C) di branch `feat/ui1-komponen-bengkel`, menunggu QA dan uji HP 8.18** (`docs/loop/20261023-ui1-komponen-bengkel/`) | 6A2 di-merge (PR #58) |
+| UI-2 dan seterusnya | Hasil (struk), koran, jeda dengan tutorial dan banner, HUD (hanya tombol jeda); ditulis sesudah UI-1 di-merge dan dinilai di HP | UI-1 di-merge |
+
+Perintah di bawah ringkasan dari SPEC run (`docs/loop/20261023-ui1-komponen-bengkel/SPEC.md`, kontraknya), bukan salinan kata demi kata dari pesan pemilik.
+
+**Putusan orchestrator Bagian 6k (usulan, bisa ditolak di review PR; jangan ditanyakan ulang):**
+
+- **U-1 Bengkel tata C**: sepeda dan tiga baris servis di satu panel kiri, upgrade di kolom kanan (kolom servis 48% | 8 | upgrade). Kondisi terbaca dari sepeda (chip "! Ban" atau "Rantai aus" di titik `titik_kecil` dari `sepeda.json`; sepeda baik bersih). Harga selalu chip di sebelah tombolnya. PERLU SERVIS = kartu menonjol bergaris WARN; Baik atau Dimiliki = kartu redup. Upgrade tingkat 2-3 tidak menambah kartu (kartu sama berganti isi, jejak I · II · III). Tiga kartu upgrade muat tanpa scroll di 640 dan 800.
+- **U-2 Satu bahasa tombol**: empat peran (utama, biasa, sakelar, tenang); 9-slice dari aset kanvas; ditekan = wajah turun 2 px; nonaktif rata, diarsir, teks berganti alasan ("Koin kurang"), terbaca tanpa warna. "Hari berikutnya" 140x42 aksi utama, SELALU aktif, kanan bawah.
+- **U-3 Komponen sebagai fungsi BARU** di `GayaHud` dan type variation BARU di `assets/ui/theme.tres`; `GayaHud.terapkan_tombol`, `kotak`, `panel_hud`, dan variation lama TIDAK diubah.
+- **U-4 Latar bengkel dipasang untuk uji HP** walau lisensi generatornya belum dicatat: butir terbuka pemilik di LOG dan README redesain; ART_DIRECTION 9 menandainya belum boleh masuk rilis; tidak memblokir run. Latar tidak boleh menurunkan kontras (teks >= 7:1, garis komponen >= 3:1) diukur dari tangkapan nyata.
+- **U-5 Tidak ada angka ekonomi atau aturan permainan yang berubah.** Teks hanya dari `translations/`; kunci baru seperlunya di `ui.csv`.
+
+```text
+Kamu adalah ORCHESTRATOR loop Dev↔QA untuk repo Loper Koran. Ikuti docs/LOOP-DEV-QA.md secara ketat
+(Bagian 1, Bagian 0c, dan Bagian 6k). Mulai dari main terbaru yang sudah memuat Run 6A2 (PR #58).
+Baca dulu: docs/design/redesain/README.md (semua), docs/design/redesain/kanvas/{ui.css,Bengkel*.dc.html,
+Spesifikasi.dc.html}, docs/design/redesain/aset/{meta.json,sepeda.json}, tools/ui_art/redesain/*.py,
+tools/tests_cek/uji_ui_redesain.py, docs/design/DESIGN_SPEC.md (1.1-1.3, 3.3, 4 baris Bengkel),
+docs/loop/20261020-fase6a1-bengkel-kondisi/{SPEC,LOG}.md, docs/loop/20261023-fase6a2-reputasi-pelanggan/{SPEC,LOG}.md,
+scenes/bengkel/bengkel.tscn, scripts/ui/{layar_bengkel,kotak_kondisi,gaya_hud,tombol_sentuh,palette}.gd,
+assets/ui/theme.tres, scripts/systems/{economy,tampil_kondisi,data_toko,pemuat_toko}.gd,
+tests/{tes_bengkel_scene,tes_kondisi_scene,tes_tata_letak,probe_bengkel_jendela}.gd, rule ui-scenes,
+art-assets, gdscript, testing, docs, git-workflow. Pelajaran lama: tekstur dimuat di _init/_ready,
+bukan _draw; satu proses Godot sekaligus; tes tidak menulis save sungguhan; pola --salin memasang HANYA
+yang dipakai; mutan nyata (Dev >= 30, QA mengulang >= 10 pilihannya sendiri); QA mengukur sendiri
+dan MELIHAT tangkapan. Keputusan yang sudah ada berlaku, jangan ditanyakan ulang.
+
+PUTUSAN (usulan, bisa ditolak di review PR; jangan ditanyakan ulang): U-1 .. U-5 di atas.
+
+SCOPE: Run UI-1 — redesain UI langkah 1 dan 2 (komponen + bengkel tata C). Tidak ada angka ekonomi
+  atau aturan permainan yang berubah.
+  A. Komponen: (1) baseline di LOG (tes, pemeriksa, semua uji_*.py, sha256 save asli
+     37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e); (2) komponen.py --salin
+     (+ sepeda_fullbody.py/latar_bengkel.py --salin hanya menyalin berkas resmi docs/; UI_ART_SALIN_KE
+     untuk uji) memasang HANYA yang dipakai bengkel ke assets/sprites/ui/ dengan .import Lossless;
+     (3) uji_ui_redesain.py diperluas dan langkahnya di job `alat` tes.yml; (4) GayaHud.tombol_*,
+     kartu_*, panel_layar, chip + type variation baru di theme.tres, fungsi lama tidak berubah, layar
+     lain tidak berubah tampilannya (tangkapan sebelum/sesudah piksel sama); (5) kotak kondisi besar
+     8x8 (jarak 2, "!" 3x9, berongga = AUS), KotakKondisi 14 px di HUD tidak berubah; tes murni
+     pemilihan keadaan tombol/kartu/chip terbaca tanpa warna.
+  B. Bengkel tata C: bengkel.tscn dan layar_bengkel.gd dibangun ulang dari kanvas (header y 11, isi
+     y 46, margin 12 + inset aman, kolom 48% | 8 | upgrade, kartu servis x50 dan upgrade x62, chip
+     harga 18, sepeda kecil 116x78 dengan chip di titik sepeda.json, papan alat, latar), lentur 640..800
+     (anchor + Container), tiga upgrade tanpa scroll, tanpa hex di scene; keadaan a-g dari data nyata,
+     tingkat 2-3 sebagai model tampilan dengan data uji (upgrades.json tidak berubah); perilaku tidak
+     berubah (sinyal, API tes, Economy, simpan tepat sekali, Hari berikutnya selalu aktif, back Android);
+     setiap tes lama yang diubah dicatat di LOG; tombol >= 42 tinggi dan >= 84 lebar, tanpa teks terpotong
+     atau tumpang tindih, kontras diukur dari tangkapan nyata; probe_bengkel_jendela.gd diperbarui (empat
+     ukuran + lebar 800, mencetak keadaan tidak sesuai), tangkapan DILIHAT QA.
+  C. Dokumen dan penutup: DESIGN_SPEC 4 baris Bengkel, ART_DIRECTION 6.8/Changelog/9, redesain/README.md
+     (bagian 6 butir 1-2, lisensi latar), tools/ui_art/README.md, AGENTS.md, docs/README.md,
+     DEV_PHASES (catatan; aset UI TIDAK dicentang sebelum uji HP), SETUP_ANDROID 8.18, LOOP-DEV-QA 6k.
+  Di LUAR scope (jangan dikerjakan atau diputuskan): layar hasil, koran, jeda, tutorial, banner, HUD
+  rute (UI-2 dan seterusnya); lapisan jeda 72%; kunci teks koran "Iklan baris" dan hasil "Pelanggan:";
+  upgrade baru atau tingkat 2-3 yang nyata (upgrades.json); ekonomi 6B; iklan hadiah (Fase 14);
+  menyalin aset koran/struk/foto/lencana32 ke assets/; mengubah palet atau font induk; mencentang
+  butir aset UI sebelum uji HP 8.18.
+  Tes: semua di atas, keluaran 6A1/6A2/5x tetap hijau kecuali yang disebabkan U-1..U-5 (dicatat),
+  paket --export-pack memuat aset bengkel baru dan TIDAK memuat aset redesain yang tidak dipasang,
+  sha256 save asli tidak berubah, mutan nyata khusus logika tampilan bengkel (satu perubahan, tes
+  penuh, git checkout; Dev >= 30, QA mengulang >= 10 pilihannya sendiri); tes tidak menulis save
+  sungguhan; satu proses Godot sekaligus. Keputusan terbuka yang mungkin menghambat: bila tata C tidak
+  muat di 640 untuk teks terpanjang, berhenti dan tanyakan SEKALI dengan satu rekomendasi.
+  Git: judul PR Conventional Commits; jangan mengedit CHANGELOG.md, .release-please-manifest.json,
+  atau membuat tag. Push, PR, dan merge menunggu konfirmasi pemilik.
+HASIL UJI HP: pemilik 2026-10-22 "untuk uji hp sejauh ini oke semua" (6A1/6A0); uji 6A2 (8.17) belum
+  diisi dan tidak memblokir run ini.
+DESIGN: docs/design/redesain/ (kanvas, aset, README); tidak ada layar baru.
+IZIN HP: boleh memasang APK ke vivo V2108 (adb 12d8c9da) setelah QA PASS dengan `adb install -r`
+  (izin tetap pemilik 2026-10-17, tanpa bertanya lagi); A54 (RRCWA05E2NN) hanya bila tersambung.
+  Hanya orchestrator yang menyentuh HP; cek layar menyala dan tidak sedang dipakai; tidak ada
+  uninstall/logcat -c. Edit save.json lewat run-as lebih disukai daripada pm clear; pm clear
+  com.rmh.kring boleh bila perlu (izin pemilik 2026-10-18), catat save yang dipakai di LOG.
+RUN_ID: 20261023-ui1-komponen-bengkel
+```
+
+**Catatan run UI-1 (dikerjakan 2026-10-23; SPEC dan LOG di `docs/loop/20261023-ui1-komponen-bengkel/`):** dipecah tiga bagian Dev berurutan (A komponen, B bengkel, C dokumen). Pelajaran: (1) set aset yang dipasang didaftar SATU tempat (`tools/ui_art/redesain/pasang.py`) dan dibaca skrip `--salin` serta uji, jadi "hanya yang dipakai" ditegakkan mesin, bukan disiplin; (2) pola penolakan aset lampu nyala di `uji_aset_pasang_5b.py` terlalu luas dan salah menandai `ui_btn_sakelar_nyala.png`, gerbang bagian B menangkapnya; (3) label berbungkus kata yang baru tampil menghitung tinggi dengan lebar 0 dan Control menyimpan ukuran itu di offsetnya (isi bergeser ke atas); `LayarBengkel._pulihkan_batas` menegakkan persegi penuh; (4) peringatan kontras harus diukur dari tangkapan nyata (`tools/ukur_kontras_tangkapan.py`), bukan dari token: WARN di atas `UI_PANEL` 6,91:1 dan chip diredupkan 3,65:1 baru ketahuan di tangkapan; (5) `git checkout` milik harness mutan bisa membuang suntingan yang belum di-commit, jadi commit dulu sebelum mutan. Mutan nyata bagian B: 50 dari 50 tertangkap sesudah sembilan tes ditambah.
+
 ## 7. Batasan yang perlu diketahui
 
 - QA berbasis agent tidak menggantikan uji di HP nyata untuk rasa kontrol, performa, dan tampilan rasio layar. Fase gameplay selalu ditutup dengan uji manual (`DEV_PHASES.md`).

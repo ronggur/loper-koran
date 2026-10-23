@@ -1,9 +1,11 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/layar_bengkel.gd" id="1_script"]
 [ext_resource type="Theme" path="res://assets/ui/theme.tres" id="2_theme"]
 [ext_resource type="Script" path="res://scripts/ui/tombol_sentuh.gd" id="3_tombol"]
-[ext_resource type="Texture2D" path="res://assets/sprites/ui/ui_icon_koin.png" id="4_koin"]
+[ext_resource type="Script" path="res://scripts/ui/chip_ui.gd" id="4_chip"]
+[ext_resource type="Script" path="res://scripts/ui/panggung_sepeda.gd" id="5_panggung"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/ui_bengkel_latar_800.png" id="6_latar"]
 
 [node name="Bengkel" type="CanvasLayer"]
 layer = 20
@@ -11,12 +13,27 @@ script = ExtResource("1_script")
 
 [node name="Latar" type="ColorRect" parent="."]
 unique_name_in_owner = true
+texture_filter = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_theme")
+
+[node name="GambarLatar" type="TextureRect" parent="Latar"]
+unique_name_in_owner = true
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("6_latar")
+expand_mode = 1
+stretch_mode = 3
 
 [node name="Batas" type="MarginContainer" parent="Latar"]
 unique_name_in_owner = true
@@ -32,6 +49,7 @@ mouse_filter = 2
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
+theme_override_constants/separation = 0
 
 [node name="BarisAtas" type="HBoxContainer" parent="Latar/Batas/Isi"]
 unique_name_in_owner = true
@@ -42,41 +60,30 @@ mouse_filter = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_type_variation = &"JudulLayar"
+size_flags_vertical = 0
+theme_type_variation = &"LayarJudul"
 text = "BENGKEL_JUDUL"
 
-[node name="PanelSaldo" type="PanelContainer" parent="Latar/Batas/Isi/BarisAtas"]
+[node name="BlokSaldo" type="HBoxContainer" parent="Latar/Batas/Isi/BarisAtas"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="LabelSaldo" type="Label" parent="Latar/Batas/Isi/BarisAtas/BlokSaldo"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"LayarLabel"
+text = "BENGKEL_LABEL_SALDO"
+
+[node name="ChipSaldo" type="PanelContainer" parent="Latar/Batas/Isi/BarisAtas/BlokSaldo"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
-
-[node name="IsiSaldo" type="HBoxContainer" parent="Latar/Batas/Isi/BarisAtas/PanelSaldo"]
-layout_mode = 2
-mouse_filter = 2
-
-[node name="IkonSaldo" type="TextureRect" parent="Latar/Batas/Isi/BarisAtas/PanelSaldo/IsiSaldo"]
-unique_name_in_owner = true
-texture_filter = 1
-layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 2
-texture = ExtResource("4_koin")
-stretch_mode = 2
-
-[node name="AngkaSaldo" type="Label" parent="Latar/Batas/Isi/BarisAtas/PanelSaldo/IsiSaldo"]
-unique_name_in_owner = true
-layout_mode = 2
-mouse_filter = 2
-theme_type_variation = &"HudAngka"
-
-[node name="Galat" type="Label" parent="Latar/Batas/Isi"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-theme_type_variation = &"HudLabel"
-text = "BENGKEL_GALAT_TOKO"
-autowrap_mode = 3
+script = ExtResource("4_chip")
 
 [node name="Kolom" type="HBoxContainer" parent="Latar/Batas/Isi"]
 unique_name_in_owner = true
@@ -84,28 +91,70 @@ layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="KolomServis" type="VBoxContainer" parent="Latar/Batas/Isi/Kolom"]
+[node name="PanelServis" type="PanelContainer" parent="Latar/Batas/Isi/Kolom"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="IsiServis" type="VBoxContainer" parent="Latar/Batas/Isi/Kolom/PanelServis"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="BagianServis" type="HBoxContainer" parent="Latar/Batas/Isi/Kolom/PanelServis/IsiServis"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="LabelServis" type="Label" parent="Latar/Batas/Isi/Kolom/PanelServis/IsiServis/BagianServis"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"LayarLabel"
+text = "BENGKEL_LABEL_SERVIS"
+
+[node name="GarisServis" type="ColorRect" parent="Latar/Batas/Isi/Kolom/PanelServis/IsiServis/BagianServis"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="Panggung" type="Control" parent="Latar/Batas/Isi/Kolom/PanelServis/IsiServis"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+script = ExtResource("5_panggung")
+
+[node name="DaftarServis" type="VBoxContainer" parent="Latar/Batas/Isi/Kolom/PanelServis/IsiServis"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="BarisCatatan" type="HBoxContainer" parent="Latar/Batas/Isi/Kolom/PanelServis/IsiServis"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="GlifCatatan" type="TextureRect" parent="Latar/Batas/Isi/Kolom/PanelServis/IsiServis/BarisCatatan"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(12, 12)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+stretch_mode = 3
+
+[node name="CatatanOngkos" type="Label" parent="Latar/Batas/Isi/Kolom/PanelServis/IsiServis/BarisCatatan"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-mouse_filter = 2
-
-[node name="LabelServis" type="Label" parent="Latar/Batas/Isi/Kolom/KolomServis"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"HudLabel"
-text = "BENGKEL_LABEL_SERVIS"
-
-[node name="DaftarServis" type="VBoxContainer" parent="Latar/Batas/Isi/Kolom/KolomServis"]
-unique_name_in_owner = true
-layout_mode = 2
-mouse_filter = 2
-
-[node name="CatatanOngkos" type="Label" parent="Latar/Batas/Isi/Kolom/KolomServis"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-theme_type_variation = &"TeksKecil"
+size_flags_vertical = 4
+theme_type_variation = &"LayarTeksKecil"
 autowrap_mode = 3
 
 [node name="KolomUpgrade" type="VBoxContainer" parent="Latar/Batas/Isi/Kolom"]
@@ -113,31 +162,73 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
+theme_override_constants/separation = 6
 
-[node name="LabelUpgrade" type="Label" parent="Latar/Batas/Isi/Kolom/KolomUpgrade"]
+[node name="BagianUpgrade" type="HBoxContainer" parent="Latar/Batas/Isi/Kolom/KolomUpgrade"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="LabelUpgrade" type="Label" parent="Latar/Batas/Isi/Kolom/KolomUpgrade/BagianUpgrade"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"HudLabel"
+size_flags_vertical = 4
+theme_type_variation = &"LayarLabel"
 text = "BENGKEL_LABEL_UPGRADE"
+
+[node name="GarisUpgrade" type="ColorRect" parent="Latar/Batas/Isi/Kolom/KolomUpgrade/BagianUpgrade"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="PanelGalat" type="PanelContainer" parent="Latar/Batas/Isi/Kolom/KolomUpgrade"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+
+[node name="IsiGalat" type="HBoxContainer" parent="Latar/Batas/Isi/Kolom/KolomUpgrade/PanelGalat"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="GlifGalat" type="TextureRect" parent="Latar/Batas/Isi/Kolom/KolomUpgrade/PanelGalat/IsiGalat"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(12, 12)
+layout_mode = 2
+mouse_filter = 2
+stretch_mode = 3
+
+[node name="Galat" type="Label" parent="Latar/Batas/Isi/Kolom/KolomUpgrade/PanelGalat/IsiGalat"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"LayarTeksUtama"
+text = "BENGKEL_GALAT_TOKO"
+autowrap_mode = 3
 
 [node name="DaftarUpgrade" type="VBoxContainer" parent="Latar/Batas/Isi/Kolom/KolomUpgrade"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
+theme_override_constants/separation = 6
 
-[node name="BarisBawah" type="HBoxContainer" parent="Latar/Batas/Isi"]
+[node name="TombolHariBerikutnya" type="Button" parent="Latar"]
 unique_name_in_owner = true
-layout_mode = 2
-mouse_filter = 2
-
-[node name="Ruang" type="Control" parent="Latar/Batas/Isi/BarisBawah"]
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 2
-
-[node name="TombolHariBerikutnya" type="Button" parent="Latar/Batas/Isi/BarisBawah"]
-unique_name_in_owner = true
-layout_mode = 2
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -152.0
+offset_top = -54.0
+offset_right = -12.0
+offset_bottom = -12.0
+grow_horizontal = 0
+grow_vertical = 0
 focus_mode = 0
 text = "HASIL_HARI_BERIKUTNYA"
 script = ExtResource("3_tombol")

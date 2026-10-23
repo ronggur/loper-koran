@@ -209,11 +209,19 @@ func _initialize() -> void:
 	# Run 20261022-fase5c-animasi-simpang bagian D: simpang T hiasan (validasi, rute identik, ubin, piksel, gerak dan zona tidak berubah).
 	var simpang: TesSimpang = TesSimpang.new(check, _judul, self)
 	await simpang.jalankan()
+	# Run ui1-komponen-bengkel bagian A: komponen UI redesain (pemilihan keadaan tombol/kartu/chip, wujud GayaHud, kotak kondisi besar, tema).
+	var komponen_ui: TesKomponenUi = TesKomponenUi.new(check, _judul)
+	komponen_ui.jalankan()
 	# Run fase6a1-bengkel-kondisi bagian B: kondisi sepeda di scene rute, HUD kondisi, peringatan berpasangan, layar hasil, layar bengkel, dan alur Hasil -> Bengkel -> Hari berikutnya.
 	var scene_kondisi: TesKondisiScene = TesKondisiScene.new(check, _judul, self)
 	await scene_kondisi.jalankan()
 	var scene_bengkel: TesBengkelScene = TesBengkelScene.new(check, _judul, self)
 	await scene_bengkel.jalankan()
+	# Run ui1-komponen-bengkel bagian B: bengkel tata C (pemilihan keadaan murni, keadaan a sampai g dari data nyata, ukuran minimum, tanpa teks terpotong atau tumpang tindih, chip di dalam panggung, kontras token).
+	var tampil_bengkel: TesTampilBengkel = TesTampilBengkel.new(check, _judul)
+	tampil_bengkel.jalankan()
+	var tata_c: TesBengkelTataC = TesBengkelTataC.new(check, _judul, self)
+	await tata_c.jalankan()
 	# Run fase6a2-reputasi-pelanggan bagian B: potongan koran terbuang di scene rute, layar hasil, HUD, dan alur hari.
 	var scene_potongan: TesPotonganScene = TesPotonganScene.new(check, _judul, self)
 	await scene_potongan.jalankan()

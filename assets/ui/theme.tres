@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=5 format=3]
+[gd_resource type="Theme" load_steps=6 format=3]
 
 [ext_resource type="FontFile" path="res://assets/fonts/lexend/lexend_variable.ttf" id="1_lexend"]
 [ext_resource type="FontFile" path="res://assets/fonts/lilita_one/lilita_one_regular.ttf" id="2_lilita"]
@@ -15,9 +15,46 @@ variation_opentype = {
 2003265652: 400.0
 }
 
+[sub_resource type="FontVariation" id="FontVariation_label"]
+base_font = ExtResource("1_lexend")
+variation_opentype = {
+2003265652: 600.0
+}
+spacing_glyph = 1
+
 [resource]
 default_font = SubResource("FontVariation_semibold")
 default_font_size = 8
+LayarJudul/base_type = &"Label"
+LayarJudul/font_sizes/font_size = 24
+LayarJudul/fonts/font = ExtResource("2_lilita")
+LayarLabel/base_type = &"Label"
+LayarLabel/font_sizes/font_size = 8
+LayarLabel/fonts/font = SubResource("FontVariation_label")
+LayarTeksKecil/base_type = &"Label"
+LayarTeksKecil/font_sizes/font_size = 9
+LayarTeksKecil/fonts/font = SubResource("FontVariation_regular")
+LayarTeksMini/base_type = &"Label"
+LayarTeksMini/font_sizes/font_size = 8
+LayarTeksMini/fonts/font = SubResource("FontVariation_regular")
+LayarTeksUtama/base_type = &"Label"
+LayarTeksUtama/font_sizes/font_size = 10
+LayarTeksUtama/fonts/font = SubResource("FontVariation_semibold")
+ChipTeks/base_type = &"Label"
+ChipTeks/font_sizes/font_size = 10
+ChipTeks/fonts/font = SubResource("FontVariation_semibold")
+ChipTeksBesar/base_type = &"Label"
+ChipTeksBesar/font_sizes/font_size = 12
+ChipTeksBesar/fonts/font = SubResource("FontVariation_semibold")
+ChipTeksKecil/base_type = &"Label"
+ChipTeksKecil/font_sizes/font_size = 8
+ChipTeksKecil/fonts/font = SubResource("FontVariation_semibold")
+TombolPeran/base_type = &"Button"
+TombolPeran/font_sizes/font_size = 10
+TombolPeran/fonts/font = SubResource("FontVariation_semibold")
+TombolTipis/base_type = &"Button"
+TombolTipis/font_sizes/font_size = 10
+TombolTipis/fonts/font = SubResource("FontVariation_regular")
 HudAngka/base_type = &"Label"
 HudAngka/font_sizes/font_size = 10
 HudAngka/fonts/font = SubResource("FontVariation_semibold")

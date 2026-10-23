@@ -124,5 +124,12 @@ BENGKEL_KOIN_KURANG,Koin kurang
 BENGKEL_HARGA_ANGKA,{n} koin
 BENGKEL_GALAT_TOKO,Daftar upgrade tidak bisa dimuat; servis tetap bisa
 BENGKEL_ONGKOS_NAIK,Banyak yang rusak: ongkos servis x{x}
+BENGKEL_LABEL_SALDO,SALDO
+BENGKEL_PENANDA_PERLU,! {nama}
+BENGKEL_PENANDA_AUS,{nama} aus
+BENGKEL_TINGKAT_1,I
+BENGKEL_TINGKAT_2,II
+BENGKEL_TINGKAT_3,III
+BENGKEL_TINGKAT_LAIN,{n}
 RUTE_TIP_LABEL,TIP
 RUTE_TIP_SISI_DEKAT,Mulai hari ini pelanggan ada di kedua sisi jalan

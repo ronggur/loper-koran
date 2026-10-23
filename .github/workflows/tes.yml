@@ -150,5 +150,5 @@ jobs:
       - name: Uji lencana milestone run 6A2 (lencana.py deterministik, assets/ = keluaran, palet induk, 1/2/3 garis tanpa warna, impor Lossless)
         run: python3 tools/tests_cek/uji_ui_lencana.py
 
-      - name: Uji aset redesain UI (komponen.py dan sepeda_fullbody.py deterministik, docs = keluaran, palet, ukuran bingkai; sifat latar bengkel; sepeda tanpa warna tokoh)
+      - name: Uji aset redesain UI (komponen.py dan sepeda_fullbody.py deterministik, docs = keluaran, palet, ukuran bingkai; sifat latar bengkel; sepeda tanpa warna tokoh; pemasangan ke assets/sprites/ui = keluaran --salin, set tepat yang dipakai, impor Lossless, slice = meta.json = Config)
         run: python3 tools/tests_cek/uji_ui_redesain.py
