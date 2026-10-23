@@ -868,6 +868,8 @@ const PELANGGAN_BARU_MAKS_PER_RUTE: int = 6
 const PELANGGAN_KANDIDAT_CADANGAN: int = 4
 ## Percobaan pencocokan per tingkat pelepasan prioritas di `RouteBuilder` dengan keadaan pelanggan.
 const PELANGGAN_PERCOBAAN_PER_TINGKAT: int = 60
+## Prioritas pelanggan dilepas bertahap: tiap tingkat melepas 1/sekian dari daftar prioritas (paling sedikit satu).
+const PELANGGAN_LEPAS_PEMBAGI: int = 4
 ## Bonus biaya (ubin) bagi pelanggan prioritas (setia, calon kembali) dalam pencocokan: jauh di atas selisih terbesar mana pun, jadi mereka selalu terpilih selama ada susunan sah.
 const PELANGGAN_BONUS_PRIORITAS_UBIN: float = 1000000.0
 ## Id kepribadian pelanggan (permanen) dan berkas datanya (`assets/data/customers/kepribadian.json`, DATA_SCHEMA 4b).

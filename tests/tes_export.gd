@@ -35,6 +35,8 @@ const JALUR_WAJIB_IKUT: Array[String] = [
 	"assets/audio/sfx/mission/sfx_mis_meong_01.wav", "assets/audio/sfx/mission/sfx_mis_terlihat_01.wav", "assets/audio/sfx/mission/sfx_mis_selesai_01.wav", "assets/audio/sfx/mission/sfx_mis_gagal_01.wav",
 	# Run fase6a1-bengkel-kondisi (AC-30): data upgrade bengkel dan skrip kondisi, efek, ekonomi, serta pemuat data upgrade (scene, bunyi, dan skrip bengkel di bagian B).
 	"assets/data/shop/upgrades.json", "scripts/systems/bike_condition.gd", "scripts/systems/efek_kondisi.gd", "scripts/systems/economy.gd", "scripts/systems/data_toko.gd", "scripts/systems/pemuat_toko.gd",
+	# Run fase6a2-reputasi-pelanggan bagian A (AC-17): data kepribadian pelanggan dan skrip reputasi, pelanggan tetap, serta pemuatnya.
+	"assets/data/customers/kepribadian.json", "scripts/systems/reputation_manager.gd", "scripts/systems/pelanggan_rute.gd", "scripts/systems/kepribadian_pelanggan.gd", "scripts/systems/pemuat_pelanggan.gd",
 	# Bagian B: scene dan skrip bengkel, kondisi di rute, dan lima bunyi kondisi.
 	"scenes/bengkel/bengkel.tscn", "scripts/ui/layar_bengkel.gd", "scripts/ui/kotak_kondisi.gd", "scripts/systems/kondisi_rute.gd", "scripts/systems/tampil_kondisi.gd", "scripts/systems/bunyi_kondisi.gd",
 	"assets/audio/sfx/condition/sfx_cond_rantai_berisik_01.wav", "assets/audio/sfx/condition/sfx_cond_rem_berdecit_01.wav", "assets/audio/sfx/condition/sfx_cond_ban_mendesis_01.wav",

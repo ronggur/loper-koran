@@ -249,7 +249,22 @@ func _test_satu_hari_utuh() -> void:
 	check(s["headline_jeda"].has(halaman1[0]) and s["headline_jeda"].has(halaman1[2]) and s["headline_jeda"].size() == 2, "jeda headline utama dan ringan hari 1 tercatat: %s" % [s["headline_jeda"]])
 	check(s["flag"] == ["kucing_ketemu"] and s["pengaturan"] == {"kidal": false, "mode_bantu": false, "suara": 1.0, "musik": 1.0}, "flag kucing_ketemu menunggu tampil besok (M-6) dan pengaturan bawaan tersimpan")
 	var contoh: String = FileAccess.get_file_as_string("res://docs/DATA_SCHEMA.md")
-	check(contoh.contains(FileAccess.get_file_as_string(_jalur()).strip_edges()), "contoh save di DATA_SCHEMA 4 = isi berkas save nyata sesudah hari 1 (byte demi byte)")
+	var awal_blok: int = contoh.find("```json", contoh.find("Contoh save nyata setelah hari 1 selesai"))
+	var blok: String = contoh.substr(awal_blok + 7, contoh.find("```", awal_blok + 7) - awal_blok - 7)
+	var dari_dokumen: Variant = JSON.parse_string(blok)
+	var dari_berkas: Variant = JSON.parse_string(FileAccess.get_file_as_string(_jalur()))
+	var cocok: bool = typeof(dari_dokumen) == TYPE_DICTIONARY and typeof(dari_berkas) == TYPE_DICTIONARY and (dari_dokumen as Dictionary).size() == (dari_berkas as Dictionary).size()
+	var beda: Array[String] = []
+	if cocok:
+		for kunci: Variant in (dari_dokumen as Dictionary):
+			if kunci == "pelanggan":
+				for id: Variant in (dari_dokumen as Dictionary)["pelanggan"]:
+					if not ((dari_berkas as Dictionary)["pelanggan"] as Dictionary).has(id) or ((dari_dokumen as Dictionary)["pelanggan"] as Dictionary)[id] != ((dari_berkas as Dictionary)["pelanggan"] as Dictionary)[id]:
+						beda.append("pelanggan." + str(id))
+			elif (dari_dokumen as Dictionary)[kunci] != (dari_berkas as Dictionary).get(kunci):
+				beda.append(str(kunci))
+	check(cocok and beda.is_empty(), "contoh save di DATA_SCHEMA 4 = isi berkas save nyata sesudah hari 1 (semua field sama; pelanggan: tiap entri contoh sama dengan berkas; selisih: %s)" % [beda])
+	check(cocok and ((dari_berkas as Dictionary)["pelanggan"] as Dictionary).size() == 25 and int(((dari_berkas as Dictionary)["reputasi"] as Dictionary)["perumahan"]) == 2, "berkas nyata memuat 25 pelanggan rute hari 1 dan reputasi Perumahan 2 (misi sedang +2, kredit 9 < 30)")
 	check(hari.status().keadaan == MesinHari.Keadaan.KORAN and hari.status().hari == 2 and hari.koran().tampil() and hari.rute() == null, "kembali ke layar koran hari 2, rute dibuang")
 	check(hari.get_child_count() == 1 + (1 if m.get_parent() == hari else 0), "node rute dibuang dari scene hari (hanya koran yang tersisa)")
 	check(hari.koran().teks_tampil()[1] == "Hari 2 · Perumahan Melati", "layar koran hari 2: 'Hari 2 · Perumahan Melati'")

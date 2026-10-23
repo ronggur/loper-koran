@@ -142,7 +142,7 @@ func _manajer() -> Node:
 func _test_config() -> void:
 	_judul.call("Hari, seed, dan save: angka Config literal (AC-7, AC-15)")
 	var harapan: Dictionary = {
-		"HARI_AWAL": 1, "SEED_HARI_LANGKAH": LANGKAH, "SEED_RUTE_DASAR": DASAR_RUTE, "SEED_HEADLINE_DASAR": DASAR_HEADLINE, "SAVE_VERSI": 3,
+		"HARI_AWAL": 1, "SEED_HARI_LANGKAH": LANGKAH, "SEED_RUTE_DASAR": DASAR_RUTE, "SEED_HEADLINE_DASAR": DASAR_HEADLINE, "SAVE_VERSI": 4,
 		"SAVE_BERKAS": "user://save.json", "SAVE_SEMENTARA_EKSTENSI": "tmp", "SAVE_RUSAK_PENANDA": ".corrupt.", "SAVE_VOLUME_BAWAAN": 1.0,
 	}
 	var peta: Dictionary = (load("res://scripts/config.gd") as GDScript).get_script_constant_map()
@@ -248,10 +248,10 @@ func _test_save_templat_dan_bulak_balik() -> void:
 	_judul.call("DataSave: templat v3 dan bulak-balik teks (AC-7, AC-1 run fase6a1-bengkel-kondisi)")
 	var t: Dictionary = DataSave.templat()
 	var harapan: Dictionary = {
-		"versi": 3, "hari": 1, "koin": 0, "koin_total": 0, "sepeda": {"ban": {"kondisi": 1.0, "level": 0}, "rem": {"kondisi": 1.0, "level": 0}, "rantai": {"kondisi": 1.0, "level": 0}, "servis_total": 0}, "tip_total": 0, "flag": [], "misi_jeda": {}, "headline_jeda": {}, "misi_hasil": {}, "tutorial": {"selesai": false}, "terakhir": {},
+		"versi": 4, "hari": 1, "koin": 0, "koin_total": 0, "sepeda": {"ban": {"kondisi": 1.0, "level": 0}, "rem": {"kondisi": 1.0, "level": 0}, "rantai": {"kondisi": 1.0, "level": 0}, "servis_total": 0}, "reputasi": {"perumahan": 0}, "pelanggan": {}, "tip_total": 0, "flag": [], "misi_jeda": {}, "headline_jeda": {}, "misi_hasil": {}, "tutorial": {"selesai": false}, "terakhir": {},
 		"pengaturan": {"kidal": false, "mode_bantu": false, "suara": 1.0, "musik": 1.0},
 	}
-	check(t == harapan, "templat = save baru: versi 3, hari 1, koin 0, tanpa flag, pengaturan bawaan; dapat %s" % [t])
+	check(t == harapan, "templat = save baru: versi 4, hari 1, koin 0, tanpa flag, pengaturan bawaan; dapat %s" % [t])
 	var hasil: DataSave.Hasil = DataSave.dari_teks(DataSave.ke_teks(t))
 	check(hasil.status == DataSave.Status.SAH and hasil.state == t, "templat -> teks -> state bulak-balik sama (status SAH)")
 	var t2: Dictionary = DataSave.templat()
@@ -273,7 +273,7 @@ func _test_save_migrasi_v0() -> void:
 	var hasil: DataSave.Hasil = DataSave.dari_teks(v0)
 	var s: Dictionary = hasil.state
 	check(hasil.status == DataSave.Status.SAH, "fixture v0 terbaca SAH, bukan rusak")
-	check(s["versi"] == 3, "versi menjadi 3 (SAVE_VERSI)")
+	check(s["versi"] == 4, "versi menjadi 4 (SAVE_VERSI)")
 	check(s["hari"] == 7 and s["koin"] == 1500, "hari 7 dan koin 1500 dipertahankan")
 	check(s["flag"] == ["kucing_belum", "flag_lama"], "flag dipertahankan (termasuk yang tidak dikenal data)")
 	check(s["pengaturan"]["kidal"] == true and s["pengaturan"]["mode_bantu"] == true, "pengaturan kidal dan mode_bantu dipertahankan")
@@ -283,7 +283,7 @@ func _test_save_migrasi_v0() -> void:
 	var mentah: Dictionary = {"hari": 4, "flag": ["a"]}
 	var salinan: Dictionary = mentah.duplicate(true)
 	var m: Dictionary = DataSave.migrasi(mentah)
-	check(mentah == salinan and m["versi"] == 3 and m["hari"] == 4, "migrasi tidak mengubah masukan dan menaikkan versi")
+	check(mentah == salinan and m["versi"] == 4 and m["hari"] == 4, "migrasi tidak mengubah masukan dan menaikkan versi")
 	check(DataSave.migrasi(m) == m, "migrasi save yang sudah v3 tidak mengubah apa pun (idempoten)")
 
 
@@ -320,9 +320,9 @@ func _test_save_rusak_dan_terlalu_baru() -> void:
 	for nama: String in rusak:
 		var h: DataSave.Hasil = DataSave.dari_teks(rusak[nama])
 		check(h.status == DataSave.Status.RUSAK and h.perlu_salinan() and h.state == DataSave.templat() and not h.alasan.is_empty(), "%s: RUSAK, perlu disalin, state bawaan, ada alasan" % nama)
-	var baru: DataSave.Hasil = DataSave.dari_teks('{"versi": 4, "koin": 777}')
-	check(baru.status == DataSave.Status.TERLALU_BARU and baru.perlu_salinan() and baru.state == DataSave.templat(), "versi 4 (lebih baru dari 3): TERLALU_BARU, perlu disalin, state bawaan")
-	check(DataSave.dari_teks('{"versi": 3.0, "hari": 3}').status == DataSave.Status.SAH, "versi 3.0 (float dari JSON) sama dengan 3: SAH")
+	var baru: DataSave.Hasil = DataSave.dari_teks('{"versi": 5, "koin": 777}')
+	check(baru.status == DataSave.Status.TERLALU_BARU and baru.perlu_salinan() and baru.state == DataSave.templat(), "versi 5 (lebih baru dari 4): TERLALU_BARU, perlu disalin, state bawaan")
+	check(DataSave.dari_teks('{"versi": 4.0, "hari": 3}').status == DataSave.Status.SAH, "versi 4.0 (float dari JSON) sama dengan 4: SAH")
 	check(DataSave.dari_teks('{"versi": 0, "hari": 3}').status == DataSave.Status.SAH, "versi 0 eksplisit: SAH (dimigrasi)")
 	check(not DataSave.dari_teks(DataSave.ke_teks(DataSave.templat())).perlu_salinan(), "save sah tidak perlu disalin")
 
@@ -354,7 +354,7 @@ func _test_catat_hari_dari_angka() -> void:
 	check(s["flag"] == ["lama", "baru"], "flag baru ditambahkan, flag lama tetap")
 	check(s["misi_jeda"] == {"p1_kucing": 11, "misi_baru": 5} and s["headline_jeda"] == {"utama_x": 9}, "jeda digabung (nilai terbesar menang)")
 	check(s["pengaturan"]["kidal"] == true and s["pengaturan"]["mode_bantu"] == true, "sakelar kidal dan bantu dari jeda ikut tersimpan (AC-13)")
-	check(s["versi"] == 3 and DataSave.dari_teks(DataSave.ke_teks(s)).state == s, "hasil catat_hari tetap save v3 yang sah dan bulak-balik")
+	check(s["versi"] == 4 and DataSave.dari_teks(DataSave.ke_teks(s)).state == s, "hasil catat_hari tetap save v4 yang sah dan bulak-balik")
 	var tanpa_angka: Dictionary = DataSave.catat_hari(DataSave.templat(), DataSave.CatatanHari.new())
 	check(tanpa_angka["hari"] == 2 and tanpa_angka["koin"] == 0, "catatan tanpa angka tidak crash dan tidak menambah koin")
 
@@ -440,12 +440,12 @@ func _test_lewati_tanpa_penalti() -> void:
 	check(ambil_tanpa == lewati_tanpa, "Ambil dan Lewati dengan Angka yang sama: seluruh save sama kecuali terakhir.misi_diambil")
 	check(ambil["terakhir"]["misi_diambil"] == "p1_kucing" and lewati["terakhir"]["misi_diambil"] == "", "misi_diambil tercatat hanya bila diambil")
 	check(lewati["koin"] == 300 + 330 and lewati["hari"] == 2, "Lewati tidak mengurangi koin dan hari tetap maju")
-	var sah: Array[String] = ["versi", "hari", "koin", "koin_total", "tip_total", "sepeda", "flag", "misi_jeda", "headline_jeda", "misi_hasil", "tutorial", "terakhir", "pengaturan"]
+	var sah: Array[String] = ["versi", "hari", "koin", "koin_total", "tip_total", "sepeda", "reputasi", "pelanggan", "flag", "misi_jeda", "headline_jeda", "misi_hasil", "tutorial", "terakhir", "pengaturan"]
 	var asing: Array[String] = []
 	for kunci: Variant in lewati:
 		if not sah.has(str(kunci)):
 			asing.append(str(kunci))
-	check(asing.is_empty(), "save tidak punya field keadaan kalah, game over, atau hukuman (hanya field v3): %s" % [asing])
+	check(asing.is_empty(), "save tidak punya field keadaan kalah, game over, atau hukuman (hanya field v4): %s" % [asing])
 
 
 # --- SaveManager (AC-7, AC-8, AC-9, AC-14) ---

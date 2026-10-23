@@ -238,9 +238,9 @@ Akibat geometri rumah (petak 4 ubin, kavling 3 ubin): celah antar rumah sesisi p
 
 ## 4. Save
 
-File: `user://save.json`. Satu slot dulu. Format v3 (run 6A1: `koin` menjadi saldo, `koin_total`, `sepeda`; v2 dari run 4B dan v1 dari run 4A dimigrasi, tidak dihapus) di bawah dibaca dan ditulis `SaveManager` (autoload) lewat `DataSave`; **alur hari berurutan yang memakai save ini adalah prototype yang tidak mengunci struktur sesi** (ROADMAP 5: hari terakhir, kalender 120 hari, game over, target harian belum diputuskan). Field DATA_SCHEMA lain yang belum dipakai (`distrik_terbuka`, `reputasi`, `pelanggan`, `kosmetik`, `milestone`) belum ditulis; bila ada di berkas (save masa depan) dibiarkan.
+File: `user://save.json`. Satu slot dulu. Format v4 (run 6A2: `reputasi` per distrik dan `pelanggan` tetap; v3 dari run 6A1 (`koin` menjadi saldo, `koin_total`, `sepeda`), v2 dari run 4B, dan v1 dari run 4A dimigrasi, tidak dihapus) di bawah dibaca dan ditulis `SaveManager` (autoload) lewat `DataSave`; **alur hari berurutan yang memakai save ini adalah prototype yang tidak mengunci struktur sesi** (ROADMAP 5: hari terakhir, kalender 120 hari, game over, target harian belum diputuskan). Field DATA_SCHEMA lain yang belum dipakai (`distrik_terbuka`, `kosmetik`, `milestone`) belum ditulis; bila ada di berkas (save masa depan) dibiarkan.
 
-Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur_hari.gd`: P1 diambil dan selesai, 3 dari 25 terantar, pendapatan hari itu 195 koin = rute 120 termasuk tip 25 + hadiah misi 75 (`terakhir.koin` dan `koin_total`), skor 1500; flag `kucing_ketemu` menunggu tampil besok; SATU belanja di bengkel: rantai yang aus 0,40 diservis seharga 90 koin (150 x 0,6), jadi saldo `koin` 105, `servis_total` 1, dan rantai kembali 1.0; `koin_total` tidak berkurang oleh belanja):
+Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur_hari.gd`: P1 diambil dan selesai, 3 dari 25 terantar, pendapatan hari itu 195 koin = rute 120 termasuk tip 25 + hadiah misi 75 (`terakhir.koin` dan `koin_total`), skor 1500; flag `kucing_ketemu` menunggu tampil besok; SATU belanja di bengkel: rantai yang aus 0,40 diservis seharga 90 koin (150 x 0,6), jadi saldo `koin` 105, `servis_total` 1, dan rantai kembali 1.0; `koin_total` tidak berkurang oleh belanja; reputasi Perumahan 2 = misi sedang +2 (3 antaran = 9 kredit belum cukup satu poin); `pelanggan` berisi 25 rumah rute hari 1, DI SINI HANYA TIGA DITAMPILKAN: satu terantar, satu tidak terantar, dan rumah tempat kucing ditangkap yang menjadi `setia` karena hadiah `pelanggan_setia`; tes mencocokkan tiap entri contoh dengan berkas nyata):
 
 ```json
 {
@@ -263,11 +263,34 @@ Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur
 	"misi_jeda": {
 		"p1_kucing": 8
 	},
+	"pelanggan": {
+		"per_buka_02@6": {
+			"antar": 1,
+			"hari_berhenti": 0,
+			"meleset": 0,
+			"status": "aktif"
+		},
+		"per_tengah_01@14": {
+			"antar": 0,
+			"hari_berhenti": 0,
+			"meleset": 1,
+			"status": "aktif"
+		},
+		"per_tengah_02@10": {
+			"antar": 0,
+			"hari_berhenti": 0,
+			"meleset": 1,
+			"status": "setia"
+		}
+	},
 	"pengaturan": {
 		"kidal": false,
 		"mode_bantu": false,
 		"musik": 1.0,
 		"suara": 1.0
+	},
+	"reputasi": {
+		"perumahan": 2
 	},
 	"sepeda": {
 		"ban": {
@@ -299,7 +322,7 @@ Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur
 	"tutorial": {
 		"selesai": true
 	},
-	"versi": 3
+	"versi": 4
 }
 ```
 
@@ -313,6 +336,8 @@ Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur
 | `koin_total` | Koin yang pernah didapat seumur hidup (v3): bertambah sebesar koin hari itu, tidak pernah berkurang (belanja tidak mengubahnya), tidak pernah di bawah saldo `koin`. Untuk milestone nanti. Awal (migrasi) = `koin` v2 |
 | `tip_total` | Total koin dari tip (bagian dari `koin_total`; belanja tidak mengubahnya) |
 | `sepeda` | Kondisi dan upgrade sepeda (v3, M-7): `ban`, `rem`, `rantai`, masing-masing `{"kondisi": 0.0 sampai 1.0, "level": n}`, ditambah `servis_total` (jumlah servis seumur hidup, bukti "servis pertama" untuk syarat distrik Ruko, TECH_PLAN 6A). `kondisi` 1.0 = baru, dibulatkan 4 desimal (teks save stabil byte demi byte), nilai di luar 0 sampai 1 atau bukan angka dijepit (bukan save rusak); `level` = tingkat upgrade yang dimiliki (0 = belum; jumlah upgrade dibaca dari sini); `level` dan `servis_total` hanya naik. Id komponen asing dibiarkan; `sepeda` atau komponen bukan objek, atau `servis_total` bukan angka = save rusak. `setang` dan `lampu` dicadangkan sebagai id (belum dipakai, tidak ditulis). `statistik_aus` tidak dibuat (tidak ada konsumen di 6A1) |
+| `reputasi` | Reputasi pemain per distrik (v4, O-8, usulan): `{id distrik: bilangan bulat 0 sampai 100}`, hanya `perumahan` yang dimainkan di 6A2. Awal `Config.REPUTASI_AWAL` (0). Naik dari kredit antaran (tepat 4, teras 3, kotak surat 2, halaman 1; pelanggan `cerewet` tidak memberi kredit halaman; 30 kredit per poin, bulat ke bawah per hari) dan misi selesai (kecil +1, sedang +2, besar +3), turun satu per pelanggan yang berhenti dan `gagal.reputasi` misi gagal (0 atau 1). Dijepit 0 sampai 100; tabrakan dan kondisi sepeda tidak memengaruhi. Id distrik asing dibiarkan; distrik awal selalu ada; bukan angka berhingga = `REPUTASI_AWAL`. `reputasi` bukan objek = save rusak. Belum memengaruhi pendapatan |
+| `pelanggan` | Status pelanggan tetap (v4, O-6, usulan): `{id rumah: {"status", "antar", "meleset", "hari_berhenti"}}`, HANYA penghitung, bukan riwayat. Id rumah = id rute `<id_segmen>@<pos>` (bagian 3; keputusan K-4 run 6A2). `status`: `aktif` (sudah pernah masuk rute; rumah tanpa entri = "baru"), `setia` (`antar` >= 5 atau hadiah misi `pelanggan_setia`), `berhenti` (hanya kepribadian `sensitif`: tidak terantar 2 hari berturut-turut, setia 3). `antar` = antaran sah sejak masuk atau sejak kembali; `meleset` = hari berturut-turut tidak terantar saat masuk rute (direset oleh antaran); `hari_berhenti` = hari berhenti (0 bila bukan `berhenti`). `berhenti` kembali `aktif` (penghitung 0) lewat antaran atau misi selesai di rumah itu; rute memilih paling banyak satu calon kembali sesudah 3 hari. Kepribadian TIDAK disimpan: diturunkan dari id rumah (bagian 4b). Nilai tak sah dijepit (`antar`, `meleset` 0 sampai 999), status asing dibaca `aktif`, entri bukan objek dibuang, id yang tidak ada di data dibiarkan. `pelanggan` bukan objek = save rusak |
 | `flag` | Daftar flag "lanjutan menunggu tampil" (id). **Arti berubah di v2 (M-6):** bukan riwayat. Hasil misi menulis flag (`flag_lanjut`) di akhir hari; headline lanjutan yang `syarat.flag`-nya flag itu tampil besok tepat sekali, lalu flag dikonsumsi (dihapus) di akhir hari tampilnya. Urutan di `catat_hari`: konsumsi dulu, tambah flag baru sesudahnya (flag baru hari ini tidak ikut terhapus). Id yang tidak ada di data dibiarkan |
 | `misi_hasil` | Riwayat permanen hasil misi (M-7): id misi -> `{"hasil": "selesai" atau "gagal", "hari": n}`. `selesai` tidak pernah ditimpa `gagal` dan hari selesainya tidak bergeser; `gagal` boleh diganti `selesai` atau `gagal` yang lebih baru. Id yang tidak ada di data dibiarkan |
 | `tutorial` | `{"selesai": bool}`: tutorial terpandu hari 1 selesai atau dilewati (M-9), ditulis di akhir hari dan tidak pernah kembali false |
@@ -326,19 +351,45 @@ Aturan:
 - Save ditulis di akhir hari (tombol "Hari berikutnya" di bengkel, v3; sebelumnya di layar hasil), tepat satu kali per hari, bukan di tengah rute. Selama layar hasil dan bengkel, saldo, kondisi, dan belanja ada di memori; menutup app di sana mengulang hari dari koran dengan save lama (juga pendapatan hari itu dan belanja). Tutup app di tengah rute: save terakhir utuh, hari yang sama dimulai lagi dari layar koran dengan headline dan seed rute yang sama.
 - Penulisan atomik: ke `user://save.tmp`, diperiksa terbaca, lalu rename. Save rusak (bukan JSON, bukan objek, field kunci bertipe salah) atau `versi` lebih baru tidak ditimpa diam-diam: disalin dulu ke `user://save.corrupt.<detik unix>.json` (isi yang sama dengan salinan yang sudah ada tidak disalin lagi, jadi peluncuran berulang tidak menumpuk salinan), permainan mulai dari state bawaan, dan layar koran memberi tahu satu baris (`KORAN_SAVE_RUSAK`). Berkas yang ADA tetapi tidak bisa dibuka (izin, galat I/O), atau berkas rusak yang salinannya gagal dibuat, TIDAK PERNAH ditimpa: `simpan` ditahan sepanjang sesi (mengembalikan false, berkas lama utuh), permainan tetap jalan dari state bawaan di memori, dan layar koran memberi tahu satu baris jujur (`KORAN_SAVE_TIDAK_TERBACA`, tanpa mengaku menyimpan salinan). Simpan akhir hari yang gagal dicoba sekali lagi; bila tetap gagal alur tidak diblokir dan koran berikutnya menampilkan satu baris netral (`KORAN_SAVE_GAGAL`) sampai satu simpan berhasil (kemajuan menumpuk di memori, jadi simpan berikutnya menuliskan semuanya). Nilai tidak sah di dalam blok (negatif, tipe salah) dijepit atau diganti bawaan.
 - Progres tidak turun: `hari`, `koin_total`, `tip_total`, `servis_total`, dan `level` upgrade hanya naik, jeda tidak mundur; `koin` (saldo) turun hanya karena belanja bengkel; hari dengan koin 0 atau misi gagal tidak mengurangi apa pun (prinsip 2). (Invarian "flag hanya bertambah" run 4A diganti aturan konsumsi flag di v2.) Hadiah misi = `Config.MISI_HADIAH_KOIN` menurut `hadiah.tingkat` (75 untuk `sedang`, K-1), dibayar saat misi selesai dan dihitung sekali di `HasilRute.Angka`, bukan di UI.
-- Id pelanggan memakai rumah tetap di distrik (`per_r014`), supaya pelanggan yang sama tetap ada walau segmen diacak. Cara memetakan rumah tetap ke segmen yang diacak ditunda ke Fase 6 (bagian 5); di Fase 3 dan 4A rumah hanya punya id rute `<id_segmen>@<pos>` (bagian 3) dan tidak ada yang ditulis ke save.
+- Id pelanggan = id rumah rute `<id_segmen>@<pos>` (bagian 3), yang stabil karena segmen dan posisi rumah di data tetap walau urutan segmen diacak per hari (run 6A2, K-4: id `per_r014` dari rencana lama tidak dipakai). Rumah yang segmennya tidak terpilih hari itu tidak masuk rute dan statusnya tidak berubah.
 - `kosmetik.baju` (nanti) memakai nama varian baju dari `ART_DIRECTION.md` 3.3.
 - Misi aktif tidak disimpan: hidup hanya selama rute; app ditutup di tengah rute = hari yang sama diulang dari koran dan misi dari awal (konsisten dengan 4A). Misi lintas hari tidak dikerjakan di 4B dan masih terbuka (bagian 5, ROADMAP 5).
 - Migrasi v1 -> v2 (`DataSave.migrasi`, `if versi < 2`): `misi_hasil` kosong, `tutorial.selesai` false, `terakhir.misi_hasil` "" dan `terakhir.koin_misi` 0; `flag`, `koin`, `hari`, `tip_total`, jeda, dan pengaturan dipertahankan. Dites dengan fixture bentuk save 4A asli dan v0.
 - Migrasi v2 -> v3 (`if versi < 3`): `koin_total` = `koin` lama, `sepeda` baru (semua kondisi 1.0, level 0, `servis_total` 0: tidak ada kerusakan atau upgrade gratis); semua field v2 dipertahankan nilainya. Dites dengan fixture bentuk save 4B asli (hari 2, koin 195, flag `kucing_ketemu`), save 4A (v1), dan v0. Versi > 3 tidak ditimpa (disalin dulu).
 - `catat_hari` (v3) menerima sepeda akhir rute dan belanja bengkel: `koin` = saldo lama + koin hari - belanja, `koin_total` = lama + koin hari (persis sekali), kondisi sepeda akhir (sesudah aus rute, servis, dan upgrade).
+- Migrasi v3 -> v4 (`if versi < 4`): `reputasi` = {`perumahan`: 0}, `pelanggan` = {} (riwayat antaran lama tidak bisa dipulihkan, jadi semua rumah "baru"); semua field v3 dipertahankan nilainya. Dites dengan fixture save 6A1 asli (contoh bagian ini sebelum run 6A2), 4B (v2), 4A (v1), dan v0. Versi > 4 tidak ditimpa (disalin dulu). Field `reputasi`/`pelanggan` di berkas berversi 3 tidak dipercaya (v3 tidak menulisnya) dan diganti awal.
+- `catat_hari` (v4) menerima `CatatanHari.pelanggan` (catatan pelanggan hari itu dari `ReputationManager.catat`) dan pustaka kepribadian: reputasi dan status pelanggan dihitung `ReputationManager.terapkan` TEPAT sekali per hari dari state save dan catatan itu (fungsi murni, hasil sama dengan yang ditampilkan layar hasil). `pelanggan` null = reputasi dan pelanggan tidak berubah.
+
+---
+
+## 4b. Kepribadian pelanggan
+
+File: `assets/data/customers/kepribadian.json` (run 6A2, usulan). Array objek `{"id", "bobot"}`, dibaca satu-satunya oleh `PemuatPelanggan` (validasi `KepribadianPelanggan`). Kepribadian sebuah rumah adalah fungsi deterministik dari id rumah dan pool ini, TIDAK disimpan di save: hash FNV-1a 32 bit atas byte UTF-8 id rumah, sisa bagi jumlah bobot, lalu pencarian kumulatif menurut urutan berkas (`KepribadianPelanggan.dari_id`). Mengubah urutan atau bobot berkas mengubah pemetaan semua rumah, jadi bobot dikunci bersama versi data. Tanpa nama atau penanda visual pelanggan (GDD 8: "kebiasaan").
+
+Contoh nyata (isi `kepribadian.json`):
+
+```json
+[
+	{ "id": "biasa", "bobot": 55 },
+	{ "id": "cerewet", "bobot": 15 },
+	{ "id": "pemberi_tip", "bobot": 15 },
+	{ "id": "sensitif", "bobot": 15 }
+]
+```
+
+| Field | Arti |
+|---|---|
+| `id` | Salah satu dari empat id permanen (`Config.PELANGGAN_KEPRIBADIAN_ID`), semuanya wajib ada, unik. Arti ada di kode: `biasa` tanpa efek; `cerewet` tidak memberi kredit reputasi untuk antaran halaman; `pemberi_tip` pemberi tip persisten (didahulukan `RouteBuilder` bila masuk rute); `sensitif` satu-satunya yang bisa berhenti karena tidak terantar |
+| `bobot` | Bilangan bulat >= 1; jumlah bobot > 0. Sebaran 71 rumah perumahan (bobot 55/15/15/15): biasa 36, cerewet 14, pemberi tip 10, sensitif 11 |
+
+Validasi menolak, tiap kasus dites: id ganda, id asing, id wajib hilang, bobot <= 0 atau pecahan atau bukan angka, field asing, entri bukan objek, isi bukan array, array kosong, JSON rusak, dan berkas hilang atau kosong (galat tanpa crash; semua pelanggan jadi `biasa`).
 
 ---
 
 ## 5. Yang perlu diputuskan
 
 - ~~Segmen ditulis sebagai JSON atau scene Godot yang diekspor.~~ **Diputuskan 2026-10-16 (pemilik, K-1 run 3A): JSON buatan tangan** di `assets/data/routes/<distrik>/<id>.json` (bagian 3). Nilai `jenis`, parameter objek, dan aturan validasi tetap usulan sampai uji HP.
-- Cara memetakan pelanggan tetap ke rute yang diacak. **Masih terbuka, ditunda ke Fase 6** (K-3): run 3A memakai id rute `<id_segmen>@<pos>` dan tidak menulis save; id rumah tetap di save (`per_r014`) belum ada.
+- ~~Cara memetakan pelanggan tetap ke rute yang diacak.~~ **Diterapkan run 6A2 (usulan, K-4)**: id rumah rute `<id_segmen>@<pos>` dipakai langsung sebagai id pelanggan di save v4 (bagian 4); `RouteBuilder.bangun` menerima keadaan pelanggan dan memilih pelanggan menurut status (ROUTE_DESIGN, BALANCING 7.2).
 - Misi lintas hari (GDD 10.9) memengaruhi save: misi aktif perlu disimpan atau tidak. **Masih terbuka** (run 4A dan 4B tidak menyimpan misi aktif; 4B tidak mengerjakan misi lintas hari).
 - Format data milestone (Fase 6B). ~~Format data bengkel~~ **Diterapkan run 6A1 (usulan, bagian 6)**: `upgrades.json` dan kondisi sepeda di save v3 (bagian 4).
 - Bentuk struktur sesi (setoran tiga pos, kalender, tenggat bab) yang menentukan di mana koin saldo dibelanjakan: **masih terbuka** (ROADMAP 5, Fase 6B). Alur Koran -> Rute -> Hasil -> Bengkel -> hari berikutnya di 6A1 adalah prototype.

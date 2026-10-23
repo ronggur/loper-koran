@@ -129,6 +129,13 @@ func _initialize() -> void:
 	toko.jalankan()
 	var save_v3: TesSaveV3 = TesSaveV3.new(check, _judul)
 	save_v3.jalankan()
+	# Run fase6a2-reputasi-pelanggan bagian A: kepribadian, ReputationManager, laju reputasi (SimEkonomi), RouteBuilder dengan keadaan pelanggan, save v4.
+	var reputasi: TesReputasi = TesReputasi.new(check, _judul)
+	reputasi.jalankan()
+	var rute_pelanggan: TesRutePelanggan = TesRutePelanggan.new(check, _judul)
+	rute_pelanggan.jalankan()
+	var save_v4: TesSaveV4 = TesSaveV4.new(check, _judul)
+	save_v4.jalankan()
 	var sprite: TesSprite = TesSprite.new(check, _judul, self)
 	sprite.jalankan()
 	var ekspor: TesExport = TesExport.new(check, _judul)

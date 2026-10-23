@@ -32,6 +32,8 @@ const _TIPE_KUNCI: Dictionary = {
 	"koin_total": "angka",
 	"tip_total": "angka",
 	"sepeda": "kamus",
+	"reputasi": "kamus",
+	"pelanggan": "kamus",
 	"flag": "daftar",
 	"misi_jeda": "kamus",
 	"headline_jeda": "kamus",

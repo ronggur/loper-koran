@@ -548,7 +548,7 @@ static func _pilih_pelanggan_dua_sisi(rute: Rute, rng: RandomNumberGenerator, ga
 ##     dilonggarkan: semua rumah baru boleh, `Rute.dikenal_kurang`);
 ## (d) pemberi tip: lihat `_pilih_pemberi_tip_keadaan`; (e) kuota dekat, total, celah gabungan, dan `periksa_rute` tidak berubah.
 ## Prioritas (calon kembali dulu, lalu setia) masuk pencocokan sebagai bonus biaya, jadi selalu terpilih selama ada susunan sah. Bila tidak ada susunan sah, prioritas dilepas bertahap (seperempat dari ekor daftar prioritas tiap
-## tingkat, calon kembali terakhir; ekor daftar prioritas = setia yang paling berdekatan dengan yang lain). Urutan pelepasan: batas pelanggan baru dulu (tingkat 1), lalu prioritas sedikit demi sedikit, lalu larangan `berhenti` (semua boleh): `Rute.pelepasan` mencatat tingkatnya. Tanpa entri apa pun, urutan konsumsi RNG sama
+## tingkat, calon kembali terakhir; ekor daftar prioritas = setia yang paling berdekatan dengan yang lain). Urutan pelepasan: batas pelanggan baru dulu (tingkat 1), lalu prioritas sedikit demi sedikit, lalu larangan `berhenti` dicabut (semua boleh) dengan prioritas penuh dulu yang kemudian dilepas lagi sedikit demi sedikit: `Rute.pelepasan` mencatat tingkatnya. Tanpa entri apa pun, urutan konsumsi RNG sama
 ## dengan `_pilih_pelanggan_dua_sisi`, jadi pelanggan sama dengan rute tanpa keadaan. False + galat hanya bila rute tanpa keadaan pun gagal (kandidat kurang atau celah tak terpenuhi).
 static func _pilih_pelanggan_keadaan(rute: Rute, rng: RandomNumberGenerator, p: PelangganRute, galat: Array[String]) -> bool:
 	var semua: Array = [_kandidat_sisi(rute, LoperAnim.Sisi.DEKAT), _kandidat_sisi(rute, LoperAnim.Sisi.SEBERANG)]
@@ -616,11 +616,12 @@ static func _pilih_pelanggan_keadaan(rute: Rute, rng: RandomNumberGenerator, p: 
 	var jumlah_prioritas: Array[int] = [prioritas.size()]
 	while jumlah_prioritas[jumlah_prioritas.size() - 1] > 0:
 		var sekarang: int = jumlah_prioritas[jumlah_prioritas.size() - 1]
-		jumlah_prioritas.append(sekarang - maxi(1, floori(float(sekarang) / 4.0)))
+		jumlah_prioritas.append(sekarang - maxi(1, floori(float(sekarang) / float(Config.PELANGGAN_LEPAS_PEMBAGI))))
 	var tingkat: Array = [{"prioritas": prioritas.size(), "batas_baru": true, "berhenti": false}]
 	for k: int in jumlah_prioritas:
 		tingkat.append({"prioritas": k, "batas_baru": false, "berhenti": false})
-	tingkat.append({"prioritas": 0, "batas_baru": false, "berhenti": true})
+	for k: int in jumlah_prioritas:
+		tingkat.append({"prioritas": k, "batas_baru": false, "berhenti": true})
 	for t: int in range(tingkat.size()):
 		var cfg: Dictionary = tingkat[t]
 		var aktif: Dictionary = {}
@@ -695,7 +696,7 @@ static func _urut_tersebar(daftar: Array[RumahRute], rng: RandomNumberGenerator)
 	sisa.remove_at(awal)
 	while not sisa.is_empty():
 		var terbaik: int = 0
-		var jarak_terbaik: float = -1.0
+		var jarak_terbaik: float = -INF
 		for i: int in range(sisa.size()):
 			var terdekat: float = INF
 			for t: RumahRute in hasil:

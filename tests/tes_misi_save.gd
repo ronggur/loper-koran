@@ -102,7 +102,7 @@ func _test_migrasi_save_4a() -> void:
 	var hasil: DataSave.Hasil = DataSave.dari_teks(SAVE_4A)
 	var s: Dictionary = hasil.state
 	check(hasil.status == DataSave.Status.SAH and not hasil.perlu_salinan(), "save 4A (v1) terbaca SAH dan tidak perlu disalin: dimigrasi, tidak dihapus")
-	check(s["versi"] == 3, "versi menjadi 3 (v1 -> v2 -> v3, run 6A1)")
+	check(s["versi"] == Config.SAVE_VERSI, "versi menjadi SAVE_VERSI (v1 -> v2 -> v3 -> v4)")
 	check(s["hari"] == 2 and s["koin"] == 120 and s["tip_total"] == 25, "hari 2, koin 120, tip_total 25 dipertahankan (progres tidak hilang)")
 	check(s["misi_jeda"] == {"p1_kucing": 8} and s["headline_jeda"] == {"ringan_mangga": 4, "utama_jalan_diperbaiki": 5}, "misi_jeda dan headline_jeda dipertahankan")
 	check(s["pengaturan"] == {"kidal": false, "mode_bantu": false, "suara": 1.0, "musik": 1.0}, "pengaturan dipertahankan")
@@ -115,8 +115,8 @@ func _test_migrasi_save_4a() -> void:
 	dengan_flag["flag"] = ["kucing_belum", "flag_lama"]
 	var s2: Dictionary = DataSave.dari_teks(JSON.stringify(dengan_flag)).state
 	check(s2["flag"] == ["kucing_belum", "flag_lama"] and s2["koin"] == 120, "flag v1 (termasuk id yang tidak dikenal data) dan koin tidak dijatuhkan migrasi")
-	var v4: DataSave.Hasil = DataSave.dari_teks('{"versi": 4, "koin": 5}')
-	check(v4.status == DataSave.Status.TERLALU_BARU and v4.perlu_salinan() and v4.state == DataSave.templat(), "versi 4 (lebih baru dari 3): TERLALU_BARU, disalin, tidak ditimpa diam-diam")
+	var v4: DataSave.Hasil = DataSave.dari_teks('{"versi": 5, "koin": 5}')
+	check(v4.status == DataSave.Status.TERLALU_BARU and v4.perlu_salinan() and v4.state == DataSave.templat(), "versi 5 (lebih baru dari 4): TERLALU_BARU, disalin, tidak ditimpa diam-diam")
 	check(DataSave.dari_teks('{"versi": 2, "hari": 4, "misi_hasil": [], "tutorial": {}}').status == DataSave.Status.RUSAK, "misi_hasil bukan objek = save rusak (tipe kunci salah)")
 	check(DataSave.dari_teks('{"versi": 2, "tutorial": 5}').status == DataSave.Status.RUSAK, "tutorial bukan objek = save rusak")
 
@@ -125,7 +125,7 @@ func _test_migrasi_v0_dan_tak_sah() -> void:
 	_judul.call("Save v2: v0 ke v2, id tak dikenal dibiarkan, nilai tidak sah dijepit (AC-7)")
 	var v0: DataSave.Hasil = DataSave.dari_teks('{"hari": 7, "koin": 1500, "flag": ["kucing_belum", "flag_lama"], "pengaturan": {"kidal": true}}')
 	var s: Dictionary = v0.state
-	check(v0.status == DataSave.Status.SAH and s["versi"] == 3 and s["hari"] == 7 and s["koin"] == 1500 and s["flag"] == ["kucing_belum", "flag_lama"] and s["pengaturan"]["kidal"] == true, "v0 ke v2: hari, koin, flag, pengaturan dipertahankan")
+	check(v0.status == DataSave.Status.SAH and s["versi"] == Config.SAVE_VERSI and s["hari"] == 7 and s["koin"] == 1500 and s["flag"] == ["kucing_belum", "flag_lama"] and s["pengaturan"]["kidal"] == true, "v0 ke v2: hari, koin, flag, pengaturan dipertahankan")
 	check(s["misi_hasil"] == {} and s["tutorial"] == {"selesai": false}, "v0 ke v2: field baru bawaan")
 	var d: Dictionary = {
 		"versi": 2, "hari": 3,
