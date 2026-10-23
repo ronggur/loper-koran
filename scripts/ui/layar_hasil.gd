@@ -10,6 +10,9 @@ extends CanvasLayer
 ## Run fase6a1-bengkel-kondisi bagian B (AC-24, M-11, usulan): bila ada komponen sepeda PERLU_BENGKEL, satu baris per komponen (sampai tiga, `KONDISI_HASIL_PERLU` "Rantai perlu servis", `WARN`) tampil di
 ## bawah daftar yang ada dan di atas tombol; tanpa komponen rusak tidak ada baris. Tidak menyentuh `HasilRute.Angka`, hadiah misi, atau rekap misi. Di alur hari tombolnya "Ke bengkel"
 ## (`BENGKEL_BUKA`, memancarkan `bengkel_diminta`; hari berakhir di bengkel, bukan di sini); "Main lagi" hanya di rute yang dijalankan sendiri dan banner galat muat.
+## Run fase6a2-reputasi-pelanggan bagian B (AC-11, K-1, O-1, O-2, usulan): bila ada koran yang dilempar lalu terbuang, dua baris netral (`TEXT_2`, tanpa kata "gagal") tampil di daftar netral, terpisah dari ongkos dan tip:
+## "Koran terbuang n koran (-potongan)" dan "Koin bersih" (boleh minus, tanda minus eksplisit); tanpa koran terbuang kedua baris tersembunyi. Baris "Saldo mulai lagi dari 0" tampil hanya bila saldo save benar-benar
+## dijepit 0 (`isi` diberi `saldo_lama`, -1 = tidak diketahui). Baris "Koin" tetap koin kotor (`HasilRute.Angka.koin`); semua angka dari `HasilRute.Angka`.
 ## Latar menangkap sentuhan GUI (`MOUSE_FILTER_STOP`); HUD dan kontrol sentuh di bawahnya dimatikan adegan (`RuteMain`) selama layar ini
 ## tampil, karena keduanya membaca sentuhan lewat `_input`.
 
@@ -33,6 +36,9 @@ var _mode_hari: bool = false
 @onready var _nilai_skor: Label = %NilaiSkor
 @onready var _nilai_tepat: Label = %NilaiTepat
 @onready var _nilai_meleset: Label = %NilaiMeleset
+@onready var _nilai_terbuang: Label = %NilaiTerbuang
+@onready var _nilai_bersih: Label = %NilaiBersih
+@onready var _teks_saldo_nol: Label = %TeksSaldoNol
 @onready var _teks_tenggat: Label = %TeksTenggat
 @onready var _rekap_misi: Label = %RekapMisi
 @onready var _tombol: TombolSentuh = %TombolMainLagi
@@ -54,6 +60,9 @@ func _ready() -> void:
 	for label: Node in _daftar_netral.get_children():
 		(label as Label).add_theme_color_override(&"font_color", Palette.TEXT_2)
 	_teks_tenggat.add_theme_color_override(&"font_color", Palette.TEXT_2)
+	_teks_saldo_nol.add_theme_color_override(&"font_color", Palette.TEXT_2)
+	_nilai_bersih.add_theme_color_override(&"font_color", Palette.TEXT)
+	_nilai_terbuang.add_theme_color_override(&"font_color", Palette.TEXT_2)
 	_rekap_misi.custom_minimum_size = Vector2(Config.HASIL_PANEL_LEBAR_PX - 2 * Config.HUD_PANEL_PAD_X_PX, 0)
 	for label: Node in _kondisi.get_children():
 		(label as Label).add_theme_color_override(&"font_color", Palette.WARN)
@@ -88,8 +97,9 @@ func _saat_tombol() -> void:
 
 ## Mengisi angka dari `angka` (`HasilRute.dari`). Tidak menghitung ulang apa pun. `misi` (data misi hari ini, null = tanpa misi) memberi teks banner untuk
 ## baris rekap misi (run fase4b-misi-kucing, AC-16): satu baris bila `angka.misi_hasil` selesai atau gagal, tidak ada baris tanpa misi. `perlu_bengkel` = id komponen sepeda PERLU_BENGKEL
-## (`BikeCondition.perlu_bengkel`): satu baris kondisi per komponen, tanpa komponen rusak tidak ada baris (AC-24).
-func isi(angka: HasilRute.Angka, misi: DataMisi = null, perlu_bengkel: Array[String] = []) -> void:
+## (`BikeCondition.perlu_bengkel`): satu baris kondisi per komponen, tanpa komponen rusak tidak ada baris (AC-24). `saldo_lama` = saldo save sebelum hari ini (-1 = tidak diketahui, mis. rute yang
+## dijalankan sendiri): baris "Saldo mulai lagi dari 0" hanya bila `HasilRute.koin_dijepit` > 0.
+func isi(angka: HasilRute.Angka, misi: DataMisi = null, perlu_bengkel: Array[String] = [], saldo_lama: int = -1) -> void:
 	var pemisah: String = tr("HUD_PEMISAH_RIBUAN")
 	_nilai_terkirim.text = tr("HASIL_TERKIRIM_ANGKA").format({"n": angka.terkirim, "total": angka.pelanggan})
 	_nilai_tip.text = tr("HASIL_TIP_ANGKA").format({"koin": HasilRute.ribuan(angka.koin_tip, pemisah), "n": angka.jumlah_tip})
@@ -97,6 +107,7 @@ func isi(angka: HasilRute.Angka, misi: DataMisi = null, perlu_bengkel: Array[Str
 	_nilai_skor.text = tr("HASIL_SKOR_ANGKA").format({"n": HasilRute.ribuan(angka.skor, pemisah)})
 	_nilai_tepat.text = tr("HASIL_TEPAT_ANGKA").format({"n": angka.jumlah_tepat})
 	_nilai_meleset.text = tr("HASIL_MELESET_ANGKA").format({"n": angka.meleset})
+	_isi_potongan(angka, saldo_lama, pemisah)
 	_isi_rekap_misi(angka, misi)
 	_isi_kondisi(perlu_bengkel)
 	if angka.tenggat_lewat:
@@ -104,6 +115,17 @@ func isi(angka: HasilRute.Angka, misi: DataMisi = null, perlu_bengkel: Array[Str
 		_teks_tenggat.text = tr("HASIL_TENGGAT_LEWAT").format({"m": md.x, "s": "%02d" % md.y})
 	else:
 		_teks_tenggat.text = tr("HASIL_TENGGAT_SEMPAT")
+
+
+## Baris koran terbuang dan koin bersih (AC-11): tersembunyi bila tidak ada koran terbuang; baris saldo dijepit hanya bila saldo benar-benar dijepit 0 (O-2).
+func _isi_potongan(angka: HasilRute.Angka, saldo_lama: int, pemisah: String) -> void:
+	var ada: bool = angka.lempar_terbuang > 0
+	for node: Node in [_nilai_terbuang, _nilai_bersih, _nilai_terbuang.get_parent().get_child(_nilai_terbuang.get_index() - 1), _nilai_bersih.get_parent().get_child(_nilai_bersih.get_index() - 1)]:
+		(node as Label).visible = ada
+	_nilai_terbuang.text = tr("HASIL_TERBUANG_ANGKA").format({"n": angka.lempar_terbuang, "koin": HasilRute.ribuan(angka.potongan, pemisah)})
+	_nilai_bersih.text = tr("HASIL_KOIN_BERSIH_ANGKA").format({"n": HasilRute.ribuan(angka.koin_bersih, pemisah)})
+	_teks_saldo_nol.visible = saldo_lama >= 0 and HasilRute.koin_dijepit(saldo_lama, angka.koin_bersih) > 0
+	_teks_saldo_nol.text = tr("HASIL_SALDO_NOL")
 
 
 ## Baris rekap misi (AC-16): "Misi: Kucing ketemu! +75 koin" (selesai, `OK`, di bawah daftar yang berhasil) atau "Misi: Kucingnya lolos hari ini" (gagal, netral
@@ -182,12 +204,26 @@ func tampil() -> bool:
 	return visible
 
 
-## Teks yang tampil (sesudah terjemahan), urut dari atas (untuk tes): judul, lalu pasangan label dan nilai, lalu teks tenggat.
+## Teks koran terbuang, koin bersih, dan saldo dijepit yang tampil, urut ("" bila tersembunyi); untuk tes.
+func teks_potongan() -> Array[String]:
+	var hasil: Array[String] = []
+	if _nilai_terbuang.visible:
+		hasil.append(_nilai_terbuang.text)
+		hasil.append(_nilai_bersih.text)
+	if _teks_saldo_nol.visible:
+		hasil.append(_teks_saldo_nol.text)
+	return hasil
+
+
+## Teks yang tampil (sesudah terjemahan), urut dari atas (untuk tes): judul, lalu pasangan label dan nilai (yang tersembunyi dilewati), lalu teks tenggat.
 func teks_tampil() -> Array[String]:
 	var hasil: Array[String] = [tr(_judul.text)]
 	for daftar: GridContainer in [_daftar_berhasil, _daftar_netral]:
 		for label: Node in daftar.get_children():
-			hasil.append(tr((label as Label).text))
+			if (label as Label).visible:
+				hasil.append(tr((label as Label).text))
+	if _teks_saldo_nol.visible:
+		hasil.append(_teks_saldo_nol.text)
 	hasil.append(tr(_teks_tenggat.text))
 	if _rekap_misi.visible:
 		hasil.append(_rekap_misi.text)
@@ -217,10 +253,13 @@ func rect_panel() -> Rect2:
 ## Persegi tiap label di panel (untuk tes tata letak: semuanya di dalam panel dan layar).
 func rect_label() -> Array[Rect2]:
 	var hasil: Array[Rect2] = [_judul.get_global_rect(), _teks_tenggat.get_global_rect()]
+	if _teks_saldo_nol.visible:
+		hasil.append(_teks_saldo_nol.get_global_rect())
 	if _rekap_misi.visible:
 		hasil.append(_rekap_misi.get_global_rect())
 	hasil.append_array(rect_kondisi())
 	for daftar: GridContainer in [_daftar_berhasil, _daftar_netral]:
 		for label: Node in daftar.get_children():
-			hasil.append((label as Label).get_global_rect())
+			if (label as Label).visible:
+				hasil.append((label as Label).get_global_rect())
 	return hasil

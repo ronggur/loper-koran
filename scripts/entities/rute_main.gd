@@ -184,7 +184,8 @@ func _buka_hasil() -> void:
 	if _pelanggan_rute != null:
 		_catatan_pelanggan = ReputationManager.catat(_rute, _skor, _hari, _misi, _keadaan_misi)
 		_hasil_reputasi = ReputationManager.terapkan(_state_pelanggan, _catatan_pelanggan, _kepribadian)
-	_layar_hasil.isi(_angka_hasil, _misi if _keadaan_misi != null else null, perlu)
+	var saldo_lama: int = int(_state_pelanggan["koin"]) if _state_pelanggan.has("koin") else -1
+	_layar_hasil.isi(_angka_hasil, _misi if _keadaan_misi != null else null, perlu, saldo_lama)
 	_layar_hasil.tampilkan(true)
 	_panel_akhir.tampilkan(false)
 	_hud.visible = false

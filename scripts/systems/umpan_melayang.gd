@@ -4,8 +4,9 @@ extends RefCounted
 ##
 ## Tiap antaran sah (`SkorRute.Status.ANTAR`) menambah satu entri di titik mendaratnya: ongkos antar ("+15"), tip bila ada, dan "TEPAT"
 ## bila tepat. Entri naik `UMPAN_MELAYANG_NAIK_PX` dan memudar selama `UMPAN_MELAYANG_DETIK`; paling banyak `UMPAN_MELAYANG_MAKS`
-## sekaligus, yang lama hilang lebih dulu. Koran ulang (netral) dan tidak sah tidak memunculkan entri (meleset cukup ikon kecil, DESIGN_SPEC
-## 3.6). Waktu ikut `dt` efektif (jeda membekukan). Teksnya disusun node (`UmpanMelayangGambar`) lewat kunci terjemahan; di sini hanya angka.
+## sekaligus, yang lama hilang lebih dulu. Koran ulang (netral) dan tidak sah tidak memunculkan entri antaran (ikon penanda kena/meleset cukup, DESIGN_SPEC 3.6),
+## tetapi koran terbuang (`SkorRute.hasil_terbuang`, run fase6a2 bagian B, O-3) menambah entri potongan ("-5", `dari_potongan`) di titik mendaratnya: nada netral, tanpa bintang atau koin.
+## Waktu ikut `dt` efektif (jeda membekukan). Teksnya disusun node (`UmpanMelayangGambar`) lewat kunci terjemahan; di sini hanya angka.
 
 
 ## Satu umpan balik.
@@ -17,6 +18,8 @@ class Entri extends RefCounted:
 	## Tip, koin (0 = tanpa tip).
 	var tip: int = 0
 	var tepat: bool = false
+	## Potongan koran terbuang, koin (> 0 = entri potongan "-5": tanpa ongkos, tip, TEPAT, bintang, dan koin).
+	var potongan: int = 0
 	## Sisa waktu tampil, detik.
 	var sisa_detik: float = 0.0
 
@@ -26,6 +29,7 @@ class Entri extends RefCounted:
 		baru.ongkos = ongkos
 		baru.tip = tip
 		baru.tepat = tepat
+		baru.potongan = potongan
 		baru.sisa_detik = sisa_detik
 		return baru
 
@@ -39,6 +43,17 @@ static func dari_hasil(hasil: SkorRute.Hasil, titik_dunia: Vector2) -> Entri:
 	e.tip = hasil.tip
 	e.ongkos = hasil.koin_tambah - hasil.tip
 	e.tepat = hasil.tepat
+	e.sisa_detik = Config.UMPAN_MELAYANG_DETIK
+	return e
+
+
+## Entri potongan `jumlah` koin di titik dunia `titik_dunia` (O-3), atau null bila `jumlah` <= 0.
+static func dari_potongan(jumlah: int, titik_dunia: Vector2) -> Entri:
+	if jumlah <= 0:
+		return null
+	var e: Entri = Entri.new()
+	e.titik_dunia = titik_dunia
+	e.potongan = jumlah
 	e.sisa_detik = Config.UMPAN_MELAYANG_DETIK
 	return e
 
