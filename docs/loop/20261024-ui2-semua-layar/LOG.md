@@ -9,6 +9,9 @@ Scope: Run UI-2 — redesain UI langkah 3-6 (hasil, koran, jeda, tutorial, banne
 - sha256 save asli: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e`.
 - `.claude/` untracked: bukan bagian run, tidak di-commit.
 
+## Amandemen scope (orchestrator, 2026-10-24, sebelum Dev A)
+Pemilik menambah dua permintaan setelah SPEC ditulis: font bengkel dan hasil terlalu kecil, dan HUD diatur ulang (kecepatan dan stamina menumpuk). Menjadi V-8 (skala font +2, semua layar penuh, bengkel ikut) dan V-9 (H-1 panel bawah berdampingan, H-2 kolom kanan atas dipadatkan, H-3 tombol jeda) di SPEC; menggantikan V-6, AC-6, AC-8 versi awal. Catatan Dev per tes yang diubah wajib di bagian masing-masing.
+
 ## Butir terbuka pemilik
 - Lisensi latar bengkel (UI-1) belum dicatat; belum boleh masuk rilis (ART_DIRECTION 9).
 - Keputusan QA-003/D-1/D-2 UI-1 (kontras garis kartu, margin inset).
