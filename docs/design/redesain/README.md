@@ -1,6 +1,6 @@
 # Redesain UI layar penuh (usulan, 2026-10-23)
 
-Hasil prompt [`../PROMPT_REDESAIN_UI.md`](../PROMPT_REDESAIN_UI.md) yang dijalankan di Claude Design: kanvas **"UI Loper Koran — Redesain"** (artefak Claude Design milik pemilik, privat). Alasannya dari uji HP pemilik 2026-10-23: UI terlalu kecil, terlalu kosong, dan tombolnya polos. **Semua isi folder ini usulan.** Belum ada yang dipasang di game, belum ada yang disalin ke `assets/`, dan tidak ada yang dikunci sebelum dinilai di HP. Porting ke Godot dikerjakan bertahap, satu layar per run (bagian 6).
+Hasil prompt [`../PROMPT_REDESAIN_UI.md`](../PROMPT_REDESAIN_UI.md) yang dijalankan di Claude Design: kanvas **"UI Loper Koran — Redesain"** (artefak Claude Design milik pemilik, privat). Alasannya dari uji HP pemilik 2026-10-23: UI terlalu kecil, terlalu kosong, dan tombolnya polos. **Semua isi folder ini usulan.** Tidak ada yang dikunci sebelum dinilai di HP. Porting ke Godot dikerjakan bertahap, satu layar per run (bagian 6). Status per 2026-10-23: komponen bersama dan bengkel tata C (bagian 6 butir 1 dan 2) dipasang di run UI-1 sebagai usulan; hanya latar bengkel 800 dan komponen yang dipakai bengkel yang disalin ke `assets/sprites/ui/` (daftar di `tools/ui_art/redesain/pasang.py`); koran, struk, foto berita, lencana 32, dan layar lain belum dipasang.
 
 ## 1. Isi folder
 
@@ -83,12 +83,17 @@ Yang masih terlihat bila diamati: beberapa piksel krem dan hijau sisa di dekat t
 
 ## 6. Urutan porting yang disarankan
 
-1. **Komponen**: renderer `tools/ui_art/redesain/komponen.py` dipindah ke alur `--salin` ke `assets/sprites/ui/`, bentuk dipasang di `assets/ui/theme.tres` dan `scripts/ui/gaya_hud.gd`; tombol polos di semua layar diganti sekaligus.
-2. **Bengkel** (tata C): ikon 24, sepeda, papan alat, latar; tata letak dua kolom dari kode. Uji keadaan a–g di HP.
+1. **Komponen**: renderer `tools/ui_art/redesain/komponen.py` dipindah ke alur `--salin` ke `assets/sprites/ui/`, bentuk dipasang di `assets/ui/theme.tres` dan `scripts/ui/gaya_hud.gd`; tombol polos di semua layar diganti sekaligus. **Status: terpasang (usulan, run UI-1, `docs/loop/20261023-ui1-komponen-bengkel/`, dinilai di HP, SETUP_ANDROID 8.18)** sebagai fungsi BARU (`GayaHud.tombol_utama/biasa/sakelar/tenang/nonaktif`, `kartu_*`, `panel_layar`, `chip`; logika murni `KomponenUi`, node `ChipUi`, `KotakKondisiBesar`) dan type variation BARU; `terapkan_tombol`, `kotak`, `panel_hud` dan variation lama tidak diubah. **Penggantian tombol polos di layar lain (hasil, koran, jeda, tutorial, banner, HUD) belum dikerjakan:** tampilannya tidak berubah sampai run layar masing-masing (butir 3 sampai 6), jadi "diganti sekaligus" di atas menjadi bertahap.
+2. **Bengkel** (tata C): ikon 24, sepeda, papan alat, latar; tata letak dua kolom dari kode. Uji keadaan a–g di HP. **Status: terpasang (usulan, run UI-1, dinilai di HP)**: `scenes/bengkel/bengkel.tscn` dan `scripts/ui/layar_bengkel.gd` ditulis ulang (anchor + Container), keadaan a sampai g dan tingkat I, II, III (data uji) tertangani dan dites, `TampilBengkel` memuat logika pemilihan keadaan. **Hanya latar 800 dan komponen yang dipakai bengkel yang dipasang ke `assets/`**: `sepeda_besar`, latar 640 (potongan tengah latar 800), koran, struk, foto, `lencana32`, `kertas_tile`, dan ikon serta glif yang belum dipakai tetap hanya di folder ini. Penyimpangan dari kanvas (usulan, bisa ditolak): kontras garis bingkai kartu dan tombol nonaktif < 3:1 (D-1), margin `max(12, inset)` (D-2), status "Perlu servis" berwarna `TEXT`, chip jejak "menunggu" tidak diredupkan, pelat di belakang judul UPGRADE; rincian di `docs/loop/20261023-ui1-komponen-bengkel/LOG.md`.
 3. **Hasil**: struk 9-slice, angka besar, kolom samping (data reputasi, pelanggan, milestone dari run 6A2).
 4. **Koran**: tekstur kertas, foto berita, kotak iklan baris (kunci teks baru); nilai silau di HP.
 5. **Jeda, tutorial, banner**: panel dan sakelar.
 6. **HUD**: hanya tombol jeda berbentuk tombol biasa; posisi dan ukuran panel lain tidak berubah (DESIGN_SPEC 3).
+
+**Butir terbuka (pemilik):**
+- **Lisensi latar bengkel** (bagian 5): generator dan ketentuan lisensi komersial `sumber_ai.jpg` belum dicatat. Latar dipasang di `assets/sprites/ui/ui_bengkel_latar_800.png` untuk uji HP run UI-1 (keputusan orchestrator U-4, bisa ditolak) tetapi **belum boleh masuk rilis** sebelum dicatat di `assets/LICENSES.md` (ART_DIRECTION 9).
+- Garis bingkai kartu dan tombol nonaktif di bengkel berkontras 1,14..1,78:1 (di bawah 3:1): perlu sorot garis (mengubah aset komponen) atau diterima; keputusan setelah uji HP 8.18.
+- Lapisan jeda 72 % (bagian 4) tetap menunggu keputusan sebelum layar jeda diporting.
 
 ## 7. Alamat gambar di `kanvas/`
 
