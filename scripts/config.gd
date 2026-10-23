@@ -890,6 +890,8 @@ const MILESTONE_TARGET_MISI_SELESAI: Array[int] = [1, 3, 5]
 const MILESTONE_TARGET_SEPEDA: Array[int] = [1, 4, 10]
 ## Layar hasil menampilkan paling banyak sekian tingkat yang baru tercapai hari itu (tertinggi dulu, lalu urutan `MILESTONE_ID`); sisanya tetap tercatat di progres.
 const MILESTONE_BARU_MAKS_TAMPIL: int = 3
+## Volume bunyi milestone tercapai, dB (lembut: sekitar 4 dB di bawah bunyi misi selesai yang sudah -3, tidak menutupi bunyi lain).
+const AUDIO_MILESTONE_VOLUME_DB: float = -4.0
 
 ## --- Layar halaman depan koran (DESIGN_SPEC 4, 1.2; rule ui-scenes; run 4A, usulan; dinilai lewat uji HP) ---
 

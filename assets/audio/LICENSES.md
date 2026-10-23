@@ -54,6 +54,12 @@ Ke-5 berkas di bawah dibuat dari rumus oleh skrip project `tools/audio_art/sinte
 | `sfx/condition/sfx_cond_servis_01.wav` | Servis di bengkel: tiga ketukan ratchet lalu dua dentingan naik | 0,60 detik | `tools/audio_art/sintesis_kondisi.py` | Milik project, tanpa atribusi pihak ketiga |
 | `sfx/condition/sfx_cond_upgrade_01.wav` | Upgrade di bengkel: empat nada naik bertimbre cerah | 0,80 detik | `tools/audio_art/sintesis_kondisi.py` | Milik project, tanpa atribusi pihak ketiga |
 
+Berkas di bawah dibuat dari rumus oleh skrip project `tools/audio_art/sintesis_milestone.py` (hanya pustaka standar Python, deterministik, tanpa acak), **tanpa rekaman, sampel, atau unduhan apa pun** (run 6A2 bagian C).
+
+| Berkas | Isi | Durasi | Dibuat oleh | Lisensi |
+|---|---|---|---|---|
+| `sfx/milestone/sfx_milestone_tercapai_01.wav` | Milestone tercapai: denting lembut dua nada naik (selang kelima), sekitar 4 dB lebih pelan dari bunyi misi selesai | 0,65 detik | `tools/audio_art/sintesis_milestone.py` | Milik project, tanpa atribusi pihak ketiga |
+
 ## Pihak ketiga
 
 Belum ada.

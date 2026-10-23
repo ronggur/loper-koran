@@ -65,6 +65,9 @@ jobs:
       - name: Uji sintesis bunyi kondisi (5 WAV rantai berisik, rem berdecit, ban mendesis, servis, upgrade = hasil skrip, deterministik, tanpa klik)
         run: python3 tools/tests_cek/uji_sintesis_kondisi.py
 
+      - name: Uji sintesis bunyi milestone (1 WAV milestone tercapai = hasil skrip, deterministik, lembut, tanpa klik)
+        run: python3 tools/tests_cek/uji_sintesis_milestone.py
+
       - name: Uji aset kucing misi (sheet di assets/ = hasil tools/env_art/kendaraan.py, deterministik)
         run: |
           python3 -m pip install --quiet numpy pillow

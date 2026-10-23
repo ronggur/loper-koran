@@ -27,6 +27,9 @@ extends Node
 ## sebagai bilangan bulat karena autoload tidak merujuk `BikeCondition`: ban mendesis, rem berdecit, rantai berisik) dan transaksi bengkel (`putar_servis`, `putar_upgrade`). Keputusan di
 ## `BunyiKondisi` (logika murni); jalur jeda dan background sama dengan bunyi lain (tidak ada bunyi baru saat jeda; jeda dan background menghentikan yang berbunyi).
 ##
+## Bunyi milestone run 6A2 bagian C (AC-15) juga di bus `SFX`: satu denting lembut (`putar_milestone`) saat layar hasil menampilkan tingkat milestone yang baru tercapai (pasangan visual: lencana dan baris
+## "Baru"). Berkas `BunyiMilestone.BERKAS`; jalur jeda dan background sama dengan bunyi lain.
+##
 ## **Tidak merujuk autoload lain** (rule `gdscript`): semua data datang dari pemanggil sebagai argumen. Pemilik sepeda (`JalanUji`)
 ## memanggil `perbarui_sepeda` tiap langkah, menyambungkan sinyal `jeda_berubah` ke `atur_jeda`, dan memanggil `hentikan_sepeda`
 ## saat keluar dari pohon.
@@ -88,6 +91,9 @@ var _misi_terakhir: String = ""
 var _pemutar_kondisi: Dictionary = {}
 var _jumlah_kondisi: Dictionary = {}
 var _kondisi_terakhir: String = ""
+## Pemutar bunyi milestone dan jumlah keputusan putarnya (untuk tes).
+var _milestone: AudioStreamPlayer
+var _jumlah_milestone: int = 0
 
 
 func _init() -> void:
@@ -112,6 +118,7 @@ func _init() -> void:
 		var berkas_kondisi: String = BunyiKondisi.berkas(b)
 		var nama_kondisi: StringName = StringName("PemutarKondisi_" + berkas_kondisi.get_file().get_basename())
 		_pemutar_kondisi[berkas_kondisi] = _buat_pemutar(nama_kondisi, berkas_kondisi, BunyiKondisi.volume_db(b), BUS_LEMPAR)
+	_milestone = _buat_pemutar(&"PemutarMilestone", BunyiMilestone.BERKAS, BunyiMilestone.volume_db(), BUS_LEMPAR)
 
 
 func _notification(what: int) -> void:
@@ -321,6 +328,25 @@ func ada_bunyi_kondisi() -> bool:
 	return false
 
 
+## Milestone baru tercapai: satu denting lembut. Tidak ada bunyi baru selama jeda.
+func putar_milestone() -> void:
+	if _jeda:
+		return
+	_jumlah_milestone += 1
+	if _boleh_putar():
+		_milestone.play()
+
+
+## Berapa kali bunyi milestone diputuskan sejak autoload dibuat atau `atur_ulang_rute` (untuk tes).
+func jumlah_bunyi_milestone() -> int:
+	return _jumlah_milestone
+
+
+## Pemutar bunyi milestone (untuk tes dan probe).
+func pemutar_milestone() -> AudioStreamPlayer:
+	return _milestone
+
+
 ## Mengembalikan pencacah dan giliran bunyi rute ke awal (untuk tes dan "Main lagi").
 func atur_ulang_rute() -> void:
 	_giliran_rute.clear()
@@ -331,6 +357,7 @@ func atur_ulang_rute() -> void:
 	_misi_terakhir = ""
 	_jumlah_kondisi.clear()
 	_kondisi_terakhir = ""
+	_jumlah_milestone = 0
 
 
 ## Berapa kali bunyi rute `b` diputuskan sejak autoload dibuat atau `atur_ulang_rute` (untuk tes).
@@ -495,3 +522,4 @@ func _hentikan_pemutar_lempar() -> void:
 		pemutar.stop()
 	for pemutar: AudioStreamPlayer in _pemutar_kondisi.values():
 		pemutar.stop()
+	_milestone.stop()
