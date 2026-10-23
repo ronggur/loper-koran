@@ -27,7 +27,12 @@ Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MAN
 | ID | Iter | Sev | Lokasi | Temuan & reproduksi/bukti | Status | Fix (file/commit) | Tes regresi |
 |---|---|---|---|---|---|---|---|
 
-## Baseline (AC-1; diisi Dev bagian A)
+## Baseline (AC-1; diisi Dev bagian A, 2026-10-24, pohon kerja bersih di `b637062`, `main` + UI-1)
+- `godot --headless --import`: tanpa ERROR/WARNING (0 baris).
+- `run_tests.gd`: **23406 lolos, 0 gagal**; `tools/cek_keluaran_tes.py`: "lolos (23406 lolos, 0 gagal, 0 peringatan)".
+- Semua `tools/tests_cek/uji_*.py` (17 berkas): exit 0 semua (aset_fase3, aset_gelombang1, aset_kucing, aset_lampu_pohon, aset_pasang_5b, aset_pasang_gelombang1, aset_simpang, bangun_frames, pemeriksa, sintesis_{kondisi,lempar,milestone,misi,rute,sepeda}, ui_lencana, ui_redesain).
+- sha256 save asli sebelum dan sesudah baseline: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` (tidak berubah).
+- Tangkapan "sebelum" (jendela asli, 1920x1080 dan 2340x1080) di `shots/baseline/`: `bengkel_*` (probe_bengkel, 0 keadaan tidak sesuai), `hud_*` (probe_hud_rute: HUD, layar jeda `hud_jeda_sakelar`, layar hasil `hud_hasil_*`), `reputasi_*` (probe_reputasi: HUD reputasi dan layar hasil tujuh keadaan + inset + dari rute nyata), `koran_*` (probe_halaman_koran), `misi_*` (probe_misi: banner `misi_banner_*`, tutorial `misi_tutorial_lempar`, hasil `misi_hasil_*`). Semua probe: "probe selesai, 0 keadaan tidak sesuai".
 
 ## Bagian A — komponen tambahan + Hasil
 
