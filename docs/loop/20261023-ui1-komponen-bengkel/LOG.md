@@ -1,7 +1,7 @@
 # Loop Log — 20261023-ui1-komponen-bengkel
 Scope: Run UI-1 — redesain UI langkah 1-2 (komponen + bengkel tata C)  ·  Branch: feat/ui1-komponen-bengkel  ·  Mulai: 2026-10-23  ·  Godot: 4.7.2.stable.official.ed1daf0bf
 
-## Status: IN_PROGRESS   (iterasi saat ini: 1/2, Dev bagian A, B, dan C selesai; menunggu QA)
+## Status: IN_PROGRESS   (iterasi saat ini: 1/2, QA iterasi 1 = FAIL: 2 Major OPEN (QA-001, QA-002); menunggu perbaikan Dev)
 
 ## Lingkungan (orchestrator, awal run)
 - `main` = `origin/main` = `b99f5a9` (rilis 0.6.0; memuat PR #61, #62, #63). Branch dibuat dari sana.
@@ -13,13 +13,22 @@ Scope: Run UI-1 — redesain UI langkah 1-2 (komponen + bengkel tata C)  ·  Bra
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
 |---|---|---|---|---|---|
-| 1 | Dev: bagian A komponen (30 aset, `GayaHud`, `KomponenUi`, kotak kondisi besar), bagian B bengkel tata C (`TampilBengkel`, `PanggungSepeda`, `LayarBengkel`, probe, mutan 50/50), bagian C dokumen | import tanpa error, `--quit-after 2` tanpa ERROR/WARNING, `run_tests.gd` 23003 lolos 0 gagal + pemeriksa lolos, 17 `uji_*.py` exit 0, sha256 save asli tidak berubah | (menunggu QA) | (QA belum jalan) | (belum) |
+| 1 | Dev: bagian A komponen (30 aset, `GayaHud`, `KomponenUi`, kotak kondisi besar), bagian B bengkel tata C (`TampilBengkel`, `PanggungSepeda`, `LayarBengkel`, probe, mutan 50/50), bagian C dokumen | import tanpa error, `--quit-after 2` tanpa ERROR/WARNING, `run_tests.gd` 23003 lolos 0 gagal + pemeriksa lolos, 17 `uji_*.py` exit 0, sha256 save asli tidak berubah | (menunggu QA) | **FAIL** (QA iterasi 1: gerbang objektif hijau; 2 Major OPEN) | 9 baru: 2 Major, 1 Minor, 6 Nit | 0 |
 
 ## Temuan
 Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MANUAL | BLOCKED
 
 | ID | Iter | Sev | Lokasi | Temuan & reproduksi/bukti | Status | Fix (file/commit) | Tes regresi |
 |---|---|---|---|---|---|---|---|
+| QA-001 | 1 | Major | scripts/ui/layar_bengkel.gd:377 (`kartu.nama = _label(&"LayarTeksUtama", ...)` di `_bangun_kartu_upgrade`; juga :304 kartu servis) | Label nama kartu upgrade TIDAK punya autowrap atau ellipsis (hanya `deskripsi` yang dibungkus). SPEC AC-6: "Teks panjang pakai autowrap/ellipsis". `DataToko` mengizinkan nama sampai `Config.TOKO_NAMA_PANJANG_MAKS` = 24 huruf. Lebar minimum kartu naik, `Batas`/`Isi` ikut melebar dan seluruh layar bergeser keluar viewport. Bukti (tes reproduksi QA, tidak terdaftar di runner): `godot --headless --path . --script res://tests/qa_repro_ui1_teks_panjang.gd` di lebar game 640 (1920x1080): nama "Rem Pakem Racing Edition" (24 huruf): `Isi` = (-4.5, 12) ukuran 649 x 336 (kiri dan kanan keluar layar 640); nama "Ban Anti-Selip Super" (20 huruf): `Isi` 618 lebar (melewati margin 12). Di lebar 800 nama 24 huruf "WWW..." menggeser `Isi` ke x=-14 (ukuran 828). Deskripsi 48 huruf biasa (kontrol) tidak merusak. Latent: data nyata saat ini <= 14 huruf ("Ban Anti-Selip"), tetapi pemuat data MENGIZINKAN nilai itu dan tidak ada tes terpanjang (Dev hanya menguji "Stamina awet dan rantai lebih tahan"). | OPEN | | tes `tes_bengkel_tata_c`: nama 24 huruf di 640 dan 800 tidak melebihi margin, `autowrap` atau `text_overrun_behavior` pada `nama` |
+| QA-002 | 1 | Major | scripts/ui/layar_bengkel.gd:230 dan :259 (`_tampil_chip(kartu.chip_harga, ...)`) | Mutan QA M16 (chip harga disembunyikan bila `Aksi.KURANG`, hanya tampil bila AKTIF) LOLOS: 23004 lolos, 0 gagal. SPEC U-1: "Harga selalu chip di sebelah tombolnya" dan keadaan c (saldo kurang) memperlihatkan harga di sebelah tombol "Koin kurang" supaya pemain tahu berapa yang kurang. Tes memeriksa `kartu.harga.text` (teks label) tetapi tidak `chip_harga.visible` / `is_visible_in_tree()` pada kartu servis maupun upgrade berstatus KURANG (`tes_bengkel_tata_c._test_keadaan_c` dan `tes_bengkel_scene`). Perilaku sekarang benar (tangkapan c menunjukkan "84 koin" di sebelah "Koin kurang"); yang hilang adalah tes untuk logika kritis ini. | OPEN | | tambah `check(kartu.chip_harga.is_visible_in_tree() ...)` untuk servis dan upgrade berstatus KURANG di keadaan c dan tingkat_3_dimiliki |
+| QA-003 | 1 | Minor | assets/sprites/ui/ui_kartu_biasa.png, ui_kartu_redup.png, ui_btn_nonaktif.png (garis bingkai) | AC-9 menulis "garis komponen >= 3:1". Ukuran QA sendiri dari tangkapan 2340x1080 (tepi komponen vs 2 px di luarnya, pita kiri): kartu biasa/redup 1,14..1,29:1, tombol nonaktif 1,14:1 (kartu menonjol berbingkai WARN 6,91:1; tombol aktif 8,53..10,27:1; "Hari berikutnya" 10,27:1). Cocok dengan angka Dev (D-1). Putusan QA: BUKAN Major. Alasan: tombol AKTIF (satu-satunya yang menuntut pengenalan target) lolos jauh; tombol nonaktif dikecualikan dari 1.4.11 WCAG dan dibedakan tanpa warna (arsir, teks tipis, alasan "Koin kurang", teks >= 7,48:1 terhadap sisi terang arsir, diukur QA); kartu adalah wadah, bukan kontrol, dan isinya terbaca (teks >= 7,79:1). Tetap penyimpangan harfiah dari AC-9 dan dari kanvas yang diberi pemilik; keputusan pemilik setelah uji HP 8.18 (D-1). Disarankan SPEC AC-9 dipersempit ke "kontrol aktif". | DEFERRED (keputusan pemilik, D-1) | | |
+| QA-004 | 1 | Nit | tools/ui_art/redesain/pasang.py:LATAR; SPEC AC-2 | SPEC AC-2 menyebut latar "640/800"; hanya 800 dipasang (P1). QA memverifikasi alasannya: `bengkel_latar_640.png` = potongan tengah (x 80..720) `bengkel_latar_800.png`, 0 piksel beda; `Config.LAYAR_LEBAR_MAKS_PX` = 800; `ui_bengkel_latar_800.png` di assets = salinan byte-identik docs. Di lebar 640 bengkel tampil benar (tangkapan 1920x1080 dilihat QA: lampu di tengah, tidak ada teks tertutup). Pembenaran SAH; yang tersisa hanya SPEC perlu diamendemen. | DEFERRED (diterima) | | |
+| QA-005 | 1 | Nit | scripts/systems/tampil_bengkel.gd:81 (`kunci_tombol`) | Mutan QA M6 (`status != Aksi.AKTIF` alih-alih `== Aksi.KURANG`) lolos: setara di praktik karena `_atur_tombol` hanya dipanggil bila aksi != TIDAK_ADA, tetapi kontrak fungsi murni untuk `Aksi.TIDAK_ADA` tidak diuji. | OPEN | | `kunci_tombol(TIDAK_ADA, "BENGKEL_SERVIS") == "BENGKEL_SERVIS"` di `tes_tampil_bengkel` |
+| QA-006 | 1 | Nit | scripts/systems/tampil_bengkel.gd:173 (`var cincin: int = 1`), scripts/ui/panggung_sepeda.gd:45 (`Vector2(-1, -1)`, `Vector2(2, 2)`), scripts/ui/gaya_hud.gd (`set_border_width_all(1)`, `_kotak_fokus`) | Angka ajaib kecil (garis 1 px) di luar `Config`; rule `gdscript` "tanpa angka ajaib". Murni gaya, tidak mengubah perilaku. | OPEN | | |
+| QA-007 | 1 | Nit | tools/tests_cek/uji_aset_pasang_5b.py:67 | Pola larangan `r'nyala'` diperlonggar jadi `r'^prop_lampu_.*nyala'` (dicatat Dev; alasan sah: `ui_btn_sakelar_nyala`). Efek samping: aset lain berkata "nyala" kini tidak ditandai. Lebih ketat bila hanya mengecualikan `ui_btn_sakelar_nyala` secara eksplisit. Juga `tes_bengkel_scene.gd` (satu `check` diubah dari teks "Baik" ke `not tingkat.visible`, dicatat Dev). | DEFERRED | | |
+| QA-008 | 1 | Nit | scripts/ui/layar_bengkel.gd:`_saat_beli_komponen` | Latent (data sekarang hanya tingkat I): pada komponen bertingkat kartu berganti isi ke tingkat berikutnya sesudah beli, jadi ketukan kedua pada tempat yang sama (frame berbeda) membeli tingkat II tanpa konfirmasi. Bukan bug untuk data hari ini; patut dipertimbangkan sebelum tingkat 2-3 nyata dipakai (jeda 0,35 detik atau konfirmasi). | DEFERRED | | |
+| QA-009 | 1 | Nit | scenes/bengkel/bengkel.tscn (`GambarLatar`) | Lebar game > 800 (mis. 21:9 = 853, QA uji 853/1000/1066 lewat skrip, tata letak benar, tanpa teks terpotong) membuat latar 800 tidak menutup tepi; sisi kiri dan kanan berwarna `UI_BG` polos. `LAYAR_LEBAR_MAKS_PX` memang 800 (20:9), jadi di luar jangkauan resmi. Visual saja. | DEFERRED | | |
 
 ## Baseline (AC-1; diisi Dev bagian A langkah 1)
 Diambil di pohon kerja yang belum berubah selain `docs/loop/` (HEAD `0b34f64`, setara `main` `b99f5a9`), 2026-10-23, satu proses Godot sekaligus.
@@ -247,3 +256,84 @@ Catatan: satu kejadian kerja, bukan mutan: `git checkout` milik harness sempat m
 - D-1 (garis kartu 1,14..1,78:1 dan tombol nonaktif 1,14:1 < 3:1) dan D-2 (max vs 12 + inset).
 - `uji_aset_pasang_5b.py` sudah gagal di HEAD bagian A (diperbaiki di sini).
 - Lisensi latar bengkel tetap terbuka (bagian C mencatatnya di dokumen).
+
+## QA iterasi 1 (Agent 2, independen; semua perintah dijalankan sendiri, satu proses Godot sekaligus)
+
+**Verdict: FAIL** (gerbang objektif hijau; 2 Major OPEN: QA-001 layout rusak untuk nama upgrade 21-24 huruf, QA-002 mutan chip harga lolos). Temuan: Blocker 0, Major 2, Minor 1, Nit 6.
+
+### Gerbang objektif
+| Gerbang | Perintah | Hasil |
+|---|---|---|
+| Impor | `godot --headless --import` | selesai, tanpa ERROR |
+| Buka proyek | `godot --headless --path . --quit-after 2` | tanpa ERROR/WARNING |
+| Tes | `godot --headless --script res://tests/run_tests.gd` + `python3 tools/cek_keluaran_tes.py build/tests.log` | 23003 lolos, 0 gagal; pemeriksa: lolos (0 peringatan) |
+| Alat Python | semua 17 `tools/tests_cek/uji_*.py` (termasuk `uji_pemeriksa.py`, `uji_ui_redesain.py`) | semua exit 0 |
+| Save asli | sha256 `~/Library/Application Support/Godot/app_userdata/Kring Kring!/save.json` sebelum dan sesudah (juga sesudah semua probe dan 18 mutan) | `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` tetap |
+| Kebersihan repo | `git diff main...HEAD --name-only`, `git log main..HEAD` | tidak ada `.godot/`, `build/`, APK, keystore, secret; tidak ada commit di `main` (branch `feat/ui1-komponen-bengkel`, 17 commit, tanpa merge); semua commit berformat `tipe: ...` bahasa Indonesia + `Claude-Session`; `.uid` dan `.import` ada untuk skrip dan PNG baru; tidak ada file nyasar |
+| Paket | `godot --headless --path . --export-pack "Android" build/kring-uji.pck` | ada: 29 PNG UI terpasang, `ui_bengkel_sepeda.json`, skrip/scene bengkel, `theme.tres`; tidak ada: `ui_koran_`, `ui_struk`, `ui_foto`, `lencana32`, `sepeda_besar`, `latar_640`, `res://tests`, `res://docs` |
+
+### Kepatuhan AC dan putusan (BUKTI = kode + tes/ukuran yang QA jalankan; TANPA BUKTI = kurang)
+| AC / putusan | Status | Catatan QA |
+|---|---|---|
+| AC-1 baseline | BUKTI | bagian Baseline di LOG ada; angka akhir cocok gerbang di atas |
+| AC-2 set aset | BUKTI dengan penyimpangan sah | 29 PNG + `ui_bengkel_sepeda.json` tepat sama dengan `pasang.py` dan `tes_export` (himpunan tepat, impor Lossless Nearest tanpa mipmap, `.import` ada); `SALIN_KE` (`UI_ART_SALIN_KE`) ada. Latar 640 TIDAK dipasang: dibuktikan 640 = potongan tengah 800 (0 piksel beda), `LAYAR_LEBAR_MAKS_PX` 800 (QA-004, diterima) |
+| AC-3 `uji_ui_redesain.py` | BUKTI | exit 0, langkah ada di job `alat` (tes.yml:94..154), bukan job `tes` |
+| AC-4 fungsi lama utuh | BUKTI | `git diff` `gaya_hud.gd` dan `theme.tres`: hanya penambahan (tidak ada baris `-` di fungsi atau variation lama). Probe `probe_hud_rute_jendela.gd` 1920x1080 dijalankan di worktree `main` dan di branch: `hud_hasil_meleset_lewat`, `hud_hasil_semua`, `hud_jeda_sakelar`, `hud_kidal`, `hud_progres_campuran`, `hud_tenggat_hampir`, `hud_tenggat_lewat` = 0 piksel beda; `hud_awal` dan `hud_radar` beda antar jalan di branch yang sama (derau animasi, `main` jalan 2 = branch jalan 2: 0 piksel); `hud_bantu_abu` beda 45 piksel di kotak 24x12 (x 582..605, y 813..824) secara konsisten main vs branch (dua jalan tiap sisi): QA melihat potongannya, itu satu bingkai koran terbang di dunia (posisi bergantung waktu), bukan HUD/UI; bukan regresi tampilan layar yang dikerjakan. Layar koran/tutorial/banner tidak disentuh (tidak ada di diff) |
+| AC-5 kotak kondisi besar | BUKTI | `KotakKondisiBesar` + `TampilKondisiBesar`; `kotak_kondisi.gd` tidak ada di diff; tes murni di `tes_komponen_ui.gd`; terlihat di tangkapan (tiga kotak, berongga, "!") |
+| AC-6 bengkel mengikuti kanvas | BUKTI sebagian | angka kanvas (header, isi y 46, kolom 48%|8, kartu 50/62/72, chip 18, sepeda 116x78, titik `sepeda.json` = `Config.BENGKEL_SEPEDA_TITIK` urut ban, rem, rantai) cocok; anchor + Container, tanpa hex di scene. **Teks panjang: autowrap hanya di deskripsi; nama tidak (QA-001)** |
+| AC-7 keadaan a-g, tingkat 2-3 | BUKTI | semua dilihat di tangkapan (daftar di bawah) dan diuji dari data nyata |
+| AC-8 perilaku tak berubah | BUKTI | `hari_main.gd`, `economy.gd`, `data_save.gd` tidak ada di diff; QA skrip: saldo = harga sah, harga - 1 nonaktif "Koin kurang", `pressed.emit()` pada nonaktif tidak mengubah state/belanja, ketukan ganda servis dan beli membelanjakan sekali, "Hari berikutnya" selalu aktif (saldo 0). Tes lama berubah: hanya satu `check` di `tes_bengkel_scene.gd` (dicatat) dan regex `uji_aset_pasang_5b.py` (QA-007) |
+| AC-9 ukuran dan kontras | BUKTI, dengan QA-003 | tombol >= 42 tinggi dan >= 84 lebar (probe 4 ukuran: 0 tidak sesuai; QA skrip saldo sampai 2.147.483.647, semua komponen 0 atau dimiliki, lebar 640..1066: tanpa teks terpotong, tanpa kartu menimpa "Hari berikutnya"). Kontras teks lihat tabel; garis komponen lihat QA-003 |
+| AC-10 probe | BUKTI | dijalankan 4 ukuran, 0 keadaan tidak sesuai, tangkapan dilihat |
+| AC-11 dokumen | BUKTI | DESIGN_SPEC, ART_DIRECTION, redesain README, tools README, AGENTS, README, DEV_PHASES (tanpa mencentang), SETUP_ANDROID 8.18, LOOP-DEV-QA 6k ada; semua berlabel usulan, tidak ada klaim "dikunci"; butir lisensi latar tercatat |
+| AC-12 gerbang akhir | BUKTI | tabel gerbang |
+| AC-13 mutan | BUKTI dengan QA-002/005 | Dev 50/50 (klaim); QA 18 mutan: 16 tertangkap, 2 lolos (tabel di bawah) |
+| U-1 tata C | BUKTI | |
+| U-2 satu bahasa tombol | BUKTI | empat peran, nonaktif rata diarsir "Koin kurang", 140x42 kanan bawah selalu aktif |
+| U-3 fungsi baru | BUKTI | |
+| U-4 latar dipasang untuk uji | BUKTI | lisensi tercatat sebagai butir terbuka pemilik |
+| U-5 tanpa angka ekonomi/kunci lama berubah | BUKTI | `git diff` `translations/ui.csv`: hanya 7 kunci baru (`BENGKEL_LABEL_SALDO`, `BENGKEL_PENANDA_PERLU/AUS`, `BENGKEL_TINGKAT_1/2/3/LAIN`); `config.gd`: hanya konstanta tampilan `BENGKEL_*` (beberapa konstanta lama `BENGKEL_JARAK_PX`, `BENGKEL_TOMBOL_LEBAR_PX`, `BENGKEL_HARGA_LEBAR_PX`, `BENGKEL_KOLOM_*_RASIO` dihapus karena tidak lagi dipakai; tes hijau) dan `UI_*`/`KONDISI_BESAR_*`; tidak ada konstanta `SERVIS_*`/`TOKO_*` berubah |
+
+### Tangkapan yang QA jalankan dan LIHAT (`docs/loop/20261023-ui1-komponen-bengkel/shots/qa_iter1/`, 4 ukuran x 11 keadaan = 44 PNG + JSON)
+Dilihat satu per satu (Read PNG): 2340x1080 `a_baru`, `b_ada_rusak`, `c_saldo_kurang`, `d_sesudah_beli`, `e_terpadat`, `f_galat_data`, `g_inset_aman`, `tingkat_2`, `tingkat_3_dimiliki`; 1920x1080 (lebar 640) `e_terpadat`, `g_inset_aman`, `tingkat_3_dimiliki`, `f_galat_data`. Yang TIDAK saya lihat sebagai gambar (hanya dijalankan dan lolos pemeriksaan probe/JSON): 2400x1080 dan 1600x720 (lebar 800, diperiksa lewat angka probe), `sesudah_servis` dan `tingkat_1` semua ukuran, 1920x1080 `a`,`b`,`c`,`d`. Perbandingan dengan kanvas dilakukan lewat angka dan komposisi dari `Bengkel*.dc.html`/`ui.css`/`sepeda.json` (kanvas tidak bisa dirender di sini: bergantung `support.js` dan blob). Hasil: sepeda di tengah panggung dengan chip "! Ban" di depan titik ban, "! Rem" sesudah titik rem, "Rantai aus" di bawah titik rantai (sepeda baik tampil bersih, keadaan a); kartu PERLU SERVIS berbingkai WARN menonjol, BAIK/Dimiliki redup dengan chip "Baik"/"Dimiliki" bercentang; chip harga persis di sebelah tombol, juga di samping "Koin kurang"; tombol nonaktif rata, diarsir, teks alasan; jejak tingkat "I | II | III" dengan centang dan tingkat aktif beraksen; tiga kartu upgrade dan tiga kartu servis muat tanpa scroll di 640, 780, 800; "Hari berikutnya" 140x42 kanan bawah, panah di kanan; galat data menampilkan panel WARN, servis tetap jalan; inset aman menggeser margin dan tombol; tidak ada teks terpotong; lampu latar menimpa judul "UPGRADE" tetapi berpelat (terbaca). Pengamatan: potongan krem (kalender) dari latar mengintip di celah antar kartu upgrade (tidak mengganggu teks); bagian latar di bawah kartu upgrade terakhir kosong.
+
+Tangkapan lama hasil/jeda: `probe_hud_rute_jendela.gd` 1920x1080 dijalankan di worktree `main` (`b99f5a9`, sudah di-prune) dan branch; layar hasil, jeda (sakelar), kidal, progres, tenggat, hasil semua: piksel identik (lihat AC-4). Tampilan sama dengan main.
+
+### Kontras (ukuran QA sendiri dari tangkapan; skrip scratchpad `kontras_qa3.py`, `kontras_qa2.py`; metode berbeda dari `tools/ukur_kontras_tangkapan.py`)
+- Teks: warna token dari JSON probe (bukan estimasi piksel) melawan warna latar modal di persegi teks, 44 tangkapan: terburuk 7,79:1 ("! Ban"/"! Rem"/"! Rantai" WARN di chip warn), lalu 8,28:1 ("Baik"), 8,32:1 ("UPGRADE" di pelat), 8,53:1 (TEXT_2 di `UI_PANEL`/status/deskripsi/"Koin kurang"), 8,99:1, 9,63:1 dst; tidak ada teks < 7:1. Cocok dengan angka Dev, tetapi dihitung ulang dengan warna token independen.
+- "Koin kurang" di atas arsir: dua warna arsir `(42,30,23)` dan `(54,40,30)`; TEXT_2 `(205,185,163)` terhadap keduanya 8,53:1 dan 7,48:1 (>= 7).
+- Judul "Bengkel" dan label "SALDO" langsung di atas latar (tanpa pelat): piksel latar di persegi itu (aset 800x360, p99 luminans 0,004..0,010) memberi 15,9..17,8:1 (judul) dan 9,2..10,3:1 (label TEXT_2). Percobaan awal QA dengan latar dari tangkapan memberi 1,5..1,9:1 karena menghitung piksel tepi huruf, itu artefak metode, bukan temuan.
+- Garis komponen: lihat QA-003 (tombol aktif 8,53..10,27:1; kartu menonjol 6,91:1; kartu biasa/redup 1,14..1,29:1; tombol nonaktif 1,14:1).
+
+### Mutan QA (18, pilihan sendiri; satu perubahan, `run_tests.gd` penuh, `git checkout`/pemulihan sesudahnya; pohon kerja bersih lagi)
+Skrip `mutan.py` di scratchpad menulis balik berkas asli dari salinan memori; `git status` sesudah semua mutan: hanya `.claude/`, `shots/qa_iter1/`, dan tes reproduksi QA.
+| # | Mutan | Hasil |
+|---|---|---|
+| M1 | `Aksi.AKTIF if saldo >= harga` -> `>` | TERTANGKAP (10 gagal) |
+| M2 | penanda di sepeda hanya untuk PERLU (AUS tak bertanda) | TERTANGKAP (6) |
+| M3 | kartu PERLU_BENGKEL tidak menonjol (BIASA) | TERTANGKAP (13) |
+| M4 | titik rem x 33 -> 34 di `BENGKEL_SEPEDA_TITIK` | TERTANGKAP (3) |
+| M5 | jejak tingkat tampil bila >= 1 (bukan > 1) | TERTANGKAP (3) |
+| M6 | `kunci_tombol`: `status != Aksi.AKTIF` (alih-alih `== KURANG`) | **LOLOS** (setara di praktik; QA-005) |
+| M7 | lebar minimum tombol 84 -> 80 | TERTANGKAP (14) |
+| M8 | tombol nonaktif tetap `disabled = false` | TERTANGKAP (21) |
+| M9 | chip tingkat aktif: `dimiliki or jumlah > 1` -> `and` | TERTANGKAP (4) |
+| M10 | jarak chip sisi AKHIR 5 -> 0 | TERTANGKAP (2) |
+| M11 | catatan ongkos naik bila rusak >= 3 (bukan 2) | TERTANGKAP (3) |
+| M12 | kunci penanda PERLU dan AUS tertukar | TERTANGKAP (3) |
+| M13 | upgrade yang dijual: `>` -> `>=` level dimiliki | TERTANGKAP (10, dengan SCRIPT ERROR) |
+| M14 | kartu upgrade dimiliki tidak redup | TERTANGKAP (4) |
+| M15 | fraksi kolom servis 0,48 -> 0,5 | TERTANGKAP (5) |
+| M16 | chip harga kartu servis hanya tampil bila AKTIF (hilang saat "Koin kurang") | **LOLOS** (0 gagal; QA-002 Major) |
+| M17 | warna teks tombol nonaktif TEXT_2 -> TEXT | TERTANGKAP (5) |
+| M18 | status jejak AKTIF = indeks 0 | TERTANGKAP (3) |
+
+### Edge case bengkel (skrip scratchpad `qa_edge*.gd`, `qa_first.gd`)
+Saldo = harga (aktif, belanja 84, saldo 0), harga - 1 (nonaktif "Koin kurang"; `pressed.emit()` dua kali: state identik); saldo 0 semua baik (tiga "Koin kurang" + hanya "Hari berikutnya"); saldo 999.999, 12.345.678, 2.147.483.647 di lebar 640 dan 800 (tanpa terpotong, tanpa keluar viewport); semua komponen 0, tidak ada yang rusak, semua dimiliki (hanya satu tombol tampil); ketukan ganda servis dan beli (sekali); lebar game 853, 1000, 1066 (tata letak benar). Gagal: nama upgrade panjang (QA-001). Catatan: pada instansiasi PERTAMA di proses headless dengan `root.size` yang diatur skrip, tinggi `Isi` 616 (viewport awal belum sesuai): artefak skrip QA (diberi pemanasan di tes reproduksi), BUKAN temuan; QA tidak melaporkannya. Back Android = Hari berikutnya, jeda/background, kidal: tidak berubah (tidak ada di diff `hari_main.gd`/`layar_bengkel` tidak menyebut kidal; tes lama hijau).
+
+### NEEDS-MANUAL
+- [ ] SETUP_ANDROID 8.18 (10 butir) di vivo V2108 dan A54: terbaca sekilas, chip kondisi tepat, tombol enak ditekan (ditekan = turun 2 px), kartu menonjol vs redup, harga dekat tombol, latar tidak mengganggu (lisensi latar belum tercatat, belum boleh masuk rilis), tiga upgrade tanpa scroll, 60 fps, zona aman notch. Tambahan QA: nilai apakah garis kartu (QA-003) cukup jelas di bawah sinar matahari.
+- [ ] Keputusan pemilik: QA-003 (garis kartu < 3:1), D-2 (`max(12, inset)` vs `12 + inset`).
+
+### Tes reproduksi QA
+`tests/qa_repro_ui1_teks_panjang.gd` (TIDAK terdaftar di `run_tests.gd`, exit 1 selama QA-001 terbuka): `godot --headless --path . --script res://tests/qa_repro_ui1_teks_panjang.gd`. Hapus atau jadikan tes resmi (`tes_bengkel_tata_c`) saat Dev memperbaiki.
