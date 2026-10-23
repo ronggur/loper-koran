@@ -42,7 +42,7 @@ Jangan mengambil keputusan yang tercatat terbuka di `ROADMAP.md` bagian 5 (game 
 ## Prinsip desain (GDD 2; menang atas keputusan teknis)
 
 1. **Kecepatan adalah pilihan dengan konsekuensi.** Ngebut menaikkan skor tapi mempersempit waktu bereaksi dan menguras stamina. Santai lebih aman tapi tenggat tidak menunggu.
-2. **Gagal tidak menghukum berlapis.** Misi gagal tidak mengurangi koin dan tidak menggagalkan hari. Kerusakan sepeda menghambat, tidak menghentikan permainan. Tidak ada keadaan "kalah" yang mengunci pemain (STORY, TECH_PLAN 3.2).
+2. **Gagal tidak menghukum berlapis.** Misi gagal tidak mengurangi koin dan tidak menggagalkan hari. Kerusakan sepeda menghambat, tidak menghentikan permainan. Tidak ada keadaan "kalah" yang mengunci pemain (STORY, TECH_PLAN 3.2). Satu pengecualian disengaja (keputusan pemilik 2026-10-22, GDD 2 dan 14.1): koran yang dilempar lalu terbuang memotong koin kecil (`KOIN_POTONGAN_KORAN_MELESET`); saldo tidak pernah di bawah 0 dan tidak ada hukuman lain.
 3. **Adil dan bisa dibaca.** Rintangan punya pola yang bisa dipelajari, kerusakan memberi tanda peringatan dulu, petunjuk misi punya penanda visual minimal 2 detik, jalur utama selalu bersih, objek yang menutupi pemain semi-transparan.
 4. **Tanpa pay-to-win.** Satu mata uang (koin), hanya dari bermain. Iklan selalu pilihan pemain, tidak pernah di tengah rute, dan seluruh game bisa dimainkan tanpa iklan.
 5. **Indonesia yang hidup.** Gang kampung, warung, pasar, hajatan, tujuh belasan adalah bahan utama dunia, rintangan, dan misi, bukan dekorasi.
