@@ -120,7 +120,7 @@ func _test_kondisi_baru() -> void:
 	for id: String in Config.KONDISI_KOMPONEN:
 		var kartu: LayarBengkel.KartuServis = layar.kartu_servis(id)
 		check(not kartu.tombol.visible and kartu.label_baik.visible and kartu.label_baik.text == "Baik" and not kartu.harga.visible, "%s penuh: label 'Baik', tanpa tombol Servis dan tanpa harga" % id)
-		check(kartu.tingkat.text == "Baik" and kartu.kotak.kotak_tampil() == [TampilKondisi.Kotak.PENUH, TampilKondisi.Kotak.PENUH, TampilKondisi.Kotak.PENUH] and not kartu.kotak.seru_tampil(), "%s: tingkat 'Baik', tiga kotak penuh, tanpa '!'" % id)
+		check(not kartu.tingkat.visible and kartu.kotak.kotak_tampil() == [TampilKondisi.Kotak.PENUH, TampilKondisi.Kotak.PENUH, TampilKondisi.Kotak.PENUH] and not kartu.kotak.seru_tampil(), "%s: teks status kecil tersembunyi (chip 'Baik' sudah menyatakannya, redesain tata C), tiga kotak penuh, tanpa '!'" % id)
 	check(layar.jumlah_upgrade_tampil() == 3 and not layar.ongkos_tampil() and not layar.galat_tampil(), "tiga upgrade tampil, tanpa catatan ongkos naik, tanpa galat data")
 	var pakem: TombolSentuh = layar.tombol_beli("rem_pakem")
 	var anti: TombolSentuh = layar.tombol_beli("ban_anti_selip")

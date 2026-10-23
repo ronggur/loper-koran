@@ -217,6 +217,11 @@ func _initialize() -> void:
 	await scene_kondisi.jalankan()
 	var scene_bengkel: TesBengkelScene = TesBengkelScene.new(check, _judul, self)
 	await scene_bengkel.jalankan()
+	# Run ui1-komponen-bengkel bagian B: bengkel tata C (pemilihan keadaan murni, keadaan a sampai g dari data nyata, ukuran minimum, tanpa teks terpotong atau tumpang tindih, chip di dalam panggung, kontras token).
+	var tampil_bengkel: TesTampilBengkel = TesTampilBengkel.new(check, _judul)
+	tampil_bengkel.jalankan()
+	var tata_c: TesBengkelTataC = TesBengkelTataC.new(check, _judul, self)
+	await tata_c.jalankan()
 	# Run fase6a2-reputasi-pelanggan bagian B: potongan koran terbuang di scene rute, layar hasil, HUD, dan alur hari.
 	var scene_potongan: TesPotonganScene = TesPotonganScene.new(check, _judul, self)
 	await scene_potongan.jalankan()
