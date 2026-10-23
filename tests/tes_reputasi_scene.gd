@@ -171,6 +171,12 @@ func _test_hud_tanpa_keadaan() -> void:
 		var akar: RuteMain = await _siapkan(_state(nilai))
 		check(akar.hud_rute().reputasi_tampil() and akar.hud_rute().teks_reputasi() == str(nilai), "reputasi %d tampil '%d'" % [nilai, nilai])
 		_bersihkan(akar)
+	var di_luar: RuteMain = await _siapkan(_state(50))
+	di_luar.hud_rute().tampilkan_reputasi(150)
+	check(di_luar.hud_rute().teks_reputasi() == "100", "reputasi di atas 100 dijepit tampil '100', dapat '%s'" % di_luar.hud_rute().teks_reputasi())
+	di_luar.hud_rute().tampilkan_reputasi(-5)
+	check(not di_luar.hud_rute().reputasi_tampil(), "reputasi negatif = penanda tersembunyi")
+	_bersihkan(di_luar)
 	var akar2: RuteMain = await _siapkan(_state(55))
 	_langkah(akar2, 300)
 	check(akar2.hud_rute().teks_reputasi() == "55", "reputasi tetap 55 selama rute berjalan (berubah hanya di akhir hari)")
@@ -264,6 +270,7 @@ func _test_layar_hasil_kanan() -> void:
 	check(l.teks_pelanggan() == ["Berhenti berlangganan: 1"] and l.teks_target() == "" and l.teks_baru().is_empty(), "tanpa milestone: bagian target dan baru tersembunyi; berhenti 1 tampil: %s" % [l.teks_pelanggan()])
 	l.isi(_angka(20, 300, 0), null, [] as Array[String], -1, _rep(50, 50, [0, 0, 0, 0]), null)
 	check(l.teks_reputasi() == "50 (+0)" and l.teks_pelanggan().is_empty(), "perubahan nol: '50 (+0)' dan bagian pelanggan tersembunyi")
+	check(nilai.get_theme_color(&"font_color") == Palette.TEXT_2, "perubahan nol: nilai netral TEXT_2 (hanya kenaikan yang OK)")
 	# Empat jenis.
 	l.isi(_angka(20, 300, 0), null, [] as Array[String], -1, _rep(30, 29, [2, 1, 1, 1]), null)
 	check(l.teks_pelanggan() == ["Pelanggan baru: 2", "Jadi pelanggan tetap: 1", "Berhenti berlangganan: 1", "Berlangganan lagi: 1"], "empat jenis tampil urut: %s" % [l.teks_pelanggan()])
@@ -332,6 +339,13 @@ func _test_layar_hasil_ukuran(u: Array) -> void:
 	var aman: Rect2 = Rect2(Vector2(20, 16), layar.size - Vector2(44, 34))
 	check(aman.encloses(panel) and aman.encloses(tombol), "%d: panel dan tombol di dalam zona aman 20/16/24/18" % u[0])
 	check(l.teks_reputasi() == "53 (-2)" and l.teks_pelanggan().size() == 4 and l.teks_baru().size() == 3, "%d: reputasi, empat pelanggan, tiga baru tampil" % u[0])
+	# Tanpa kolom samping (rute yang dijalankan sendiri): kasus yang sama tetap muat dan tidak melar (lebar sekitar 300, bukan hasil autowrap yang runtuh).
+	angka.misi_hasil = ""
+	l.isi(angka, null, ["ban", "rem", "rantai"] as Array[String], 10)
+	await _tree.process_frame
+	await _tree.process_frame
+	var polos: Rect2 = l.rect_panel()
+	check(not l.kanan_tampil() and polos.size.x >= 296.0 and polos.size.x <= 310.0 and polos.size.y <= 300.0 and layar.encloses(polos) and l.rect_tombol().size.y >= 42.0, "%d: tanpa kolom samping dan tanpa rekap misi panel %s tetap sekitar 300 lebar dan di dalam layar" % [u[0], polos.size])
 	l.queue_free()
 
 
@@ -392,6 +406,8 @@ func _test_bunyi_milestone() -> void:
 	if audio == null:
 		check(false, "autoload Audio ada")
 		return
+	var dummy_lama: bool = bool(audio.get(&"putar_di_driver_dummy"))
+	audio.set(&"putar_di_driver_dummy", true)
 	var s1: Dictionary = _state(0)
 	s1["koin_total"] = 950
 	var a1: RuteMain = await _siapkan(s1)
@@ -410,6 +426,7 @@ func _test_bunyi_milestone() -> void:
 	_selesaikan(a2, 100, 0, 0)
 	check(int(audio.call(&"jumlah_bunyi_milestone")) == n1 and a2.hasil_milestone().baru.is_empty(), "100 + 100 = 200 tidak melewati milestone: tanpa denting")
 	_bersihkan(a2)
+	audio.set(&"putar_di_driver_dummy", dummy_lama)
 	check(BunyiMilestone.berbunyi(1) and BunyiMilestone.berbunyi(3) and not BunyiMilestone.berbunyi(0), "BunyiMilestone.berbunyi: hanya bila ada tingkat baru")
 
 
