@@ -106,6 +106,7 @@ func _test_kontras_token() -> void:
 		var isi: Color = _piksel(KomponenUi.nama_tekstur_chip(gaya), 4, 4)
 		var teks: Color = KomponenUi.warna_teks_chip(gaya)
 		check(_kontras(teks, isi) >= 7.0, "chip %s: teks di atas isi %s kontras %.2f >= 7" % [gaya, isi.to_html(false), _kontras(teks, isi)])
+	check(KomponenUi.warna_teks_chip(KomponenUi.GayaChip.GELAP) == Palette.TEXT and KomponenUi.warna_teks_chip(KomponenUi.GayaChip.OK) == Palette.OK and KomponenUi.warna_teks_chip(KomponenUi.GayaChip.WARN) == Palette.WARN and KomponenUi.warna_teks_chip(KomponenUi.GayaChip.NETRAL) == Palette.TEXT_2 and KomponenUi.warna_teks_chip(KomponenUi.GayaChip.AKSEN) == Palette.ACCENT, "warna teks chip: GELAP TEXT, OK OK, WARN WARN, NETRAL TEXT_2, AKSEN ACCENT (literal kanvas ui.css)")
 	check(_kontras(KomponenUi.warna_teks_tombol(KomponenUi.Peran.UTAMA, KomponenUi.KeadaanTombol.NORMAL), _piksel("btn_utama", 6, 8)) >= 7.0, "tombol utama: teks gelap di atas isi ACCENT >= 7")
 	check(_kontras(KomponenUi.warna_teks_tombol(KomponenUi.Peran.BIASA, KomponenUi.KeadaanTombol.NORMAL), _piksel("btn_biasa", 6, 8)) >= 7.0, "tombol biasa: teks TEXT di atas isinya >= 7")
 	check(_kontras(KomponenUi.warna_teks_tombol(KomponenUi.Peran.BIASA, KomponenUi.KeadaanTombol.DITEKAN), _piksel("btn_biasa_tekan", 6, 8)) >= 7.0, "tombol biasa ditekan: teks ACCENT di atas isinya >= 7")
@@ -135,7 +136,8 @@ func _test_keadaan_a() -> void:
 	for id: String in Config.KONDISI_KOMPONEN:
 		var kartu: LayarBengkel.KartuServis = layar.kartu_servis(id)
 		check(_kartu_jenis(layar, id) == KomponenUi.JenisKartu.REDUP and _jenis_kartu(kartu.panel) == GayaHud.tekstur("kartu_redup") and kartu.chip_baik.visible and not kartu.tombol.visible and not kartu.chip_harga.visible, "%s: kartu redup (tekstur kartu_redup), chip Baik, tanpa tombol dan harga" % id)
-		check(not layar.panggung().chip_tampil(id), "%s: sepeda bersih, tanpa chip penanda" % id)
+		check(not layar.panggung().chip_tampil(id) and layar.panggung().rect_titik_global(id) == Rect2(), "%s: sepeda bersih, tanpa chip dan tanpa titik penanda" % id)
+		check(kartu.label_baik.get_theme_color(&"font_color") == Palette.OK and absf(kartu.chip_baik.get_global_rect().size.y - 18.0) < 0.5, "%s: chip Baik bertulisan hijau OK setinggi 18" % id)
 	for id: String in ["ban_anti_selip", "rem_pakem", "rantai_hemat"]:
 		var tombol: TombolSentuh = layar.tombol_beli(id)
 		check(tombol.disabled and tombol.text == "Koin kurang" and layar.kartu_upgrade(id).panel.visible, "%s: tombol nonaktif 'Koin kurang' (saldo 375 < harga)" % id)
@@ -155,7 +157,10 @@ func _test_keadaan_b() -> void:
 	check(p.teks_chip("ban") == "! Ban" and p.teks_chip("rem") == "! Rem" and p.teks_chip("rantai") == "Rantai aus", "chip di sepeda: '! Ban', '! Rem', 'Rantai aus', dapat '%s' '%s' '%s'" % [p.teks_chip("ban"), p.teks_chip("rem"), p.teks_chip("rantai")])
 	check(layar.kartu_servis("ban").kotak.seru_tampil() and layar.kartu_servis("rem").kotak.seru_tampil() and not layar.kartu_servis("rantai").kotak.seru_tampil(), "tanda '!' di kotak kondisi hanya pada komponen PERLU")
 	check(layar.kartu_servis("ban").tingkat.text == "Perlu servis" and layar.kartu_servis("rantai").tingkat.text == "Aus", "teks status 'Perlu servis' dan 'Aus' (terbaca tanpa warna)")
+	check(layar.kartu_servis("ban").tingkat.get_theme_color(&"font_color") == Palette.TEXT and layar.kartu_servis("rantai").tingkat.get_theme_color(&"font_color") == Palette.TEXT_2, "teks status: 'Perlu servis' TEXT (WARN hanya 6,91:1 di atas kartu), 'Aus' TEXT_2")
+	check(p.warna_titik("ban") == Palette.WARN and p.warna_titik("rem") == Palette.WARN and p.warna_titik("rantai") == Palette.TEXT_2, "titik penanda: PERLU berwarna WARN, AUS berwarna TEXT_2")
 	for id: String in Config.KONDISI_KOMPONEN:
+		check(absf(p.rect_chip(id).size.y - 14.0) < 0.5, "chip penanda %s setinggi 14 (ukuran kecil)" % id)
 		check(not layar.tombol_servis(id).disabled and layar.tombol_servis(id).text == "Servis" and layar.tombol_servis(id).icon != null, "%s: tombol Servis aktif berikon kunci" % id)
 	_buang(layar)
 
@@ -184,7 +189,8 @@ func _test_keadaan_d() -> void:
 	await _tree.process_frame
 	var kartu: LayarBengkel.KartuUpgrade = layar.kartu_upgrade("ban_anti_selip")
 	check(kartu.info.dimiliki and _jenis_kartu(kartu.panel) == GayaHud.tekstur("kartu_redup") and kartu.chip_dimiliki.visible and kartu.label_dimiliki.text == "Dimiliki" and not kartu.tombol.visible and not kartu.chip_harga.visible, "ban_anti_selip: kartu redup, chip 'Dimiliki', tanpa tombol dan harga")
-	check(kartu.chip_tingkat.teks() == "I" and kartu.info.status_tingkat == KomponenUi.StatusChip.TINGKAT_AKTIF, "chip tingkat 'I' beraksen sesudah dimiliki")
+	check(kartu.nama.get_theme_color(&"font_color") == Palette.TEXT_2 and layar.kartu_upgrade("rem_pakem").nama.get_theme_color(&"font_color") == Palette.TEXT, "nama upgrade yang dimiliki TEXT_2 (redup), yang dijual TEXT")
+	check(kartu.label_dimiliki.get_theme_color(&"font_color") == Palette.TEXT_2 and kartu.chip_tingkat.teks() == "I" and kartu.info.status_tingkat == KomponenUi.StatusChip.TINGKAT_AKTIF, "chip tingkat 'I' beraksen sesudah dimiliki")
 	check(layar.state()["koin"] == 500 and layar.teks_saldo() == "500" and not layar.tombol_beli("rem_pakem").disabled and layar.tombol_beli("rantai_hemat").disabled, "saldo 500: rem_pakem (500) tepat terbeli, rantai_hemat (700) nonaktif")
 	check(_jenis_kartu(layar.kartu_upgrade("rem_pakem").panel) == GayaHud.tekstur("kartu_biasa"), "kartu upgrade lain tetap biasa")
 	_buang(layar)
@@ -193,6 +199,8 @@ func _test_keadaan_d() -> void:
 func _test_keadaan_e() -> void:
 	_judul.call("Bengkel tata C keadaan e (terpadat: tiga PERLU, saldo 125.480): harga 162, 96, 158 (ongkos x1,5), saldo enam digit terbaca penuh, tiga chip penanda (AC-7e)")
 	var layar: LayarBengkel = await _bengkel(_state(125480, 0.1, 0.2, 0.3))
+	var chip_saldo: Control = layar.find_child("ChipSaldo", true, false)
+	check(absf(chip_saldo.get_global_rect().size.y - 24.0) < 0.5 and absf(layar.kartu_servis("ban").chip_harga.get_global_rect().size.y - 18.0) < 0.5, "chip saldo setinggi 24 (besar) dan chip harga 18 (normal)")
 	check(layar.teks_saldo() == "125.480" and layar.teks_ongkos() == "Banyak yang rusak: ongkos servis x1.50", "saldo '125.480' dan catatan x1.50")
 	check(layar.kartu_servis("ban").harga.text == "162 koin" and layar.kartu_servis("rem").harga.text == "96 koin" and layar.kartu_servis("rantai").harga.text == "158 koin", "harga 162, 96, 158 (150 x 0,7 x 1,5 = 157,5 dibulatkan ke atas)")
 	for id: String in Config.KONDISI_KOMPONEN:
@@ -239,7 +247,7 @@ func _test_tombol_nonaktif_gaya() -> void:
 	var aktif: StyleBoxTexture = layar.tombol_servis("rem").get_theme_stylebox(&"normal") as StyleBoxTexture
 	check(aktif.texture == GayaHud.tekstur("btn_biasa") and layar.tombol_servis("rem").get_theme_stylebox(&"pressed") is StyleBoxTexture and (layar.tombol_servis("rem").get_theme_stylebox(&"pressed") as StyleBoxTexture).texture == GayaHud.tekstur("btn_biasa_tekan"), "tombol aktif: bingkai biasa dan biasa_tekan")
 	var hari: TombolSentuh = layar.tombol_hari_berikutnya()
-	check((hari.get_theme_stylebox(&"normal") as StyleBoxTexture).texture == GayaHud.tekstur("btn_utama") and hari.size.x >= 140.0 and hari.size.y >= 42.0 and hari.icon == GayaHud.tekstur("glif_panah_gelap"), "'Hari berikutnya': peran utama, 140x42, glif panah gelap")
+	check((hari.get_theme_stylebox(&"normal") as StyleBoxTexture).texture == GayaHud.tekstur("btn_utama") and hari.size.x >= 140.0 and hari.size.y >= 42.0 and hari.icon == GayaHud.tekstur("glif_panah_gelap") and hari.icon_alignment == HORIZONTAL_ALIGNMENT_RIGHT, "'Hari berikutnya': peran utama, 140x42, glif panah gelap")
 	check(layar.tombol_servis("ban").size.x >= 84.0 and layar.tombol_servis("ban").size.y >= 42.0 and layar.tombol_servis("rem").size.x >= 84.0, "tombol servis >= 84x42 (nonaktif maupun aktif)")
 	_buang(layar)
 

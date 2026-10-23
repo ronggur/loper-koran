@@ -86,6 +86,14 @@ func rect_titik_global(id: String) -> Rect2:
 	return _titik[i].get_global_rect()
 
 
+## Warna isi titik penanda komponen `id` (`WARN` bila PERLU_BENGKEL, `TEXT_2` bila AUS); transparan bila titik tidak tampil.
+func warna_titik(id: String) -> Color:
+	var i: int = Config.KONDISI_KOMPONEN.find(id)
+	if i < 0 or not _titik[i].visible:
+		return Color(0, 0, 0, 0)
+	return (_titik[i].get_theme_stylebox(&"panel") as StyleBoxFlat).bg_color
+
+
 func _gambar(tekstur: Texture2D) -> TextureRect:
 	var gambar: TextureRect = TextureRect.new()
 	gambar.mouse_filter = Control.MOUSE_FILTER_IGNORE

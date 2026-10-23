@@ -166,7 +166,13 @@ func _test_rect_chip_dan_titik() -> void:
 	var sempit: TampilBengkel.TataPanggung = TampilBengkel.tata_panggung(120, 92)
 	var ban_sempit: Rect2i = TampilBengkel.rect_chip(0, sempit, Vector2i(60, 14), Vector2i(120, 92))
 	check(ban_sempit.position.x == 2, "panggung sempit: chip ban tidak melewati tepi kiri (x dijepit ke 2)")
-	for lebar: int in [200, 280, 300, 356]:
+	var sangat_sempit: TampilBengkel.TataPanggung = TampilBengkel.tata_panggung(160, 92)
+	var rem_sempit: Rect2i = TampilBengkel.rect_chip(1, sangat_sempit, Vector2i(60, 14), Vector2i(160, 92))
+	check(rem_sempit.end.x == 158, "panggung 160 lebar: chip rem (x mentah 101, lebar 60) dijepit hingga tepi kanan 158 (2 dari tepi)")
+	var bawah_sempit: Rect2i = TampilBengkel.rect_chip(2, TampilBengkel.tata_panggung(60, 92), Vector2i(40, 14), Vector2i(60, 92))
+	check(bawah_sempit.position.x == 2 or bawah_sempit.position.x == 18, "panggung 60 lebar: chip rantai dijepit ke dalam (x %d)" % bawah_sempit.position.x)
+	check(Rect2i(0, 0, 60, 92).encloses(bawah_sempit), "panggung 60 lebar: chip rantai di dalam panggung")
+	for lebar: int in [60, 100, 120, 160, 200, 280, 300, 356]:
 		for tinggi_panggung: int in [78, 84, 92, 100]:
 			var tt: TampilBengkel.TataPanggung = TampilBengkel.tata_panggung(lebar, tinggi_panggung)
 			for i: int in range(3):
