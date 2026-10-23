@@ -534,6 +534,7 @@ func _test_berhenti_terpaksa() -> void:
 	var salah_tercatat: int = 0
 	var jumlah_terpaksa_total: int = 0
 	var uji_lubang: int = 0
+	var gagal_lubang: int = 0
 	var hari: int = 30
 	for sid: String in ["per_tengah_01", "per_tengah_03", "per_tengah_05", "per_buka_02", "per_tutup_01"]:
 		var peta: Dictionary = {}
@@ -544,6 +545,7 @@ func _test_berhenti_terpaksa() -> void:
 		for i: int in range(16):
 			var h: RouteBuilder.Hasil = _bangun(SeedHari.rute(hari) + i * 31, hari, p)
 			if not h.sah():
+				gagal_lubang += 1
 				continue
 			var memuat: bool = false
 			for sg: SegmenRute in h.rute.segmen:
@@ -567,6 +569,7 @@ func _test_berhenti_terpaksa() -> void:
 				jumlah_terpaksa_total += terpaksa.size()
 				if terpaksa.is_empty():
 					salah_terpaksa += 1
+	check(gagal_lubang == 0, "rute dengan lubang berhenti tetap sah, tidak pernah gagal bangun (%d gagal dari 80)" % gagal_lubang)
 	check(uji_lubang >= 30, "cukup rute memuat segmen yang seluruh rumahnya berhenti (%d)" % uji_lubang)
 	check(salah_terpaksa == 0, "pengecualian ada TEPAT bila oracle tak menemukan susunan tanpa rumah berhenti (%d salah; %d rute wajib, %d rute terpaksa)" % [salah_terpaksa, jumlah_wajar, jumlah_terpaksa])
 	check(salah_tercatat == 0, "tiap rumah berhenti yang masuk rute tercatat di berhenti_terpaksa (%d tidak tercatat)" % salah_tercatat)
