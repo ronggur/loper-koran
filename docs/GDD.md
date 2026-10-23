@@ -186,6 +186,7 @@ Setiap rumah punya penghuni dengan kebiasaan sendiri, dan reputasi pemain di lin
 - **Kepribadian pelanggan:** ada yang cerewet kalau koran jatuh di rumput, ada yang memberi tip kalau koran mendarat tepat di teras, ada yang berhenti langganan kalau koran meleset dua kali.
 - **Reputasi:** akumulasi dari antaran yang tepat, misi sampingan yang berhasil, dan kejadian di rute. Reputasi tinggi menaikkan pendapatan dan membuka distrik baru.
 - **Hubungan dengan misi:** hasil misi sampingan membawa konsekuensi ke hari berikutnya (bagian 10.7).
+- **Penanda dan hasil reputasi (run 6A2 bagian C, usulan, dinilai di HP):** reputasi Perumahan (angka bulat 0 sampai 100, ikon bintang) tampil di HUD rute dan di layar hasil bersama perubahannya hari itu ("12 (+2)") serta jumlah pelanggan baru, jadi tetap, berhenti berlangganan, dan berlangganan lagi (hanya yang bukan nol, tanpa nama; pelanggan dikenali dari "kebiasaan", bukan identitas). Pemain yang teliti naik sekitar 2 sampai 3 poin per hari. Di 6A2 reputasi hanya ditampilkan dan dipakai milestone; efeknya ke pendapatan dan pembukaan distrik menunggu 6B dan Fase 8.
 - **Koran terbuang** (keputusan pemilik 2026-10-22, run 6A2): koran yang dilempar ke luar sasaran, ke rumah bukan pelanggan, atau ke rumah yang sudah terantar memotong koin (14.1); ini terpisah dari "meleset" untuk status pelanggan di atas, yang menghitung pelanggan rute yang tidak menerima koran.
 
 ---
@@ -455,6 +456,8 @@ Milestone adalah penanda pencapaian jangka panjang yang terbuka sepanjang perjal
 - **Tingkatan:** tiap milestone punya tiga tingkat (misalnya perunggu, perak, emas) dengan target yang makin tinggi.
 - **Hadiah:** koin, julukan (misalnya "Loper Andalan"), dan kosmetik sepeda seperti stiker, bel, dan warna. Tidak ada gems, dan hadiah tidak menutup akses ke kemampuan inti supaya tetap adil.
 - **Tampilan:** layar hasil harian menunjukkan milestone yang hampir tercapai, dan satu milestone bisa dipilih sebagai target aktif yang kemajuannya tampil di bengkel.
+
+**Diterapkan run 6A2 bagian C (usulan, dinilai lewat uji HP; `MilestoneTracker`, BALANCING 7.4):** empat milestone dasar masing-masing tiga tingkat (perunggu, perak, emas): pelanggan tetap 3/10/25, koin total 1.000/5.000/15.000, misi sampingan selesai 1/3/5, dan perawatan sepeda (servis + level upgrade) 1/4/10. Progres dihitung dari save tanpa field baru dan TANPA hadiah (tidak ada kosmetik atau julukan di 6A2). Layar hasil menampilkan SATU milestone yang paling dekat tercapai (pecahan terbesar menuju tingkat berikutnya; seri: sisa angka terkecil, lalu urutan pelanggan tetap, koin total, misi, sepeda), dengan bilah dan angka "n/target" (bukan warna saja) dan lencana tingkat, ditambah tingkat yang baru tercapai hari itu dengan satu denting lembut. "Target aktif di bengkel" dan milestone keahlian menyusul (Fase 13). Tingkat sepeda yang tercapai lewat belanja di bengkel tidak diumumkan (belanja terjadi sesudah layar hasil); progresnya tetap tampil di bilah hari berikutnya.
 
 ---
 

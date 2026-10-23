@@ -238,7 +238,7 @@ Akibat geometri rumah (petak 4 ubin, kavling 3 ubin): celah antar rumah sesisi p
 
 ## 4. Save
 
-File: `user://save.json`. Satu slot dulu. Format v4 (run 6A2: `reputasi` per distrik dan `pelanggan` tetap; v3 dari run 6A1 (`koin` menjadi saldo, `koin_total`, `sepeda`), v2 dari run 4B, dan v1 dari run 4A dimigrasi, tidak dihapus) di bawah dibaca dan ditulis `SaveManager` (autoload) lewat `DataSave`; **alur hari berurutan yang memakai save ini adalah prototype yang tidak mengunci struktur sesi** (ROADMAP 5: hari terakhir, kalender 120 hari, game over, target harian belum diputuskan). Field DATA_SCHEMA lain yang belum dipakai (`distrik_terbuka`, `kosmetik`, `milestone`) belum ditulis; bila ada di berkas (save masa depan) dibiarkan.
+File: `user://save.json`. Satu slot dulu. Format v4 (run 6A2: `reputasi` per distrik dan `pelanggan` tetap; v3 dari run 6A1 (`koin` menjadi saldo, `koin_total`, `sepeda`), v2 dari run 4B, dan v1 dari run 4A dimigrasi, tidak dihapus) di bawah dibaca dan ditulis `SaveManager` (autoload) lewat `DataSave`; **alur hari berurutan yang memakai save ini adalah prototype yang tidak mengunci struktur sesi** (ROADMAP 5: hari terakhir, kalender 120 hari, game over, target harian belum diputuskan). Field DATA_SCHEMA lain yang belum dipakai (`distrik_terbuka`, `kosmetik`) belum ditulis; bila ada di berkas (save masa depan) dibiarkan. **Milestone tidak punya field save** (run 6A2 bagian C, O-9): progres, tingkat, dan "baru tercapai" DITURUNKAN dari field yang sudah ada oleh `MilestoneTracker` (lihat 4c), jadi target milestone bisa digeser di `scripts/config.gd` tanpa migrasi.
 
 Contoh save nyata setelah hari 1 selesai (isi dari tes alur hari `tests/tes_alur_hari.gd`: P1 diambil dan selesai, 3 dari 25 terantar, pendapatan hari itu 195 koin = rute 120 termasuk tip 25 + hadiah misi 75 (`terakhir.koin` dan `koin_total`), skor 1500; flag `kucing_ketemu` menunggu tampil besok; SATU belanja di bengkel: rantai yang aus 0,40 diservis seharga 90 koin (150 x 0,6), jadi saldo `koin` 105, `servis_total` 1, dan rantai kembali 1.0; `koin_total` tidak berkurang oleh belanja; reputasi Perumahan 2 = misi sedang +2 (3 antaran = 9 kredit belum cukup satu poin); `pelanggan` berisi 25 rumah rute hari 1, DI SINI HANYA TIGA DITAMPILKAN: satu terantar, satu tidak terantar, dan rumah tempat kucing ditangkap yang menjadi `setia` karena hadiah `pelanggan_setia`; tes mencocokkan tiap entri contoh dengan berkas nyata):
 
@@ -387,12 +387,25 @@ Validasi menolak, tiap kasus dites: id ganda, id asing, id wajib hilang, bobot <
 
 ---
 
+### 4c. Milestone dasar (run 6A2 bagian C, O-9, usulan; tanpa field save)
+
+Empat milestone dengan tiga tingkat (perunggu, perak, emas). Id (permanen) dan target ada di `scripts/config.gd` (`MILESTONE_ID`, `MILESTONE_TARGET_*`), bukan di berkas data. Progres dibaca dari state save v4:
+
+| Id | Nilai progres | Field save yang dibaca |
+|---|---|---|
+| `pelanggan_tetap` | jumlah entri berstatus `setia` | `pelanggan[id].status` |
+| `koin_total` | `koin_total` | `koin_total` |
+| `misi_selesai` | jumlah entri berhasil `selesai` | `misi_hasil[id].hasil` |
+| `sepeda` | `servis_total` + jumlah `level` tiga komponen | `sepeda.servis_total`, `sepeda.<komponen>.level` |
+
+Nilai hilang, bukan angka, negatif, atau bentuk salah dihitung 0 (tanpa galat). Contoh dari save 6A1 asli (dimigrasi ke v4): `koin_total` 195 (belum perunggu), `misi_selesai` 1 (perunggu), `sepeda` 1 (servis_total 1, level 0; perunggu), `pelanggan_tetap` 0. Layar hasil menghitung "sesudah hari" dengan pratinjau `DataSave.catat_hari` (tanpa belanja bengkel, tidak menulis apa pun), jadi progres di layar hasil dan save sesudah "Hari berikutnya" tidak berselisih (kecuali tingkat `sepeda` dari belanja bengkel, yang tercatat di save sesudahnya).
+
 ## 5. Yang perlu diputuskan
 
 - ~~Segmen ditulis sebagai JSON atau scene Godot yang diekspor.~~ **Diputuskan 2026-10-16 (pemilik, K-1 run 3A): JSON buatan tangan** di `assets/data/routes/<distrik>/<id>.json` (bagian 3). Nilai `jenis`, parameter objek, dan aturan validasi tetap usulan sampai uji HP.
 - ~~Cara memetakan pelanggan tetap ke rute yang diacak.~~ **Diterapkan run 6A2 (usulan, K-4)**: id rumah rute `<id_segmen>@<pos>` dipakai langsung sebagai id pelanggan di save v4 (bagian 4); `RouteBuilder.bangun` menerima keadaan pelanggan dan memilih pelanggan menurut status (ROUTE_DESIGN, BALANCING 7.2).
 - Misi lintas hari (GDD 10.9) memengaruhi save: misi aktif perlu disimpan atau tidak. **Masih terbuka** (run 4A dan 4B tidak menyimpan misi aktif; 4B tidak mengerjakan misi lintas hari).
-- Format data milestone (Fase 6B). ~~Format data bengkel~~ **Diterapkan run 6A1 (usulan, bagian 6)**: `upgrades.json` dan kondisi sepeda di save v3 (bagian 4).
+- ~~Format data milestone (Fase 6B).~~ **Diterapkan run 6A2 bagian C (usulan, bagian 4c):** milestone dasar tanpa berkas data dan tanpa field save; hadiah milestone (kosmetik, julukan) dan target aktif di bengkel menyusul (Fase 13). ~~Format data bengkel~~ **Diterapkan run 6A1 (usulan, bagian 6)**: `upgrades.json` dan kondisi sepeda di save v3 (bagian 4).
 - Bentuk struktur sesi (setoran tiga pos, kalender, tenggat bab) yang menentukan di mana koin saldo dibelanjakan: **masih terbuka** (ROADMAP 5, Fase 6B). Alur Koran -> Rute -> Hasil -> Bengkel -> hari berikutnya di 6A1 adalah prototype.
 - Setang dan lampu (komponen kelima dan keempat GDD 12.4): id `setang` dan `lampu` dicadangkan, belum dibuat.
 
