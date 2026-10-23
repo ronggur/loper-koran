@@ -6,10 +6,11 @@ sama dengan papan "Gambar AI baru jadi pixel art · versi 5" di kanvas "Karakter
 Langkah:
   1. tokoh dibuang: semua di atas y 108 (kepala, lengan, koran), warna kulit/kemeja/celana di kolom badan beserta
      garis luarnya yang gelap, sepatu, gantungan kunci, dan bayangan tanah lama
-  2. bagian sepeda yang tadinya tertutup tokoh digambar ulang HANYA di piksel yang dibuang (piksel asli tidak diubah):
-     sisi kanan roda belakang (profil radial dari bagian roda yang terlihat, jari-jari tiap 30 derajat), batang
+  2. bagian sepeda yang tadinya tertutup tokoh digambar ulang HANYA di piksel yang dibuang (piksel asli tidak diubah, kecuali sadel dan kabel di langkah 3):
+     sisi kanan roda belakang (profil radial yang diukur dari ban yang terlihat, lingkaran, jari-jari tiap 30 derajat), batang
      bawah (chainstay), seat stay, seat tube, dua pipa rangka step-through yang menerus dari potongan di kanan,
-     tiang dan sadel, gir depan, engkol dan pedal dua sisi; lalu garis luar #1B1226 di tepi bagian baru
+     tiang sadel, gir depan, engkol dan pedal dua sisi, kiri bawah roda depan (pantulan sisi kanan); lalu garis luar
+     #1B1226 di tepi bagian baru. Sadel digambar utuh dengan hidung lebih panjang, kabel rem ditipiskan jadi 1 px
   3. sisa piksel lepas dibuang, bayangan tanah baru (#2E3550 alpha 96, seperti gambar full body) di bawah roda
   4. dipotong ke kotak sepeda -> sepeda_besar.png (kepadatan gambar skala besar), lalu versi setengah
      sepeda_kecil.png (mode per blok 2x2, garis luar dirapikan) untuk panggung bengkel
@@ -44,7 +45,9 @@ KULIT = [(239, 164, 98), (220, 118, 69), (199, 103, 61), (218, 114, 68), (240, 1
 KEMEJA = [(132, 166, 186), (110, 138, 170), (101, 121, 158), (127, 158, 182), (109, 134, 167)]
 CELANA = [(44, 48, 79), (58, 66, 94), (84, 96, 142), (36, 34, 61), (35, 34, 63), (51, 57, 89), (83, 95, 141), (87, 99, 144)]
 
-RODA_BELAKANG = (46, 219, 41.5, 44)      # cx, cy, rx, ry (roda tampak sedikit lonjong)
+# roda: pusat dan jari-jari garis luar ban, diukur dari ban yang terlihat di gambar sumber (lingkaran, bukan elips)
+RODA_BELAKANG = (46.5, 221.5, 41.5)
+RODA_DEPAN = (190.5, 219.5, 43.5)
 JARI_SUDUT = [10 + 30 * i for i in range(12)]
 BB = (110, 232)                          # poros gir depan
 DUDUKAN = (86, 158)                      # pertemuan seat tube dan seat stay di bawah sadel
@@ -130,25 +133,60 @@ class Kuas:
                             break
 
 
+def warna_ban(x, y, cx, cy, R):
+    """Profil radial yang diukur dari ban sumber, d = jarak dari garis luar ke dalam:
+    garis luar, ban terang 2 px, ban gelap 3 px, garis, pelek 3 px (terang di kiri atas). None = di luar atau di dalam pelek."""
+    d = R - math.hypot(x - cx, y - cy)
+    if d < -0.5 or d > 9.5:
+        return None
+    if d <= 0.5:
+        return GARIS
+    if d <= 2.5:
+        return BAN[0]
+    if d <= 5.5:
+        return BAN[1]
+    if d <= 6.5:
+        return GARIS
+    if d <= 7.5 and (x - cx) + (y - cy) < 0:
+        return LOGAM[0]
+    return LOGAM[1]
+
+
 def roda_belakang(k):
-    cx, cy, rx, ry = RODA_BELAKANG
-    profil = [(0.80, None), (0.82, LOGAM[2]), (0.89, LOGAM[1]), (0.91, GARIS), (0.99, BAN[1]), (1.03, BAN[0]), (1.06, GARIS)]
-    for y in range(k.H):
-        for x in range(k.W):
-            r = math.hypot((x - cx) / rx, (y - cy) / ry)
-            for batas, c in profil:
-                if r < batas:
-                    if c is not None:
-                        k.titik(x, y, c)
-                    break
+    """Sisi kanan roda belakang (tertutup tokoh): ban dan pelek dari profil, jari-jari tiap 30 derajat."""
+    cx, cy, R = RODA_BELAKANG
+    for y in range(int(cy - R) - 1, int(cy + R) + 2):
+        for x in range(int(cx - R) - 1, int(cx + R) + 2):
+            c = warna_ban(x, y, cx, cy, R)
+            if c is not None:
+                k.titik(x, y, c)
     for a in JARI_SUDUT:
         t = math.radians(a)
-        for i in range(10, 81):
-            r = i / 100
-            x = cx + r * rx * math.cos(t)
-            y = cy + r * ry * math.sin(t)
-            k.titik(int(round(x)), int(round(y)), JARI[0], padat=False)
-            k.titik(int(round(x)), int(round(y)) + 1, JARI[1], padat=False)
+        for i in range(10, 79):
+            r = i / 100 * R
+            x = int(round(cx + r * math.cos(t)))
+            y = int(round(cy + r * math.sin(t)))
+            k.titik(x, y, JARI[0], padat=False)
+            k.titik(x, y + 1, JARI[1], padat=False)
+
+
+def roda_depan(k, asli):
+    """Kiri bawah roda depan ikut terhapus bersama sepatu: diisi pantulan mendatar sisi kanan bawah roda yang utuh
+    (tekstur ban dan jari-jari sama), atau profil ban bila pantulannya bukan warna roda."""
+    cx, cy, R = RODA_DEPAN
+    warna_roda = {GARIS, *BAN, *LOGAM, *JARI}
+    for y in range(int(cy), int(cy + R) + 2):
+        for x in range(int(cx - R) - 1, int(cx) + 1):
+            if not k.lubang[y, x] or math.hypot(x - cx, y - cy) > R + 0.5:
+                continue
+            xm = int(round(2 * cx - x))
+            c = tuple(int(v) for v in asli[y, xm, :3])
+            if asli[y, xm, 3] == 255 and not k.lubang[y, xm] and c in warna_roda:
+                k.titik(x, y, c, padat=c not in JARI)
+            else:
+                c = warna_ban(x, y, cx, cy, R)
+                if c is not None:
+                    k.titik(x, y, c)
 
 
 def rangka(k):
@@ -160,14 +198,59 @@ def rangka(k):
     k.pipa((86, 158), (82, 146), 2, LOGAM)          # tiang sadel
 
 
-def sadel(k, asli):
-    """Bagian tengah sadel: tiap baris diisi warna kolom kiri sadel yang masih terlihat (x 70)."""
-    for y in range(136, 147):
-        c = asli[y, 70]
-        if c[3] == 0:
-            continue
-        for x in range(72, 89):
-            k.titik(x, y, tuple(int(v) for v in c[:3]))
+SADEL_WARNA = [(173, 61, 50), (128, 46, 37), (76, 43, 41), (23, 13, 20)]   # sorot, kulit, sisi, bawah (dari sadel sumber)
+SADEL_X = (64, 97)          # ekor kiri sampai hidung kanan; hidung 6 px lebih panjang dari sadel sumber yang terpotong tokoh
+SADEL_Y = (136, 145)        # tepi atas dan bawah bagian lebar
+
+
+def sadel(img):
+    """Sadel digambar utuh (menimpa sadel sumber yang separuhnya tertutup tokoh): ekor membulat di kiri, hidung
+    menyempit dan sedikit turun di kanan, sorot di baris atas, sisi lebih gelap, bawah hampir hitam, garis luar."""
+    x0, x1 = SADEL_X
+    y0, y1 = SADEL_Y
+    img[y0 - 3:y1 + 2, x0 - 2:x1 + 3] = 0
+    isi = {}
+    for x in range(x0, x1 + 1):
+        atas, bawah = y0, y1
+        if x - x0 < 2:                       # ekor membulat
+            atas, bawah = y0 + 2 - (x - x0), y1 - 2 + (x - x0)
+        hidung = x - (x1 - 9)
+        if hidung > 0:                       # hidung: atas turun, bawah naik
+            atas = y0 + (hidung + 1) // 2
+            bawah = y1 - (hidung * 2) // 3
+        for y in range(atas, bawah + 1):
+            i = y - atas
+            c = SADEL_WARNA[0] if i == 0 else SADEL_WARNA[3] if y == bawah else SADEL_WARNA[1] if i <= 3 else SADEL_WARNA[2]
+            isi[(x, y)] = c
+    for (x, y), c in isi.items():
+        img[y, x] = (*c, 255)
+    for (x, y) in list(isi):
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            if (x + dx, y + dy) not in isi and img[y + dy, x + dx, 3] == 0:
+                img[y + dy, x + dx] = (*GARIS, 255)
+    # garis gelap sisa kaki tokoh di bawah ekor sadel
+    img[y1 + 1:y1 + 8, 71:74] = 0
+
+
+KABEL = (160, 121, 186, 200)   # kotak kabel rem dan lampu (x0, y0, x1, y1) di gambar sumber
+
+
+def tipiskan_kabel(img):
+    """Kabel sumber 2-3 px; di kotak kabel, deret mendatar piksel gelap yang diapit piksel kosong di kedua sisi
+    disisakan satu piksel (kiri), supaya kabel 1 px dan di versi setengah tetap garis tipis tanpa garis luar."""
+    x0, y0, x1, y1 = KABEL
+    gelap = (img[..., 3] == 255) & (img[..., :3].astype(int).mean(-1) < 60)
+    for y in range(y0, y1):
+        x = x0
+        while x < x1:
+            if gelap[y, x] and img[y, x - 1, 3] == 0:
+                e = x
+                while e < x1 and gelap[y, e]:
+                    e += 1
+                if 2 <= e - x <= 3 and img[y, e, 3] == 0:
+                    img[y, x + 1:e] = 0
+                x = e
+            x += 1
 
 
 def gir_dan_engkol(k):
@@ -281,10 +364,12 @@ def main():
     img, lubang = buang_tokoh(asli)
     k = Kuas(img, lubang)
     roda_belakang(k)
+    roda_depan(k, asli)
     rangka(k)
-    sadel(k, asli)
     gir_dan_engkol(k)
     k.garis_luar()
+    sadel(k.img)
+    tipiskan_kabel(k.img)
     img = rapikan_lepas(k.img)
     img = bayangan(img)
     besar, (x0, y0) = potong(img)
