@@ -1,20 +1,29 @@
 name: tes
 
-# Tes headless Godot untuk setiap PR dan setiap push ke main (rule `testing`, DEV_PHASES Fase 0).
+# Dua job paralel untuk setiap PR (rule `testing`, DEV_PHASES Fase 0):
+# - `tes`: Godot headless (import, buka project, tes logika, probe layar). Ini yang paling lama (sekitar 6 menit), jadi
+#   HANYA jalan di PR biasa (gerbang sebelum merge) dan jalan manual. Tidak jalan saat push ke main (hasilnya sama dengan
+#   PR yang baru di-merge) dan tidak di PR rilis release-please (isinya hanya CHANGELOG dan versi).
+# - `alat`: uji skrip Python (aset di repo = keluaran skrip, deterministik). Berjalan paralel dengan `tes`, tidak butuh Godot.
+# PR baru ke branch yang sama membatalkan run yang masih jalan.
 # Godot tidak ada di runner, jadi dipasang dari rilis resmi godotengine/godot-builds dan
 # diverifikasi dengan SHA-512 yang disematkan di sini (nilai dari SHA512-SUMS.txt rilis yang sama,
 # dicocokkan juga dengan zip yang diunduh). Mengganti versi Godot berarti mengganti dua nilai env.
 
 on:
   pull_request:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: tes-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   tes:
+    if: ${{ !startsWith(github.head_ref, 'release-please--') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -43,63 +52,6 @@ jobs:
             "${GODOT_VERSI_DIHARAPKAN}"*) ;;
             *) echo "Versi Godot tidak sesuai, diharapkan ${GODOT_VERSI_DIHARAPKAN}"; exit 1 ;;
           esac
-
-      - name: Uji pemeriksa keluaran tes
-        run: python3 tools/tests_cek/uji_pemeriksa.py
-
-      - name: Uji pembangun SpriteFrames (berkas di repo = hasil skrip, deterministik)
-        run: python3 tools/tests_cek/uji_bangun_frames.py
-
-      - name: Uji sintesis bunyi sepeda (WAV di repo = hasil skrip, deterministik, loop tanpa klik)
-        run: python3 tools/tests_cek/uji_sintesis_sepeda.py
-
-      - name: Uji sintesis bunyi lempar dan mendarat (13 WAV di repo = hasil skrip, deterministik, tanpa klik)
-        run: python3 tools/tests_cek/uji_sintesis_lempar.py
-
-      - name: Uji sintesis bunyi rute (10 WAV rintangan, tabrakan, bel, tip, tepat = hasil skrip, deterministik, tanpa klik)
-        run: python3 tools/tests_cek/uji_sintesis_rute.py
-
-      - name: Uji sintesis bunyi misi (4 WAV petunjuk, terlihat, selesai, gagal = hasil skrip, deterministik, tanpa klik)
-        run: python3 tools/tests_cek/uji_sintesis_misi.py
-
-      - name: Uji sintesis bunyi kondisi (5 WAV rantai berisik, rem berdecit, ban mendesis, servis, upgrade = hasil skrip, deterministik, tanpa klik)
-        run: python3 tools/tests_cek/uji_sintesis_kondisi.py
-
-      - name: Uji sintesis bunyi milestone (1 WAV milestone tercapai = hasil skrip, deterministik, lembut, tanpa klik)
-        run: python3 tools/tests_cek/uji_sintesis_milestone.py
-
-      - name: Uji aset kucing misi (sheet di assets/ = hasil tools/env_art/kendaraan.py, deterministik)
-        run: |
-          python3 -m pip install --quiet numpy pillow
-          python3 tools/tests_cek/uji_aset_kucing.py
-
-      - name: Uji aset gelombang 1 Fase 5 (renderer deterministik, palet induk, manifest, K-1, mock docs = hasil skrip)
-        run: python3 tools/tests_cek/uji_aset_gelombang1.py
-
-      - name: Uji pemasangan aset gelombang 1 (isi assets/sprites/{props,vfx,houses/perumahan,tiles/perumahan} = keluaran --salin, hanya yang dipasang, impor Lossless)
-        run: python3 tools/tests_cek/uji_aset_pasang_gelombang1.py
-
-      - name: Uji renderer pohon dan lampu (lampu_pohon.py deterministik, keluaran lama tidak berubah, --salin hanya yang dipasang, tanpa bingkai nyala, warna)
-        run: python3 tools/tests_cek/uji_aset_lampu_pohon.py
-
-      - name: Uji pemasangan aset run 5B (tembok, tong sampah logam, pohon, lampu mati, ubin tambahan = keluaran --salin, golden 5A byte-identik, impor Lossless)
-        run: python3 tools/tests_cek/uji_aset_pasang_5b.py
-
-      - name: Uji ubin simpang T dan ujung kerb run 5C (deterministik, hanya yang dipakai, config = JSON renderer, susunan = adegan renderer, referensi, impor Lossless)
-        run: python3 tools/tests_cek/uji_aset_simpang.py
-
-      - name: Uji aset fase 3 perumahan run 5D (rumah, rintangan, kotak surat = keluaran fase3.py, deterministik, hanya yang dipasang, mock docs, impor Lossless)
-        run: python3 tools/tests_cek/uji_aset_fase3.py
-
-      - name: Uji lencana milestone run 6A2 (lencana.py deterministik, assets/ = keluaran, palet induk, 1/2/3 garis tanpa warna, impor Lossless)
-        run: |
-          python3 -m pip install --quiet pillow
-          python3 tools/tests_cek/uji_ui_lencana.py
-
-      - name: Uji aset redesain UI (komponen.py deterministik, docs = keluaran, palet induk, ukuran bingkai; sifat latar bengkel)
-        run: |
-          python3 -m pip install --quiet numpy pillow
-          python3 tools/tests_cek/uji_ui_redesain.py
 
       - name: Import project (tanpa error, tanpa berkas yang belum di-commit)
         run: |
@@ -138,3 +90,65 @@ jobs:
           if grep -E 'SCRIPT ERROR|ERROR:|PECAHAN' "$RUNNER_TEMP/layar.log"; then
             echo "Probe layar menemukan error atau skala pecahan"; exit 1
           fi
+
+  alat:
+    if: ${{ !startsWith(github.head_ref, 'release-please--') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Ambil kode
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Pasang numpy dan pillow
+        run: python3 -m pip install --quiet numpy pillow
+
+      - name: Uji pemeriksa keluaran tes
+        run: python3 tools/tests_cek/uji_pemeriksa.py
+
+      - name: Uji pembangun SpriteFrames (berkas di repo = hasil skrip, deterministik)
+        run: python3 tools/tests_cek/uji_bangun_frames.py
+
+      - name: Uji sintesis bunyi sepeda (WAV di repo = hasil skrip, deterministik, loop tanpa klik)
+        run: python3 tools/tests_cek/uji_sintesis_sepeda.py
+
+      - name: Uji sintesis bunyi lempar dan mendarat (13 WAV di repo = hasil skrip, deterministik, tanpa klik)
+        run: python3 tools/tests_cek/uji_sintesis_lempar.py
+
+      - name: Uji sintesis bunyi rute (10 WAV rintangan, tabrakan, bel, tip, tepat = hasil skrip, deterministik, tanpa klik)
+        run: python3 tools/tests_cek/uji_sintesis_rute.py
+
+      - name: Uji sintesis bunyi misi (4 WAV petunjuk, terlihat, selesai, gagal = hasil skrip, deterministik, tanpa klik)
+        run: python3 tools/tests_cek/uji_sintesis_misi.py
+
+      - name: Uji sintesis bunyi kondisi (5 WAV rantai berisik, rem berdecit, ban mendesis, servis, upgrade = hasil skrip, deterministik, tanpa klik)
+        run: python3 tools/tests_cek/uji_sintesis_kondisi.py
+
+      - name: Uji sintesis bunyi milestone (1 WAV milestone tercapai = hasil skrip, deterministik, lembut, tanpa klik)
+        run: python3 tools/tests_cek/uji_sintesis_milestone.py
+
+      - name: Uji aset kucing misi (sheet di assets/ = hasil tools/env_art/kendaraan.py, deterministik)
+        run: python3 tools/tests_cek/uji_aset_kucing.py
+
+      - name: Uji aset gelombang 1 Fase 5 (renderer deterministik, palet induk, manifest, K-1, mock docs = hasil skrip)
+        run: python3 tools/tests_cek/uji_aset_gelombang1.py
+
+      - name: Uji pemasangan aset gelombang 1 (isi assets/sprites/{props,vfx,houses/perumahan,tiles/perumahan} = keluaran --salin, hanya yang dipasang, impor Lossless)
+        run: python3 tools/tests_cek/uji_aset_pasang_gelombang1.py
+
+      - name: Uji renderer pohon dan lampu (lampu_pohon.py deterministik, keluaran lama tidak berubah, --salin hanya yang dipasang, tanpa bingkai nyala, warna)
+        run: python3 tools/tests_cek/uji_aset_lampu_pohon.py
+
+      - name: Uji pemasangan aset run 5B (tembok, tong sampah logam, pohon, lampu mati, ubin tambahan = keluaran --salin, golden 5A byte-identik, impor Lossless)
+        run: python3 tools/tests_cek/uji_aset_pasang_5b.py
+
+      - name: Uji ubin simpang T dan ujung kerb run 5C (deterministik, hanya yang dipakai, config = JSON renderer, susunan = adegan renderer, referensi, impor Lossless)
+        run: python3 tools/tests_cek/uji_aset_simpang.py
+
+      - name: Uji aset fase 3 perumahan run 5D (rumah, rintangan, kotak surat = keluaran fase3.py, deterministik, hanya yang dipasang, mock docs, impor Lossless)
+        run: python3 tools/tests_cek/uji_aset_fase3.py
+
+      - name: Uji lencana milestone run 6A2 (lencana.py deterministik, assets/ = keluaran, palet induk, 1/2/3 garis tanpa warna, impor Lossless)
+        run: python3 tools/tests_cek/uji_ui_lencana.py
+
+      - name: Uji aset redesain UI (komponen.py deterministik, docs = keluaran, palet induk, ukuran bingkai; sifat latar bengkel)
+        run: python3 tools/tests_cek/uji_ui_redesain.py
