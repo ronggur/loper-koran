@@ -5,12 +5,13 @@ sama dengan papan "Gambar AI baru jadi pixel art · versi 5" di kanvas "Karakter
 
 Langkah:
   1. tokoh dibuang: semua di atas y 108 (kepala, lengan, koran), warna kulit/kemeja/celana di kolom badan beserta
-     garis luarnya yang gelap, sepatu, gantungan kunci, dan bayangan tanah lama
+     garis luarnya yang gelap (kecuali kotak pegangan setang), sepatu, gantungan kunci, dan bayangan tanah lama
   2. bagian sepeda yang tadinya tertutup tokoh digambar ulang HANYA di piksel yang dibuang (piksel asli tidak diubah, kecuali sadel dan kabel di langkah 3):
      sisi kanan roda belakang (profil radial yang diukur dari ban yang terlihat, lingkaran, jari-jari tiap 30 derajat), batang
      bawah (chainstay), seat stay, seat tube, dua pipa rangka step-through yang menerus dari potongan di kanan,
-     tiang sadel, gir depan, engkol dan pedal dua sisi, kiri bawah roda depan (pantulan sisi kanan); lalu garis luar
-     #1B1226 di tepi bagian baru. Sadel digambar utuh dengan hidung lebih panjang, kabel rem ditipiskan jadi 1 px
+     tiang sadel, kiri bawah roda depan (pantulan sisi kanan); lalu garis luar
+     #1B1226 di tepi bagian baru. Gir depan, engkol, pedal, dan rantai digambar ulang
+     sebagai satu rakitan; sadel digambar utuh dengan hidung lebih panjang, kabel rem ditipiskan jadi 1 px
   3. sisa piksel lepas dibuang, bayangan tanah baru (#2E3550 alpha 96, seperti gambar full body) di bawah roda
   4. dipotong ke kotak sepeda -> sepeda_besar.png (kepadatan gambar skala besar), lalu versi setengah
      sepeda_kecil.png (mode per blok 2x2, garis luar dirapikan) untuk panggung bengkel
@@ -51,8 +52,9 @@ RODA_DEPAN = (190.5, 219.5, 43.5)
 JARI_SUDUT = [10 + 30 * i for i in range(12)]
 BB = (110, 232)                          # poros gir depan
 DUDUKAN = (86, 158)                      # pertemuan seat tube dan seat stay di bawah sadel
-# titik penanda kondisi di gambar sumber: ban belakang kiri bawah, tuas rem di setang, kotak rantai
-TITIK = {'ban': (13, 248), 'rem': (152, 121), 'rantai': (70, 216)}
+PEGANGAN = [(140, 113, 160, 121)]   # pegangan seberang (kiri atas) (x0, y0, x1, y1)
+# titik penanda kondisi di gambar sumber: ban belakang kiri bawah, tuas rem di setang, rantai atas
+TITIK = {'ban': (13, 248), 'rem': (152, 121), 'rantai': (70, 220)}
 
 
 def buang_tokoh(im):
@@ -79,6 +81,10 @@ def buang_tokoh(im):
     m[251:, 117:165] = True                         # sepatu kanan
     m[150:190, 114:127] |= im[150:190, 114:127, 3] > 0   # gantungan kunci
     m |= (im[..., 3] > 0) & (im[..., 3] < 255)      # bayangan tanah lama
+    # pegangan setang: sorot pegangan (194,81,56) sama dengan salah satu warna kulit, jadi sorot, garis atas,
+    # dan sisi gelapnya ikut terbuang (pegangan tampak coak); kotak pegangan tidak dibuang
+    for x0, y0, x1, y1 in PEGANGAN:
+        m[y0:y1, x0:x1] = False
     out = im.copy()
     out[m] = 0
     return out, m
@@ -253,19 +259,73 @@ def tipiskan_kabel(img):
             x += 1
 
 
-def gir_dan_engkol(k):
+KOTAK_GIR = (96, 203, 129, 253)   # kotak gir depan dan engkol (x0, y0, x1, y1): isi sumber di sini dibuang lalu digambar ulang
+GIR_R = 9                          # jari-jari gir depan
+GIR_BELAKANG_R = 3.5               # jari-jari gir belakang di poros roda belakang
+ENGKOL = (-5, 14)                  # ujung engkol sisi dekat dari poros (sisi seberang = kebalikannya)
+
+
+def penggerak(img):
+    """Gir depan, engkol, pedal, dan rantai digambar ulang sebagai satu rakitan (sumber hanya memperlihatkan potongan
+    di antara kaki tokoh). Urutan dari belakang ke depan: engkol dan pedal seberang, pipa rangka di kotak gir,
+    gir depan (lima lengan), engkol dan pedal dekat, garis luar, lalu rantai atas dan bawah dari gir belakang ke gir depan."""
+    x0, y0, x1, y1 = KOTAK_GIR
+    img[y0:y1, x0:x1] = 0
+    kotak = np.zeros(img.shape[:2], bool)
+    kotak[y0:y1, x0:x1] = True
+    k = Kuas(img, kotak)
     bx, by = BB
-    m = k.masker(lambda d, ss: d.ellipse([(bx - 7.5) * ss, (by - 7.5) * ss, (bx + 7.5) * ss, (by + 7.5) * ss], fill=255))
-    for (x, y) in m:
-        r = math.hypot(x - bx, y - by)
-        c = LOGAM[0] if (r > 5.5 and x + y < bx + by) else (LOGAM[2] if r > 5.5 else LOGAM[1])
-        if r < 2:
-            c = LOGAM[2]
-        k.titik(x, y, c)
-    k.pipa((bx, by), (bx - 9, by + 14), 3, [LOGAM[2], LOGAM[2], GARIS])    # engkol sisi seberang (gelap, turun)
-    k.pipa((bx - 13, by + 15), (bx - 5, by + 15), 3, [BAN[0], BAN[1], GARIS])
-    k.pipa((bx, by), (bx + 10, by - 14), 3, LOGAM)                        # engkol sisi dekat (naik)
-    k.pipa((bx + 6, by - 16), (bx + 15, by - 16), 3, [BAN[0], BAN[1], GARIS])
+    ex, ey = ENGKOL
+    gelap = [LOGAM[2], LOGAM[2], GARIS]
+    pedal = [BAN[0], BAN[1], GARIS]
+    k.pipa((bx, by), (bx - ex, by - ey), 3, gelap)                       # engkol seberang (di belakang rangka)
+    k.pipa((bx - ex - 4, by - ey - 1), (bx - ex + 4, by - ey - 1), 3, gelap)
+    rangka(k)
+    for y in range(by - GIR_R - 1, by + GIR_R + 2):
+        for x in range(bx - GIR_R - 1, bx + GIR_R + 2):
+            dx, dy = x - bx, y - by
+            r = math.hypot(dx, dy)
+            if r > GIR_R + 0.5:
+                continue
+            sudut = math.degrees(math.atan2(dy, dx)) % 360
+            if r > GIR_R - 0.5:                                             # gigi: putus-putus
+                c = GARIS if int(sudut // 20) % 2 else LOGAM[2]
+            elif r > GIR_R - 2.5:                                           # cincin gir, terang di kiri atas
+                c = LOGAM[0] if dx + dy < 0 else LOGAM[1]
+            elif r > 2.5:                                                   # lima lengan
+                c = LOGAM[1] if min((sudut - 18 - 72 * i) % 360 for i in range(5)) < 14 or \
+                    min((18 + 72 * i - sudut) % 360 for i in range(5)) < 14 else LOGAM[2]
+            else:
+                c = GARIS if r < 1 else LOGAM[0]
+            k.titik(x, y, c)
+    k.pipa((bx, by), (bx + ex, by + ey), 3, LOGAM)                       # engkol dekat
+    k.pipa((bx + ex - 5, by + ey + 1), (bx + ex + 5, by + ey + 1), 3, pedal)
+    k.garis_luar()
+    # rantai: garis singgung luar gir belakang dan gir depan, dua baris (mata rantai abu tua berselang, bawahnya garis gelap; lebih gelap dari jari-jari supaya terbaca)
+    cx, cy, _ = RODA_BELAKANG
+    d = (bx - cx, by - cy)
+    n = math.hypot(*d)
+    nx, ny = -d[1] / n, d[0] / n
+    rantai = []
+    for tanda in (-1, 1):                                                   # -1 = rantai atas, 1 = rantai bawah
+        a = (cx + tanda * GIR_BELAKANG_R * nx, cy + tanda * GIR_BELAKANG_R * ny)
+        b = (bx + tanda * GIR_R * nx, by + tanda * GIR_R * ny)
+        langkah = int(max(abs(b[0] - a[0]), abs(b[1] - a[1])))
+        for i in range(langkah + 1):
+            x = int(round(a[0] + (b[0] - a[0]) * i / langkah))
+            y = int(round(a[1] + (b[1] - a[1]) * i / langkah))
+            if math.hypot(x - bx, y - by) <= GIR_R - 0.5:
+                continue
+            img[y, x] = (*(LOGAM[1] if (x // 2) % 2 else LOGAM[2]), 255)
+            img[y + 1, x] = (*GARIS, 255)
+            rantai += [(x, y), (x, y + 1)]
+    # gir belakang: cincin gelap di poros roda belakang, tempat rantai berbalik
+    for y in range(int(cy) - 5, int(cy) + 6):
+        for x in range(int(cx) - 5, int(cx) + 6):
+            r = math.hypot(x - cx, y - cy)
+            if GIR_BELAKANG_R - 1 < r <= GIR_BELAKANG_R + 1:
+                img[y, x] = (*(GARIS if r > GIR_BELAKANG_R else LOGAM[2]), 255)
+    return rantai
 
 
 def rapikan_lepas(img, min_px=60):
@@ -314,10 +374,12 @@ def potong(img):
     return img[ys.min():ys.max() + 1, xs.min():xs.max() + 1], (int(xs.min()), int(ys.min()))
 
 
-def setengah(img):
+def setengah(img, rantai=()):
     """Versi 1/2. Blok 2x2 dengan >= 3 piksel opak selain jari-jari = padat, warna terbanyak (garis luar kalah bila seri); blok dengan
     1-2 piksel opak = garis tipis (jari-jari, kabel), memakai warna paling terang supaya tidak menebal; blok yang
-    menyentuh bayangan = bayangan. Garis luar #1B1226 hanya di sekitar blok padat."""
+    menyentuh bayangan = bayangan. Garis luar #1B1226 hanya di sekitar blok padat. Piksel rantai (2 baris di versi besar)
+    tidak dihitung padat supaya tidak menggumpal; rantai digambar ulang 1 px (abu tua berselang) sesudahnya."""
+    rantai = set(rantai)
     H, W = img.shape[:2]
     H2, W2 = (H + 1) // 2, (W + 1) // 2
     pad = np.zeros((H2 * 2, W2 * 2, 4), np.uint8)
@@ -326,7 +388,8 @@ def setengah(img):
     padat = np.zeros((H2, W2), bool)
     for y in range(H2):
         for x in range(W2):
-            blok = [tuple(int(v) for v in pad[2 * y + dy, 2 * x + dx]) for dy in (0, 1) for dx in (0, 1)]
+            blok = [tuple(int(v) for v in pad[2 * y + dy, 2 * x + dx]) for dy in (0, 1) for dx in (0, 1)
+                    if (2 * x + dx, 2 * y + dy) not in rantai]
             opak = [b for b in blok if b[3] == 255]
             bukan_jari = [b for b in opak if b[:3] not in JARI]
             if len(bukan_jari) >= 3:
@@ -350,6 +413,10 @@ def setengah(img):
         tepi |= geser
     tepi &= out[..., 3] < 255
     out[tepi] = (*GARIS, 255)
+    for (x, y) in sorted(rantai):
+        x2, y2 = x // 2, y // 2
+        if not padat[y2, x2]:
+            out[y2, x2] = (*(LOGAM[1] if x2 % 2 else LOGAM[2]), 255)
     return out
 
 
@@ -366,14 +433,14 @@ def main():
     roda_belakang(k)
     roda_depan(k, asli)
     rangka(k)
-    gir_dan_engkol(k)
     k.garis_luar()
+    rantai = penggerak(k.img)
     sadel(k.img)
     tipiskan_kabel(k.img)
     img = rapikan_lepas(k.img)
     img = bayangan(img)
     besar, (x0, y0) = potong(img)
-    kecil = setengah(besar)
+    kecil = setengah(besar, [(x - x0, y - y0) for (x, y) in rantai])
     hasil = {'sepeda_besar.png': besar, 'sepeda_kecil.png': kecil}
     for nama, arr in hasil.items():
         Image.fromarray(arr).save(out / nama)
