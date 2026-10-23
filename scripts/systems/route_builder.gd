@@ -125,6 +125,9 @@ class Rute extends RefCounted:
 	## dan true bila di salah satu sisi pelanggan dikenal kurang dari kuota + `PELANGGAN_KANDIDAT_CADANGAN` sehingga batas pelanggan baru dilonggarkan di sisi itu.
 	var pelepasan: int = 0
 	var dikenal_kurang: bool = false
+	## Id pelanggan `berhenti` yang TERPAKSA masuk rute karena tanpa mereka tidak ada susunan sah (celah gabungan <= `RUTE_PELANGGAN_JARAK_MAKS_UBIN` atau kuota; iterasi 2, QA-001). Kosong di hampir semua rute.
+	## Mereka bukan calon kembali, tetapi diperlakukan sebagai jalur kembali yang sah: antaran sah ke rumah `berhenti` mana pun mengembalikannya `aktif` (`ReputationManager`). Jumlahnya diminimalkan.
+	var berhenti_terpaksa: Array[String] = []
 
 
 ## Hasil `bangun`: rute (null bila ada galat) dan daftar galat.
@@ -548,7 +551,7 @@ static func _pilih_pelanggan_dua_sisi(rute: Rute, rng: RandomNumberGenerator, ga
 ##     dilonggarkan: semua rumah baru boleh, `Rute.dikenal_kurang`);
 ## (d) pemberi tip: lihat `_pilih_pemberi_tip_keadaan`; (e) kuota dekat, total, celah gabungan, dan `periksa_rute` tidak berubah.
 ## Prioritas (calon kembali dulu, lalu setia) masuk pencocokan sebagai bonus biaya, jadi selalu terpilih selama ada susunan sah. Bila tidak ada susunan sah, prioritas dilepas bertahap (seperempat dari ekor daftar prioritas tiap
-## tingkat, calon kembali terakhir; ekor daftar prioritas = setia yang paling berdekatan dengan yang lain). Urutan pelepasan: batas pelanggan baru dulu (tingkat 1), lalu prioritas sedikit demi sedikit, lalu larangan `berhenti` dicabut (semua boleh) dengan prioritas penuh dulu yang kemudian dilepas lagi sedikit demi sedikit: `Rute.pelepasan` mencatat tingkatnya. Tanpa entri apa pun, urutan konsumsi RNG sama
+## tingkat, calon kembali terakhir; ekor daftar prioritas = setia yang paling berdekatan dengan yang lain). Urutan pelepasan: batas pelanggan baru dulu (tingkat 1), lalu prioritas sedikit demi sedikit; larangan `berhenti` TIDAK dicabut oleh tingkat-tingkat itu. Bila semuanya gagal, tingkat terakhir (`_susun_pasti`, iterasi 2 QA-001) mencari susunan sah secara eksak (DP) dengan jumlah rumah `berhenti` (selain calon kembali) paling sedikit: nol bila ada susunan tanpa mereka, selebihnya dicatat di `Rute.berhenti_terpaksa`. `Rute.pelepasan` mencatat tingkatnya (tingkat terakhir = jumlah tingkat biasa). Tanpa entri apa pun, urutan konsumsi RNG sama
 ## dengan `_pilih_pelanggan_dua_sisi`, jadi pelanggan sama dengan rute tanpa keadaan. False + galat hanya bila rute tanpa keadaan pun gagal (kandidat kurang atau celah tak terpenuhi).
 static func _pilih_pelanggan_keadaan(rute: Rute, rng: RandomNumberGenerator, p: PelangganRute, galat: Array[String]) -> bool:
 	var semua: Array = [_kandidat_sisi(rute, LoperAnim.Sisi.DEKAT), _kandidat_sisi(rute, LoperAnim.Sisi.SEBERANG)]
@@ -617,11 +620,9 @@ static func _pilih_pelanggan_keadaan(rute: Rute, rng: RandomNumberGenerator, p: 
 	while jumlah_prioritas[jumlah_prioritas.size() - 1] > 0:
 		var sekarang: int = jumlah_prioritas[jumlah_prioritas.size() - 1]
 		jumlah_prioritas.append(sekarang - maxi(1, floori(float(sekarang) / float(Config.PELANGGAN_LEPAS_PEMBAGI))))
-	var tingkat: Array = [{"prioritas": prioritas.size(), "batas_baru": true, "berhenti": false}]
+	var tingkat: Array = [{"prioritas": prioritas.size(), "batas_baru": true}]
 	for k: int in jumlah_prioritas:
-		tingkat.append({"prioritas": k, "batas_baru": false, "berhenti": false})
-	for k: int in jumlah_prioritas:
-		tingkat.append({"prioritas": k, "batas_baru": false, "berhenti": true})
+		tingkat.append({"prioritas": k, "batas_baru": false})
 	for t: int in range(tingkat.size()):
 		var cfg: Dictionary = tingkat[t]
 		var aktif: Dictionary = {}
@@ -670,19 +671,121 @@ static func _pilih_pelanggan_keadaan(rute: Rute, rng: RandomNumberGenerator, p: 
 				rute.pelanggan.append(rumah)
 			rute.pelepasan = t
 			return true
-	galat.append("tidak ada pilihan pelanggan dengan keadaan dan celah gabungan di bawah %.1f ubin dalam %d tingkat pelepasan" % [Config.RUTE_PELANGGAN_JARAK_MAKS_UBIN, tingkat.size()])
+	# Tingkat terakhir: pencarian eksak. Larangan `berhenti` hanya dilanggar bila memang tidak ada susunan sah tanpa mereka, dan sesedikit mungkin.
+	var pasti: Array[RumahRute] = _susun_pasti(semua, kuota, kembali, p, rng)
+	if not pasti.is_empty():
+		for rumah: RumahRute in pasti:
+			rumah.pelanggan = true
+			rute.pelanggan.append(rumah)
+			if p.status(rumah.id) == PelangganRute.BERHENTI and not kembali.has(rumah.id):
+				rute.berhenti_terpaksa.append(rumah.id)
+		rute.pelepasan = tingkat.size()
+		return true
+	galat.append("tidak ada pilihan pelanggan dengan keadaan dan celah gabungan di bawah %.1f ubin dalam %d tingkat pelepasan" % [Config.RUTE_PELANGGAN_JARAK_MAKS_UBIN, tingkat.size() + 1])
 	return false
 
 
-## True bila rumah `r` boleh masuk kolam kandidat pada tingkat `cfg`: `berhenti` hanya bila calon kembali aktif (atau tingkat terakhir), `baru` hanya bila batas baru mati, di sisi yang dilonggarkan, atau termasuk yang diundi boleh.
+## True bila rumah `r` boleh masuk kolam kandidat pada tingkat `cfg`: `berhenti` hanya bila calon kembali aktif, `baru` hanya bila batas baru mati, di sisi yang dilonggarkan, atau termasuk yang diundi boleh.
 ## Setia dan aktif selalu boleh (setia di luar prioritas hanyalah kandidat biasa).
 static func _boleh_masuk(r: RumahRute, p: PelangganRute, cfg: Dictionary, aktif: Dictionary, boleh_baru: Dictionary, sisi_ketat: bool) -> bool:
 	match p.status(r.id):
 		PelangganRute.BERHENTI:
-			return bool(cfg["berhenti"]) or aktif.has(r.id)
+			return aktif.has(r.id)
 		PelangganRute.BARU:
 			return not bool(cfg["batas_baru"]) or not sisi_ketat or boleh_baru.has(r.id)
 	return true
+
+
+## Susunan pelanggan eksak (tingkat terakhir `_pilih_pelanggan_keadaan`, iterasi 2 QA-001): dari SEMUA kandidat kedua sisi, pilih `kuota[0]` dekat dan `kuota[1]` seberang dengan celah gabungan <= `RUTE_PELANGGAN_JARAK_MAKS_UBIN`
+## dan jumlah rumah `berhenti` (selain `kembali`) sekecil mungkin. DP mundur atas (butir terakhir, jumlah dekat, jumlah seberang) memberi biaya sisa minimum; penelusuran maju memilih, di antara butir yang menjaga biaya total minimum,
+## yang paling dekat dengan target tersebar rata + goyangan dari `rng` (mirip `_cocokkan`). Kosong bila tidak ada susunan sah sama sekali.
+static func _susun_pasti(semua: Array, kuota: Array[int], kembali: Dictionary, p: PelangganRute, rng: RandomNumberGenerator) -> Array[RumahRute]:
+	var butir: Array[RumahRute] = []
+	for sisi: int in range(2):
+		for r: RumahRute in semua[sisi]:
+			butir.append(r)
+	butir.sort_custom(_lebih_awal)
+	var n: int = butir.size()
+	var k0: int = kuota[0]
+	var k1: int = kuota[1]
+	var total: int = k0 + k1
+	var tak_hingga: int = n + 1
+	var biaya: Array[int] = []
+	var sisi_butir: Array[int] = []
+	for r: RumahRute in butir:
+		biaya.append(1 if p.status(r.id) == PelangganRute.BERHENTI and not kembali.has(r.id) else 0)
+		sisi_butir.append(0 if r.sisi == LoperAnim.Sisi.DEKAT else 1)
+	var lebar_s: int = k1 + 1
+	var lebar_d: int = (k0 + 1) * lebar_s
+	var sisa: PackedInt32Array = PackedInt32Array()
+	sisa.resize(n * lebar_d)
+	sisa.fill(tak_hingga)
+	for i: int in range(n - 1, -1, -1):
+		for d: int in range(k0 + 1):
+			for s: int in range(k1 + 1):
+				if (sisi_butir[i] == 0 and d == 0) or (sisi_butir[i] == 1 and s == 0):
+					continue
+				if d == k0 and s == k1:
+					sisa[i * lebar_d + d * lebar_s + s] = 0
+					continue
+				var terbaik: int = tak_hingga
+				for j: int in range(i + 1, n):
+					if butir[j].maju_ubin - butir[i].maju_ubin > Config.RUTE_PELANGGAN_JARAK_MAKS_UBIN:
+						break
+					var nd: int = d + (1 if sisi_butir[j] == 0 else 0)
+					var ns: int = s + (1 if sisi_butir[j] == 1 else 0)
+					if nd > k0 or ns > k1:
+						continue
+					var nilai: int = sisa[j * lebar_d + nd * lebar_s + ns]
+					if nilai < tak_hingga:
+						terbaik = mini(terbaik, nilai + biaya[j])
+				sisa[i * lebar_d + d * lebar_s + s] = terbaik
+	var perlu: int = tak_hingga
+	for i: int in range(n):
+		var d0: int = 1 if sisi_butir[i] == 0 else 0
+		var s0: int = 1 - d0
+		if d0 > k0 or s0 > k1:
+			continue
+		var nilai: int = sisa[i * lebar_d + d0 * lebar_s + s0]
+		if nilai < tak_hingga:
+			perlu = mini(perlu, nilai + biaya[i])
+	if perlu >= tak_hingga or total <= 0:
+		return []
+	var hasil: Array[RumahRute] = []
+	var awal: float = butir[0].maju_ubin
+	var akhir: float = butir[n - 1].maju_ubin
+	var sekarang: int = -1
+	var d_now: int = 0
+	var s_now: int = 0
+	for langkah: int in range(total):
+		var dasar: float = (awal + akhir) / 2
+		if total > 1:
+			dasar = awal + (akhir - awal) * float(langkah) / float(total - 1)
+		var target: float = dasar + rng.randf_range(-Config.RUTE_PELANGGAN_GOYANG_UBIN, Config.RUTE_PELANGGAN_GOYANG_UBIN)
+		var pilih: int = -1
+		var selisih_terbaik: float = INF
+		for j: int in range(sekarang + 1, n):
+			if sekarang >= 0 and butir[j].maju_ubin - butir[sekarang].maju_ubin > Config.RUTE_PELANGGAN_JARAK_MAKS_UBIN:
+				break
+			var nd: int = d_now + (1 if sisi_butir[j] == 0 else 0)
+			var ns: int = s_now + (1 if sisi_butir[j] == 1 else 0)
+			if nd > k0 or ns > k1:
+				continue
+			var nilai: int = sisa[j * lebar_d + nd * lebar_s + ns]
+			if nilai >= tak_hingga or nilai + biaya[j] != perlu:
+				continue
+			var selisih: float = absf(butir[j].maju_ubin - target)
+			if selisih < selisih_terbaik:
+				selisih_terbaik = selisih
+				pilih = j
+		if pilih < 0:
+			return []
+		perlu -= biaya[pilih]
+		d_now += 1 if sisi_butir[pilih] == 0 else 0
+		s_now += 1 if sisi_butir[pilih] == 1 else 0
+		sekarang = pilih
+		hasil.append(butir[pilih])
+	return hasil
 
 
 ## Urutan "tersebar" `daftar`: titik pertama diundi dari `rng` (tanpa undian bila kurang dari dua), berikutnya selalu yang jaraknya ke titik terpilih terdekat paling besar (seri: yang lebih awal di rute).
