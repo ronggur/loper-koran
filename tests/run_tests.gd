@@ -136,6 +136,9 @@ func _initialize() -> void:
 	rute_pelanggan.jalankan()
 	var save_v4: TesSaveV4 = TesSaveV4.new(check, _judul)
 	save_v4.jalankan()
+	# Run fase6a2-reputasi-pelanggan bagian B: potongan koran terbuang (murni).
+	var potongan: TesPotongan = TesPotongan.new(check, _judul)
+	potongan.jalankan()
 	var sprite: TesSprite = TesSprite.new(check, _judul, self)
 	sprite.jalankan()
 	var ekspor: TesExport = TesExport.new(check, _judul)
@@ -208,6 +211,9 @@ func _initialize() -> void:
 	await scene_kondisi.jalankan()
 	var scene_bengkel: TesBengkelScene = TesBengkelScene.new(check, _judul, self)
 	await scene_bengkel.jalankan()
+	# Run fase6a2-reputasi-pelanggan bagian B: potongan koran terbuang di scene rute, layar hasil, HUD, dan alur hari.
+	var scene_potongan: TesPotonganScene = TesPotonganScene.new(check, _judul, self)
+	await scene_potongan.jalankan()
 	var tata_letak: TesTataLetak = TesTataLetak.new(check, _judul, self)
 	await tata_letak.jalankan()
 	var bunyi: TesBunyi = TesBunyi.new(check, _judul, self)
