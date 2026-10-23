@@ -1,13 +1,14 @@
 # Loop Log — 20261023-fase6a2-reputasi-pelanggan
 Scope: Run 6A2, Fase 6A bagian kedua: reputasi per distrik, pelanggan tetap (aktif/setia/berhenti, kepribadian), pemetaan pelanggan tetap ke rute yang diacak, potongan koran terbuang (K-1 pemilik), milestone dasar  ·  Branch: feat/fase6a2-reputasi-pelanggan  ·  Mulai: 2026-10-23  ·  Godot: 4.7.2
 
-## Status: IN_PROGRESS   (iterasi saat ini: 1/2; Dev iterasi 1 bagian A selesai, bagian B dan C belum dimulai)
+## Status: IN_PROGRESS   (iterasi saat ini: 1/2; Dev iterasi 1 bagian A dan bagian B selesai, bagian C belum dimulai)
 
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang (import/tes/keluaran) | QA verdict | Temuan baru | Terverifikasi |
 |---|---|---|---|---|---|
 | 0 | Persiapan orchestrator: SPEC, baseline | ✅ | - | - | - |
 | 1A | Logika murni reputasi, pelanggan tetap, save v4, RouteBuilder dengan keadaan, sim_ekonomi | ✅ (19668 lolos, 0 gagal) | - | - | - |
+| 1B | Potongan koran terbuang: SkorRute/HasilRute/catat_hari, umpan "-5", HUD koin bersih, layar hasil | ✅ (19872 lolos, 0 gagal) | - | - | - |
 
 ## Baseline (orchestrator, `main` = 726b59c, branch dari main terbaru, 2026-10-23)
 - `godot --headless --import`: 0 baris ERROR/WARNING. `godot --headless --path . --quit-after 2`: 0 baris ERROR/WARNING.
@@ -75,3 +76,46 @@ M01 berhenti `>` bukan `>=` (transisi aktif -> berhenti); M02 setia `>` bukan `>
 - Untuk C: `RuteMain.hasil_reputasi()` (`ReputationManager.Hasil`: `reputasi_sebelum/sesudah`, `perubahan`, `jumlah(Jenis.BARU/SETIA/BERHENTI/KEMBALI)`) siap dibaca setelah `hasil_dibuka`; HUD rute dapat membaca `ReputationManager.reputasi_di(state, "perumahan")` dari state save yang diberikan ke `atur_pelanggan`. `tes_alur_hari` kini membandingkan contoh DATA_SCHEMA 4 secara semantik (25 pelanggan nyata, 3 ditampilkan di dokumen).
 - `tests/sim_ekonomi.gd` adalah pembantu `class_name SimEkonomi` (dipanggil `TesReputasi`); `tests/sim_ekonomi_laporan.gd` mencetak laporan (`-- 45 rinci`).
 - Belum dikerjakan (bukan scope A): AC-8 sampai AC-16, AC-19 (dokumen selain DATA_SCHEMA/BALANCING), AGENTS.md, README docs, ROADMAP, GDD.
+
+
+## Iterasi 1, bagian B (Dev)
+
+Cakupan: AC-8 sampai AC-11 (potongan koran terbuang, K-1/K-2/O-1/O-2/O-3). Bagian C (milestone, penanda reputasi, ikon dan bunyi baru, probe jendela, dokumen penutup) tidak dikerjakan. Branch `feat/fase6a2-reputasi-pelanggan`, commit kecil, tidak push.
+
+### Gerbang (dijalankan sendiri, satu proses Godot sekaligus)
+- `godot --headless --import`: 0 baris ERROR/WARNING.
+- `run_tests.gd` + `tools/cek_keluaran_tes.py`: **19872 lolos, 0 gagal, 0 peringatan** (bagian A 19668; +204 pemeriksaan: `tes_potongan` murni, `tes_potongan_scene`, sisanya penyesuaian oracle lama).
+- `godot --headless --path . --quit-after 2`: 0 ERROR/WARNING.
+- 14 `tools/tests_cek/uji_*.py`: semua exit 0.
+- sha256 `user://save.json` asli: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` (tidak berubah; alur hari memakai `user://tes_potongan_scene/`, `TesPotonganScene` membandingkan jejak sebelum/sesudah, dan runner memeriksa lagi di akhir).
+- Paket ekspor: tidak ada berkas data atau aset baru di bagian B (hanya skrip, scene, terjemahan); `tes_export` hijau. Tidak menjalankan ulang `--export-pack`.
+
+### Yang dibuat (ringkas)
+- `scripts/config.gd`: `KOIN_POTONGAN_KORAN_MELESET` = 5 (satu baris literal).
+- `scripts/systems/skor_rute.gd`: `Keadaan.terbuang` (disalin di `salin`), naik untuk `TIDAK_SAH` dan `ULANG`, tidak untuk `ANTAR`; `SkorRute.potongan(k)` dan `SkorRute.hasil_terbuang(h)`. Skor, koin kotor, combo tidak disentuh.
+- `scripts/systems/hasil_rute.gd`: `Angka.lempar_terbuang`, `potongan`, `koin_bersih` (properti `koin - potongan`, jadi Angka rakitan tes ikut konsisten), `HasilRute.saldo_sesudah(saldo_lama, koin_bersih)` dan `koin_dijepit`. `Angka.koin` tetap bruto (ongkos + tip + hadiah misi).
+- `scripts/systems/data_save.gd`: saldo = `max(0, lama + (koin_kotor - potongan)) - belanja`; `koin_total` += koin kotor; `terakhir.potongan` (field angka baru di `_TERAKHIR_ANGKA`, bawaan 0 untuk save lama). Blok reputasi bagian A tidak diubah. `scripts/entities/hari_main.gd`: saldo awal bengkel lewat `HasilRute.saldo_sesudah` (satu rumus dengan save).
+- Tampilan: `UmpanMelayang.Entri.potongan` + `dari_potongan`; `VfxAntaran.item_entri` tidak memutar bintang/koin untuk entri potongan; `UmpanMelayangGambar` teks `-{n}` (kunci `RUTE_UMPAN_POTONGAN`) berwarna `TEXT_2`; `AdeganJalan._saat_koran_mendarat` menambah entri "-5" di titik mendarat bila terbuang, `_koin_tampil()` (koin bersih) ke panel koin HUD. Layar hasil: baris `LabelTerbuang`/`NilaiTerbuang` dan `LabelBersih`/`NilaiBersih` di daftar netral (hanya bila ada koran terbuang), `TeksSaldoNol` (hanya bila saldo benar-benar dijepit), `isi(..., saldo_lama)`; `RuteMain._buka_hasil` meneruskan `koin` dari state save. Kunci baru di `translations/ui.csv`: `RUTE_UMPAN_POTONGAN`, `HASIL_TERBUANG(_ANGKA)`, `HASIL_KOIN_BERSIH(_ANGKA)`, `HASIL_SALDO_NOL`.
+- Tes: `tests/tes_potongan.gd` (Config, status, 25/30/semua kena/tanpa lemparan, campuran, `catat_hari`, fuzz 10.000 hari vs oracle bilangan bulat, umpan, golden skor, 1000 urutan acak), `tests/tes_potongan_scene.gd` (lemparan nyata: meleset/ulang/antaran, "-5", HUD, mode bantu, jeda, Main lagi, HUD koin negatif di empat ukuran kanan dan kidal, layar hasil di empat ukuran termasuk kasus terpadat, hasil dari rute, dua alur `hari.tscn`), `tests/pembantu_golden_skor.gd`, `tests/ukur_golden_skor.gd`, `tests/data/golden_skor_main.json` (dibuat dari checkout `main` di worktree sementara, blob `skor_rute.gd` `0329ad5b...` dicatat; worktree sudah dihapus). Terdaftar di `run_tests.gd`.
+- Dokumen (hanya sejauh perlu): GDD 2 (pengecualian prinsip 2), 8, 14.1; BALANCING 5 (baris jendela), 7, bagian baru 7.3, 10; DATA_SCHEMA 4 (`koin`, `koin_total`, `terakhir.potongan`); rule `00-project-core` prinsip 2 dan `balancing`.
+
+### Keputusan teknis dan alasannya
+1. **`Angka.koin_bersih` properti, bukan field.** Banyak tes lama merakit `HasilRute.Angka` dengan `.koin = X`; sebagai properti turunan (`koin - potongan`) mereka tetap benar tanpa diubah, dan tidak ada dua sumber yang bisa melenceng.
+2. **Potongan di `Angka.potongan`, bukan di `Keadaan.koin`.** `SkorRute.Keadaan.koin` tetap koin kotor sehingga semua golden skor/koin lama utuh (dibuktikan golden dari `main`: 1000 urutan acak, sidik field lama sama persis).
+3. **`catat_hari` memakai `koin_hari - max(potongan, 0)`** (bukan `koin_bersih` mentah) supaya jaminan lama "angka koin negatif tidak pernah mengurangi saldo" (`tes_hari`) tetap berlaku untuk koin kotor negatif; `koin_total` tetap koin kotor.
+4. **`terakhir.potongan` tanpa kenaikan `SAVE_VERSI`.** `terakhir` dinormalisasi dari daftar field dengan bawaan 0, jadi save v4 lama terbaca tanpa migrasi. Oracle tes lama yang membandingkan dict `terakhir` persis (`tes_hari`, `tes_misi_save`, `tes_save_v3`, `tes_alur_hari`) dan contoh DATA_SCHEMA diberi `"potongan": 0`; tidak ada angka emas skor/combo/tenggat yang diubah.
+5. **Umpan "-5" memakai antrean `UmpanMelayang` yang sama** (maks 2 sekaligus, `UMPAN_MELAYANG_MAKS` tidak diubah). Dua tes lama yang menegaskan "meleset/ulang: tanpa label" (`tes_vfx_sprite` 546/547) dan HUD koin "30" (`tes_rintangan_scene` 618, sekarang "25" karena satu koran ulang terbuang) diperbarui ke perilaku baru; yang ditegaskan tetap tanpa bintang dan koin.
+6. **Baris layar hasil tersembunyi bila tidak ada koran terbuang**, jadi layar hari bersih identik dengan sebelumnya (tes lama tidak berubah). `teks_tampil`/`rect_label` kini melewati label tersembunyi. Baris "Saldo mulai lagi dari 0" memerlukan saldo lama; rute yang dijalankan sendiri (tanpa state save) tidak menampilkannya.
+7. **Satu rumus saldo** `HasilRute.saldo_sesudah` dipakai `DataSave.catat_hari` dan saldo awal bengkel di `HariMain`, jadi saldo bengkel (belanja) dan save tidak bisa berbeda.
+8. **Tes tahan error skrip.** Penjagaan `get_child(0)`/`back()` pada daftar kosong ditambahkan karena error skrip di dalam coroutine tes membuat runner menggantung bila umpan hilang (ditemukan saat mutan M14).
+
+### Mutan (AC-18, bagian B): 30 mutan nyata, semuanya tertangkap
+Harness: `mutan_b.py` + `runner_b.gd` (di scratchpad, bukan di repo) memasang satu penggantian teks pada kode produksi, menjalankan runner cepat (`TesPotongan`, `TesPotonganScene`, `TesSkor`, `TesHasil`, `TesHari`, `TesMisiSave`, `TesSaveV3/V4`, `TesVfxSprite`, `TesRintanganScene`; 1002 pemeriksaan, nol gagal pada kode asli), lalu memulihkan berkas (`git status` bersih sesudah tiap mutan). Penangkap pertama dalam kurung:
+M01 ULANG tidak dihitung terbuang; M02 TIDAK_SAH tidak dihitung; M03 ANTAR dihitung terbuang; M04 `salin` lupa `terbuang`; M05 potongan dari `Angka.meleset`; M06 `lempar_terbuang` dari `Angka.meleset`; M07 `koin_bersih` abaikan potongan; M08 `saldo_sesudah` tidak dijepit 0; M09 `koin_total` memakai bersih; M10 `catat_hari` abaikan potongan; M11 `terakhir.potongan` selalu 0; M12 potongan tidak ikut mode bantu (`tes_potongan_scene`); M13 HUD koin tanpa potongan; M14 umpan "-5" tidak ditambahkan; M15 saldo awal bengkel pakai koin kotor (alur hari minus); M16 konstanta 6 (literal Config); M17 potongan memutar bintang; M18 baris "saldo dijepit" mengabaikan saldo; M19 baris potongan selalu tampil; M20 potongan x3; M21 label potongan berwarna OK; M22 saldo lama tidak diteruskan ke layar hasil; M23 `hasil_terbuang` abaikan ULANG; M24 `koin_dijepit` salah; M25 belanja tidak dikurangi dari saldo; M26 potongan negatif tidak dijepit; M27 `dari_potongan` jumlah tetap 1; M28 `putus_combo` menghapus terbuang; M29 `terakhir.potongan` tidak dinormalisasi; M30 Main lagi tidak mereset terbuang. Semua di `tes_potongan` atau `tes_potongan_scene` kecuali M29 (`tes_hari`). Satu percobaan awal (M14 dengan baris dihapus) adalah mutan tidak sah (parse error: badan `if` kosong), diganti `pass`; tidak ada mutan yang lolos. Catatan: M08 dan M24 hanya tertangkap di tingkat fungsi pembantu karena `catat_hari` menjepit ulang; saldo bengkel tetap dijaga M15 dan alur hari minus.
+
+### Menyimpang dari SPEC / catatan untuk bagian C
+- BLOCKED: tidak ada. Penyimpangan dari SPEC: tidak ada pada isi AC-8 sampai AC-11.
+- Kekurangan yang perlu diketahui: **tangkapan layar belum dilihat** (probe jendela adalah bagian C, AC-16). Tata letak dites lewat geometri di empat ukuran (panel koin HUD negatif tidak menimpa panel skor/progres/kondisi/radar, kanan dan kidal; layar hasil kasus terpadat termasuk potongan + rekap misi + tiga baris kondisi + saldo dijepit muat di 360 px dan tombol >= 42 px), tetapi bagian C/QA sebaiknya melihat tangkapan hari minus dan kasus terpadat. `tes_potongan_scene` membangun kasus terpadat dengan angka tenggat lewat tetapi tanpa baris pelanggan/milestone bagian C: ruang vertikal baris baru bagian C (reputasi, pelanggan, milestone) perlu dicek ulang karena panel sudah sepadat itu.
+- Untuk C: `LayarHasil.isi(angka, misi, perlu_bengkel, saldo_lama)`; urutan node di `IsiHasil`: judul, daftar berhasil, daftar netral (meleset, terbuang, bersih), `TeksTenggat`... `TeksSaldoNol` berada tepat di bawah `TeksTenggat`. `HasilRute.Angka` kini punya `lempar_terbuang`, `potongan`, `koin_bersih`. Kunci terjemahan baru sudah ada; bunyi/ikon untuk potongan tidak ditambahkan (umpan "-5" tanpa bunyi, pilihan: potongan tidak menghukum dengan bunyi negatif; bisa dinilai di HP).
+- NEEDS-MANUAL untuk SETUP_ANDROID 8.17 (bagian C menulisnya): potongan 5 terasa adil, "-5" terbaca dan tidak mengganggu, hari minus terbaca netral, tidak membuat pemain takut melempar.
+- Belum disentuh (bagian C/penutup): DEV_PHASES, ROADMAP 5, LOOP-DEV-QA 6f/6g, docs/README, AGENTS.md peta, SETUP_ANDROID 8.17, DESIGN_SPEC layar hasil/HUD.
