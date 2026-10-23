@@ -394,31 +394,6 @@
    104
   ]
  },
- "sepeda_samping": {
-  "note": "Sepeda loper tampak samping, hadap kanan, cahaya kiri atas. Titik tandai: ban, rem, rantai",
-  "size": [
-   124,
-   72
-  ],
-  "titik": {
-   "ban_belakang": [
-    7,
-    49
-   ],
-   "ban_depan": [
-    117,
-    49
-   ],
-   "rantai": [
-    42,
-    49
-   ],
-   "rem": [
-    91,
-    27
-   ]
-  }
- },
  "struk": {
   "note": "Struk hasil: tepi atas/bawah bergerigi, 9-slice mode ulang (tile)",
   "size": [

@@ -1,0 +1,30 @@
+{
+ "besar": [
+  232,
+  155
+ ],
+ "catatan": "titik_kecil = tempat penanda kondisi di sepeda_kecil (ban, rem, rantai)",
+ "kecil": [
+  116,
+  78
+ ],
+ "potong_dari": [
+  3,
+  112
+ ],
+ "sumber": "docs/design/character/loper_agen/loper_agen_fullbody.png",
+ "titik_kecil": {
+  "ban": [
+   5,
+   68
+  ],
+  "rantai": [
+   33,
+   52
+  ],
+  "rem": [
+   74,
+   4
+  ]
+ }
+}
