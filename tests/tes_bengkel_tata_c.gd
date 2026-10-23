@@ -140,7 +140,7 @@ func _test_keadaan_a() -> void:
 		var kartu: LayarBengkel.KartuServis = layar.kartu_servis(id)
 		check(_kartu_jenis(layar, id) == KomponenUi.JenisKartu.REDUP and _jenis_kartu(kartu.panel) == GayaHud.tekstur("kartu_redup") and kartu.chip_baik.visible and not kartu.tombol.visible and not kartu.chip_harga.visible, "%s: kartu redup (tekstur kartu_redup), chip Baik, tanpa tombol dan harga" % id)
 		check(not layar.panggung().chip_tampil(id) and layar.panggung().rect_titik_global(id) == Rect2(), "%s: sepeda bersih, tanpa chip dan tanpa titik penanda" % id)
-		check(kartu.label_baik.get_theme_color(&"font_color") == Palette.OK and absf(kartu.chip_baik.get_global_rect().size.y - 18.0) < 0.5, "%s: chip Baik bertulisan hijau OK setinggi 18" % id)
+		check(kartu.label_baik.get_theme_color(&"font_color") == Palette.OK and absf(kartu.chip_baik.get_global_rect().size.y - 20.0) < 0.5, "%s: chip Baik bertulisan hijau OK setinggi 20 (V-8)" % id)
 	for id: String in ["ban_anti_selip", "rem_pakem", "rantai_hemat"]:
 		var tombol: TombolSentuh = layar.tombol_beli(id)
 		check(tombol.disabled and tombol.text == "Koin kurang" and layar.kartu_upgrade(id).panel.visible, "%s: tombol nonaktif 'Koin kurang' (saldo 375 < harga)" % id)
@@ -163,7 +163,7 @@ func _test_keadaan_b() -> void:
 	check(layar.kartu_servis("ban").tingkat.get_theme_color(&"font_color") == Palette.TEXT and layar.kartu_servis("rantai").tingkat.get_theme_color(&"font_color") == Palette.TEXT_2, "teks status: 'Perlu servis' TEXT (WARN hanya 6,91:1 di atas kartu), 'Aus' TEXT_2")
 	check(p.warna_titik("ban") == Palette.WARN and p.warna_titik("rem") == Palette.WARN and p.warna_titik("rantai") == Palette.TEXT_2, "titik penanda: PERLU berwarna WARN, AUS berwarna TEXT_2")
 	for id: String in Config.KONDISI_KOMPONEN:
-		check(absf(p.rect_chip(id).size.y - 14.0) < 0.5, "chip penanda %s setinggi 14 (ukuran kecil)" % id)
+		check(absf(p.rect_chip(id).size.y - 16.0) < 0.5, "chip penanda %s setinggi 16 (ukuran kecil, V-8)" % id)
 		check(not layar.tombol_servis(id).disabled and layar.tombol_servis(id).text == "Servis" and layar.tombol_servis(id).icon != null, "%s: tombol Servis aktif berikon kunci" % id)
 	_buang(layar)
 
@@ -203,7 +203,7 @@ func _test_keadaan_e() -> void:
 	_judul.call("Bengkel tata C keadaan e (terpadat: tiga PERLU, saldo 125.480): harga 162, 96, 158 (ongkos x1,5), saldo enam digit terbaca penuh, tiga chip penanda (AC-7e)")
 	var layar: LayarBengkel = await _bengkel(_state(125480, 0.1, 0.2, 0.3))
 	var chip_saldo: Control = layar.find_child("ChipSaldo", true, false)
-	check(absf(chip_saldo.get_global_rect().size.y - 24.0) < 0.5 and absf(layar.kartu_servis("ban").chip_harga.get_global_rect().size.y - 18.0) < 0.5, "chip saldo setinggi 24 (besar) dan chip harga 18 (normal)")
+	check(absf(chip_saldo.get_global_rect().size.y - 26.0) < 0.5 and absf(layar.kartu_servis("ban").chip_harga.get_global_rect().size.y - 20.0) < 0.5, "chip saldo setinggi 26 (besar) dan chip harga 20 (normal), V-8")
 	check(layar.teks_saldo() == "125.480" and layar.teks_ongkos() == "Banyak yang rusak: ongkos servis x1.50", "saldo '125.480' dan catatan x1.50")
 	check(layar.kartu_servis("ban").harga.text == "162 koin" and layar.kartu_servis("rem").harga.text == "96 koin" and layar.kartu_servis("rantai").harga.text == "158 koin", "harga 162, 96, 158 (150 x 0,7 x 1,5 = 157,5 dibulatkan ke atas)")
 	for id: String in Config.KONDISI_KOMPONEN:
@@ -276,7 +276,7 @@ func _test_tingkat_bertingkat() -> void:
 	var layar: LayarBengkel = await _bengkel(_state(5000), Vector2i(1920, 1080), toko)
 	var kartu: LayarBengkel.KartuUpgrade = layar.kartu_upgrade("ban_anti_selip")
 	check(layar.jumlah_upgrade_tampil() == 3 and layar.kartu_upgrade("ban_anti_selip_2") == kartu and layar.kartu_upgrade("ban_anti_selip_3") == kartu, "tetap tiga kartu; tiga tingkat ban satu kartu")
-	check(kartu.baris_jejak.visible and kartu.jejak.size() == 3 and kartu.panel.custom_minimum_size.y == 72.0 and layar.kartu_upgrade("rem_pakem").panel.custom_minimum_size.y == 62.0, "kartu ban memakai jejak tiga chip dan tinggi 72; kartu rem tanpa jejak 62")
+	check(kartu.baris_jejak.visible and kartu.jejak.size() == 3 and kartu.panel.custom_minimum_size.y == 72.0 and layar.kartu_upgrade("rem_pakem").panel.custom_minimum_size.y == 70.0, "kartu ban memakai jejak tiga chip dan tinggi 72; kartu rem tanpa jejak 70 (V-8: naik dari 62)")
 	check(kartu.jejak[0].teks() == "I" and kartu.jejak[1].teks() == "II" and kartu.jejak[2].teks() == "III" and kartu.chip_tingkat.teks() == "I", "jejak I, II, III dan chip tingkat 'I'")
 	check(kartu.jejak[2].modulate.a == 1.0 and kartu.jejak[1].modulate.a == 1.0 and not kartu.jejak[2].glif_tampil() and kartu.jejak[0].glif_tampil() == false and layar.tombol_beli("ban_anti_selip") != null and layar.tombol_beli("ban_anti_selip_2") == null, "chip jejak tidak diredupkan (teks tetap >= 7:1; kanvas opacity .55 ditolak); tombol Beli hanya untuk tingkat yang dijual")
 	layar.tombol_beli("ban_anti_selip").pressed.emit()
@@ -324,7 +324,7 @@ func _teks_terpotong(layar: LayarBengkel) -> Array[String]:
 		var label: Label = simpul as Label
 		if not label.is_visible_in_tree() or label.text == "":
 			continue
-		# Label dengan `max_lines_visible` (deskripsi upgrade, QA-001) sengaja memotong baris ke-3 dan seterusnya dengan elipsis; baris yang dijatah harus tampil penuh.
+		# Label dengan `max_lines_visible` (deskripsi upgrade, QA-001) sengaja memotong baris di atas jatah (3 untuk kartu tunggal, 2 untuk kartu bertingkat; V-8) dengan elipsis; baris yang dijatah harus tampil penuh.
 		var baris_jatah: int = label.get_line_count() if label.max_lines_visible <= 0 else mini(label.get_line_count(), label.max_lines_visible)
 		if label.get_visible_line_count() != baris_jatah:
 			hasil.append("baris terpotong: " + label.text)
@@ -530,13 +530,13 @@ func _test_teks_panjang() -> void:
 				var tinggi_salah: Array[String] = []
 				for kartu_u: LayarBengkel.KartuUpgrade in [layar.kartu_upgrade("ban_anti_selip"), layar.kartu_upgrade("rem_pakem"), layar.kartu_upgrade("rantai_hemat")]:
 					kartu_terbawah = maxf(kartu_terbawah, kartu_u.panel.get_global_rect().end.y)
-					if absf(kartu_u.panel.size.y - 62.0) > 0.5:
+					if absf(kartu_u.panel.size.y - 70.0) > 0.5:
 						tinggi_salah.append("%s %.1f" % [kartu_u.komponen, kartu_u.panel.size.y])
 					check(kartu_u.nama.text_overrun_behavior == TextServer.OVERRUN_TRIM_ELLIPSIS and kartu_u.nama.autowrap_mode == TextServer.AUTOWRAP_OFF and kartu_u.nama.get_line_count() == 1, "%s: nama upgrade %s satu baris dengan elipsis" % [tag, kartu_u.komponen])
 				for id: String in Config.KONDISI_KOMPONEN:
 					if absf(layar.kartu_servis(id).panel.size.y - 50.0) > 0.5:
 						tinggi_salah.append("servis %s %.1f" % [id, layar.kartu_servis(id).panel.size.y])
-				check(tinggi_salah.is_empty(), "%s: kartu servis tetap 50 dan kartu upgrade tetap 62: %s" % [tag, tinggi_salah])
+				check(tinggi_salah.is_empty(), "%s: kartu servis tetap 50 dan kartu upgrade tetap 70 (V-8: naik dari 62): %s" % [tag, tinggi_salah])
 				check(layar.find_children("*", "ScrollContainer", true, false).is_empty() and kartu_terbawah <= layar.rect_tombol_hari().position.y + 0.5 and kartu_terbawah <= 348.5, "%s: tiga upgrade tanpa scroll, kartu terbawah y %.1f di atas 'Hari berikutnya' (%.1f)" % [tag, kartu_terbawah, layar.rect_tombol_hari().position.y])
 				check(layar.teks_saldo() == HasilRute.ribuan(Economy.saldo(layar.state()), "."), "%s: saldo terbaca penuh '%s'" % [tag, layar.teks_saldo()])
 				_buang(layar)

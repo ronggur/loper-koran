@@ -70,7 +70,7 @@ func _test_config_dan_meta() -> void:
 	check(Config.UI_CHIP_SLICE_PX == int(meta["chip_ok"]["slice"][0]), "slice chip = Config.UI_CHIP_SLICE_PX")
 	check(Config.UI_TOMBOL_SLICE_ATAS_PX == 6 and Config.UI_TOMBOL_SLICE_SAMPING_PX == 4 and Config.UI_PANEL_SLICE_PX == 4 and Config.UI_CHIP_SLICE_PX == 3, "angka literal dari kanvas: tombol 6/4, panel 4, chip 3")
 	check(Config.UI_TOMBOL_TINGGI_PX == 42 and Config.UI_TOMBOL_LEBAR_MIN_PX == 84 and Config.UI_TOMBOL_LEBAR_UTAMA_PX == 140, "tombol 42 tinggi, lebar minimum 84, aksi utama 140 (README redesain 4, ui-scenes)")
-	check(Config.UI_CHIP_TINGGI_KECIL_PX == 14 and Config.UI_CHIP_TINGGI_PX == 18 and Config.UI_CHIP_TINGGI_BESAR_PX == 24, "chip tinggi 14/18/24")
+	check(Config.UI_CHIP_TINGGI_KECIL_PX == 16 and Config.UI_CHIP_TINGGI_PX == 20 and Config.UI_CHIP_TINGGI_BESAR_PX == 26, "chip tinggi 16/20/26 (V-8: huruf 10/12/14, tinggi baris Lexend 13/15/18)")
 	check(Config.UI_TOMBOL_TEKAN_GESER_PX == 2, "ditekan = turun 2 px")
 	# Ukuran tekstur terpasang = meta.json (tidak ada tekstur salah pasang).
 	var salah: Array[String] = []
@@ -225,7 +225,7 @@ func _test_chip() -> void:
 		check(nama == "" or GayaHud.tekstur(nama) != null, "glif chip status %d terpasang" % status)
 	check(KomponenUi.status_chip_servis(BikeCondition.Tingkat.BAIK) == KomponenUi.StatusChip.BAIK and KomponenUi.status_chip_servis(BikeCondition.Tingkat.AUS) == KomponenUi.StatusChip.AUS
 		and KomponenUi.status_chip_servis(BikeCondition.Tingkat.PERLU_BENGKEL) == KomponenUi.StatusChip.PERLU_SERVIS, "tingkat -> status chip")
-	check(KomponenUi.tinggi_chip(KomponenUi.UkuranChip.KECIL) == 14 and KomponenUi.tinggi_chip(KomponenUi.UkuranChip.NORMAL) == 18 and KomponenUi.tinggi_chip(KomponenUi.UkuranChip.BESAR) == 24, "tinggi chip 14/18/24")
+	check(KomponenUi.tinggi_chip(KomponenUi.UkuranChip.KECIL) == 16 and KomponenUi.tinggi_chip(KomponenUi.UkuranChip.NORMAL) == 20 and KomponenUi.tinggi_chip(KomponenUi.UkuranChip.BESAR) == 26, "tinggi chip 16/20/26 (V-8)")
 	check(KomponenUi.pad_x_chip(KomponenUi.UkuranChip.KECIL) == 1 and KomponenUi.pad_x_chip(KomponenUi.UkuranChip.NORMAL) == 2 and KomponenUi.pad_x_chip(KomponenUi.UkuranChip.BESAR) == 4, "padding chip 1/2/4")
 
 
@@ -444,13 +444,13 @@ func _test_kondisi_besar_node() -> void:
 # --- Tema ---
 
 func _test_theme() -> void:
-	_judul.call("Tema: type variation baru U-3 (utama 10, kecil 9, label 8, judul 24, chip 10/8/12, tombol 10); variation lama tidak berubah")
+	_judul.call("Tema: type variation baru U-3 dengan skala V-8 (utama 12, kecil 11, mini 10, label 10, judul 24, chip 12/10/14, tombol 12); variation lama tidak berubah")
 	var tema: Theme = load("res://assets/ui/theme.tres")
 	check(tema != null, "theme.tres termuat")
 	if tema == null:
 		return
-	var ukuran: Dictionary = {&"LayarTeksUtama": ["Label", 10], &"LayarTeksKecil": ["Label", 9], &"LayarLabel": ["Label", 8], &"LayarJudul": ["Label", 24],
-			&"ChipTeks": ["Label", 10], &"ChipTeksKecil": ["Label", 8], &"ChipTeksBesar": ["Label", 12], &"TombolPeran": ["Button", 10], &"TombolTipis": ["Button", 10]}
+	var ukuran: Dictionary = {&"LayarTeksUtama": ["Label", 12], &"LayarTeksKecil": ["Label", 11], &"LayarTeksMini": ["Label", 10], &"LayarLabel": ["Label", 10], &"LayarJudul": ["Label", 24],
+			&"ChipTeks": ["Label", 12], &"ChipTeksKecil": ["Label", 10], &"ChipTeksBesar": ["Label", 14], &"TombolPeran": ["Button", 12], &"TombolTipis": ["Button", 12]}
 	for nama: StringName in ukuran:
 		var info: Array = ukuran[nama]
 		check(tema.get_type_variation_base(nama) == StringName(info[0]), "variation %s berdasar %s" % [nama, info[0]])

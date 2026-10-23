@@ -3,7 +3,7 @@ extends SceneTree
 ## tulisan probe dan data upgrade nyata, lalu memotret keadaan kanvas a sampai g (a hari pertama, b ban dan rem perlu servis, c saldo kurang, d sesudah beli upgrade, e terpadat, f galat data upgrade,
 ## g inset aman), sesudah servis, dan upgrade bertingkat I, II, III (data uji dari upgrades.json + dua tingkat ban; `upgrades.json` tidak berubah). Servis dan Beli ditekan lewat `pressed.emit()` (kode asli).
 ## Mencetak data tiap keadaan dan jumlah keadaan yang tidak sesuai: elemen di luar layar atau zona aman, bertumpuk, tombol < 42 tinggi atau < 84 lebar ("Hari berikutnya" < 140), teks terpotong
-## (baris, tinggi, lebar), chip di luar kartunya, chip kondisi di luar panggung sepeda atau titik di luar gambar sepeda, dan kolom tidak sama dengan `TampilBengkel.lebar_kolom`. Menulis juga
+## (baris, tinggi, lebar), kartu yang menutupi "Hari berikutnya" (V-8, juga dengan inset aman), chip di luar kartunya, chip kondisi di luar panggung sepeda atau titik di luar gambar sepeda, dan kolom tidak sama dengan `TampilBengkel.lebar_kolom`. Menulis juga
 ## `<awalan>_bengkel_<keadaan>.json` (persegi dan warna token tiap teks, persegi kartu, tombol, chip) yang dibaca `tools/ukur_kontras_tangkapan.py` untuk mengukur kontras dari tangkapan nyata.
 ## Tidak interaktif: keluar lewat `ProbeKeluar`.
 ##
@@ -130,6 +130,10 @@ func _periksa(nama: String, layar: LayarBengkel) -> void:
 		var perlu: float = float(label.get_line_count()) * float(label.get_line_height())
 		if label.get_visible_line_count() != label.get_line_count() or label.size.y + 0.5 < perlu or (label.autowrap_mode == TextServer.AUTOWRAP_OFF and label.size.x + 0.5 < label.get_minimum_size().x):
 			print("TIDAK SESUAI [%s]: teks terpotong '%s' (label %s, perlu tinggi %.1f)" % [nama, label.text, label.size, perlu])
+			salah += 1
+	for r_kartu: Rect2 in layar.rect_kartu():
+		if r_kartu.intersects(layar.rect_tombol_hari()):
+			print("TIDAK SESUAI [%s]: kartu %s menutupi 'Hari berikutnya' %s" % [nama, r_kartu, layar.rect_tombol_hari()])
 			salah += 1
 	salah += _periksa_chip(nama, layar)
 	var kolom: Vector2i = TampilBengkel.lebar_kolom(int(akhir - awal))

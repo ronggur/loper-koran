@@ -1187,28 +1187,28 @@ const BENGKEL_BARIS_ATAS_PX: int = 34
 const BENGKEL_KOLOM_SERVIS_FRAKSI: float = 0.48
 const BENGKEL_KOLOM_JARAK_PX: int = 8
 ## Isi panel servis berjarak sekian piksel dari tepi (garis 4 + padding 4), jarak antar anak panel servis, tinggi baris judul bagian dan baris catatan ongkos, piksel game.
-const BENGKEL_PANEL_PAD_PX: int = 8
+const BENGKEL_PANEL_PAD_PX: int = 6
 const BENGKEL_PANEL_JARAK_PX: int = 4
-const BENGKEL_BAGIAN_TINGGI_PX: int = 12
+const BENGKEL_BAGIAN_TINGGI_PX: int = 14
 ## Judul bagian Upgrade berada di atas latar (bukan di dalam panel): diberi pelat `HUD_PANEL` dengan jarak samping sekian piksel supaya kontras teksnya tidak bergantung pada lampu di latar.
 const BENGKEL_BAGIAN_PELAT_PAD_PX: int = 3
-const BENGKEL_CATATAN_TINGGI_PX: int = 12
+const BENGKEL_CATATAN_TINGGI_PX: int = 14
 ## Jarak antar kartu upgrade dan geseran ke bawah judul bagian Upgrade, piksel game.
 const BENGKEL_UPGRADE_JARAK_PX: int = 6
 const BENGKEL_UPGRADE_ATAS_PX: int = 4
 ## Tinggi kartu servis, kartu upgrade tingkat tunggal, dan kartu upgrade dengan jejak tingkat I, II, III (komponen bertingkat), piksel game.
 const BENGKEL_KARTU_SERVIS_PX: int = 50
-const BENGKEL_KARTU_UPGRADE_PX: int = 62
+const BENGKEL_KARTU_UPGRADE_PX: int = 70
 const BENGKEL_KARTU_UPGRADE_JEJAK_PX: int = 72
 ## Isi kartu: jarak antar kolom, jarak tepi kiri (garis 4 + padding 4) dan kanan (garis 4), jarak antar baris teks servis dan upgrade, jarak kotak kondisi ke teks status, jarak antar chip, piksel game.
-const BENGKEL_KARTU_JARAK_PX: int = 6
-const BENGKEL_KARTU_PAD_AWAL_PX: int = 8
+const BENGKEL_KARTU_JARAK_PX: int = 3
+const BENGKEL_KARTU_PAD_AWAL_PX: int = 6
 const BENGKEL_KARTU_PAD_AKHIR_PX: int = 4
-const BENGKEL_KARTU_TEKS_JARAK_SERVIS_PX: int = 3
+const BENGKEL_KARTU_TEKS_JARAK_SERVIS_PX: int = 2
 const BENGKEL_KARTU_TEKS_JARAK_UPGRADE_PX: int = 2
 const BENGKEL_KARTU_STATUS_JARAK_PX: int = 5
 ## Jarak antar baris bila teks status turun ke bawah kotak kondisi (kolom teks sempit), piksel game.
-const BENGKEL_KARTU_STATUS_BARIS_PX: int = 2
+const BENGKEL_KARTU_STATUS_BARIS_PX: int = 1
 const BENGKEL_JEJAK_JARAK_PX: int = 2
 ## Tampilan: ikon komponen (`ui_icon24_*`), glif (`ui_glif_*`), dan ikon koin di chip, sisi persegi piksel game.
 const BENGKEL_IKON_PX: int = 24
@@ -1216,8 +1216,12 @@ const BENGKEL_GLIF_PX: int = 12
 const BENGKEL_KOIN_PX: int = 14
 ## Panel galat data upgrade: jarak isi ke tepi di luar garis kartu (kanvas padding 8), jarak glif ke teks.
 const BENGKEL_GALAT_PAD_PX: int = 8
-## Deskripsi kartu upgrade paling banyak sekian baris; sisanya dipotong dengan elipsis supaya kartu tetap 62 tinggi dan tiga upgrade muat tanpa scroll (QA-001; data nyata 1 sampai 2 baris).
-const BENGKEL_DESKRIPSI_BARIS_MAKS: int = 2
+## Deskripsi kartu upgrade tingkat tunggal paling banyak sekian baris; sisanya dipotong dengan elipsis supaya kartu tetap 70 tinggi dan tiga upgrade muat tanpa scroll (QA-001; V-8: font 11 membuat data nyata 2 sampai 3 baris di kolom 640).
+const BENGKEL_DESKRIPSI_BARIS_MAKS: int = 3
+## Deskripsi kartu upgrade BERTINGKAT (ada baris jejak I, II, III di bawahnya) paling banyak sekian baris.
+const BENGKEL_DESKRIPSI_BARIS_JEJAK_MAKS: int = 2
+## Jarak antar baris deskripsi kartu upgrade, piksel game (bawaan Label 3; 1 supaya tiga baris huruf 11 muat di kartu 70 dan tiga kartu muat di atas "Hari berikutnya" juga dengan inset aman bawah).
+const BENGKEL_DESKRIPSI_JARAK_BARIS_PX: int = 1
 ## Panggung sepeda: tinggi minimum bila ruang sempit, ukuran sepeda kecil (`ui_bengkel_sepeda_kecil.png`) dan papan alat (`ui_bengkel_papan_alat.png`), jarak sepeda dari bawah panggung, lebar latar.
 const BENGKEL_PANGGUNG_MIN_PX: int = 40
 const BENGKEL_SEPEDA_LEBAR_PX: int = 116
@@ -1418,15 +1422,15 @@ const UI_TOMBOL_FOKUS_JARAK_PX: int = 2
 const UI_GARIS_PX: int = 1
 ## Isi sakelar: jarak tambahan kiri dan kanan di luar tepi 9-slice (CSS `padding: 0 4px 2px`).
 const UI_TOMBOL_SAKELAR_PAD_X_PX: int = 4
-## Tinggi chip kecil, normal, dan besar, serta jarak isi ke samping di luar tepi 9-slice, piksel game.
-const UI_CHIP_TINGGI_KECIL_PX: int = 14
-const UI_CHIP_TINGGI_PX: int = 18
-const UI_CHIP_TINGGI_BESAR_PX: int = 24
+## Tinggi chip kecil, normal, dan besar (V-8: 16, 20, 26 untuk huruf 10, 12, 14), serta jarak isi ke samping di luar tepi 9-slice, piksel game.
+const UI_CHIP_TINGGI_KECIL_PX: int = 16
+const UI_CHIP_TINGGI_PX: int = 20
+const UI_CHIP_TINGGI_BESAR_PX: int = 26
 const UI_CHIP_PAD_X_KECIL_PX: int = 1
 const UI_CHIP_PAD_X_PX: int = 2
 const UI_CHIP_PAD_X_BESAR_PX: int = 4
-## Chip: jarak isi ke atas dan bawah di luar tepi 9-slice per ukuran (lebih kecil dari tepi: tinggi chip tetap 14, 18, 24 walau tinggi baris teks Lexend 10, 13, 15), dan jarak antar isi (glif, ikon, teks), piksel game.
-const UI_CHIP_PAD_Y_KECIL_PX: int = 2
+## Chip: jarak isi ke atas dan bawah di luar tepi 9-slice per ukuran (lebih kecil dari tepi: tinggi chip tetap 16, 20, 26 walau tinggi baris teks Lexend 13, 15, 18), dan jarak antar isi (glif, ikon, teks), piksel game.
+const UI_CHIP_PAD_Y_KECIL_PX: int = 1
 const UI_CHIP_PAD_Y_PX: int = 2
 const UI_CHIP_PAD_Y_BESAR_PX: int = 3
 const UI_CHIP_JARAK_PX: int = 3
