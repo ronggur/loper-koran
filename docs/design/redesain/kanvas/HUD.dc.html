@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>HUD saat mengantar</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/b23e54cf59df17b596a06d402ed34bb2">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600&amp;family=Lilita+One&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.rad{position:absolute;top:10px;width:12px;height:172px;border:1px solid #0E0A1C;box-shadow:inset 0 0 0 1px #36281E;background:rgba(14,10,28,.6)}
+.rad i{position:absolute;left:1px;width:8px;height:6px;border:1px solid #0E0A1C;background:#FFC94A}
+.kp{display:block;width:8px;height:8px;flex:none}
+</style>
+</helmet>
+<div class="lk" style="width: 640px; height: 360px; zoom: 3; background: #0E0A1C; font-family: 'Lexend', sans-serif; color: #FFF3E3">
+<img class="ab" src="/_blob/f69c513708dab5417f72e6f09771d7b4" alt="Jalan saat mengantar" style="left: 0; top: 0">
+
+<div class="rad" style="left: 4px"><i style="top: 30px"></i><i style="top: 96px; background: #56C46E"></i><i style="top: 140px; left: 0; width: 10px; height: 8px; border-color: #FFF3E3"></i></div>
+<div class="rad" style="right: 4px"><i style="top: 60px"></i></div>
+
+<button type="button" class="btn biasa ab" style="left: 26px; top: 8px; width: 24px; height: 24px; border-width: 6px 4px; padding: 0" aria-label="Jeda"><i class="g g-jeda gc-terang"></i></button>
+
+<div class="pnl hud ab" style="left: 26px; top: 50px; width: 145px; padding: 2px 5px; display: flex; align-items: center; gap: 5px">
+<img class="i14" src="/_blob/95fa34e99a2063540cf39d946e534094" alt="">
+<div><p class="lbl c-accent">Misi sampingan</p><p class="t8" style="font-weight: 600">Kucing 0/1 · 8 rumah</p></div>
+</div>
+
+<div class="pnl hud ab" style="left: 190px; top: 8px; width: 260px; padding: 2px 2px 3px; display: flex; flex-direction: column; gap: 3px">
+<div style="display: flex; justify-content: space-between; padding: 0 2px"><span class="lbl"><span class="c-text2">Waktu</span> <span class="num">1:30</span></span><span class="lbl c-accent num">3/25 Terkirim</span></div>
+<div style="display: flex; gap: 2px">
+<sc-for list="{{kotak}}" as="k" hint-placeholder-count="25"><i class="kp" style="{{k}}"></i></sc-for>
+</div>
+</div>
+
+<div class="ab" style="right: 28px; top: 8px; display: flex; flex-direction: column; align-items: flex-end; gap: 5px">
+<div style="display: flex; gap: 5px">
+<div class="pnl hud" style="height: 24px; padding: 0 6px 0 3px; display: flex; align-items: center; gap: 4px"><img class="i14" src="/_blob/1b8c69138f32cb9445bfef455e4dad11" alt="Koin"><span class="t10 num">1.250</span></div>
+<div class="pnl hud" style="height: 24px; padding: 0 6px; display: flex; flex-direction: column; justify-content: center"><span class="lbl c-accent" style="font-size: 7px; line-height: 8px">Skor <span class="c-text num">2.340</span></span><span class="lbl c-accent" style="font-size: 7px; line-height: 8px">Combo <span class="c-text num">x1.3</span></span></div>
+</div>
+<div class="pnl hud" style="width: 140px; height: 24px; padding: 0 3px; display: flex; align-items: center; justify-content: space-between">
+<span style="display: flex; align-items: center; gap: 2px"><img class="i14" src="/_blob/8accfd5abc85c093f7ac098be585e921" alt="Ban"><span class="kk hud"><i></i><i></i><i></i></span></span>
+<span style="display: flex; align-items: center; gap: 2px"><img class="i14" src="/_blob/972e215ef8cce3d49f3b1dbb217faafd" alt="Rem"><span class="kk hud"><i></i><i></i><i class="h"></i></span></span>
+<span style="display: flex; align-items: center; gap: 2px"><img class="i14" src="/_blob/ae731af7a3e15ce2c89612c2e528318f" alt="Rantai"><span class="kk hud"><i class="w"></i><i class="h"></i><i class="h"></i></span><b style="width: 3px; height: 9px; background: #FF8A3D; box-shadow: 0 0 0 1px #0E0A1C"></b></span>
+</div>
+</div>
+
+<div class="pnl hud ab" style="left: 210px; bottom: 8px; width: 170px; padding: 3px 6px; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; justify-content: space-between"><span class="lbl c-accent">Kecepatan</span><span class="t10 num">3.0 u/d</span></div>
+<span class="bar" style="flex: none; background: #36281E"><b style="width: 45%; background: #FFF3E3; box-shadow: none"></b></span>
+<span class="lbl c-accent" style="margin-top: 2px">Stamina</span>
+<span class="bar" style="flex: none; background: #36281E"><b style="width: 100%"></b></span>
+</div>
+<div class="pnl hud ab" style="left: 400px; bottom: 8px; width: 117px; padding: 3px 6px; display: flex; flex-direction: column; gap: 3px">
+<div style="display: flex; justify-content: space-between"><span class="lbl c-accent">Koran</span><span class="t10 num">30</span></div>
+<div style="display: flex; gap: 1px"><sc-for list="{{koran}}" as="c" hint-placeholder-count="8"><i style="width: 12px; height: 6px; background: #FFF3E3; box-shadow: inset 0 -1px 0 #CDB9A3, 0 0 0 1px #0E0A1C"></i></sc-for></div>
+</div>
+
+<img class="ab" src="/_blob/97b23399af47af9a6ee68826f41c12bb" alt="Bel" style="left: 556px; top: 276px; width: 40px; height: 40px; object-fit: none; object-position: 0 0">
+
+<p class="spec ab" style="left: 60px; top: 10px; width: 120px; background: rgba(14,10,28,.8); padding: 2px">Tombol jeda: bentuk tombol biasa (sisi atas terang + bibir 2 px), gambar 24×24, area sentuh 42×42 tetap.</p>
+<p class="spec ab" style="left: 456px; top: 70px; width: 156px; background: rgba(14,10,28,.8); padding: 2px">Posisi dan ukuran semua panel TIDAK berubah (DESIGN_SPEC 3). Yang diselaraskan: kartu misi memakai ikon kucing 14, label KAPITAL + angka tabular, kondisi tetap kotak 5×5 berongga/WARN + "!".</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const gaya = (i) => {
+      if (i < 3) return 'background: #56C46E; box-shadow: 0 0 0 1px #0E0A1C';
+      if (i === 3) return 'background: #D94F3D; box-shadow: 0 0 0 1px #0E0A1C';
+      if (i === 4) return 'background: #FFB22E; box-shadow: 0 0 0 1px #0E0A1C';
+      return 'background: #36281E; border: 1px dashed #CDB9A3';
+    };
+    return { kotak: Array.from({ length: 25 }, (_, i) => gaya(i)), koran: [1, 2, 3, 4, 5, 6, 7, 8] };
+  }
+}
+</script>
+</body>
+</html>

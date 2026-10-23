@@ -25,7 +25,7 @@ Status: **Fase 0 dan Fase 1 selesai, Fase 2 menunggu uji HP, Fase 3 (prototype 3
 | [`SETUP_ANDROID.md`](./SETUP_ANDROID.md) | Export Android tanpa Gradle: prasyarat mesin, preset `export_presets.cfg` beserta alasannya, ekspor APK debug dari CLI, pemeriksaan isi APK, pasang ke HP, probe render di HP (6.1), checklist uji M0 dan uji 3-5 orang Fase 1 (8.2) |
 | [`LOOP-DEV-QA.md`](./LOOP-DEV-QA.md) | Brief loop dua agent (Dev dan QA) untuk mengerjakan fase development, dengan Fase 0 dipecah jadi run 0A–0C dan perintah tempel untuk memulai run Fase 1 (Bagian 6b), Fase 6A (6f), dan pemasangan aset Fase 5 (6g, Run 5A) |
 | [`loop/`](./loop/) | Satu folder per run loop (`<RUN_ID>/`): `SPEC.md` (kontrak run), `LOG.md` (temuan dan keputusan), `shots/` (tangkapan layar bukti) |
-| [`design/`](./design/) | [`DESIGN_SPEC.md`](./design/DESIGN_SPEC.md): token warna, font, dan spesifikasi HUD; `screens/` dan `source/`: render dan source mock HUD dan kontrol; [`character/`](./design/character/): indeks semua karakter; [`character/loper_agen/`](./design/character/loper_agen/): sprite produksi pemain; [`character/varian/`](./design/character/varian/): varian baju |
+| [`design/`](./design/) | [`DESIGN_SPEC.md`](./design/DESIGN_SPEC.md): token warna, font, dan spesifikasi HUD; `screens/` dan `source/`: render dan source mock HUD dan kontrol; [`character/`](./design/character/): indeks semua karakter; [`character/loper_agen/`](./design/character/loper_agen/): sprite produksi pemain; [`character/varian/`](./design/character/varian/): varian baju; [`PROMPT_REDESAIN_UI.md`](./design/PROMPT_REDESAIN_UI.md) dan [`redesain/`](./design/redesain/README.md): redesain UI layar penuh dari kanvas Claude Design (usulan 2026-10-23, belum dipasang) |
 
 Sumber visual:
 

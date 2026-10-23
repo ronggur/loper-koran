@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Jeda</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/b23e54cf59df17b596a06d402ed34bb2">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600&amp;family=Lilita+One&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="lk" style="width: {{W}}px; height: 360px; zoom: 3; background: #0E0A1C; font-family: 'Lexend', sans-serif; color: #FFF3E3">
+<img class="ab" src="/_blob/f69c513708dab5417f72e6f09771d7b4" alt="Jalan di balik layar jeda" style="left: {{bgx}}px; top: 0">
+<i class="ab" style="left: 0; top: 0; width: {{W}}px; height: 360px; background: rgba(14, 10, 28, 0.72)"></i>
+
+<section class="pnl layar ab" role="dialog" aria-label="Jeda" style="left: {{px}}px; top: 50px; width: 232px; padding: 6px 4px 4px; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; justify-content: center; gap: 6px; height: 28px"><i class="g g-jeda gc-text gc-terang"></i><h1 class="ttl" style="font-size: 24px; letter-spacing: .04em">JEDA</h1></div>
+<button type="button" class="btn utama" style="width: 100%">Lanjut <i class="g g-lanjut gc-gelap"></i></button>
+<div class="pisah" style="margin: 2px 0"></div>
+<button type="button" class="btn sakelar" style="width: 100%; padding-left: 8px; padding-right: 8px" aria-pressed="false">Kidal: mati <span class="sak"><i></i><s></s></span></button>
+<button type="button" class="btn sakelar nyala" style="width: 100%; padding-left: 8px; padding-right: 8px" aria-pressed="true">Bantu: nyala <span class="sak on"><i></i><s></s></span></button>
+<div style="height: 42px; position: relative">
+<sc-if value="{{ukur}}" hint-placeholder-val="{{false}}"><i class="redline" style="left: 0; top: 0; right: 0; bottom: 0"></i><p class="spec ab" style="left: 6px; top: 10px; width: 210px">Ruang cadangan 42: Pengaturan dan Keluar ke menu nanti (belum digambar sebagai fitur)</p></sc-if>
+</div>
+</section>
+<sc-if value="{{ukur}}" hint-placeholder-val="{{false}}">
+<p class="spec ab" style="left: {{specX}}px; top: 52px; width: 120px">Panel 232 lebar, padding 4, jarak 6. Lanjut = aksi utama lebar penuh. Sakelar: teks + kenop, satu ketukan membalik. Lapisan HUD_PANEL 72 % supaya jalan tetap terbaca.</p>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"lebar":{"editor":"enum","options":["640","800"],"default":"640"},"ukur":{"editor":"boolean","default":false},"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const W = Number(this.props.lebar ?? '640');
+    const px = Math.round((W - 232) / 2);
+    return { W, px, bgx: Math.round((W - 640) / 2), specX: px + 244, ukur: this.props.ukur ?? false };
+  }
+}
+</script>
+</body>
+</html>

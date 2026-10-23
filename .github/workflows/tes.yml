@@ -96,6 +96,11 @@ jobs:
           python3 -m pip install --quiet pillow
           python3 tools/tests_cek/uji_ui_lencana.py
 
+      - name: Uji aset redesain UI (komponen.py deterministik, docs = keluaran, palet induk, ukuran bingkai; sifat latar bengkel)
+        run: |
+          python3 -m pip install --quiet numpy pillow
+          python3 tools/tests_cek/uji_ui_redesain.py
+
       - name: Import project (tanpa error, tanpa berkas yang belum di-commit)
         run: |
           set -uo pipefail

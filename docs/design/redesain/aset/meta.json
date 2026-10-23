@@ -1,0 +1,442 @@
+{
+ "arsir_nonaktif": {
+  "note": "Tile isi tombol nonaktif",
+  "size": [
+   4,
+   4
+  ]
+ },
+ "btn_biasa": {
+  "note": "Aksi biasa: isi UI_PANEL_RAISED, sisi atas TEXT_2",
+  "size": [
+   12,
+   16
+  ],
+  "slice": [
+   6,
+   4,
+   6,
+   4
+  ]
+ },
+ "btn_biasa_tekan": {
+  "note": "Ditekan: turun 2 px, bingkai ACCENT",
+  "size": [
+   12,
+   16
+  ],
+  "slice": [
+   6,
+   4,
+   6,
+   4
+  ]
+ },
+ "btn_nonaktif": {
+  "note": "Nonaktif: rata, garis redup, isi diarsir (tile), teks alasan",
+  "size": [
+   12,
+   16
+  ],
+  "slice": [
+   6,
+   4,
+   6,
+   4
+  ]
+ },
+ "btn_sakelar_nyala": {
+  "note": "Sakelar nyala: bingkai ACCENT + kenop kanan + teks \"nyala\"",
+  "size": [
+   12,
+   16
+  ],
+  "slice": [
+   6,
+   4,
+   6,
+   4
+  ]
+ },
+ "btn_tenang": {
+  "note": "Lewati / bahaya ringan: rata, tanpa bibir",
+  "size": [
+   12,
+   16
+  ],
+  "slice": [
+   6,
+   4,
+   6,
+   4
+  ]
+ },
+ "btn_tenang_tekan": {
+  "note": "Tenang ditekan",
+  "size": [
+   12,
+   16
+  ],
+  "slice": [
+   6,
+   4,
+   6,
+   4
+  ]
+ },
+ "btn_utama": {
+  "note": "Aksi utama: isi ACCENT, sisi atas #FFE08A, bibir #E98E3F",
+  "size": [
+   12,
+   16
+  ],
+  "slice": [
+   6,
+   4,
+   6,
+   4
+  ]
+ },
+ "btn_utama_tekan": {
+  "note": "Ditekan: wajah turun 2 px, bibir hilang",
+  "size": [
+   12,
+   16
+  ],
+  "slice": [
+   6,
+   4,
+   6,
+   4
+  ]
+ },
+ "chip_aksen": {
+  "note": "Chip tingkat aktif",
+  "size": [
+   8,
+   8
+  ],
+  "slice": [
+   3,
+   3,
+   3,
+   3
+  ]
+ },
+ "chip_gelap": {
+  "note": "Chip harga/saldo",
+  "size": [
+   8,
+   8
+  ],
+  "slice": [
+   3,
+   3,
+   3,
+   3
+  ]
+ },
+ "chip_netral": {
+  "note": "Chip Dimiliki / tingkat",
+  "size": [
+   8,
+   8
+  ],
+  "slice": [
+   3,
+   3,
+   3,
+   3
+  ]
+ },
+ "chip_ok": {
+  "note": "Chip status Baik (+ centang)",
+  "size": [
+   8,
+   8
+  ],
+  "slice": [
+   3,
+   3,
+   3,
+   3
+  ]
+ },
+ "chip_warn": {
+  "note": "Chip Perlu servis (+ \"!\")",
+  "size": [
+   8,
+   8
+  ],
+  "slice": [
+   3,
+   3,
+   3,
+   3
+  ]
+ },
+ "foto_jalan": {
+  "note": "Foto berita utama \"Jalan Sedang Diperbaiki\": tinta 2 nada di atas KORAN_KERTAS_2",
+  "size": [
+   100,
+   62
+  ]
+ },
+ "foto_lampu": {
+  "note": "Foto berita utama \"Mati Lampu\": tiang dan kabel",
+  "size": [
+   100,
+   62
+  ]
+ },
+ "glif12": {
+  "baris": [
+   "gelap",
+   "terang",
+   "teks2",
+   "ok",
+   "warn",
+   "aksen",
+   "tinta2"
+  ],
+  "kolom": [
+   "panah",
+   "centang",
+   "lanjut",
+   "seru",
+   "naik",
+   "turun",
+   "jeda",
+   "silang",
+   "kunci"
+  ],
+  "note": "Glif satu warna 12x12; di Godot satu PNG putih + modulate",
+  "size": [
+   108,
+   84
+  ]
+ },
+ "ikon24": {
+  "note": "Ikon besar 24x24 (sheet), garis luar 1 px, 3 nada, cahaya kiri atas",
+  "size": [
+   288,
+   24
+  ],
+  "urutan": [
+   "koin",
+   "bintang",
+   "ban",
+   "rem",
+   "rantai",
+   "kucing",
+   "kerucut",
+   "bohlam",
+   "lencana_perunggu",
+   "lencana_perak",
+   "lencana_emas",
+   "lencana_belum"
+  ]
+ },
+ "kartu_biasa": {
+  "note": "Kartu biasa: garis dalam atas #553428",
+  "size": [
+   12,
+   12
+  ],
+  "slice": [
+   4,
+   4,
+   4,
+   4
+  ]
+ },
+ "kartu_menonjol": {
+  "note": "Kartu butuh perhatian: garis dalam WARN 1 px + tanda \"!\"",
+  "size": [
+   12,
+   12
+  ],
+  "slice": [
+   4,
+   4,
+   4,
+   4
+  ]
+ },
+ "kartu_redup": {
+  "note": "Kartu selesai/redup: rata, tanpa garis luar gelap",
+  "size": [
+   12,
+   12
+  ],
+  "slice": [
+   4,
+   4,
+   4,
+   4
+  ]
+ },
+ "kertas_tile": {
+  "note": "Tekstur titik kertas koran",
+  "size": [
+   4,
+   4
+  ]
+ },
+ "koran_btn_terpilih": {
+  "note": "Terpilih: BERONGGA, bingkai tinta 3 px",
+  "size": [
+   12,
+   16
+  ],
+  "slice": [
+   6,
+   4,
+   6,
+   4
+  ]
+ },
+ "koran_btn_tinta": {
+  "note": "Berangkat: tinta penuh, bayangan cetak KORAN_GARIS 2 px",
+  "size": [
+   12,
+   16
+  ],
+  "slice": [
+   6,
+   4,
+   6,
+   4
+  ]
+ },
+ "koran_btn_tinta_tekan": {
+  "note": "Berangkat ditekan",
+  "size": [
+   12,
+   16
+  ],
+  "slice": [
+   6,
+   4,
+   6,
+   4
+  ]
+ },
+ "koran_btn_tipis": {
+  "note": "Ambil/Lewati tidak terpilih: garis 1 px",
+  "size": [
+   12,
+   16
+  ],
+  "slice": [
+   6,
+   4,
+   6,
+   4
+  ]
+ },
+ "koran_kotak": {
+  "note": "Kotak misi: garis ganda KORAN_GARIS",
+  "size": [
+   12,
+   12
+  ],
+  "slice": [
+   4,
+   4,
+   4,
+   4
+  ]
+ },
+ "lencana32": {
+  "note": "Lencana milestone 32x32; tingkat juga ditandai 1/2/3 titik di pita",
+  "size": [
+   128,
+   32
+  ],
+  "urutan": [
+   "perunggu",
+   "perak",
+   "emas",
+   "belum"
+  ]
+ },
+ "panel_hud": {
+  "note": "Panel HUD (tetap, sama dengan ui_panel_hud_9slice)",
+  "size": [
+   12,
+   12
+  ],
+  "slice": [
+   4,
+   4,
+   4,
+   4
+  ]
+ },
+ "panel_layar": {
+  "note": "Panel layar penuh",
+  "size": [
+   12,
+   12
+  ],
+  "slice": [
+   4,
+   4,
+   4,
+   4
+  ]
+ },
+ "papan_alat": {
+  "note": "Latar panel sepeda: papan peralatan + rak + lantai, nada rendah (hanya UI_BG, UI_PANEL, UI_PANEL_RAISED, #553428)",
+  "size": [
+   360,
+   104
+  ]
+ },
+ "sepeda_samping": {
+  "note": "Sepeda loper tampak samping, hadap kanan, cahaya kiri atas. Titik tandai: ban, rem, rantai",
+  "size": [
+   124,
+   72
+  ],
+  "titik": {
+   "ban_belakang": [
+    7,
+    49
+   ],
+   "ban_depan": [
+    117,
+    49
+   ],
+   "rantai": [
+    42,
+    49
+   ],
+   "rem": [
+    91,
+    27
+   ]
+  }
+ },
+ "struk": {
+  "note": "Struk hasil: tepi atas/bawah bergerigi, 9-slice mode ulang (tile)",
+  "size": [
+   12,
+   12
+  ],
+  "slice": [
+   4,
+   4,
+   4,
+   4
+  ]
+ },
+ "struk_takik": {
+  "note": "Takik tiket di garis sobek (dicerminkan untuk sisi kanan)",
+  "size": [
+   6,
+   10
+  ]
+ }
+}

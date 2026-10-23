@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Bengkel — upgrade bertingkat</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/b23e54cf59df17b596a06d402ed34bb2">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600&amp;family=Lilita+One&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="lk bg-gelap" style="width: 640px; height: 360px; zoom: 3; padding: 16px; font-family: 'Lexend', sans-serif; color: #FFF3E3">
+<h2 class="ttl" style="font-size: 16px">Upgrade bertingkat: satu kartu per komponen</h2>
+<p class="spec" style="margin-top: 2px; width: 560px">Kartu tetap tiga (ban, rem, rantai), jadi kolom upgrade tidak pernah perlu scroll. Tingkat berikutnya menggantikan isi kartu yang sama; jejak I · II · III menunjukkan posisi. Nama, deskripsi, dan harga tingkat 2–3 belum ada: kurung siku = tempat isi.</p>
+
+<div style="display: grid; grid-template-columns: 112px 312px; column-gap: 12px; row-gap: 10px; margin-top: 14px; align-items: center">
+<p class="spec"><b>Sekarang</b><br>tingkat 1 dijual</p>
+<div class="pnl kartu" style="height: 62px; display: flex; align-items: center; gap: 6px; padding: 0 0 0 4px">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px"><i class="i24 i-ban"></i><span class="chip kecil netral">I</span></div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 2px"><p class="t10">Ban Anti-Selip</p><p class="t9 c-text2" style="font-weight: 400">Belok lebih lincah (+15%)</p></div>
+<span class="chip gelap num"><img class="i14" src="/_blob/1b8c69138f32cb9445bfef455e4dad11" alt="">600 koin</span>
+<button type="button" class="btn biasa w84">Beli</button>
+</div>
+
+<p class="spec"><b>Nanti</b><br>I dimiliki, II dijual, III terkunci</p>
+<div class="pnl kartu" style="height: 62px; display: flex; align-items: center; gap: 6px; padding: 0 0 0 4px">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px"><i class="i24 i-ban"></i><span class="chip kecil aksen">II</span></div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 3px">
+<p class="t10">[Nama ban tingkat II]</p>
+<div style="display: flex; gap: 2px; align-items: center"><span class="chip kecil netral"><i class="g g-centang gc-teks2"></i>I</span><span class="chip kecil aksen">II</span><span class="chip kecil netral" style="opacity: .55">III</span></div>
+</div>
+<span class="chip gelap num"><img class="i14" src="/_blob/1b8c69138f32cb9445bfef455e4dad11" alt="">[harga]</span>
+<button type="button" class="btn biasa w84">Beli</button>
+</div>
+
+<p class="spec"><b>Nanti</b><br>semua tingkat dimiliki</p>
+<div class="pnl redup" style="height: 62px; display: flex; align-items: center; gap: 6px; padding: 0 0 0 4px">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px"><i class="i24 i-ban"></i><span class="chip kecil aksen">III</span></div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 3px">
+<p class="t10 c-text2">[Nama ban tingkat III]</p>
+<div style="display: flex; gap: 2px; align-items: center"><span class="chip kecil netral"><i class="g g-centang gc-teks2"></i>I</span><span class="chip kecil netral"><i class="g g-centang gc-teks2"></i>II</span><span class="chip kecil netral"><i class="g g-centang gc-teks2"></i>III</span></div>
+</div>
+<span class="chip netral" style="margin-right: 4px"><i class="g g-centang gc-teks2"></i>Dimiliki</span>
+</div>
+
+<p class="spec"><b>Deskripsi tingkat</b><br>muncul saat kartu ditekan lama atau di baris kedua bila muat</p>
+<p class="spec" style="color: #CDB9A3">Baris kedua kartu dipakai bergantian: deskripsi efek (tingkat 1, seperti sekarang) atau jejak tingkat (tingkat 2–3). Bila keduanya perlu tampil, tinggi kartu naik ke 72 dan tiga kartu masih muat (3 × 72 + 2 × 6 = 228 di atas tombol Hari berikutnya).</p>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1920,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
