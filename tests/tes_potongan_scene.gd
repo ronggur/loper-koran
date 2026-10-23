@@ -178,7 +178,7 @@ func _test_lemparan_nyata() -> void:
 	check(gambar.teks_tampil() == ["-5"] and gambar.item_sprite().is_empty(), "umpan melayang '-5' tanpa bintang dan koin: %s" % [gambar.teks_tampil()])
 	var entri: Array[UmpanMelayang.Entri] = akar.umpan_melayang()
 	check(m != null and entri.size() == 1 and entri[0].potongan == 5 and entri[0].titik_dunia == m.lintasan.titik_mendarat, "entri potongan 5 di titik mendarat koran")
-	var label: Label = gambar.get_child(0) as Label
+	var label: Label = gambar.get_child(0) as Label if gambar.get_child_count() > 0 else null
 	check(label != null and label.get_theme_color(&"font_color") == Palette.TEXT_2, "label potongan nada netral TEXT_2 (bukan OK hijau, bukan merah)")
 	# 2. Antaran sah ke kotak surat @6 sesudah umpan habis: koin 15, bersih 10.
 	_langkah(akar, 60)
@@ -195,10 +195,10 @@ func _test_lemparan_nyata() -> void:
 	# 5. Jeda membekukan umpan potongan.
 	_langkah(akar, 60)
 	_lempar_ke_titik(akar, 4.0, TITIK_MELESET, mendarat)
-	var sisa: float = akar.umpan_melayang().back().sisa_detik
+	var sisa: float = akar.umpan_melayang().back().sisa_detik if not akar.umpan_melayang().is_empty() else -1.0
 	akar.minta_jeda()
 	_langkah(akar, 40)
-	check(akar.umpan_melayang().back().sisa_detik == sisa and gambar.teks_tampil().has("-5"), "jeda game membekukan umpan '-5'")
+	check(sisa > 0.0 and not akar.umpan_melayang().is_empty() and akar.umpan_melayang().back().sisa_detik == sisa and gambar.teks_tampil().has("-5"), "jeda game membekukan umpan '-5'")
 	akar.minta_lanjut()
 	_bersihkan(akar)
 
