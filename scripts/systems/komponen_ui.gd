@@ -192,3 +192,32 @@ static func pad_x_chip(ukuran: UkuranChip) -> int:
 		UkuranChip.BESAR:
 			return Config.UI_CHIP_PAD_X_BESAR_PX
 	return Config.UI_CHIP_PAD_X_PX
+
+
+## Warna teks chip dari `Palette`: GELAP `TEXT`, OK `OK`, WARN `WARN`, NETRAL `TEXT_2`, AKSEN `ACCENT` (kanvas ui.css `.chip.*`). Dipasangkan dengan glif dan teks, jadi status tidak hanya dibedakan warna.
+static func warna_teks_chip(gaya: GayaChip) -> Color:
+	match gaya:
+		GayaChip.OK:
+			return Palette.OK
+		GayaChip.WARN:
+			return Palette.WARN
+		GayaChip.NETRAL:
+			return Palette.TEXT_2
+		GayaChip.AKSEN:
+			return Palette.ACCENT
+	return Palette.TEXT
+
+
+## Jarak isi chip ke atas dan bawah di luar tepi 9-slice, piksel game (lebih kecil dari tepi supaya tinggi chip tetap `tinggi_chip` dengan baris teks Lexend).
+static func pad_y_chip(ukuran: UkuranChip) -> int:
+	match ukuran:
+		UkuranChip.KECIL:
+			return Config.UI_CHIP_PAD_Y_KECIL_PX
+		UkuranChip.BESAR:
+			return Config.UI_CHIP_PAD_Y_BESAR_PX
+	return Config.UI_CHIP_PAD_Y_PX
+
+
+## Jarak antar isi chip (glif, ikon, teks), piksel game.
+static func jarak_chip(ukuran: UkuranChip) -> int:
+	return Config.UI_CHIP_JARAK_BESAR_PX if ukuran == UkuranChip.BESAR else Config.UI_CHIP_JARAK_PX
