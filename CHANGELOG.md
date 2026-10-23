@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.6.0](https://github.com/ronggur/loper-koran/compare/loper-koran-v0.5.0...loper-koran-v0.6.0) (2026-10-23)
+
+
+### Fitur
+
+* reputasi, pelanggan tetap, potongan koran terbuang, dan milestone (run 6A2) ([#58](https://github.com/ronggur/loper-koran/issues/58)) ([3a8e7ce](https://github.com/ronggur/loper-koran/commit/3a8e7ce8597104cb3703a69befeb902629726848))
+
+
+### Aset
+
+* redesain UI layar penuh (usulan) dari kanvas Claude Design + latar bengkel ([#61](https://github.com/ronggur/loper-koran/issues/61)) ([7e2356f](https://github.com/ronggur/loper-koran/commit/7e2356fec8626a64a5400b821b0144e31548122a))
+* **ui:** sepeda bengkel dari gambar full body tanpa tokoh ([#63](https://github.com/ronggur/loper-koran/issues/63)) ([d8b4a27](https://github.com/ronggur/loper-koran/commit/d8b4a2754725ffb1254851fef909f7112dbb1f15))
+
+
+### Dokumentasi
+
+* prompt Claude Design untuk redesain seluruh UI (komponen, bengkel, koran, hasil, jeda) ([#60](https://github.com/ronggur/loper-koran/issues/60)) ([7e12d4c](https://github.com/ronggur/loper-koran/commit/7e12d4c78d7377db012ac3ff9cddf00d562b2f32))
+
+
+### CI
+
+* tes logika hanya di PR biasa, uji skrip Python jadi job paralel ([#62](https://github.com/ronggur/loper-koran/issues/62)) ([3485393](https://github.com/ronggur/loper-koran/commit/34853931815df7e8c4a4e986fbf47961a17ff5b0))
+
 ## [0.5.0](https://github.com/ronggur/loper-koran/compare/loper-koran-v0.4.0...loper-koran-v0.5.0) (2026-10-22)
 
 
