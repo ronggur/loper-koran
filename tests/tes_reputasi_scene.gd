@@ -260,17 +260,17 @@ func _test_layar_hasil_kanan() -> void:
 	check(l.teks_pelanggan() == ["Pelanggan baru: 3"], "hanya pelanggan baru 3 (setia, berhenti, kembali nol tidak tampil): %s" % [l.teks_pelanggan()])
 	check(l.teks_target() == "Pelanggan tetap · Perunggu 1/3" and is_equal_approx(l.pecahan_bilah(), 1.0 / 3.0), "milestone terdekat: pelanggan tetap 1/3 menuju perunggu (pecahan 1/3, bukan koin 1080/5000=0,22): '%s' %.3f" % [l.teks_target(), l.pecahan_bilah()])
 	check(l.teks_baru() == ["Baru: Koin terkumpul · Perunggu"], "tingkat baru: koin 700 -> 1080 melewati 1000: %s" % [l.teks_baru()])
-	check(l.tekstur_target() == l.LENCANA[0] and l.tekstur_baru() == [l.LENCANA[0]], "lencana: target menuju perunggu (indeks 0) dan baru perunggu")
+	check(l.tekstur_target() == l.LENCANA[0] and l.tekstur_baru() == [l.LENCANA_BARU[0]], "lencana: target menuju perunggu (lencana 32, indeks 0) dan baru perunggu (ikon 24, indeks 0; run ui2)")
 	check(l.teks_tampil().has("Reputasi 12 (+2)"), "teks_tampil memuat baris reputasi")
 	# Warna perubahan: naik OK, nol dan turun TEXT_2.
-	var nilai: Label = l.find_child("NilaiReputasi", true, false) as Label
-	check(nilai.get_theme_color(&"font_color") == Palette.OK, "reputasi naik: nilai berwarna OK")
+	var nilai: Label = l.chip_reputasi().label()
+	check(nilai.get_theme_color(&"font_color") == Palette.OK and l.chip_reputasi().glif_tampil() and l.chip_reputasi().teks() == "+2", "reputasi naik: chip perubahan '+2' berwarna OK dengan glif naik (run ui2: angka besar dan chip menggantikan satu label)")
 	l.isi(_angka(20, 300, 0), null, [] as Array[String], -1, _rep(30, 29, [0, 0, 1, 0]), null)
-	check(l.teks_reputasi() == "29 (-1)" and nilai.get_theme_color(&"font_color") == Palette.TEXT_2, "reputasi turun: '29 (-1)' netral TEXT_2 (bukan merah): '%s'" % l.teks_reputasi())
+	check(l.teks_reputasi() == "29 (-1)" and nilai.get_theme_color(&"font_color") == Palette.TEXT_2 and l.chip_reputasi().teks() == "-1" and l.chip_reputasi().glif_tampil(), "reputasi turun: '29 (-1)' chip '-1' netral TEXT_2 (bukan merah) dengan glif turun: '%s'" % l.teks_reputasi())
 	check(l.teks_pelanggan() == ["Berhenti berlangganan: 1"] and l.teks_target() == "" and l.teks_baru().is_empty(), "tanpa milestone: bagian target dan baru tersembunyi; berhenti 1 tampil: %s" % [l.teks_pelanggan()])
 	l.isi(_angka(20, 300, 0), null, [] as Array[String], -1, _rep(50, 50, [0, 0, 0, 0]), null)
 	check(l.teks_reputasi() == "50 (+0)" and l.teks_pelanggan().is_empty(), "perubahan nol: '50 (+0)' dan bagian pelanggan tersembunyi")
-	check(nilai.get_theme_color(&"font_color") == Palette.TEXT_2, "perubahan nol: nilai netral TEXT_2 (hanya kenaikan yang OK)")
+	check(nilai.get_theme_color(&"font_color") == Palette.TEXT_2 and l.chip_reputasi().teks() == "+0" and not l.chip_reputasi().glif_tampil(), "perubahan nol: chip '+0' netral TEXT_2 tanpa glif (hanya kenaikan yang OK)")
 	# Empat jenis.
 	l.isi(_angka(20, 300, 0), null, [] as Array[String], -1, _rep(30, 29, [2, 1, 1, 1]), null)
 	check(l.teks_pelanggan() == ["Pelanggan baru: 2", "Jadi pelanggan tetap: 1", "Berhenti berlangganan: 1", "Berlangganan lagi: 1"], "empat jenis tampil urut: %s" % [l.teks_pelanggan()])
@@ -281,7 +281,7 @@ func _test_layar_hasil_kanan() -> void:
 	var ringkas: MilestoneTracker.Ringkasan = MilestoneTracker.ringkas(_ms_state(0, 0, 0, 0, 0), _ms_state(3, 6000, 1, 4, 0))
 	check(ringkas.baru.size() == 4, "kontrol: empat milestone naik sekaligus")
 	l.isi(_angka(20, 300, 0), null, [] as Array[String], -1, _rep(30, 32, [0, 0, 0, 0]), ringkas)
-	check(l.teks_baru().size() == Config.MILESTONE_BARU_MAKS_TAMPIL and l.teks_baru()[0] == "Baru: Koin terkumpul · Perak" and l.tekstur_baru()[0] == l.LENCANA[1], "tampil paling banyak 3, tertinggi dulu (koin perak): %s" % [l.teks_baru()])
+	check(l.teks_baru().size() == Config.MILESTONE_BARU_MAKS_TAMPIL and l.teks_baru()[0] == "Baru: Koin terkumpul · Perak" and l.tekstur_baru()[0] == l.LENCANA_BARU[1], "tampil paling banyak 3, tertinggi dulu (koin perak): %s" % [l.teks_baru()])
 	# Semua emas.
 	l.isi(_angka(25, 500, 0), null, [] as Array[String], -1, _rep(90, 92, [0, 0, 0, 0]), MilestoneTracker.ringkas(_ms_state(25, 20000, 5, 10, 0), _ms_state(25, 20500, 5, 10, 0)))
 	check(l.teks_target() == "Semua target sudah emas" and l.pecahan_bilah() == -1.0 and l.teks_baru().is_empty(), "semua emas: teks tamat, tanpa bilah, tanpa baru: '%s'" % l.teks_target())
@@ -319,7 +319,7 @@ func _test_layar_hasil_ukuran(u: Array) -> void:
 	var layar: Rect2 = Rect2(Vector2.ZERO, _tree.root.get_visible_rect().size)
 	var panel: Rect2 = l.rect_panel()
 	var tombol: Rect2 = l.rect_tombol()
-	check(layar.encloses(panel) and panel.encloses(tombol), "%d: panel %s di dalam layar %s dan tombol di dalam panel" % [u[0], panel, layar])
+	check(layar.encloses(panel) and layar.encloses(tombol) and not panel.intersects(tombol), "%d: struk %s di dalam layar %s, tombol di dalam layar dan tidak menutupi struk (run ui2: tombol kanan bawah di luar struk)" % [u[0], panel, layar])
 	check(tombol.size.y >= 42.0 and tombol.size.x >= 96.0, "%d: tombol 'Ke bengkel' >= 42 px game dan terlihat penuh: %s" % [u[0], tombol.size])
 	var dalam: bool = true
 	var tumpang: bool = false
@@ -329,15 +329,26 @@ func _test_layar_hasil_ukuran(u: Array) -> void:
 	check(dalam and not tumpang, "%d: semua label utama di dalam panel dan tidak menumpuk tombol" % u[0])
 	var samping: Rect2 = l.rect_panel_kanan()
 	var isi_kanan: Array[Rect2] = l.rect_isi_kanan()
-	dalam = panel.encloses(samping) and not samping.intersects(tombol)
+	dalam = layar.encloses(samping) and not panel.intersects(samping) and not samping.intersects(tombol)
 	for r: Rect2 in isi_kanan:
 		dalam = dalam and samping.encloses(r)
 		tumpang = tumpang or r.intersects(tombol)
-	check(dalam and not tumpang and isi_kanan.size() >= 14, "%d: kolom samping dan %d isinya di dalam panel samping dan tidak menumpuk tombol" % [u[0], isi_kanan.size()])
-	check(panel.size.y <= layar.size.y - 2.0 * float(Config.HUD_MARGIN_TEPI_PX), "%d: tinggi panel %.0f muat dengan margin tepi di %.0f" % [u[0], panel.size.y, layar.size.y])
-	# Inset aman terbesar yang dipakai probe (utama 20, atas 16, samping 24, bawah 18): panel dan tombol tetap di dalam zona aman.
+	check(dalam and not tumpang and isi_kanan.size() >= 14, "%d: kolom samping dan %d isinya di dalam layar, tidak menumpuk struk atau tombol (run ui2: kolom samping terpisah dari struk)" % [u[0], isi_kanan.size()])
+	check(panel.size.y <= layar.size.y - 2.0 * float(Config.HUD_MARGIN_TEPI_PX), "%d: tinggi struk %.0f muat dengan margin tepi di %.0f" % [u[0], panel.size.y, layar.size.y])
+	# Inset aman terbesar yang dipakai probe lama (awal 20, atas 16, akhir 24, bawah 18): struk, kolom samping, dan tombol tetap di dalam zona aman.
+	var inset: ZonaAman.Inset = ZonaAman.Inset.new()
+	inset.awal_x = 20
+	inset.akhir_x = 24
+	inset.atas = 16
+	inset.bawah = 18
+	l.atur_inset(inset)
+	await _tree.process_frame
+	await _tree.process_frame
 	var aman: Rect2 = Rect2(Vector2(20, 16), layar.size - Vector2(44, 34))
-	check(aman.encloses(panel) and aman.encloses(tombol), "%d: panel dan tombol di dalam zona aman 20/16/24/18" % u[0])
+	check(aman.encloses(l.rect_panel()) and aman.encloses(l.rect_panel_kanan()) and aman.encloses(l.rect_tombol()) and not l.rect_panel_kanan().intersects(l.rect_tombol()), "%d: struk, kolom samping, dan tombol di dalam zona aman 20/16/24/18 dan tidak bertumpuk" % u[0])
+	l.atur_inset(null)
+	await _tree.process_frame
+	await _tree.process_frame
 	check(l.teks_reputasi() == "53 (-2)" and l.teks_pelanggan().size() == 4 and l.teks_baru().size() == 3, "%d: reputasi, empat pelanggan, tiga baru tampil" % u[0])
 	# Tanpa kolom samping (rute yang dijalankan sendiri): kasus yang sama tetap muat dan tidak melar (lebar sekitar 300, bukan hasil autowrap yang runtuh).
 	angka.misi_hasil = ""
@@ -345,7 +356,7 @@ func _test_layar_hasil_ukuran(u: Array) -> void:
 	await _tree.process_frame
 	await _tree.process_frame
 	var polos: Rect2 = l.rect_panel()
-	check(not l.kanan_tampil() and polos.size.x >= 296.0 and polos.size.x <= 310.0 and polos.size.y <= 300.0 and layar.encloses(polos) and l.rect_tombol().size.y >= 42.0, "%d: tanpa kolom samping dan tanpa rekap misi panel %s tetap sekitar 300 lebar dan di dalam layar" % [u[0], polos.size])
+	check(not l.kanan_tampil() and absf(polos.size.x - 360.0) < 0.5 and polos.size.y <= 300.0 and layar.encloses(polos) and l.rect_tombol().size.y >= 42.0 and not polos.intersects(l.rect_tombol()), "%d: tanpa kolom samping dan tanpa rekap misi struk %s selebar 360 dan di dalam layar, tidak menutupi tombol (run ui2: struk 360 menggantikan panel 300)" % [u[0], polos.size])
 	l.queue_free()
 
 

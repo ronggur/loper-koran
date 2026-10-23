@@ -919,7 +919,7 @@ func _test_tata_letak(kasus: Array, kidal: bool) -> void:
 	var dalam: bool = layar.encloses(hasil.rect_panel())
 	for r: Rect2 in hasil.rect_label():
 		dalam = dalam and hasil.rect_panel().encloses(r)
-	check(dalam and not hasil.rect_tombol().intersects(hasil.rect_rekap_misi()) and hasil.rect_tombol().size.y >= 42.0, "%s: panel hasil di layar, semua label (termasuk rekap) di dalam panel, tombol >= 42 px tidak menumpuk rekap" % tag)
+	check(dalam and not hasil.rect_tombol().intersects(hasil.rect_rekap_misi()) and not hasil.rect_tombol().intersects(hasil.rect_panel()) and layar.encloses(hasil.rect_tombol()) and hasil.rect_tombol().size.y >= 42.0, "%s: struk hasil di layar, semua label (termasuk rekap) di dalam struk, tombol >= 42 px di layar dan tidak menumpuk rekap atau struk (run ui2)" % tag)
 	_periksa_teks_tidak_terpotong(tag + " hasil", [hasil.get_node("%RekapMisi") as Label])
 	_bersihkan(akar)
 

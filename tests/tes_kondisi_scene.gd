@@ -655,9 +655,9 @@ func _test_hasil_lima_ukuran(kasus: Array) -> void:
 	var dalam: bool = true
 	for r: Rect2 in layar.rect_label():
 		dalam = dalam and panel.encloses(r) and r.size.x > 0.0
-	check(dalam, "%s: semua label (termasuk tiga baris kondisi) di dalam panel" % tag)
+	check(dalam, "%s: semua label (termasuk tiga baris kondisi) di dalam struk" % tag)
 	var tombol: Rect2 = layar.rect_tombol()
-	check(tombol.size.y >= 42.0 and tombol.size.x >= 42.0 and panel.encloses(tombol), "%s: tombol >= 42 px di dalam panel" % tag)
+	check(tombol.size.y >= 42.0 and tombol.size.x >= 42.0 and kotak_layar.encloses(tombol) and not panel.intersects(tombol), "%s: tombol >= 42 px di dalam layar dan tidak menutupi struk (run ui2: tombol kanan bawah di luar struk)" % tag)
 	var tumpuk: bool = false
 	var semua: Array[Rect2] = layar.rect_label()
 	for i: int in range(semua.size()):

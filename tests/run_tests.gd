@@ -228,6 +228,11 @@ func _initialize() -> void:
 	# Run fase6a2-reputasi-pelanggan bagian C: penanda reputasi HUD, kolom kanan layar hasil (empat ukuran), integrasi RuteMain, denting milestone, tiga alur hari.
 	var scene_reputasi: TesReputasiScene = TesReputasiScene.new(check, _judul, self)
 	await scene_reputasi.jalankan()
+	# Run ui2-semua-layar bagian A: layar hasil struk (pemilihan keadaan dan tata letak murni, scene di enam ukuran, inset, kontras, huruf V-8).
+	var tampil_hasil: TesTampilHasil = TesTampilHasil.new(check, _judul)
+	tampil_hasil.jalankan()
+	var hasil_struk: TesHasilStruk = TesHasilStruk.new(check, _judul, self)
+	await hasil_struk.jalankan()
 	var tata_letak: TesTataLetak = TesTataLetak.new(check, _judul, self)
 	await tata_letak.jalankan()
 	var bunyi: TesBunyi = TesBunyi.new(check, _judul, self)

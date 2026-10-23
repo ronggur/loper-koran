@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Ukur kontras dari tangkapan layar nyata probe bengkel (run ui1-komponen-bengkel bagian B, AC-9).
+"""Ukur kontras dari tangkapan layar nyata probe bengkel (run ui1-komponen-bengkel bagian B, AC-9) dan probe layar hasil (run ui2-semua-layar bagian A, AC-7, `--jenis hasil`).
 
-Membaca pasangan `<awalan>_bengkel_<keadaan>.png` dan `.json` (ditulis `tests/probe_bengkel_jendela.gd`):
+Membaca pasangan `<awalan>_<jenis>_<keadaan>.png` dan `.json` (ditulis `tests/probe_bengkel_jendela.gd` atau `tests/probe_hasil_jendela.gd`; jenis bawaan `bengkel`):
 - TEKS: tiap persegi teks; latar = warna terbanyak di persegi, teks = piksel persentil 98 terjauh dari latar (piksel solid, bukan tepi lunak).
   Kontras WCAG antara keduanya; batas >= 7:1.
 - GARIS KOMPONEN: tiap tombol dan kartu; garis = piksel terang di pita 2 px game paling luar (tepi atas dan bawah) melawan piksel 2 px game di luar tepi; batas >= 3:1.
   Hanya dilaporkan (garis bingkai bergantung pada desain 9-slice); nonaktif sengaja redup.
-Pakai: python3 tools/ukur_kontras_tangkapan.py <folder tangkapan> [--awalan 1920x1080] (butuh numpy, pillow). Exit 1 bila ada teks < 7:1.
+Pakai: python3 tools/ukur_kontras_tangkapan.py <folder tangkapan> [--awalan 1920x1080] [--jenis bengkel|hasil] (butuh numpy, pillow). Exit 1 bila ada teks < 7:1.
 """
 import json
 import sys
@@ -58,8 +58,9 @@ def ukur_garis(img, skala, item):
 def main():
     folder = Path(sys.argv[1])
     awalan = sys.argv[sys.argv.index("--awalan") + 1] if "--awalan" in sys.argv else ""
+    jenis = sys.argv[sys.argv.index("--jenis") + 1] if "--jenis" in sys.argv else "bengkel"
     gagal = 0
-    for js in sorted(folder.glob(f"{awalan}*_bengkel_*.json")):
+    for js in sorted(folder.glob(f"{awalan}*_{jenis}_*.json")):
         png = js.with_suffix(".png")
         if not png.exists():
             continue
@@ -71,9 +72,9 @@ def main():
         terburuk = min(teks, key=lambda p: p[0][0])
         gagal_berkas = [(r, n) for r, n in teks if r[0] < 7.0]
         gagal += len(gagal_berkas)
-        garis = {"tombol": [], "tombol_nonaktif": [], "kartu": []}
+        garis = {"tombol": [], "tombol_nonaktif": [], "kartu": [], "struk": []}
         for k in data["komponen"]:
-            garis[k["jenis"]].append(ukur_garis(img, skala, k))
+            garis.setdefault(k["jenis"], []).append(ukur_garis(img, skala, k))
         ringkas = {j: (round(min(v), 2) if v else None) for j, v in garis.items()}
         print(f"{js.stem}: {len(teks)} teks, terburuk {terburuk[0][0]:.2f}:1 '{terburuk[1]}', < 7: {len(gagal_berkas)}; garis min {ringkas}")
         for r, n in gagal_berkas:

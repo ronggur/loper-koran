@@ -184,7 +184,7 @@ func _test_layar_hasil_smoke(kasus: Array) -> void:
 	check(teks_semua.find("gagal") == -1 and teks_semua.find("kalah") == -1, "nada netral: tanpa kata 'gagal' atau 'kalah' (prinsip 2)")
 	var kotak_layar: Rect2 = Rect2(Vector2.ZERO, Vector2(lebar, 360))
 	var tombol: Rect2 = layar.rect_tombol()
-	check(tombol.size.x >= 42.0 and tombol.size.y >= 42.0 and kotak_layar.encloses(layar.rect_panel()) and layar.rect_panel().encloses(tombol), "lebar %d: panel di dalam layar, tombol Main lagi >= 42 px di dalam panel (%s)" % [lebar, tombol])
+	check(tombol.size.x >= 42.0 and tombol.size.y >= 42.0 and kotak_layar.encloses(layar.rect_panel()) and kotak_layar.encloses(tombol) and not layar.rect_panel().intersects(tombol), "lebar %d: struk di dalam layar, tombol Main lagi >= 42 px di dalam layar dan tidak menutupi struk (%s; run ui2: tombol kanan bawah di luar struk)" % [lebar, tombol])
 	var semua_di_panel: bool = true
 	for r: Rect2 in layar.rect_label():
 		semua_di_panel = semua_di_panel and layar.rect_panel().encloses(r) and r.size.x > 0.0

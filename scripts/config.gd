@@ -756,18 +756,52 @@ const ZONA_AMAN_TOLERANSI_PX: float = 0.000001
 
 ## Layar hasil terbuka sesudah garis akhir bila kecepatan sepeda paling tinggi sekian u/d (sudah berhenti) dan tidak ada koran terbang.
 const HASIL_BERHENTI_TOLERANSI_UD: float = 0.000001
-## Panel layar hasil: lebar minimum, piksel game (muat di 640 dengan teks Indonesia yang lebih panjang).
-const HASIL_PANEL_LEBAR_PX: int = 300
-## Panel layar hasil: jarak antar baris dan antar bagian, piksel game.
-const HASIL_JARAK_BARIS_PX: int = 2
-## Layar hasil, kolom kanan (run 6A2 bagian C: reputasi, pelanggan, milestone): lebar minimum isi kolom, jarak ke kolom kiri, tinggi dan lebar minimum bilah milestone, dan sisi ikon (lencana, reputasi), piksel game.
-const HASIL_KANAN_LEBAR_PX: int = 180
-const HASIL_KOLOM_JARAK_PX: int = 8
+## Tinggi dan lebar minimum bilah milestone, tebal garis luarnya (piksel game di tiap sisi). Bilah di kartu target layar hasil.
 const HASIL_BILAH_TINGGI_PX: int = 7
 const HASIL_BILAH_LEBAR_MIN_PX: int = 60
-## Tebal garis luar bilah milestone (px game) di tiap sisi.
 const HASIL_BILAH_TEPI_PX: int = 1
-const HASIL_IKON_PX: int = 14
+
+## --- Layar hasil sebagai struk antaran (run ui2-semua-layar bagian A; kanvas Hasil.dc.html dan Hasil_*.dc.html, README redesain 3 butir 6 dan 4; usulan, dinilai di HP) ---
+## Margin layar minimum (dipakai max dengan inset aman), tinggi baris judul (struk dan kolom samping berada di margin atas + ini; kanvas y 44 = 12 + 32), dan jarak struk ke kolom samping, piksel game.
+const HASIL_MARGIN_PX: int = 12
+const HASIL_BARIS_ATAS_PX: int = 32
+const HASIL_STRUK_KOLOM_JARAK_PX: int = 10
+## Kolom samping dimulai sekian piksel di bawah margin atas (32 = sejajar dengan struk di kanvas; 0 = sejajar dengan judul bila kolom terpadat tidak muat di atas tombol aksi).
+const HASIL_KOLOM_ATAS_PX: int = 32
+## Lebar struk tanpa kolom samping (rute yang dijalankan sendiri; struk ke tengah), lebar kolom samping (reputasi, pelanggan, milestone) di lebar 640 dan di lebar >= `HASIL_LEBAR_LEBAR_MIN_PX`.
+const HASIL_STRUK_TANPA_SAMPING_PX: int = 360
+const HASIL_KOLOM_LEBAR_PX: int = 236
+const HASIL_KOLOM_LEBAR_LEBAR_PX: int = 300
+const HASIL_LEBAR_LEBAR_MIN_PX: int = 800
+## Struk: jarak isi ke tepi luar (sudah termasuk tepi 9-slice 4: kanvas padding 8 samping, 6 atas, 8 bawah; bawah 10 supaya kasus terpadat muat dengan inset aman bawah 20), jarak antar baris, jarak antar kelompok angka Terkirim dan Koin, tinggi baris garis sobek, tinggi minimum baris label-nilai, piksel game.
+const HASIL_STRUK_PAD_X_PX: int = 12
+const HASIL_STRUK_PAD_ATAS_PX: int = 10
+const HASIL_STRUK_PAD_BAWAH_PX: int = 10
+const HASIL_STRUK_JARAK_PX: int = 2
+const HASIL_ANGKA_JARAK_PX: int = 16
+const HASIL_SOBEK_TINGGI_PX: int = 14
+const HASIL_BARIS_TINGGI_PX: int = 15
+## Garis sobek: lebar dan tinggi takik tiket (`ui_struk_takik.png`), jarak garis putus-putus dari tepi struk, panjang goresan dan celahnya; garis titik-titik penuntun baris: jarak dari dasar baris dan jarak antar titik, piksel game.
+const HASIL_TAKIK_LEBAR_PX: int = 6
+const HASIL_TAKIK_TINGGI_PX: int = 10
+const HASIL_SOBEK_TEPI_PX: int = 6
+const HASIL_SOBEK_GORES_PX: int = 3
+const HASIL_TITIK_DASAR_PX: int = 5
+const HASIL_TITIK_JARAK_PX: int = 2
+## Ikon: koin di samping angka Koin, glif centang di samping Terkirim dan misi, bintang reputasi, lencana tingkat baru (24) dan lencana target (32), piksel game.
+const HASIL_IKON_BESAR_PX: int = 24
+const HASIL_GLIF_PX: int = 12
+const HASIL_LENCANA_TARGET_PX: int = 32
+## Kartu di kolom samping: jarak antar kartu, jarak antar baris di dalam kartu, tinggi kartu reputasi, jarak isi kartu ke garis (di luar tepi 4), jarak antar baris tingkat baru, piksel game.
+const HASIL_KARTU_JARAK_PX: int = 3
+const HASIL_KARTU_BARIS_JARAK_PX: int = 2
+const HASIL_KARTU_REPUTASI_PX: int = 40
+const HASIL_KARTU_PAD_PX: int = 2
+const HASIL_BARU_JARAK_PX: int = 2
+## Paling banyak sekian kali tata letak layar hasil ditata ulang per frame karena ukuran struk atau kolom samping berubah (bungkus kata menentukan tinggi sesudah Container selesai; mencegah berputar).
+const HASIL_SUSUN_ULANG_MAKS: int = 8
+## Jarak minimum kolom samping ke tombol aksi di bawahnya, piksel game.
+const HASIL_KOLOM_TOMBOL_JARAK_PX: int = 6
 
 ## --- Hari, seed, dan save (Fase 4 run 4A, DATA_SCHEMA 4, rule save-system; usulan, alur hari berurutan ini prototype yang tidak mengunci struktur sesi ROADMAP 5) ---
 

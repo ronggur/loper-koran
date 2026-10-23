@@ -295,9 +295,9 @@ func _test_layar_hasil(kasus: Array) -> void:
 	var di_panel: bool = true
 	for r: Rect2 in layar.rect_label():
 		di_panel = di_panel and layar.rect_panel().encloses(r) and r.size.x > 0.0
-	check(kotak_layar.encloses(layar.rect_panel()) and layar.rect_panel().encloses(tombol), "kasus terpadat lebar %d: panel %s di dalam layar 360 tinggi, tombol di dalam panel" % [lebar, layar.rect_panel()])
+	check(kotak_layar.encloses(layar.rect_panel()) and kotak_layar.encloses(tombol) and not layar.rect_panel().intersects(tombol), "kasus terpadat lebar %d: struk %s di dalam layar 360 tinggi, tombol di dalam layar dan tidak menutupi struk (run ui2: tombol kanan bawah di luar struk)" % [lebar, layar.rect_panel()])
 	check(tombol.size.x >= 42.0 and tombol.size.y >= 42.0 and kotak_layar.encloses(tombol), "kasus terpadat: tombol 'Ke bengkel' >= 42 px dan terlihat penuh (%s)" % [tombol])
-	check(di_panel, "kasus terpadat: semua label (potongan, misi, kondisi, tenggat) di dalam panel")
+	check(di_panel, "kasus terpadat: semua label (potongan, misi, kondisi, tenggat) di dalam struk")
 	_tree.root.remove_child(layar)
 	layar.free()
 

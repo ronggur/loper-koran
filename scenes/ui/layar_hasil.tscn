@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/layar_hasil.gd" id="1_script"]
 [ext_resource type="Theme" path="res://assets/ui/theme.tres" id="2_theme"]
 [ext_resource type="Script" path="res://scripts/ui/tombol_sentuh.gd" id="3_tombol"]
-[ext_resource type="Texture2D" path="res://assets/sprites/ui/ui_icon_reputasi.png" id="4_ikon_reputasi"]
-[ext_resource type="Script" path="res://scripts/ui/bilah_milestone.gd" id="5_bilah"]
+[ext_resource type="Script" path="res://scripts/ui/bilah_milestone.gd" id="4_bilah"]
+[ext_resource type="Script" path="res://scripts/ui/chip_ui.gd" id="5_chip"]
+[ext_resource type="Script" path="res://scripts/ui/garis_sobek.gd" id="6_sobek"]
 
 [node name="LayarHasil" type="CanvasLayer"]
 layer = 15
@@ -20,7 +21,8 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_theme")
 
-[node name="Tengah" type="CenterContainer" parent="LatarHasil"]
+[node name="Batas" type="MarginContainer" parent="LatarHasil"]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -29,406 +31,324 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="PanelHasil" type="PanelContainer" parent="LatarHasil/Tengah"]
+[node name="Badan" type="HBoxContainer" parent="LatarHasil/Batas"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 
-[node name="KolomHasil" type="VBoxContainer" parent="LatarHasil/Tengah/PanelHasil"]
+[node name="KolomKiri" type="VBoxContainer" parent="LatarHasil/Batas/Badan"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 
-[node name="JudulHasil" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil"]
+[node name="JudulHasil" type="Label" parent="LatarHasil/Batas/Badan/KolomKiri"]
 unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"JudulLayar"
-text = "HASIL_JUDUL"
-horizontal_alignment = 1
-
-[node name="BadanHasil" type="HBoxContainer" parent="LatarHasil/Tengah/PanelHasil/KolomHasil"]
-unique_name_in_owner = true
-layout_mode = 2
-mouse_filter = 2
-
-[node name="IsiHasil" type="VBoxContainer" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil"]
-unique_name_in_owner = true
-layout_mode = 2
-mouse_filter = 2
-
-[node name="DaftarBerhasil" type="GridContainer" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil"]
-unique_name_in_owner = true
-layout_mode = 2
-mouse_filter = 2
-columns = 2
-
-[node name="LabelTerkirim" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil/DaftarBerhasil"]
 layout_mode = 2
 size_flags_vertical = 0
-theme_type_variation = &"HudLabel"
+theme_type_variation = &"LayarJudul"
+text = "HASIL_JUDUL"
+
+[node name="PanelStruk" type="PanelContainer" parent="LatarHasil/Batas/Badan/KolomKiri"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+
+[node name="IsiStruk" type="VBoxContainer" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="BarisAngka" type="HBoxContainer" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="BlokTerkirim" type="VBoxContainer" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk/BarisAngka"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="LabelTerkirim" type="Label" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk/BarisAngka/BlokTerkirim"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"LayarLabel"
 text = "HASIL_TERKIRIM"
 
-[node name="NilaiTerkirim" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil/DaftarBerhasil"]
+[node name="BarisNilaiTerkirim" type="HBoxContainer" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk/BarisAngka/BlokTerkirim"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="NilaiTerkirim" type="Label" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk/BarisAngka/BlokTerkirim/BarisNilaiTerkirim"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"HudLabel"
-horizontal_alignment = 2
-autowrap_mode = 3
+theme_type_variation = &"LayarAngkaBesar"
 
-[node name="LabelTip" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil/DaftarBerhasil"]
+[node name="GlifTerkirim" type="TextureRect" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk/BarisAngka/BlokTerkirim/BarisNilaiTerkirim"]
+unique_name_in_owner = true
+texture_filter = 1
 layout_mode = 2
-size_flags_vertical = 0
-theme_type_variation = &"HudLabel"
-text = "HASIL_TIP"
+size_flags_vertical = 4
+mouse_filter = 2
+stretch_mode = 3
 
-[node name="NilaiTip" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil/DaftarBerhasil"]
+[node name="BlokKoin" type="VBoxContainer" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk/BarisAngka"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="LabelKoin" type="Label" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk/BarisAngka/BlokKoin"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"HudLabel"
-horizontal_alignment = 2
-autowrap_mode = 3
-
-[node name="LabelKoin" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil/DaftarBerhasil"]
-layout_mode = 2
-size_flags_vertical = 0
-theme_type_variation = &"HudLabel"
+size_flags_horizontal = 0
+theme_type_variation = &"LayarLabel"
 text = "HASIL_KOIN"
 
-[node name="NilaiKoin" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil/DaftarBerhasil"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"HudLabel"
-horizontal_alignment = 2
-autowrap_mode = 3
-
-[node name="LabelSkor" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil/DaftarBerhasil"]
-layout_mode = 2
-size_flags_vertical = 0
-theme_type_variation = &"HudLabel"
-text = "HASIL_SKOR"
-
-[node name="NilaiSkor" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil/DaftarBerhasil"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"HudLabel"
-horizontal_alignment = 2
-autowrap_mode = 3
-
-[node name="LabelTepat" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil/DaftarBerhasil"]
-layout_mode = 2
-size_flags_vertical = 0
-theme_type_variation = &"HudLabel"
-text = "HASIL_TEPAT"
-
-[node name="NilaiTepat" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil/DaftarBerhasil"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"HudLabel"
-horizontal_alignment = 2
-autowrap_mode = 3
-
-[node name="DaftarNetral" type="GridContainer" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil"]
-unique_name_in_owner = true
+[node name="BarisNilaiKoin" type="HBoxContainer" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk/BarisAngka/BlokKoin"]
 layout_mode = 2
 mouse_filter = 2
-columns = 2
+theme_override_constants/separation = 4
 
-[node name="LabelMeleset" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil/DaftarNetral"]
-layout_mode = 2
-size_flags_vertical = 0
-theme_type_variation = &"HudLabel"
-text = "HASIL_MELESET"
-
-[node name="NilaiMeleset" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil/DaftarNetral"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"HudLabel"
-horizontal_alignment = 2
-autowrap_mode = 3
-
-[node name="LabelTerbuang" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil/DaftarNetral"]
-visible = false
-layout_mode = 2
-size_flags_vertical = 0
-theme_type_variation = &"HudLabel"
-text = "HASIL_TERBUANG"
-
-[node name="NilaiTerbuang" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil/DaftarNetral"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"HudLabel"
-horizontal_alignment = 2
-autowrap_mode = 3
-
-[node name="LabelBersih" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil/DaftarNetral"]
-visible = false
-layout_mode = 2
-size_flags_vertical = 0
-theme_type_variation = &"HudLabel"
-text = "HASIL_KOIN_BERSIH"
-
-[node name="NilaiBersih" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil/DaftarNetral"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-size_flags_horizontal = 3
-theme_type_variation = &"HudLabel"
-horizontal_alignment = 2
-autowrap_mode = 3
-
-[node name="TeksTenggat" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"HudLabel"
-horizontal_alignment = 1
-autowrap_mode = 3
-
-[node name="TeksSaldoNol" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-theme_type_variation = &"HudLabel"
-horizontal_alignment = 1
-autowrap_mode = 3
-
-[node name="RekapMisi" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-theme_type_variation = &"HudLabel"
-horizontal_alignment = 1
-autowrap_mode = 3
-
-[node name="KondisiHasil" type="VBoxContainer" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-mouse_filter = 2
-
-[node name="KondisiSatu" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil/KondisiHasil"]
-visible = false
-layout_mode = 2
-theme_type_variation = &"HudLabel"
-horizontal_alignment = 1
-autowrap_mode = 3
-
-[node name="KondisiDua" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil/KondisiHasil"]
-visible = false
-layout_mode = 2
-theme_type_variation = &"HudLabel"
-horizontal_alignment = 1
-autowrap_mode = 3
-
-[node name="KondisiTiga" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/IsiHasil/KondisiHasil"]
-visible = false
-layout_mode = 2
-theme_type_variation = &"HudLabel"
-horizontal_alignment = 1
-autowrap_mode = 3
-
-[node name="PanelKanan" type="PanelContainer" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-size_flags_vertical = 0
-mouse_filter = 2
-
-[node name="KananHasil" type="VBoxContainer" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan"]
-unique_name_in_owner = true
-layout_mode = 2
-mouse_filter = 2
-
-[node name="BarisReputasi" type="HBoxContainer" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil"]
-unique_name_in_owner = true
-layout_mode = 2
-mouse_filter = 2
-
-[node name="IkonReputasiHasil" type="TextureRect" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BarisReputasi"]
+[node name="IkonKoin" type="TextureRect" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk/BarisAngka/BlokKoin/BarisNilaiKoin"]
 unique_name_in_owner = true
 texture_filter = 1
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
-texture = ExtResource("4_ikon_reputasi")
-stretch_mode = 2
+stretch_mode = 3
 
-[node name="LabelReputasi" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BarisReputasi"]
+[node name="NilaiKoin" type="Label" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk/BarisAngka/BlokKoin/BarisNilaiKoin"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_type_variation = &"HudLabel"
+theme_type_variation = &"LayarAngkaBesar"
+text_overrun_behavior = 3
+clip_text = true
+
+[node name="SobekAtas" type="Control" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("6_sobek")
+mouse_filter = 2
+
+[node name="DaftarBerhasil" type="VBoxContainer" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="BarisMisi" type="HBoxContainer" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+
+[node name="GlifMisi" type="TextureRect" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk/BarisMisi"]
+unique_name_in_owner = true
+texture_filter = 1
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+stretch_mode = 3
+
+[node name="RekapMisi" type="Label" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk/BarisMisi"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"LayarTeksUtama"
+autowrap_mode = 3
+
+[node name="SobekBawah" type="Control" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("6_sobek")
+mouse_filter = 2
+
+[node name="DaftarNetral" type="VBoxContainer" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="TeksSaldoNol" type="Label" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"LayarTeksKecil"
+autowrap_mode = 3
+
+[node name="TeksTenggat" type="Label" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LayarTeksKecil"
+autowrap_mode = 3
+
+[node name="KondisiHasil" type="VBoxContainer" parent="LatarHasil/Batas/Badan/KolomKiri/PanelStruk/IsiStruk"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+
+[node name="KolomKanan" type="VBoxContainer" parent="LatarHasil/Batas/Badan"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+
+[node name="JarakAtasKolom" type="Control" parent="LatarHasil/Batas/Badan/KolomKanan"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="KartuReputasi" type="PanelContainer" parent="LatarHasil/Batas/Badan/KolomKanan"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="BarisReputasi" type="HBoxContainer" parent="LatarHasil/Batas/Badan/KolomKanan/KartuReputasi"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="IkonReputasiHasil" type="TextureRect" parent="LatarHasil/Batas/Badan/KolomKanan/KartuReputasi/BarisReputasi"]
+unique_name_in_owner = true
+texture_filter = 1
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+stretch_mode = 3
+
+[node name="LabelReputasi" type="Label" parent="LatarHasil/Batas/Badan/KolomKanan/KartuReputasi/BarisReputasi"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_type_variation = &"LayarLabel"
 text = "HASIL_REPUTASI"
 
-[node name="NilaiReputasi" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BarisReputasi"]
+[node name="AngkaReputasi" type="Label" parent="LatarHasil/Batas/Badan/KolomKanan/KartuReputasi/BarisReputasi"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"HudLabel"
-horizontal_alignment = 2
+size_flags_vertical = 4
+theme_type_variation = &"LayarJudul"
 
-[node name="BagianPelanggan" type="VBoxContainer" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil"]
+[node name="ChipReputasi" type="PanelContainer" parent="LatarHasil/Batas/Badan/KolomKanan/KartuReputasi/BarisReputasi"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("5_chip")
+mouse_filter = 2
+
+[node name="KartuPelanggan" type="PanelContainer" parent="LatarHasil/Batas/Badan/KolomKanan"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 mouse_filter = 2
 
-[node name="JudulPelanggan" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BagianPelanggan"]
+[node name="IsiPelanggan" type="VBoxContainer" parent="LatarHasil/Batas/Badan/KolomKanan/KartuPelanggan"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="JudulPelanggan" type="Label" parent="LatarHasil/Batas/Badan/KolomKanan/KartuPelanggan/IsiPelanggan"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"HudLabel"
+theme_type_variation = &"LayarLabel"
 text = "HASIL_PELANGGAN_BAGIAN"
 
-[node name="DaftarPelanggan" type="GridContainer" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BagianPelanggan"]
+[node name="DaftarPelanggan" type="GridContainer" parent="LatarHasil/Batas/Badan/KolomKanan/KartuPelanggan/IsiPelanggan"]
 unique_name_in_owner = true
 layout_mode = 2
-mouse_filter = 2
 columns = 2
+mouse_filter = 2
 
-[node name="LabelBaru" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BagianPelanggan/DaftarPelanggan"]
-visible = false
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 0
-theme_type_variation = &"HudLabel"
-text = "HASIL_PELANGGAN_BARU"
-autowrap_mode = 3
-
-[node name="NilaiBaru" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BagianPelanggan/DaftarPelanggan"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-size_flags_vertical = 0
-theme_type_variation = &"HudLabel"
-horizontal_alignment = 2
-
-[node name="LabelSetia" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BagianPelanggan/DaftarPelanggan"]
-visible = false
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 0
-theme_type_variation = &"HudLabel"
-text = "HASIL_PELANGGAN_SETIA"
-autowrap_mode = 3
-
-[node name="NilaiSetia" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BagianPelanggan/DaftarPelanggan"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-size_flags_vertical = 0
-theme_type_variation = &"HudLabel"
-horizontal_alignment = 2
-
-[node name="LabelBerhenti" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BagianPelanggan/DaftarPelanggan"]
-visible = false
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 0
-theme_type_variation = &"HudLabel"
-text = "HASIL_PELANGGAN_BERHENTI"
-autowrap_mode = 3
-
-[node name="NilaiBerhenti" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BagianPelanggan/DaftarPelanggan"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-size_flags_vertical = 0
-theme_type_variation = &"HudLabel"
-horizontal_alignment = 2
-
-[node name="LabelKembali" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BagianPelanggan/DaftarPelanggan"]
-visible = false
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 0
-theme_type_variation = &"HudLabel"
-text = "HASIL_PELANGGAN_KEMBALI"
-autowrap_mode = 3
-
-[node name="NilaiKembali" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BagianPelanggan/DaftarPelanggan"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-size_flags_vertical = 0
-theme_type_variation = &"HudLabel"
-horizontal_alignment = 2
-
-[node name="BagianTarget" type="VBoxContainer" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil"]
+[node name="KartuTarget" type="PanelContainer" parent="LatarHasil/Batas/Badan/KolomKanan"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 mouse_filter = 2
 
-[node name="JudulTarget" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BagianTarget"]
+[node name="IsiTarget" type="VBoxContainer" parent="LatarHasil/Batas/Badan/KolomKanan/KartuTarget"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="JudulTarget" type="Label" parent="LatarHasil/Batas/Badan/KolomKanan/KartuTarget/IsiTarget"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"HudLabel"
+theme_type_variation = &"LayarLabel"
 text = "HASIL_TARGET_BAGIAN"
 
-[node name="BarisTarget" type="HBoxContainer" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BagianTarget"]
+[node name="BarisTarget" type="HBoxContainer" parent="LatarHasil/Batas/Badan/KolomKanan/KartuTarget/IsiTarget"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 
-[node name="IkonTarget" type="TextureRect" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BagianTarget/BarisTarget"]
+[node name="IkonTarget" type="TextureRect" parent="LatarHasil/Batas/Badan/KolomKanan/KartuTarget/IsiTarget/BarisTarget"]
 unique_name_in_owner = true
 texture_filter = 1
 layout_mode = 2
-size_flags_vertical = 0
+size_flags_vertical = 4
 mouse_filter = 2
-stretch_mode = 2
+stretch_mode = 3
 
-[node name="NamaTarget" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BagianTarget/BarisTarget"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 0
-theme_type_variation = &"HudLabel"
-autowrap_mode = 3
-
-[node name="BarisBilah" type="HBoxContainer" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BagianTarget"]
-unique_name_in_owner = true
-layout_mode = 2
-mouse_filter = 2
-
-[node name="BilahTarget" type="Control" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BagianTarget/BarisBilah"]
-unique_name_in_owner = true
+[node name="KolomTarget" type="VBoxContainer" parent="LatarHasil/Batas/Badan/KolomKanan/KartuTarget/IsiTarget/BarisTarget"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 mouse_filter = 2
-script = ExtResource("5_bilah")
 
-[node name="AngkaTarget" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BagianTarget/BarisBilah"]
+[node name="NamaTarget" type="Label" parent="LatarHasil/Batas/Badan/KolomKanan/KartuTarget/IsiTarget/BarisTarget/KolomTarget"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"HudLabel"
+theme_type_variation = &"LayarTeksUtama"
+autowrap_mode = 3
+
+[node name="BarisBilah" type="HBoxContainer" parent="LatarHasil/Batas/Badan/KolomKanan/KartuTarget/IsiTarget/BarisTarget/KolomTarget"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="BilahTarget" type="Control" parent="LatarHasil/Batas/Badan/KolomKanan/KartuTarget/IsiTarget/BarisTarget/KolomTarget/BarisBilah"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+script = ExtResource("4_bilah")
+mouse_filter = 2
+
+[node name="AngkaTarget" type="Label" parent="LatarHasil/Batas/Badan/KolomKanan/KartuTarget/IsiTarget/BarisTarget/KolomTarget/BarisBilah"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LayarTeksKecil"
 horizontal_alignment = 2
 
-[node name="TeksTamat" type="Label" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil/BagianTarget"]
+[node name="TeksTamat" type="Label" parent="LatarHasil/Batas/Badan/KolomKanan/KartuTarget/IsiTarget"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_type_variation = &"HudLabel"
+theme_type_variation = &"LayarTeksKecil"
 text = "HASIL_TARGET_TAMAT"
 autowrap_mode = 3
 
-[node name="BagianBaru" type="VBoxContainer" parent="LatarHasil/Tengah/PanelHasil/KolomHasil/BadanHasil/PanelKanan/KananHasil"]
+[node name="BagianBaru" type="VBoxContainer" parent="LatarHasil/Batas/Badan/KolomKanan"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 mouse_filter = 2
 
-[node name="TombolMainLagi" type="Button" parent="LatarHasil/Tengah/PanelHasil/KolomHasil"]
+[node name="TombolMainLagi" type="Button" parent="LatarHasil"]
 unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 4
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -152.0
+offset_top = -54.0
+offset_right = -12.0
+offset_bottom = -12.0
+grow_horizontal = 0
+grow_vertical = 0
 focus_mode = 0
 text = "RUTE_MAIN_LAGI"
 script = ExtResource("3_tombol")

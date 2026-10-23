@@ -36,6 +36,19 @@ const _TEKSTUR: Dictionary = {
 	"glif_centang_teks2": preload("res://assets/sprites/ui/ui_glif_centang_teks2.png"),
 	"glif_kunci_terang": preload("res://assets/sprites/ui/ui_glif_kunci_terang.png"),
 	"glif_panah_gelap": preload("res://assets/sprites/ui/ui_glif_panah_gelap.png"),
+	# Run ui2-semua-layar bagian A (layar hasil struk): struk 9-slice, takik tiket, ikon 24 koin/bintang/lencana, lencana 32, glif naik/turun.
+	"struk": preload("res://assets/sprites/ui/ui_struk.png"),
+	"struk_takik": preload("res://assets/sprites/ui/ui_struk_takik.png"),
+	"icon24_koin": preload("res://assets/sprites/ui/ui_icon24_koin.png"),
+	"icon24_bintang": preload("res://assets/sprites/ui/ui_icon24_bintang.png"),
+	"icon24_lencana_perunggu": preload("res://assets/sprites/ui/ui_icon24_lencana_perunggu.png"),
+	"icon24_lencana_perak": preload("res://assets/sprites/ui/ui_icon24_lencana_perak.png"),
+	"icon24_lencana_emas": preload("res://assets/sprites/ui/ui_icon24_lencana_emas.png"),
+	"lencana32_perunggu": preload("res://assets/sprites/ui/ui_lencana32_perunggu.png"),
+	"lencana32_perak": preload("res://assets/sprites/ui/ui_lencana32_perak.png"),
+	"lencana32_emas": preload("res://assets/sprites/ui/ui_lencana32_emas.png"),
+	"glif_naik_ok": preload("res://assets/sprites/ui/ui_glif_naik_ok.png"),
+	"glif_turun_teks2": preload("res://assets/sprites/ui/ui_glif_turun_teks2.png"),
 }
 ## Variasi tema (`assets/ui/theme.tres`) teks tombol: SemiBold 10 untuk utama, biasa, sakelar; Regular 10 untuk tenang dan nonaktif.
 const VARIASI_TOMBOL_TEBAL: StringName = &"TombolPeran"
@@ -144,6 +157,21 @@ static func kartu_redup() -> StyleBoxTexture:
 ## Panel layar penuh 9-slice.
 static func panel_layar() -> StyleBoxTexture:
 	return _panel_9slice("panel_layar")
+
+
+## Struk hasil 9-slice (run ui2-semua-layar bagian A; kanvas `.pnl.struk`, usulan): tepi atas dan bawah bergerigi, tepi `UI_PANEL_SLICE_PX`, tepi mendatar diulang (`TILE_FIT`, seperti `border-image: round` kanvas supaya gigi rata di tepi kanan).
+## Isi berjarak `pad_x` ke samping, `pad_atas` dan `pad_bawah` (sudah termasuk tepi 4).
+static func struk(pad_x: int = Config.HASIL_STRUK_PAD_X_PX, pad_atas: int = Config.HASIL_STRUK_PAD_ATAS_PX, pad_bawah: int = Config.HASIL_STRUK_PAD_BAWAH_PX) -> StyleBoxTexture:
+	var hasil: StyleBoxTexture = StyleBoxTexture.new()
+	hasil.texture = tekstur("struk")
+	hasil.set_texture_margin_all(float(Config.UI_PANEL_SLICE_PX))
+	hasil.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE_FIT
+	hasil.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE_FIT
+	hasil.content_margin_left = float(pad_x)
+	hasil.content_margin_right = float(pad_x)
+	hasil.content_margin_top = float(pad_atas)
+	hasil.content_margin_bottom = float(pad_bawah)
+	return hasil
 
 
 ## Chip 9-slice untuk `status` (`KomponenUi.chip`) dan `ukuran`: tepi `UI_CHIP_SLICE_PX`, isi berjarak samping `KomponenUi.pad_x_chip`. Tinggi minimum (`KomponenUi.tinggi_chip`) diatur pemanggil lewat `custom_minimum_size`.
