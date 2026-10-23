@@ -27,7 +27,7 @@ body{margin:0}
 <div class="bag lbl" style="height: 12px">Servis</div>
 <div style="position: relative; height: {{sh}}px; overflow: hidden; background: #2A1E17; box-shadow: 0 0 0 1px #0E0A1C">
 <img src="/_blob/7cb89d9a8ad08057e730fa7585a0ad93" alt="" style="position: absolute; left: {{papanX}}px; bottom: 0">
-<img src="/_blob/af3437483605c4f53214bb9555dbab9e" alt="Sepeda loper" style="position: absolute; left: {{bx}}px; top: {{by}}px">
+<img src="/_blob/2de4315b987c8da057d694005de1e80b" alt="Sepeda loper" style="position: absolute; left: {{bx}}px; top: {{by}}px">
 <sc-for list="{{penanda}}" as="m" hint-placeholder-count="2">
 <i style="position: absolute; left: {{m.dx}}px; top: {{m.dy}}px; width: 3px; height: 3px; background: {{m.warna}}; box-shadow: 0 0 0 1px #0E0A1C"></i>
 <span class="chip kecil {{m.cls}}" style="position: absolute; left: {{m.cx}}px; top: {{m.cy}}px">{{m.teks}}</span>
@@ -123,8 +123,8 @@ class Component extends DCLogic {
     const inner = ph - 16;
     const sh = inner - (12 + 150 + 12 + 20);
     const sw = wl - 8 - 8;
-    const bx = Math.floor(sw / 2) - 62;
-    const by = sh - 6 - 72;
+    const bx = Math.floor(sw / 2) - 58;
+    const by = sh - 4 - 78;
     const papanX = Math.floor(sw / 2) - 180;
     const D = {
       a: { saldo: 375, s: [['baik', 0], ['baik', 0], ['baik', 0]], u: ['', '', ''] },
@@ -138,7 +138,7 @@ class Component extends DCLogic {
     const fmt = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     const nama = ['Ban', 'Rem', 'Rantai'];
     const ikon = ['i-ban', 'i-rem', 'i-rantai'];
-    const titik = [[10, 62, 'kiri'], [91, 27, 'kanan'], [44, 52, 'bawah']];
+    const titik = [[5, 68, 'kiri'], [74, 5, 'kanan'], [33, 54, 'bawah']];
     const penanda = [];
     const servis = D.s.map(([t, h], i) => {
       const baik = t === 'baik', perlu = t === 'perlu';
