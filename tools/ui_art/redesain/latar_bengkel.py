@@ -21,17 +21,26 @@ Butuh numpy, pillow, opencv-python, scikit-learn.
 
   python3 tools/ui_art/redesain/latar_bengkel.py                       # tulis ke build/ui_art/redesain/latar_bengkel/
   python3 tools/ui_art/redesain/latar_bengkel.py --mock                # juga ke docs/design/redesain/latar_bengkel/
+  python3 tools/ui_art/redesain/latar_bengkel.py --salin               # HANYA menyalin keluaran resmi di docs/ (latar 800) ke assets/sprites/ui/; tidak membuat ulang, tanpa opencv dan scikit-learn
+`UI_ART_SALIN_KE` mengganti folder tujuan `--salin` (bawaan assets/sprites/ui/; dipakai uji).
 """
 import argparse
+import os
 import shutil
+import sys
 from pathlib import Path
 
-import cv2
 import numpy as np
 from PIL import Image
-from sklearn.cluster import KMeans
 
 ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import pasang
+
+SALIN_KE = Path(os.environ.get('UI_ART_SALIN_KE', ROOT / 'assets' / 'sprites' / 'ui'))
+# opencv dan scikit-learn hanya dibutuhkan untuk membuat ulang latar; dimuat di main() supaya `--salin` tidak membutuhkannya
+cv2 = None
+KMeans = None
 SUMBER = ROOT / 'docs' / 'design' / 'redesain' / 'latar_bengkel' / 'sumber_ai.jpg'
 DOCS = ROOT / 'docs' / 'design' / 'redesain' / 'latar_bengkel'
 W, H = 640, 360
@@ -188,7 +197,18 @@ def main():
     ap.add_argument('--sumber', default=str(SUMBER))
     ap.add_argument('--out', default=str(ROOT / 'build' / 'ui_art' / 'redesain' / 'latar_bengkel'))
     ap.add_argument('--mock', action='store_true', help='juga tulis ke docs/design/redesain/latar_bengkel/')
+    ap.add_argument('--salin', action='store_true', help='HANYA salin keluaran resmi di docs/ ke assets/sprites/ui/ (tidak membuat ulang)')
     a = ap.parse_args()
+    if a.salin:
+        SALIN_KE.mkdir(parents=True, exist_ok=True)
+        for sumber, tujuan in pasang.LATAR.items():
+            shutil.copyfile(ROOT / pasang.FOLDER_LATAR / sumber, SALIN_KE / tujuan)
+        print('disalin', len(pasang.LATAR), 'berkas ->', SALIN_KE)
+        return
+    global cv2, KMeans
+    import cv2 as _cv2
+    from sklearn.cluster import KMeans as _KMeans
+    cv2, KMeans = _cv2, _KMeans
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     img = konversi(a.sumber)

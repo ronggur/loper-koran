@@ -1,0 +1,77 @@
+"""Daftar aset redesain UI yang DIPASANG ke assets/sprites/ui/ (run ui1-komponen-bengkel, usulan).
+
+Satu sumber untuk `komponen.py --salin`, `sepeda_fullbody.py --salin`, `latar_bengkel.py --salin`, dan
+`tools/tests_cek/uji_ui_redesain.py`. HANYA yang dipakai layar yang sudah dipasang (komponen bersama dan bengkel tata C);
+aset lain di docs/design/redesain/aset/ (koran, struk, foto, lencana32, panel_hud, sepeda_besar, ikon dan glif yang
+belum dipakai) belum dipasang dan dipasang oleh run layar yang memakainya. Isi daftar diputuskan dari papan kanvas
+Bengkel*.dc.html dan Spesifikasi.dc.html (lihat LOG run).
+
+Tidak mengimpor pustaka apa pun (hanya data), supaya bisa dibaca skrip mana pun tanpa pillow.
+"""
+
+# --- dari komponen.py (keluaran build/ui_art/redesain/<nama>.png), nama sumber -> nama di assets/sprites/ui/ ---
+# Tombol empat peran (utama, biasa, sakelar, tenang) + nonaktif; `_tekan` = wajah turun 2 px. Sakelar mati memakai btn_biasa.
+TOMBOL: dict[str, str] = {
+    'btn_utama': 'ui_btn_utama',
+    'btn_utama_tekan': 'ui_btn_utama_tekan',
+    'btn_biasa': 'ui_btn_biasa',
+    'btn_biasa_tekan': 'ui_btn_biasa_tekan',
+    'btn_sakelar_nyala': 'ui_btn_sakelar_nyala',
+    'btn_tenang': 'ui_btn_tenang',
+    'btn_tenang_tekan': 'ui_btn_tenang_tekan',
+    'btn_nonaktif': 'ui_btn_nonaktif',
+    'arsir_nonaktif': 'ui_arsir_nonaktif',
+}
+# Panel layar penuh, tiga kartu, lima chip (panel_hud sudah ada sebagai ui_panel_hud_9slice.png, tidak dipasang ulang).
+PANEL: dict[str, str] = {
+    'panel_layar': 'ui_panel_layar',
+    'kartu_biasa': 'ui_kartu_biasa',
+    'kartu_menonjol': 'ui_kartu_menonjol',
+    'kartu_redup': 'ui_kartu_redup',
+    'chip_gelap': 'ui_chip_gelap',
+    'chip_ok': 'ui_chip_ok',
+    'chip_warn': 'ui_chip_warn',
+    'chip_netral': 'ui_chip_netral',
+    'chip_aksen': 'ui_chip_aksen',
+}
+# Papan alat bengkel (latar panel sepeda).
+PAPAN: dict[str, str] = {'papan_alat': 'ui_bengkel_papan_alat'}
+# Ikon 24x24 yang dipakai bengkel (potongan sel dari sheet ikon24): kartu servis dan kartu upgrade.
+IKON24: dict[str, str] = {
+    'ban': 'ui_icon24_ban',
+    'rem': 'ui_icon24_rem',
+    'rantai': 'ui_icon24_rantai',
+}
+# Glif 12x12 yang dipakai bengkel: (nama glif, warna baris sheet) -> nama berkas. Warna sudah tertanam (sheet glif12 satu baris per warna).
+GLIF12: dict[tuple[str, str], str] = {
+    ('seru', 'warn'): 'ui_glif_seru_warn',          # tanda PERLU SERVIS, catatan ongkos x1,25, galat data
+    ('centang', 'ok'): 'ui_glif_centang_ok',        # chip "Baik"
+    ('centang', 'teks2'): 'ui_glif_centang_teks2',  # chip "Dimiliki"
+    ('kunci', 'terang'): 'ui_glif_kunci_terang',    # tombol "Servis"
+    ('panah', 'gelap'): 'ui_glif_panah_gelap',      # tombol "Hari berikutnya"
+}
+
+# --- disalin apa adanya dari keluaran resmi di docs/ (tidak dibuat ulang): (folder docs relatif root, nama sumber) -> nama tujuan ---
+# sepeda_besar tidak dipasang (kanvas bengkel hanya memakai sepeda_kecil). Latar 640 tidak dipasang: kanvas memakai latar 800
+# di tengah (bgx = (lebar - 800) / 2), jadi satu berkas 800 melayani lebar 640..800; versi 640 = potongan tengahnya.
+SEPEDA: dict[str, str] = {
+    'sepeda_kecil.png': 'ui_bengkel_sepeda_kecil.png',
+    'sepeda.json': 'ui_bengkel_sepeda.json',
+}
+FOLDER_SEPEDA = 'docs/design/redesain/aset'
+LATAR: dict[str, str] = {'bengkel_latar_800.png': 'ui_bengkel_latar_800.png'}
+FOLDER_LATAR = 'docs/design/redesain/latar_bengkel'
+
+# Awalan nama berkas redesain di assets/sprites/ui/: berkas berawalan ini HARUS ada di daftar (set tepat).
+AWALAN = ('ui_btn_', 'ui_arsir_', 'ui_panel_layar', 'ui_kartu_', 'ui_chip_', 'ui_icon24_', 'ui_glif_', 'ui_bengkel_')
+
+
+def nama_komponen() -> list[str]:
+    """Nama berkas PNG (dengan .png) hasil komponen.py yang dipasang, terurut."""
+    semua = list(TOMBOL.values()) + list(PANEL.values()) + list(PAPAN.values()) + list(IKON24.values()) + list(GLIF12.values())
+    return sorted(n + '.png' for n in semua)
+
+
+def nama_semua() -> list[str]:
+    """Semua nama berkas redesain yang dipasang di assets/sprites/ui/ (PNG dan JSON), terurut."""
+    return sorted(nama_komponen() + list(SEPEDA.values()) + list(LATAR.values()))
