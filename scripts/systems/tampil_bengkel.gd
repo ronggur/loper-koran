@@ -170,7 +170,7 @@ static func titik_sepeda(indeks: int) -> Vector2i:
 
 ## Persegi titik penanda (3x3 berbingkai gelap 1 px, jadi 5x5) di panggung, untuk komponen ke-`indeks`.
 static func rect_titik(indeks: int, tata: TataPanggung) -> Rect2i:
-	var cincin: int = 1
+	var cincin: int = Config.UI_GARIS_PX
 	var pusat: Vector2i = tata.sepeda + titik_sepeda(indeks)
 	var tepi: int = (Config.BENGKEL_PENANDA_TITIK_PX >> 1) + cincin
 	return Rect2i(pusat - Vector2i(tepi, tepi), Vector2i.ONE * (Config.BENGKEL_PENANDA_TITIK_PX + 2 * cincin))

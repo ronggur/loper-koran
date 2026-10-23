@@ -42,7 +42,8 @@ func _ready() -> void:
 
 
 func _draw() -> void:
-	draw_rect(Rect2(Vector2(-1, -1), size + Vector2(2, 2)), Palette.OUTLINE)
+	var garis: Vector2 = Vector2.ONE * float(Config.UI_GARIS_PX)
+	draw_rect(Rect2(-garis, size + garis + garis), Palette.OUTLINE)
 	draw_rect(Rect2(Vector2.ZERO, size), Palette.UI_PANEL)
 
 

@@ -50,7 +50,7 @@ static func kotak(isi: Color, garis: Color) -> StyleBoxFlat:
 	var hasil: StyleBoxFlat = StyleBoxFlat.new()
 	hasil.bg_color = isi
 	hasil.border_color = garis
-	hasil.set_border_width_all(1)
+	hasil.set_border_width_all(Config.UI_GARIS_PX)
 	hasil.anti_aliasing = false
 	hasil.content_margin_left = float(Config.HUD_PANEL_PAD_X_PX)
 	hasil.content_margin_right = float(Config.HUD_PANEL_PAD_X_PX)
@@ -230,7 +230,7 @@ static func _kotak_fokus() -> StyleBoxFlat:
 	var hasil: StyleBoxFlat = StyleBoxFlat.new()
 	hasil.draw_center = false
 	hasil.border_color = Palette.ACCENT
-	hasil.set_border_width_all(1)
+	hasil.set_border_width_all(Config.UI_GARIS_PX)
 	hasil.set_expand_margin_all(float(Config.UI_TOMBOL_FOKUS_JARAK_PX))
 	hasil.anti_aliasing = false
 	return hasil

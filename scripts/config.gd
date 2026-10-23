@@ -1414,6 +1414,8 @@ const UI_TOMBOL_LEBAR_MIN_PX: int = 84
 const UI_TOMBOL_LEBAR_UTAMA_PX: int = 140
 ## Garis fokus tombol berada sekian piksel di luar tepi tombol (1 px jarak + 1 px garis; kanvas `outline-offset: 1px`).
 const UI_TOMBOL_FOKUS_JARAK_PX: int = 2
+## Tebal garis 1 piksel game: garis kotak `GayaHud`, garis fokus, cincin gelap titik penanda sepeda dan ring luar panggung bengkel (QA-006: tanpa angka ajaib).
+const UI_GARIS_PX: int = 1
 ## Isi sakelar: jarak tambahan kiri dan kanan di luar tepi 9-slice (CSS `padding: 0 4px 2px`).
 const UI_TOMBOL_SAKELAR_PAD_X_PX: int = 4
 ## Tinggi chip kecil, normal, dan besar, serta jarak isi ke samping di luar tepi 9-slice, piksel game.
