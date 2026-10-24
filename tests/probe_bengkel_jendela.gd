@@ -123,6 +123,11 @@ func _periksa(nama: String, layar: LayarBengkel) -> void:
 		if tombol.size.x + 0.5 < tombol.get_minimum_size().x:
 			print("TIDAK SESUAI [%s]: teks tombol '%s' terpotong (%.1f < %.1f)" % [nama, tombol.text, tombol.size.x, tombol.get_minimum_size().x])
 			salah += 1
+	var hari: Button = layar.tombol_hari_berikutnya()
+	var margin_hari: int = GayaHud.margin_glif_tombol(hari)
+	if margin_hari != roundi((hari.get_theme_stylebox(&"normal") as StyleBox).content_margin_right) or margin_hari < Config.UI_TOMBOL_GLIF_MARGIN_MIN_PX or float(GayaHud.lebar_teks_tombol(hari) + hari.get_theme_constant(&"h_separation") + hari.icon.get_width() + margin_hari * 2) > hari.size.x + 0.01:
+		print("TIDAK SESUAI [%s]: panah 'Hari berikutnya' margin %d tidak sama kiri-kanan, di bawah minimum, atau teks terpotong (R-1)" % [nama, margin_hari])
+		salah += 1
 	for simpul: Node in layar.find_children("*", "Label", true, false):
 		var label: Label = simpul as Label
 		if not label.is_visible_in_tree() or label.text == "":

@@ -8,6 +8,7 @@ kartu misi, banner, penanda kucing, umpan melayang, dan tombol bel harus sama pe
 - kolom kanan atas (koin, skor, kondisi, reputasi): x lebar-225 sampai lebar-20, y 0..130 (baris 3 reputasi lama dengan inset) (radar kanan di x lebar-16 tidak ikut dikecualikan);
 - derau animasi di sekitar pemain (debu roda, bingkai kayuh; dua jalan probe yang sama berbeda 36 sampai 45 piksel di sini): x 150..270, y 230..345;
 - tombol jeda HUD berbentuk tombol biasa (V-9 H-3): x 14..80, y 2..72 (termasuk geseran inset);
+- strip radar tanpa bingkai dan latar gelap (revisi UI pemilik R-3, run garis-finish-portal bagian E): dua strip x 4..16 dan lebar-16..lebar-4, y 10..182 (bar kecepatan dan stamina tanpa trek, R-4, sudah di dalam pengecualian panel bawah);
 - keadaan yang mengubah isinya sendiri (AC-5): tutorial (tombol Lewati dan panel petunjuk) di semua tangkapan `misi_*`, gelembung petunjuk (label "PELANGGAN:") di `misi_petunjuk`.
 Keluaran per berkas: jumlah piksel berbeda di luar pengecualian dan kotak pembatasnya. Exit 1 bila ada piksel berbeda.
 
@@ -33,6 +34,8 @@ def kotak_dikecualikan(nama, lebar, tinggi, skala):
     kotak.append((lebar - 225, 0, lebar - 20, 130))
     kotak.append((150, 230, 270, 345))
     kotak.append((14, 2, 80, 72))
+    kotak.append((4, 10, 16, 182))
+    kotak.append((lebar - 16, 10, lebar - 4, 182))
     if nama.startswith('misi_'):
         kotak.append((60, 0, 140, 50))
         kotak.append((20, 84, 210, 150))

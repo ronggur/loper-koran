@@ -250,6 +250,9 @@ func _initialize() -> void:
 	tampil_layar_c.jalankan()
 	var layar_c_scene: TesLayarCScene = TesLayarCScene.new(check, _judul, self)
 	await layar_c_scene.jalankan()
+	# Run garis-finish-portal bagian E (revisi UI pemilik R-1..R-4): margin panah tombol, baseline dan tepi kanan label-nilai hasil, radar tanpa bingkai, bar tanpa trek.
+	var revisi_ui_e: TesRevisiUiE = TesRevisiUiE.new(check, _judul, self)
+	await revisi_ui_e.jalankan()
 	var tata_letak: TesTataLetak = TesTataLetak.new(check, _judul, self)
 	await tata_letak.jalankan()
 	var bunyi: TesBunyi = TesBunyi.new(check, _judul, self)

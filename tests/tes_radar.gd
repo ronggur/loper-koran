@@ -82,7 +82,7 @@ func _test_config() -> void:
 	_judul.call("Radar: angka Config literal (K-2, DESIGN_SPEC 3.4)")
 	check(Config.RADAR_JANGKAUAN_UBIN == 30.0, "jangkauan radar 30 ubin (K-2)")
 	check(Config.RADAR_TEPI_PX == 4 and Config.RADAR_LEBAR_PX == 12 and Config.RADAR_Y_ATAS_PX == 10 and Config.RADAR_Y_BAWAH_PX == 182, "strip x 4 dari tepi, lebar 12, y 10 sampai 182")
-	check(Config.RADAR_PENANDA_LEBAR_PX == 8 and Config.RADAR_PENANDA_TINGGI_PX == 6 and Config.RADAR_JANGKAU_TAMBAH_PX == 2 and Config.RADAR_BINGKAI_PX == 2, "penanda 8x6, jangkau +2 (10x8), bingkai 9-slice 2")
+	check(Config.RADAR_PENANDA_LEBAR_PX == 8 and Config.RADAR_PENANDA_TINGGI_PX == 6 and Config.RADAR_JANGKAU_TAMBAH_PX == 2 and Config.RADAR_JALUR_PAD_PX == 2, "penanda 8x6, jangkau +2 (10x8), jalur penanda 2 px dari ujung strip (R-3: tanpa bingkai)")
 	check(Config.LEMPAR_JARAK_MAKS_UBIN == 5.0 and Config.HUD_PROGRES_TERLEWAT_UBIN == 3.0, "jangkau = jarak lempar maksimum 5,0; terlewat 3,0 ubin di belakang")
 	for jenis: String in ["pelanggan", "tip", "bukan"]:
 		for akhiran: String in ["", "_jangkau"]:
@@ -90,8 +90,7 @@ func _test_config() -> void:
 			var t: Texture2D = load(jalur) as Texture2D
 			var ukuran: Vector2 = Vector2(10, 8) if akhiran != "" else Vector2(8, 6)
 			check(t != null and t.get_size() == ukuran, "%s ada, %s" % [jalur, ukuran])
-	var bingkai: Texture2D = load("res://assets/sprites/ui/ui_radar_strip_9slice.png") as Texture2D
-	check(bingkai != null and bingkai.get_size() == Vector2(12, 12), "bingkai strip 9-slice 12x12 ada")
+	check(not ResourceLoader.exists("res://assets/sprites/ui/ui_radar_strip_9slice.png"), "R-3: bingkai strip radar 9-slice tidak dipasang lagi (strip tanpa latar gelap)")
 
 
 func _test_geometri_kotak_surat() -> void:

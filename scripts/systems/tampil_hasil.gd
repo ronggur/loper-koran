@@ -137,3 +137,17 @@ static func gelap_panel(ada_dunia: bool) -> float:
 static func modulasi_panel(ada_dunia: bool) -> Color:
 	var g: float = gelap_panel(ada_dunia)
 	return Color(g, g, g, alpha_panel(ada_dunia))
+
+
+## Perataan baseline dua teks yang berdiri sejajar dalam satu baris (revisi UI pemilik R-2, usulan): kedua teks berada di atas baris (rata atas) dengan tinggi font berbeda, jadi baseline-nya terpisah selisih ascent. Yang
+## ascent-nya lebih kecil diturunkan sebesar selisih (dibulatkan, tidak pernah negatif) lewat margin atas. Hasil `Vector2i(turun_a, turun_b)`: salah satunya selalu 0.
+static func turun_baseline(ascent_a: float, ascent_b: float) -> Vector2i:
+	var selisih: int = roundi(absf(ascent_a - ascent_b))
+	return Vector2i(selisih, 0) if ascent_a < ascent_b else Vector2i(0, selisih)
+
+
+## Baseline (jarak dari tepi atas chip ke garis dasar teks chip) untuk chip setinggi `tinggi_chip` dengan isi berjarak `pad_y` atas dan bawah, teks berbaris setinggi `tinggi_baris` dan `ascent`, teks di tengah tinggi isi
+## (`ChipUi`: label berrata tengah di dalam kotak isi). Dipakai menurunkan chip reputasi sampai garis dasar teksnya sama dengan garis dasar angka reputasi.
+static func baseline_chip(tinggi_chip: int, pad_y: int, tinggi_baris: float, ascent: float) -> float:
+	var isi: float = float(maxi(tinggi_chip - pad_y * 2, 0))
+	return float(pad_y) + (isi - tinggi_baris) / 2 + ascent

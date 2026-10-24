@@ -751,8 +751,8 @@ const RADAR_LEBAR_PX: int = 12
 const RADAR_Y_ATAS_PX: int = 10
 ## Strip radar: tepi bawah dari atas layar, piksel game (DESIGN_SPEC 3.4: y 182; zona stick mulai y 186).
 const RADAR_Y_BAWAH_PX: int = 182
-## Strip radar: tebal bingkai 9-slice `ui_radar_strip_9slice.png` (fakta aset `tools/ui_art/hud_ikon.py`), piksel game.
-const RADAR_BINGKAI_PX: int = 2
+## Strip radar: jarak jalur penanda dari ujung atas dan bawah strip, piksel game (dulu tebal bingkai 9-slice; sejak revisi UI pemilik R-3 strip tanpa bingkai, hanya garis sumbu `OUTLINE` 1 px di tengah jalur).
+const RADAR_JALUR_PAD_PX: int = 2
 ## Penanda radar biasa: lebar dan tinggi, piksel game (`ui_radar_<jenis>.png` 8x6).
 const RADAR_PENANDA_LEBAR_PX: int = 8
 ## Lihat `RADAR_PENANDA_LEBAR_PX`.
@@ -1018,6 +1018,8 @@ const KORAN_PANEL_PAD_ATAS_PX: int = 8
 const KORAN_PANEL_PAD_BAWAH_PX: int = 10
 ## Jarak antar tombol Ambil dan Lewati.
 const KORAN_TOMBOL_JARAK_PX: int = 6
+## Jarak teks ke panah di tombol Berangkat, piksel game (sama dengan bawaan tema sebelum R-1; sekarang eksplisit).
+const KORAN_BERANGKAT_JARAK_PX: int = 4
 ## Kotak hiasan "Iklan baris" di bawah kolom berita: lebar paling besar, tinggi tetap, tinggi paling kecil supaya label dan satu baris hiasan muat (selain itu kotak tidak tampil), isi samping dan atas bawah, panjang goresan garis putus.
 const KORAN_IKLAN_LEBAR_MAKS_PX: int = 220
 const KORAN_IKLAN_TINGGI_PX: int = 54
@@ -1530,6 +1532,8 @@ const UI_TOMBOL_TEKAN_GESER_PX: int = 2
 const UI_TOMBOL_TINGGI_PX: int = 42
 const UI_TOMBOL_LEBAR_MIN_PX: int = 84
 const UI_TOMBOL_LEBAR_UTAMA_PX: int = 140
+## Tombol berglif di ujung kanan (panah Berangkat, Hari berikutnya, Lanjut; revisi UI pemilik R-1): jarak tepi tombol ke teks dan ke glif dibuat SAMA (grup teks + jarak + glif di tengah), tidak boleh kurang dari ini, piksel game.
+const UI_TOMBOL_GLIF_MARGIN_MIN_PX: int = 8
 ## Garis fokus tombol berada sekian piksel di luar tepi tombol (1 px jarak + 1 px garis; kanvas `outline-offset: 1px`).
 const UI_TOMBOL_FOKUS_JARAK_PX: int = 2
 ## Tebal garis 1 piksel game: garis kotak `GayaHud`, garis fokus, cincin gelap titik penanda sepeda dan ring luar panggung bengkel (QA-006: tanpa angka ajaib).

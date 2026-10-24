@@ -1,7 +1,8 @@
 class_name RadarStrip
 extends Control
-## Satu strip radar di tepi layar (GDD 4.3, DESIGN_SPEC 3.4; AC-5 run fase3c-hud-hasil, usulan): bingkai 9-slice
-## `ui_radar_strip_9slice.png` dan penanda `ui_radar_<jenis>[_jangkau].png` dari `tools/ui_art/hud_ikon.py`.
+## Satu strip radar di tepi layar (GDD 4.3, DESIGN_SPEC 3.4; AC-5 run fase3c-hud-hasil, usulan): penanda `ui_radar_<jenis>[_jangkau].png` dari `tools/ui_art/hud_ikon.py` di atas dunia, TANPA bingkai atau latar gelap
+## (revisi UI pemilik R-3, 2026-10-24, usulan): satu garis sumbu tipis `OUTLINE` (1 px, `RadarRute.rect_sumbu`) di tengah jalur sepanjang strip menjadi satu-satunya tanda tempat penanda turun; penanda tetap terbaca di atas
+## rumput, aspal, dan trotoar karena garis luar `OUTLINE` 1 px sudah menjadi bagian gambar penanda (dan garis luar `TEXT` pada penanda "masuk jangkauan").
 ##
 ## Hanya menggambar: penanda dari `RadarRute.penanda` (diisi `HudRute`), disaring ke `sisi` strip ini (`SEBERANG` = strip di tepi x 0,
 ## `DEKAT` = strip di tepi x lebar; kidal tidak menukar). Penanda biasa 8x6 di tengah jalur, tepi atasnya `RadarRute.y_penanda_px` di
@@ -9,7 +10,6 @@ extends Control
 ## (garis luar `TEXT`, +2 px) berpusat di tempat yang sama. Jenis dibedakan bentuk juga: tip bertitik terang, bukan pelanggan berlubang.
 ## Tidak menerima sentuhan. Letak dan ukuran diatur `HudRute` lewat anchor dan offset.
 
-const TEKSTUR_BINGKAI: Texture2D = preload("res://assets/sprites/ui/ui_radar_strip_9slice.png")
 const TEKSTUR_PELANGGAN: Texture2D = preload("res://assets/sprites/ui/ui_radar_pelanggan.png")
 const TEKSTUR_TIP: Texture2D = preload("res://assets/sprites/ui/ui_radar_tip.png")
 const TEKSTUR_BUKAN: Texture2D = preload("res://assets/sprites/ui/ui_radar_bukan.png")
@@ -21,15 +21,11 @@ const TEKSTUR_BUKAN_JANGKAU: Texture2D = preload("res://assets/sprites/ui/ui_rad
 var sisi: LoperAnim.Sisi = LoperAnim.Sisi.SEBERANG
 
 var _penanda: Array[RadarRute.Penanda] = []
-var _bingkai: StyleBoxTexture = null
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_bingkai = StyleBoxTexture.new()
-	_bingkai.texture = TEKSTUR_BINGKAI
-	_bingkai.set_texture_margin_all(float(Config.RADAR_BINGKAI_PX))
 
 
 ## Mengganti penanda yang tampil: hanya yang sisinya `sisi`. Gambar ulang hanya bila isinya berubah.
@@ -61,12 +57,12 @@ static func tekstur(p: RadarRute.Penanda) -> Texture2D:
 
 ## Persegi gambar penanda `p` di dalam strip (koordinat lokal strip, piksel bulat).
 func rect_lokal(p: RadarRute.Penanda) -> Rect2:
-	var bingkai: int = Config.RADAR_BINGKAI_PX
+	var pad: int = Config.RADAR_JALUR_PAD_PX
 	var lebar: int = Config.RADAR_PENANDA_LEBAR_PX
 	var tinggi: int = Config.RADAR_PENANDA_TINGGI_PX
-	var jalur: int = roundi(size.y) - bingkai * 2
+	var jalur: int = roundi(size.y) - pad * 2
 	var x: int = floori((size.x - float(lebar)) / 2)
-	var y: int = bingkai + RadarRute.y_penanda_px(p.vertikal, jalur, tinggi)
+	var y: int = pad + RadarRute.y_penanda_px(p.vertikal, jalur, tinggi)
 	if not p.jangkau:
 		return Rect2(x, y, lebar, tinggi)
 	var tambah: int = Config.RADAR_JANGKAU_TAMBAH_PX
@@ -81,8 +77,7 @@ func rect_global(p: RadarRute.Penanda) -> Rect2:
 
 
 func _draw() -> void:
-	if _bingkai != null:
-		draw_style_box(_bingkai, Rect2(Vector2.ZERO, size))
+	draw_rect(Rect2(RadarRute.rect_sumbu(roundi(size.x), roundi(size.y))), Palette.OUTLINE)
 	# Yang jauh digambar dulu, jadi penanda yang lebih dekat (lebih penting) di atasnya.
 	for p: RadarRute.Penanda in _penanda:
 		draw_texture_rect(tekstur(p), rect_lokal(p), false)

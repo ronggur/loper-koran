@@ -320,9 +320,41 @@ func _cek(nama: String, layar: LayarHasil, inset: ZonaAman.Inset) -> void:
 		if not kartu_rep.grow(0.5).encloses(layar.chip_reputasi().get_global_rect()):
 			print("TIDAK SESUAI [%s]: chip reputasi %s di luar kartunya %s" % [nama, layar.chip_reputasi().get_global_rect(), kartu_rep])
 			salah += 1
+	salah += _periksa_rata(nama, layar)
 	print("hasil [%s]: struk %s, kolom %s, tombol %s '%s', %d tidak sesuai" % [nama, struk, kolom, tombol, layar.teks_tombol(), salah])
 	print("teks: %s" % [" | ".join(layar.teks_tampil())])
 	_gagal += salah
+
+
+## Perataan struk dan kolom samping (revisi UI pemilik R-2): garis dasar label = nilai di tiap baris struk dan baris pelanggan, tepi kanan nilai sama di semua baris struk dan sama dengan tepi kanan isi kolom samping, dan
+## garis dasar label reputasi = angka = chip. Selisih diizinkan 0,01 px (baris) atau 0,6 px (chip, pembulatan setengah piksel).
+func _periksa_rata(nama: String, layar: LayarHasil) -> int:
+	var salah: int = 0
+	var tepi: float = -1.0
+	for baris: Dictionary in layar.pasangan_baris() + layar.pasangan_pelanggan():
+		var label: Label = baris["label"] as Label
+		var nilai: Label = baris["nilai"] as Label
+		if absf(layar.baseline_label(label) - layar.baseline_label(nilai)) > 0.01:
+			print("TIDAK SESUAI [%s]: baseline label '%s' %.2f != nilai '%s' %.2f" % [nama, label.text, layar.baseline_label(label), nilai.text, layar.baseline_label(nilai)])
+			salah += 1
+	for baris: Dictionary in layar.pasangan_baris():
+		var akhir: float = (baris["nilai"] as Label).get_global_rect().end.x
+		if tepi < 0.0:
+			tepi = akhir
+		elif absf(akhir - tepi) > 0.01:
+			print("TIDAK SESUAI [%s]: tepi kanan nilai %.2f != %.2f" % [nama, akhir, tepi])
+			salah += 1
+	var samping: Array[float] = layar.tepi_kanan_samping()
+	for x: float in samping:
+		if absf(x - samping[0]) > 0.51:
+			print("TIDAK SESUAI [%s]: tepi kanan kolom samping %.2f != %.2f" % [nama, x, samping[0]])
+			salah += 1
+	if layar.kanan_tampil() and layar.chip_reputasi().is_visible_in_tree():
+		var rep: Vector3 = layar.baseline_reputasi()
+		if absf(rep.x - rep.y) > 0.6 or absf(rep.z - rep.y) > 0.6:
+			print("TIDAK SESUAI [%s]: baseline reputasi label %.2f, angka %.2f, chip %.2f" % [nama, rep.x, rep.y, rep.z])
+			salah += 1
+	return salah
 
 
 ## Label tampil yang teksnya terpotong (baris terlihat != baris, tinggi kurang, atau lebar kurang dari lebar teks pada label satu baris) dan label yang saling bertumpuk.

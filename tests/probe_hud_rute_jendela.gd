@@ -366,9 +366,60 @@ func _sentuh(index: int, posisi_viewport: Vector2, tekan: bool) -> void:
 func _foto(keadaan: String) -> void:
 	await _tunggu(3)
 	print("%s: jarak %.2f, kecepatan %.2f, %s, %s, koin %s, skor %s, bantu %s, kidal %s, hasil %s" % [keadaan, _sepeda.jarak_ubin, _sepeda.kecepatan_ud, _hud.teks_tenggat(), _hud.teks_terkirim(), _hud.teks_koin(), _hud.teks_skor(), _akar.mode_bantu(), _akar.kidal(), _akar.hasil_tampil()])
+	var gambar: Image = root.get_texture().get_image()
+	await _cek_piksel_hud(keadaan, gambar)
 	if _folder.is_empty():
 		return
-	var gambar: Image = root.get_texture().get_image()
 	var berkas: String = "%s/%s_hud_%s.png" % [_folder, _awalan, keadaan]
 	var galat: int = gambar.save_png(berkas)
 	print("tangkapan layar %dx%d (%s) ke %s (kode %d)" % [gambar.get_width(), gambar.get_height(), keadaan, berkas, galat])
+
+
+## Piksel nyata (revisi UI pemilik R-3 dan R-4): strip radar tanpa bingkai (kolom tepi strip, di luar jangkauan penanda, SAMA PERSIS dengan tangkapan yang sama tanpa strip; kolom sumbu hampir seluruhnya `OUTLINE`) dan bar kecepatan
+## dan stamina tanpa trek (bagian kosong: baris tengah `OUTLINE`, baris di atasnya BUKAN warna trek lama `UI_PANEL_RAISED`). Dilewati saat layar jeda atau hasil menutupi HUD. Dunia rute berhenti saat probe tidak memajukan simulasi,
+## jadi dua tangkapan berurutan (dengan dan tanpa strip) hanya berbeda di strip.
+func _cek_piksel_hud(keadaan: String, gambar: Image) -> void:
+	if _akar.sedang_jeda() or _akar.hasil_tampil():
+		return
+	var salah: int = 0
+	var tetap: String = Palette.OUTLINE.to_html(false)
+	var strip_ada: Array[RadarStrip] = [_hud.radar_seberang(), _hud.radar_dekat()]
+	for strip: RadarStrip in strip_ada:
+		strip.visible = false
+	await _tunggu(3)
+	var tanpa: Image = root.get_texture().get_image()
+	for strip: RadarStrip in strip_ada:
+		strip.visible = true
+	await _tunggu(2)
+	for strip: RadarStrip in strip_ada:
+		var r: Rect2 = strip.get_global_rect()
+		var beda: int = 0
+		var sumbu: int = 0
+		var baris: int = roundi(r.size.y)
+		for y: int in range(baris):
+			for kolom: int in [0, Config.RADAR_LEBAR_PX - 1]:
+				if _piksel(gambar, r.position.x + float(kolom) + 0.5, r.position.y + float(y) + 0.5) != _piksel(tanpa, r.position.x + float(kolom) + 0.5, r.position.y + float(y) + 0.5):
+					beda += 1
+			if _piksel(gambar, r.position.x + float(RadarRute.rect_sumbu(roundi(r.size.x), baris).position.x) + 0.5, r.position.y + float(y) + 0.5) == tetap:
+				sumbu += 1
+		if beda > 0 or float(sumbu) < 0.8 * float(baris):
+			print("TIDAK SESUAI [hud %s]: strip radar %s menggambar di kolom tepi (%d piksel beda, harus 0) atau %d dari %d baris sumbu OUTLINE (harus >= 80 persen)" % [keadaan, r, beda, sumbu, baris])
+			salah += 1
+	for bar: BarKecepatan in [_hud.bar_kecepatan(), _hud.bar_stamina()]:
+		if bar.nilai > 0.85:
+			continue
+		var r2: Rect2 = bar.get_global_rect()
+		var x: float = r2.position.x + r2.size.x - 3.0
+		var tengah: String = _piksel(gambar, x, r2.position.y + float(TampilHud.rect_sumbu_bar(roundi(r2.size.x), roundi(r2.size.y)).position.y) + 0.5)
+		var atas: String = _piksel(gambar, x, r2.position.y + 1.5)
+		if tengah != tetap or atas == Palette.UI_PANEL_RAISED.to_html(false):
+			print("TIDAK SESUAI [hud %s]: bar %s bagian kosong: sumbu %s (harus OUTLINE), baris atas %s (bukan UI_PANEL_RAISED)" % [keadaan, r2, tengah, atas])
+			salah += 1
+	_gagal += salah
+
+
+## Warna piksel di koordinat viewport game (`x`, `y`) pada tangkapan `gambar` (skala jendela / viewport), sebagai heksa 8-bit tanpa alpha.
+func _piksel(gambar: Image, x: float, y: float) -> String:
+	var px: int = clampi(floori(x * _skala), 0, gambar.get_width() - 1)
+	var py: int = clampi(floori(y * _skala), 0, gambar.get_height() - 1)
+	return gambar.get_pixel(px, py).to_html(false)

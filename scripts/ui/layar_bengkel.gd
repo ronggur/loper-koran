@@ -130,10 +130,8 @@ func _ready() -> void:
 	kotak_galat.set_content_margin_all(float(Config.UI_PANEL_SLICE_PX + Config.BENGKEL_GALAT_PAD_PX))
 	_panel_galat.add_theme_stylebox_override(&"panel", kotak_galat)
 	GayaHud.tombol_utama(_tombol_hari)
-	_tombol_hari.icon = GayaHud.tekstur("glif_panah_gelap")
-	_tombol_hari.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_tombol_hari.add_theme_constant_override(&"h_separation", Config.UI_CHIP_JARAK_BESAR_PX)
 	_tombol_hari.custom_minimum_size = Vector2(Config.BENGKEL_HARI_LEBAR_PX, Config.UI_TOMBOL_TINGGI_PX)
+	GayaHud.glif_ujung_kanan(_tombol_hari, "glif_panah_gelap", Config.UI_CHIP_JARAK_BESAR_PX)
 	_tombol_hari.ditekan.connect(hari_berikutnya_diminta.emit)
 	for id: String in Config.KONDISI_KOMPONEN:
 		_kartu_servis[id] = _bangun_kartu_servis(id)

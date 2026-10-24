@@ -222,20 +222,26 @@ stretch_mode = 3
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 4
+size_flags_vertical = 0
 theme_type_variation = &"LayarLabel"
 text = "HASIL_REPUTASI"
 
 [node name="AngkaReputasi" type="Label" parent="LatarHasil/Batas/Badan/KolomKanan/KartuReputasi/BarisReputasi"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 4
+size_flags_vertical = 0
 theme_type_variation = &"LayarJudul"
 
-[node name="ChipReputasi" type="PanelContainer" parent="LatarHasil/Batas/Badan/KolomKanan/KartuReputasi/BarisReputasi"]
+[node name="PembungkusChip" type="MarginContainer" parent="LatarHasil/Batas/Badan/KolomKanan/KartuReputasi/BarisReputasi"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 4
+size_flags_vertical = 0
+mouse_filter = 2
+
+[node name="ChipReputasi" type="PanelContainer" parent="LatarHasil/Batas/Badan/KolomKanan/KartuReputasi/BarisReputasi/PembungkusChip"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
 script = ExtResource("5_chip")
 mouse_filter = 2
 

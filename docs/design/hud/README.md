@@ -13,7 +13,7 @@ Aset HUD untuk Fase 3: ikon uang dan kondisi sepeda, penanda radar, dan bingkai 
 | `ui_radar_<pelanggan\|tip\|misi\|bukan>.png` | 8×6 | Penanda radar biasa |
 | `ui_radar_<jenis>_jangkau.png` | 10×8 | Masuk jangkauan lempar: +2 px, garis luar `TEXT` |
 | `ui_radar_penanda.png` | 40×16 | Sheet sel 10×8: baris atas biasa (offset 1, 1), baris bawah jangkau |
-| `ui_radar_strip_9slice.png` | 12×12 | Bingkai strip radar, margin 2 |
+| (dihapus) `ui_radar_strip_9slice.png` | - | Bingkai strip radar; sejak revisi UI pemilik R-3 (2026-10-24) strip tanpa bingkai, hanya garis sumbu `OUTLINE` 1 px dari kode (`RadarRute.rect_sumbu`) |
 | `ui_panel_hud_9slice.png` | 12×12 | Bingkai panel HUD, margin 4, sudut tumpul 3 px bertingkat |
 
 ## Pratinjau (folder ini)

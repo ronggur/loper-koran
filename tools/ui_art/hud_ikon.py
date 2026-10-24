@@ -1,4 +1,4 @@
-"""Ikon HUD 14x14, penanda radar, bingkai strip radar dan panel HUD 9-slice (usulan).
+"""Ikon HUD 14x14, penanda radar, dan panel HUD 9-slice (usulan; strip radar tanpa bingkai sejak revisi UI pemilik R-3: garis sumbu digambar dari kode).
 
 Ukuran dan token warna mengikuti docs/design/DESIGN_SPEC.md (1.1, 1.3, 3.3, 3.4), palet ART_DIRECTION 2.4.
 Pola piksel ditulis sebagai baris teks berisi peran warna, seperti scripts/systems/pola_piksel.gd:
@@ -235,17 +235,11 @@ def besar(pat):
     return [''.join(r) for r in out]
 
 
-def strip(h=172):
-    """Strip radar 12 lebar: garis luar 1 OUTLINE, garis dalam 1 UI_PANEL_RAISED, isi 8 RADAR_BG (#0E0A1C 60%)."""
+def sumbu(h=172):
+    """Garis sumbu strip radar (revisi UI pemilik R-3): strip 12 lebar TANPA bingkai dan latar gelap, hanya satu garis OUTLINE selebar 1 px di x 6 sepanjang strip (sama dengan `RadarRute.rect_sumbu`)."""
     im = Image.new('RGBA', (12, h), (0, 0, 0, 0))
     for y in range(h):
-        for x in range(12):
-            if x in (0, 11) or y in (0, h - 1):
-                im.putpixel((x, y), O)
-            elif x in (1, 10) or y in (1, h - 2):
-                im.putpixel((x, y), hexc('#36281E'))
-            else:
-                im.putpixel((x, y), (14, 10, 28, 153))
+        im.putpixel((6, y), O)
     return im
 
 
@@ -274,8 +268,8 @@ def radar_contoh(layar, out):
     W = scene.width
     top, bot = 10, 182
     jangkau_radar, jangkau_lempar = 20 * 32, 7 * 32
-    scene.alpha_composite(strip(bot - top), (4, top))
-    scene.alpha_composite(strip(bot - top), (W - 16, top))
+    scene.alpha_composite(sumbu(bot - top), (4, top))
+    scene.alpha_composite(sumbu(bot - top), (W - 16, top))
     # rumah sisi seberang di depan pemain (layar_fase3: pemain di y 150, rumah di -64, -192, -448)
     for dist, kind in ((214, 'pelanggan'), (342, 'tip'), (598, 'misi')):
         pat = besar(PENANDA[kind]) if dist <= jangkau_lempar else PENANDA[kind]
@@ -305,13 +299,12 @@ def main():
         b = render(besar(PENANDA[k]), RAD); b.save(OUT_DIR / ('ui_radar_%s_jangkau.png' % k))
         rs.alpha_composite(a, (i * 10 + 1, 1)); rs.alpha_composite(b, (i * 10, 8))
     rs.save(OUT_DIR / 'ui_radar_penanda.png')
-    strip(12).save(OUT_DIR / 'ui_radar_strip_9slice.png')
     panel_9slice().save(OUT_DIR / 'ui_panel_hud_9slice.png')
     with open(OUT_DIR / 'ui_icon_hud_sheet.json', 'w') as f:
         json.dump({'sprite': 'ui_icon_hud_sheet.png', 'cell': [14, 14], 'order': names,
                    'radar': {'sprite': 'ui_radar_penanda.png', 'cell': [10, 8], 'order': kinds,
                              'rows': ['normal 8x6 (offset 1,1)', 'masuk jangkauan 10x8']},
-                   'nine_slice': {'ui_radar_strip_9slice.png': 2, 'ui_panel_hud_9slice.png': 4},
+                   'nine_slice': {'ui_panel_hud_9slice.png': 4},
                    'note': 'Usulan, tools/ui_art/hud_ikon.py. Ikon koran tetap IKON_KORAN di pola_piksel.gd; '
                            'tombol jeda digambar dari kode (tombol_jeda.gd).'}, f, indent=1, ensure_ascii=False)
         f.write('\n')
