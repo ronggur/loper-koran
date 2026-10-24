@@ -455,7 +455,7 @@ const GELOMBANG1_TAK_DIPASANG_GF: Array[String] = [
 
 
 func _test_aset_garis_finish_ikut_paket() -> void:
-	_judul.call("Portal satpam ikut paket (PNG, remap Lossless, JSON dua frame sel 80x64 pijak 14,48) dan aset gelombang 1 yang tak dipasang tidak ada (AC-2 run garis-finish-portal)")
+	_judul.call("Portal satpam ikut paket (PNG, remap Lossless, JSON dua frame sel 80x92 pijak 14,60) dan aset gelombang 1 yang tak dipasang tidak ada (AC-2 run garis-finish-portal)")
 	var cfg: ConfigFile = ConfigFile.new()
 	cfg.load(BERKAS_PRESET)
 	var kecuali: Array[String] = []
@@ -472,11 +472,21 @@ func _test_aset_garis_finish_ikut_paket() -> void:
 		var d: Dictionary = json
 		var sel: Array = d.get("cell", []) as Array
 		var pijak: Array = d.get("ground_anchor", []) as Array
-		check(sel.size() == 2 and int(sel[0]) == 80 and int(sel[1]) == 64, "portal: sel 80x64, dapat %s" % [sel])
+		check(sel.size() == 2 and int(sel[0]) == 80 and int(sel[1]) == 92, "portal: sel 80x92, dapat %s" % [sel])
 		check(int(d.get("frames", 0)) == 2, "portal: dua frame (0 tertutup, 1 terbuka)")
-		check(pijak.size() == 2 and int(pijak[0]) == 14 and int(pijak[1]) == 48, "portal: pijak (14, 48), dapat %s" % [pijak])
+		check(pijak.size() == 2 and int(pijak[0]) == 14 and int(pijak[1]) == 60, "portal: pijak (14, 60), dapat %s" % [pijak])
 		var tekstur: Texture2D = load("res://assets/sprites/props/prop_portal_satpam.png") as Texture2D
 		check(tekstur != null and sel.size() == 2 and tekstur.get_width() == int(sel[0]) * 2 and tekstur.get_height() == int(sel[1]), "portal: ukuran PNG = dua sel berjajar")
+		# G-1a: tidak ada bagian terpotong: baris dan kolom tepi tiap frame transparan penuh (margin >= 1 px di semua sisi).
+		if tekstur != null:
+			var gambar: Image = tekstur.get_image()
+			for k: int in 2:
+				var tepi_buram: int = 0
+				for x: int in 80:
+					tepi_buram += int(gambar.get_pixel(k * 80 + x, 0).a > 0.0) + int(gambar.get_pixel(k * 80 + x, 91).a > 0.0)
+				for y: int in 92:
+					tepi_buram += int(gambar.get_pixel(k * 80, y).a > 0.0) + int(gambar.get_pixel(k * 80 + 79, y).a > 0.0)
+				check(tepi_buram == 0, "portal frame %d: tepi sel transparan penuh (tidak ada bagian terpotong), %d piksel buram di tepi" % [k, tepi_buram])
 	var png_props: Array[String] = []
 	for nama: String in DirAccess.get_files_at("res://assets/sprites/props"):
 		if nama.ends_with(".png"):

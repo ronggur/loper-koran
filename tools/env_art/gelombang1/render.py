@@ -105,8 +105,8 @@ add('properti', 'mission_mangkuk_kucing', [PR.mangkuk_kucing()], 0, (7, 8),
     'Mangkuk pink berisi pelet.')
 add('properti', 'mission_kilau', PR.kilau_misi(), 4, (4, 4),
     'Loop 2 frame. Pijak = pusat; dipasang 12-16 px di atas benda petunjuk.')
-add('properti', 'prop_portal_satpam', [PR.portal_satpam(False), PR.portal_satpam(True)], 0, (14, 48),
-    'M3. Frame 0 tertutup, frame 1 terbuka. Pijak = kaki tiang. Palang 52 unit melintang jalan.')
+add('properti', 'prop_portal_satpam', [PR.portal_satpam(False), PR.portal_satpam(True)], 0, PR.PORTAL_PIJAK,
+    'M3. Frame 0 tertutup, frame 1 terbuka; sel 80x92, pijak (14, 60) = kaki tiang (G-1a: sel diperbesar supaya tidak ada bagian terpotong). Palang 52 unit melintang jalan.')
 add('properti', 'prop_pos_satpam', [PR.pos_satpam()], 0, (32, 50),
     'M3. Pos 20x24 unit, jendela menghadap jalan samping, pintu di sisi kiri bawah.')
 

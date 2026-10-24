@@ -54,7 +54,7 @@ python3 tools/env_art/lampu_pohon.py             # 7 lampu (mati/nyala), 11 poho
 ```
 python3 tools/env_art/ubin_perumahan.py --salin           # 13 ubin yang dipasang + JSON terpangkas
 python3 tools/env_art/gelombang1/render.py --salin        # 13 sprite 5A + tong sampah logam (lima tembok 5B tidak lagi disalin sejak run 5D; tetap dirender ke build/ dan papan)
-# run garis-finish-portal (G-1): --salin juga memasang prop_portal_satpam (sel 80x64, dua frame, pijak (14, 48)) ke assets/sprites/props/; total 15 sprite. prop_pos_satpam TIDAK dipasang
+# run garis-finish-portal (G-1): --salin juga memasang prop_portal_satpam (sel 80x92, dua frame, pijak (14, 60); G-1a: sel diperbesar dari 80x64 supaya palang terbuka dan kaki penyangga tidak terpotong) ke assets/sprites/props/; total 15 sprite. prop_pos_satpam TIDAK dipasang
 python3 tools/env_art/lampu_pohon.py --salin              # tiga pohon + dua lampu mati ke assets/sprites/props/ (lalu godot --headless --import)
 python3 tools/tests_cek/uji_aset_pasang_5b.py             # isi assets/ = keluaran ketiga skrip, impor Lossless, susunan ubin khusus
 python3 tools/tests_cek/uji_aset_pasang_5b.py --perbarui-referensi   # tulis ulang tests/data/ubin_potongan_5b.png dari assets/

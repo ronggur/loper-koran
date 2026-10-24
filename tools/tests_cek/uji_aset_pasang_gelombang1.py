@@ -63,7 +63,7 @@ PASANG_SPRITE_5B = {
     'houses/perumahan': [],   # run fase5d-sisi-dekat (P-1): lima tembok tidak lagi dipasang
     'props': ['prop_tong_sampah_logam'],
 }
-# Run garis-finish-portal (G-1): HANYA portal satpam (sel 80x64, dua frame, pijak (14, 48)); pos satpam tetap tidak dipasang.
+# Run garis-finish-portal (G-1, G-1a): HANYA portal satpam (sel 80x92, dua frame, pijak (14, 60); sel lama 80x64 memotong palang terbuka dan kaki penyangga); pos satpam tetap tidak dipasang.
 PASANG_SPRITE_GARIS_FINISH = {
     'props': ['prop_portal_satpam'],
 }
@@ -296,11 +296,24 @@ def main():
         if n != 'prop_koran_kotak_surat':
             periksa(0 <= ax < cw and 0 <= ay < ch, 'JSON %s: titik pijak di dalam sel' % n)
         periksa(lebar < 2048 and tinggi < 2048, 'ukuran < 2048: %s' % n)
-    # Portal satpam (G-1): dua frame (0 tertutup, 1 terbuka), sel 80x64, pijak (14, 48) = kaki tiang; ditulis literal, bukan dari skrip.
+    # Portal satpam (G-1a): dua frame (0 tertutup, 1 terbuka), sel 80x92, pijak (14, 60) = kaki tiang; ditulis literal, bukan dari skrip.
     portal = json.loads(baca(os.path.join(SPRITES, 'props', 'prop_portal_satpam.json')))
-    periksa(portal['cell'] == [80, 64] and portal['frames'] == 2 and portal['ground_anchor'] == [14, 48],
-            'JSON portal: sel 80x64, dua frame, pijak (14, 48): %s %s %s' % (portal['cell'], portal['frames'], portal['ground_anchor']))
-    periksa(ukuran(os.path.join(SPRITES, 'props', 'prop_portal_satpam.png')) == (160, 64), 'PNG portal 160x64 (dua sel 80x64 berjajar)')
+    periksa(portal['cell'] == [80, 92] and portal['frames'] == 2 and portal['ground_anchor'] == [14, 60],
+            'JSON portal: sel 80x92, dua frame, pijak (14, 60): %s %s %s' % (portal['cell'], portal['frames'], portal['ground_anchor']))
+    periksa(ukuran(os.path.join(SPRITES, 'props', 'prop_portal_satpam.png')) == (160, 92), 'PNG portal 160x92 (dua sel 80x92 berjajar)')
+    # Tidak ada bagian yang terpotong (A-1, A-2): di tiap frame baris dan kolom tepi sel transparan penuh (margin >= 1 px di semua sisi),
+    # dan bbox tiap frame sama dengan angka terukur (tertutup x 4..69 y 36..87, terbuka x 4..31 y 3..62).
+    import numpy as np
+    from PIL import Image
+    with Image.open(os.path.join(SPRITES, 'props', 'prop_portal_satpam.png')) as g:
+        a = np.array(g.convert('RGBA'))
+    for k, (bx, by) in enumerate([((4, 69), (36, 87)), ((4, 31), (3, 62))]):
+        f = a[:, k * 80:(k + 1) * 80, 3] > 0
+        ys, xs = np.nonzero(f)
+        periksa((int(xs.min()), int(xs.max())) == bx and (int(ys.min()), int(ys.max())) == by,
+                'portal frame %d: bbox x %s y %s' % (k, (int(xs.min()), int(xs.max())), (int(ys.min()), int(ys.max()))))
+        periksa(not f[0].any() and not f[-1].any() and not f[:, 0].any() and not f[:, -1].any(), 'portal frame %d: tepi sel transparan penuh (tidak terpotong)' % k)
+        periksa(int(ys.min()) >= 1 and int(xs.min()) >= 1 and 91 - int(ys.max()) >= 1 and 79 - int(xs.max()) >= 1, 'portal frame %d: margin >= 1 px di semua sisi' % k)
     # Total sprite keluaran render.py --salin: 6 koran + 7 VFX/kilau + tong sampah logam + portal satpam = 15 (13 lama tidak berubah).
     total = sum(len(ns) for ns in list(PASANG_SPRITE.values()) + list(PASANG_SPRITE_5B.values()) + list(PASANG_SPRITE_GARIS_FINISH.values()))
     periksa(total == 15, 'render.py --salin memasang tepat 15 sprite (13 lama + tong sampah + portal): %d' % total)

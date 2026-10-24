@@ -132,7 +132,7 @@ def build(sore=False, minimal=False):
         put(V.percikan()[2], 16, 48, 12, 12, layer=3)
 
         # gerbang: portal terbuka di halaman seberang, pos satpam di sisi dekat sesudah tembok
-        put(PR.portal_satpam(terbuka=True), -100, 206, 14, 48)
+        put(PR.portal_satpam(terbuka=True), -100, 206, *PR.PORTAL_PIJAK)
         put(PR.pos_satpam(), 118, 210, 32, 50)
 
     urut = ([o for o in objs if o[0] == 0] + sorted([o for o in objs if o[0] == 1], key=lambda o: o[1])
