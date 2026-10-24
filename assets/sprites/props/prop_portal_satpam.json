@@ -1,0 +1,15 @@
+{
+ "sprite": "prop_portal_satpam.png",
+ "cell": [
+  80,
+  64
+ ],
+ "frames": 2,
+ "fps": 0,
+ "ground_anchor": [
+  14,
+  48
+ ],
+ "board": "properti",
+ "note": "Usulan, tools/env_art/gelombang1 (Fase 5 gelombang 1). Frame berjajar kiri ke kanan. M3. Frame 0 tertutup, frame 1 terbuka. Pijak = kaki tiang. Palang 52 unit melintang jalan."
+}

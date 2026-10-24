@@ -7,7 +7,8 @@ Dari root repo (butuh numpy dan pillow, seperti tools/env_art):
 Keluaran bisa dipindah dengan ENV_ART_OUT (folder induk, sama dengan renderer env_art lain). Hasil deterministik.
 `--salin` (run fase5a-pasang-aset-gelombang1, D-1): 13 sprite (PNG + JSON) dipasang di rute: koran ke props/, VFX sepeda, bintang, koin,
 dan kilau misi ke vfx/. Run fase5b-tembok-dekor (D-1): ditambah lima tembok sisi dekat (`house_tembok_{polos,bata,besi,pot,tiang}`) ke
-houses/perumahan/ dan `prop_tong_sampah_logam` ke props/ (tong biru TIDAK, K-2). Aset lain (jejak, mangkuk, portal, pos, percikan, ubin)
+houses/perumahan/ dan `prop_tong_sampah_logam` ke props/ (tong biru TIDAK, K-2). Run garis-finish-portal (G-1): ditambah HANYA
+`prop_portal_satpam` ke props/ (portal di garis akhir rute; `prop_pos_satpam` TIDAK). Aset lain (jejak, mangkuk, pos, percikan, ubin)
 TIDAK disalin; ubin jalan disalin `tools/env_art/ubin_perumahan.py --salin`. `ENV_ART_MOCK_KE` mengganti folder mock `--mock`. `ENV_ART_SALIN_KE` mengganti folder induk tujuan (default assets/sprites; dipakai
 tools/tests_cek/uji_aset_pasang_gelombang1.py). Tiga penyesuaian K-1 (2026-10-21): kilau dua warna, tong sampah logam dan biru
 (hijau dibuang), polisi tidur kuning-hitam lama dibuang dari ubin_perumahan.py.
@@ -49,6 +50,11 @@ PASANG = {
 # jadi lima sprite `house_tembok_*` tidak lagi disalin ke assets/ (tetap dirender ke build/ dan papan).
 PASANG_5B = {
     'props': ['prop_tong_sampah_logam'],
+}
+
+# Tambahan run garis-finish-portal (G-1): isi pasangan 5A dan 5B di atas tidak berubah. Hanya portal; pos satpam tidak dipasang.
+PASANG_GARIS_FINISH = {
+    'props': ['prop_portal_satpam'],
 }
 
 PANEL = (0x34, 0x27, 0x1F, 255)
@@ -247,6 +253,8 @@ if '--salin' in sys.argv:
     ada = {e['name'] for e in S}
     pasang = {folder: list(nama) for folder, nama in PASANG.items()}
     for folder, nama in PASANG_5B.items():
+        pasang.setdefault(folder, []).extend(nama)
+    for folder, nama in PASANG_GARIS_FINISH.items():
         pasang.setdefault(folder, []).extend(nama)
     for folder, nama in pasang.items():
         tujuan = SALIN_KE / folder
