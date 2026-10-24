@@ -1,7 +1,7 @@
 # Loop Log — 20261024-garis-finish-portal
 Scope: Run garis finish dengan portal satpam (sepeda melaju keluar viewport)  ·  Branch: feat/garis-finish-portal (dari main 92255fa, rilis 0.7.0 + PR #66)  ·  Mulai: 2026-10-24  ·  Godot: 4.7.2
 
-## Status: Dev iterasi 2 selesai (Bagian E, F, G; menunggu QA iterasi 2). Iterasi 1: PASSED ( 0 Blocker, 0 Major; QA-001..004 OPEN/DEFERRED; HP vivo tidak terhubung saat QA selesai, APK belum dipasang)
+## Status: PASSED (iterasi 2/2; QA iterasi 2 PASS: 0 Blocker, 0 Major; QA-001..009 OPEN/DEFERRED, Minor dan Nit; HP vivo tidak terhubung, APK belum dipasang)
 
 ## Lingkungan (orchestrator, awal run)
 - Basis: `main` = `origin/main` = `92255fa` (memuat PR #66 UI-2, di-merge 2026-10-24).
