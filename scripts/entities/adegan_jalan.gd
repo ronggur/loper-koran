@@ -96,7 +96,7 @@ extends Node2D
 ## Run garis-finish-portal bagian C (G-2, G-5; usulan): sesudah garis akhir sepeda melaju keluar viewport (bukan direm), jadi adegan turunan punya kait tambahan, semuanya bawaan tidak berubah
 ## untuk jalan uji: `_siapkan_gerak` (laju dijaga sebelum langkah gerak), `_jarak_dunia` (jarak yang dipakai tanah dan dunia; dibekukan di garis akhir supaya tanah dan jendela daur tidak ikut sepeda
 ## keluar dan tidak muncul lubang di belakang kamera yang beku), `_rintangan_aktif` (mati sesudah garis akhir: tidak ada tabrakan baru, jam jatuh tetap berjalan), `_bel_diizinkan`, dan
-## `_sepeda_senyap`. Kamera beku (`_bekukan_kamera`, dipanggil adegan turunan SEKALI saat garis tercapai): posisi kamera dan geseran dorongan tidak berubah lagi sampai `_kembalikan_awal`.
+## `_sepeda_senyap`, dan (Bagian F) `_efek_gerak`. Kamera beku (`_bekukan_kamera`, dipanggil adegan turunan SEKALI saat garis tercapai): posisi kamera dan geseran dorongan tidak berubah lagi sampai `_kembalikan_awal`.
 
 ## Status jeda berubah: true = layar jeda dibuka (simulasi, sprite, partikel, dan input berhenti), false = lanjut.
 signal jeda_berubah(jeda: bool)
@@ -315,6 +315,11 @@ func _siapkan_gerak() -> void:
 	pass
 
 
+## Efek kondisi sepeda yang dipakai `BikeMotion.langkah` langkah ini (bawaan: efek kondisi rute; null di jalan uji). Rute mengembalikan null sesudah garis akhir (Bagian F, F-3): sepeda keluar dengan cepat walau aus atau rusak.
+func _efek_gerak() -> EfekKondisi:
+	return _kondisi.efek if _kondisi != null else null
+
+
 ## Jarak maju (ubin) yang dipakai tanah, jendela daur, dan dunia lain. Bawaan = jarak sepeda; rute membekukannya di garis akhir (G-5: tanah di belakang portal tetap tergambar, tanpa lubang).
 func _jarak_dunia() -> float:
 	return _sepeda.jarak_ubin
@@ -509,7 +514,7 @@ func perbarui(dt: float) -> void:
 	if not _jeda:
 		_baru_lanjut = false
 	_siapkan_gerak()
-	var gerak: BikeMotion.Hasil = _sepeda.gerak(_vektor_stick(), langkah_dt, _rintangan.tabrakan.jatuh_detik, _kondisi.efek if _kondisi != null else null)
+	var gerak: BikeMotion.Hasil = _sepeda.gerak(_vektor_stick(), langkah_dt, _rintangan.tabrakan.jatuh_detik, _efek_gerak())
 	_langkah_waktu(langkah_dt)
 	var tabrak: Tabrakan.Hasil = _langkah_rintangan(langkah_dt)
 	_langkah_kondisi(gerak, langkah_dt, tabrak)

@@ -10,7 +10,7 @@ extends RefCounted
 ## Garis finish dengan portal (run garis-finish-portal bagian B, G-2 sampai G-5, usulan): sesudah garis akhir sepeda TIDAK direm, melainkan melaju
 ## lurus keluar viewport. Tambahan di berkas ini (kontrak lama `periksa`, `Status`, `tercapai`, `stick_akhir` tidak berubah):
 ## - Fase (`Fase`): SEBELUM garis, MELAJU_KELUAR (garis tercapai, sepeda belum seluruhnya di luar viewport), SUDAH_KELUAR. Hanya maju (`periksa_keluar`).
-## - Gerak: `stick_keluar` (lurus penuh, tanpa belok) dan laju minimum `RUTE_KELUAR_LAJU_MIN_UD` (`laju_dijaga`, `keadaan_dijaga`).
+## - Gerak: `stick_keluar` (lurus penuh, tanpa belok) dan laju minimum `RUTE_KELUAR_LAJU_MIN_UD` (`laju_dijaga`, `keadaan_dijaga`); Bagian F: laju minimum = level ngebut (6,0 u/d) dan efek kondisi serta lelah tidak berlaku sesudah garis.
 ## - Keluar viewport dari geometri nyata, bukan waktu: titik pijak sepeda di layar (`posisi_layar_pijak`, `posisi_layar`), kotak badan
 ##   `RUTE_KELUAR_BADAN_KIRI_PX` dan `RUTE_KELUAR_BADAN_BAWAH_PX`, dan arah maju dari `Iso` (naik ke kanan atas). `sisa_ubin_keluar` = ubin yang masih harus ditempuh sampai seluruh badan di luar
 ##   tepi kanan atau tepi atas viewport (mana lebih dulu); "hampir keluar" (sinyal banner) bila sisa <= `RUTE_KELUAR_HAMPIR_UBIN`.
@@ -81,18 +81,23 @@ static func laju_dijaga(laju_ud: float) -> float:
 	return maxf(laju_ud, Config.RUTE_KELUAR_LAJU_MIN_UD)
 
 
-## Salinan keadaan gerak dengan kecepatan sudah dijaga (`laju_dijaga`); bagian lain sama. Dipanggil sebelum `BikeMotion.langkah` sesudah garis akhir.
-## Tujuan stick lurus penuh tidak pernah di bawah laju minimum, jadi kecepatan keluaran langkah juga tidak turun di bawahnya. Keadaan null = keadaan awal.
-static func keadaan_dijaga(keadaan: BikeMotion.Keadaan) -> BikeMotion.Keadaan:
+## Salinan keadaan gerak untuk keluar dengan CEPAT (Bagian F, F-3): kecepatan dijaga (`laju_dijaga`), `lelah` dipadamkan (lelah menjepit tujuan ke cepat 4,5), dan stamina dikembalikan ke `stamina_garis`
+## (stamina sepeda saat garis tercapai; NaN, negatif, atau tak hingga = stamina tidak diubah) supaya sepeda yang keluar tidak lelah atau terkuras di tengah keluar. Bagian lain sama. Dipanggil sebelum
+## `BikeMotion.langkah` sesudah garis akhir. Tujuan stick lurus penuh tanpa efek kondisi dan tanpa lelah adalah ngebut (sama dengan laju dijaga), jadi kecepatan keluaran langkah juga tidak turun di
+## bawahnya. Keadaan null = keadaan awal.
+static func keadaan_dijaga(keadaan: BikeMotion.Keadaan, stamina_garis: float = NAN) -> BikeMotion.Keadaan:
 	var baru: BikeMotion.Keadaan = keadaan.salin() if keadaan != null else BikeMotion.Keadaan.new()
 	baru.kecepatan_ud = laju_dijaga(baru.kecepatan_ud)
+	baru.lelah = false
+	if is_finite(stamina_garis) and stamina_garis >= 0.0:
+		baru.stamina = minf(stamina_garis, Config.STAMINA_MAKS)
 	return baru
 
 
-## Satu langkah gerak sesudah garis akhir: keadaan dijaga, stick `stick_keluar`, lewat `BikeMotion.langkah` biasa (rem tidak pernah aktif).
-## `beku_detik` dan `efek` diteruskan apa adanya (jatuh sesudah tabrakan, efek kondisi).
-static func langkah_keluar(keadaan: BikeMotion.Keadaan, dt: float, beku_detik: float = 0.0, efek: EfekKondisi = null) -> BikeMotion.Hasil:
-	return BikeMotion.langkah(keadaan_dijaga(keadaan), stick_keluar(), dt, beku_detik, efek)
+## Satu langkah gerak sesudah garis akhir: keadaan dijaga, stick `stick_keluar`, lewat `BikeMotion.langkah` biasa (rem tidak pernah aktif) TANPA efek kondisi sepeda (null = identitas: aus atau rusak tidak
+## memperlambat keluar; kondisi sudah dibekukan di garis, G-5). `beku_detik` (jatuh sesudah tabrakan) diteruskan apa adanya.
+static func langkah_keluar(keadaan: BikeMotion.Keadaan, dt: float, beku_detik: float = 0.0, stamina_garis: float = NAN) -> BikeMotion.Hasil:
+	return BikeMotion.langkah(keadaan_dijaga(keadaan, stamina_garis), stick_keluar(), dt, beku_detik, null)
 
 
 ## Titik pijak sepeda di layar (koordinat viewport game) saat kamera mengikuti: sasaran `KAMERA_SEPEDA_*_PECAHAN` dari ukuran viewport ditambah

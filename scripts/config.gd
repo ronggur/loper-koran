@@ -517,8 +517,8 @@ const RUTE_AKHIR_STICK_Y: float = -1.0
 ## --- Garis finish dengan portal (run garis-finish-portal bagian B, G-2 sampai G-5, usulan; disetel di HP) ---
 ## Stick buatan sesudah garis akhir (menggantikan rem `RUTE_AKHIR_STICK_Y` di scene rute): komponen tegak +1 = lurus ke depan penuh, komponen datar 0 = tanpa belok. Lewat `BikeMotion` biasa: tujuan ngebut (atau lebih rendah menurut lelah dan efek kondisi), tanpa rem.
 const RUTE_KELUAR_STICK_Y: float = 1.0
-## Laju terendah sepeda sesudah garis akhir, u/d (sama dengan santai). Tujuan stick lurus penuh tidak pernah di bawah ini (lelah menjepit ke 4,5; batas puncak rantai tidak di bawah santai), jadi menaikkan laju awal ke angka ini sudah cukup menjaganya.
-const RUTE_KELUAR_LAJU_MIN_UD: float = 3.0
+## Laju terendah sepeda sesudah garis akhir, u/d (Bagian F, F-3, permintaan pemilik 2026-10-24: sepeda keluar viewport dengan CEPAT). 6,0 = level ngebut yang sudah ada (`KECEPATAN_NGEBUT_UD`, bar kecepatan penuh, debu dan garis kecepatan penuh), bukan angka baru di luar skala permainan; dijaga langsung di angka ini (bukan menunggu akselerasi 3,0 u/d2 dari santai, yang makan 1,0 detik dan 4,5 ubin). Laju yang sudah lebih tinggi tidak diturunkan. Sesudah garis efek kondisi sepeda dan stamina tidak berlaku (`AkhirRute.keadaan_dijaga`, `RuteMain._efek_gerak`), jadi lelah atau sepeda rusak tidak memperlambat keluar.
+const RUTE_KELUAR_LAJU_MIN_UD: float = 6.0
 ## Jarak sisi kiri badan pemain + sepeda dari titik pijak sepeda saat melaju lurus, piksel game. Bersama `RUTE_KELUAR_BADAN_BAWAH_PX` menentukan kapan seluruh badan keluar viewport (maju = naik ke kanan atas, jadi hanya sisi kiri dan bawah yang terakhir meninggalkan tepi kanan dan atas). Diukur dari piksel buram `loper_agen*.png` animasi arah lurus kayuh, melambat, meluncur, rem, dan berhenti (kiri 18, kanan 16, atas 43, bawah 8); dijaga `tes_garis_finish`.
 const RUTE_KELUAR_BADAN_KIRI_PX: int = 18
 ## Jarak sisi bawah badan dari titik pijak sepeda (ban dan bayangan), piksel game. Lihat `RUTE_KELUAR_BADAN_KIRI_PX`.
@@ -537,6 +537,14 @@ const RUTE_PORTAL_PIJAK_PX: Array[int] = [14, 60]
 ## Setengah sisi tapak kotak penutup pemain di sekitar tiang (ubin) dan tinggi kotak (ubin: 57 piksel opak palang terangkat di atas pijak / 32). Frame tertutup lebih rendah, jadi kotak ini cukup untuk keduanya. Setengah tapak 0,75 = ukuran terkecil (kelipatan 0,125) yang membuat tidak ada piksel opak palang terangkat di atas piksel pemain tanpa kotak menutupinya (0,5: 20 posisi, 0,625: 2 posisi); dijaga tes piksel.
 const RUTE_PORTAL_TAPAK_SETENGAH_UBIN: float = 0.75
 const RUTE_PORTAL_TINGGI_UBIN: float = 1.78125
+## --- Hiasan lanjutan di depan garis akhir (run garis-finish-portal Bagian F, F-1; usulan, disetel di HP) ---
+## Panjang minimum hiasan sesudah garis akhir, ubin: sedikitnya sepanjang jendela daur ke depan (`RUTE_DAUR_MAJU_UBIN` 30) supaya seluruh jendela terisi rumah dan dekor, termasuk tepi viewport terjauh (kamera beku melihat paling jauh 17,9 ubin di depan sepeda di garis, LOG bagian B). Rumah dan dekor disalin dari segmen pembuka/tengah pustaka (`HiasanRute`), semuanya bukan pelanggan.
+const RUTE_HIASAN_PANJANG_UBIN: int = 32
+## Selisih seed hiasan dari seed rute: aliran acak sendiri (pilihan segmen hiasan), tidak mengubah rute, pelanggan, atau misi.
+const RUTE_HIASAN_SEED_SELISIH: int = 104729
+## Paling banyak segmen hiasan dan paling banyak undian per segmen (separuh pertama menolak segmen padat berurutan, separuh kedua melonggarkan).
+const RUTE_HIASAN_SEGMEN_MAKS: int = 4
+const RUTE_HIASAN_COBA_MAKS: int = 24
 ## Jarak banner "Rute selesai" dari tepi atas layar, piksel game: di bawah strip atas HUD dan di luar zona stick dan swipe.
 const RUTE_BANNER_MARGIN_ATAS_PX: int = 64
 ## Nama 12 sprite rumah perumahan (`assets/sprites/houses/perumahan/<nama>.png`), sejajar dengan `RUTE_RUMAH_PIJAK_PX`.

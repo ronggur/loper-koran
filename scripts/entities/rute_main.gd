@@ -83,6 +83,8 @@ var _hari: int = Config.HARI_AWAL
 var _tip_sisa: float = 0.0
 var _tip_sudah: bool = false
 var _rute: RouteBuilder.Rute = RouteBuilder.Rute.new()
+## Hiasan lanjutan di depan garis akhir (`HiasanRute`, F-1): rute terpisah, hanya rumah bukan pelanggan dan dekor; tidak masuk radar, progres, zona, skor, atau `_rute`.
+var _hiasan: RouteBuilder.Rute = RouteBuilder.Rute.new()
 var _pustaka: Array[SegmenRute] = []
 ## Galat memuat segmen atau menyusun rute (kosong bila baik).
 var _galat: Array[String] = []
@@ -93,6 +95,8 @@ var _selesai: bool = false
 var _fase: AkhirRute.Fase = AkhirRute.Fase.SEBELUM
 var _hampir_keluar: bool = false
 var _jarak_beku: float = 0.0
+## Stamina sepeda saat garis akhir tercapai (dipulihkan tiap langkah sesudah garis supaya keluar tidak menguras atau membuat lelah).
+var _stamina_garis: float = Config.STAMINA_MAKS
 ## Jam tenggat rute (`TenggatRute`).
 var _tenggat: TenggatRute.Keadaan = TenggatRute.Keadaan.new()
 ## True sejak layar hasil terbuka sampai "Main lagi".
@@ -130,6 +134,8 @@ var _hasil_milestone: MilestoneTracker.Ringkasan = null
 @onready var _panel_akhir: PanelAkhirRute = %PanelAkhir
 @onready var _rintangan_daur: RintanganDaur = %Rintangan
 @onready var _dekor_daur: DekorDaur = %Dekor
+@onready var _rumah_hiasan: RumahDaurRute = %RumahHiasan
+@onready var _dekor_hiasan: DekorDaur = %DekorHiasan
 @onready var _portal: PortalGaris = %Portal
 @onready var _umpan_gambar: UmpanMelayangGambar = %UmpanMelayang
 @onready var _layar_hasil: LayarHasil = %LayarHasil
@@ -143,6 +149,8 @@ func _siapkan_dunia() -> void:
 	_daur.penerap = _penerap
 	_rintangan_daur.penerap = _penerap
 	_dekor_daur.penerap = _penerap
+	_rumah_hiasan.penerap = _penerap
+	_dekor_hiasan.penerap = _penerap
 	_portal.penerap = _penerap
 	_kucing.penerap = _penerap
 	_tutorial_node.lewati_diminta.connect(_saat_tutorial_dilewati)
@@ -161,6 +169,8 @@ func _perbarui_dunia(jarak_ubin: float) -> void:
 	_daur.atur_terantar(_skor.terantar)
 	_rintangan_daur.perbarui(_rintangan, jarak_ubin)
 	_dekor_daur.perbarui(jarak_ubin)
+	_rumah_hiasan.perbarui(jarak_ubin)
+	_dekor_hiasan.perbarui(jarak_ubin)
 	_tip_node.tampilkan(TipSisiDekat.kunci_teks(_hari) if TipSisiDekat.tampil(_tip_sisa) and not _hasil_tampil else "")
 	_umpan_gambar.tampilkan(_umpan)
 	_penerap.terapkan(_sepeda.posisi_dunia())
@@ -169,6 +179,7 @@ func _perbarui_dunia(jarak_ubin: float) -> void:
 	_selesai = status.selesai
 	if status.baru_selesai:
 		_jarak_beku = jarak_ubin
+		_stamina_garis = _sepeda.stamina()
 		_tenggat = TenggatRute.hentikan(_tenggat)
 		_kontrol.lepas_semua()
 		# Sesudah garis akhir stick dan jari tidak dibaca lagi (jempol yang masih menahan tidak membelokkan atau mengerem), dan tidak ada lemparan atau ketukan baru.
@@ -311,10 +322,15 @@ func _vektor_stick() -> Vector2:
 	return super()
 
 
-## Sesudah garis akhir laju dinaikkan ke laju minimum sebelum langkah gerak (`AkhirRute.keadaan_dijaga`); sebelum garis tidak ada yang berubah.
+## Sesudah garis akhir laju dinaikkan ke laju minimum (level ngebut), lelah dipadamkan, dan stamina dikembalikan ke nilai di garis sebelum langkah gerak (`AkhirRute.keadaan_dijaga`); sebelum garis tidak ada yang berubah.
 func _siapkan_gerak() -> void:
 	if _selesai:
-		_sepeda.keadaan = AkhirRute.keadaan_dijaga(_sepeda.keadaan)
+		_sepeda.keadaan = AkhirRute.keadaan_dijaga(_sepeda.keadaan, _stamina_garis)
+
+
+## Efek kondisi sepeda tidak berlaku sesudah garis akhir (Bagian F, F-3): sepeda keluar dengan cepat walau aus atau rusak; kondisi sudah dibekukan di garis (G-5).
+func _efek_gerak() -> EfekKondisi:
+	return null if _selesai else super()
 
 
 ## Tanah dan dunia di garis akhir dibekukan di jarak saat garis tercapai (G-5): kamera beku melihat persis yang sama dengan frame sebelum beku, tanpa lubang di belakang portal.
@@ -361,6 +377,7 @@ func _susun(benih: int) -> void:
 	_fase = AkhirRute.Fase.SEBELUM
 	_hampir_keluar = false
 	_jarak_beku = 0.0
+	_stamina_garis = Config.STAMINA_MAKS
 	_tenggat = TenggatRute.awal(_rute.panjang_ubin)
 	_hasil_tampil = false
 	_angka_hasil = null
@@ -380,6 +397,9 @@ func _susun(benih: int) -> void:
 	_tanah.atur_simpang(UbinKhusus.himpunan_baris_simpang(RouteBuilder.simpang_di(_rute)))
 	_rintangan_daur.lepas_semua()
 	_dekor_daur.atur_rute(_rute)
+	_hiasan = HiasanRute.bangun(_rute, _pustaka) if not gagal else RouteBuilder.Rute.new()
+	_rumah_hiasan.atur_rute(_hiasan)
+	_dekor_hiasan.atur_rute(_hiasan)
 	_portal.atur_rute(_rute.panjang_ubin)
 	_penerap.terapkan(_sepeda.posisi_dunia())
 	_panel_akhir.tampilkan(false)
@@ -614,6 +634,31 @@ func rintangan_daur() -> RintanganDaur:
 ## Gambar dekor pinggir jalan (untuk tes dan probe).
 func dekor_daur() -> DekorDaur:
 	return _dekor_daur
+
+
+## Rute hiasan di depan garis akhir (untuk tes dan probe).
+func hiasan() -> RouteBuilder.Rute:
+	return _hiasan
+
+
+## Banyaknya gambar hiasan yang terdaftar di penerap penutup: semua rumah hiasan yang tergambar dan dekor hiasan yang menutupi (sisi dekat). Untuk tes.
+func jumlah_hiasan_penerap() -> int:
+	var jumlah: int = _rumah_hiasan.jumlah_rumah()
+	for indeks: int in _dekor_hiasan.indeks_tampil():
+		var butir: RouteBuilder.DekorItem = _hiasan.dekor[indeks]
+		if DekorRute.menutupi(butir.jenis, butir.varian, butir.sisi):
+			jumlah += 1
+	return jumlah
+
+
+## Gambar rumah hiasan (untuk tes dan probe).
+func rumah_hiasan() -> RumahDaurRute:
+	return _rumah_hiasan
+
+
+## Gambar dekor hiasan (untuk tes dan probe).
+func dekor_hiasan() -> DekorDaur:
+	return _dekor_hiasan
 
 
 ## Gambar umpan balik melayang (untuk tes dan probe).

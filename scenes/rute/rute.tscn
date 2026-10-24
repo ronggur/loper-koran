@@ -134,6 +134,20 @@ y_sort_enabled = true
 texture_filter = 1
 script = ExtResource("29_dekor")
 
+[node name="RumahHiasan" type="Node2D" parent="Objek"]
+unique_name_in_owner = true
+y_sort_enabled = true
+texture_filter = 1
+script = ExtResource("3_daur")
+adegan_kotak_surat = ExtResource("9_kotak_surat")
+adegan_kotak_surat_bukan = ExtResource("23_kotak_bukan")
+
+[node name="DekorHiasan" type="Node2D" parent="Objek"]
+unique_name_in_owner = true
+y_sort_enabled = true
+texture_filter = 1
+script = ExtResource("29_dekor")
+
 [node name="Kucing" parent="Objek" instance=ExtResource("24_kucing")]
 unique_name_in_owner = true
 
