@@ -1507,7 +1507,7 @@ SPEC dan LOG di `docs/loop/20261024-garis-finish-portal/`, branch `feat/garis-fi
 **Putusan orchestrator (usulan, bisa ditolak di review PR; jangan ditanyakan ulang):**
 
 - **G-1 Penanda = HANYA `prop_portal_satpam`** (dua frame, tertutup saat jauh, membuka mendekat); `prop_pos_satpam` tidak dipasang (M3). **G-1a (amandemen setelah ukuran Dev bagian A):** sel dan pijak semula 80x64 dan (14, 48) hanya berasal dari deskripsi ROADMAP; terukur memotong palang terbuka dan kaki penyangga tertutup, jadi diperbesar lewat renderer ke 80x92 dan pijak (14, 60).
-- **G-2 Sesudah garis akhir** sepeda tidak direm: melaju lurus dengan laju minimal santai sampai seluruh badan keluar viewport; stick sungguhan, lemparan, dan mode bantu dikunci; kamera berhenti di garis.
+- **G-2 Sesudah garis akhir** sepeda tidak direm: melaju lurus dengan laju minimal santai (diubah Bagian F, permintaan pemilik 2026-10-24: level ngebut 6,0 u/d, efek kondisi dan lelah dilepas, hiasan perumahan `HiasanRute` tetap tampak di depan portal) sampai seluruh badan keluar viewport; stick sungguhan, lemparan, dan mode bantu dikunci; kamera berhenti di garis.
 - **G-3 Banner "Rute selesai"** muncul saat hampir keluar (bukan sesudah berhenti); tanpa kunci teks baru.
 - **G-4 Layar hasil** tampil sesudah sepeda keluar dan semua koran terbang mendarat (`HasilRute.siap_tampil`).
 - **G-5** Skor, tenggat, misi, kondisi sepeda, progres, radar, dan save tidak berubah (dibekukan di garis seperti sebelumnya, dibuktikan lawan golden dari worktree `main`); tanpa segmen atau panjang rute baru.

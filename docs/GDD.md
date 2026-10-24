@@ -71,7 +71,7 @@ Inti Paperboy tetap dipertahankan: sepeda terus berjalan sementara pemain mengan
 - **Combo dan momentum:** antaran beruntun yang berhasil menaikkan pengali skor. Satu kesalahan memutus rantai.
 - **Rute bercabang:** pemain memilih gang kecil yang lebih cepat tapi berbahaya, atau jalan utama yang aman tapi panjang.
 - **Tenggat rute:** tiap rute punya batas waktu, jadi terlalu santai punya harga (bagian 5).
-- **Garis finish dengan portal satpam (usulan, run garis-finish-portal 2026-10-24, dinilai di HP; aturan permainan tidak berubah):** rute berakhir di portal satpam yang melintang jalan dan membuka saat sepeda mendekat; sepeda tidak direm tetapi melaju sendiri lewat portal sampai keluar layar, sementara skor, tenggat, dan misi sudah dibekukan di garis akhir, lalu hasil hari tampil. Pos satpam dan portal buka-tutup sebagai rintangan distrik Perumahan (9.2) tetap M3. Angka dan perilaku: [`BALANCING.md`](./BALANCING.md) 6h, [`ROUTE_DESIGN.md`](./ROUTE_DESIGN.md) 4d.
+- **Garis finish dengan portal satpam (usulan, run garis-finish-portal 2026-10-24, dinilai di HP; aturan permainan tidak berubah):** rute berakhir di portal satpam yang melintang jalan dan membuka saat sepeda mendekat; sepeda tidak direm tetapi melaju sendiri dengan laju ngebut lewat portal sampai keluar layar (kamera diam, perumahan hiasan tetap tampak di depan portal), sementara skor, tenggat, dan misi sudah dibekukan di garis akhir, lalu hasil hari tampil. Pos satpam dan portal buka-tutup sebagai rintangan distrik Perumahan (9.2) tetap M3. Angka dan perilaku: [`BALANCING.md`](./BALANCING.md) 6h, [`ROUTE_DESIGN.md`](./ROUTE_DESIGN.md) 4d.
 
 ### 4.2 Dua sisi jalan
 
