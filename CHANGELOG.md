@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/ronggur/loper-koran/compare/loper-koran-v0.7.0...loper-koran-v0.8.0) (2026-10-24)
+
+
+### Fitur
+
+* redesain UI hasil, koran, jeda, tutorial, banner, dan HUD (run UI-2) ([#66](https://github.com/ronggur/loper-koran/issues/66)) ([92255fa](https://github.com/ronggur/loper-koran/commit/92255fa4e25cb22de93f02cd3153d8dcaab4ffb7))
+
 ## [0.7.0](https://github.com/ronggur/loper-koran/compare/loper-koran-v0.6.0...loper-koran-v0.7.0) (2026-10-23)
 
 
