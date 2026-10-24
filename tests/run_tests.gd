@@ -160,6 +160,9 @@ func _initialize() -> void:
 	await scene_bantu.jalankan()
 	var scene_rute: TesRuteScene = TesRuteScene.new(check, _judul, self)
 	await scene_rute.jalankan()
+	# Run garis-finish-portal bagian B: fase keluar, laju minimum, geometri keluar viewport, portal, siap_tampil (murni; satu bagian memakai jalan_uji untuk kamera).
+	var garis_finish: TesGarisFinish = TesGarisFinish.new(check, _judul, self)
+	await garis_finish.jalankan()
 	var kotak_surat: TesKotakSurat = TesKotakSurat.new(check, _judul, self)
 	await kotak_surat.jalankan()
 	# Run fase5a-pasang-aset-gelombang1: ubin tanah enam kolom (pemetaan, scene, tanpa celah dan pita, referensi Python).
