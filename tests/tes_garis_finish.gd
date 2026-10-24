@@ -170,6 +170,12 @@ func _test_gerak_lurus_bike_motion() -> void:
 	kosong.kecepatan_ud = 0.0
 	check(AkhirRute.langkah_keluar(kosong, DT).kecepatan_awal_ud == 3.0, "kecepatan awal langkah dari laju 0 = 3,0")
 	check(kosong.kecepatan_ud == 0.0, "langkah_keluar tidak mengubah keadaan masukan")
+	# Jatuh sesudah tabrakan (beku_detik): sepeda diam selama beku, laju minimum tidak memaksa sepeda bergerak.
+	var jatuh: BikeMotion.Hasil = AkhirRute.langkah_keluar(BikeMotion.Keadaan.new(), 0.5, 0.5)
+	check(jatuh.maju_ubin == 0.0 and jatuh.keadaan.kecepatan_ud == 0.0, "beku_detik diteruskan: selama jatuh sepeda diam (jarak 0, laju 0)")
+	var bangun: BikeMotion.Hasil = AkhirRute.langkah_keluar(BikeMotion.Keadaan.new(), 1.0, 0.5)
+	check(is_equal_approx(bangun.maju_ubin, 0.375) and is_equal_approx(bangun.keadaan.kecepatan_ud, 1.5), "sisa langkah 0,5 detik sesudah bangun: akselerasi dari 0 (1,5 u/d, 0,375 ubin); laju minimum baru berlaku di langkah berikutnya")
+	check(AkhirRute.langkah_keluar(bangun.keadaan, DT).kecepatan_awal_ud == 3.0, "langkah berikutnya: laju dijaga kembali ke 3,0")
 
 
 func _jarak_satu_detik(v0: float, e: EfekKondisi) -> float:
@@ -253,6 +259,7 @@ func _test_geometri_keluar_tabel() -> void:
 	check(is_equal_approx(AkhirRute.sisa_ubin_keluar(Vector2(-100.0, 200.0), Vector2(640.0, 360.0)), 13.0), "pijak di luar sisi barat viewport: tetap dihitung ke tepi atas, (200+8)/16 = 13,0 ubin")
 	check(is_inf(AkhirRute.sisa_ubin_keluar(Vector2(NAN, 100.0), Vector2(640.0, 360.0))) and is_inf(AkhirRute.sisa_ubin_keluar(Vector2(100.0, INF), Vector2(640.0, 360.0))), "pijak NaN atau tak hingga: sisa tak hingga")
 	check(is_inf(AkhirRute.sisa_ubin_keluar(Vector2(100.0, 100.0), Vector2(0.0, 360.0))) and is_inf(AkhirRute.sisa_ubin_keluar(Vector2(100.0, 100.0), Vector2(640.0, -1.0))) and is_inf(AkhirRute.sisa_ubin_keluar(Vector2(100.0, 100.0), Vector2(NAN, 360.0))), "ukuran tidak positif atau NaN: sisa tak hingga")
+	check(is_inf(AkhirRute.sisa_ubin_keluar(Vector2(100.0, 100.0), Vector2(640.0, 0.0))), "tinggi viewport 0: sisa tak hingga")
 	check(not AkhirRute.sudah_keluar(INF) and not AkhirRute.sudah_keluar(NAN) and AkhirRute.sudah_keluar(0.0) and AkhirRute.sudah_keluar(-0.5), "sudah_keluar: 0 dan negatif ya; tak hingga dan NaN tidak")
 	check(AkhirRute.hampir_keluar(6.0) and AkhirRute.hampir_keluar(0.0) and not AkhirRute.hampir_keluar(6.0001) and not AkhirRute.hampir_keluar(INF) and not AkhirRute.hampir_keluar(NAN), "hampir_keluar: <= 6,0 ubin (inklusif); 6,0001, tak hingga, NaN tidak")
 	check(Config.RUTE_KELUAR_HAMPIR_UBIN == 6.0, "ambang hampir keluar = 6,0 ubin")

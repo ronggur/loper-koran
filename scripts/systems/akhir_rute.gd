@@ -140,7 +140,7 @@ static func hampir_keluar(sisa_ubin: float) -> bool:
 
 ## Fase dan sinyal sesudah memeriksa posisi layar `posisi_layar_pijak_px` di viewport `ukuran`, dari fase `fase_lama` dan `hampir_lama` (sinyal sebelumnya).
 ## `selesai` = garis akhir sudah tercapai (`Status.selesai`). Fase hanya maju; sebelum `selesai` tidak ada fase yang naik dan tidak ada sinyal. Melompat langsung
-## ke SUDAH_KELUAR (langkah besar) tetap memberi `baru_hampir_keluar` pada pemeriksaan yang sama, supaya banner tidak terlewat.
+## ke SUDAH_KELUAR (langkah besar) tetap memberi `baru_hampir_keluar` pada pemeriksaan yang sama (sisa 0 selalu <= ambang hampir), supaya banner tidak terlewat.
 static func periksa_keluar(fase_lama: Fase, hampir_lama: bool, selesai: bool, posisi_layar_pijak_px: Vector2, ukuran: Vector2) -> Keluar:
 	var k: Keluar = Keluar.new()
 	k.sisa_ubin = sisa_ubin_keluar(posisi_layar_pijak_px, ukuran)
@@ -151,7 +151,7 @@ static func periksa_keluar(fase_lama: Fase, hampir_lama: bool, selesai: bool, po
 			k.fase = Fase.MELAJU_KELUAR
 		if sudah_keluar(k.sisa_ubin):
 			k.fase = Fase.SUDAH_KELUAR
-		if not k.hampir_keluar and (hampir_keluar(k.sisa_ubin) or k.fase == Fase.SUDAH_KELUAR):
+		if not k.hampir_keluar and hampir_keluar(k.sisa_ubin):
 			k.hampir_keluar = true
 			k.baru_hampir_keluar = true
 	k.baru_keluar = k.fase == Fase.SUDAH_KELUAR and fase_lama != Fase.SUDAH_KELUAR
@@ -181,10 +181,10 @@ static func jarak_ke_garis(jarak_ubin: float, panjang_ubin: float) -> float:
 
 
 ## True bila portal terbuka: sepeda paling jauh `RUTE_PORTAL_BUKA_JARAK_UBIN` dari garis akhir (inklusif), dan tetap terbuka sesudah melewatinya
-## (jarak ke garis nol atau negatif). Masukan tidak hingga atau panjang tidak positif = tertutup.
+## (jarak ke garis nol atau negatif). Masukan tidak hingga atau panjang tidak positif = NaN dari `jarak_ke_garis`, dan perbandingan dengan NaN selalu false = tertutup.
 static func portal_terbuka(jarak_ubin: float, panjang_ubin: float) -> bool:
 	var sisa: float = jarak_ke_garis(jarak_ubin, panjang_ubin)
-	return not is_nan(sisa) and sisa <= Config.RUTE_PORTAL_BUKA_JARAK_UBIN
+	return sisa <= Config.RUTE_PORTAL_BUKA_JARAK_UBIN
 
 
 ## Frame sprite `prop_portal_satpam` untuk jarak sepeda: 0 tertutup, 1 terbuka (`portal_terbuka`).
