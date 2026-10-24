@@ -1,7 +1,7 @@
 # Loop Log — 20261024-ui2-semua-layar
 Scope: Run UI-2 — redesain UI langkah 3-6 (hasil, koran, jeda, tutorial, banner, tombol jeda HUD) dalam satu PR  ·  Branch: feat/ui2-semua-layar (dari main d16b3bb, 0.7.0)  ·  Mulai: 2026-10-24  ·  Godot: 4.7.2.stable.official.ed1daf0bf
 
-## Status: IN_PROGRESS   (iterasi 1/2; bagian A dan B selesai)
+## Status: IN_PROGRESS   (iterasi 1/2; bagian A, B, dan C selesai)
 
 ## Lingkungan (orchestrator, awal run)
 - Basis: `main` = `origin/main` = `d16b3bb` (rilis 0.7.0; memuat PR #64 UI-1). Branch dibuat dari sana.
@@ -199,6 +199,112 @@ Satu perubahan per mutan, runner kecil (`TesTampilKoran` + `TesKomponenUi` + `Te
 - sha256 save asli sesudah semua tes dan probe: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` (tidak berubah).
 
 ## Bagian C — Jeda, tutorial, banner, HUD
+
+Commit kode: `a99094e` (C1 dan C2 dalam satu commit karena `Config`, `GayaHud`, dan `theme.tres` dipakai bersama). Probe baru `tests/probe_jeda_hud_jendela.gd`, perbandingan piksel `tools/bandingkan_tangkapan_hud.py`, kontras `tools/ukur_kontras_tangkapan.py --jenis jeda|tutorial|banner|hud_c`.
+
+### C1 — Jeda, tutorial, banner (selesai)
+- Kode baru: `scripts/systems/tampil_jeda.gd` (`TampilJeda`, murni: warna lapisan 72 %, kunci teks dan bingkai sakelar menurut keadaan, glif, dua pola kenop 22x12 `KENOP_MATI` dan `KENOP_NYALA` dari huruf per piksel, `perintah_kenop`), `scripts/systems/tampil_tutorial.gd` (`TampilTutorial`: titik langkah terisi sampai langkah sekarang, glif per langkah, `perintah_titik`), `scripts/ui/kenop_sakelar.gd` (`KenopSakelar`), `scripts/ui/titik_langkah.gd` (`TitikLangkah`). `GayaHud`: `panel_jeda()`, `bingkai_tombol()` (publik, untuk gambar tombol jeda HUD), `tombol_sakelar(tombol, nyala, pad_tambah)` dan `panel_hud(pad_x, pad_y)` dengan parameter baru yang bawaannya sama dengan sebelumnya (pemanggil lama tidak berubah); enam glif baru di `_TEKSTUR`.
+- Layar jeda (`layar_jeda.tscn` dan `.gd` ditulis ulang, anchor + Container): lapisan `HUD_PANEL` alpha 0,72 (konstanta `JEDA_LAPISAN_ALPHA`; token `HUD_PANEL` alpha 0,84 tidak diubah), panel layar 232 lebar di tengah (CenterContainer), judul "JEDA" Lilita 24 dengan glif jeda, Lanjut peran utama (glif lanjut gelap di ujung kanan, `Button.icon` seperti "Hari berikutnya"), garis pemisah, dua sakelar peran sakelar (bingkai biasa saat mati, bingkai ACCENT saat nyala, teks `JEDA_KIDAL_*` / `HUD_BANTU_*` kata "mati"/"nyala" tetap, dan kenop 22x12: mati = kenop berongga di kiri dan kotak kosong di kanan, nyala = kenop terisi di kanan di atas ACCENT dan garis tegak di kiri: terbaca tanpa warna). Sinyal `lanjut_diminta`, `kidal_diubah`, `bantu_diubah`, `atur_kidal`, `atur_bantu`, `tampilkan`, `tampil`, `rect_*`, `sakelar_*` TETAP (nama simpul `JudulJeda`, `TombolLanjut`, `SakelarKidal`, `SakelarBantu` tetap); baru: `rect_panel`, `rect_judul`, `rect_kenop_*`, `kenop_*`, `tombol_lanjut`. Font: tombol `TombolPeran` 12 dan judul 24 (V-8).
+- Tutorial (`tutorial.tscn`, `tutorial_controller.gd`): panel HUD 176 lebar (dulu 150) di (26, 88), label langkah `ACCENT` + titik langkah, glif aksen per langkah (naik, turun, panah, seru; kanvas hanya menunjukkan langkah 1 dengan glif naik) dan kalimat 10 px (`HudAngka`, berbungkus kata), Lewati peran tenang 64x42 di (66, 4). Tetap tidak memblokir input (hanya Lewati yang menerima sentuhan).
+- Banner (`panel_akhir_rute.tscn`, `.gd`): panel HUD dengan glif di depan judul (centang `OK` untuk Rute selesai, tanda seru `WARN` untuk galat muat: di kanvas hanya Rute selesai ada glif), tombol Main lagi (hanya galat) peran utama.
+- Gelembung petunjuk dari pelanggan: label `MISI_PETUNJUK_LABEL` = "PELANGGAN:" (`TEXT_2`, HudLabel 8) di kiri kalimat; lebar baris tetap 170, jadi gelembung tetap 184 lebar dan 33 tinggi (sama dengan sebelumnya). **Itu satu-satunya perubahan di HUD misi.** Kunci baru kedua dan TERAKHIR V-3 (kunci pertama `KORAN_IKLAN_BARIS`, bagian B); kalimat petunjuk tetap dari konten.
+- **Banner hasil misi di HUD TIDAK diubah (keputusan Dev, perlu konfirmasi):** SPEC AC-5 menyebut "banner misi bila ada papan" memakai panel/tombol baru dan kanvas Banner.dc.html menambah ikon kucing 24 dan ikon koin 14, tetapi V-9 dan AC-6 mewajibkan banner (dan petunjuk) piksel-identik, dan ikon menambah lebar banner ke sekitar 205 px sehingga bertabrakan dengan panel baris 2 kolom kanan di 640. Dipilih V-9: banner tetap teks Lilita 16 pada panel HUD yang sama (dibuktikan piksel-identik di bawah); panel HUD itu memang sudah panel baru komponen HUD. Bila ikon kanvas diinginkan, perlu keputusan menggeser panel baris 2 atau banner.
+- Aset (V-4): `komponen.py --salin` lewat daftar tunggal `pasang.py` memasang enam glif baru (`ui_glif_{jeda_terang,lanjut_gelap,naik_aksen,turun_aksen,panah_aksen,seru_aksen}`, total redesain terpasang 62: hanya yang dipakai); `.import` Lossless, tanpa mipmap, bukan VRAM. Kenop sakelar dari kode (tanpa PNG). `panel_hud` redesain TIDAK dipasang: panel HUD tetap `ui_panel_hud_9slice.png` yang ada (sama dengan `.pnl.hud`).
+- Penyimpangan dari kanvas (usulan, bisa ditolak): (1) panel jeda di tengah layar secara tegak (CenterContainer), bukan di y 50, dan ruang cadangan 42 piksel "Pengaturan dan Keluar ke menu nanti" tidak dikosongkan (hanya anotasi papan); (2) glif Lanjut menempel di tepi kanan tombol (`Button.icon`, sama dengan "Hari berikutnya"); (3) kenop tidak ikut turun 2 px saat tombol sakelar ditekan (teks ikut turun); (4) jarak kenop dari tepi tombol 12 (tepi 4 + padding 4 + tambahan 4 seperti kanvas `padding-left: 8`); (5) "JEDA" tanpa letter-spacing .04em; (6) tutorial: glif tidak hanya naik (lihat atas) dan titik langkah terisi sampai langkah sekarang (kanvas hanya menunjukkan langkah 1); (7) banner galat muat memakai tanda seru WARN dan Main lagi peran utama (kanvas hanya menampilkan Rute selesai, Kucing ketemu, Kucingnya lolos, gelembung); (8) HUD misi banner lihat atas.
+- Kontras (`tools/ukur_kontras_tangkapan.py`, dari tangkapan nyata, empat ukuran): jeda terburuk **10,14:1** ("Lanjut" gelap di atas ACCENT), garis Lanjut (kontrol aktif) **12,56:1** (>= 3:1), garis sakelar 8,53:1; tutorial dan banner: 0 teks < 7:1, banner Main lagi >= 3:1.
+
+Tes lama yang diubah di C1 (alasan):
+| Tes | Perubahan | Alasan |
+|---|---|---|
+| `tests/tes_jeda_scene.gd` `_test_tombol_dan_layar` | cek lapisan: `latar.color == Palette.HUD_PANEL` -> `TampilJeda.warna_lapisan()` (alpha 0,72) dan token HUD_PANEL tetap alpha 0,84; cek Lanjut: `StyleBoxFlat` garis TEXT -> `StyleBoxTexture` `btn_utama` dengan teks `UI_BG` | V-2 dan tombol peran utama |
+| `tests/tes_export.gd` | enam glif baru di `UI1_PNG_DIPASANG`; skrip dan scene jeda/tutorial/banner di `UI1_SKRIP_IKUT` | aset dan skrip bagian C ikut paket |
+| `tools/tests_cek/uji_ui_redesain.py` | bagian baru: enam glif terdaftar, kenop dari kode (dua pola 22x12 = `Config.JEDA_KENOP_*`, tanpa PNG kenop) | AC-10 |
+
+### C2 — HUD (V-9, selesai)
+- Kode baru: `scripts/systems/tampil_hud.gd` (`TampilHud`, murni: `warna_stamina` (FAIL di bawah 30), `posisi_tanda` (80 % dibulatkan ke bawah), `margin_bawah`, `koran_di_awal`, `nama_bingkai_jeda`, `posisi_glif_jeda`, `kunci_reputasi`, `reputasi_tampil`, `baris2_tampil`). `BarKecepatan` mendapat `tanda` dan `rect_tanda()`; `HudDasar` mendapat `rect_bar_*`, `rect_kolom_*`, `label_bawah`, `bar_kecepatan`, `bar_stamina`; `TombolJeda` digambar dari bingkai tombol biasa dan glif; `HudRute`: `GrupReputasi` di dalam `PanelKondisi`. `theme.tres`: type variation BARU `HudLabelBawah` (10) dan `HudAngkaBawah` (12) (`HudLabel`/`HudAngka` tidak diubah).
+- **H-1 panel bawah:** kecepatan dan stamina berdampingan dalam satu panel 9-slice 220 lebar dan 39 tinggi (dulu 170 x 59): kolom 111 dan 89, jarak 8, label 10 px KAPITAL di atas bar tinggi 9, angka "3.0 u/d" 12 px di kanan label kecepatan, `LELAH` di kanan label stamina; panel koran 115 lebar, sama tinggi 39 (isi tidak berubah selain huruf dan panel 9-slice). Posisi: panel kecepatan x 196 (dulu 210), koran x 424 (dulu 400), berakhir x 539 di 640: tersisa 2 px dari zona tap bel dengan inset kanan 11 (541) dan 3 px dari zona tap bel kidal dengan inset kiri 10; zona stick berakhir x 192. Kidal dicerminkan seperti sebelumnya. **Tanda 80 % TIDAK ada di kode sebelum run ini** (DESIGN_SPEC 3.5 hanya mencatatnya, `BarKecepatan` tidak menggambar apa pun): ditambahkan sebagai garis `WARN` 1 px setinggi bar di 80 % lebar isi (x 88 di bar 111). Catatan angka: ambang sprite ngebut 0,80 dari kekuatan stick (santai 3,0 = 0, ngebut 6,0 = 1) jatuh di 5,4 u/d, yaitu 90 % bar (bar = kecepatan / 6,0); tanda mengikuti 80 % DESIGN_SPEC/V-9 (perlu keputusan: 80 % atau 90 %).
+- **H-2 kolom kanan atas:** pilihan layout = **alternatif "berbagi panel kondisi"**, bukan menggabung ke panel koin. Ukur di 640: ruang baris 1 antara panel progres (berakhir x 450) dan tepi kanan (x 612) = 157 px (dengan jarak 5); panel koin + reputasi (7 + 14 + 3 + "1.250" 26 + 6 + 14 + 3 + "100" 19 + 7 = sekitar 99) + 5 + panel skor (>= 72, terukur 76) = sekitar 180 > 157. Hasil: baris 1 [koin][skor/combo] tidak berubah, baris 2 satu panel [ban rem rantai | bintang angka] 174 px (37) atau 181 px (100) dari 140 (tanpa reputasi), mulai x 431 di 640; baris 3 dihapus. Aturan tampil reputasi (hanya bila rute punya keadaan pelanggan) tetap.
+- **H-3:** tombol jeda berbentuk tombol biasa (bingkai 9-slice `btn_biasa`, ditekan `btn_biasa_tekan`, glif jeda 12 px di (6, 5) atau (6, 7)); gambar 24x24 di (26, 8) dan area sentuh 42x42 di (17, 4) tidak berubah.
+- **Bukti piksel-identik** (`tools/bandingkan_tangkapan_hud.py shots/baseline shots/iter1`, probe lama `probe_hud_rute`, `probe_misi`, `probe_reputasi` dijalankan ulang di 1920x1080 dan 2340x1080 dengan langkah tetap): **30 tangkapan per ukuran (hud_awal, radar, bantu_abu, progres_campuran, tenggat_hampir, tenggat_lewat, kidal; seluruh misi_* termasuk kartu, kucing di tiap titik, penanda tepi layar, banner selesai dan gagal; reputasi_hud_* termasuk inset) identik piksel demi piksel di luar pengecualian: 0 berbeda di kedua ukuran.** Pengecualian (tertulis di docstring alat): panel bawah (pita 90..540 x 80 dari bawah), kolom kanan atas (x lebar-225..lebar-20, y 0..130), tombol jeda (14..80 x 2..72), tutorial di `misi_*`, gelembung petunjuk di `misi_petunjuk` (label baru), dan derau animasi di sekitar pemain (x 150..270, y 230..345: dua jalan probe yang sama berbeda 36 sampai 45 piksel di sana, debu roda dan bingkai kayuh). Radar kiri dan kanan, panel progres dan tenggat, kartu misi, banner selesai dan gagal, tombol bel, penanda kucing, dan umpan melayang tidak dikecualikan. Dua tangkapan pertama sebuah jalan probe (`misi_awal` 2340x1080, sempat berbeda) tidak deterministik antar jalan; diulang dan identik.
+- Zona swipe: panel koran dan panel kecepatan tidak menangkap sentuhan (dites sentuhan sungguhan di 640, 667, 780, 800: jari di tengah panel menjadi swipe atau stick menurut zona, `TesLayarCScene._test_sentuhan_panel_bawah`; tes lama `_test_tata_letak_kondisi` untuk panel baris 2 tetap hijau).
+- Konsekuensi: **banner misi 24 huruf (batas data `MISI_BANNER_PANJANG_MAKS`, sekitar 242 px) akan menyentuh panel baris 2 di 640 saat reputasi tampil** (panel mulai x 431; banner terpanjang yang ada, 173 px, tidak). Tes lama menjaga lebar banner 240; diubah ke 176 (lihat tabel). Opsi bila itu masalah: menurunkan baris 2, memotong banner, atau memindahkan reputasi; perlu keputusan.
+
+Tes lama yang diubah di C2 (alasan):
+| Tes | Perubahan | Alasan |
+|---|---|---|
+| `tests/tes_hud_rute_scene.gd` `_test_sakelar_layar_jeda` | panel kecepatan mulai x 210 -> `HUD_PANEL_KECEPATAN_GESER_PX` (196) di dua cek | H-1 |
+| `tests/tes_input_scene.gd` (tiga cek panel kecepatan, satu cek font) | x 210 dan lebar 170 -> x 196 dan lebar 220 (tangan kanan dan kidal); ukuran font panel bawah: angka 10 dan label 8 -> angka 12 dan label 10 (type variation baru) | H-1 |
+| `tests/tes_gerak_scene.gd` | "bar stamina di bawah bar kecepatan, selebar, tinggi 7" -> bar berdampingan, sejajar tegak, tinggi 9 | H-1 |
+| `tests/tes_reputasi_scene.gd` `_pelanggaran_hud`, `_test_hud_reputasi`, `_test_hud_tanpa_keadaan` | panel reputasi baris 3 (rata kanan dengan panel kondisi dan 5 px di bawahnya, simpul `PanelReputasi` dan `IsiReputasi`) -> penanda di dalam panel baris 2 (`GrupReputasi`), tidak ada panel reputasi sendiri; tumpang tindih diperiksa untuk panel baris 2 utuh; lebar banner asumsi 240 -> 176 (alasan di atas) | H-2 |
+| `tests/probe_reputasi_jendela.gd` `_cek_hud` dan bagian inset | idem tes di atas | H-2 |
+Tes baru: `tests/tes_tampil_layar_c.gd` (murni: lapisan, kunci, kenop (pola = perintah gambar), titik dan glif tutorial, stamina di ambang, tanda 80 %, margin dan urutan panel bawah, tombol jeda, baris 2) dan `tests/tes_layar_c_scene.gd` (scene: jeda di empat lebar, sakelar, tutorial per langkah, banner, HUD 4 lebar x kanan/kidal x inset x keadaan terpadat, isi HUD, gelembung petunjuk, sentuhan), terdaftar di `run_tests.gd`.
+
+### C3 — Probe dan ukur
+- Probe `tests/probe_jeda_hud_jendela.gd` (baru): `jeda_*` (4), `tutorial_*` (5), `banner_*` (5), `hud_c_*` (22 keadaan: awal, kecepatan penuh, stamina batas atas, stamina rendah, lelah, koran sedikit dan habis, kondisi AUS, PERLU_BENGKEL dengan "!", peringatan, reputasi 37 dan 100, skor besar, combo putus, terpadat, terpadat dengan misi dan petunjuk, kidal, inset, kidal + inset) di 1920x1080, 2340x1080, 2400x1080, 1600x720: **0 keadaan tidak sesuai di keempat ukuran** (teks terpotong, di luar layar atau zona aman, tumpang tindih, kolom bawah di zona stick, tinggi panel bawah > 40, bar tidak berdampingan, tombol < 42x84 kecuali Lewati 64x42 dan area sentuh jeda 42x42, tanda 80 %). Probe lama `probe_hud_rute`, `probe_misi`, `probe_reputasi` (1920x1080 dan 2340x1080): 0 keadaan tidak sesuai.
+- Tangkapan DILIHAT (Read): jeda mati, nyala (1920x1080) dan nyala 1600x720; tutorial langkah 1 (1920x1080) dan 4 (2400x1080); banner Rute selesai dan galat muat; HUD awal, terpadat dengan misi dan petunjuk (1920x1080), terpadat kidal + inset (2340x1080), hud_c_awal. Penilaian: kecepatan dan stamina kini terbaca sekilas sebagai dua kolom dengan label di atas bar dan angka di samping label; tanda 80 % terlihat sebagai garis oranye di bar kecepatan; kolom kanan atas dua baris tidak penuh dan reputasi terbaca di ujung panel kondisi; panel bawah turun dari 59 ke 39 px sehingga lebih banyak jalan terlihat. Catatan visual: glif jeda 12 px di samping judul "JEDA" tampak kecil (sama dengan kanvas); gelembung petunjuk dua baris (label + kalimat bungkus) menempati ruang yang sama dengan sebelumnya.
+- Kontras (`--jenis jeda|tutorial|banner|hud_c`, empat ukuran): semua teks >= 7:1 kecuali kata status berwarna token `FAIL` di HUD (`LELAH`, `HABIS`, `PUTUS`): **3,7 sampai 4,8:1 di atas panel HUD, PRA-ADA** (warna dan panel tidak diubah run ini; baseline sama), dilaporkan oleh alat sebagai "PRA-ADA" dan tidak menggagalkan. Perlu keputusan: ganti warna kata status HUD ke `WARN` atau tetap.
+
+### Mutan nyata bagian C (41 dari 41 tertangkap; 1 setara)
+Satu perubahan per mutan, runner kecil (`TesTampilLayarC` + `TesLayarCScene` + `TesJedaScene` + `TesHudRuteScene` + `TesReputasiScene` + `TesTataLetak` + `TesKomponenUi` + `TesGerakScene` + `TesInputScene`, sekitar 12 detik), `git checkout` sesudah tiap mutan, kode di-COMMIT lebih dulu (`a99094e`). Putaran pertama: 40 tertangkap, 1 lolos (C33), 1 setara (C04). C33 ditutup tes (`TombolJeda.bingkai()` dan `glif()` dites; commit penutup) dan diulang: tertangkap.
+| Mutan | Perubahan | Tertangkap oleh |
+|---|---|---|
+| C01 | `JEDA_LAPISAN_ALPHA` 0,72 -> 0,84 | "lapisan jeda ... alpha 0,72 (V-2)" |
+| C02 | kunci teks kidal tertukar | kunci teks kidal mati dan nyala |
+| C03 | bingkai sakelar nyala selalu bingkai biasa | bingkai sakelar mati/nyala |
+| C04 | rentang kenop `.` ikut digambar | SETARA: kedua pola kenop tidak memuat `.` (tanpa piksel transparan), jadi tidak ada beda terlihat |
+| C05 | satu piksel garis tegak kenop nyala diubah | pola kenop nyala 22x12 |
+| C06 | warna huruf `a` kenop = TEXT | warna huruf kenop dari Palette |
+| C07 | titik langkah `<=` jadi `<` | langkah 1 dari 4: satu titik terisi |
+| C08 | glif langkah melambat = naik | glif per langkah |
+| C09 | cincin titik terisi 5x5 (bukan 6x6) | titik terisi: cincin gelap 1 px |
+| C10 | lebar titik memakai `total` jarak (bukan `total - 1`) | lebar empat titik 22 px |
+| C11 | stamina FAIL `<` jadi `<=` | stamina 30 ke atas: ACCENT |
+| C12 | `HUD_STAMINA_AMBANG_RENDAH` 30 -> 35 | stamina 30 ke atas: ACCENT |
+| C13 | tanda 80 % `floor` jadi `ceil` | tanda dibulatkan ke bawah |
+| C14 | `HUD_BAR_TANDA_PECAHAN` 0,8 -> 0,9 | ambang 30, tanda 0,8, bar 9 tinggi |
+| C15 | margin panel bawah kanan/kidal tertukar | margin kiri/kanan |
+| C16 | koran di awal terbalik | koran di akhir (kanan) bawaan, di awal saat kidal |
+| C17 | geser glif jeda memakai `tambah.y` | glif 12x12 di (6, 5) dan (6, 7) |
+| C18 | reputasi 0 disembunyikan | kunci reputasi dijepit 0..100 |
+| C19 | baris 2 tampil `or` jadi `and` | panel baris 2 tampil bila ada kondisi atau reputasi |
+| C20 | `reputasi_tampil` `>= 0` jadi `> 0` | reputasi 0 tetap tampil |
+| C21 | bingkai jeda ditekan diabaikan | bingkai tombol biasa, ditekan = btn_biasa_tekan |
+| C22 | bar stamina selalu ACCENT | stamina 29,9: FAIL |
+| C23 | bar kecepatan tanpa tanda | bar kecepatan bertanda 0,8 |
+| C24 | `HUD_PANEL_KECEPATAN_GESER_PX` 196 -> 210 | margin kiri/kanan |
+| C25 | `HUD_BAR_TINGGI_PX` 9 -> 7 | ambang 30, tanda 0,8, bar 9 tinggi |
+| C26 | lapisan jeda alpha 0,84 (token) | lapisan HUD_PANEL alpha 0,72 menutup layar |
+| C27 | atur_kidal tidak mengubah kenop | ketuk kidal: kenop kidal nyala saja |
+| C28 | panel jeda tanpa lebar minimum | panel lebar 232 di tengah layar |
+| C29 | grup reputasi selalu tersembunyi | reputasi 100 di dalam panel baris 2 |
+| C30 | titik langkah tidak diatur | titik terisi (ACCENT) per langkah |
+| C31 | galat muat memakai centang | galat muat dengan tanda seru WARN |
+| C32 | `JEDA_PANEL_LEBAR_PX` 232 -> 240 | panel 232 lebar, kenop 22x12 |
+| C33 | `TombolJeda.bingkai(true)` mengembalikan bingkai normal | tombol jeda menggambar bingkai biasa (ditekan: bingkai tekan) (setelah ditambah) |
+| C34 | `HUD_PANEL_KORAN_GESER_PX` 424 -> 420 | geser 196, lebar 220, koran mulai 424 |
+| C35 | tanda bar tanpa garis luar 1 px | tanda 80 %: x 88 di bar 111 |
+| C36 | glif Lanjut di kiri | glif Lanjut gelap di ujung akhir |
+| C37 | kunci teks bantu tertukar | kunci teks bantu mati dan nyala |
+| C38 | label PELANGGAN: berwarna ACCENT | label di kiri kalimat ... label TEXT_2 |
+| C39 | `HUD_PANEL_BAWAH_PAD_X_PX` 6 -> 7 | lebar panel = 2 x pad + kolom + jarak + kolom |
+| C40 | `HUD_BAWAH_BARIS_TINGGI_PX` 15 -> 18 | panel kecepatan 220x39 dan koran 115x39 |
+| C41 | panel koran tidak pindah ke awal saat kidal | kidal dicerminkan |
+| C42 | `tampilkan_kondisi(null)` tetap menampilkan kondisi | tanpa kondisi dan tanpa reputasi: panel baris 2 tersembunyi |
+
+### Gerbang bagian C (2026-10-24, keluaran nyata)
+- `godot --headless --import`: 0 baris ERROR/WARNING. `godot --headless --path . --quit-after 2`: 0 baris ERROR/WARNING.
+- `run_tests.gd`: **28415 lolos, 0 gagal**; `tools/cek_keluaran_tes.py`: "lolos (28415 lolos, 0 gagal, 0 peringatan)" (akhir bagian B 25855; +2560 pemeriksaan: `TesTampilLayarC` dan `TesLayarCScene`).
+- 17 berkas `tools/tests_cek/uji_*.py`: exit 0 semua (termasuk `uji_ui_redesain.py` diperluas).
+- `godot --headless --path . --export-pack Android build/kring-uji.pck`: exit 0, 0 ERROR/WARNING; ada: enam glif baru, `tampil_jeda.gd`, `tampil_tutorial.gd`, `tampil_hud.gd`, `kenop_sakelar.gd`, `titik_langkah.gd`, `layar_jeda.tscn`, `tutorial.tscn`, `panel_akhir_rute.tscn`, `hud_rute.tscn`; tidak ada: `tests/`, probe dan tes bagian C, `ui_sepeda_besar`, `ui_panel_hud.png` (redesain), `ui_lencana32.png`, PNG kenop.
+- Probe jendela `probe_jeda_hud_jendela.gd` dan `probe_kondisi_jendela.gd` (1920x1080, 2340x1080, 2400x1080, 1600x720): 0 keadaan tidak sesuai. `probe_hud_rute`, `probe_misi`, `probe_reputasi` (1920x1080, 2340x1080): 0 keadaan tidak sesuai. `tools/bandingkan_tangkapan_hud.py`: 30 tangkapan per ukuran, 0 berbeda.
+- sha256 save asli sesudah semua tes dan probe: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` (tidak berubah).
+
+### Butuh keputusan (bagian C)
+1. Banner hasil misi HUD: ikon kanvas (kucing 24, koin 14) tidak dipasang demi V-9 piksel-identik dan lebar kolom kanan (lihat C1). 
+2. Tanda bar kecepatan: 80 % (DESIGN_SPEC/V-9, dipakai) atau 90 % (setara ambang sprite ngebut 5,4 u/d).
+3. Banner misi 24 huruf (batas data) akan menyentuh panel baris 2 di 640 bila reputasi tampil; opsi di C2.
+4. Kata status berwarna `FAIL` di HUD (`LELAH`, `HABIS`, `PUTUS`) 3,7 sampai 4,8:1 (PRA-ADA): ganti ke `WARN` atau terima.
+5. Panel jeda di tengah tegak (bukan y 50 kanvas) dan tanpa ruang cadangan 42.
 
 ## Bagian D — dokumen
 
