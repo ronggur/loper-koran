@@ -115,7 +115,7 @@ func _cek_jeda(layar: LayarJeda, keadaan: String) -> void:
 		print("TIDAK SESUAI [jeda %s]: teks Lanjut terpotong" % keadaan)
 		salah += 1
 	var margin_lanjut: int = GayaHud.margin_glif_tombol(lanjut)
-	if margin_lanjut != roundi((lanjut.get_theme_stylebox(&"normal") as StyleBox).content_margin_right) or margin_lanjut < Config.UI_TOMBOL_GLIF_MARGIN_MIN_PX or float(GayaHud.lebar_teks_tombol(lanjut) + lanjut.get_theme_constant(&"h_separation") + lanjut.icon.get_width() + margin_lanjut * 2) > lanjut.size.x + 0.01:
+	if margin_lanjut != roundi((lanjut.get_theme_stylebox(&"normal") as StyleBox).content_margin_right) + GayaHud.pad_kanan_glif(lanjut) or margin_lanjut < Config.UI_TOMBOL_GLIF_MARGIN_MIN_PX or float(GayaHud.lebar_teks_tombol(lanjut) + lanjut.get_theme_constant(&"h_separation") + lanjut.icon.get_width() + margin_lanjut * 2 - GayaHud.pad_kanan_glif(lanjut)) > lanjut.size.x + 0.01:
 		print("TIDAK SESUAI [jeda %s]: panah Lanjut margin %d tidak sama kiri-kanan, di bawah minimum, atau teks terpotong (R-1)" % [keadaan, margin_lanjut])
 		salah += 1
 	print("jeda [%s]: panel %s, lanjut %s, kidal %s (%s), bantu %s (%s), %d tidak sesuai" % [keadaan, panel, layar.rect_tombol_lanjut(), layar.rect_sakelar_kidal(), tr(layar.sakelar_kidal().text), layar.rect_sakelar_bantu(), tr(layar.sakelar_bantu().text), salah])

@@ -59,10 +59,11 @@ static func nama_tekstur_tombol(peran: Peran, keadaan: KeadaanTombol, nyala: boo
 	return "btn_tenang_tekan" if tekan else "btn_tenang"
 
 
-## Margin isi kiri dan kanan (sama) tombol berglif di ujung kanan (revisi UI pemilik R-1): grup teks + `jarak` + glif diletakkan di tengah tombol, jadi jarak tepi kiri tombol ke teks sama dengan jarak glif ke tepi kanan
-## tombol (`(lebar_tombol - lebar_teks - jarak - lebar_glif) / 2`, dibulatkan ke bawah). Tidak kurang dari `UI_TOMBOL_GLIF_MARGIN_MIN_PX` (dan tidak kurang dari tepi 9-slice); bila grup tidak muat, tombol membesar dan margin tetap minimum.
-static func margin_grup_glif(lebar_tombol: int, lebar_teks: int, lebar_glif: int, jarak: int) -> int:
-	var sisa: int = lebar_tombol - lebar_teks - jarak - lebar_glif
+## Margin terlihat (sama di kiri dan kanan) tombol berglif di ujung kanan (revisi UI pemilik R-1): grup teks + `jarak` + glif diletakkan di tengah tombol, jadi jarak tepi kiri tombol ke teks sama dengan jarak TINTA glif ke tepi kanan
+## tombol (`(lebar_tombol - lebar_teks - jarak - lebar_glif + pad_kanan_glif) / 2`, dibulatkan ke bawah; `pad_kanan_glif` = kolom kosong di kanan tinta glif di dalam kotak glifnya, jadi glif yang tintanya tidak penuh
+## tetap tampak sama jaraknya). Tidak kurang dari `UI_TOMBOL_GLIF_MARGIN_MIN_PX` (dan tidak kurang dari tepi 9-slice); bila grup tidak muat, tombol membesar dan margin tetap minimum.
+static func margin_grup_glif(lebar_tombol: int, lebar_teks: int, lebar_glif: int, jarak: int, pad_kanan_glif: int = 0) -> int:
+	var sisa: int = lebar_tombol - lebar_teks - jarak - lebar_glif + pad_kanan_glif
 	var tengah: int = sisa / 2
 	return maxi(tengah, maxi(Config.UI_TOMBOL_GLIF_MARGIN_MIN_PX, Config.UI_TOMBOL_SLICE_SAMPING_PX))
 

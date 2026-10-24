@@ -125,7 +125,7 @@ func _periksa(nama: String, layar: LayarBengkel) -> void:
 			salah += 1
 	var hari: Button = layar.tombol_hari_berikutnya()
 	var margin_hari: int = GayaHud.margin_glif_tombol(hari)
-	if margin_hari != roundi((hari.get_theme_stylebox(&"normal") as StyleBox).content_margin_right) or margin_hari < Config.UI_TOMBOL_GLIF_MARGIN_MIN_PX or float(GayaHud.lebar_teks_tombol(hari) + hari.get_theme_constant(&"h_separation") + hari.icon.get_width() + margin_hari * 2) > hari.size.x + 0.01:
+	if margin_hari != roundi((hari.get_theme_stylebox(&"normal") as StyleBox).content_margin_right) + GayaHud.pad_kanan_glif(hari) or margin_hari < Config.UI_TOMBOL_GLIF_MARGIN_MIN_PX or float(GayaHud.lebar_teks_tombol(hari) + hari.get_theme_constant(&"h_separation") + hari.icon.get_width() + margin_hari * 2 - GayaHud.pad_kanan_glif(hari)) > hari.size.x + 0.01:
 		print("TIDAK SESUAI [%s]: panah 'Hari berikutnya' margin %d tidak sama kiri-kanan, di bawah minimum, atau teks terpotong (R-1)" % [nama, margin_hari])
 		salah += 1
 	for simpul: Node in layar.find_children("*", "Label", true, false):

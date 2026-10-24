@@ -183,7 +183,7 @@ func _foto(keadaan: String) -> void:
 		salah.append("foto bukan 100x62: %s" % _koran.rect_foto().size)
 	var tb: Button = _koran.tombol_berangkat()
 	var mb: int = GayaHud.margin_glif_tombol(tb)
-	if mb != roundi((tb.get_theme_stylebox(&"normal") as StyleBox).content_margin_right) or mb < Config.UI_TOMBOL_GLIF_MARGIN_MIN_PX or float(GayaHud.lebar_teks_tombol(tb) + tb.get_theme_constant(&"h_separation") + tb.icon.get_width() + mb * 2) > tb.size.x + 0.01:
+	if mb != roundi((tb.get_theme_stylebox(&"normal") as StyleBox).content_margin_right) + GayaHud.pad_kanan_glif(tb) or mb < Config.UI_TOMBOL_GLIF_MARGIN_MIN_PX or float(GayaHud.lebar_teks_tombol(tb) + tb.get_theme_constant(&"h_separation") + tb.icon.get_width() + mb * 2 - GayaHud.pad_kanan_glif(tb)) > tb.size.x + 0.01:
 		salah.append("panah Berangkat: margin %d tidak sama kiri-kanan, di bawah minimum, atau teks terpotong (R-1)" % mb)
 	print("%s: %d label, %d kontrol, foto '%s', ikon '%s', iklan %s, notif %s, %s" % [keadaan, _label_tampil().size(), tombol.size(), _koran.nama_foto(), _koran.nama_ikon_utama(), _koran.iklan_tampil(), _koran.notifikasi_tampil(), "OK" if salah.is_empty() else "; ".join(salah)])
 	_gagal += salah.size()

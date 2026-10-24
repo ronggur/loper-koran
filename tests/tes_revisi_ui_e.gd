@@ -43,11 +43,11 @@ func jalankan() -> void:
 
 func _test_panah_murni() -> void:
 	_judul.call("R-1 margin grup glif (murni, oracle literal)")
-	# (lebar tombol, lebar teks, lebar glif, jarak) -> margin = floor((lebar - teks - jarak - glif) / 2), minimum 8.
-	var tabel: Array = [[140, 60, 12, 4, 32], [140, 95, 12, 4, 14], [216, 40, 12, 4, 80], [140, 109, 12, 4, 8], [140, 130, 12, 4, 8], [141, 95, 12, 4, 15]]
+	# (lebar tombol, lebar teks, lebar glif, jarak, pad kanan glif) -> margin = floor((lebar - teks - jarak - glif + pad) / 2), minimum 8.
+	var tabel: Array = [[140, 60, 12, 4, 0, 32], [140, 95, 12, 4, 0, 14], [216, 40, 12, 4, 0, 80], [140, 109, 12, 4, 0, 8], [140, 130, 12, 4, 0, 8], [141, 95, 12, 4, 0, 15], [140, 95, 12, 4, 2, 15], [216, 40, 12, 4, 4, 82]]
 	for baris: Array in tabel:
-		var dapat: int = KomponenUi.margin_grup_glif(baris[0], baris[1], baris[2], baris[3])
-		check(dapat == baris[4], "tombol %d, teks %d, glif %d, jarak %d -> margin %d (dapat %d)" % [baris[0], baris[1], baris[2], baris[3], baris[4], dapat])
+		var dapat: int = KomponenUi.margin_grup_glif(baris[0], baris[1], baris[2], baris[3], baris[4])
+		check(dapat == baris[5], "tombol %d, teks %d, glif %d, jarak %d, pad kanan %d -> margin %d (dapat %d)" % [baris[0], baris[1], baris[2], baris[3], baris[4], baris[5], dapat])
 	check(Config.UI_TOMBOL_GLIF_MARGIN_MIN_PX == 8, "margin minimum glif tombol 8 px (literal Config)")
 	var tidak_pernah_kurang: bool = true
 	for lebar: int in range(60, 260, 7):
@@ -74,16 +74,18 @@ func _buang(simpul: Node) -> void:
 func _periksa_tombol(nama: String, tombol: Button, jendela: Array) -> void:
 	var margin_kiri: float = (tombol.get_theme_stylebox(&"normal") as StyleBox).content_margin_left
 	var margin_kanan: float = (tombol.get_theme_stylebox(&"normal") as StyleBox).content_margin_right
+	var pad: int = GayaHud.pad_kanan_glif(tombol)
 	var teks: int = GayaHud.lebar_teks_tombol(tombol)
 	var glif: int = tombol.icon.get_width()
 	var jarak: int = tombol.get_theme_constant(&"h_separation")
 	var lebar: float = tombol.size.x
 	var ket: String = "%s @%dx%d" % [nama, jendela[0], jendela[1]]
 	check(tombol.icon != null and tombol.icon_alignment == HORIZONTAL_ALIGNMENT_RIGHT, "%s: glif ada di kanan teks" % ket)
-	check(margin_kiri == margin_kanan, "%s: margin isi kiri (%.0f) = kanan (%.0f)" % [ket, margin_kiri, margin_kanan])
+	check(margin_kiri == margin_kanan + float(pad), "%s: margin kiri (%.0f) = margin kanan (%.0f) + kolom kosong kanan tinta glif (%d): jarak teks ke tepi kiri = jarak tinta glif ke tepi kanan" % [ket, margin_kiri, margin_kanan, pad])
+	check(tombol.alignment == HORIZONTAL_ALIGNMENT_LEFT, "%s: teks rata kiri, mulai tepat di margin" % ket)
 	check(margin_kiri >= float(Config.UI_TOMBOL_GLIF_MARGIN_MIN_PX), "%s: margin %.0f >= minimum %d" % [ket, margin_kiri, Config.UI_TOMBOL_GLIF_MARGIN_MIN_PX])
-	check(float(teks + jarak + glif) + margin_kiri * 2.0 <= lebar + 0.01, "%s: teks %d + jarak %d + glif %d + 2 x margin %.0f muat di lebar %.0f (tidak terpotong)" % [ket, teks, jarak, glif, margin_kiri, lebar])
-	var sisa: float = lebar - float(teks + jarak + glif) - margin_kiri * 2.0
+	check(float(teks + jarak + glif) + margin_kiri + margin_kanan <= lebar + 0.01, "%s: teks %d + jarak %d + glif %d + margin %.0f + %.0f muat di lebar %.0f (tidak terpotong)" % [ket, teks, jarak, glif, margin_kiri, margin_kanan, lebar])
+	var sisa: float = lebar - float(teks + jarak + glif) - margin_kiri - margin_kanan
 	check(sisa >= -0.01 and sisa <= 1.01, "%s: grup memenuhi isi (sisa %.2f px hanya pembulatan), jadi jarak ke tepi kiri = jarak glif ke tepi kanan" % [ket, sisa])
 	check(tombol.get_minimum_size().x <= lebar + 0.01, "%s: tombol tidak lebih kecil dari isinya" % ket)
 
