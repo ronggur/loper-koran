@@ -30,6 +30,7 @@ func jalankan() -> void:
 	await _test_takik_menempel_tepi()
 	await _test_rekap_misi_posisi_dan_nama_unik()
 	await _test_kolom_sejajar_atau_naik()
+	await _test_bagian_tampil_dan_sembunyi()
 	await _test_tanpa_samping_digeser()
 	await _test_tombol_aksi()
 	for jendela: Array in JENDELA:
@@ -250,6 +251,7 @@ func _test_kolom_sejajar_atau_naik() -> void:
 	await _tampil(l)
 	var kolom: Rect2 = l.rect_panel_kanan()
 	check(is_equal_approx(kolom.position.y, 12.0) and kolom.end.y <= float(l.tata().batas_bawah_kolom) + 0.5 and not kolom.intersects(l.rect_tombol()) and not kolom.intersects(l.rect_panel()), "kasus terpadat: kolom naik ke y 12, berakhir y %.1f <= %d, tidak menutupi tombol atau struk" % [kolom.end.y, l.tata().batas_bawah_kolom])
+	check(is_equal_approx(l.rect_kartu()[0].position.y, 12.0), "kasus terpadat: kartu pertama tepat di y 12 (pengisi atas kolom tersembunyi, tanpa jarak sisa)")
 	check(l.teks_baru().size() == 3 and l.teks_pelanggan().size() == 4 and l.rect_kartu().size() == 3, "tiga kartu, empat baris pelanggan, tiga tingkat baru tampil")
 	l.isi(_angka(22, 355, 3), null, [] as Array[String], 120, _rep(10, 12, [1, 0, 0, 0]), _ringan_ringkas())
 	await _tampil(l)
@@ -265,6 +267,27 @@ func _test_kolom_sejajar_atau_naik() -> void:
 	await _tampil(l6)
 	check(is_equal_approx(l6.rect_panel_kanan().size.x, 236.0) and is_equal_approx(l6.rect_panel().size.x, 370.0), "lebar 640: kolom 236 dan struk 370")
 	_buang(l6)
+
+
+func _test_bagian_tampil_dan_sembunyi() -> void:
+	_judul.call("Hasil (struk): kolom samping tampil bila hanya reputasi atau hanya milestone; kartu pelanggan tersembunyi bila semua nol; baris terbuang dan kondisi tersembunyi bila tidak ada; lencana baru menurut tingkat (AC-2)")
+	var l: LayarHasil = await _layar(Vector2i(1920, 1080))
+	l.isi(_angka(22, 355), null, [] as Array[String], 120, null, _ringan_ringkas())
+	await _tampil(l)
+	check(l.kanan_tampil() and l.teks_reputasi() == "" and l.teks_target() != "" and l.rect_kartu().size() == 1, "hanya milestone: kolom tampil, tanpa kartu reputasi, kartu target ada (%d kartu)" % l.rect_kartu().size())
+	l.isi(_angka(22, 355), null, [] as Array[String], 120, _rep(10, 12, [1, 0, 0, 0]), null)
+	await _tampil(l)
+	check(l.kanan_tampil() and l.teks_reputasi() == "12 (+2)" and l.teks_target() == "" and l.teks_baru().is_empty() and l.rect_kartu().size() == 2, "hanya reputasi: kolom tampil, tanpa target dan tingkat baru, kartu reputasi dan pelanggan (%d kartu)" % l.rect_kartu().size())
+	l.isi(_angka(22, 355), null, [] as Array[String], 120, _rep(10, 12, [0, 0, 0, 0]), _ringan_ringkas())
+	await _tampil(l)
+	check(l.teks_pelanggan().is_empty() and l.rect_kartu().size() == 2, "semua jumlah pelanggan nol: kartu pelanggan tersembunyi (reputasi dan target saja)")
+	check(not l.kondisi_tampil() and l.rect_kondisi().is_empty() and l.teks_potongan().is_empty() and not l.teks_tampil().has("Koran terbuang") and not l.teks_tampil().has("Koin bersih"), "tanpa kondisi dan tanpa koran terbuang: blok kondisi dan baris terbuang/bersih tersembunyi")
+	check(l.tekstur_baru() == [LayarHasil.LENCANA_BARU[0]], "koin 700 -> 1080 melewati perunggu: satu lencana baru berindeks 0 (24 px)")
+	var perak: MilestoneTracker.Ringkasan = MilestoneTracker.ringkas(_ms(0, 0, 0, 0), _ms(0, 6000, 0, 0))
+	l.isi(_angka(22, 355), null, [] as Array[String], 120, _rep(10, 12, [0, 0, 0, 0]), perak)
+	await _tampil(l)
+	check(l.tekstur_baru() == [LayarHasil.LENCANA_BARU[1]] and l.teks_baru() == ["Baru: Koin terkumpul · Perak"], "koin 0 -> 6000 melewati perak: lencana baru perak (indeks 1)")
+	_buang(l)
 
 
 func _test_tanpa_samping_digeser() -> void:

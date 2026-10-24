@@ -212,7 +212,7 @@ func _hasil_dari_rute() -> void:
 	await _tunggu(2)
 
 
-## Layar hasil kasus terpadat dengan inset aman tiruan: panel dan tombol tetap di dalam zona aman (layar hasil dipusatkan, jadi harus muat di layar dikurangi inset).
+## Layar hasil kasus terpadat dengan inset aman tiruan: struk, kolom, dan tombol tetap di dalam zona aman.
 func _hasil_inset() -> void:
 	var misi: DataMisi = PemuatMisi.muat_folder().cari("p1_kucing")
 	var layar: LayarHasil = (load(BERKAS_HASIL) as PackedScene).instantiate() as LayarHasil
@@ -221,6 +221,12 @@ func _hasil_inset() -> void:
 	var angka: HasilRute.Angka = _angka(2, 150, 25, true)
 	angka.misi_hasil = "selesai"
 	angka.koin_misi = 75
+	var inset: ZonaAman.Inset = ZonaAman.Inset.new()
+	inset.awal_x = 20
+	inset.atas = 16
+	inset.akhir_x = 24
+	inset.bawah = 18
+	layar.atur_inset(inset)
 	layar.atur_mode_hari(true)
 	layar.isi(angka, misi, ["ban", "rem", "rantai"] as Array[String], 10, _rep(55, 53, [4, 3, 2, 1]), MilestoneTracker.ringkas(_ms_state(2, 990, 0, 0, 0), _ms_state(10, 5100, 1, 4, 0)))
 	layar.tampilkan(true)
@@ -292,23 +298,22 @@ func _cek_hud(keadaan: String) -> void:
 	_gagal += salah
 
 
-## Panel hasil dan isinya di dalam layar dikurangi `inset` (utama, atas, samping, bawah), tombol >= 42 px dan terlihat penuh, label dan isi kolom samping di dalam panel dan tidak menumpuk tombol atau satu sama lain.
+## Struk hasil, kolom samping, dan tombol di dalam layar dikurangi `inset` (awal, atas, akhir, bawah) dan tidak bertumpuk; tombol >= 42 px dan terlihat penuh; label di dalam struk, isi kolom samping di dalam kolom, tidak menumpuk tombol
+## (run ui2-semua-layar: struk, kolom, dan tombol terpisah; pemeriksaan penuh ada di `probe_hasil_jendela.gd`).
 func _cek_hasil(keadaan: String, hasil: LayarHasil, inset: Vector4) -> void:
 	var layar: Rect2 = Rect2(Vector2(inset.x, inset.y), root.get_visible_rect().size - Vector2(inset.x + inset.z, inset.y + inset.w))
 	var salah: int = 0
 	var panel: Rect2 = hasil.rect_panel()
 	var tombol: Rect2 = hasil.rect_tombol()
-	if not layar.encloses(panel) or not layar.encloses(tombol):
-		print("TIDAK SESUAI [%s]: panel hasil %s atau tombol %s di luar zona aman %s" % [keadaan, panel, tombol, layar])
+	if not layar.encloses(panel) or not layar.encloses(tombol) or (hasil.kanan_tampil() and not layar.encloses(hasil.rect_panel_kanan())):
+		print("TIDAK SESUAI [%s]: struk %s, tombol %s, atau kolom samping di luar zona aman %s" % [keadaan, panel, tombol, layar])
 		salah += 1
-	if tombol.size.y < float(Config.HUD_TOMBOL_TINGGI_PX) or not panel.encloses(tombol):
-		print("TIDAK SESUAI [%s]: tombol %s kurang dari 42 px atau keluar panel" % [keadaan, tombol])
+	if tombol.size.y < float(Config.HUD_TOMBOL_TINGGI_PX) or panel.intersects(tombol) or (hasil.kanan_tampil() and hasil.rect_panel_kanan().intersects(tombol)):
+		print("TIDAK SESUAI [%s]: tombol %s kurang dari 42 px atau menutupi struk atau kolom samping" % [keadaan, tombol])
 		salah += 1
-	var semua: Array[Rect2] = hasil.rect_label()
-	semua.append_array(hasil.rect_isi_kanan())
-	for r: Rect2 in semua:
+	for r: Rect2 in hasil.rect_label():
 		if not panel.encloses(r):
-			print("TIDAK SESUAI [%s]: isi %s keluar dari panel %s" % [keadaan, r, panel])
+			print("TIDAK SESUAI [%s]: isi %s keluar dari struk %s" % [keadaan, r, panel])
 			salah += 1
 		if r.intersects(tombol):
 			print("TIDAK SESUAI [%s]: isi %s menumpuk tombol %s" % [keadaan, r, tombol])
@@ -317,9 +322,9 @@ func _cek_hasil(keadaan: String, hasil: LayarHasil, inset: Vector4) -> void:
 		var samping: Rect2 = hasil.rect_panel_kanan()
 		for r: Rect2 in hasil.rect_isi_kanan():
 			if not samping.encloses(r):
-				print("TIDAK SESUAI [%s]: isi kolom samping %s keluar dari panel samping %s" % [keadaan, r, samping])
+				print("TIDAK SESUAI [%s]: isi kolom samping %s keluar dari kolom %s" % [keadaan, r, samping])
 				salah += 1
-	print("hasil [%s]: panel %s, tombol %s (%s), reputasi %s, pelanggan %s, target %s, baru %s, %d tidak sesuai" % [keadaan, panel, tombol, hasil.teks_tombol(), hasil.teks_reputasi(), hasil.teks_pelanggan(), hasil.teks_target(), hasil.teks_baru(), salah])
+	print("hasil [%s]: struk %s, tombol %s (%s), reputasi %s, pelanggan %s, target %s, baru %s, %d tidak sesuai" % [keadaan, panel, tombol, hasil.teks_tombol(), hasil.teks_reputasi(), hasil.teks_pelanggan(), hasil.teks_target(), hasil.teks_baru(), salah])
 	print("teks layar hasil: %s" % [" | ".join(hasil.teks_tampil())])
 	_gagal += salah
 
