@@ -1,7 +1,7 @@
 class_name TesTampilLayarC
 extends RefCounted
 ## Tes pemilihan tampilan layar jeda, tutorial, dan HUD rute, logika murni (`TampilJeda`, `TampilTutorial`, `TampilHud`; run ui2-semua-layar bagian C, AC-4 sampai AC-6): lapisan 72 %, kunci teks dan bingkai sakelar,
-## pola kenop 22x12 (mati dan nyala berbeda bentuk, bukan hanya warna), titik langkah tutorial, glif per langkah, warna stamina di ambang 30, tanda 80 % bar kecepatan, margin dan urutan panel bawah (kidal dicerminkan),
+## pola kenop 22x12 (mati dan nyala berbeda bentuk, bukan hanya warna), titik langkah tutorial, glif per langkah, warna stamina di ambang 30, tanda bar kecepatan di ambang ngebut sebenarnya (90 %), margin dan urutan panel bawah (kidal dicerminkan),
 ## bingkai dan glif tombol jeda HUD, dan isi baris 2 kolom kanan atas (reputasi berbagi panel kondisi). Oracle independen: angka kanvas (kenop `.sak`, margin 196 dan 8, glif 12 di wajah 24, titik 4 jarak 2) ditulis literal.
 
 var _cek: Callable
@@ -97,12 +97,18 @@ func _test_titik_dan_glif_tutorial() -> void:
 
 
 func _test_stamina_dan_tanda() -> void:
-	_judul.call("Panel bawah murni: warna stamina di ambang 30 dan tanda 80 % bar kecepatan")
+	_judul.call("Panel bawah murni: warna stamina di ambang 30 dan tanda ambang ngebut (90 %) bar kecepatan, diturunkan dari BikeMotion dan Config")
 	check(TampilHud.warna_stamina(29.99) == Palette.FAIL and TampilHud.warna_stamina(0.0) == Palette.FAIL and TampilHud.warna_stamina(10.0) == Palette.FAIL, "stamina di bawah 30: FAIL")
 	check(TampilHud.warna_stamina(30.0) == Palette.ACCENT and TampilHud.warna_stamina(100.0) == Palette.ACCENT and TampilHud.warna_stamina(30.01) == Palette.ACCENT, "stamina 30 ke atas: ACCENT (tepat 30 belum FAIL)")
-	check(Config.HUD_STAMINA_AMBANG_RENDAH == 30.0 and Config.HUD_BAR_TANDA_PECAHAN == 0.8 and Config.HUD_BAR_TINGGI_PX == 9, "ambang 30, tanda 0,8, bar 9 tinggi")
-	check(TampilHud.posisi_tanda(109.0, 0.8) == 87 and TampilHud.posisi_tanda(87.0, 0.8) == 69 and TampilHud.posisi_tanda(100.0, 0.8) == 80, "tanda 80 % dibulatkan ke bawah (109 -> 87, 87 -> 69, 100 -> 80)")
-	check(TampilHud.posisi_tanda(100.0, 1.5) == 100 and TampilHud.posisi_tanda(100.0, 0.0) == 0 and TampilHud.posisi_tanda(0.0, 0.8) == 0 and TampilHud.posisi_tanda(NAN, 0.8) == 0 and TampilHud.posisi_tanda(100.0, -0.2) == 0, "tanda: pecahan > 1 dijepit, nol atau tidak sah = 0")
+	check(Config.HUD_STAMINA_AMBANG_RENDAH == 30.0 and Config.HUD_BAR_TANDA_PECAHAN == 0.9 and Config.HUD_BAR_TINGGI_PX == 9, "ambang 30, tanda 0,9, bar 9 tinggi")
+	# Tanda diturunkan dari kode nyata, bukan dari angka yang disalin: kecepatan di ambang stick sprite ngebut (`BikeMotion.kecepatan_tujuan_ud`) dibagi skala bar (`KECEPATAN_NGEBUT_UD`).
+	var kecepatan_ambang: float = BikeMotion.kecepatan_tujuan_ud(Config.SPRITE_AMBANG_NGEBUT)
+	check(absf(kecepatan_ambang - 5.4) < 0.000001, "kecepatan di ambang stick sprite ngebut 0,80 = 5,4 u/d (%.6f)" % kecepatan_ambang)
+	check(absf(Config.HUD_BAR_TANDA_PECAHAN - kecepatan_ambang / Config.KECEPATAN_NGEBUT_UD) < 0.000001, "HUD_BAR_TANDA_PECAHAN = kecepatan di ambang ngebut / skala bar = %.4f (tidak bisa melenceng diam-diam)" % (kecepatan_ambang / Config.KECEPATAN_NGEBUT_UD))
+	check(LoperAnim.tingkat_dari_stick(Config.SPRITE_AMBANG_NGEBUT) == 1 and LoperAnim.tingkat_dari_stick(Config.SPRITE_AMBANG_NGEBUT + 0.001) == 2, "sprite ngebut tepat di atas ambang yang sama (0,80 cepat, 0,801 ngebut)")
+	check(BikeMotion.kecepatan_tujuan_ud(Config.SPRITE_AMBANG_NGEBUT + 0.001) / Config.KECEPATAN_NGEBUT_UD > Config.HUD_BAR_TANDA_PECAHAN, "tepat di atas ambang sprite, bar sudah melewati tanda")
+	check(TampilHud.posisi_tanda(109.0, 0.9) == 98 and TampilHud.posisi_tanda(87.0, 0.9) == 78 and TampilHud.posisi_tanda(100.0, 0.9) == 90, "tanda 90 % dibulatkan ke bawah (109 -> 98, 87 -> 78, 100 -> 90)")
+	check(TampilHud.posisi_tanda(100.0, 1.5) == 100 and TampilHud.posisi_tanda(100.0, 0.0) == 0 and TampilHud.posisi_tanda(0.0, 0.9) == 0 and TampilHud.posisi_tanda(NAN, 0.9) == 0 and TampilHud.posisi_tanda(100.0, -0.2) == 0, "tanda: pecahan > 1 dijepit, nol atau tidak sah = 0")
 
 
 func _test_panel_bawah() -> void:

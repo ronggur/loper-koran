@@ -3,7 +3,7 @@ extends RefCounted
 ## Tes scene layar jeda, tutorial, banner, dan HUD rute tata ulang (run ui2-semua-layar bagian C, AC-4 sampai AC-7; V-9): `scenes/ui/layar_jeda.tscn`, `tutorial.tscn`, `panel_akhir_rute.tscn` sendiri dan `scenes/rute/rute.tscn`
 ## di lebar 640, 667, 780, dan 800. Jeda: panel 232 di tengah, tombol >= 42x84 di dalam panel, Lanjut peran utama, sakelar berganti teks, bingkai, dan kenop, lapisan alpha 72 %. Tutorial: label dan titik langkah, glif per
 ## langkah, Lewati peran tenang. Banner: glif status dan tombol Main lagi peran utama, label "PELANGGAN:" di gelembung petunjuk. HUD: kecepatan dan stamina berdampingan (bar 9 tinggi sejajar, kolom di dalam panel),
-## panel bawah sama tinggi (<= 40), tanda 80 %, stamina FAIL di bawah 30, reputasi di panel baris 2, tidak ada tumpang tindih (kanan, kidal, inset; keadaan terpadat), sentuhan tetap lolos ke router. Harapan literal dari
+## panel bawah sama tinggi (<= 40), tanda ambang ngebut 90 %, stamina FAIL di bawah 30, reputasi di panel baris 2, tidak ada tumpang tindih (kanan, kidal, inset; keadaan terpadat), sentuhan tetap lolos ke router. Harapan literal dari
 ## kanvas dan SPEC V-9. Tidak menyentuh `user://save.json`.
 
 const BERKAS_JEDA: String = "res://scenes/ui/layar_jeda.tscn"
@@ -346,13 +346,13 @@ func _test_hud(j: Array, kidal: bool, inset: bool) -> void:
 
 
 func _test_hud_isi() -> void:
-	_judul.call("HUD rute: tanda 80 % bar kecepatan, stamina FAIL di bawah 30, reputasi di panel baris 2, tombol jeda tombol biasa (AC-6, V-9)")
+	_judul.call("HUD rute: tanda ambang ngebut 90 % bar kecepatan, stamina FAIL di bawah 30, reputasi di panel baris 2, tombol jeda tombol biasa (AC-6, V-9)")
 	var akar: RuteMain = await _rute(JENDELA[0])
 	var hud: HudRute = akar.hud_rute()
 	var bar: BarKecepatan = hud.bar_kecepatan()
 	var dalam: float = bar.size.x - 2.0
-	check(bar.tanda == 0.8 and hud.bar_stamina().tanda == 0.0, "bar kecepatan bertanda 0,8, bar stamina tanpa tanda")
-	check(bar.rect_tanda() == Rect2(1.0 + floorf(dalam * 0.8), 0, 1, 9) and bar.rect_tanda().position.x == 88.0, "tanda 80 %: x 88 di bar 111 (1 + floor(109 x 0,8)), 1 px lebar, setinggi bar")
+	check(bar.tanda == 0.9 and hud.bar_stamina().tanda == 0.0, "bar kecepatan bertanda 0,9, bar stamina tanpa tanda")
+	check(bar.rect_tanda() == Rect2(1.0 + floorf(dalam * 0.9), 0, 1, 9) and bar.rect_tanda().position.x == 99.0, "tanda 90 %: x 99 di bar 111 (1 + floor(109 x 0,9)), 1 px lebar, setinggi bar")
 	hud.tampilkan_stamina(29.9, false)
 	check(hud.warna_stamina() == Palette.FAIL, "stamina 29,9: FAIL")
 	hud.tampilkan_stamina(30.0, false)

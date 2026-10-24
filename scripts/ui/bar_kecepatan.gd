@@ -2,7 +2,7 @@ class_name BarKecepatan
 extends Control
 ## Bar HUD (DESIGN_SPEC 1.3 dan 3.5): garis luar 1 px `OUTLINE`, latar `UI_PANEL_RAISED`, isi `warna_isi`, dan (opsional) tanda tegak `WARN` di `tanda` (batas ngebut, run ui2-semua-layar bagian C2).
 ##
-## Dipakai untuk kecepatan (isi `TEXT`, bawaan, bertanda 80 %) dan stamina (isi `ACCENT` atau `FAIL`, diatur `HudDev`, tanpa tanda).
+## Dipakai untuk kecepatan (isi `TEXT`, bawaan, bertanda di ambang ngebut sebenarnya, 90 %) dan stamina (isi `ACCENT` atau `FAIL`, diatur `HudDev`, tanpa tanda).
 ## Tingginya `Config.HUD_BAR_TINGGI_PX`; lebar mengikuti container. Hanya menggambar: nilainya (0 sampai 1) dan warnanya
 ## diisi pemanggil. Ukuran selalu bilangan bulat (isi dibulatkan ke bawah) supaya piksel tajam.
 

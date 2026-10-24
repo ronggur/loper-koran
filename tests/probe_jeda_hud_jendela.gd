@@ -397,9 +397,9 @@ func _cek_tanda(keadaan: String) -> void:
 	var tanda: Rect2 = bar.rect_tanda()
 	var dalam: float = bar.size.x - 2.0
 	var harapan: float = 1.0 + floorf(dalam * Config.HUD_BAR_TANDA_PECAHAN)
-	_harap("tanda 80 %% di x %.0f (dapat %.0f) setinggi bar" % [harapan, tanda.position.x], tanda.position.x == harapan and tanda.size.y == bar.size.y and tanda.size.x == 1.0, str(tanda))
+	_harap("tanda 90 %% di x %.0f (dapat %.0f) setinggi bar" % [harapan, tanda.position.x], tanda.position.x == harapan and tanda.size.y == bar.size.y and tanda.size.x == 1.0, str(tanda))
 	_harap("bar stamina tanpa tanda", _hud.bar_stamina().tanda <= 0.0, "")
-	print("tanda bar kecepatan [%s]: %s di bar %s (80 %% dari %.0f px isi)" % [keadaan, tanda, bar.size, dalam])
+	print("tanda bar kecepatan [%s]: %s di bar %s (90 %% dari %.0f px isi)" % [keadaan, tanda, bar.size, dalam])
 
 
 ## Semua kontrol HUD: di dalam layar (dan di luar inset), tidak bertumpuk, kolom bawah di luar zona stick, panel bawah <= 40 tinggi, bar berdampingan, label tidak keluar panel, tombol jeda >= 42.

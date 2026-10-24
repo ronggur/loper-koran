@@ -367,8 +367,10 @@ const HUD_PANEL_PAD_Y_PX: int = 5
 const HUD_PANEL_PAD_X_PX: int = 7
 ## Tinggi bar kecepatan dan stamina termasuk garis luar 1 px, piksel game (DESIGN_SPEC 1.3; V-9 H-1: 7 -> 9 karena dua bar berdampingan hemat tinggi panel).
 const HUD_BAR_TINGGI_PX: int = 9
-## Letak tanda batas ngebut di bar kecepatan sebagai pecahan lebar isi bar (DESIGN_SPEC 3.5: garis tegak `WARN` di 80%). Catatan: ambang sprite ngebut (`SPRITE_AMBANG_NGEBUT` 0,80 dari kekuatan stick, santai 3,0 = 0 dan ngebut 6,0 = 1) jatuh di 5,4 u/d, yaitu 90% bar (bar = kecepatan / `KECEPATAN_NGEBUT_UD`); tanda mengikuti angka 80% DESIGN_SPEC (usulan, perlu keputusan).
-const HUD_BAR_TANDA_PECAHAN: float = 0.8
+## Letak tanda batas ngebut di bar kecepatan sebagai pecahan lebar isi bar (garis tegak `WARN`). Nilai 0,9 BUKAN pilihan desain bebas, melainkan hasil hitung dari kode: bar = kecepatan / `KECEPATAN_NGEBUT_UD` (6,0), dan sprite beralih ke ngebut di atas
+## `SPRITE_AMBANG_NGEBUT` (0,80 dari kekuatan stick); kecepatan di kekuatan itu = `BikeMotion.kecepatan_tujuan_ud(0,80)` = lerp(`KECEPATAN_SANTAI_UD` 3,0, `KECEPATAN_NGEBUT_UD` 6,0, 0,80) = 5,4 u/d, jadi 5,4 / 6,0 = 0,9. Tanda 0,8 (angka DESIGN_SPEC lama) menyesatkan: jatuh di 4,8 u/d,
+## sedangkan sprite baru ngebut di 5,4 u/d. `tests/tes_tampil_layar_c.gd` menurunkan angka ini dari `BikeMotion` dan `Config` supaya tidak bisa melenceng diam-diam.
+const HUD_BAR_TANDA_PECAHAN: float = 0.9
 ## Panel bawah (kecepatan, stamina, koran; V-9 H-1): jarak isi ke samping dari tepi luar panel, lebar kolom kecepatan dan kolom stamina (label KECEPATAN 10 px 61 + jarak 6 + angka "3.0 u/d" 12 px 44; STAMINA 49 + 6 + LELAH 34), jarak antar kolom,
 ## tinggi baris label (tinggi baris Lexend 12 px; dua kolom sejajar), dan jarak baris label ke bar atau deret ikon, piksel game.
 const HUD_PANEL_BAWAH_PAD_X_PX: int = 6
