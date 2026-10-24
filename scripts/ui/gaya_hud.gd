@@ -141,6 +141,53 @@ static func tombol_sakelar(tombol: Button, nyala: bool, pad_tambah: int = 0) -> 
 	_terapkan_peran(tombol, KomponenUi.Peran.SAKELAR, nyala, pad_tambah)
 
 
+## Tombol berglif di ujung kanan (panah "Berangkat" dan "Hari berikutnya", "Lanjut"; revisi UI pemilik R-1, usulan): `glif` (nama dasar tekstur) di kanan teks berjarak `jarak`, dan margin isi kiri dan kanan SAMA
+## (`KomponenUi.margin_grup_glif`, dengan koreksi kolom kosong di kanan tinta glif) sehingga grup teks + glif berada di tengah dan glif tidak mepet tepi kanan; teks rata kiri di dalam isi supaya mulai tepat di margin. Dipanggil SESUDAH peran tombol diatur (`tombol_utama`, `tombol_koran`) dan sesudah `custom_minimum_size`
+## diisi; margin dihitung ulang tiap tombol berubah ukuran (sinyal `resized`), dari lebar teks dengan font tombol.
+static func glif_ujung_kanan(tombol: Button, glif: String, jarak: int) -> void:
+	tombol.icon = tekstur(glif)
+	tombol.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	tombol.add_theme_constant_override(&"h_separation", jarak)
+	var sambung: Callable = _atur_margin_glif.bind(tombol)
+	if not tombol.resized.is_connected(sambung):
+		tombol.resized.connect(sambung)
+	_atur_margin_glif(tombol)
+
+
+## Margin terlihat yang sedang dipakai tombol berglif (`glif_ujung_kanan`) = margin isi kiri gaya normal: jarak tepi kiri tombol ke teks dan jarak tinta glif ke tepi kanan (untuk tes dan probe).
+static func margin_glif_tombol(tombol: Button) -> int:
+	return roundi((tombol.get_theme_stylebox(&"normal") as StyleBox).content_margin_left)
+
+
+## Kolom kosong di kanan tinta glif tombol di dalam kotak glifnya (piksel game, dari piksel tekstur); margin isi kanan = `margin_glif_tombol` dikurangi ini supaya tinta glif sejajar dengan jarak teks di kiri.
+static func pad_kanan_glif(tombol: Button) -> int:
+	if tombol.icon == null:
+		return 0
+	var terpakai: Rect2i = tombol.icon.get_image().get_used_rect()
+	return maxi(tombol.icon.get_width() - terpakai.end.x, 0)
+
+
+## Lebar teks tombol (piksel game, dibulatkan ke atas) dengan font dan ukuran font tombol itu.
+static func lebar_teks_tombol(tombol: Button) -> int:
+	var font: Font = tombol.get_theme_font(&"font")
+	var ukuran: int = tombol.get_theme_font_size(&"font_size")
+	return ceili(font.get_string_size(tombol.tr(tombol.text), HORIZONTAL_ALIGNMENT_LEFT, -1, ukuran).x)
+
+
+static func _atur_margin_glif(tombol: Button) -> void:
+	if tombol.icon == null:
+		return
+	var lebar: int = roundi(maxf(tombol.size.x, tombol.custom_minimum_size.x))
+	var jarak: int = tombol.get_theme_constant(&"h_separation")
+	var pad: int = pad_kanan_glif(tombol)
+	var margin: int = KomponenUi.margin_grup_glif(lebar, lebar_teks_tombol(tombol), tombol.icon.get_width(), jarak, pad)
+	tombol.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	for gaya: StringName in [&"normal", &"hover", &"pressed", &"hover_pressed", &"disabled"]:
+		var kotak: StyleBox = tombol.get_theme_stylebox(gaya)
+		kotak.content_margin_left = float(margin)
+		kotak.content_margin_right = float(margin - pad)
+
+
 ## Tombol tenang (`KomponenUi.Peran.TENANG`): rata tanpa bibir, teks Regular TEXT_2 (Lewati, bahaya ringan); ditekan tidak bergeser.
 static func tombol_tenang(tombol: Button) -> void:
 	_terapkan_peran(tombol, KomponenUi.Peran.TENANG, false)

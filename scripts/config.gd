@@ -514,6 +514,37 @@ const RUTE_DAUR_MUNDUR_UBIN: int = 20
 const RUTE_DAUR_MAJU_UBIN: int = 30
 ## Stick buatan yang diberikan ke sepeda sesudah garis akhir: komponen tegak -1 = tarik penuh ke bawah = rem (stick sungguhan dikunci).
 const RUTE_AKHIR_STICK_Y: float = -1.0
+## --- Garis finish dengan portal (run garis-finish-portal bagian B, G-2 sampai G-5, usulan; disetel di HP) ---
+## Stick buatan sesudah garis akhir (menggantikan rem `RUTE_AKHIR_STICK_Y` di scene rute): komponen tegak +1 = lurus ke depan penuh, komponen datar 0 = tanpa belok. Lewat `BikeMotion` biasa: tujuan ngebut (atau lebih rendah menurut lelah dan efek kondisi), tanpa rem.
+const RUTE_KELUAR_STICK_Y: float = 1.0
+## Laju terendah sepeda sesudah garis akhir, u/d (Bagian F, F-3, permintaan pemilik 2026-10-24: sepeda keluar viewport dengan CEPAT). 6,0 = level ngebut yang sudah ada (`KECEPATAN_NGEBUT_UD`, bar kecepatan penuh, debu dan garis kecepatan penuh), bukan angka baru di luar skala permainan; dijaga langsung di angka ini (bukan menunggu akselerasi 3,0 u/d2 dari santai, yang makan 1,0 detik dan 4,5 ubin). Laju yang sudah lebih tinggi tidak diturunkan. Sesudah garis efek kondisi sepeda dan stamina tidak berlaku (`AkhirRute.keadaan_dijaga`, `RuteMain._efek_gerak`), jadi lelah atau sepeda rusak tidak memperlambat keluar.
+const RUTE_KELUAR_LAJU_MIN_UD: float = 6.0
+## Jarak sisi kiri badan pemain + sepeda dari titik pijak sepeda saat melaju lurus, piksel game. Bersama `RUTE_KELUAR_BADAN_BAWAH_PX` menentukan kapan seluruh badan keluar viewport (maju = naik ke kanan atas, jadi hanya sisi kiri dan bawah yang terakhir meninggalkan tepi kanan dan atas). Diukur dari piksel buram `loper_agen*.png` animasi arah lurus kayuh, melambat, meluncur, rem, dan berhenti (kiri 18, kanan 16, atas 43, bawah 8); dijaga `tes_garis_finish`.
+const RUTE_KELUAR_BADAN_KIRI_PX: int = 18
+## Jarak sisi bawah badan dari titik pijak sepeda (ban dan bayangan), piksel game. Lihat `RUTE_KELUAR_BADAN_KIRI_PX`.
+const RUTE_KELUAR_BADAN_BAWAH_PX: int = 8
+## Banner "Rute selesai" muncul saat sisa jalan sepeda sampai seluruh badannya keluar viewport paling banyak sekian ubin (G-3). 6 ubin = 1,0 detik di ngebut dan 2,0 detik di santai sebelum layar hasil menggantikan banner.
+const RUTE_KELUAR_HAMPIR_UBIN: float = 6.0
+## Portal satpam mulai terbuka saat sepeda paling jauh sekian ubin dari garis akhir (inklusif), lalu tetap terbuka (G-1). 6 ubin = 1,0 detik di ngebut dan 2,0 detik di santai sebelum sepeda lewat.
+const RUTE_PORTAL_BUKA_JARAK_UBIN: float = 6.0
+## --- Portal satpam di scene rute (run garis-finish-portal bagian C, G-1; usulan, disetel di HP) ---
+## Letak tiang portal melintang jalan, ubin dari garis tengah (negatif = sisi seberang). Palang `prop_portal_satpam` membentang 1,625 ubin ke sisi dekat dari tiang (sumbu +x dunia).
+const RUTE_PORTAL_LATERAL_UBIN: float = -2.0
+## Ukuran satu sel `prop_portal_satpam` (lebar, tinggi), jumlah frame (0 tertutup, 1 terbuka; berjajar kiri ke kanan), dan titik pijak (kaki tiang) di dalam sel, piksel; sama dengan JSON aset, dijaga tes.
+const RUTE_PORTAL_SEL_PX: Array[int] = [80, 92]
+const RUTE_PORTAL_FRAME: int = 2
+const RUTE_PORTAL_PIJAK_PX: Array[int] = [14, 60]
+## Setengah sisi tapak kotak penutup pemain di sekitar tiang (ubin) dan tinggi kotak (ubin: 57 piksel opak palang terangkat di atas pijak / 32). Frame tertutup lebih rendah, jadi kotak ini cukup untuk keduanya. Setengah tapak 0,75 = ukuran terkecil (kelipatan 0,125) yang membuat tidak ada piksel opak palang terangkat di atas piksel pemain tanpa kotak menutupinya (0,5: 20 posisi, 0,625: 2 posisi); dijaga tes piksel.
+const RUTE_PORTAL_TAPAK_SETENGAH_UBIN: float = 0.75
+const RUTE_PORTAL_TINGGI_UBIN: float = 1.78125
+## --- Hiasan lanjutan di depan garis akhir (run garis-finish-portal Bagian F, F-1; usulan, disetel di HP) ---
+## Panjang minimum hiasan sesudah garis akhir, ubin: sedikitnya sepanjang jendela daur ke depan (`RUTE_DAUR_MAJU_UBIN` 30) supaya seluruh jendela terisi rumah dan dekor, termasuk tepi viewport terjauh (kamera beku melihat paling jauh 17,9 ubin di depan sepeda di garis, LOG bagian B). Rumah dan dekor disalin dari segmen pembuka/tengah pustaka (`HiasanRute`), semuanya bukan pelanggan.
+const RUTE_HIASAN_PANJANG_UBIN: int = 32
+## Selisih seed hiasan dari seed rute: aliran acak sendiri (pilihan segmen hiasan), tidak mengubah rute, pelanggan, atau misi.
+const RUTE_HIASAN_SEED_SELISIH: int = 104729
+## Paling banyak segmen hiasan dan paling banyak undian per segmen (separuh pertama menolak segmen padat berurutan, separuh kedua melonggarkan).
+const RUTE_HIASAN_SEGMEN_MAKS: int = 4
+const RUTE_HIASAN_COBA_MAKS: int = 24
 ## Jarak banner "Rute selesai" dari tepi atas layar, piksel game: di bawah strip atas HUD dan di luar zona stick dan swipe.
 const RUTE_BANNER_MARGIN_ATAS_PX: int = 64
 ## Nama 12 sprite rumah perumahan (`assets/sprites/houses/perumahan/<nama>.png`), sejajar dengan `RUTE_RUMAH_PIJAK_PX`.
@@ -728,8 +759,8 @@ const RADAR_LEBAR_PX: int = 12
 const RADAR_Y_ATAS_PX: int = 10
 ## Strip radar: tepi bawah dari atas layar, piksel game (DESIGN_SPEC 3.4: y 182; zona stick mulai y 186).
 const RADAR_Y_BAWAH_PX: int = 182
-## Strip radar: tebal bingkai 9-slice `ui_radar_strip_9slice.png` (fakta aset `tools/ui_art/hud_ikon.py`), piksel game.
-const RADAR_BINGKAI_PX: int = 2
+## Strip radar: jarak jalur penanda dari ujung atas dan bawah strip, piksel game (dulu tebal bingkai 9-slice; sejak revisi UI pemilik R-3 strip tanpa bingkai, hanya garis sumbu `OUTLINE` 1 px di tengah jalur).
+const RADAR_JALUR_PAD_PX: int = 2
 ## Penanda radar biasa: lebar dan tinggi, piksel game (`ui_radar_<jenis>.png` 8x6).
 const RADAR_PENANDA_LEBAR_PX: int = 8
 ## Lihat `RADAR_PENANDA_LEBAR_PX`.
@@ -762,8 +793,6 @@ const ZONA_AMAN_TOLERANSI_PX: float = 0.000001
 
 ## --- Layar hasil (DESIGN_SPEC 4, rule ui-scenes; O-11, O-12 run fase3c-hud-hasil; usulan, sketsa) ---
 
-## Layar hasil terbuka sesudah garis akhir bila kecepatan sepeda paling tinggi sekian u/d (sudah berhenti) dan tidak ada koran terbang.
-const HASIL_BERHENTI_TOLERANSI_UD: float = 0.000001
 ## Tinggi dan lebar minimum bilah milestone, tebal garis luarnya (piksel game di tiap sisi). Bilah di kartu target layar hasil.
 const HASIL_BILAH_TINGGI_PX: int = 7
 const HASIL_BILAH_LEBAR_MIN_PX: int = 60
@@ -804,6 +833,9 @@ const HASIL_LENCANA_TARGET_PX: int = 32
 const HASIL_KARTU_JARAK_PX: int = 3
 const HASIL_KARTU_BARIS_JARAK_PX: int = 2
 const HASIL_KARTU_REPUTASI_PX: int = 40
+## Tinggi tinta (piksel game) angka reputasi (font `LayarJudul`, angka 0 sampai 9) dan huruf kapital label "Reputasi" (font `LayarLabel`), terukur dari tangkapan nyata (probe hasil); dipakai meratakan pusat vertikal label, angka, dan chip di kartu reputasi (R-5). Dijaga probe piksel.
+const HASIL_REPUTASI_TINTA_ANGKA_PX: int = 17
+const HASIL_REPUTASI_TINTA_LABEL_PX: int = 7
 const HASIL_KARTU_PAD_PX: int = 2
 const HASIL_BARU_JARAK_PX: int = 2
 ## Paling banyak sekian kali tata letak layar hasil ditata ulang per frame karena ukuran struk atau kolom samping berubah (bungkus kata menentukan tinggi sesudah Container selesai; mencegah berputar).
@@ -997,6 +1029,8 @@ const KORAN_PANEL_PAD_ATAS_PX: int = 8
 const KORAN_PANEL_PAD_BAWAH_PX: int = 10
 ## Jarak antar tombol Ambil dan Lewati.
 const KORAN_TOMBOL_JARAK_PX: int = 6
+## Jarak teks ke panah di tombol Berangkat, piksel game (sama dengan bawaan tema sebelum R-1; sekarang eksplisit).
+const KORAN_BERANGKAT_JARAK_PX: int = 4
 ## Kotak hiasan "Iklan baris" di bawah kolom berita: lebar paling besar, tinggi tetap, tinggi paling kecil supaya label dan satu baris hiasan muat (selain itu kotak tidak tampil), isi samping dan atas bawah, panjang goresan garis putus.
 const KORAN_IKLAN_LEBAR_MAKS_PX: int = 220
 const KORAN_IKLAN_TINGGI_PX: int = 54
@@ -1509,6 +1543,8 @@ const UI_TOMBOL_TEKAN_GESER_PX: int = 2
 const UI_TOMBOL_TINGGI_PX: int = 42
 const UI_TOMBOL_LEBAR_MIN_PX: int = 84
 const UI_TOMBOL_LEBAR_UTAMA_PX: int = 140
+## Tombol berglif di ujung kanan (panah Berangkat, Hari berikutnya, Lanjut; revisi UI pemilik R-1): jarak tepi tombol ke teks dan ke glif dibuat SAMA (grup teks + jarak + glif di tengah), tidak boleh kurang dari ini, piksel game.
+const UI_TOMBOL_GLIF_MARGIN_MIN_PX: int = 8
 ## Garis fokus tombol berada sekian piksel di luar tepi tombol (1 px jarak + 1 px garis; kanvas `outline-offset: 1px`).
 const UI_TOMBOL_FOKUS_JARAK_PX: int = 2
 ## Tebal garis 1 piksel game: garis kotak `GayaHud`, garis fokus, cincin gelap titik penanda sepeda dan ring luar panggung bengkel (QA-006: tanpa angka ajaib).

@@ -114,6 +114,10 @@ func _cek_jeda(layar: LayarJeda, keadaan: String) -> void:
 	if _lebar_teks(lanjut) + float(Config.JEDA_LANJUT_JARAK_PX + Config.HUD_JEDA_GLIF_PX) > ruang_lanjut:
 		print("TIDAK SESUAI [jeda %s]: teks Lanjut terpotong" % keadaan)
 		salah += 1
+	var margin_lanjut: int = GayaHud.margin_glif_tombol(lanjut)
+	if margin_lanjut != roundi((lanjut.get_theme_stylebox(&"normal") as StyleBox).content_margin_right) + GayaHud.pad_kanan_glif(lanjut) or margin_lanjut < Config.UI_TOMBOL_GLIF_MARGIN_MIN_PX or float(GayaHud.lebar_teks_tombol(lanjut) + lanjut.get_theme_constant(&"h_separation") + lanjut.icon.get_width() + margin_lanjut * 2 - GayaHud.pad_kanan_glif(lanjut)) > lanjut.size.x + 0.01:
+		print("TIDAK SESUAI [jeda %s]: panah Lanjut margin %d tidak sama kiri-kanan, di bawah minimum, atau teks terpotong (R-1)" % [keadaan, margin_lanjut])
+		salah += 1
 	print("jeda [%s]: panel %s, lanjut %s, kidal %s (%s), bantu %s (%s), %d tidak sesuai" % [keadaan, panel, layar.rect_tombol_lanjut(), layar.rect_sakelar_kidal(), tr(layar.sakelar_kidal().text), layar.rect_sakelar_bantu(), tr(layar.sakelar_bantu().text), salah])
 	_gagal += salah
 	var teks: Array = [
@@ -199,10 +203,10 @@ func _cek_tutorial(keadaan: String, nomor: int) -> void:
 func _skenario_banner() -> void:
 	await _pasang(1, false, false)
 	await _maju(0.3)
-	# Rute selesai: sepeda melewati garis akhir; banner tampil sebelum layar hasil.
+	# Rute selesai: sepeda melewati garis akhir dan mulai keluar viewport (run garis finish: banner muncul saat HAMPIR KELUAR, sekitar 60 sampai 160 langkah sesudah garis, jadi batas 600 langkah); banner tampil sebelum layar hasil.
 	_letakkan(_akar.rute().panjang_ubin - 0.3)
 	var batas: int = 0
-	while not _akar.panel_akhir().tampil() and batas < 120:
+	while not _akar.panel_akhir().tampil() and batas < 600:
 		await _maju(DT, false)
 		batas += 1
 	await _tunggu(3)

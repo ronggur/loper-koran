@@ -1,0 +1,43 @@
+extends SceneTree
+## QA iterasi 2: md5 keluaran RouteBuilder.bangun untuk 300 benih x hari 1..10 (dengan dan tanpa PelangganRute kosong). Dijalankan di main dan branch; harus identik.
+## godot --headless --path <repo> --script <ini> -- <keluaran.txt>
+
+func _rute_md5(r: RouteBuilder.Rute) -> String:
+	var t: PackedStringArray = PackedStringArray()
+	t.append("%d|%d|%.4f|%d|%d" % [r.benih, r.hari, r.panjang_ubin, r.koran_awal, r.pelepasan])
+	for s: SegmenRute in r.segmen:
+		t.append("S%s" % s.id)
+	for a: float in r.awal_segmen:
+		t.append("A%.3f" % a)
+	for x: RouteBuilder.RumahRute in r.rumah:
+		t.append("R%s|%d|%.3f|%d|%s|%s|%s|%s" % [x.id, x.pos, x.maju_ubin, x.sisi, x.jenis, str(x.pelanggan_boleh), str(x.pelanggan), str(x.pemberi_tip)])
+	for x: RouteBuilder.ObjekRute in r.objek:
+		t.append("O%s|%.3f|%s|%.3f" % [x.jenis, x.maju_ubin, x.jalur, x.tanda_ubin])
+	for x: RouteBuilder.TitikMisiRute in r.titik_misi:
+		t.append("M%s|%.3f|%d" % [x.nama, x.maju_ubin, x.sisi])
+	for x: RouteBuilder.DekorItem in r.dekor:
+		t.append("D%s|%.3f|%.3f|%d|%s|%s" % [x.id, x.maju_ubin, x.lateral_ubin, x.sisi, x.jenis, x.varian])
+	for x: RouteBuilder.SimpangItem in r.simpang:
+		t.append("P%s|%.3f|%d" % [x.id, x.maju_ubin, x.sisi])
+	for x: RouteBuilder.RumahRute in r.pelanggan:
+		t.append("C%s" % x.id)
+	return "\n".join(t).md5_text()
+
+
+func _initialize() -> void:
+	await process_frame
+	var arg: PackedStringArray = OS.get_cmdline_user_args()
+	var kumpulan: PemuatRute.Kumpulan = PemuatRute.muat_folder()
+	var baris: PackedStringArray = PackedStringArray()
+	# RNG global: nilai yang dikonsumsi diam-diam akan menggeser deretan ini
+	seed(424242)
+	for benih: int in range(1, 301):
+		for hari: int in range(1, 11):
+			var h: RouteBuilder.Hasil = RouteBuilder.bangun(benih, kumpulan.segmen, hari)
+			baris.append("%d,%d,%s" % [benih, hari, _rute_md5(h.rute) if h.rute != null else "galat"])
+	baris.append("rng_global_setelah,%d" % randi())
+	var f: FileAccess = FileAccess.open(arg[0], FileAccess.WRITE)
+	f.store_string("\n".join(baris))
+	f.close()
+	print("golden: ", baris.size(), " baris")
+	quit(0)

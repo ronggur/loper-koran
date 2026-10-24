@@ -98,3 +98,12 @@ static func penanda(rute: RouteBuilder.Rute, maju_sepeda_ubin: float, terantar: 
 static func y_penanda_px(nilai_vertikal: float, tinggi_jalur_px: int, tinggi_penanda_px: int) -> int:
 	var ruang: int = maxi(tinggi_jalur_px - tinggi_penanda_px, 0)
 	return roundi(clampf(nilai_vertikal, 0.0, 1.0) * float(ruang))
+
+
+## Garis sumbu strip radar (revisi UI pemilik R-3): satu garis `UI_GARIS_PX` selebar satu piksel di tengah lebar strip (`floor(lebar / 2)`, jadi 6 dari 12: 4 px penanda di kirinya dan 3 di kanannya, penanda 8 lebar mulai di x 2),
+## sepanjang strip (dari atas sampai bawah). Koordinat lokal strip, piksel game; Rect2i kosong bila ukuran tidak positif.
+static func rect_sumbu(lebar_strip: int, tinggi_strip: int) -> Rect2i:
+	if lebar_strip <= 0 or tinggi_strip <= 0:
+		return Rect2i()
+	var tengah: int = lebar_strip / 2
+	return Rect2i(tengah, 0, Config.UI_GARIS_PX, tinggi_strip)

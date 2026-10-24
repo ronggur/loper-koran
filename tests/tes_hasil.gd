@@ -91,17 +91,16 @@ func _test_hasil_meleset_dan_tenggat_lewat() -> void:
 
 
 func _test_siap_tampil() -> void:
-	_judul.call("Layar hasil terbuka sesudah garis akhir, sepeda berhenti, dan tanpa koran terbang (O-11)")
+	_judul.call("Layar hasil terbuka sesudah garis akhir, sepeda keluar viewport, dan tanpa koran terbang (O-11, G-4)")
 	var terbang: KoranLempar.Koran = KoranLempar.Koran.new()
 	var mendarat: KoranLempar.Koran = KoranLempar.Koran.new()
 	mendarat.mendarat = true
 	var tanpa: Array[KoranLempar.Koran] = []
-	check(HasilRute.siap_tampil(true, 0.0, tanpa), "selesai, berhenti, tanpa koran: siap")
-	check(HasilRute.siap_tampil(true, 0.0, [mendarat] as Array[KoranLempar.Koran]), "koran sudah mendarat (penanda masih tampil): siap")
-	check(not HasilRute.siap_tampil(true, 0.0, [mendarat, terbang] as Array[KoranLempar.Koran]), "satu koran masih terbang: belum")
-	check(not HasilRute.siap_tampil(true, 0.01, tanpa), "sepeda masih bergerak 0,01 u/d: belum")
-	check(not HasilRute.siap_tampil(false, 0.0, tanpa), "rute belum selesai: belum")
-	check(not HasilRute.siap_tampil(true, NAN, tanpa), "kecepatan NaN: belum")
+	check(HasilRute.siap_tampil(true, true, tanpa), "selesai, sudah keluar, tanpa koran: siap")
+	check(HasilRute.siap_tampil(true, true, [mendarat] as Array[KoranLempar.Koran]), "koran sudah mendarat (penanda masih tampil): siap")
+	check(not HasilRute.siap_tampil(true, true, [mendarat, terbang] as Array[KoranLempar.Koran]), "satu koran masih terbang: belum")
+	check(not HasilRute.siap_tampil(true, false, tanpa), "sepeda belum keluar viewport: belum")
+	check(not HasilRute.siap_tampil(false, true, tanpa), "rute belum selesai: belum")
 
 
 func _test_ribuan() -> void:

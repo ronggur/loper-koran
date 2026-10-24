@@ -51,9 +51,7 @@ func _ready() -> void:
 	for tombol: TombolSentuh in [_tombol_lanjut, _sakelar_kidal, _sakelar_bantu]:
 		tombol.custom_minimum_size = Vector2(Config.JEDA_TOMBOL_LEBAR_PX, Config.HUD_TOMBOL_TINGGI_PX)
 	GayaHud.tombol_utama(_tombol_lanjut)
-	_tombol_lanjut.icon = GayaHud.tekstur(TampilJeda.nama_glif_lanjut())
-	_tombol_lanjut.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_tombol_lanjut.add_theme_constant_override(&"h_separation", Config.JEDA_LANJUT_JARAK_PX)
+	GayaHud.glif_ujung_kanan(_tombol_lanjut, TampilJeda.nama_glif_lanjut(), Config.JEDA_LANJUT_JARAK_PX)
 	_pasang_kenop(_kenop_kidal)
 	_pasang_kenop(_kenop_bantu)
 	_tombol_lanjut.ditekan.connect(lanjut_diminta.emit)

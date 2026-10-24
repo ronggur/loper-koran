@@ -57,8 +57,10 @@ const TINGGI: int = 360
 const LEBAR_UJI: Array[int] = [640, 667, 780, 800]
 ## Tidak boleh ada nama ini di sumber (pemindai AC-17, bagian ubin). Disambung supaya berkas ini tidak cocok dengan dirinya sendiri.
 ## Run fase5b-tembok-dekor bagian B2: tong sampah logam sah dirujuk (`DekorRute`), hanya `tong_sampah_biru` yang tetap terlarang (D-1, K-2). Bagian B1 run 5B memasang lima tembok; run fase5d-sisi-dekat (P-1) melepasnya lagi, pemindai nama sprite tembok (tidak boleh ada rujukan) ada di `tes_sisi_dekat.gd`.
+## Run garis-finish-portal (G-1): `prop_portal_satpam` dipasang dan boleh dirujuk, jadi "prop_portal" keluar dari daftar ini; yang tetap terlarang adalah pos satpam
+## (`prop_pos_`). Daftar berkas portal yang boleh ada dijaga `uji_aset_pasang_gelombang1.py` dan `tes_export.gd`.
 const TERLARANG: Array[String] = [
-	"prop_" + "tong_sampah_biru", "mission_" + "jejak", "mission_" + "mangkuk", "prop_" + "portal", "prop_" + "pos_",
+	"prop_" + "tong_sampah_biru", "mission_" + "jejak", "mission_" + "mangkuk", "prop_" + "pos_",
 	"vfx_" + "percikan", "polisi_" + "tidur", "perumahan_" + "zebra", "perumahan_" + "genangan",
 ]
 

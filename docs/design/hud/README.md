@@ -10,10 +10,10 @@ Aset HUD untuk Fase 3: ikon uang dan kondisi sepeda, penanda radar, dan bingkai 
 | `ui_icon_ban.png`, `ui_icon_rem.png`, `ui_icon_rantai.png` | 14×14 | Kondisi sepeda (DESIGN_SPEC 3.3): ban dengan velg, tuas rem, dua mata rantai |
 | `ui_icon_misi_kucing.png` | 14×14 | Kartu misi P1 Kucing Bu Ratmi (Fase 4) |
 | `ui_icon_hud_sheet.png` + `.json` | 84×14 | Enam ikon di atas dalam satu baris, sel 14×14 |
-| `ui_radar_<pelanggan\|tip\|misi\|bukan>.png` | 8×6 | Penanda radar biasa |
+| `ui_radar_<pelanggan\|tip\|misi\|bukan>.png` | 8×6 | Penanda radar biasa. Pelanggan kuning stabilo `#FFF200` (sorot atas `#FFF65A`) sejak revisi UI pemilik R-6 (2026-10-24); `hud_ikon.py --varian=kuning` (bawaan), `hijau`, atau `lama` hanya untuk tangkapan perbandingan |
 | `ui_radar_<jenis>_jangkau.png` | 10×8 | Masuk jangkauan lempar: +2 px, garis luar `TEXT` |
 | `ui_radar_penanda.png` | 40×16 | Sheet sel 10×8: baris atas biasa (offset 1, 1), baris bawah jangkau |
-| `ui_radar_strip_9slice.png` | 12×12 | Bingkai strip radar, margin 2 |
+| (dihapus) `ui_radar_strip_9slice.png` | - | Bingkai strip radar; sejak revisi UI pemilik R-3 (2026-10-24) strip tanpa bingkai, hanya garis sumbu `OUTLINE` 1 px dari kode (`RadarRute.rect_sumbu`) |
 | `ui_panel_hud_9slice.png` | 12×12 | Bingkai panel HUD, margin 4, sudut tumpul 3 px bertingkat |
 
 ## Pratinjau (folder ini)

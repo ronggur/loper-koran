@@ -30,7 +30,6 @@
   ]
  },
  "nine_slice": {
-  "ui_radar_strip_9slice.png": 2,
   "ui_panel_hud_9slice.png": 4
  },
  "note": "Usulan, tools/ui_art/hud_ikon.py. Ikon koran tetap IKON_KORAN di pola_piksel.gd; tombol jeda digambar dari kode (tombol_jeda.gd)."

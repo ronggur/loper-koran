@@ -121,9 +121,9 @@ func _ready() -> void:
 	for tombol: TombolSentuh in [_tombol_ambil, _tombol_lewati]:
 		tombol.custom_minimum_size = Vector2(Config.UI_TOMBOL_LEBAR_MIN_PX, Config.UI_TOMBOL_TINGGI_PX)
 	_tombol_berangkat.custom_minimum_size = Vector2(Config.UI_TOMBOL_LEBAR_UTAMA_PX, Config.UI_TOMBOL_TINGGI_PX)
-	_tombol_berangkat.icon = GayaHud.tekstur(TampilKoran.glif_berangkat())
 	_peran[_tombol_berangkat] = TampilKoran.PeranTombol.TINTA
 	GayaHud.tombol_koran(_tombol_berangkat, TampilKoran.PeranTombol.TINTA)
+	GayaHud.glif_ujung_kanan(_tombol_berangkat, TampilKoran.glif_berangkat(), Config.KORAN_BERANGKAT_JARAK_PX)
 	_tombol_ambil.ditekan.connect(_saat_ambil)
 	_tombol_lewati.ditekan.connect(_saat_lewati)
 	_tombol_berangkat.ditekan.connect(berangkat_diminta.emit)

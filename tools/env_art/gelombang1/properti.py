@@ -116,9 +116,16 @@ def _box_solid(c, half, pal, faces=None, pattern=None):
     return Solid(f, sh)
 
 
+# Sel dan pijak portal (run garis-finish-portal, G-1a): dua frame berbagi sel dan pijak yang sama. Sel lama 80x64 pijak (14, 48) memotong
+# palang terbuka di tepi atas (ujung z = 62) dan kaki penyangga tertutup di tepi bawah (kaki di 26 px di bawah pijak). Terukur dari render
+# (relatif pijak): kiri -10, kanan +55, atas -57 (terbuka), bawah +27 (tertutup); sel 80x92 pijak (14, 60) menyisakan margin transparan >= 2 px.
+PORTAL_SEL = (80, 92)
+PORTAL_PIJAK = (14, 60)
+
+
 def portal_satpam(terbuka=False):
     """Portal palang: tiang + pemberat di sisi seberang, palang belang
-    bata/krem melintang jalan (sepanjang x, 52 unit). Sel 80x56, pijak (14,40)."""
+    bata/krem melintang jalan (sepanjang x, 52 unit). Sel PORTAL_SEL 80x92, pijak PORTAL_PIJAK (14, 60) = kaki tiang."""
     lg = P['logamg']; br = P['bata']
     solids = []
     solids.append(_box_solid((0, 0, 9), (2, 2, 9), [lg[0], lg[1], lg[2]]))       # tiang
@@ -147,8 +154,8 @@ def portal_satpam(terbuka=False):
             stripes(col, x, y, z, np.where(fc == 0, 1, fc), u)
             return col
         solids.append(Solid(sdf_up, shu))
-    img = render(80, 64, 14, 48, solids, zmin=-1, zmax=70, step=0.15, inner=4.0)
-    return with_shadow(img, 14, 48, 10, 5)
+    img = render(PORTAL_SEL[0], PORTAL_SEL[1], PORTAL_PIJAK[0], PORTAL_PIJAK[1], solids, zmin=-1, zmax=70, step=0.15, inner=4.0)
+    return with_shadow(img, PORTAL_PIJAK[0], PORTAL_PIJAK[1], 10, 5)
 
 
 def pos_satpam():

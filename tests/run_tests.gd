@@ -160,6 +160,15 @@ func _initialize() -> void:
 	await scene_bantu.jalankan()
 	var scene_rute: TesRuteScene = TesRuteScene.new(check, _judul, self)
 	await scene_rute.jalankan()
+	# Run garis-finish-portal bagian B: fase keluar, laju minimum, geometri keluar viewport, portal, siap_tampil (murni; satu bagian memakai jalan_uji untuk kamera).
+	var garis_finish: TesGarisFinish = TesGarisFinish.new(check, _judul, self)
+	await garis_finish.jalankan()
+	# Run garis-finish-portal bagian C: portal, sepeda keluar viewport, kamera dan dunia beku, G-5 lawan golden main, pemulihan.
+	var garis_finish_scene: TesGarisFinishScene = TesGarisFinishScene.new(check, _judul, self)
+	await garis_finish_scene.jalankan()
+	# Run garis-finish-portal Bagian F: hiasan lanjutan di depan garis akhir (murni dan scene).
+	var hiasan: TesHiasan = TesHiasan.new(check, _judul, self)
+	await hiasan.jalankan()
 	var kotak_surat: TesKotakSurat = TesKotakSurat.new(check, _judul, self)
 	await kotak_surat.jalankan()
 	# Run fase5a-pasang-aset-gelombang1: ubin tanah enam kolom (pemetaan, scene, tanpa celah dan pita, referensi Python).
@@ -244,6 +253,9 @@ func _initialize() -> void:
 	tampil_layar_c.jalankan()
 	var layar_c_scene: TesLayarCScene = TesLayarCScene.new(check, _judul, self)
 	await layar_c_scene.jalankan()
+	# Run garis-finish-portal bagian E (revisi UI pemilik R-1..R-4): margin panah tombol, baseline dan tepi kanan label-nilai hasil, radar tanpa bingkai, bar tanpa trek.
+	var revisi_ui_e: TesRevisiUiE = TesRevisiUiE.new(check, _judul, self)
+	await revisi_ui_e.jalankan()
 	var tata_letak: TesTataLetak = TesTataLetak.new(check, _judul, self)
 	await tata_letak.jalankan()
 	var bunyi: TesBunyi = TesBunyi.new(check, _judul, self)

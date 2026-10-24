@@ -407,8 +407,8 @@ func _test_rumah_digambar() -> void:
 			anak_gambar += 1
 	# Run fase3b-rintangan-skor: rintangan kini digambar, tetapi di dalam satu node induk `Rintangan` (anak Y-sort Objek), jadi anak Objek =
 	# rumah (tembok sisi dekat run 5B dilepas run 5D) + kotak surat (oranye pelanggan dan abu-abu bukan pelanggan seberang, 2026-10-17) + sepeda + node Rintangan (rintangan sendiri
-	# dites di `tes_rintangan_scene.gd`) + node Dekor (induk dekor pinggir jalan, run fase5b B2; dites di `tes_dekor.gd`).
-	check(anak_gambar == akar.daur().jumlah_rumah() + akar.daur().jumlah_kotak_surat() + akar.daur().jumlah_kotak_surat_bukan() + 3 and akar.rintangan_daur().get_parent() == objek and akar.dekor_daur().get_parent() == objek, "tidak ada node lain yang digambar di Objek (rumah, kotak surat oranye dan abu-abu, sepeda, induk rintangan, induk dekor): %d" % anak_gambar)
+	# dites di `tes_rintangan_scene.gd`) + node Dekor (induk dekor pinggir jalan, run fase5b B2; dites di `tes_dekor.gd`) + node Portal (run garis-finish-portal bagian C; dites di `tes_garis_finish_scene.gd`) + dua induk hiasan (RumahHiasan dan DekorHiasan, Bagian F; dites di `tes_hiasan.gd`).
+	check(anak_gambar == akar.daur().jumlah_rumah() + akar.daur().jumlah_kotak_surat() + akar.daur().jumlah_kotak_surat_bukan() + 6 and akar.rintangan_daur().get_parent() == objek and akar.dekor_daur().get_parent() == objek, "tidak ada node lain yang digambar di Objek (rumah, kotak surat oranye dan abu-abu, sepeda, induk rintangan, induk dekor, portal garis finish, induk rumah hiasan, induk dekor hiasan): %d" % anak_gambar)
 	_bersihkan(akar)
 
 
@@ -419,7 +419,8 @@ func _test_jendela_daur_bergerak() -> void:
 	var salah: Array[String] = []
 	var maks_tampil: int = 0
 	var maks_node: int = 0
-	for langkah: int in range(0, 100):
+	# 95 titik (jarak sampai 235): sesudah garis akhir dunia dibekukan (run garis-finish-portal, G-5), jadi jendela daur di sana dites di `tes_garis_finish_scene.gd`.
+	for langkah: int in range(0, 95):
 		var jarak: float = float(langkah) * 2.5
 		_taruh_sepeda(akar, 3.0, 0.0, 0.0, jarak)
 		var tampil: Array[int] = akar.daur().indeks_tampil()
@@ -427,9 +428,9 @@ func _test_jendela_daur_bergerak() -> void:
 			salah.append("jarak %.1f: %s" % [jarak, tampil.size()])
 		maks_tampil = maxi(maks_tampil, tampil.size())
 		maks_node = maxi(maks_node, akar.daur().jumlah_node_rumah())
-		if akar.penerap_penutup().jumlah() != tampil.size() + akar.rintangan_daur().jumlah_tampil() + _jumlah_dekor_penutup(akar):
+		if akar.penerap_penutup().jumlah() != tampil.size() + akar.rintangan_daur().jumlah_tampil() + _jumlah_dekor_penutup(akar) + 1 + akar.jumlah_hiasan_penerap():
 			salah.append("jarak %.1f: penerap %d, tampil %d" % [jarak, akar.penerap_penutup().jumlah(), tampil.size()])
-	check(salah.is_empty(), "sepanjang rute (100 titik): rumah digambar = jendela oracle dan didaftarkan ke penerap penutup: %s" % [salah.slice(0, 3)])
+	check(salah.is_empty(), "sepanjang rute (95 titik): rumah digambar = jendela oracle dan didaftarkan ke penerap penutup: %s" % [salah.slice(0, 3)])
 	check(maks_tampil <= 30 and maks_tampil >= 20, "paling banyak %d rumah sekaligus (jendela, bukan 89)" % maks_tampil)
 	check(maks_node <= 30, "node rumah dipakai ulang dari kolam (paling banyak %d node dibuat, 89 rumah)" % maks_node)
 	_bersihkan(akar)
@@ -737,30 +738,34 @@ func _test_akhir_rute() -> void:
 	_langkah(akar, 30)
 	check(akar.rute_sudah_selesai() and (catatan["selesai"] as int) == 1, "melewati garis akhir: selesai dan rute_selesai tepat sekali (%d)" % catatan["selesai"])
 	check(sepeda.jarak_ubin >= PANJANG_RUTE, "sepeda sudah mencapai garis akhir (%.2f >= 236)" % sepeda.jarak_ubin)
-	check(akar.panel_akhir().tampil() and akar.panel_akhir().teks_banner() == "Rute selesai" and not akar.panel_akhir().tombol_tampil(), "banner 'Rute selesai' tampil lewat kunci terjemahan, tanpa tombol (Main lagi di layar hasil, O-11)")
+	check(not akar.panel_akhir().tampil() and akar.fase_keluar() == AkhirRute.Fase.MELAJU_KELUAR, "di garis akhir banner BELUM tampil (G-3: muncul saat sepeda hampir keluar) dan fase melaju keluar")
 	check(not akar.layar_hasil().tampil(), "layar hasil belum terbuka selagi sepeda masih melaju sesudah garis")
 	check(tr("RUTE_SELESAI") == "Rute selesai" and tr("RUTE_MAIN_LAGI") == "Main lagi", "kunci RUTE_SELESAI dan RUTE_MAIN_LAGI diterjemahkan")
-	# Stick ke atas tetap ditahan, tetapi dikunci: sepeda direm sampai berhenti dengan rem biasa.
+	# Stick ke atas tetap ditahan, tetapi dikunci: sepeda TIDAK direm, melaju keluar viewport, banner muncul saat hampir keluar, lalu layar hasil terbuka (G-2 sampai G-4).
 	var rem_terlihat: bool = false
-	var maks_v: float = 0.0
-	for i: int in range(60 * 10):
+	var laju_min: float = INF
+	var banner_terlihat: bool = false
+	var banner_benar: bool = true
+	for i: int in range(60 * 20):
 		_langkah(akar, 1)
 		rem_terlihat = rem_terlihat or sepeda.rem_aktif()
-		maks_v = maxf(maks_v, sepeda.kecepatan_ud)
-		if sepeda.kecepatan_ud == 0.0:
+		laju_min = minf(laju_min, sepeda.kecepatan_ud)
+		if akar.panel_akhir().tampil() and not akar.hasil_tampil():
+			banner_terlihat = true
+			banner_benar = banner_benar and akar.panel_akhir().teks_banner() == "Rute selesai" and not akar.panel_akhir().tombol_tampil()
+		if akar.hasil_tampil():
 			break
-	check(sepeda.kecepatan_ud == 0.0 and rem_terlihat, "sepeda berhenti (kecepatan 0) dengan rem aktif walau stick ke atas masih ditahan")
-	_langkah(akar, 1)
-	check(akar.layar_hasil().tampil() and akar.hasil_tampil() and not akar.panel_akhir().tampil(), "sepeda berhenti tanpa koran terbang: layar hasil terbuka, banner disembunyikan (O-11)")
-	var jarak_berhenti: float = sepeda.jarak_ubin
+	check(akar.hasil_tampil() and akar.layar_hasil().tampil() and akar.fase_keluar() == AkhirRute.Fase.SUDAH_KELUAR, "layar hasil terbuka sesudah sepeda keluar viewport (bukan sesudah berhenti)")
+	check(banner_terlihat and banner_benar and not akar.panel_akhir().tampil(), "banner 'Rute selesai' (kunci terjemahan, tanpa tombol) tampil saat hampir keluar dan disembunyikan saat hasil terbuka (O-11, G-3)")
+	check(not rem_terlihat and laju_min >= Config.RUTE_KELUAR_LAJU_MIN_UD - 0.0001, "sepeda tidak pernah direm sesudah garis dan lajunya tidak turun di bawah laju minimum (terendah %.3f)" % laju_min)
 	_langkah(akar, 120)
-	check(sepeda.kecepatan_ud == 0.0 and sepeda.jarak_ubin == jarak_berhenti, "tetap diam 2 detik walau stick ke atas ditahan (stick dikunci)")
+	check(sepeda.lateral_ubin == lateral_sebelum and akar.hasil_tampil(), "stick ke atas yang masih ditahan tidak membelokkan sepeda sesudah akhir (stick dikunci)")
 	# Stick ke samping dan atas, jari baru: tidak mengubah apa pun.
 	_sentuh(0, TITIK_STICK, false)
 	_sentuh(2, TITIK_STICK, true)
 	_geser(2, TITIK_STICK + Vector2(40, 0))
 	_langkah(akar, 30)
-	check(sepeda.lateral_ubin == lateral_sebelum and sepeda.kecepatan_ud == 0.0, "stick ke samping sesudah akhir: tidak berpindah jalur dan tetap diam")
+	check(sepeda.lateral_ubin == lateral_sebelum and not akar.sedang_jeda(), "stick ke samping sesudah akhir: tidak berpindah jalur")
 	_sentuh(2, TITIK_STICK, false)
 	# Lemparan baru ditolak (tap mode bantu dan swipe), koran tidak berkurang.
 	var sisa: int = akar.koran.sisa
@@ -970,7 +975,7 @@ func _test_penutup() -> void:
 	check(pencacah == 1, "hanya satu simpul PenerapPenutup di seluruh scene (%d)" % pencacah)
 	_taruh_sepeda(akar, 3.0, 0.5, 0.0, 100.0)
 	# Rumah rute di jendela daur terdaftar ke penerap yang sama; tidak ada yang menutupi pemain di jalan resmi (D-8 run 3A).
-	check(penerap.jumlah() == akar.daur().jumlah_rumah() + akar.rintangan_daur().jumlah_tampil() + _jumlah_dekor_penutup(akar) and akar.daur().jumlah_rumah() > 0, "rumah, rintangan, dan pohon/lampu (run fase5b B2) di jendela daur terdaftar ke penerap (%d)" % penerap.jumlah())
+	check(penerap.jumlah() == akar.daur().jumlah_rumah() + akar.rintangan_daur().jumlah_tampil() + _jumlah_dekor_penutup(akar) + 1 and akar.daur().jumlah_rumah() > 0, "rumah, rintangan, pohon/lampu (run fase5b B2) di jendela daur, dan satu portal garis finish terdaftar ke penerap (%d)" % penerap.jumlah())
 	var menutupi_nyata: int = 0
 	for lateral: float in [-1.0, 0.0, 1.0]:
 		for maju: int in range(0, 237, 2):
@@ -1004,7 +1009,7 @@ func _test_penutup() -> void:
 	akar.perbarui(0.0)
 	check(is_equal_approx(gambar.modulate.a, 0.45), "pemain di lateral -0,9: menutupi lagi (alfa 0,45)")
 	penerap.lepas(gambar)
-	check(gambar.modulate.a == 1.0 and penerap.jumlah() == akar.daur().jumlah_rumah() + akar.rintangan_daur().jumlah_tampil() + _jumlah_dekor_penutup(akar), "objek dilepas dari penerap: alfa kembali 1,0")
+	check(gambar.modulate.a == 1.0 and penerap.jumlah() == akar.daur().jumlah_rumah() + akar.rintangan_daur().jumlah_tampil() + _jumlah_dekor_penutup(akar) + 1 + akar.jumlah_hiasan_penerap(), "objek dilepas dari penerap: alfa kembali 1,0")
 	gambar.queue_free()
 	_bersihkan(akar)
 

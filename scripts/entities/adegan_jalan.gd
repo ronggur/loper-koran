@@ -92,6 +92,11 @@ extends Node2D
 ## `atur_mode_bantu`, yang menyamakan kontrol, HUD, dan layar jeda. Zona tap bel mengikuti geseran zona aman HUD (`HudDasar.geser_bel`)
 ## tiap langkah. Kait baru: `_langkah_waktu` (jam tenggat rute, dt efektif, sesudah sepeda digerakkan), `_tenggat_lewat` (status tenggat
 ## saat koran mendarat, untuk tip, `SkorRute.nilai_koran`), dan `_saring_jeda` (rute mengabaikan back di layar hasil).
+##
+## Run garis-finish-portal bagian C (G-2, G-5; usulan): sesudah garis akhir sepeda melaju keluar viewport (bukan direm), jadi adegan turunan punya kait tambahan, semuanya bawaan tidak berubah
+## untuk jalan uji: `_siapkan_gerak` (laju dijaga sebelum langkah gerak), `_jarak_dunia` (jarak yang dipakai tanah dan dunia; dibekukan di garis akhir supaya tanah dan jendela daur tidak ikut sepeda
+## keluar dan tidak muncul lubang di belakang kamera yang beku), `_rintangan_aktif` (mati sesudah garis akhir: tidak ada tabrakan baru, jam jatuh tetap berjalan), `_bel_diizinkan`, dan
+## `_sepeda_senyap`, dan (Bagian F) `_efek_gerak`. Kamera beku (`_bekukan_kamera`, dipanggil adegan turunan SEKALI saat garis tercapai): posisi kamera dan geseran dorongan tidak berubah lagi sampai `_kembalikan_awal`.
 
 ## Status jeda berubah: true = layar jeda dibuka (simulasi, sprite, partikel, dan input berhenti), false = lanjut.
 signal jeda_berubah(jeda: bool)
@@ -143,6 +148,10 @@ var _putus_detik: float = 0.0
 var _umpan: Array[UmpanMelayang.Entri] = []
 ## Kondisi sepeda rute ini (`KondisiRute`); null di jalan uji (tanpa aus, tanpa efek).
 var _kondisi: KondisiRute.Keadaan = null
+
+## True sejak kamera dibekukan (`_bekukan_kamera`) sampai `_kembalikan_awal`, dan posisi kamera beku itu.
+var _kamera_beku: bool = false
+var _posisi_kamera_beku: Vector2 = Vector2.ZERO
 
 ## Medan sasaran koran (zona penilaian dan kotak penutup): null = jalan uji, `MedanKoran.dari_rute` di scene rute. Dipakai penilaian koran dan garis
 ## bidik dengan fungsi yang sama (prediksi = hasil).
@@ -299,6 +308,44 @@ func _rintangan_awal() -> RintanganRute.Keadaan:
 ## Vektor stick yang diberikan ke sepeda langkah ini (bawaan: kontrol touch atau keyboard di editor).
 func _vektor_stick() -> Vector2:
 	return _kontrol.vektor_stick()
+
+
+## Dipanggil tiap langkah sebelum sepeda digerakkan: adegan turunan boleh mengganti keadaan gerak (rute: laju dijaga sesudah garis akhir, `AkhirRute.keadaan_dijaga`). Bawaan tidak mengubah apa pun.
+func _siapkan_gerak() -> void:
+	pass
+
+
+## Efek kondisi sepeda yang dipakai `BikeMotion.langkah` langkah ini (bawaan: efek kondisi rute; null di jalan uji). Rute mengembalikan null sesudah garis akhir (Bagian F, F-3): sepeda keluar dengan cepat walau aus atau rusak.
+func _efek_gerak() -> EfekKondisi:
+	return _kondisi.efek if _kondisi != null else null
+
+
+## Jarak maju (ubin) yang dipakai tanah, jendela daur, dan dunia lain. Bawaan = jarak sepeda; rute membekukannya di garis akhir (G-5: tanah di belakang portal tetap tergambar, tanpa lubang).
+func _jarak_dunia() -> float:
+	return _sepeda.jarak_ubin
+
+
+## False bila rintangan tidak lagi bergerak dan tidak bisa menabrak (rute sesudah garis akhir). Jam jatuh tabrakan yang sedang berjalan tetap maju. Bawaan true.
+func _rintangan_aktif() -> bool:
+	return true
+
+
+## False bila bel tidak boleh berbunyi (rute sesudah garis akhir). Bawaan true.
+func _bel_diizinkan() -> bool:
+	return true
+
+
+## True bila bunyi sepeda dimatikan (rute: layar hasil terbuka, sepeda sudah di luar layar). Bawaan false.
+func _sepeda_senyap() -> bool:
+	return false
+
+
+## Membekukan kamera di posisi yang menaruh sepeda di titik pijak kamera (`AkhirRute.posisi_kamera`) dengan geseran dorongan saat ini; posisi dan geseran tidak berubah lagi sampai `_kembalikan_awal`.
+## Dipanggil adegan turunan SEKALI saat garis akhir tercapai. Kamera langsung dipasang.
+func _bekukan_kamera() -> void:
+	_posisi_kamera_beku = AkhirRute.posisi_kamera(_sepeda.position, get_viewport_rect().size, _geser_dorongan)
+	_kamera_beku = true
+	_kamera.position = _posisi_kamera_beku
 
 
 ## False bila lemparan (swipe dan tap mode bantu) sedang tidak diterima, mis. sesudah akhir rute. Bawaan true.
@@ -466,7 +513,8 @@ func perbarui(dt: float) -> void:
 	var langkah_dt: float = JedaSim.dt_efektif(_jeda, _baru_lanjut, dt)
 	if not _jeda:
 		_baru_lanjut = false
-	var gerak: BikeMotion.Hasil = _sepeda.gerak(_vektor_stick(), langkah_dt, _rintangan.tabrakan.jatuh_detik, _kondisi.efek if _kondisi != null else null)
+	_siapkan_gerak()
+	var gerak: BikeMotion.Hasil = _sepeda.gerak(_vektor_stick(), langkah_dt, _rintangan.tabrakan.jatuh_detik, _efek_gerak())
 	_langkah_waktu(langkah_dt)
 	var tabrak: Tabrakan.Hasil = _langkah_rintangan(langkah_dt)
 	_langkah_kondisi(gerak, langkah_dt, tabrak)
@@ -475,8 +523,8 @@ func perbarui(dt: float) -> void:
 	_umpan = UmpanMelayang.langkah(_umpan, langkah_dt)
 	_perbarui_lemparan(langkah_dt)
 	_kontrol.langkah_tanda(langkah_dt)
-	_tanah.perbarui(_sepeda.jarak_ubin)
-	_perbarui_dunia(_sepeda.jarak_ubin)
+	_tanah.perbarui(_jarak_dunia())
+	_perbarui_dunia(_jarak_dunia())
 	_hud.tampilkan_kecepatan(_sepeda.kecepatan_ud)
 	_hud.tampilkan_stamina(_sepeda.stamina(), _sepeda.lelah())
 	_kontrol.atur_rem(_sepeda.rem_aktif())
@@ -487,7 +535,11 @@ func perbarui(dt: float) -> void:
 	_hud.tampilkan_bel(_kontrol.router.bel_ditahan(), Bel.sisa_jeda_pecahan(_bel))
 	_kontrol.router.geser_bel = _hud.geser_bel()
 	if _audio != null:
-		_audio.perbarui_sepeda(_sepeda.pose(), _sepeda.kecepatan_ud, _sepeda.rem_aktif(), _jeda)
+		var senyap: bool = _sepeda_senyap()
+		_audio.perbarui_sepeda(_sepeda.pose(), 0.0 if senyap else _sepeda.kecepatan_ud, _sepeda.rem_aktif() and not senyap, _jeda)
+	if _kamera_beku:
+		_kamera.position = _posisi_kamera_beku
+		return
 	_geser_dorongan = DoronganKecepatan.haluskan(_geser_dorongan, DoronganKecepatan.geser_target(_sepeda.kecepatan_ud), langkah_dt)
 	_kamera.position = posisi_kamera()
 
@@ -521,6 +573,13 @@ func _perbarui_lemparan(langkah_dt: float) -> void:
 ## Satu langkah rintangan sesudah sepeda digerakkan (urutan di atas): peristiwa ke bunyi; tabrakan baru diterapkan ke sepeda, combo putus,
 ## bunyi, dan sinyal `tabrakan`. Mengembalikan `Tabrakan.Hasil` langkah ini bila ada tabrakan baru (masukan kerusakan kondisi), selain itu null.
 func _langkah_rintangan(langkah_dt: float) -> Tabrakan.Hasil:
+	if not _rintangan_aktif():
+		# Rintangan membeku di keadaan terakhirnya dan tidak bisa menabrak; hanya jam jatuh yang sedang berjalan tetap maju (sepeda bangun, lalu melaju lagi).
+		var beku: RintanganRute.Keadaan = RintanganRute.Keadaan.new()
+		beku.daftar = _rintangan.daftar
+		beku.tabrakan = Tabrakan.langkah(_rintangan.tabrakan, Tabrakan.kotak_sepeda(_sepeda.jarak_ubin, _sepeda.lateral_ubin), [], langkah_dt).keadaan
+		_rintangan = beku
+		return null
 	var hr: RintanganRute.Hasil = RintanganRute.langkah(_rintangan, _sepeda.jarak_ubin, _sepeda.lateral_ubin, _sepeda.kecepatan_ud, langkah_dt)
 	_rintangan = hr.keadaan
 	if _audio != null:
@@ -589,6 +648,8 @@ func _saat_bel_ditekan(_posisi: Vector2) -> void:
 ## Satu ketukan bel (tombol, juga dipanggil tes): `Bel.ketuk` dengan status jeda game; bila berbunyi: bunyi bel, rintangan dalam jangkauan
 ## bereaksi (`RintanganRute.terapkan_bel`), dan `bel_berbunyi`. Hasil ketukan dikembalikan.
 func ketuk_bel() -> Bel.Bunyi:
+	if not _bel_diizinkan():
+		return Bel.Bunyi.TOLAK
 	var hb: Bel.Hasil = Bel.ketuk(_bel, _jeda)
 	_bel = hb.keadaan
 	if not Bel.berbunyi(hb.bunyi):
@@ -664,6 +725,7 @@ func _kembalikan_awal(koran_awal: int) -> void:
 	_kontrol.lepas_semua()
 	_kontrol.atur_rem(false)
 	_geser_dorongan = Vector2.ZERO
+	_kamera_beku = false
 	_koran_tanah.tampilkan(_terbang)
 	_koran_udara.tampilkan(_terbang)
 	_hud.tampilkan_koran(koran.sisa, koran.penuh)
@@ -682,6 +744,11 @@ func sedang_jeda() -> bool:
 ## Geseran sepeda di layar akibat dorongan kecepatan (sudah dihaluskan), piksel game; nol di kecepatan santai.
 func geser_dorongan() -> Vector2:
 	return _geser_dorongan
+
+
+## True selama kamera beku di garis akhir (tidak mengikuti sepeda lagi).
+func kamera_beku() -> bool:
+	return _kamera_beku
 
 
 ## Posisi kamera supaya sepeda jatuh di `KAMERA_SEPEDA_*_PECAHAN` viewport ditambah geseran dorongan kecepatan,

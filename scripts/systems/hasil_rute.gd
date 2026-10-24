@@ -9,8 +9,8 @@ extends RefCounted
 ## - Koran terbuang (run fase6a2-reputasi-pelanggan bagian B, K-1, K-2, O-1, O-2): `lempar_terbuang` = `SkorRute.Keadaan.terbuang` (lemparan nyata, BUKAN `meleset` di atas),
 ##   `potongan` = `SkorRute.potongan`, `koin_bersih` = `koin` - `potongan` (boleh negatif). `koin` tetap koin kotor (ongkos + tip + hadiah misi). Satu sumber untuk HUD, layar hasil, dan save.
 ## - Tenggat lewat (bool) dan detik lewat (detik bulat tampilan, `TenggatRute.detik_tampil`; 0 bila tidak lewat) dari `TenggatRute`.
-## - Layar hasil boleh terbuka (`siap_tampil`) sesudah garis akhir, saat sepeda sudah berhenti (kecepatan paling tinggi
-##   `HASIL_BERHENTI_TOLERANSI_UD`) DAN tidak ada koran yang masih terbang (semua koran yang dilempar sudah mendarat dan dinilai).
+## - Layar hasil boleh terbuka (`siap_tampil`) sesudah garis akhir, saat sepeda sudah KELUAR viewport (`AkhirRute.Fase.SUDAH_KELUAR`, G-4 run
+##   garis-finish-portal; dulu: berhenti) DAN tidak ada koran yang masih terbang (semua koran yang dilempar sudah mendarat dan dinilai).
 ## Juga format angka dengan pemisah ribuan ("1.250", DESIGN_SPEC 3.3); pemisahnya diberikan pemanggil dari kunci terjemahan.
 ## Tanpa node, `Time`, atau RNG; masukan tidak diubah.
 
@@ -79,10 +79,10 @@ static func koin_dijepit(saldo_lama: int, koin_bersih: int) -> int:
 	return maxi(-(maxi(saldo_lama, 0) + koin_bersih), 0)
 
 
-## True bila layar hasil boleh terbuka: rute `selesai`, kecepatan sepeda `kecepatan_ud` paling tinggi `HASIL_BERHENTI_TOLERANSI_UD`, dan
-## tidak ada koran di `koran` yang belum mendarat.
-static func siap_tampil(selesai: bool, kecepatan_ud: float, koran: Array[KoranLempar.Koran]) -> bool:
-	if not selesai or not is_finite(kecepatan_ud) or kecepatan_ud > Config.HASIL_BERHENTI_TOLERANSI_UD:
+## True bila layar hasil boleh terbuka: rute `selesai`, sepeda `sudah_keluar` viewport (`AkhirRute.sudah_keluar`/fase SUDAH_KELUAR), dan tidak ada koran
+## di `koran` yang belum mendarat. Kecepatan sepeda tidak lagi dibaca (G-4).
+static func siap_tampil(selesai: bool, sudah_keluar: bool, koran: Array[KoranLempar.Koran]) -> bool:
+	if not selesai or not sudah_keluar:
 		return false
 	for k: KoranLempar.Koran in koran:
 		if not k.mendarat:

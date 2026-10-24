@@ -258,6 +258,12 @@ func _test_radar_bantu_dan_tenggat() -> void:
 	var img_pel: Image = (load("res://assets/sprites/ui/ui_radar_pelanggan.png") as Texture2D).get_image()
 	var terang_tip: float = img_tip.get_pixel(3, 2).get_luminance() - img_tip.get_pixel(1, 1).get_luminance()
 	var terang_pel: float = img_pel.get_pixel(3, 2).get_luminance() - img_pel.get_pixel(1, 1).get_luminance()
+	check(img_pel.get_pixel(3, 2).is_equal_approx(Palette.RADAR_PELANGGAN) and img_pel.get_pixel(1, 1).is_equal_approx(Color("#FFF65A")) and img_pel.get_pixel(0, 0).is_equal_approx(Palette.OUTLINE), "R-6 penanda pelanggan: isi = Palette.RADAR_PELANGGAN (kuning stabilo #FFF200), sorot atas #FFF65A, garis luar OUTLINE")
+	var img_pel_j: Image = (load("res://assets/sprites/ui/ui_radar_pelanggan_jangkau.png") as Texture2D).get_image()
+	check(img_pel_j.get_pixel(3, 3).is_equal_approx(Palette.RADAR_PELANGGAN) and img_pel_j.get_pixel(1, 1).is_equal_approx(Palette.OUTLINE) and img_pel_j.get_pixel(1, 0).is_equal_approx(Palette.TEXT), "R-6 penanda pelanggan jangkau: isi stabilo, garis luar OUTLINE, garis luar TEXT di luarnya")
+	var kontras_isi: float = _kontras(Palette.RADAR_PELANGGAN, Color("#6fae4f"))
+	var kontras_lama: float = _kontras(Color("#FFC94A"), Color("#6fae4f"))
+	check(kontras_isi > kontras_lama + 0.4 and kontras_isi >= 2.2 and _kontras(Palette.OUTLINE, Color("#6fae4f")) >= 7.0, "R-6 kontras isi vs rumput %.2f:1 (lama %.2f:1), garis luar vs rumput %.2f:1" % [kontras_isi, kontras_lama, _kontras(Palette.OUTLINE, Color("#6fae4f"))])
 	check(terang_tip > 0.1 and terang_pel < 0.05, "aset tip bertitik terang di tengah (selisih terang %.2f); pelanggan tanpa titik terang (%.2f)" % [terang_tip, terang_pel])
 	(_jeda(akar)).sakelar_bantu().ditekan.emit()
 	akar.perbarui(0.0)
@@ -509,3 +515,17 @@ func _test_main_lagi_mengatur_ulang() -> void:
 	check(t.jumlah == 0 and t.jatuh_detik == 0.0 and t.kebal_detik == 0.0 and t.menempel.is_empty() and akar.bel().jumlah == 0 and not String(_sepeda(akar).nama_animasi()).begins_with("jatuh") and not String(_sepeda(akar).nama_animasi()).begins_with("terjerembab") and _sepeda(akar).alfa_sprite() == 1.0, "tabrakan, jatuh, kebal, bel, sprite jatuh dan kedip diatur ulang")
 	check(hud.visible and (_anak(akar, "KontrolTouch") as KontrolTouch).is_processing_input(), "HUD tampil lagi dan kontrol sentuh membaca sentuhan lagi")
 	_bersihkan(akar)
+
+
+## Kontras WCAG dua warna (R-6).
+func _kontras(a: Color, b: Color) -> float:
+	var la: float = _lum(a)
+	var lb: float = _lum(b)
+	return (maxf(la, lb) + 0.05) / (minf(la, lb) + 0.05)
+
+
+func _lum(c: Color) -> float:
+	var kanal: Array[float] = []
+	for v: float in [c.r, c.g, c.b]:
+		kanal.append(v / 12.92 if v <= 0.03928 else pow((v + 0.055) / 1.055, 2.4))
+	return 0.2126 * kanal[0] + 0.7152 * kanal[1] + 0.0722 * kanal[2]

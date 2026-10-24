@@ -1,0 +1,199 @@
+extends SceneTree
+## QA edge (branch saja): sapuan viewport x kidal x laju awal di garis, oracle bbox piksel opak NYATA sprite (bukan konstanta 18/8 Dev),
+## sepeda berhenti di garis, hasil tepat sekali, Main lagi 20x (kebocoran sinyal/node).
+
+const BERKAS_RUTE: String = "res://scenes/rute/rute.tscn"
+const DT: float = 1.0 / 60.0
+const JENDELA: Array = [[1280, 720, 2], [1386, 720, 2], [1560, 720, 2], [1600, 720, 2], [1920, 1080, 3], [2079, 1080, 3], [2340, 1080, 3], [2400, 1080, 3]]
+var gagal: int = 0
+var lolos: int = 0
+
+
+func cek(k: bool, label: String) -> void:
+	if k:
+		lolos += 1
+	else:
+		gagal += 1
+		print("GAGAL: ", label)
+
+
+func bbox_layar(akar: RuteMain, sprite: AnimatedSprite2D) -> Rect2:
+	var tex: Texture2D = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+	var img: Image = tex.get_image()
+	var r: Rect2i = img.get_used_rect()
+	if r.size == Vector2i.ZERO:
+		return Rect2()
+	var tsz: Vector2 = tex.get_size()
+	var lokal: Rect2 = Rect2(sprite.offset - (tsz / 2.0 if sprite.centered else Vector2.ZERO), tsz)
+	var kam: Camera2D = akar.find_child("Kamera", true, false) as Camera2D
+	var ukuran: Vector2 = akar.get_viewport_rect().size
+	var pojok: Vector2 = sprite.global_position + lokal.position + Vector2(r.position) - kam.position + ukuran / 2
+	return Rect2(pojok, Vector2(r.size))
+
+
+func satu(lebar: int, tinggi: int, skala: int, kidal: bool, laju: float, lateral: float, kondisi: float, rem: bool) -> void:
+	root.size = Vector2i(lebar, tinggi)
+	var akar: RuteMain = (load(BERKAS_RUTE) as PackedScene).instantiate() as RuteMain
+	var sp: Dictionary = {"sepeda": {}}
+	for id: String in Config.KONDISI_KOMPONEN:
+		(sp["sepeda"] as Dictionary)[id] = {"kondisi": kondisi, "level": 0}
+	var daftar: Array[DataToko] = []
+	akar.atur_sepeda(sp, 1, daftar)
+	root.add_child(akar)
+	await process_frame
+	await process_frame
+	akar.set_process(false)
+	(akar.find_child("KontrolTouch", true, false) as KontrolTouch).keyboard_aktif = false
+	(akar.find_child("LoperAgen", true, false) as LoperSprite).set_process(false)
+	akar.atur_kidal(kidal)
+	akar.atur_benih_awal(akar.benih())
+	var sepeda: SepedaUji = akar.find_child("Sepeda", true, false) as SepedaUji
+	var sprite: LoperSprite = akar.find_child("LoperAgen", true, false) as LoperSprite
+	var ukuran: Vector2 = akar.get_viewport_rect().size
+	var tag: String = "%dx%d(%d) kidal=%s v=%.1f lat=%.1f kond=%.2f rem=%s" % [lebar, tinggi, int(ukuran.x), str(kidal), laju, lateral, kondisi, str(rem)]
+	var panjang: float = akar.rute().panjang_ubin
+	var k: BikeMotion.Keadaan = sepeda.keadaan.salin()
+	k.kecepatan_ud = laju
+	k.lateral_ubin = lateral
+	sepeda.keadaan = k
+	sepeda.jarak_ubin = panjang - 0.3
+	var dibuka: Array[int] = [0]
+	akar.hasil_dibuka.connect(func(_a: HasilRute.Angka) -> void: dibuka[0] += 1)
+	var vmin: float = 1e9
+	var langkah: int = 0
+	var kam0: Vector2 = Vector2.ZERO
+	var kam_ok: bool = true
+	var garis: bool = false
+	var l_keluar_pertama: int = -1
+	var l_hasil: int = -1
+	var luar_saat_hasil: bool = false
+	var pernah_di_dalam_setelah_hasil: bool = false
+	var hasil_sebelum_luar: bool = false
+	var lat_ok: bool = true
+	var lat_garis: float = 0.0
+	var l_garis: int = 0
+	var stick_lawan: bool = true
+	while langkah < 1500:
+		# Jari memegang stick ke belakang dan samping SEPANJANG fase (rem manual ditahan / jempol belum lepas)
+		if rem:
+			var e1: InputEventScreenTouch = InputEventScreenTouch.new()
+			if langkah == 0:
+				e1.index = 0
+				e1.position = Vector2(110, 270) * float(skala)
+				e1.pressed = true
+				Input.parse_input_event(e1)
+				Input.flush_buffered_events()
+			var e2: InputEventScreenDrag = InputEventScreenDrag.new()
+			e2.index = 0
+			e2.position = (Vector2(110, 270) + Vector2(-50, 60)) * float(skala)
+			Input.parse_input_event(e2)
+			Input.flush_buffered_events()
+		akar.perbarui(DT)
+		langkah += 1
+		if akar.rute_sudah_selesai():
+			var kamera: Camera2D = akar.find_child("Kamera", true, false) as Camera2D
+			if not garis:
+				garis = true
+				kam0 = kamera.position
+				lat_garis = sepeda.lateral_ubin
+				l_garis = langkah
+			if kamera.position != kam0:
+				kam_ok = false
+			if not Tabrakan.jatuh(akar.rintangan().tabrakan) and sepeda.kecepatan_ud < vmin and langkah > l_garis:
+				vmin = sepeda.kecepatan_ud
+			if absf(sepeda.lateral_ubin - lateral) > 1e-6 and lateral != 0.0 and false:
+				lat_ok = false
+			var bb: Rect2 = bbox_layar(akar, sprite)
+			var layar: Rect2 = Rect2(Vector2.ZERO, ukuran)
+			var di_luar: bool = not bb.intersects(layar) or bb.size == Vector2.ZERO
+			if di_luar and l_keluar_pertama < 0:
+				l_keluar_pertama = langkah
+			if akar.hasil_tampil() and l_hasil < 0:
+				l_hasil = langkah
+				luar_saat_hasil = di_luar
+			if l_keluar_pertama >= 0 and not di_luar and l_hasil < 0:
+				pernah_di_dalam_setelah_hasil = true
+			if akar.hasil_tampil() and not di_luar:
+				hasil_sebelum_luar = true
+		if akar.hasil_tampil() and langkah - l_hasil > 5:
+			break
+	if rem:
+		var e3: InputEventScreenTouch = InputEventScreenTouch.new()
+		e3.index = 0
+		e3.position = Vector2(110, 270) * float(skala)
+		e3.pressed = false
+		Input.parse_input_event(e3)
+		Input.flush_buffered_events()
+	cek(akar.hasil_tampil() and dibuka[0] == 1, "%s: hasil terbuka tepat sekali (sinyal=%d)" % [tag, dibuka[0]])
+	cek(luar_saat_hasil and not hasil_sebelum_luar, "%s: pada frame hasil terbuka bbox opak sprite sepenuhnya di luar viewport" % tag)
+	cek(kam_ok and akar.kamera_beku(), "%s: kamera tidak bergeser sama sekali sesudah garis" % tag)
+	if kondisi < 0.5:
+		print("vmin ", tag, " = ", vmin)
+	cek(vmin >= 3.0 - 1e-9, "%s: laju minimum sesudah garis (vmin=%.3f)" % [tag, vmin])
+	cek(l_keluar_pertama > 0 and l_hasil - l_keluar_pertama <= 2, "%s: hasil muncul <=2 frame setelah sepeda luar (luar@%d hasil@%d, total %d)" % [tag, l_keluar_pertama, l_hasil, l_hasil])
+	cek(sprite.animation.begins_with("berhenti") == false and not String(sprite.animation).begins_with("rem"), "%s: animasi akhir bukan rem/berhenti (%s)" % [tag, sprite.animation])
+	cek(absf(sepeda.lateral_ubin - lat_garis) < 1e-6, "%s: lateral tidak berubah sejak garis (%.4f vs %.4f)" % [tag, sepeda.lateral_ubin, lat_garis])
+	if not luar_saat_hasil or hasil_sebelum_luar:
+		print("   info ", tag, " l_luar=", l_keluar_pertama, " l_hasil=", l_hasil)
+	(akar.find_child("KontrolTouch", true, false) as KontrolTouch).keyboard_aktif = OS.has_feature("editor")
+	root.remove_child(akar)
+	akar.free()
+	await process_frame
+
+
+func main_lagi_20() -> void:
+	root.size = Vector2i(2340, 1080)
+	var akar: RuteMain = (load(BERKAS_RUTE) as PackedScene).instantiate() as RuteMain
+	root.add_child(akar)
+	await process_frame
+	await process_frame
+	akar.set_process(false)
+	(akar.find_child("KontrolTouch", true, false) as KontrolTouch).keyboard_aktif = false
+	var sepeda: SepedaUji = akar.find_child("Sepeda", true, false) as SepedaUji
+	var awal_sinyal: Dictionary = {}
+	for nama: String in ["rute_selesai", "hasil_dibuka", "rute_disusun", "koran_dilempar", "koran_mendarat", "tabrakan", "skor_dinilai", "jeda_berubah"]:
+		awal_sinyal[nama] = akar.get_signal_connection_list(nama).size()
+	var tombol: Object = akar.layar_hasil().tombol_main_lagi()
+	var awal_tombol: int = tombol.get_signal_connection_list("ditekan").size()
+	var awal_node: int = int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
+	var awal_objek: int = int(Performance.get_monitor(Performance.OBJECT_COUNT))
+	var awal_anak: int = akar.get_child_count()
+	var awal_penerap: int = akar.penerap_penutup().jumlah()
+	var benih0: int = akar.benih()
+	for putaran: int in range(20):
+		sepeda.jarak_ubin = akar.rute().panjang_ubin - 0.3
+		for i: int in range(900):
+			akar.perbarui(DT)
+			if akar.hasil_tampil():
+				break
+		cek(akar.hasil_tampil(), "putaran %d: hasil terbuka" % putaran)
+		akar.layar_hasil().tombol_main_lagi().ditekan.emit()
+		cek(not akar.kamera_beku() and akar.fase_keluar() == AkhirRute.Fase.SEBELUM and akar.portal().bingkai() == 0 and not akar.hasil_tampil() and not akar.panel_akhir().tampil(), "putaran %d: pulih" % putaran)
+		akar.perbarui(DT)
+	cek(akar.benih() == benih0 + 20, "benih naik 20")
+	for nama: String in awal_sinyal:
+		cek(akar.get_signal_connection_list(nama).size() == int(awal_sinyal[nama]), "sinyal %s tidak bocor (%d -> %d)" % [nama, int(awal_sinyal[nama]), akar.get_signal_connection_list(nama).size()])
+	cek(tombol.get_signal_connection_list("ditekan").size() == awal_tombol, "tombol main lagi sinyal tidak bocor")
+	var akhir_node: int = int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
+	cek(absi(akhir_node - awal_node) <= 5, "jumlah node stabil (%d -> %d)" % [awal_node, akhir_node])
+	cek(akar.get_child_count() == awal_anak and akar.penerap_penutup().jumlah() <= awal_penerap + 40 and akar.penerap_penutup().jumlah() >= awal_penerap - 40, "anak akar dan penerap stabil (%d -> %d, penerap %d -> %d)" % [awal_anak, akar.get_child_count(), awal_penerap, akar.penerap_penutup().jumlah()])
+	print("objek ", awal_objek, " -> ", int(Performance.get_monitor(Performance.OBJECT_COUNT)))
+	root.remove_child(akar)
+	akar.free()
+
+
+func _initialize() -> void:
+	await process_frame
+	for j: Array in JENDELA:
+		for kidal: bool in [false, true]:
+			for laju: float in [0.0, 1.5, 6.0]:
+				await satu(int(j[0]), int(j[1]), int(j[2]), kidal, laju, 0.0, 1.0, false)
+	# kasus tepi
+	await satu(2340, 1080, 3, false, 0.0, 1.9, 0.0, false)
+	await satu(2340, 1080, 3, false, 0.0, -1.9, 0.0, false)
+	await satu(2340, 1080, 3, false, 6.0, 1.9, 0.0, true)
+	await satu(2400, 1080, 3, true, 4.0, -1.9, 0.0, true)
+	await satu(1920, 1080, 3, false, 5.0, 0.0, 0.0, true)
+	await main_lagi_20()
+	print("qa_edge: ", lolos, " lolos, ", gagal, " gagal")
+	quit(0)
