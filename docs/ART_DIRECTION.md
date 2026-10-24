@@ -412,7 +412,7 @@ Spesifikasi di `design/DESIGN_SPEC.md`.
 | Layar hasil harian | ✅ | ✅ |
 | Layar bengkel | ⬜ | ✅ |
 
-**Usulan (2026-10-15, `tools/ui_art/hud_ikon.py`):** ikon 14×14 koin, reputasi, ban, rem, rantai, dan misi kucing (`assets/sprites/ui/ui_icon_<nama>.png`, `ui_icon_hud_sheet.png`), penanda radar 8×6 dan versi masuk jangkauan 10×8 (`ui_radar_<jenis>.png`, `ui_radar_<jenis>_jangkau.png`, `ui_radar_penanda.png`), bingkai 9-slice strip radar dan panel HUD. Koran tetap `IKON_KORAN` di kode, tombol jeda dari kode. Pratinjau di `design/hud/`. Ikon rem paling lemah di ×1, cek di HP.
+**Usulan (2026-10-15, `tools/ui_art/hud_ikon.py`):** ikon 14×14 koin, reputasi, ban, rem, rantai, dan misi kucing (`assets/sprites/ui/ui_icon_<nama>.png`, `ui_icon_hud_sheet.png`), penanda radar 8×6 dan versi masuk jangkauan 10×8 (`ui_radar_<jenis>.png`, `ui_radar_<jenis>_jangkau.png`, `ui_radar_penanda.png`), panel HUD 9-slice (bingkai 9-slice strip radar dihapus 2026-10-24: strip radar tanpa bingkai, hanya garis sumbu dari kode). Koran tetap `IKON_KORAN` di kode, tombol jeda dari kode. Pratinjau di `design/hud/`. Ikon rem paling lemah di ×1, cek di HP.
 | Tombol bel: diam, ditekan, jeda (usulan, `design/bel/`) | ⬜ | ✅ |
 | Logo "Kring Kring!" untuk layar judul dan ikon aplikasi | ⬜ | ✅ |
 

@@ -361,7 +361,7 @@ Keputusan pemilik K-1 (tenggat, tip hilang sesudahnya) dan K-2 (radar 30 ubin), 
 |---|---|---|
 | Pengali tenggat | ×1,15 waktu tempuh santai | `TENGGAT_PENGALI`; `TENGGAT_TOLERANSI_DETIK` 0,000001 hanya derau float; `WAKTU_DETIK_PER_MENIT` 60 |
 | Jangkauan radar | 30 ubin ke depan (sekitar 5 detik ngebut, 10 detik santai) | `RADAR_JANGKAUAN_UBIN` (K-2); kelak bisa upgrade (GDD 4.3) |
-| Strip radar | x 4 dari tepi, lebar 12, y 10 sampai 182, bingkai 9-slice 2; penanda 8×6, jangkau 10×8 | `RADAR_TEPI_PX`, `RADAR_LEBAR_PX`, `RADAR_Y_ATAS_PX`, `RADAR_Y_BAWAH_PX`, `RADAR_BINGKAI_PX`, `RADAR_PENANDA_*`, `RADAR_JANGKAU_TAMBAH_PX` (DESIGN_SPEC 3.4) |
+| Strip radar | x 4 dari tepi, lebar 12, y 10 sampai 182, tanpa bingkai (garis sumbu 1 px sejak R-3 2026-10-24), jalur penanda 2 dari ujung strip; penanda 8×6, jangkau 10×8 | `RADAR_TEPI_PX`, `RADAR_LEBAR_PX`, `RADAR_Y_ATAS_PX`, `RADAR_Y_BAWAH_PX`, `RADAR_JALUR_PAD_PX`, `RADAR_PENANDA_*`, `RADAR_JANGKAU_TAMBAH_PX` (DESIGN_SPEC 3.4) |
 | Kotak progres | 25 kotak 8×8 jarak 2 di panel 260 (isi samping 6, bukan 7, supaya 248 px muat); terlewat sesudah 3,0 ubin | `HUD_PROGRES_*` (DESIGN_SPEC 3.2) |
 | Panel kanan atas | koin dan skor, tepi kanan 28 dari tepi layar, jarak antar panel 5, ikon 14, panel 9-slice 4 | `HUD_KANAN_MARGIN_PX`, `HUD_PANEL_JARAK_PX`, `HUD_IKON_PX`, `HUD_PANEL_9SLICE_PX`; pemisah ribuan tiap `ANGKA_KELOMPOK_RIBUAN` 3 angka |
 | Zona aman | margin tepi = max(margin DESIGN_SPEC, inset aman); inset layar dibulatkan ke atas ke piksel game | `ZONA_AMAN_TOLERANSI_PX` 0,000001 hanya derau float |

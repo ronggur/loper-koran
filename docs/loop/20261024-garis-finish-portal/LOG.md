@@ -273,3 +273,62 @@ Portal tertutup dari jauh (di bawah panel kanan atas pada 14 ubin) terbaca sebag
 - [ ] Panel kondisi dan koin/skor menutupi sepeda saat keluar (QA-002): dinilai di HP A54.
 - [ ] Palang tertutup yang hanya separuh jalan: apakah terbaca sebagai garis finish; coba lateral -1,0 (QA-004).
 - [ ] Jempol sungguhan menahan stick/swipe melewati garis, lalu dilepas: tidak ada lemparan/bel/belokan (jalur tersintesis lolos; jalur sentuh fisik belum).
+
+## Dev iterasi 2, Bagian E: revisi UI pemilik R-1..R-4 (Dev, 2026-10-24; usulan, hasil visual dinilai pemilik di HP)
+
+Commit: `fa563fb` (kode R-1..R-4 + tes), `07b6ea2` (koreksi panah), commit docs sesudahnya. Tidak ada angka permainan, ekonomi, save, atau aturan yang berubah; tidak ada kunci terjemahan baru. sha256 save asli `37d6d6cb...549e` sama sebelum dan sesudah (dicek sebelum, sesudah tes, sesudah gerbang).
+
+### Yang diubah (per file)
+- **R-1 panah.** Sebab: `Button.icon_alignment = RIGHT` menaruh glif di tepi kanan isi dan teks di tengah sisanya, jadi panah mepet tepi (6 px game di Berangkat dan Hari berikutnya, 8 px di Lanjut) sementara teks 15 sampai 81 px dari kiri. `scripts/systems/komponen_ui.gd` (`margin_grup_glif`, murni), `scripts/ui/gaya_hud.gd` (`glif_ujung_kanan`, `margin_glif_tombol`, `pad_kanan_glif`, `lebar_teks_tombol`): grup teks + jarak + glif ditaruh di tengah, margin kiri sama dengan jarak TINTA glif ke tepi kanan (kolom kosong kanan glif dikoreksi dari piksel PNG), dihitung ulang tiap `resized`; teks rata kiri. Dipakai `layar_bengkel.gd`, `layar_jeda.gd`, `halaman_koran.gd` (hanya tiga tombol berpanah; tombol Ambil/Lewati berglif centang dan Servis berglif kunci TIDAK diubah karena di luar R-1). `config.gd`: `UI_TOMBOL_GLIF_MARGIN_MIN_PX` 8, `KORAN_BERANGKAT_JARAK_PX` 4 (nilai bawaan tema sebelumnya, kini eksplisit).
+- **R-2 perataan.** Sebab terukur: baris Meleset (label `LayarTeksKecil` 11 rata atas, nilai `LayarTeksUtama` 12) garis dasar 201,00 lawan 202,00; kartu reputasi: label 68,00, angka 73,00, chip 68,00 (rata tengah tinggi berbeda). `scripts/systems/tampil_hasil.gd` (`turun_baseline`, `baseline_chip`, murni), `scripts/ui/layar_hasil.gd` (`_ratakan_baseline` lewat gaya `normal` Label, `_ratakan_reputasi`, aksesor tes `baseline_label`, `baseline_reputasi`, `pasangan_baris`, `pasangan_pelanggan`, `tepi_kanan_samping`), `scenes/ui/layar_hasil.tscn` (label dan angka reputasi rata atas, `PembungkusChip` baru membungkus `ChipReputasi`; nama unik `%ChipReputasi` tetap). Tepi kanan nilai sudah sama dari awal (rect kanan semua baris 510, kolom samping 762); pengukuran ink 0,0 sampai 0,7 px bukan selisih tata letak melainkan bearing glif.
+- **R-3 radar.** `scripts/ui/radar_strip.gd` (bingkai 9-slice dihapus, `draw_rect` garis sumbu), `scripts/systems/radar_rute.gd` (`rect_sumbu`), `config.gd` (`RADAR_BINGKAI_PX` -> `RADAR_JALUR_PAD_PX`, nilai 2). Aset: `assets/sprites/ui/ui_radar_strip_9slice.png` + `.import` DIHAPUS (tidak dipakai lagi; tidak ada di daftar set-tepat `pasang.py`, `uji_aset_*`, `tes_export` karena aset ini dari `hud_ikon.py`, bukan dari gelombang 1 atau redesain), `ui_icon_hud_sheet.json` tanpa entri 9-slice strip, `tools/ui_art/hud_ikon.py` (`strip()` -> `sumbu()` untuk contoh, tidak menulis PNG strip), `docs/design/hud/radar_contoh.png` dirender ulang lewat skrip, `docs/design/hud/README.md`. Penanda tidak diubah (sudah punya garis luar `OUTLINE` 1 px dan jangkau `TEXT`).
+- **R-4 bar.** `scripts/ui/bar_kecepatan.gd` (tanpa garis luar dan latar `UI_PANEL_RAISED`; garis sumbu `OUTLINE` 1 px di tengah tinggi sepanjang bar, di bawah isi; isi tetap 7 px; tanda 90 persen `WARN` tetap setinggi bar), `scripts/systems/tampil_hud.gd` (`rect_sumbu_bar`). Panel bawah tidak diubah.
+- **Probe dan alat.** `tests/probe_hud_rute_jendela.gd` (+ `_cek_piksel_hud`: strip radar tidak menggambar di kolom tepi dibanding tangkapan yang sama tanpa strip, kolom sumbu >= 80 persen `OUTLINE`, bar kosong: baris tengah `OUTLINE` dan baris atas bukan warna trek lama), `tests/probe_hasil_jendela.gd` (+ `_periksa_rata`), `tests/probe_halaman_koran_jendela.gd`, `tests/probe_bengkel_jendela.gd`, `tests/probe_jeda_hud_jendela.gd` (+ cek margin panah). `tools/bandingkan_tangkapan_hud.py`: pengecualian baru dua strip radar (x 4..16 dan lebar-16..lebar-4, y 10..182); bar sudah di pengecualian panel bawah. Hasil pada tangkapan sebelum lawan sesudah (2340x1080, 7 tangkapan hud): 0 piksel berbeda di luar pengecualian.
+- Tes baru `tests/tes_revisi_ui_e.gd` (`TesRevisiUiE`, didaftarkan di `run_tests.gd`): 126 asersi baru (lihat jumlah di gerbang).
+
+### Tes dan probe lama yang diubah (alasan sah R-x)
+1. `tests/tes_radar.gd` baris 85: `Config.RADAR_BINGKAI_PX == 2` -> `Config.RADAR_JALUR_PAD_PX == 2` (konstanta diganti nama, R-3; nilai tetap).
+2. `tests/tes_radar.gd` baris 93-94: asersi "bingkai strip 9-slice 12x12 ada" -> "aset bingkai tidak dipasang lagi" (R-3 menghapus aset).
+3. `tests/probe_jeda_hud_jendela.gd`: batas langkah menunggu banner "Rute selesai" 120 -> 600. BUKAN karena R-x: cacat dari iterasi 1 (banner kini muncul saat hampir keluar, 60 sampai 160 langkah sesudah garis, jadi probe di HEAD `818cab4` mencetak 3 keadaan tidak sesuai di dua ukuran). Diperbaiki agar AC-12 (probe tanpa keadaan tidak sesuai) terpenuhi.
+4. Probe `hud_rute`, `hasil`, `halaman_koran`, `bengkel`, `jeda_hud`: hanya ditambah pemeriksaan baru (di atas), tidak ada asersi lama yang dilonggarkan. Tidak ada tes lain yang bergantung pada bingkai radar atau trek bar (suite penuh hijau tanpa perubahan lain, jadi pengunci lama lemah di sini; ditutup oleh `tes_revisi_ui_e.gd` dan probe piksel).
+
+### Ukuran sebelum dan sesudah (tangkapan nyata, piksel game; skrip pengukur di scratchpad, bukan di repo)
+Panah (jarak ink teks dari tepi kiri tombol / ink panah dari tepi kanan tombol), sama di 2340x1080 dan 1600x720:
+
+| Tombol (lebar) | Sebelum | Sesudah |
+|---|---|---|
+| Berangkat (140) | 31,3 / 6,0 | 32,3 / 31,0 |
+| Hari berikutnya (140) | 15,3 / 6,0 | 16,3 / 15,0 |
+| Lanjut (216) | 81,3 / 8,0 | 83,3 / 82,0 |
+
+Sisa selisih 1,3 px game (4 px layar di 3x) adalah bearing kiri huruf pertama; sebelum koreksi kolom kosong glif selisih Lanjut 2,7 px. Teks terpanjang tidak terpotong: `tes_revisi_ui_e.gd` memeriksa teks + jarak + glif + margin muat di empat lebar viewport (640, 780, 800 dan 800 di 1600x720); Hari berikutnya paling padat: sisa margin terlihat 15 sampai 16 px lawan minimum 8.
+Struk (garis dasar = tepi bawah ink huruf tanpa descender): Meleset 201,00 / 202,00 -> 202,00 / 202,00; Skor, Tepat, Tip tetap sama (sudah 0 selisih). Kartu reputasi label / angka / chip 68,00 / 73,00 / 68,00 -> 73,00 / 73,00 / 73,00. Tepi kanan nilai struk: ink 508,3 sampai 509,3 (rect kanan identik 510,0); kolom samping rect kanan identik 762,0.
+
+### Kontras terukur (R-3, R-4)
+Latar diambil dari piksel nyata di sekitar kedua strip (12 warna >= 1 persen: rumput `#6fae4f` 49 persen, trotoar hijau `#4f9a74`, aspal `#6c6872`, `#6e6a76`, `#4e4a56`, dinding `#f2e7c9`, dst). Kontras WCAG penanda = maks(garis luar `OUTLINE`, isi) terhadap latar terburuk: pelanggan 4,08:1, tip 4,81:1, bukan pelanggan 3,05:1 (di atas `#4e4a56`), semuanya >= 3:1 (batas objek grafis WCAG 1.4.11; teks tidak termasuk, jadi aturan 7:1 tidak berlaku). Garis luar `TEXT` pada penanda jangkau hanya 1,13:1 terhadap dinding terang, tetapi garis luar `OUTLINE` di dalamnya tetap ada. Garis sumbu radar `OUTLINE`: 7,27:1 di atas rumput, 3,58:1 di atas `#6c6872`, 2,26:1 di atas aspal tergelap `#4e4a56` (sumbu hanya penuntun, bukan pembawa informasi).
+Bar: isi `TEXT` 14,4:1 dan `ACCENT` 8,8:1 terhadap panel HUD di atas rumput (`#1d2424`), 11,5:1 dan 7,0:1 terhadap kasus terburuk (dunia putih di belakang panel 84 persen); garis sumbu `OUTLINE` hanya 1,2:1 sampai 1,5:1 terhadap panel. Cara bagian kosong dan isi terbedakan: isi terang 7 px lawan panel gelap (kontras tinggi); garis sumbu pada bagian kosong cuma isyarat samar (panel dan `OUTLINE` hampir sama gelap), tanda 90 persen `WARN` tetap tegak. Tidak dipakai garis luar tipis pada isi karena isi sudah terbaca di panel gelap.
+
+### Mutan Dev (AC-12: >= 10; commit `07b6ea2` sebelum mutan, satu perubahan per mutan, `git checkout` revert, suite penuh + pemeriksa)
+21 percobaan: 16 mutan suite penuh, 1 ulangan, 4 mutan probe piksel. Tertangkap 19 dari 20 mutan sah; 1 ekuivalen; 1 salah pasang.
+- M01 (ganti `+ pad` di KOMENTAR `margin_grup_glif`): bukan mutan sah (pengganti mengenai komentar), diulang sebagai M01b.
+- M01b `sisa` memakai `- pad_kanan_glif`: tertangkap. M02 margin kanan tidak dikurangi pad: tertangkap (Godot crash segfault, ditolak pemeriksa). M03 teks rata tengah lagi: tertangkap. M04 margin minimum 8 -> 2: tertangkap. M05 baris struk tidak diratakan: tertangkap. M06 `turun_baseline` terbalik: tertangkap. M07 reputasi tidak diratakan: tertangkap. M08 chip tidak diturunkan: tertangkap. M09 sumbu radar geser 3 px: tertangkap. M10 sumbu bar di baris 0: tertangkap. M11 trek bar `UI_PANEL_RAISED` kembali: tertangkap. M12 `RADAR_JALUR_PAD_PX` 2 -> 0: tertangkap. M14 tanda ambang bar dipotong 2 px: tertangkap. M15 Hari berikutnya tanpa helper margin: tertangkap. M16 Berangkat tanpa helper margin: tertangkap.
+- M13 `_geser_atas(b, 0)` (nilai tidak pernah diturunkan): LOLOS, EKUIVALEN untuk UI sekarang: cabang itu hanya aktif bila ascent label > ascent nilai, yang tidak terjadi pada font mana pun di struk ini (label selalu <= nilai); cabang dijaga oleh tes murni `turun_baseline(23, 10) == (0, 13)`.
+- Probe piksel (`probe_hud_rute_jendela.gd` 2340x1080): P1 sumbu radar tidak digambar: 14 keadaan tidak sesuai; P2 latar gelap radar kembali: 14; P3 bar tanpa sumbu: 6; P4 trek bar kembali: 7 (semua tertangkap; baseline bersih 0).
+
+### Penilaian visual jujur (tangkapan DILIHAT sendiri; `shots/iter2/`, 16 berkas 1,7 MB, awalan `sebelum_` dan `sesudah_`)
+- Radar terbaca: penanda kuning/hijau/abu tetap jelas di atas rumput dan trotoar hijau; garis sumbu tipis terlihat di atas rumput tetapi nyaris hilang di atas aspal gelap atau bayangan (2,3:1). Tanpa latar gelap, penanda "bukan pelanggan" (abu berlubang) paling lemah: 3,05:1 di atas aspal tergelap; lubangnya memperlihatkan dunia sehingga bentuknya bisa kalah dengan rumah beratap abu.
+- Bar: isi putih dan oranye mudah dibedakan dari bagian kosong karena panel di belakangnya tetap gelap; garis sumbu di bagian kosong hampir tidak terlihat (hanya 1,2:1) sehingga bar kosong tampak seperti "tidak ada bar" kecuali tanda 90 persen di bar kecepatan. Bar stamina kosong tidak punya tanda sama sekali. Ini konsekuensi langsung dari permintaan pemilik (hapus trek, garis hitam tipis) di atas panel yang sudah gelap; bila terasa kurang di HP, opsi: sumbu `TEXT_2` (kontras 5 sampai 6:1) atau garis luar tipis `UI_PANEL_RAISED` pada bagian kosong. Dibiarkan sesuai SPEC dan dilaporkan.
+- Struk: baris dan kartu reputasi rata; label "Reputasi" kini berdiri di garis dasar angka besar (bintang tetap di tengah baris), jadi tampak sedikit turun dibanding sebelumnya.
+- Panah: sudah berjarak lega di ketiga tombol; Lanjut kini grup teks+panah di tengah, jadi teks bergeser kiri dibanding sebelumnya.
+
+### Gerbang bagian E (hasil akhir)
+- `godot --headless --import`: exit 0. `--quit-after 2`: 0 baris ERROR/WARNING.
+- `run_tests.gd` + `cek_keluaran_tes.py`: **29214 lolos, 0 gagal, 0 peringatan** (iterasi 1: 29088; +126 asersi `tes_revisi_ui_e.gd`).
+- 17 `uji_*.py` exit 0 (angka sama seperti iterasi 1; `uji_ui_redesain.py` LOLOS).
+- `--export-pack "Android"`: exit 0, 2.030.360 byte, tanpa `ui_radar_strip_9slice` dan tanpa `tests/`.
+- Probe (0 keadaan tidak sesuai di 2340x1080 dan 1600x720): `hud_rute`, `hasil`, `halaman_koran`, `bengkel`, `jeda_hud`.
+- sha256 save asli tidak berubah.
+
+### OPEN / NEEDS-MANUAL (E)
+- [ ] HP A54: bar stamina/kecepatan tanpa trek terbaca saat kosong; sumbu radar terlihat di atas aspal gelap; penanda "bukan pelanggan" masih terbedakan dari rumah abu.
+- [ ] Tombol Ambil/Lewati (glif centang) dan Servis (glif kunci) memakai gaya lama (glif dekat tepi); bila pemilik menganggapnya sama ("panah" -> semua glif), perlu diperluas (di luar SPEC R-1).
