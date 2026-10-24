@@ -7,7 +7,7 @@ Palet: token DESIGN_SPEC 1.1 + palet induk ART_DIRECTION 2.4, tanpa anti-aliasin
 diberi tiga nada dengan cahaya dari kiri atas, lalu garis luar 1 px #0E0A1C.
 
 `--salin` (run ui1-komponen-bengkel) memasang ke assets/sprites/ui/ HANYA yang dipakai layar yang sudah dipasang
-(daftar di pasang.py: tombol, panel, kartu, chip, struk, papan alat, ikon 24, lencana 32, dan glif 12 yang dipakai bengkel dan layar hasil). Aset lain belum dipasang;
+(daftar di pasang.py: tombol, panel, kartu, chip, struk, koran (kotak, tombol tinta, kertas, foto), papan alat, ikon 24, lencana 32, dan glif 12 yang dipakai bengkel, layar hasil, dan halaman koran). Aset lain belum dipasang;
 porting ke Godot dikerjakan bertahap (docs/design/redesain/README.md).
 
 Menjalankan (dari root repo, butuh pillow):
@@ -633,7 +633,7 @@ def salin_ke_assets(dst=SALIN_KE):
     """Pasang aset yang dipakai ke `dst`: bingkai apa adanya, ikon 24 dan glif 12 dipotong per sel dari sheet (piksel sama dengan sheet)."""
     dst = Path(dst)
     dst.mkdir(parents=True, exist_ok=True)
-    for sumber, tujuan in {**pasang.TOMBOL, **pasang.PANEL, **pasang.PAPAN}.items():
+    for sumber, tujuan in {**pasang.TOMBOL, **pasang.PANEL, **pasang.KORAN, **pasang.PAPAN}.items():
         shutil.copyfile(OUT / f'{sumber}.png', dst / f'{tujuan}.png')
     ikon = Image.open(OUT / 'ikon24.png').convert('RGBA')
     urutan = META['ikon24']['urutan']

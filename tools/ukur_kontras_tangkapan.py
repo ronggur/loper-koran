@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Ukur kontras dari tangkapan layar nyata probe bengkel (run ui1-komponen-bengkel bagian B, AC-9) dan probe layar hasil (run ui2-semua-layar bagian A, AC-7, `--jenis hasil`).
+"""Ukur kontras dari tangkapan layar nyata probe bengkel (run ui1-komponen-bengkel bagian B, AC-9), probe layar hasil (run ui2-semua-layar bagian A, AC-7, `--jenis hasil`), dan probe halaman koran
+(run ui2-semua-layar bagian B, AC-7, `--jenis koran`).
 
-Membaca pasangan `<awalan>_<jenis>_<keadaan>.png` dan `.json` (ditulis `tests/probe_bengkel_jendela.gd` atau `tests/probe_hasil_jendela.gd`; jenis bawaan `bengkel`):
+Membaca pasangan `<awalan>_<jenis>_<keadaan>.png` dan `.json` (ditulis `tests/probe_bengkel_jendela.gd`, `tests/probe_hasil_jendela.gd`, atau `tests/probe_halaman_koran_jendela.gd`; jenis bawaan `bengkel`):
 - TEKS: tiap persegi teks; latar = warna terbanyak di persegi, teks = piksel persentil 98 terjauh dari latar (piksel solid, bukan tepi lunak).
   Kontras WCAG antara keduanya; batas >= 7:1.
 - GARIS KOMPONEN: tiap tombol dan kartu; garis = piksel terang di pita 2 px game paling luar (tepi atas dan bawah) melawan piksel 2 px game di luar tepi; batas >= 3:1.
   Hanya dilaporkan (garis bingkai bergantung pada desain 9-slice); nonaktif sengaja redup.
-Pakai: python3 tools/ukur_kontras_tangkapan.py <folder tangkapan> [--awalan 1920x1080] [--jenis bengkel|hasil] (butuh numpy, pillow). Exit 1 bila ada teks < 7:1.
+  `--jenis koran`: tombol (Berangkat, tinta penuh) dan pilih (Ambil/Lewati, tipis atau terpilih) adalah kontrol aktif dan WAJIB >= 3:1 (exit 1 bila kurang); `kotak_misi` adalah wadah non-kontrol (garis ganda `KORAN_GARIS`
+  di atas kertas, dilaporkan saja seperti kartu bengkel dan struk hasil). Teks di atas kertas terang (tinta di krem) ikut diukur >= 7:1.
+Pakai: python3 tools/ukur_kontras_tangkapan.py <folder tangkapan> [--awalan 1920x1080] [--jenis bengkel|hasil|koran] (butuh numpy, pillow). Exit 1 bila ada teks < 7:1 (atau kontrol koran aktif < 3:1).
 """
 import json
 import sys
@@ -72,10 +75,15 @@ def main():
         terburuk = min(teks, key=lambda p: p[0][0])
         gagal_berkas = [(r, n) for r, n in teks if r[0] < 7.0]
         gagal += len(gagal_berkas)
-        garis = {"tombol": [], "tombol_nonaktif": [], "kartu": [], "struk": []}
+        garis = {"tombol": [], "tombol_nonaktif": [], "kartu": [], "struk": [], "pilih": [], "kotak_misi": []}
         for k in data["komponen"]:
             garis.setdefault(k["jenis"], []).append(ukur_garis(img, skala, k))
-        ringkas = {j: (round(min(v), 2) if v else None) for j, v in garis.items()}
+        ringkas = {j: (round(min(v), 2) if v else None) for j, v in garis.items() if jenis == "koran" or j not in ("pilih", "kotak_misi")}
+        if jenis == "koran":
+            lemah = [(j, round(min(garis[j]), 2)) for j in ("tombol", "pilih") if garis[j] and min(garis[j]) < 3.0]
+            gagal += len(lemah)
+            for j, nilai in lemah:
+                print(f"   KONTROL AKTIF < 3:1 '{j}' {nilai}")
         print(f"{js.stem}: {len(teks)} teks, terburuk {terburuk[0][0]:.2f}:1 '{terburuk[1]}', < 7: {len(gagal_berkas)}; garis min {ringkas}")
         for r, n in gagal_berkas:
             print(f"   TEKS < 7:1 '{n}' {r[0]:.2f} latar {r[1]} teks {r[2]}")

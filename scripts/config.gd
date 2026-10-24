@@ -935,26 +935,69 @@ const MILESTONE_BARU_MAKS_TAMPIL: int = 3
 ## Volume bunyi milestone tercapai, dB (lembut: sekitar 4 dB di bawah bunyi misi selesai yang sudah -3, tidak menutupi bunyi lain).
 const AUDIO_MILESTONE_VOLUME_DB: float = -4.0
 
-## --- Layar halaman depan koran (DESIGN_SPEC 4, 1.2; rule ui-scenes; run 4A, usulan; dinilai lewat uji HP) ---
+## --- Layar halaman depan koran (DESIGN_SPEC 4, 1.2; rule ui-scenes; run 4A, usulan; dinilai lewat uji HP; tata ulang run ui2-semua-layar bagian B dari kanvas Koran*.dc.html) ---
 
 ## Tepi layar koran ke isi, piksel game (sebelum zona aman).
 const KORAN_MARGIN_PX: int = 12
-## Jarak antar blok di layar koran, piksel game.
-const KORAN_JARAK_PX: int = 8
-## Lebar kolom berita (nama, berita utama, berita ringan) dibanding kolom misi (misi, Berangkat): bobot regangan `size_flags_stretch_ratio`.
-const KORAN_KOLOM_BERITA_RASIO: float = 0.55
-## Bobot regangan kolom misi.
-const KORAN_KOLOM_MISI_RASIO: float = 0.45
-## Ukuran huruf teks tombol di layar koran, piksel game (lebih besar dari teks HUD supaya terbaca sekilas).
-const KORAN_TOMBOL_HURUF_PX: int = 10
-## Tombol Ambil dan Lewati: lebar, piksel game (tinggi `HUD_TOMBOL_TINGGI_PX`, >= 44 dp di A54).
-const KORAN_TOMBOL_PILIH_LEBAR_PX: int = 96
-## Tombol Berangkat: lebar, piksel game.
-const KORAN_TOMBOL_BERANGKAT_LEBAR_PX: int = 136
-## Tebal garis pemisah halaman koran, piksel game.
-const KORAN_GARIS_TEBAL_PX: int = 2
-## Tebal garis tombol terpilih dan panel misi, piksel game (tombol tidak terpilih 1 px: bentuk, bukan hanya warna).
-const KORAN_BINGKAI_TERPILIH_PX: int = 3
+## Jarak antar blok di kolom misi, piksel game (kanvas: gap 5).
+const KORAN_MISI_JARAK_PX: int = 5
+## Jarak antar blok di kolom berita, piksel game (kanvas: gap 6).
+const KORAN_BERITA_JARAK_PX: int = 6
+## Lebar kolom misi di lebar viewport < `KORAN_LEBAR_LEBAR_MIN_PX` dan di lebar >= itu (kanvas: 236 dan 280).
+const KORAN_MISI_LEBAR_PX: int = 236
+const KORAN_MISI_LEBAR_LEBAR_PX: int = 280
+const KORAN_LEBAR_LEBAR_MIN_PX: int = 800
+## Jarak kolom berita ke garis tegak dan garis tegak ke kolom misi (kanvas: 6 + garis 1 + 6), dan tebal garis tegak.
+const KORAN_KOLOM_JARAK_PX: int = 6
+const KORAN_GARIS_TEGAK_PX: int = 1
+## Garis ganda di bawah kepala (kanvas `.k-ganda`): garis atas 2, celah 1, garis bawah 1 (tinggi total 4), dan jarak kepala ke garis dan garis ke isi.
+const KORAN_GANDA_ATAS_PX: int = 2
+const KORAN_GANDA_CELAH_PX: int = 1
+const KORAN_GANDA_BAWAH_PX: int = 1
+const KORAN_GANDA_JARAK_PX: int = 6
+## Kepala: nama koran Lilita One 32 (tinggi baris 38) dinaikkan sekian px ke atas margin (seperti kanvas: kotak baris 33,6 px berpusat di glif) dan jarak ke garis ganda; sehingga garis ganda jatuh di y 46 (margin 12 + 34) seperti kanvas.
+const KORAN_KEPALA_NAIK_PX: int = 5
+const KORAN_KEPALA_BAWAH_PX: int = 1
+## "Hari N · Perumahan Melati" diturunkan sekian px dari tepi atas kepala supaya garis dasarnya sejajar nama koran (kanvas: top 26 di margin 12 + 13).
+const KORAN_HARI_TURUN_PX: int = 13
+## Jarak antar baris label bungkus kata (tambahan di atas tinggi huruf; bawaan Godot 3): headline Lilita One 24 dan 16 dirapatkan seperti kanvas (tinggi baris 1,05 em), teks Lexend 11 sedikit rapat.
+const KORAN_JARAK_BARIS_UTAMA_PX: int = -3
+const KORAN_JARAK_BARIS_JUDUL_PX: int = -2
+const KORAN_JARAK_BARIS_TEKS_PX: int = 1
+## Foto berita utama 100x62 dan jarak foto ke headline (kanvas: gap 8).
+const KORAN_FOTO_LEBAR_PX: int = 100
+const KORAN_FOTO_TINGGI_PX: int = 62
+const KORAN_FOTO_JARAK_PX: int = 8
+## Efek berita utama yang punya foto dan ikon 24 (urutan sejajar; efek lain tanpa foto dan tanpa ikon: "jalan dan lampu dulu", Spesifikasi.dc.html).
+const KORAN_EFEK_FOTO: Array[String] = ["jalan_diperbaiki", "mati_lampu"]
+const KORAN_NAMA_FOTO: Array[String] = ["foto_jalan", "foto_lampu"]
+const KORAN_NAMA_IKON: Array[String] = ["icon24_kerucut", "icon24_bohlam"]
+## Ikon 24 di judul bagian (berita utama, misi) dan jarak ikon ke label.
+const KORAN_IKON_PX: int = 24
+const KORAN_IKON_JARAK_PX: int = 6
+## Isi kotak misi 9-slice (tepi `UI_PANEL_SLICE_PX` sudah termasuk): samping, atas, bawah (kanvas: padding 4 6 6 di dalam bingkai 4).
+const KORAN_PANEL_PAD_X_PX: int = 10
+const KORAN_PANEL_PAD_ATAS_PX: int = 8
+const KORAN_PANEL_PAD_BAWAH_PX: int = 10
+## Jarak antar tombol Ambil dan Lewati.
+const KORAN_TOMBOL_JARAK_PX: int = 6
+## Kotak hiasan "Iklan baris" di bawah kolom berita: lebar paling besar, tinggi tetap, tinggi paling kecil supaya label dan satu baris hiasan muat (selain itu kotak tidak tampil), isi samping dan atas bawah, panjang goresan garis putus.
+const KORAN_IKLAN_LEBAR_MAKS_PX: int = 220
+const KORAN_IKLAN_TINGGI_PX: int = 54
+const KORAN_IKLAN_TINGGI_MIN_PX: int = 28
+const KORAN_IKLAN_PAD_X_PX: int = 6
+const KORAN_IKLAN_PAD_Y_PX: int = 4
+const KORAN_IKLAN_GORES_PX: int = 3
+## Garis hiasan pengganti teks (kanvas: batang 2 px KORAN_KERTAS_2): tinggi, jarak antar baris, jarak antar kolom, dan lebar tiap batang (pecahan dari lebar kolomnya, kiri ke kanan lalu ke bawah, dua kolom).
+const KORAN_HIASAN_TINGGI_PX: int = 2
+const KORAN_HIASAN_JARAK_BARIS_PX: int = 3
+const KORAN_HIASAN_JARAK_KOLOM_PX: int = 10
+const KORAN_HIASAN_POLA: Array[float] = [1.0, 1.0, 1.0, 0.8, 0.6, 1.0]
+## Kotak notifikasi save: tinggi paling kecil, isi samping dan atas bawah, jarak glif ke teks (kanvas: 42, padding 5 6, gap 4).
+const KORAN_NOTIF_TINGGI_MIN_PX: int = 42
+const KORAN_NOTIF_PAD_X_PX: int = 6
+const KORAN_NOTIF_PAD_Y_PX: int = 5
+const KORAN_NOTIF_JARAK_PX: int = 4
 ## Kontras minimum teks terhadap latar di layar koran (rumus WCAG, rasio).
 const KORAN_KONTRAS_TEKS_MIN: float = 7.0
 ## Kontras minimum garis tombol dan panel terhadap latar (komponen UI, WCAG 1.4.11).

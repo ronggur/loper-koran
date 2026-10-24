@@ -45,13 +45,19 @@ static func _entri(id: String, jenis: String, teks: String, ringkasan: String = 
 	return e
 
 
-## Halaman dengan teks terpanjang yang sah di ketiga baris (perlu `pasang_terjemahan`).
+## Halaman dengan teks terpanjang yang sah di ketiga baris (perlu `pasang_terjemahan`). Efek `jalan_diperbaiki` (foto 100x62 ikut tampil: kasus tersempit bagi headline; run ui2-semua-layar bagian B, dulu `hajatan`).
 static func terpanjang() -> HeadlineManager.Halaman:
 	var h: HeadlineManager.Halaman = HeadlineManager.Halaman.new()
-	h.utama = _entri("u_panjang", "utama", KUNCI_UTAMA, "", "", "hajatan")
+	h.utama = _entri("u_panjang", "utama", KUNCI_UTAMA, "", "", "jalan_diperbaiki")
 	h.misi = _entri("m_panjang", "misi", KUNCI_MISI, KUNCI_RINGKASAN, "m_panjang")
 	h.ringan = _entri("r_panjang", "ringan", KUNCI_RINGAN)
 	return h
+
+
+## `halaman` dengan efek berita utama diganti `efek` (mis. "hajatan" tanpa foto, "mati_lampu" foto lampu); mengembalikan halaman yang sama.
+static func dengan_efek(halaman: HeadlineManager.Halaman, efek: String) -> HeadlineManager.Halaman:
+	halaman.utama.efek = efek
+	return halaman
 
 
 ## Halaman tanpa misi yang memenuhi syarat (S-8): berita utama dan ringan nyata.
