@@ -54,6 +54,7 @@ python3 tools/env_art/lampu_pohon.py             # 7 lampu (mati/nyala), 11 poho
 ```
 python3 tools/env_art/ubin_perumahan.py --salin           # 13 ubin yang dipasang + JSON terpangkas
 python3 tools/env_art/gelombang1/render.py --salin        # 13 sprite 5A + tong sampah logam (lima tembok 5B tidak lagi disalin sejak run 5D; tetap dirender ke build/ dan papan)
+# run garis-finish-portal (G-1): --salin juga memasang prop_portal_satpam (sel 80x64, dua frame, pijak (14, 48)) ke assets/sprites/props/; total 15 sprite. prop_pos_satpam TIDAK dipasang
 python3 tools/env_art/lampu_pohon.py --salin              # tiga pohon + dua lampu mati ke assets/sprites/props/ (lalu godot --headless --import)
 python3 tools/tests_cek/uji_aset_pasang_5b.py             # isi assets/ = keluaran ketiga skrip, impor Lossless, susunan ubin khusus
 python3 tools/tests_cek/uji_aset_pasang_5b.py --perbarui-referensi   # tulis ulang tests/data/ubin_potongan_5b.png dari assets/
@@ -73,7 +74,7 @@ Aset gelombang 1 Fase 5 (usulan, 2026-10-20) dibuat oleh paket `gelombang1/`, po
 ```
 python3 tools/env_art/gelombang1/render.py          # sprite + papan ke build/env_art/gelombang1/
 python3 tools/env_art/gelombang1/render.py --mock   # juga salin mock terpilih dan lembar kontak ke docs/design/environment/gelombang1/
-python3 tools/env_art/gelombang1/render.py --salin  # juga salin 13 sprite yang dipasang ke assets/sprites/{props,vfx}/ (lalu godot --headless --import)
+python3 tools/env_art/gelombang1/render.py --salin  # juga salin sprite yang dipasang (13 sprite 5A + tong sampah logam + portal satpam = 15) ke assets/sprites/{props,vfx}/ (lalu godot --headless --import)
 python3 tools/tests_cek/uji_aset_gelombang1.py      # deterministik, palet induk, manifest, K-1, mock docs = hasil skrip
 python3 tools/tests_cek/uji_aset_pasang_gelombang1.py   # isi assets/sprites/{props,vfx,tiles/perumahan} = keluaran --salin, hanya yang dipasang, impor Lossless
 ```
