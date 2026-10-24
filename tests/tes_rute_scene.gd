@@ -407,8 +407,8 @@ func _test_rumah_digambar() -> void:
 			anak_gambar += 1
 	# Run fase3b-rintangan-skor: rintangan kini digambar, tetapi di dalam satu node induk `Rintangan` (anak Y-sort Objek), jadi anak Objek =
 	# rumah (tembok sisi dekat run 5B dilepas run 5D) + kotak surat (oranye pelanggan dan abu-abu bukan pelanggan seberang, 2026-10-17) + sepeda + node Rintangan (rintangan sendiri
-	# dites di `tes_rintangan_scene.gd`) + node Dekor (induk dekor pinggir jalan, run fase5b B2; dites di `tes_dekor.gd`) + node Portal (run garis-finish-portal bagian C; dites di `tes_garis_finish_scene.gd`).
-	check(anak_gambar == akar.daur().jumlah_rumah() + akar.daur().jumlah_kotak_surat() + akar.daur().jumlah_kotak_surat_bukan() + 4 and akar.rintangan_daur().get_parent() == objek and akar.dekor_daur().get_parent() == objek, "tidak ada node lain yang digambar di Objek (rumah, kotak surat oranye dan abu-abu, sepeda, induk rintangan, induk dekor, portal garis finish): %d" % anak_gambar)
+	# dites di `tes_rintangan_scene.gd`) + node Dekor (induk dekor pinggir jalan, run fase5b B2; dites di `tes_dekor.gd`) + node Portal (run garis-finish-portal bagian C; dites di `tes_garis_finish_scene.gd`) + dua induk hiasan (RumahHiasan dan DekorHiasan, Bagian F; dites di `tes_hiasan.gd`).
+	check(anak_gambar == akar.daur().jumlah_rumah() + akar.daur().jumlah_kotak_surat() + akar.daur().jumlah_kotak_surat_bukan() + 6 and akar.rintangan_daur().get_parent() == objek and akar.dekor_daur().get_parent() == objek, "tidak ada node lain yang digambar di Objek (rumah, kotak surat oranye dan abu-abu, sepeda, induk rintangan, induk dekor, portal garis finish, induk rumah hiasan, induk dekor hiasan): %d" % anak_gambar)
 	_bersihkan(akar)
 
 
@@ -428,7 +428,7 @@ func _test_jendela_daur_bergerak() -> void:
 			salah.append("jarak %.1f: %s" % [jarak, tampil.size()])
 		maks_tampil = maxi(maks_tampil, tampil.size())
 		maks_node = maxi(maks_node, akar.daur().jumlah_node_rumah())
-		if akar.penerap_penutup().jumlah() != tampil.size() + akar.rintangan_daur().jumlah_tampil() + _jumlah_dekor_penutup(akar) + 1:
+		if akar.penerap_penutup().jumlah() != tampil.size() + akar.rintangan_daur().jumlah_tampil() + _jumlah_dekor_penutup(akar) + 1 + akar.jumlah_hiasan_penerap():
 			salah.append("jarak %.1f: penerap %d, tampil %d" % [jarak, akar.penerap_penutup().jumlah(), tampil.size()])
 	check(salah.is_empty(), "sepanjang rute (95 titik): rumah digambar = jendela oracle dan didaftarkan ke penerap penutup: %s" % [salah.slice(0, 3)])
 	check(maks_tampil <= 30 and maks_tampil >= 20, "paling banyak %d rumah sekaligus (jendela, bukan 89)" % maks_tampil)
@@ -1009,7 +1009,7 @@ func _test_penutup() -> void:
 	akar.perbarui(0.0)
 	check(is_equal_approx(gambar.modulate.a, 0.45), "pemain di lateral -0,9: menutupi lagi (alfa 0,45)")
 	penerap.lepas(gambar)
-	check(gambar.modulate.a == 1.0 and penerap.jumlah() == akar.daur().jumlah_rumah() + akar.rintangan_daur().jumlah_tampil() + _jumlah_dekor_penutup(akar) + 1, "objek dilepas dari penerap: alfa kembali 1,0")
+	check(gambar.modulate.a == 1.0 and penerap.jumlah() == akar.daur().jumlah_rumah() + akar.rintangan_daur().jumlah_tampil() + _jumlah_dekor_penutup(akar) + 1 + akar.jumlah_hiasan_penerap(), "objek dilepas dari penerap: alfa kembali 1,0")
 	gambar.queue_free()
 	_bersihkan(akar)
 

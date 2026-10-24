@@ -166,6 +166,9 @@ func _initialize() -> void:
 	# Run garis-finish-portal bagian C: portal, sepeda keluar viewport, kamera dan dunia beku, G-5 lawan golden main, pemulihan.
 	var garis_finish_scene: TesGarisFinishScene = TesGarisFinishScene.new(check, _judul, self)
 	await garis_finish_scene.jalankan()
+	# Run garis-finish-portal Bagian F: hiasan lanjutan di depan garis akhir (murni dan scene).
+	var hiasan: TesHiasan = TesHiasan.new(check, _judul, self)
+	await hiasan.jalankan()
 	var kotak_surat: TesKotakSurat = TesKotakSurat.new(check, _judul, self)
 	await kotak_surat.jalankan()
 	# Run fase5a-pasang-aset-gelombang1: ubin tanah enam kolom (pemetaan, scene, tanpa celah dan pita, referensi Python).

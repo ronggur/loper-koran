@@ -633,7 +633,7 @@ func _test_rujukan_dan_pemisahan() -> void:
 		if jalur.ends_with(".gd") and not jalur.ends_with("dekor_rute.gd") and FileAccess.get_file_as_string(jalur).contains("DekorRute."):
 			pengguna.append(jalur)
 	pengguna.sort()
-	check(pengguna == (["res://scripts/entities/dekor_daur.gd", "res://scripts/systems/penutup_pemain.gd", "res://scripts/systems/route_builder.gd", "res://scripts/systems/segmen_rute.gd"] as Array[String]), "pengguna DekorRute di scripts: DekorDaur, PenutupPemain, RouteBuilder, SegmenRute saja: %s" % [pengguna])
+	check(pengguna == (["res://scripts/entities/dekor_daur.gd", "res://scripts/entities/rute_main.gd", "res://scripts/systems/hiasan_rute.gd", "res://scripts/systems/penutup_pemain.gd", "res://scripts/systems/route_builder.gd", "res://scripts/systems/segmen_rute.gd"] as Array[String]), "pengguna DekorRute di scripts: DekorDaur, RuteMain (hitungan penerap hiasan), HiasanRute (lateral dekor hiasan), PenutupPemain, RouteBuilder, SegmenRute saja: %s" % [pengguna])
 	var pengguna_daur: Array[String] = []
 	for jalur: String in berkas:
 		if jalur.ends_with(".gd") and not jalur.ends_with("dekor_daur.gd") and FileAccess.get_file_as_string(jalur).contains("DekorDaur"):
@@ -788,7 +788,7 @@ func _test_scene_dekor() -> void:
 					tong_tampil += 1
 					if dekor.sprite_dekor(i).modulate.a != 1.0:
 						alfa_tong_salah += 1
-			if penerap.jumlah() != daur.jumlah_rumah() + akar.rintangan_daur().jumlah_tampil() + _jumlah_penutup(akar) + 1:
+			if penerap.jumlah() != daur.jumlah_rumah() + akar.rintangan_daur().jumlah_tampil() + _jumlah_penutup(akar) + 1 + akar.jumlah_hiasan_penerap():
 				alfa_tong_salah += 1000
 	check(tong_tampil >= 4 and alfa_tong_salah == 0, "tong sampah seberang tidak didaftarkan ke penerap (jumlah terdaftar = rumah + rintangan + dekor sisi dekat + portal) dan alfanya 1,0 di semua sapuan (%d tong terlihat, salah %d)" % [tong_tampil, alfa_tong_salah])
 	_bersihkan(akar)
@@ -919,7 +919,7 @@ func _test_penutup_scene() -> void:
 		var s: Sprite2D = anak as Sprite2D
 		if s != null and not s.visible and s.modulate.a != 1.0:
 			di_kolam_salah += 1
-	check(di_kolam_salah == 0 and penerap.jumlah() == akar.daur().jumlah_rumah() + akar.rintangan_daur().jumlah_tampil() + _jumlah_penutup(akar) + 1, "sprite dekor yang keluar jendela dilepas dari penerap dan dikembalikan ke alfa 1,0 (kolam %d salah); terdaftar = rumah + rintangan + pohon dan lampu sisi dekat tampil + portal" % di_kolam_salah)
+	check(di_kolam_salah == 0 and penerap.jumlah() == akar.daur().jumlah_rumah() + akar.rintangan_daur().jumlah_tampil() + _jumlah_penutup(akar) + 1 + akar.jumlah_hiasan_penerap(), "sprite dekor yang keluar jendela dilepas dari penerap dan dikembalikan ke alfa 1,0 (kolam %d salah); terdaftar = rumah + rintangan + pohon dan lampu sisi dekat tampil + portal" % di_kolam_salah)
 	_bersihkan(akar)
 
 

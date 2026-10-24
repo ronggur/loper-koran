@@ -95,15 +95,18 @@ func _test_status_lama_tetap() -> void:
 # --- Laju minimum dan gerak lurus ---
 
 func _test_stick_dan_laju_dijaga() -> void:
-	_judul.call("Laju dijaga minimal 3,0 u/d: dari laju 0, rendah, pas, tinggi, NaN, negatif; tidak mengubah yang lebih tinggi")
-	check(Config.RUTE_KELUAR_LAJU_MIN_UD == 3.0, "laju minimum keluar = 3,0 u/d (santai)")
-	check(AkhirRute.laju_dijaga(0.0) == 3.0, "laju 0 -> 3,0")
-	check(AkhirRute.laju_dijaga(1.5) == 3.0, "laju 1,5 -> 3,0")
-	check(AkhirRute.laju_dijaga(2.999) == 3.0, "laju 2,999 -> 3,0")
-	check(AkhirRute.laju_dijaga(3.0) == 3.0, "laju 3,0 tetap 3,0 (batas inklusif)")
-	check(AkhirRute.laju_dijaga(3.001) == 3.001, "laju 3,001 tidak diubah")
-	check(AkhirRute.laju_dijaga(4.5) == 4.5 and AkhirRute.laju_dijaga(6.0) == 6.0, "laju tinggi (4,5 dan 6,0) tidak diubah")
-	check(AkhirRute.laju_dijaga(NAN) == 3.0 and AkhirRute.laju_dijaga(-2.0) == 3.0, "NaN dan negatif -> 3,0")
+	_judul.call("Laju dijaga 6,0 u/d (level ngebut, Bagian F, F-3): dari laju 0, rendah, pas, tinggi, NaN, negatif; tidak mengubah yang lebih tinggi; lelah padam, stamina dipulihkan")
+	check(Config.RUTE_KELUAR_LAJU_MIN_UD == 6.0 and Config.RUTE_KELUAR_LAJU_MIN_UD == Config.KECEPATAN_NGEBUT_UD, "laju minimum keluar = 6,0 u/d = level ngebut yang sudah ada (literal dan sama dengan KECEPATAN_NGEBUT_UD)")
+	check(AkhirRute.laju_dijaga(0.0) == 6.0, "laju 0 -> 6,0")
+	check(AkhirRute.laju_dijaga(1.5) == 6.0, "laju 1,5 -> 6,0")
+	check(AkhirRute.laju_dijaga(3.0) == 6.0, "laju santai 3,0 -> 6,0")
+	check(AkhirRute.laju_dijaga(4.5) == 6.0, "laju cepat 4,5 -> 6,0")
+	check(AkhirRute.laju_dijaga(5.999) == 6.0, "laju 5,999 -> 6,0")
+	check(AkhirRute.laju_dijaga(6.0) == 6.0, "laju 6,0 tetap 6,0 (batas inklusif)")
+	check(AkhirRute.laju_dijaga(6.001) == 6.001, "laju 6,001 tidak diubah")
+	check(AkhirRute.laju_dijaga(7.5) == 7.5, "laju di atas ngebut (7,5) tidak diturunkan")
+	check(AkhirRute.laju_dijaga(NAN) == 6.0 and AkhirRute.laju_dijaga(-2.0) == 6.0, "NaN dan negatif -> 6,0")
+	check(AkhirRute.laju_dijaga(INF) == INF, "tak hingga tidak diubah (bukan NaN)")
 	var asli: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
 	asli.kecepatan_ud = 0.5
 	asli.lateral_ubin = -1.25
@@ -112,78 +115,86 @@ func _test_stick_dan_laju_dijaga() -> void:
 	asli.tahan_rem_detik = 0.4
 	asli.lelah = true
 	var dijaga: BikeMotion.Keadaan = AkhirRute.keadaan_dijaga(asli)
-	check(asli.kecepatan_ud == 0.5, "keadaan_dijaga tidak mengubah keadaan masukan")
-	check(dijaga.kecepatan_ud == 3.0 and dijaga.lateral_ubin == -1.25 and dijaga.stamina == 42.0 and dijaga.rem_aktif and dijaga.tahan_rem_detik == 0.4 and dijaga.lelah, "keadaan_dijaga hanya mengubah kecepatan")
-	check(AkhirRute.keadaan_dijaga(null).kecepatan_ud == 3.0, "keadaan null = keadaan awal (santai 3,0)")
-
-
-## Efek kondisi terburuk yang masih mungkin: ban 0,92, batas puncak rantai 3,0 (tidak di bawah santai), akselerasi 0,35, rem 0,4, lateral 0,6.
-func _efek_terburuk() -> EfekKondisi:
-	var e: EfekKondisi = EfekKondisi.new()
-	e.pengali_kecepatan = 0.92
-	e.batas_puncak_ud = 3.0
-	e.pengali_akselerasi = 0.35
-	e.pengali_rem = 0.4
-	e.pengali_lateral = 0.6
-	return e
+	check(asli.kecepatan_ud == 0.5 and asli.lelah and asli.stamina == 42.0, "keadaan_dijaga tidak mengubah keadaan masukan")
+	check(dijaga.kecepatan_ud == 6.0 and dijaga.lateral_ubin == -1.25 and dijaga.stamina == 42.0 and dijaga.rem_aktif and dijaga.tahan_rem_detik == 0.4 and not dijaga.lelah, "keadaan_dijaga tanpa stamina garis: hanya kecepatan dan lelah yang berubah (lelah padam)")
+	var pulih: BikeMotion.Keadaan = AkhirRute.keadaan_dijaga(asli, 77.5)
+	check(pulih.stamina == 77.5 and pulih.kecepatan_ud == 6.0 and not pulih.lelah and pulih.lateral_ubin == -1.25, "keadaan_dijaga dengan stamina garis 77,5: stamina dipulihkan ke nilai di garis")
+	check(AkhirRute.keadaan_dijaga(asli, 0.0).stamina == 0.0, "stamina garis 0 sah (dipulihkan ke 0, lelah tetap padam)")
+	check(AkhirRute.keadaan_dijaga(asli, 250.0).stamina == Config.STAMINA_MAKS, "stamina garis di atas maksimum dijepit ke maksimum")
+	check(AkhirRute.keadaan_dijaga(asli, -1.0).stamina == 42.0 and AkhirRute.keadaan_dijaga(asli, NAN).stamina == 42.0 and AkhirRute.keadaan_dijaga(asli, INF).stamina == 42.0, "stamina garis negatif, NaN, atau tak hingga: stamina tidak diubah")
+	check(AkhirRute.keadaan_dijaga(null).kecepatan_ud == 6.0, "keadaan null = keadaan awal dengan laju dijaga 6,0")
 
 
 func _test_gerak_lurus_bike_motion() -> void:
-	_judul.call("BikeMotion nyata: sesudah garis akhir sepeda tidak berbelok, tidak merem, tidak turun dari laju minimum (semua laju awal, efek, lateral, lelah)")
-	var efek_daftar: Array = [null, _efek_terburuk()]
-	var laju_awal: Array = [0.0, 1.5, 2.9, 3.0, 4.5, 6.0]
+	_judul.call("BikeMotion nyata: sesudah garis akhir sepeda tidak berbelok, tidak merem, tidak turun dari 6,0 u/d (semua laju awal, lelah, stamina 0, lateral)")
+	var laju_awal: Array = [0.0, 1.5, 2.9, 3.0, 4.5, 5.9, 6.0, 7.5]
 	var lateral_awal: Array = [-2.0, -1.3, 0.0, 1.9]
 	var semua_ok: bool = true
 	var jumlah_kasus: int = 0
-	for e: Variant in efek_daftar:
-		for lelah: bool in [false, true]:
-			for v0: float in laju_awal:
-				for lat: float in lateral_awal:
-					var k: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
-					k.kecepatan_ud = v0
-					k.lateral_ubin = lat
-					k.lelah = lelah
-					k.stamina = 0.0 if lelah else 100.0
-					# Rem aktif dari sebelum garis akhir: harus padam begitu stick keluar dipakai.
-					k.rem_aktif = v0 < 1.0
-					k.tahan_rem_detik = 1.0 if k.rem_aktif else 0.0
-					var jarak: float = 0.0
-					for i: int in range(600):
-						var h: BikeMotion.Hasil = AkhirRute.langkah_keluar(k, DT, 0.0, e as EfekKondisi)
-						k = h.keadaan
-						jarak += h.maju_ubin
-						if k.kecepatan_ud < 3.0 - 0.000001 or k.rem_aktif or k.tahan_rem_detik != 0.0 or k.lateral_ubin != lat or h.lateral_ud != 0.0:
-							semua_ok = false
-						if h.pose == LoperAnim.Pose.REM or h.pose == LoperAnim.Pose.BERHENTI or h.arah_sprite != 0 or h.stick_maju != 1.0 or h.maju_ubin <= 0.0:
-							semua_ok = false
-					if jarak < 3.0 * 10.0 - 0.001:
+	var catatan: String = ""
+	for lelah: bool in [false, true]:
+		for v0: float in laju_awal:
+			for lat: float in lateral_awal:
+				var k: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
+				k.kecepatan_ud = v0
+				k.lateral_ubin = lat
+				k.lelah = lelah
+				k.stamina = 0.0 if lelah else 100.0
+				# Rem aktif dari sebelum garis akhir: harus padam begitu stick keluar dipakai.
+				k.rem_aktif = v0 < 1.0
+				k.tahan_rem_detik = 1.0 if k.rem_aktif else 0.0
+				var stamina_garis: float = k.stamina
+				var jarak: float = 0.0
+				for i: int in range(600):
+					var h: BikeMotion.Hasil = AkhirRute.langkah_keluar(k, DT, 0.0, stamina_garis)
+					k = h.keadaan
+					jarak += h.maju_ubin
+					if k.kecepatan_ud < 6.0 - 0.000001 or k.rem_aktif or k.tahan_rem_detik != 0.0 or k.lateral_ubin != lat or h.lateral_ud != 0.0:
 						semua_ok = false
-					jumlah_kasus += 1
-	check(semua_ok, "%d kasus x 600 langkah: kecepatan >= 3,0, rem padam, lateral tetap, tanpa belok, pose bukan rem/berhenti, jarak maju tiap langkah > 0" % jumlah_kasus)
-	# Jarak literal. Tanpa efek: dari 3,0 menuju 6,0 dengan akselerasi 3,0 u/d2 selama 1 detik = rata-rata 4,5 u/d x 1 detik = 4,5 ubin.
-	check(is_equal_approx(_jarak_satu_detik(3.0, null), 4.5), "tanpa efek, dari 3,0 selama 1 detik: 4,5 ubin (dapat %f)" % _jarak_satu_detik(3.0, null))
-	check(is_equal_approx(_jarak_satu_detik(0.0, null), 4.5), "dari laju 0: dinaikkan ke 3,0 lebih dulu, hasil sama 4,5 ubin")
-	check(is_equal_approx(_jarak_satu_detik(6.0, null), 6.0), "dari 6,0 tetap 6,0 selama 1 detik = 6,0 ubin (tidak direm, tidak melambat)")
-	check(is_equal_approx(_jarak_satu_detik(0.0, _efek_terburuk()), 3.0), "efek terburuk (puncak 3,0) dari laju 0: tetap 3,0 u/d = 3,0 ubin per detik")
+						catatan += " [lelah %s v0 %.1f lat %.1f langkah %d v %.4f]" % [lelah, v0, lat, i, k.kecepatan_ud]
+						break
+					if h.pose == LoperAnim.Pose.REM or h.pose == LoperAnim.Pose.BERHENTI or h.arah_sprite != 0 or h.stick_maju != 1.0 or h.maju_ubin <= 0.0 or h.tujuan_ud != 6.0:
+						semua_ok = false
+						catatan += " [pose/tujuan lelah %s v0 %.1f langkah %d]" % [lelah, v0, i]
+						break
+				if jarak < 6.0 * 10.0 - 0.001:
+					semua_ok = false
+				jumlah_kasus += 1
+	check(semua_ok, "%d kasus x 600 langkah: kecepatan >= 6,0, rem padam, lateral tetap, tanpa belok, pose bukan rem/berhenti, tujuan 6,0 walau lelah, jarak maju tiap langkah > 0, 10 detik >= 60 ubin.%s" % [jumlah_kasus, catatan])
+	# Jarak literal satu detik: dari laju mana pun di bawah 6,0 langsung 6,0 u/d (tidak menunggu akselerasi 3,0 u/d2 = 4,5 ubin).
+	check(is_equal_approx(_jarak_satu_detik(3.0), 6.0), "dari 3,0 selama 1 detik: 6,0 ubin (dapat %f); sebelum Bagian F 4,5" % _jarak_satu_detik(3.0))
+	check(is_equal_approx(_jarak_satu_detik(0.0), 6.0), "dari laju 0: dinaikkan ke 6,0 lebih dulu, 6,0 ubin")
+	check(is_equal_approx(_jarak_satu_detik(6.0), 6.0), "dari 6,0 tetap 6,0 selama 1 detik = 6,0 ubin (tidak direm, tidak melambat)")
+	check(is_equal_approx(_jarak_satu_detik(7.5), 6.0), "dari 7,5: BikeMotion membersihkan keadaan ke ngebut maksimum 6,0, jadi 6,0 ubin (dapat %f)" % _jarak_satu_detik(7.5))
 	# Telemetri: kecepatan awal langkah yang dilaporkan sudah dijaga (bukan 0).
 	var kosong: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
 	kosong.kecepatan_ud = 0.0
-	check(AkhirRute.langkah_keluar(kosong, DT).kecepatan_awal_ud == 3.0, "kecepatan awal langkah dari laju 0 = 3,0")
+	check(AkhirRute.langkah_keluar(kosong, DT).kecepatan_awal_ud == 6.0, "kecepatan awal langkah dari laju 0 = 6,0")
 	check(kosong.kecepatan_ud == 0.0, "langkah_keluar tidak mengubah keadaan masukan")
 	# Jatuh sesudah tabrakan (beku_detik): sepeda diam selama beku, laju minimum tidak memaksa sepeda bergerak.
 	var jatuh: BikeMotion.Hasil = AkhirRute.langkah_keluar(BikeMotion.Keadaan.new(), 0.5, 0.5)
 	check(jatuh.maju_ubin == 0.0 and jatuh.keadaan.kecepatan_ud == 0.0, "beku_detik diteruskan: selama jatuh sepeda diam (jarak 0, laju 0)")
 	var bangun: BikeMotion.Hasil = AkhirRute.langkah_keluar(BikeMotion.Keadaan.new(), 1.0, 0.5)
 	check(is_equal_approx(bangun.maju_ubin, 0.375) and is_equal_approx(bangun.keadaan.kecepatan_ud, 1.5), "sisa langkah 0,5 detik sesudah bangun: akselerasi dari 0 (1,5 u/d, 0,375 ubin); laju minimum baru berlaku di langkah berikutnya")
-	check(AkhirRute.langkah_keluar(bangun.keadaan, DT).kecepatan_awal_ud == 3.0, "langkah berikutnya: laju dijaga kembali ke 3,0")
+	check(AkhirRute.langkah_keluar(bangun.keadaan, DT).kecepatan_awal_ud == 6.0, "langkah berikutnya: laju dijaga kembali ke 6,0")
+	# Stamina tidak menguras: dengan stamina garis, 10 detik keluar menguras paling banyak satu langkah, dan lelah tidak pernah menyala.
+	var k2: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
+	k2.stamina = 40.0
+	var turun_maks: float = 0.0
+	var lelah_menyala: int = 0
+	for i: int in range(600):
+		k2 = AkhirRute.langkah_keluar(k2, DT, 0.0, 40.0).keadaan
+		turun_maks = maxf(turun_maks, 40.0 - k2.stamina)
+		lelah_menyala += 1 if k2.lelah else 0
+	check(turun_maks <= 12.0 * DT + 0.000001 and lelah_menyala == 0, "stamina garis 40: 600 langkah keluar menguras paling banyak satu langkah (%.4f), lelah tidak pernah menyala (%d)" % [turun_maks, lelah_menyala])
 
 
-func _jarak_satu_detik(v0: float, e: EfekKondisi) -> float:
+func _jarak_satu_detik(v0: float) -> float:
 	var k: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
 	k.kecepatan_ud = v0
 	var jarak: float = 0.0
 	for i: int in range(60):
-		var h: BikeMotion.Hasil = AkhirRute.langkah_keluar(k, DT, 0.0, e)
+		var h: BikeMotion.Hasil = AkhirRute.langkah_keluar(k, DT)
 		k = h.keadaan
 		jarak += h.maju_ubin
 	return jarak
@@ -343,9 +354,12 @@ func _test_simulasi_keluar() -> void:
 		for v0: float in [0.0, 1.5, 3.0, 4.5, 6.0]:
 			for pakai_terburuk: bool in [false, true]:
 				var ukuran: Vector2 = _ukuran(lebar)
-				var efek: EfekKondisi = _efek_terburuk() if pakai_terburuk else null
 				var k: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
 				k.kecepatan_ud = v0
+				# Kasus kedua = sepeda lelah dengan stamina 0 di garis (efek kondisi dan lelah tidak berlaku lagi sesudah garis).
+				var stamina_garis: float = 0.0 if pakai_terburuk else 100.0
+				k.stamina = stamina_garis
+				k.lelah = pakai_terburuk
 				var pijak: Vector2 = AkhirRute.posisi_layar_pijak(ukuran, DoronganKecepatan.geser_target(v0))
 				var sisa_awal: float = AkhirRute.sisa_ubin_keluar(pijak, ukuran)
 				var fase: AkhirRute.Fase = AkhirRute.Fase.SEBELUM
@@ -358,7 +372,7 @@ func _test_simulasi_keluar() -> void:
 				var jumlah_hampir: int = 0
 				var jumlah_keluar: int = 0
 				for i: int in range(3000):
-					var h: BikeMotion.Hasil = AkhirRute.langkah_keluar(k, DT, 0.0, efek)
+					var h: BikeMotion.Hasil = AkhirRute.langkah_keluar(k, DT, 0.0, stamina_garis)
 					k = h.keadaan
 					jarak += h.maju_ubin
 					pijak += Vector2(32.0, -16.0) * h.maju_ubin
@@ -383,8 +397,8 @@ func _test_simulasi_keluar() -> void:
 					semua_ok = false
 					catatan += " [lebar %d v0 %.1f terburuk %s: hampir %d keluar %d langkah %d/%d jarak %.3f sisa awal %.3f sisa hampir %.3f]" % [lebar, v0, pakai_terburuk, jumlah_hampir, jumlah_keluar, langkah_hampir, langkah_keluar, jarak_saat_keluar, sisa_awal, sisa_saat_hampir]
 				kombinasi += 1
-	check(semua_ok, "%d kombinasi (4 lebar x 5 laju awal x 2 efek): hampir 1x lalu keluar 1x, jarak saat keluar = sisa geometri (selisih < 1 langkah), sisa saat hampir 5,9 sampai 6,0.%s" % [kombinasi, catatan])
-	# Waktu literal untuk 640 santai (efek tidak ada, dari 3,0): 1 detik percepatan 3->6 menempuh 4,5 ubin, sisa 13,8965 - 4,5 = 9,3965 ubin pada 6,0 u/d = 1,5661 detik: 2,5661 detik = langkah ke-154 (indeks 153).
+	check(semua_ok, "%d kombinasi (4 lebar x 5 laju awal x {stamina penuh, lelah stamina 0}): hampir 1x lalu keluar 1x, jarak saat keluar = sisa geometri (selisih < 1 langkah), sisa saat hampir 5,9 sampai 6,0.%s" % [kombinasi, catatan])
+	# Waktu literal untuk 640 dari 3,0: laju dijaga 6,0 sejak langkah pertama, jarak 13,8965 ubin / 6,0 = 2,3161 detik = langkah ke-139 (indeks 138).
 	var k2: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
 	var pijak2: Vector2 = AkhirRute.posisi_layar_pijak(Vector2(640.0, 360.0), Vector2.ZERO)
 	var fase2: AkhirRute.Fase = AkhirRute.Fase.SEBELUM
@@ -400,15 +414,17 @@ func _test_simulasi_keluar() -> void:
 		if hasil2.baru_keluar:
 			indeks_keluar = i
 			break
-	check(indeks_keluar >= 152 and indeks_keluar <= 154, "640x360 santai tanpa efek: keluar di langkah indeks %d (oracle 153 +-1)" % indeks_keluar)
-	# Laju minimum terburuk (efek puncak 3,0 u/d konstan): 13,8965 ubin / 3,0 = 4,632 detik = 278 langkah.
+	check(indeks_keluar >= 137 and indeks_keluar <= 139, "640x360 santai: keluar di langkah indeks %d (oracle 138 +-1, sebelumnya 153)" % indeks_keluar)
+	# Lelah dengan stamina 0 di garis: sama (efek kondisi dan lelah tidak berlaku); terburuk dulu 277 langkah.
 	var k3: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
+	k3.stamina = 0.0
+	k3.lelah = true
 	var pijak3: Vector2 = AkhirRute.posisi_layar_pijak(Vector2(640.0, 360.0), Vector2.ZERO)
 	var fase3: AkhirRute.Fase = AkhirRute.Fase.SEBELUM
 	var hampir3: bool = false
 	var indeks3: int = -1
 	for i: int in range(1000):
-		var h3: BikeMotion.Hasil = AkhirRute.langkah_keluar(k3, DT, 0.0, _efek_terburuk())
+		var h3: BikeMotion.Hasil = AkhirRute.langkah_keluar(k3, DT, 0.0, 0.0)
 		k3 = h3.keadaan
 		pijak3 += Vector2(32.0, -16.0) * h3.maju_ubin
 		var hasil3: AkhirRute.Keluar = AkhirRute.periksa_keluar(fase3, hampir3, true, pijak3, Vector2(640.0, 360.0))
@@ -417,7 +433,7 @@ func _test_simulasi_keluar() -> void:
 		if hasil3.baru_keluar:
 			indeks3 = i
 			break
-	check(indeks3 >= 276 and indeks3 <= 279, "640x360 santai, efek terburuk (3,0 u/d): keluar di langkah indeks %d (oracle 277 +-1)" % indeks3)
+	check(indeks3 >= 137 and indeks3 <= 139, "640x360 lelah stamina 0: keluar di langkah indeks %d (oracle 138 +-1; dulu terburuk 277)" % indeks3)
 
 
 # --- Portal ---
@@ -539,7 +555,7 @@ func _test_invarian_g5() -> void:
 	var sepeda: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
 	sepeda.kecepatan_ud = 6.0
 	for i: int in range(600):
-		var gerak: BikeMotion.Hasil = AkhirRute.langkah_keluar(sepeda, DT, 0.0, beku.efek)
+		var gerak: BikeMotion.Hasil = AkhirRute.langkah_keluar(sepeda, DT)
 		sepeda = gerak.keadaan
 		beku = KondisiRute.langkah(beku, gerak, DT, null, true).keadaan
 		jalan = KondisiRute.langkah(jalan, gerak, DT, null, false).keadaan

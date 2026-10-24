@@ -42,6 +42,7 @@ func jalankan() -> void:
 	await _test_tanpa_lubang_tanah()
 	await _test_masukan_dikunci()
 	await _test_laju_minimum_dan_tutorial()
+	await _test_keluar_cepat_walau_rusak_dan_lelah()
 	await _test_rintangan_nonaktif_sesudah_garis()
 	await _test_jeda_saat_keluar()
 	await _test_koran_terbang_menunda_hasil()
@@ -320,7 +321,8 @@ func _satu_keluar(jendela: Array, kidal: bool, laju: float) -> void:
 				kamera_bergeser += 1
 			if sepeda.rem_aktif():
 				rem_terlihat += 1
-			laju_min = minf(laju_min, sepeda.kecepatan_ud)
+			if langkah > langkah_selesai:
+				laju_min = minf(laju_min, sepeda.kecepatan_ud)
 			var nama: String = String(sepeda.nama_animasi())
 			if nama.contains("rem") or nama.contains("berhenti"):
 				animasi_salah += 1
@@ -334,12 +336,12 @@ func _satu_keluar(jendela: Array, kidal: bool, laju: float) -> void:
 	check(kamera_bergeser == 0 and kamera.position == kamera_garis, "%s: kamera dan geseran dorongan tidak bergeser sama sekali sesudah garis (%d langkah beda)" % [tag, kamera_bergeser])
 	check(sepeda.lateral_ubin == lateral_garis and rem_terlihat == 0 and animasi_salah == 0, "%s: jempol menarik kiri-bawah diabaikan: lateral tetap, rem tidak pernah aktif (%d), animasi bukan rem atau berhenti (%d)" % [tag, rem_terlihat, animasi_salah])
 	check(laju_min >= minf(laju_garis, Config.RUTE_KELUAR_LAJU_MIN_UD) - 0.0001 and (laju < Config.KECEPATAN_NGEBUT_UD or laju_min >= laju_garis - 0.0001), "%s: stick buatan lurus ke depan menjaga laju (ngebut tidak melambat: terendah %.3f dari %.3f di garis)" % [tag, laju_min, laju_garis])
-	check(laju_min >= Config.RUTE_KELUAR_LAJU_MIN_UD - 0.0001, "%s: laju tidak turun di bawah laju minimum (terendah %.3f)" % [tag, laju_min])
+	check(laju_min >= Config.RUTE_KELUAR_LAJU_MIN_UD - 0.0001 and laju_min >= 6.0 - 0.0001, "%s: sejak langkah pertama sesudah garis laju tidak turun di bawah 6,0 u/d (level ngebut, F-3; terendah %.3f)" % [tag, laju_min])
 	check(sisa_sebelum_hasil > 0.0 and AkhirRute.sisa_ubin_keluar(akar.posisi_layar_sepeda(), ukuran) == 0.0, "%s: satu langkah sebelum hasil sepeda masih sebagian di layar (sisa %.2f ubin), saat hasil seluruhnya di luar" % [tag, sisa_sebelum_hasil])
 	var pijak: Vector2 = akar.posisi_layar_sepeda()
 	var badan: Rect2 = Rect2(pijak + BADAN.position, BADAN.size)
 	check(not Rect2(Vector2.ZERO, ukuran).intersects(badan) and (badan.position.x >= ukuran.x or badan.end.y <= 0.0), "%s: kotak badan sepeda %s tidak beririsan dengan viewport %s saat hasil terbuka (keluar lewat tepi kanan/atas)" % [tag, badan, ukuran])
-	check(float(langkah_hasil - langkah_selesai) * DT <= 6.0 and not akar.panel_akhir().tampil() and akar.koran.sisa == koran_awal, "%s: dari garis ke hasil %.2f detik (<= 6,0), banner disembunyikan saat hasil, koran tidak terpakai" % [tag, float(langkah_hasil - langkah_selesai) * DT])
+	check(float(langkah_hasil - langkah_selesai) * DT <= 3.0 and not akar.panel_akhir().tampil() and akar.koran.sisa == koran_awal, "%s: dari garis ke hasil %.2f detik (<= 3,0, F-3; sebelumnya 6,0), banner disembunyikan saat hasil, koran tidak terpakai" % [tag, float(langkah_hasil - langkah_selesai) * DT])
 	check(skala >= 2 and Vector2(lebar, 360) == ukuran, "%s: viewport game %dx360, skala bulat %d" % [tag, lebar, skala])
 	_langkah(akar, 30)
 	check(kamera.position == kamera_garis and akar.hasil_tampil() and akar.rintangan().daftar.size() == daftar_rintangan, "%s: layar hasil tetap terbuka dan dunia tetap beku 30 langkah sesudahnya (rintangan %d tetap)" % [tag, daftar_rintangan])
@@ -491,6 +493,47 @@ func _test_laju_minimum_dan_tutorial() -> void:
 	_langkah(akar2, 60)
 	check(akar2.keadaan_tutorial() == keadaan, "tutorial membeku sesudah garis akhir (keadaan tidak diganti lagi)")
 	_bersihkan(akar2)
+
+
+## F-3: sepeda rusak (kondisi 0,05 semua komponen: efek terburuk) dan lelah (stamina 0) tetap keluar dengan 6,0 u/d, stamina dan kondisi tidak berubah sesudah garis, efek kondisi hanya dilepas sesudah garis.
+func _test_keluar_cepat_walau_rusak_dan_lelah() -> void:
+	_judul.call("F-3: sepeda rusak dan lelah tetap keluar dengan laju ngebut; efek kondisi dilepas hanya sesudah garis; stamina dan kondisi dibekukan di garis")
+	for rusak: bool in [false, true]:
+		var akar: RuteMain = await _siapkan()
+		if rusak:
+			var daftar: Array[DataToko] = []
+			akar.atur_sepeda(PembantuGoldenGaris.state_sepeda(0.05), 1, daftar)
+		var sepeda: SepedaUji = _sepeda(akar)
+		_taruh(akar, 3.0, 0.0, PANJANG_RUTE - 4.0)
+		var k: BikeMotion.Keadaan = sepeda.keadaan.salin()
+		k.stamina = 0.0
+		k.lelah = true
+		sepeda.keadaan = k
+		var efek_sebelum: Variant = akar.call(&"_efek_gerak")
+		check(efek_sebelum != null, "kondisi uji: sebelum garis efek kondisi dipakai (rusak %s)" % rusak)
+		var langkah: int = 0
+		while langkah < 400 and not akar.rute_sudah_selesai():
+			akar.perbarui(DT)
+			langkah += 1
+		check(akar.rute_sudah_selesai(), "rusak %s: garis tercapai" % rusak)
+		check(akar.call(&"_efek_gerak") == null, "rusak %s: efek kondisi dilepas sesudah garis (null)" % rusak)
+		var kondisi_garis: Dictionary = akar.kondisi_akhir()
+		var stamina_garis: float = sepeda.stamina()
+		var laju_min: float = INF
+		var stamina_maks_turun: float = 0.0
+		var lelah_menyala: int = 0
+		var hasil_langkah: int = 0
+		while hasil_langkah < 900 and not akar.hasil_tampil():
+			akar.perbarui(DT)
+			hasil_langkah += 1
+			laju_min = minf(laju_min, sepeda.kecepatan_ud)
+			stamina_maks_turun = maxf(stamina_maks_turun, stamina_garis - sepeda.stamina())
+			lelah_menyala += 1 if (sepeda.lelah() and stamina_garis > 0.0) else 0
+		check(akar.hasil_tampil() and float(hasil_langkah) * DT <= 3.0, "rusak %s lelah stamina 0: hasil terbuka %.2f detik sesudah garis (<= 3,0)" % [rusak, float(hasil_langkah) * DT])
+		check(laju_min >= 6.0 - 0.0001, "rusak %s lelah: laju tidak pernah di bawah 6,0 sesudah garis (terendah %.3f)" % [rusak, laju_min])
+		check(akar.kondisi_akhir() == kondisi_garis, "rusak %s: kondisi sepeda tidak berubah sesudah garis (G-5)" % rusak)
+		check(stamina_maks_turun <= 12.0 * DT + 0.0001 and lelah_menyala == 0, "rusak %s: stamina tidak terkuras sesudah garis (turun paling banyak %.4f, lelah menyala %d)" % [rusak, stamina_maks_turun, lelah_menyala])
+		_bersihkan(akar)
 
 
 # --- Rintangan sesudah garis ---
