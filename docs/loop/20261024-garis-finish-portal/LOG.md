@@ -1,7 +1,7 @@
 # Loop Log — 20261024-garis-finish-portal
 Scope: Run garis finish dengan portal satpam (sepeda melaju keluar viewport)  ·  Branch: feat/garis-finish-portal (dari main 92255fa, rilis 0.7.0 + PR #66)  ·  Mulai: 2026-10-24  ·  Godot: 4.7.2
 
-## Status: IN_PROGRESS   (iterasi 1/2; Dev bagian A, B, dan C selesai, D belum)
+## Status: IN_PROGRESS   (iterasi 1/2; Dev bagian A, B, C, dan D selesai; QA belum)
 
 ## Lingkungan (orchestrator, awal run)
 - Basis: `main` = `origin/main` = `92255fa` (memuat PR #66 UI-2, di-merge 2026-10-24).
@@ -23,7 +23,7 @@ Diukur Dev bagian A, 2026-10-24, di `99b0d29` (= main `92255fa` + dua commit doc
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang | QA verdict | Temuan baru | Terverifikasi |
 |---|---|---|---|---|---|
-| 1 | | | | | |
+| 1 | Dev A (portal dipasang, G-1a), B (`AkhirRute`, `HasilRute.siap_tampil`, konstanta), C (scene portal, gerak keluar, pembekuan kamera dan dunia, golden `main`, probe, mutan), D (dokumen) | import 0 error; `--quit-after 2` 0 ERROR/WARNING; `run_tests` 29088 lolos, 0 gagal, 0 peringatan (baseline 28489); 17 `uji_*.py` exit 0; sha256 save asli tidak berubah; mutan Dev B 55/55 dan C 51/51 tertangkap | belum (menunggu QA) | tidak ada temuan OPEN; A-1 dan A-2 FIXED (G-1a) | belum |
 
 ## Temuan
 Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MANUAL | BLOCKED
@@ -60,7 +60,17 @@ Bagian C (scene; G-1..G-6):
 - Baru: `tests/tes_garis_finish_scene.gd` (`TesGarisFinishScene`, terdaftar sesudah `TesGarisFinish`), `tests/pembantu_golden_garis.gd`, `tests/ukur_golden_garis.gd`, `tests/data/golden_garis_main.json`. `probe_rute_jendela.gd` dan `probe_hasil_jendela.gd` diperbarui.
 
 ## NEEDS-MANUAL (uji di HP)
-- [ ] SETUP_ANDROID 8.20 (ditulis bagian D)
+- [ ] SETUP_ANDROID 8.20 (ditulis bagian D; 16 butir + lembar hasil), butir-butir:
+  - [ ] portal terlihat jelas dari jauh dan terbaca sebagai gerbang di trotoar seberang dan separuh aspal (butir 1)
+  - [ ] portal membuka saat didekati, tidak menimpa sepeda (butir 2); letak lateral -2,0 pas (butir 3, angka disetel di HP)
+  - [ ] sepeda keluar mulus ke tepi kanan tanpa lompatan kamera dan tanpa lubang tanah; tidak direm; lonjakan laju dari 0 ke 3,0 bila sempat berhenti di garis (butir 4, 5)
+  - [ ] banner "Rute selesai" tepat waktu dan tidak menutupi portal atau sepeda (butir 6)
+  - [ ] jempol yang masih menahan stick atau ketukan tidak melempar atau membelokkan (butir 7)
+  - [ ] sepeda lewat di bawah panel kondisi dan panel koin/skor sebelum hilang (0,3 sampai 0,5 detik): mengganggu atau tidak (butir 8)
+  - [ ] layar hasil terbaca di atas dunia, portal tampak di latar kiri (butir 9)
+  - [ ] waktu garis akhir sampai hasil (sekitar 2,6 sampai 3,1 detik normal, sampai sekitar 6 detik terburuk) pas atau terlalu lama (butir 10)
+  - [ ] Main lagi dan Hari berikutnya memulihkan (butir 11); tutorial hari 1 beku (12); jeda saat keluar (13)
+  - [ ] 60 fps, piksel tajam, bunyi sepeda senyap sesudah hasil (butir 14); kidal (15); zona aman A54 (16)
 
 ## Keputusan & catatan
 - Putusan orchestrator G-1..G-6 di SPEC.
@@ -180,3 +190,35 @@ Commit: `test:` golden perilaku lama (2eff0c2), `feat:` portal + gerak keluar + 
 **Mutan (AC-10) bagian C**: commit dulu, lalu 52 mutan satu perubahan (skrip bantu di scratchpad, subset `TesGarisFinishScene` + `TesRuteScene` dengan timeout 120 detik; mutan macet/error dihitung tertangkap hanya setelah diperiksa ulang satu per satu): `rute_main.gd` 28 (jarak beku 0, set_process_input dihapus, bekukan kamera dihapus, portal frame 0, hasil di fase salah, hampir_keluar/fase tidak diperbarui, jarak dunia = jarak sepeda, laju dijaga mati, stick nol dan stick rem, rintangan aktif, bel diizinkan, sepeda senyap, tutorial, posisi layar salah, tenggat tidak dihentikan, lepas_semua dihapus, sinyal rute_selesai dihapus, tiga reset `_susun` dihapus, portal atur_rute dihapus, banner hasil tidak disembunyikan, lempar diizinkan, banner di fase salah, penerap portal dihapus, dan satu pengganti tanpa efek), `adegan_jalan.gd` 12 (siapkan gerak, tanah dan dunia memakai jarak sepeda, return kamera beku dihapus, bunyi senyap, kamera beku tidak menyala, reset kamera beku dihapus, jam jatuh dt 0, bel diizinkan, daftar rintangan kosong, geseran dorongan pada kamera beku, rintangan aktif), `portal_garis.gd` 9, `config.gd` 3. **Hasil: 51 bermakna, 51 tertangkap; 0 lolos** (satu mutan, nomor 24, ternyata penggantian identik tanpa efek karena salah ketik skrip; dicoret dan tidak dihitung). Tiga mutan sempat dilaporkan "error" oleh skrip (mutan 7, 32, 34); diulang satu per satu dan semuanya tertangkap oleh asersi golden dan keluar (sepeda tidak pernah keluar viewport karena kamera tidak beku, hasil tidak pernah terbuka). Sebelum putaran mutan, dari analisis tiap mutan yang saya rencanakan (bukan dari hasil lari), saya menambah asersi untuk kelemahan yang terlihat: laju minimum dari laju 0 (`_siapkan_gerak` mati), ngebut tidak melambat (stick nol), bunyi senyap sesudah hasil, tutorial beku, router bersih (`lepas_semua`), dan daftar rintangan tetap (`_test_laju_minimum_dan_tutorial`, tambahan di `_satu_keluar`); semua mutan itu kemudian tertangkap pada putaran pertama dan satu-satunya. Mutan tanpa tes penutup yang tidak dibuat: perubahan jarak yang dipakai `_langkah_misi` dan `_tampilkan_misi` (setara: misi sudah gagal di garis dan tidak berubah lagi; tampilan kucing dari luar layar).
 
 Catatan untuk D: (a) dokumen yang menyebut "sepeda direm di garis akhir" (ROUTE_DESIGN, BALANCING baris Akhir rute dan 6 konstanta baru, ART_DIRECTION 6.x, AGENTS.md, SETUP_ANDROID 8.20, README docs) belum ditulis ulang; (b) angka tuning disetel di HP: lateral portal -2,0, jarak buka 6,0, hampir keluar 6,0; (c) NEEDS-MANUAL: sepeda lewat di bawah panel kondisi/skor saat keluar, tarikan jempol, 60 fps.
+
+### Bagian D (Dev, iterasi 1): dokumen
+
+Commit `docs:` (tanpa kode): BALANCING + ROUTE_DESIGN + GDD + ROADMAP, ART_DIRECTION, SETUP_ANDROID 8.20, AGENTS.md, README + DEV_PHASES, LOOP-DEV-QA 6m, dan LOG ini. Tidak ada kode, aset, atau tes yang diubah di bagian D (gerbang menuntut tidak ada perbaikan). Semua dengan status "usulan, dinilai di HP"; aset portal dan perilaku garis finish TIDAK dicentang di DEV_PHASES (catatan dan butir baru bertanda `[ ]`) sebelum uji HP 8.20.
+
+**Yang ditulis**
+- `docs/ROADMAP.md`: baris usulan garis finish (keputusan terbuka 5) dicoret `~~ ~~` dan diganti "Dikerjakan run garis-finish-portal (usulan, Dev iterasi 1 selesai, menunggu QA dan uji HP 8.20)" dengan ringkasan perilaku, plus kalimat pembaruan 24 Oktober di baris status atas.
+- `docs/ROUTE_DESIGN.md`: bagian 4d baru, akhir rute dengan portal (garis akhir tetap `panjang_ubin`, tidak ada segmen yang ditambah, portal lateral -2,0, sepeda tidak direm, keluar lewat tepi kanan, kamera dan dunia beku, rintangan tidak menabrak, jarak tambahan 12,8 sampai 17,9 ubin per lebar viewport).
+- `docs/BALANCING.md`: baris Akhir rute (6b) ditulis ulang (rem lama diganti keluar viewport; `RUTE_AKHIR_STICK_Y` hanya untuk bot `tes_rintangan`), butir Layar hasil (6f) dan kalimat "pengereman otomatis di akhir rute" (8.6) diluruskan (baris 368 sudah diperbarui bagian C), bagian 6h baru dengan DUA BELAS konstanta (lihat catatan di bawah) lengkap dengan nilai, satuan, alasan, dan tabel jarak keluar per viewport dari LOG bagian B, catatan perubahan 2026-10-24.
+- `docs/GDD.md`: satu bullet di 4.1 (garis finish dengan portal satpam; pos satpam dan portal buka-tutup rintangan distrik tetap M3), aturan permainan tidak berubah.
+- `docs/ART_DIRECTION.md`: butir 6.4 portal ditambah pemasangan di scene (lateral -2,0, Y-sort, kotak penutup tapak 0,75 dan tinggi 1,78125, oracle piksel, mock) dan entri Changelog 2026-10-24; bagian 9 tidak diubah (portal dibuat sendiri, tidak ada lisensi baru).
+- `AGENTS.md`: perintah probe rute dan `render.py --salin` (15 sprite) diperbarui, peta repo (`AkhirRute`, `HasilRute`) diperluas, daftar run ditambah, dan paragraf "Run garis finish" mengikuti pola UI-2 (entitas portal, kait `AdeganJalan`, konstanta, tes baru, tes lama yang diubah).
+- `docs/README.md` (baris status, baris LOOP-DEV-QA), `docs/DEV_PHASES.md` (butir properti portal dengan catatan dan butir garis finish baru, keduanya `[ ]`).
+- `docs/SETUP_ANDROID.md`: bagian 8.20 baru (16 butir + lembar hasil), butir lama 8.6 nomor 7 dan 8.8 nomor 9 diberi catatan bahwa sepeda tidak lagi mengerem di garis akhir. Tidak ada daftar isi bernomor di dokumen itu yang perlu diperbarui.
+- `docs/LOOP-DEV-QA.md`: bagian 6m baru (putusan G-1..G-6 + G-1a, tabel ringkasan, pelajaran), status UI-2 di 6k dan 6l diperbarui (lolos QA iterasi 1, PR #66).
+- `tools/env_art/README.md`: sudah diperbarui bagian A, tidak diubah.
+- Tidak diubah: `CHANGELOG.md`, `.release-please-manifest.json`, `version.txt`.
+
+**Yang tidak cocok antara dokumen lama dan kode (ditemukan dan diperbaiki)**
+1. Brief menyebut "enam konstanta baru"; `config.gd` punya DUA BELAS (6 `RUTE_KELUAR_*`/`RUTE_PORTAL_BUKA_JARAK_UBIN` dari bagian B dan 6 `RUTE_PORTAL_*` dari bagian C). Semua dua belas didokumentasikan di BALANCING 6h dan catatan perubahan.
+2. BALANCING baris Akhir rute (6b) masih menulis "sepeda direm dengan rem biasa ... berhenti paling jauh sekitar 4,5 ubin" dan butir Layar hasil (6f, "saat sepeda berhenti") serta 8.6 ("pengereman otomatis di akhir rute") belum diubah bagian C (C hanya memperbarui baris tabel 368). Ketiganya diluruskan.
+3. SETUP_ANDROID 8.6 nomor 7 dan 8.8 nomor 9 menyebut "sepeda mengerem sampai berhenti" dan hasil "sekitar 0,6 sampai 1,2 detik sesudah garis akhir"; diberi catatan penunjuk ke 8.20 (butir lama tidak dihapus, riwayat tetap).
+4. LOOP-DEV-QA 6k dan 6l masih menyebut UI-2 "menunggu QA"; diperbarui ke lolos QA iterasi 1 dan di-merge (PR #66), sesuai DEV_PHASES dan SPEC run ini.
+5. DEV_PHASES Fase 5 masih menulis "portal satpam (M3)" sebagai satu butir; portal sudah terpasang sebagai usulan, jadi diberi catatan dan butir garis finish baru, TIDAK dicentang.
+6. Brief menyebut baris BALANCING 290 dan 368: baris 368 sudah diperbarui bagian C, baris 290 belum (diperbaiki di sini). Angka "sekitar 2,6-6 detik" di 8.20 berasal dari LOG bagian B: normal 2,6 sampai 3,1 detik, terpanjang sekitar 5,95 detik.
+
+### Gerbang bagian D (hasil akhir)
+- `godot --headless --import`: exit 0. `godot --headless --path . --quit-after 2`: exit 0, 0 baris ERROR/WARNING.
+- `run_tests.gd` + `cek_keluaran_tes.py`: **29088 lolos, 0 gagal, 0 peringatan** (sama dengan bagian C; bagian D tidak mengubah kode).
+- 17 `uji_*.py` semuanya exit 0: aset_fase3 148, aset_gelombang1 352, aset_kucing 13, aset_lampu_pohon 183, aset_pasang_5b 599, aset_pasang_gelombang1 587, aset_simpang 214, bangun_frames 62, pemeriksa 16 kasus 0 menyimpang, sintesis_kondisi 55, sintesis_lempar 111, sintesis_milestone 18, sintesis_misi 47, sintesis_rute 90, sintesis_sepeda 32, ui_lencana 25, ui_redesain LOLOS.
+- sha256 save asli sesudah semua perintah: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` (tidak berubah).
+- `git status`: hanya `.claude/` (untracked, bukan bagian run). Tidak ada push.
