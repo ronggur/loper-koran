@@ -1,0 +1,669 @@
+{
+	"commit_main": "92255fa4e25cb22de93f02cd3153d8dcaab4ffb7",
+	"kasus": [
+		{
+			"angka": {
+				"detik_lewat": 0,
+				"jumlah_tepat": 14,
+				"jumlah_tip": 0,
+				"koin": 285,
+				"koin_bersih": 230,
+				"koin_misi": 0,
+				"koin_tip": 0,
+				"lempar_terbuang": 11,
+				"meleset": 6,
+				"misi_hasil": "",
+				"misi_id": "",
+				"pelanggan": 25,
+				"potongan": 55,
+				"skor": 3839,
+				"tenggat_lewat": false,
+				"terkirim": 19
+			},
+			"garis": {
+				"beruntun": 0,
+				"jumlah_antar": 19,
+				"jumlah_tepat": 14,
+				"jumlah_tip": 0,
+				"koin": 285,
+				"koin_tip": 0,
+				"kondisi": {
+					"ban": 0.9646,
+					"rantai": 0.974,
+					"rem": 1.0
+				},
+				"misi_hasil": "tanpa",
+				"misi_koin": 0,
+				"radar_progres": {
+					"progres": "1,1,2,1,1,1,2,2,2,2,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1",
+					"radar": "",
+					"terkirim": 19
+				},
+				"rintangan_jatuh": false,
+				"skor": 3839,
+				"tenggat_berhenti": true,
+				"tenggat_lewat": false,
+				"tenggat_waktu": "78.7000",
+				"terantar": "per_buka_02@10,per_buka_02@6,per_tengah_01@14,per_tengah_01@30,per_tengah_01@6,per_tengah_02@18,per_tengah_02@26,per_tengah_02@6,per_tengah_03@30,per_tengah_03@34,per_tengah_04@10,per_tengah_04@22,per_tengah_04@30,per_tengah_04@6,per_tengah_05@14,per_tengah_05@26,per_tengah_05@6,per_tutup_01@14,per_tutup_01@6",
+				"terbuang": 9
+			},
+			"garis_jarak": "236.0000",
+			"hasil": {
+				"beruntun": 0,
+				"jumlah_antar": 19,
+				"jumlah_tepat": 14,
+				"jumlah_tip": 0,
+				"koin": 285,
+				"koin_tip": 0,
+				"kondisi": {
+					"ban": 0.9646,
+					"rantai": 0.974,
+					"rem": 1.0
+				},
+				"misi_hasil": "tanpa",
+				"misi_koin": 0,
+				"radar_progres": {
+					"progres": "1,1,2,1,1,1,2,2,2,2,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1",
+					"radar": "",
+					"terkirim": 19
+				},
+				"rintangan_jatuh": false,
+				"skor": 3839,
+				"tenggat_berhenti": true,
+				"tenggat_lewat": false,
+				"tenggat_waktu": "78.7000",
+				"terantar": "per_buka_02@10,per_buka_02@6,per_tengah_01@14,per_tengah_01@30,per_tengah_01@6,per_tengah_02@18,per_tengah_02@26,per_tengah_02@6,per_tengah_03@30,per_tengah_03@34,per_tengah_04@10,per_tengah_04@22,per_tengah_04@30,per_tengah_04@6,per_tengah_05@14,per_tengah_05@26,per_tengah_05@6,per_tutup_01@14,per_tutup_01@6",
+				"terbuang": 11
+			},
+			"hasil_terbuka": true,
+			"jumlah_lempar": 30,
+			"langkah_garis": 2358,
+			"nama": "santai_hari1",
+			"panjang_ubin": "236.0000",
+			"pelanggan": 25,
+			"tabrakan_sebelum_garis": 0,
+			"tabrakan_sesudah_garis": 0
+		},
+		{
+			"angka": {
+				"detik_lewat": 0,
+				"jumlah_tepat": 9,
+				"jumlah_tip": 0,
+				"koin": 195,
+				"koin_bersih": 165,
+				"koin_misi": 0,
+				"koin_tip": 0,
+				"lempar_terbuang": 6,
+				"meleset": 12,
+				"misi_hasil": "gagal",
+				"misi_id": "p1_kucing",
+				"pelanggan": 25,
+				"potongan": 30,
+				"skor": 2924,
+				"tenggat_lewat": false,
+				"terkirim": 13
+			},
+			"garis": {
+				"beruntun": 0,
+				"jumlah_antar": 13,
+				"jumlah_tepat": 9,
+				"jumlah_tip": 0,
+				"koin": 195,
+				"koin_tip": 0,
+				"kondisi": {
+					"ban": 0.914,
+					"rantai": 0.9089,
+					"rem": 1.0
+				},
+				"misi_hasil": "gagal",
+				"misi_koin": 0,
+				"radar_progres": {
+					"progres": "2,1,2,2,2,1,1,2,2,2,1,1,1,2,1,2,1,1,2,1,2,1,1,2,1",
+					"radar": "",
+					"terkirim": 13
+				},
+				"rintangan_jatuh": false,
+				"skor": 2924,
+				"tenggat_berhenti": true,
+				"tenggat_lewat": false,
+				"tenggat_waktu": "49.7076",
+				"terantar": "per_buka_02@6,per_tengah_01@26,per_tengah_02@22,per_tengah_02@6,per_tengah_03@16,per_tengah_03@34,per_tengah_03@6,per_tengah_04@22,per_tengah_04@30,per_tengah_04@6,per_tengah_05@18,per_tengah_05@30,per_tutup_01@16",
+				"terbuang": 4
+			},
+			"garis_jarak": "236.0000",
+			"hasil": {
+				"beruntun": 0,
+				"jumlah_antar": 13,
+				"jumlah_tepat": 9,
+				"jumlah_tip": 0,
+				"koin": 195,
+				"koin_tip": 0,
+				"kondisi": {
+					"ban": 0.914,
+					"rantai": 0.9089,
+					"rem": 1.0
+				},
+				"misi_hasil": "gagal",
+				"misi_koin": 0,
+				"radar_progres": {
+					"progres": "2,1,2,2,2,1,1,2,2,2,1,1,1,2,1,2,1,1,2,1,2,1,1,2,1",
+					"radar": "",
+					"terkirim": 13
+				},
+				"rintangan_jatuh": false,
+				"skor": 2924,
+				"tenggat_berhenti": true,
+				"tenggat_lewat": false,
+				"tenggat_waktu": "49.7076",
+				"terantar": "per_buka_02@6,per_tengah_01@26,per_tengah_02@22,per_tengah_02@6,per_tengah_03@16,per_tengah_03@34,per_tengah_03@6,per_tengah_04@22,per_tengah_04@30,per_tengah_04@6,per_tengah_05@18,per_tengah_05@30,per_tutup_01@16",
+				"terbuang": 6
+			},
+			"hasil_terbuka": true,
+			"jumlah_lempar": 19,
+			"langkah_garis": 1488,
+			"nama": "ngebut_hari3_misi",
+			"panjang_ubin": "236.0000",
+			"pelanggan": 25,
+			"tabrakan_sebelum_garis": 0,
+			"tabrakan_sesudah_garis": 0
+		},
+		{
+			"angka": {
+				"detik_lewat": 0,
+				"jumlah_tepat": 7,
+				"jumlah_tip": 0,
+				"koin": 180,
+				"koin_bersih": 140,
+				"koin_misi": 0,
+				"koin_tip": 0,
+				"lempar_terbuang": 8,
+				"meleset": 13,
+				"misi_hasil": "gagal",
+				"misi_id": "p1_kucing",
+				"pelanggan": 25,
+				"potongan": 40,
+				"skor": 1688,
+				"tenggat_lewat": false,
+				"terkirim": 12
+			},
+			"garis": {
+				"beruntun": 0,
+				"jumlah_antar": 12,
+				"jumlah_tepat": 7,
+				"jumlah_tip": 0,
+				"koin": 180,
+				"koin_tip": 0,
+				"kondisi": {
+					"ban": 0.2466,
+					"rantai": 0.0,
+					"rem": 0.6
+				},
+				"misi_hasil": "gagal",
+				"misi_koin": 0,
+				"radar_progres": {
+					"progres": "1,1,1,2,2,2,2,2,2,1,1,1,2,1,2,2,2,1,2,1,2,1,1,1,2",
+					"radar": "",
+					"terkirim": 12
+				},
+				"rintangan_jatuh": false,
+				"skor": 1688,
+				"tenggat_berhenti": true,
+				"tenggat_lewat": false,
+				"tenggat_waktu": "76.9728",
+				"terantar": "per_buka_02@22,per_buka_02@4,per_buka_02@6,per_tengah_01@24,per_tengah_01@26,per_tengah_02@20,per_tengah_02@26,per_tengah_02@6,per_tengah_03@26,per_tengah_03@6,per_tengah_04@22,per_tutup_01@14",
+				"terbuang": 6
+			},
+			"garis_jarak": "236.0000",
+			"hasil": {
+				"beruntun": 0,
+				"jumlah_antar": 12,
+				"jumlah_tepat": 7,
+				"jumlah_tip": 0,
+				"koin": 180,
+				"koin_tip": 0,
+				"kondisi": {
+					"ban": 0.2466,
+					"rantai": 0.0,
+					"rem": 0.6
+				},
+				"misi_hasil": "gagal",
+				"misi_koin": 0,
+				"radar_progres": {
+					"progres": "1,1,1,2,2,2,2,2,2,1,1,1,2,1,2,2,2,1,2,1,2,1,1,1,2",
+					"radar": "",
+					"terkirim": 12
+				},
+				"rintangan_jatuh": false,
+				"skor": 1688,
+				"tenggat_berhenti": true,
+				"tenggat_lewat": false,
+				"tenggat_waktu": "76.9728",
+				"terantar": "per_buka_02@22,per_buka_02@4,per_buka_02@6,per_tengah_01@24,per_tengah_01@26,per_tengah_02@20,per_tengah_02@26,per_tengah_02@6,per_tengah_03@26,per_tengah_03@6,per_tengah_04@22,per_tutup_01@14",
+				"terbuang": 8
+			},
+			"hasil_terbuka": true,
+			"jumlah_lempar": 20,
+			"langkah_garis": 2306,
+			"nama": "campuran_hari5_misi_aus",
+			"panjang_ubin": "236.0000",
+			"pelanggan": 25,
+			"tabrakan_sebelum_garis": 3,
+			"tabrakan_sesudah_garis": 0
+		},
+		{
+			"angka": {
+				"detik_lewat": 0,
+				"jumlah_tepat": 6,
+				"jumlah_tip": 0,
+				"koin": 120,
+				"koin_bersih": 75,
+				"koin_misi": 0,
+				"koin_tip": 0,
+				"lempar_terbuang": 9,
+				"meleset": 17,
+				"misi_hasil": "",
+				"misi_id": "",
+				"pelanggan": 25,
+				"potongan": 45,
+				"skor": 1048,
+				"tenggat_lewat": false,
+				"terkirim": 8
+			},
+			"garis": {
+				"beruntun": 0,
+				"jumlah_antar": 8,
+				"jumlah_tepat": 6,
+				"jumlah_tip": 0,
+				"koin": 120,
+				"koin_tip": 0,
+				"kondisi": {
+					"ban": 0.0,
+					"rantai": 0.0,
+					"rem": 0.0
+				},
+				"misi_hasil": "tanpa",
+				"misi_koin": 0,
+				"radar_progres": {
+					"progres": "1,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,2,2,2,2,1,2,2",
+					"radar": "",
+					"terkirim": 8
+				},
+				"rintangan_jatuh": false,
+				"skor": 1048,
+				"tenggat_berhenti": true,
+				"tenggat_lewat": false,
+				"tenggat_waktu": "87.6354",
+				"terantar": "per_buka_01@6,per_tengah_01@26,per_tengah_02@18,per_tengah_02@6,per_tengah_03@34,per_tengah_04@30,per_tengah_05@14,per_tengah_05@30",
+				"terbuang": 7
+			},
+			"garis_jarak": "236.0000",
+			"hasil": {
+				"beruntun": 0,
+				"jumlah_antar": 8,
+				"jumlah_tepat": 6,
+				"jumlah_tip": 0,
+				"koin": 120,
+				"koin_tip": 0,
+				"kondisi": {
+					"ban": 0.0,
+					"rantai": 0.0,
+					"rem": 0.0
+				},
+				"misi_hasil": "tanpa",
+				"misi_koin": 0,
+				"radar_progres": {
+					"progres": "1,2,2,1,2,2,1,2,2,1,2,1,1,2,2,2,2,1,2,2,2,2,1,2,2",
+					"radar": "",
+					"terkirim": 8
+				},
+				"rintangan_jatuh": false,
+				"skor": 1048,
+				"tenggat_berhenti": true,
+				"tenggat_lewat": false,
+				"tenggat_waktu": "87.6354",
+				"terantar": "per_buka_01@6,per_tengah_01@26,per_tengah_02@18,per_tengah_02@6,per_tengah_03@34,per_tengah_04@30,per_tengah_05@14,per_tengah_05@30",
+				"terbuang": 9
+			},
+			"hasil_terbuka": true,
+			"jumlah_lempar": 17,
+			"langkah_garis": 2626,
+			"nama": "campuran_hari1_hampir_rusak",
+			"panjang_ubin": "236.0000",
+			"pelanggan": 25,
+			"tabrakan_sebelum_garis": 6,
+			"tabrakan_sesudah_garis": 0
+		},
+		{
+			"angka": {
+				"detik_lewat": 0,
+				"jumlah_tepat": 13,
+				"jumlah_tip": 0,
+				"koin": 240,
+				"koin_bersih": 195,
+				"koin_misi": 0,
+				"koin_tip": 0,
+				"lempar_terbuang": 9,
+				"meleset": 9,
+				"misi_hasil": "",
+				"misi_id": "",
+				"pelanggan": 25,
+				"potongan": 45,
+				"skor": 3993,
+				"tenggat_lewat": false,
+				"terkirim": 16
+			},
+			"garis": {
+				"beruntun": 0,
+				"jumlah_antar": 16,
+				"jumlah_tepat": 13,
+				"jumlah_tip": 0,
+				"koin": 240,
+				"koin_tip": 0,
+				"kondisi": {
+					"ban": 0.9128,
+					"rantai": 0.9077,
+					"rem": 1.0
+				},
+				"misi_hasil": "tanpa",
+				"misi_koin": 0,
+				"radar_progres": {
+					"progres": "2,1,1,1,1,2,2,1,1,1,2,2,1,2,1,1,1,2,1,1,1,1,1,2,2",
+					"radar": "",
+					"terkirim": 16
+				},
+				"rintangan_jatuh": false,
+				"skor": 3993,
+				"tenggat_berhenti": true,
+				"tenggat_lewat": false,
+				"tenggat_waktu": "50.6029",
+				"terantar": "per_buka_02@10,per_buka_02@22,per_tengah_01@32,per_tengah_01@4,per_tengah_01@6,per_tengah_02@10,per_tengah_02@6,per_tengah_03@26,per_tengah_03@6,per_tengah_04@10,per_tengah_04@26,per_tengah_04@28,per_tengah_04@6,per_tengah_05@14,per_tengah_05@26,per_tutup_02@6",
+				"terbuang": 7
+			},
+			"garis_jarak": "240.0000",
+			"hasil": {
+				"beruntun": 0,
+				"jumlah_antar": 16,
+				"jumlah_tepat": 13,
+				"jumlah_tip": 0,
+				"koin": 240,
+				"koin_tip": 0,
+				"kondisi": {
+					"ban": 0.9128,
+					"rantai": 0.9077,
+					"rem": 1.0
+				},
+				"misi_hasil": "tanpa",
+				"misi_koin": 0,
+				"radar_progres": {
+					"progres": "2,1,1,1,1,2,2,1,1,1,2,2,1,2,1,1,1,2,1,1,1,1,1,2,2",
+					"radar": "",
+					"terkirim": 16
+				},
+				"rintangan_jatuh": false,
+				"skor": 3993,
+				"tenggat_berhenti": true,
+				"tenggat_lewat": false,
+				"tenggat_waktu": "50.6029",
+				"terantar": "per_buka_02@10,per_buka_02@22,per_tengah_01@32,per_tengah_01@4,per_tengah_01@6,per_tengah_02@10,per_tengah_02@6,per_tengah_03@26,per_tengah_03@6,per_tengah_04@10,per_tengah_04@26,per_tengah_04@28,per_tengah_04@6,per_tengah_05@14,per_tengah_05@26,per_tutup_02@6",
+				"terbuang": 9
+			},
+			"hasil_terbuka": true,
+			"jumlah_lempar": 25,
+			"langkah_garis": 1515,
+			"nama": "ngebut_hari4",
+			"panjang_ubin": "240.0000",
+			"pelanggan": 25,
+			"tabrakan_sebelum_garis": 0,
+			"tabrakan_sesudah_garis": 0
+		},
+		{
+			"angka": {
+				"detik_lewat": 0,
+				"jumlah_tepat": 13,
+				"jumlah_tip": 0,
+				"koin": 255,
+				"koin_bersih": 190,
+				"koin_misi": 0,
+				"koin_tip": 0,
+				"lempar_terbuang": 13,
+				"meleset": 8,
+				"misi_hasil": "gagal",
+				"misi_id": "p1_kucing",
+				"pelanggan": 25,
+				"potongan": 65,
+				"skor": 3402,
+				"tenggat_lewat": false,
+				"terkirim": 17
+			},
+			"garis": {
+				"beruntun": 0,
+				"jumlah_antar": 17,
+				"jumlah_tepat": 13,
+				"jumlah_tip": 0,
+				"koin": 255,
+				"koin_tip": 0,
+				"kondisi": {
+					"ban": 0.7646,
+					"rantai": 0.774,
+					"rem": 0.8
+				},
+				"misi_hasil": "gagal",
+				"misi_koin": 0,
+				"radar_progres": {
+					"progres": "1,1,2,1,2,1,1,1,1,1,1,2,1,1,1,1,1,1,1,2,2,2,2,2,1",
+					"radar": "",
+					"terkirim": 17
+				},
+				"rintangan_jatuh": false,
+				"skor": 3402,
+				"tenggat_berhenti": true,
+				"tenggat_lewat": false,
+				"tenggat_waktu": "78.6696",
+				"terantar": "per_buka_01@10,per_buka_01@6,per_tengah_01@14,per_tengah_01@18,per_tengah_01@30,per_tengah_01@6,per_tengah_03@14,per_tengah_03@26,per_tengah_03@34,per_tengah_03@6,per_tengah_04@22,per_tengah_04@30,per_tengah_04@6,per_tengah_05@14,per_tengah_05@26,per_tengah_05@30,per_tutup_02@18",
+				"terbuang": 13
+			},
+			"garis_jarak": "236.0000",
+			"hasil": {
+				"beruntun": 0,
+				"jumlah_antar": 17,
+				"jumlah_tepat": 13,
+				"jumlah_tip": 0,
+				"koin": 255,
+				"koin_tip": 0,
+				"kondisi": {
+					"ban": 0.7646,
+					"rantai": 0.774,
+					"rem": 0.8
+				},
+				"misi_hasil": "gagal",
+				"misi_koin": 0,
+				"radar_progres": {
+					"progres": "1,1,2,1,2,1,1,1,1,1,1,2,1,1,1,1,1,1,1,2,2,2,2,2,1",
+					"radar": "",
+					"terkirim": 17
+				},
+				"rintangan_jatuh": false,
+				"skor": 3402,
+				"tenggat_berhenti": true,
+				"tenggat_lewat": false,
+				"tenggat_waktu": "78.6696",
+				"terantar": "per_buka_01@10,per_buka_01@6,per_tengah_01@14,per_tengah_01@18,per_tengah_01@30,per_tengah_01@6,per_tengah_03@14,per_tengah_03@26,per_tengah_03@34,per_tengah_03@6,per_tengah_04@22,per_tengah_04@30,per_tengah_04@6,per_tengah_05@14,per_tengah_05@26,per_tengah_05@30,per_tutup_02@18",
+				"terbuang": 13
+			},
+			"hasil_terbuka": true,
+			"jumlah_lempar": 30,
+			"langkah_garis": 2357,
+			"nama": "santai_hari2_misi",
+			"panjang_ubin": "236.0000",
+			"pelanggan": 25,
+			"tabrakan_sebelum_garis": 0,
+			"tabrakan_sesudah_garis": 0
+		},
+		{
+			"angka": {
+				"detik_lewat": 0,
+				"jumlah_tepat": 6,
+				"jumlah_tip": 0,
+				"koin": 135,
+				"koin_bersih": 110,
+				"koin_misi": 0,
+				"koin_tip": 0,
+				"lempar_terbuang": 5,
+				"meleset": 16,
+				"misi_hasil": "gagal",
+				"misi_id": "p1_kucing",
+				"pelanggan": 25,
+				"potongan": 25,
+				"skor": 1342,
+				"tenggat_lewat": false,
+				"terkirim": 9
+			},
+			"garis": {
+				"beruntun": 0,
+				"jumlah_antar": 9,
+				"jumlah_tepat": 6,
+				"jumlah_tip": 0,
+				"koin": 135,
+				"koin_tip": 0,
+				"kondisi": {
+					"ban": 0.3287,
+					"rantai": 0.9269,
+					"rem": 0.1
+				},
+				"misi_hasil": "gagal",
+				"misi_koin": 0,
+				"radar_progres": {
+					"progres": "2,2,1,1,2,2,2,1,1,2,2,2,2,1,2,1,1,2,2,1,2,2,2,2,1",
+					"radar": "",
+					"terkirim": 9
+				},
+				"rintangan_jatuh": false,
+				"skor": 1342,
+				"tenggat_berhenti": true,
+				"tenggat_lewat": false,
+				"tenggat_waktu": "70.2054",
+				"terantar": "per_buka_01@18,per_tengah_01@26,per_tengah_01@6,per_tengah_02@4,per_tengah_03@16,per_tengah_03@26,per_tengah_04@10,per_tengah_05@26,per_tutup_02@20",
+				"terbuang": 3
+			},
+			"garis_jarak": "236.0000",
+			"hasil": {
+				"beruntun": 0,
+				"jumlah_antar": 9,
+				"jumlah_tepat": 6,
+				"jumlah_tip": 0,
+				"koin": 135,
+				"koin_tip": 0,
+				"kondisi": {
+					"ban": 0.3287,
+					"rantai": 0.9269,
+					"rem": 0.1
+				},
+				"misi_hasil": "gagal",
+				"misi_koin": 0,
+				"radar_progres": {
+					"progres": "2,2,1,1,2,2,2,1,1,2,2,2,2,1,2,1,1,2,2,1,2,2,2,2,1",
+					"radar": "",
+					"terkirim": 9
+				},
+				"rintangan_jatuh": false,
+				"skor": 1342,
+				"tenggat_berhenti": true,
+				"tenggat_lewat": false,
+				"tenggat_waktu": "70.2054",
+				"terantar": "per_buka_01@18,per_tengah_01@26,per_tengah_01@6,per_tengah_02@4,per_tengah_03@16,per_tengah_03@26,per_tengah_04@10,per_tengah_05@26,per_tutup_02@20",
+				"terbuang": 5
+			},
+			"hasil_terbuka": true,
+			"jumlah_lempar": 14,
+			"langkah_garis": 2103,
+			"nama": "campuran_hari8_misi",
+			"panjang_ubin": "236.0000",
+			"pelanggan": 25,
+			"tabrakan_sebelum_garis": 5,
+			"tabrakan_sesudah_garis": 0
+		},
+		{
+			"angka": {
+				"detik_lewat": 55,
+				"jumlah_tepat": 10,
+				"jumlah_tip": 0,
+				"koin": 180,
+				"koin_bersih": 110,
+				"koin_misi": 0,
+				"koin_tip": 0,
+				"lempar_terbuang": 14,
+				"meleset": 13,
+				"misi_hasil": "",
+				"misi_id": "",
+				"pelanggan": 25,
+				"potongan": 70,
+				"skor": 2747,
+				"tenggat_lewat": true,
+				"terkirim": 12
+			},
+			"garis": {
+				"beruntun": 0,
+				"jumlah_antar": 12,
+				"jumlah_tepat": 10,
+				"jumlah_tip": 0,
+				"koin": 180,
+				"koin_tip": 0,
+				"kondisi": {
+					"ban": 0.9133,
+					"rantai": 0.9083,
+					"rem": 0.988
+				},
+				"misi_hasil": "tanpa",
+				"misi_koin": 0,
+				"radar_progres": {
+					"progres": "1,1,2,2,1,2,1,1,2,1,1,1,1,2,2,1,2,1,2,2,2,2,1,2,2",
+					"radar": "",
+					"terkirim": 12
+				},
+				"rintangan_jatuh": false,
+				"skor": 2747,
+				"tenggat_berhenti": true,
+				"tenggat_lewat": true,
+				"tenggat_waktu": "146.9742",
+				"terantar": "per_buka_02@4,per_buka_02@6,per_tengah_01@30,per_tengah_01@6,per_tengah_02@28,per_tengah_02@6,per_tengah_03@14,per_tengah_03@24,per_tengah_04@28,per_tengah_04@30,per_tengah_04@6,per_tutup_02@6",
+				"terbuang": 12
+			},
+			"garis_jarak": "240.0000",
+			"hasil": {
+				"beruntun": 0,
+				"jumlah_antar": 12,
+				"jumlah_tepat": 10,
+				"jumlah_tip": 0,
+				"koin": 180,
+				"koin_tip": 0,
+				"kondisi": {
+					"ban": 0.9133,
+					"rantai": 0.9083,
+					"rem": 0.988
+				},
+				"misi_hasil": "tanpa",
+				"misi_koin": 0,
+				"radar_progres": {
+					"progres": "1,1,2,2,1,2,1,1,2,1,1,1,1,2,2,1,2,1,2,2,2,2,1,2,2",
+					"radar": "",
+					"terkirim": 12
+				},
+				"rintangan_jatuh": false,
+				"skor": 2747,
+				"tenggat_berhenti": true,
+				"tenggat_lewat": true,
+				"tenggat_waktu": "146.9742",
+				"terantar": "per_buka_02@4,per_buka_02@6,per_tengah_01@30,per_tengah_01@6,per_tengah_02@28,per_tengah_02@6,per_tengah_03@14,per_tengah_03@24,per_tengah_04@28,per_tengah_04@30,per_tengah_04@6,per_tutup_02@6",
+				"terbuang": 14
+			},
+			"hasil_terbuka": true,
+			"jumlah_lempar": 26,
+			"langkah_garis": 2486,
+			"nama": "berhenti_lama_hari3",
+			"panjang_ubin": "240.0000",
+			"pelanggan": 25,
+			"tabrakan_sebelum_garis": 0,
+			"tabrakan_sesudah_garis": 0
+		}
+	]
+}
