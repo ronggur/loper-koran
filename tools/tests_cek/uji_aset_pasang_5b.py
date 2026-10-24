@@ -57,6 +57,7 @@ UBIN_BARU = ['trotoar_seberang_masuk', 'rumput_seberang_masuk', 'trotoar_seberan
 UBIN_5A = ['rumput_seberang', 'trotoar_seberang', 'aspal_seberang', 'aspal_dekat', 'trotoar_dekat', 'rumput_dekat', 'rumput_1']
 PROPS_5A = ['prop_koran_putar', 'prop_koran_bayangan', 'prop_koran_teras', 'prop_koran_rumput', 'prop_koran_kotak_surat', 'prop_koran_terlipat']
 PROPS_LAMA = ['prop_kotak_surat', 'prop_kotak_surat_bukan']
+PROPS_GARIS_FINISH = ['prop_portal_satpam']     # run garis-finish-portal (G-1): satu-satunya tambahan render.py --salin sesudah 5B
 VFX_5A = ['vfx_debu_roda', 'vfx_garis_kecepatan_a', 'vfx_garis_kecepatan_b', 'vfx_garis_kecepatan_c', 'vfx_bintang_kena', 'vfx_koin_tip', 'mission_kilau']
 RUMAH_LAMA = ['house_perumahan_%s' % n for n in (
     'dekat_limasan_bukan', 'dekat_limasan_pelanggan', 'dekat_pelana_lintang_bukan', 'dekat_pelana_lintang_pelanggan',
@@ -66,7 +67,7 @@ RUMAH_LAMA = ['house_perumahan_%s' % n for n in (
 TIDAK_DIPASANG_REGEX = [
     r'^prop_tong_sampah_biru', r'^prop_pohon_(?!rindang\.|glodokan\.|ketapang\.)', r'^prop_lampu_(?!lengan_seberang\.|lengan_dekat\.)', r'^prop_lampu_.*nyala',
     r'^tile_perumahan_aspal_[0-9]\.', r'^tile_perumahan_.*_dekat_masuk\.', r'^tile_perumahan_rumput_([04-9])\.', r'polisi', r'zebra', r'genangan',
-    r'^mission_jejak', r'^mission_mangkuk', r'^prop_portal', r'^prop_pos', r'^vfx_percikan',
+    r'^mission_jejak', r'^mission_mangkuk', r'^prop_portal(?!_satpam\.)', r'^prop_pos', r'^vfx_percikan',
 ]
 
 gagal = 0
@@ -124,7 +125,7 @@ def ekspektasi_repo():
     """{folder relatif: [berkas aset]} persis isi assets/sprites untuk tiga folder run 5B (ditulis eksplisit)."""
     return {
         'houses/perumahan': sorted(pasang(RUMAH_LAMA) + pasang(TEMBOK)),
-        'props': sorted(pasang(PROPS_5A + PROPS_LAMA + list(TONG) + POHON + LAMPU)),
+        'props': sorted(pasang(PROPS_5A + PROPS_LAMA + list(TONG) + POHON + LAMPU + PROPS_GARIS_FINISH)),
         'tiles/perumahan': sorted(['tile_perumahan_%s.png' % n for n in UBIN_5A + UBIN_BARU + UBIN_5C] + ['tile_perumahan.json']),
     }
 
@@ -329,7 +330,7 @@ def main():
         # isi keluaran skrip: persis aset baru + isi 5A (tanpa kotak surat dan rumah lama, bukan keluaran skrip)
         harap_keluaran = {
             'houses/perumahan': sorted(pasang(TEMBOK)),
-            'props': sorted(pasang(PROPS_5A + list(TONG) + POHON + LAMPU)),
+            'props': sorted(pasang(PROPS_5A + list(TONG) + POHON + LAMPU + PROPS_GARIS_FINISH)),
             'vfx': sorted(pasang(VFX_5A)),
             'tiles/perumahan': ekspektasi['tiles/perumahan'],
         }

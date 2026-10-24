@@ -176,6 +176,7 @@ func jalankan() -> void:
 	_test_aset_5c_ikut_paket()
 	_test_aset_5d_ikut_paket()
 	_test_aset_ui1_ikut_paket()
+	_test_aset_garis_finish_ikut_paket()
 	_test_rujukan_5d_tak_dipasang()
 	_test_dokumen_5d()
 	_test_probe_tidak_ikut()
@@ -340,7 +341,7 @@ func _pelanggaran_preset(teks: String) -> Array[String]:
 	for spike: String in FILTER_SPIKE:
 		if not kecuali.has(spike):
 			hasil.append("exclude_filter harus memuat %s (spike sisi dekat tidak ikut paket game, AC-14 run 3C)" % spike)
-	for wajib_ikut: String in JALUR_WAJIB_IKUT + JALUR_WAJIB_IKUT_5C + JALUR_WAJIB_IKUT_5D:
+	for wajib_ikut: String in JALUR_WAJIB_IKUT + JALUR_WAJIB_IKUT_5C + JALUR_WAJIB_IKUT_5D + JALUR_WAJIB_IKUT_GARIS_FINISH:
 		if _dikecualikan(wajib_ikut, kecuali):
 			hasil.append("%s harus ikut paket tetapi cocok dengan exclude_filter (konten dan scene alur hari, run fase4a-koran-hari)" % wajib_ikut)
 		if not FileAccess.file_exists("res://" + wajib_ikut):
@@ -431,6 +432,61 @@ func _test_aset_5b_ikut_paket() -> void:
 		check(not FileAccess.file_exists("res://" + jalur), "aset tak dipasang tidak ada di repo (tidak ikut paket): %s" % jalur)
 	for nama: String in DirAccess.get_files_at("res://assets/sprites/tiles/perumahan"):
 		check(not nama.contains("aspal_1") and not nama.contains("aspal_2") and not nama.contains("aspal_3") and not nama.contains("_dekat_masuk"), "tiles/perumahan tanpa aspal_N dan *_dekat_masuk: %s" % nama)
+
+
+# --- Run garis-finish-portal bagian A (AC-2): portal satpam ikut paket; aset gelombang 1 lain yang tidak dipasang (pos satpam dll.) tidak ada di repo ---
+
+## Portal satpam di garis akhir (G-1): PNG, remap .import, dan JSON titik pijak ikut paket (literal, bukan dibaca dari `render.py`).
+const JALUR_WAJIB_IKUT_GARIS_FINISH: Array[String] = [
+	"assets/sprites/props/prop_portal_satpam.png", "assets/sprites/props/prop_portal_satpam.png.import", "assets/sprites/props/prop_portal_satpam.json",
+]
+## Isi tepat `assets/sprites/props/` (PNG, nama dasar) sesudah run garis-finish-portal: 6 koran, 2 kotak surat, tong sampah logam, 3 pohon, 2 lampu, portal satpam.
+const PROPS_PNG_DIPASANG_GF: Array[String] = [
+	"prop_koran_bayangan", "prop_koran_kotak_surat", "prop_koran_putar", "prop_koran_rumput", "prop_koran_teras", "prop_koran_terlipat",
+	"prop_kotak_surat", "prop_kotak_surat_bukan", "prop_lampu_lengan_dekat", "prop_lampu_lengan_seberang",
+	"prop_pohon_glodokan", "prop_pohon_ketapang", "prop_pohon_rindang", "prop_portal_satpam", "prop_tong_sampah_logam",
+]
+## Aset gelombang 1 yang TIDAK dipasang (pos satpam, jejak, mangkuk, percikan, polisi tidur, zebra, genangan); nama disambung supaya pemindai rujukan tidak menandai berkas ini.
+const GELOMBANG1_TAK_DIPASANG_GF: Array[String] = [
+	"assets/sprites/props/prop_" + "pos_satpam.png", "assets/sprites/props/prop_" + "pos_satpam.json", "assets/sprites/props/mission_" + "jejak_kucing_1.png",
+	"assets/sprites/props/mission_" + "mangkuk_kucing.png", "assets/sprites/vfx/vfx_" + "percikan_genangan.png", "assets/sprites/props/prop_tong_sampah_" + "biru.png",
+	"assets/sprites/tiles/perumahan/tile_perumahan_polisi_" + "tidur.png", "assets/sprites/tiles/perumahan/tile_perumahan_" + "zebra.png", "assets/sprites/tiles/perumahan/tile_perumahan_" + "genangan.png",
+]
+
+
+func _test_aset_garis_finish_ikut_paket() -> void:
+	_judul.call("Portal satpam ikut paket (PNG, remap Lossless, JSON dua frame sel 80x64 pijak 14,48) dan aset gelombang 1 yang tak dipasang tidak ada (AC-2 run garis-finish-portal)")
+	var cfg: ConfigFile = ConfigFile.new()
+	cfg.load(BERKAS_PRESET)
+	var kecuali: Array[String] = []
+	for bagian_filter: String in str(cfg.get_value("preset.0", "exclude_filter", "")).split(","):
+		kecuali.append(bagian_filter.strip_edges())
+	for jalur: String in JALUR_WAJIB_IKUT_GARIS_FINISH:
+		check(FileAccess.file_exists("res://" + jalur), "%s ada (ikut paket)" % jalur)
+		check(not _dikecualikan(jalur, kecuali), "%s tidak dikecualikan filter preset" % jalur)
+	var teks_import: String = _baca_jika_ada("res://assets/sprites/props/prop_portal_satpam.png.import")
+	check(teks_import.contains("compress/mode=0") and teks_import.contains("mipmaps/generate=false"), "prop_portal_satpam: impor Lossless tanpa mipmap")
+	var json: Variant = JSON.parse_string(_baca_jika_ada("res://assets/sprites/props/prop_portal_satpam.json"))
+	check(json is Dictionary, "prop_portal_satpam.json bisa diurai")
+	if json is Dictionary:
+		var d: Dictionary = json
+		var sel: Array = d.get("cell", []) as Array
+		var pijak: Array = d.get("ground_anchor", []) as Array
+		check(sel.size() == 2 and int(sel[0]) == 80 and int(sel[1]) == 64, "portal: sel 80x64, dapat %s" % [sel])
+		check(int(d.get("frames", 0)) == 2, "portal: dua frame (0 tertutup, 1 terbuka)")
+		check(pijak.size() == 2 and int(pijak[0]) == 14 and int(pijak[1]) == 48, "portal: pijak (14, 48), dapat %s" % [pijak])
+		var tekstur: Texture2D = load("res://assets/sprites/props/prop_portal_satpam.png") as Texture2D
+		check(tekstur != null and sel.size() == 2 and tekstur.get_width() == int(sel[0]) * 2 and tekstur.get_height() == int(sel[1]), "portal: ukuran PNG = dua sel berjajar")
+	var png_props: Array[String] = []
+	for nama: String in DirAccess.get_files_at("res://assets/sprites/props"):
+		if nama.ends_with(".png"):
+			png_props.append(nama.trim_suffix(".png"))
+	png_props.sort()
+	var harapan: Array[String] = PROPS_PNG_DIPASANG_GF.duplicate()
+	harapan.sort()
+	check(png_props == harapan, "assets/sprites/props hanya berisi 15 PNG yang dipasang: selisih %s" % [_selisih(png_props, harapan)])
+	for jalur: String in GELOMBANG1_TAK_DIPASANG_GF:
+		check(not FileAccess.file_exists("res://" + jalur), "aset gelombang 1 yang tak dipasang tidak ada di repo (tidak ikut paket): %s" % jalur)
 
 
 # --- Run ui1-komponen-bengkel bagian B (AC-12): aset komponen dan bengkel redesain yang dipasang ikut paket; yang tidak dipasang tidak ada di assets/ ---

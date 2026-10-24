@@ -5,8 +5,8 @@
    dan JSON byte-identik (tujuan dialihkan ke folder sementara lewat ENV_ART_SALIN_KE; folder repo tidak disentuh).
 2. Isi `assets/sprites/props/`, `vfx/`, `houses/perumahan/`, `tiles/perumahan/` piksel-identik (PNG) dan byte-identik (JSON) dengan keluaran skrip,
    dan berkas aset di folder itu HANYA daftar D-1 (run 5A: 13 sprite gelombang 1 + 7 ubin + JSON ubin terpangkas; run 5B: tong sampah logam (lima tembok 5B dilepas run 5D),
-   tiga pohon, dua lampu, `rumput_2/3`, empat ubin khusus), ditambah berkas lama (kotak surat, rumah perumahan). Tidak ada aset gelombang 1 yang belum
-   dipasang (tong sampah biru, jejak, mangkuk, portal, pos, percikan, polisi tidur, zebra, genangan, `aspal_N`, `*_dekat_masuk`) di assets/.
+   tiga pohon, dua lampu, `rumput_2/3`, empat ubin khusus; run garis-finish-portal G-1: `prop_portal_satpam` saja), ditambah berkas lama (kotak surat, rumah perumahan). Tidak ada aset gelombang 1 yang belum
+   dipasang (tong sampah biru, jejak, mangkuk, pos, percikan, polisi tidur, zebra, genangan, `aspal_N`, `*_dekat_masuk`) di assets/.
    Catatan run 5B: pohon dan lampu dikeluarkan `tools/env_art/lampu_pohon.py --salin` (diuji `uji_aset_lampu_pohon.py` dan `uji_aset_pasang_5b.py`),
    jadi hanya dicek ada di repo di sini, bukan dibangkitkan ulang.
 3. JSON konsisten: sel x jumlah frame = ukuran PNG, titik pijak di dalam sel (kecuali tumpangan kotak surat), ubin 64x32 pijak (32, 16),
@@ -63,8 +63,12 @@ PASANG_SPRITE_5B = {
     'houses/perumahan': [],   # run fase5d-sisi-dekat (P-1): lima tembok tidak lagi dipasang
     'props': ['prop_tong_sampah_logam'],
 }
+# Run garis-finish-portal (G-1): HANYA portal satpam (sel 80x64, dua frame, pijak (14, 48)); pos satpam tetap tidak dipasang.
+PASANG_SPRITE_GARIS_FINISH = {
+    'props': ['prop_portal_satpam'],
+}
 PASANG_LAMPU_POHON = ['prop_pohon_rindang', 'prop_pohon_glodokan', 'prop_pohon_ketapang', 'prop_lampu_lengan_seberang', 'prop_lampu_lengan_dekat']
-TIDAK_DIPASANG = ('prop_tong_sampah_biru', 'mission_jejak', 'mission_mangkuk', 'prop_portal', 'prop_pos', 'vfx_percikan',
+TIDAK_DIPASANG = ('prop_tong_sampah_biru', 'mission_jejak', 'mission_mangkuk', 'prop_pos', 'vfx_percikan',
                   'tile_perumahan_polisi_tidur', 'tile_perumahan_zebra', 'tile_perumahan_genangan', 'prop_polisi_tidur')
 
 gagal = 0
@@ -190,7 +194,7 @@ def uji_susunan(periksa):
 
 def ekspektasi_skrip():
     """{folder relatif: [nama berkas]} keluaran render.py --salin dan ubin_perumahan.py --salin (ditulis eksplisit, bukan dari skrip)."""
-    props = sorted(n + e for n in PASANG_SPRITE['props'] + PASANG_SPRITE_5B['props'] for e in ('.png', '.json'))
+    props = sorted(n + e for n in PASANG_SPRITE['props'] + PASANG_SPRITE_5B['props'] + PASANG_SPRITE_GARIS_FINISH['props'] for e in ('.png', '.json'))
     vfx = sorted(n + e for n in PASANG_SPRITE['vfx'] for e in ('.png', '.json'))
     rumah = sorted(n + e for n in PASANG_SPRITE_5B['houses/perumahan'] for e in ('.png', '.json'))
     ubin = sorted(['tile_perumahan_%s.png' % n for n in PASANG_UBIN + UBIN_TAMBAHAN + UBIN_KHUSUS + UBIN_5C] + ['tile_perumahan.json'])
@@ -266,12 +270,17 @@ def main():
         semua += [n for n in files if not n.endswith(('.import', '.uid'))]
     asing = [n for n in semua if n.startswith(TIDAK_DIPASANG)]
     periksa(asing == [], 'aset gelombang 1 yang belum dipasang tidak ada di assets/: %s' % asing)
+    # Run garis-finish-portal: dari keluarga portal hanya portal satpam (png + json) yang boleh ada; pos satpam tidak.
+    keluarga_portal = sorted(n for n in semua if n.startswith('prop_portal') or n.startswith('prop_pos'))
+    periksa(keluarga_portal == ['prop_portal_satpam.json', 'prop_portal_satpam.png'],
+            'dari keluarga portal/pos hanya prop_portal_satpam.{png,json} yang dipasang: %s' % keluarga_portal)
     asing = [n for n in semua if re.match(r'tile_perumahan_.*_dekat_masuk\.png$', n) or re.match(r'tile_perumahan_aspal_[0-9]\.png$', n)
              or re.match(r'tile_perumahan_rumput_([04-9])\.png$', n)]
     periksa(asing == [], 'ubin yang belum dipasang (aspal_N, *_dekat_masuk, rumput_4+) tidak ada di assets/: %s' % asing)
 
     # ---- JSON konsisten dengan PNG
     daftar_json = [(f, n) for f in ('props', 'vfx') for n in PASANG_SPRITE[f]] + [(f, n) for f, ns in PASANG_SPRITE_5B.items() for n in ns]
+    daftar_json += [(f, n) for f, ns in PASANG_SPRITE_GARIS_FINISH.items() for n in ns]
     for folder, n in daftar_json:
         png = os.path.join(SPRITES, folder, n + '.png')
         js = os.path.join(SPRITES, folder, n + '.json')
@@ -287,6 +296,14 @@ def main():
         if n != 'prop_koran_kotak_surat':
             periksa(0 <= ax < cw and 0 <= ay < ch, 'JSON %s: titik pijak di dalam sel' % n)
         periksa(lebar < 2048 and tinggi < 2048, 'ukuran < 2048: %s' % n)
+    # Portal satpam (G-1): dua frame (0 tertutup, 1 terbuka), sel 80x64, pijak (14, 48) = kaki tiang; ditulis literal, bukan dari skrip.
+    portal = json.loads(baca(os.path.join(SPRITES, 'props', 'prop_portal_satpam.json')))
+    periksa(portal['cell'] == [80, 64] and portal['frames'] == 2 and portal['ground_anchor'] == [14, 48],
+            'JSON portal: sel 80x64, dua frame, pijak (14, 48): %s %s %s' % (portal['cell'], portal['frames'], portal['ground_anchor']))
+    periksa(ukuran(os.path.join(SPRITES, 'props', 'prop_portal_satpam.png')) == (160, 64), 'PNG portal 160x64 (dua sel 80x64 berjajar)')
+    # Total sprite keluaran render.py --salin: 6 koran + 7 VFX/kilau + tong sampah logam + portal satpam = 15 (13 lama tidak berubah).
+    total = sum(len(ns) for ns in list(PASANG_SPRITE.values()) + list(PASANG_SPRITE_5B.values()) + list(PASANG_SPRITE_GARIS_FINISH.values()))
+    periksa(total == 15, 'render.py --salin memasang tepat 15 sprite (13 lama + tong sampah + portal): %d' % total)
     meta = json.loads(baca(os.path.join(SPRITES, 'tiles', 'perumahan', 'tile_perumahan.json')))
     periksa(meta['tile'] == [64, 32] and meta['ground_anchor'] == [32, 16], 'JSON ubin: 64x32, titik pijak (32, 16)')
     periksa(meta['tiles'] == sorted('tile_perumahan_%s.png' % n for n in PASANG_UBIN + UBIN_TAMBAHAN + UBIN_KHUSUS + UBIN_5C), 'JSON ubin hanya memuat ubin yang dipasang: %s' % meta['tiles'])
