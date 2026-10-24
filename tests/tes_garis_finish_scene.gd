@@ -41,6 +41,7 @@ func jalankan() -> void:
 	await _test_keluar_empat_ukuran()
 	await _test_tanpa_lubang_tanah()
 	await _test_masukan_dikunci()
+	await _test_laju_minimum_dan_tutorial()
 	await _test_rintangan_nonaktif_sesudah_garis()
 	await _test_jeda_saat_keluar()
 	await _test_koran_terbang_menunda_hasil()
@@ -298,6 +299,9 @@ func _satu_keluar(jendela: Array, kidal: bool, laju: float) -> void:
 	var animasi_salah: int = 0
 	var sisa_sebelum_hasil: float = INF
 	var koran_awal: int = akar.koran.sisa
+	var audio: Node = _tree.root.get_node_or_null(^"Audio")
+	var laju_garis: float = 0.0
+	var daftar_rintangan: int = akar.rintangan().daftar.size()
 	while langkah < 900 and not akar.hasil_tampil():
 		akar.perbarui(DT)
 		langkah += 1
@@ -306,6 +310,8 @@ func _satu_keluar(jendela: Array, kidal: bool, laju: float) -> void:
 			kamera_garis = kamera.position
 			geser_garis = akar.geser_dorongan()
 			lateral_garis = sepeda.lateral_ubin
+			laju_garis = sepeda.kecepatan_ud
+			check(not akar.kontrol_router().stick_aktif() and akar.kontrol_router().jumlah_jari_aktif() == 0, "%s: di garis semua jari dilepas dari router (stick tidak aktif, tidak ada jari)" % tag)
 			check(kamera.position == AkhirRute.posisi_kamera(sepeda.position, ukuran, akar.geser_dorongan()) and akar.kamera_beku(), "%s: kamera dibekukan di garis = AkhirRute.posisi_kamera (posisi gambar sepeda, geseran dorongan saat itu)" % tag)
 			PembantuGoldenGaris.geser(0, titik + Vector2(-35 if not kidal else 35, 40))
 			check(not akar.panel_akhir().tampil(), "%s: banner BELUM tampil di garis akhir" % tag)
@@ -327,6 +333,7 @@ func _satu_keluar(jendela: Array, kidal: bool, laju: float) -> void:
 	check(langkah_selesai > 0 and langkah_banner > langkah_selesai and langkah_banner < langkah_hasil, "%s: banner muncul sesudah garis dan SEBELUM layar hasil (langkah garis %d, banner %d, hasil %d)" % [tag, langkah_selesai, langkah_banner, langkah_hasil])
 	check(kamera_bergeser == 0 and kamera.position == kamera_garis, "%s: kamera dan geseran dorongan tidak bergeser sama sekali sesudah garis (%d langkah beda)" % [tag, kamera_bergeser])
 	check(sepeda.lateral_ubin == lateral_garis and rem_terlihat == 0 and animasi_salah == 0, "%s: jempol menarik kiri-bawah diabaikan: lateral tetap, rem tidak pernah aktif (%d), animasi bukan rem atau berhenti (%d)" % [tag, rem_terlihat, animasi_salah])
+	check(laju_min >= minf(laju_garis, Config.RUTE_KELUAR_LAJU_MIN_UD) - 0.0001 and (laju < Config.KECEPATAN_NGEBUT_UD or laju_min >= laju_garis - 0.0001), "%s: stick buatan lurus ke depan menjaga laju (ngebut tidak melambat: terendah %.3f dari %.3f di garis)" % [tag, laju_min, laju_garis])
 	check(laju_min >= Config.RUTE_KELUAR_LAJU_MIN_UD - 0.0001, "%s: laju tidak turun di bawah laju minimum (terendah %.3f)" % [tag, laju_min])
 	check(sisa_sebelum_hasil > 0.0 and AkhirRute.sisa_ubin_keluar(akar.posisi_layar_sepeda(), ukuran) == 0.0, "%s: satu langkah sebelum hasil sepeda masih sebagian di layar (sisa %.2f ubin), saat hasil seluruhnya di luar" % [tag, sisa_sebelum_hasil])
 	var pijak: Vector2 = akar.posisi_layar_sepeda()
@@ -335,7 +342,9 @@ func _satu_keluar(jendela: Array, kidal: bool, laju: float) -> void:
 	check(float(langkah_hasil - langkah_selesai) * DT <= 6.0 and not akar.panel_akhir().tampil() and akar.koran.sisa == koran_awal, "%s: dari garis ke hasil %.2f detik (<= 6,0), banner disembunyikan saat hasil, koran tidak terpakai" % [tag, float(langkah_hasil - langkah_selesai) * DT])
 	check(skala >= 2 and Vector2(lebar, 360) == ukuran, "%s: viewport game %dx360, skala bulat %d" % [tag, lebar, skala])
 	_langkah(akar, 30)
-	check(kamera.position == kamera_garis and akar.hasil_tampil(), "%s: layar hasil tetap terbuka dan dunia tetap beku 30 langkah sesudahnya" % tag)
+	check(kamera.position == kamera_garis and akar.hasil_tampil() and akar.rintangan().daftar.size() == daftar_rintangan, "%s: layar hasil tetap terbuka dan dunia tetap beku 30 langkah sesudahnya (rintangan %d tetap)" % [tag, daftar_rintangan])
+	if audio != null:
+		check(int(audio.call(&"loop_aktif")) == int(BunyiSepeda.Loop.DIAM), "%s: bunyi sepeda senyap sesudah layar hasil terbuka (sepeda sudah di luar layar)" % tag)
 	_bersihkan(akar)
 
 
@@ -454,6 +463,34 @@ func _test_masukan_dikunci() -> void:
 	check(akar.ketuk_bel() == Bel.Bunyi.TOLAK and akar.bel().jumlah == bel_awal and catatan[2] == 0, "ketuk_bel sesudah garis: TOLAK, tanpa bunyi dan tanpa reaksi rintangan")
 	check(skala >= 2 and not akar.sedang_jeda(), "tidak ada jeda tak sengaja dari semua sentuhan itu")
 	_bersihkan(akar)
+
+
+# --- Laju minimum dan tutorial ---
+
+func _test_laju_minimum_dan_tutorial() -> void:
+	_judul.call("Laju minimum sesudah garis (G-2) dari laju 0, dan tutorial hari 1 tidak lagi berjalan sesudah garis")
+	var akar: RuteMain = await _siapkan()
+	_taruh(akar, 0.0, 0.0, PANJANG_RUTE + 0.3)
+	akar.perbarui(DT)
+	check(akar.rute_sudah_selesai() and _sepeda(akar).kecepatan_ud < Config.RUTE_KELUAR_LAJU_MIN_UD, "kondisi uji: garis terlewati dengan sepeda hampir diam (%.2f u/d)" % _sepeda(akar).kecepatan_ud)
+	akar.perbarui(DT)
+	check(_sepeda(akar).kecepatan_ud >= Config.RUTE_KELUAR_LAJU_MIN_UD - 0.0001, "langkah pertama sesudah garis menaikkan laju ke laju minimum (%.3f)" % _sepeda(akar).kecepatan_ud)
+	_bersihkan(akar)
+	var akar2: RuteMain = (load(BERKAS_RUTE) as PackedScene).instantiate() as RuteMain
+	akar2.atur_tutorial(true)
+	_tree.root.add_child(akar2)
+	await _tree.process_frame
+	akar2.set_process(false)
+	(akar2.find_child("KontrolTouch", true, false) as KontrolTouch).keyboard_aktif = false
+	(akar2.find_child("LoperAgen", true, false) as LoperSprite).set_process(false)
+	akar2.atur_benih_awal(akar2.benih())
+	_taruh(akar2, 6.0, 0.0, PANJANG_RUTE - 0.3)
+	_langkah(akar2, 12)
+	check(akar2.rute_sudah_selesai() and akar2.keadaan_tutorial() != null, "kondisi uji: tutorial hari 1 aktif dan garis terlewati")
+	var keadaan: TutorialLangkah.Keadaan = akar2.keadaan_tutorial()
+	_langkah(akar2, 60)
+	check(akar2.keadaan_tutorial() == keadaan, "tutorial membeku sesudah garis akhir (keadaan tidak diganti lagi)")
+	_bersihkan(akar2)
 
 
 # --- Rintangan sesudah garis ---

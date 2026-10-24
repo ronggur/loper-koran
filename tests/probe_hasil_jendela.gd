@@ -22,7 +22,8 @@ const BERKAS_HASIL: String = "res://scenes/ui/layar_hasil.tscn"
 const DT: float = 1.0 / 60.0
 ## Hari dan posisi rute (pecahan panjang rute) untuk sapuan latar terburuk, dan posisi dunia keadaan biasa.
 const SAPU_HARI: Array[int] = [3, 9]
-const SAPU_POSISI: Array[float] = [0.08, 0.25, 0.42, 0.58, 0.75, 0.92]
+## 1,0 = tepat di garis akhir: dunia beku dengan portal di latar (run garis-finish-portal, kamera beku seperti saat layar hasil nyata terbuka).
+const SAPU_POSISI: Array[float] = [0.08, 0.25, 0.42, 0.58, 0.75, 0.92, 1.0]
 const POSISI_BIASA: float = 0.5
 const HARI_BIASA: int = 3
 
@@ -64,6 +65,8 @@ func _initialize() -> void:
 	inset.bawah = 20
 	await _kasus("m_inset_terpadat", padat, misi, tiga, 10, _rep(55, 53, [4, 3, 2, 1]), _ms(2, 990, 0, 0, 0), _ms(10, 5100, 1, 4, 0), true, inset)
 	await _kasus("n_inset_biasa", _angka(22, 355, 0, 25, 1, 14780, 9), null, kosong, 120, _rep(10, 12, [1, 0, 0, 0]), _ms(7, 700, 0, 0, 0), _ms(7, 1080, 0, 0, 0), true, inset)
+	# Run garis-finish-portal bagian C: layar hasil di atas dunia beku di garis akhir (portal terlihat di latar, sepeda sudah di luar layar), diukur kontrasnya seperti keadaan lain.
+	await _kasus("q_dunia_portal", padat, misi, tiga, 10, _rep(55, 53, [4, 3, 2, 1]), _ms(2, 990, 0, 0, 0), _ms(10, 5100, 1, 4, 0), true, null, 1.0)
 	await _kasus_tanpa_dunia("p_tanpa_dunia", padat, misi, tiga, 10, _rep(55, 53, [4, 3, 2, 1]), _ms(2, 990, 0, 0, 0), _ms(10, 5100, 1, 4, 0))
 	await _sapu(padat, misi, tiga)
 	print("probe selesai, %d keadaan tidak sesuai" % _gagal)

@@ -180,7 +180,7 @@ func _perbarui_dunia(jarak_ubin: float) -> void:
 	var keluar: AkhirRute.Keluar = AkhirRute.periksa_keluar(_fase, _hampir_keluar, _selesai, AkhirRute.posisi_layar(_sepeda.position, _kamera.position, ukuran), ukuran)
 	_fase = keluar.fase
 	_hampir_keluar = keluar.hampir_keluar
-	if keluar.baru_hampir_keluar and not _hasil_tampil:
+	if keluar.baru_hampir_keluar:
 		_panel_akhir.tampilkan(true)
 	_perbarui_hud_rute(jarak_ubin)
 	if _selesai and not _hasil_tampil and HasilRute.siap_tampil(_selesai, _fase == AkhirRute.Fase.SUDAH_KELUAR, koran_terbang()):
@@ -380,7 +380,7 @@ func _susun(benih: int) -> void:
 	_tanah.atur_simpang(UbinKhusus.himpunan_baris_simpang(RouteBuilder.simpang_di(_rute)))
 	_rintangan_daur.lepas_semua()
 	_dekor_daur.atur_rute(_rute)
-	_portal.atur_rute(_rute.panjang_ubin if not gagal else 0.0)
+	_portal.atur_rute(_rute.panjang_ubin)
 	_penerap.terapkan(_sepeda.posisi_dunia())
 	_panel_akhir.tampilkan(false)
 	if gagal:

@@ -365,7 +365,7 @@ Keputusan pemilik K-1 (tenggat, tip hilang sesudahnya) dan K-2 (radar 30 ubin), 
 | Kotak progres | 25 kotak 8×8 jarak 2 di panel 260 (isi samping 6, bukan 7, supaya 248 px muat); terlewat sesudah 3,0 ubin | `HUD_PROGRES_*` (DESIGN_SPEC 3.2) |
 | Panel kanan atas | koin dan skor, tepi kanan 28 dari tepi layar, jarak antar panel 5, ikon 14, panel 9-slice 4 | `HUD_KANAN_MARGIN_PX`, `HUD_PANEL_JARAK_PX`, `HUD_IKON_PX`, `HUD_PANEL_9SLICE_PX`; pemisah ribuan tiap `ANGKA_KELOMPOK_RIBUAN` 3 angka |
 | Zona aman | margin tepi = max(margin DESIGN_SPEC, inset aman); inset layar dibulatkan ke atas ke piksel game | `ZONA_AMAN_TOLERANSI_PX` 0,000001 hanya derau float |
-| Layar hasil | panel lebar minimum 300, jarak baris 2; terbuka saat kecepatan ≤ 0,000001 u/d | `HASIL_PANEL_LEBAR_PX`, `HASIL_JARAK_BARIS_PX`, `HASIL_BERHENTI_TOLERANSI_UD` |
+| Layar hasil | panel lebar minimum 300, jarak baris 2; terbuka saat sepeda sudah keluar viewport (bukan lagi saat berhenti, run garis-finish-portal) dan semua koran mendarat | `HASIL_PANEL_LEBAR_PX`, `HASIL_JARAK_BARIS_PX` |
 
 Dites (invarian prinsip): bot santai tanpa berhenti di sisi bebas sampai garis akhir sebelum tenggat tanpa tabrakan di 20 seed (cadangan paling sedikit 10 detik); bot yang berhenti 100 detik melewati tenggat tetapi tetap sampai garis akhir tepat sekali; koin tidak pernah berkurang, juga sesudah tenggat.
 
