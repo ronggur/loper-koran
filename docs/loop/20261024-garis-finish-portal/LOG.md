@@ -380,3 +380,51 @@ Commit: `a6b2ec2` (kode F-1, F-2, F-3), `d6ab709` (tes), commit tes/probe/tangka
 ### OPEN / NEEDS-MANUAL (F)
 - [ ] HP: keluar cukup kencang (opsi bila kurang: pengali kecepatan keluar di atas ngebut lewat `EfekKondisi`, tidak dikerjakan); lonjakan 3,0 -> 6,0 tidak janggal.
 - [ ] HP: hiasan terbaca wajar, pola tidak mencolok; sisi dekat di depan portal tidak terlalu kosong.
+
+## Dev iterasi 2, Bagian G: revisi UI pemilik R-5, R-6, R-7 (Dev, 2026-10-24; usulan, dinilai pemilik di HP)
+
+Commit: `style:` R-5..R-7 (kode, aset, palet induk, tes, tangkapan) dan commit docs ini. Tidak ada angka permainan, ekonomi, save, atau aturan yang berubah; tidak ada kunci terjemahan baru. sha256 save asli tidak berubah.
+
+### R-5: chip "+2" satu garis tengah
+- Sebab terukur (tangkapan 2340x1080, piksel layar): tinta angka "12" baris 168..218 (pusat 193), huruf R label 198..218 (pusat 208), kotak chip 180..233 (pusat 206,5): chip dan label berdiri di garis dasar angka (R-2), jadi lebih rendah dari angka dan bintang.
+- Sekarang: pusat tinta label, pusat tinta angka, dan pusat kotak chip disamakan (`TampilHasil.pusat_tinta`, `turun_pusat`, murni; `LayarHasil._ratakan_reputasi` menurunkan margin atas label, angka, `PembungkusChip`). Konstanta baru `HASIL_REPUTASI_TINTA_ANGKA_PX` 17 dan `HASIL_REPUTASI_TINTA_LABEL_PX` 7 (tinggi tinta terukur dari tangkapan, dijaga probe piksel). Konsekuensi jujur: baris ini TIDAK lagi berbagi garis dasar label dan angka (label kecil naik sekitar 5 px game, ke tengah) karena R-5 meminta satu garis tengah; baris struk (Tip, Skor, Tepat, Meleset, kolom pelanggan) tetap rata garis dasar (R-2).
+- Terukur dari tangkapan nyata (`probe_hasil_jendela.gd`, `_ukur_piksel_reputasi`, 2340x1080 dan 1600x720): pusat tinta label 64,50, angka 64,33 sampai 64,67, chip 65,00 piksel game (selisih <= 0,67; tinggi tinta angka ganjil 17 lawan chip genap 18 membuat 0,5 px game tak mungkin dihilangkan, anti-alias font menambah sampai 0,3). Bukan 0 px mutlak: batas fisika bilangan bulat, dilaporkan. Kasus "+2", "+0", "-3", "100", "-8" lewat `tes_revisi_ui_e` (empat lebar viewport x 5 kasus: selisih <= 0,51 dari layout).
+- Tangkapan: `shots/iter2/g_reputasi_2340x1080.png` dan `g_reputasi_1600x720.png` (sebelum atas, sesudah bawah).
+
+### R-6: penanda pelanggan radar kuning stabilo
+- Tiga varian dibuat dengan `tools/ui_art/hud_ikon.py --varian=lama|kuning|hijau` (sorot atas dijaga selisih terang < 0,05 supaya pelanggan tidak bertitik terang seperti tip). Tangkapan perbandingan di game (`g_radar_varian_*.png`: lama, kuning, hijau berdampingan di strip kiri dan kanan, probe HUD) dan di enam latar terburuk (`g_radar_latar_terburuk.png`). Kontras isi lawan latar (WCAG), garis luar `OUTLINE` lawan latar:
+
+| Latar | lama `#FFC94A` | **kuning `#FFF200`** | hijau `#39FF14` | garis luar |
+|---|---|---|---|---|
+| rumput `#6FAE4F` | 1,7 | **2,3** | 2,0 | 7,3 |
+| trotoar hijau `#4F9A74` | 2,2 | **2,9** | 2,5 | 5,8 |
+| aspal `#6C6872` | 3,5 | **4,7** | 4,0 | 3,6 |
+| aspal gelap `#4E4A56` | 5,6 | **7,4** | 6,4 | 2,3 |
+| bayangan rumput `#4F8A3E` | 2,7 | **3,6** | 3,1 | 4,7 |
+| dinding krem `#F2E7C9` | 1,2 | 1,1 | 1,1 | 15,8 |
+
+  Terukur dari piksel tangkapan nyata (strip kiri di atas rumput): isi lama 1,75:1, kuning 2,29:1, hijau 1,97:1 (terburuk di sekitar 1,50, 1,97, 1,70). Bahwa isi sendiri < 3:1 di atas rumput berlaku untuk ketiganya (stabilo terang di atas hijau menengah); yang membuat penanda terbaca >= 3:1 adalah garis luar `OUTLINE` 1 px (7,3:1 rumput, 5,8:1 trotoar, 3,6:1 aspal terang) yang sudah ada sejak R-3, dan terhadap latar gelap isinya sendiri (4,7 sampai 7,4:1). Latar krem (dinding): isi tak berguna, garis luar 15,8:1.
+- **Rekomendasi dan yang dipasang: KUNING stabilo `#FFF200`** (sorot `#FFF65A`). Alasan terukur: kontras isi tertinggi di semua latar yang berwarna (naik 31 persen di rumput dari lama, 12 sampai 17 persen di aspal), hue 57 derajat jauh dari rumput (101 derajat) sedangkan hijau stabilo satu rumpun hue dengan rumput dan dengan penanda tip (`OK` hijau, tertukar), tidak mengubah pembedaan bentuk (tip bertitik, bukan pelanggan berlubang). Hijau hanya tangkapan, tidak dipasang.
+- Warna lewat token: `Palette.RADAR_PELANGGAN` `#FFC94A` -> `#FFF200`; dua warna stabilo ditambahkan ke palet induk (`assets/palette/loper_master.gpl` dan ART_DIRECTION 2.4, dijaga tes palet induk: token berasal dari palet induk); DESIGN_SPEC 1.1 dan 3.4 diperbarui; aset lewat `hud_ikon.py` (hanya `ui_radar_pelanggan.png`, `ui_radar_pelanggan_jangkau.png`, `ui_radar_penanda.png` dan pratinjau radar di docs/design/hud yang berubah; menjalankan `--salin` penuh juga mengubah byte PNG ikon lain karena PIL berbeda dan mengembalikan `ui_radar_strip_9slice.png` dari `build/` basi: semua itu dikembalikan dengan `git checkout`/dihapus, hanya radar pelanggan yang dikomit). Perilaku `RadarRute` tidak berubah. Tes baru di `tes_hud_rute_scene` (isi = token, sorot, garis luar, jangkau, kontras).
+
+### R-7: garis tengah bar kecepatan dan stamina abu terang
+- Token `Palette.TEXT_2` `#CDB9A3` (`BarKecepatan.warna_sumbu()`), semula `OUTLINE` hitam. Kontras garis lawan panel HUD (84 persen `#0E0A1C` di atas dunia): rumput 8,3:1, aspal gelap 9,5:1, trotoar 8,6:1, dinding krem 7,1:1, dunia putih 6,65:1 (garis hitam lama: 1,1 sampai 1,5:1, hampir tak terlihat). Lawan isi: putih `TEXT` 1,73:1, oranye `ACCENT` 1,05:1, `FAIL` 2,15:1; sengaja tidak dikejar karena isi 7 px menutup garis 1 px (dibedakan tebal, bukan kontras); alternatif `RADAR_BUKAN` abu `#969AA0` lebih beda dari putih (2,58:1) tetapi hanya 4,5 sampai 6,4:1 lawan panel, jadi TEXT_2 dipilih (keterbacaan di panel gelap yang diminta). Bar stamina kosong ikut punya garis.
+- Tambahan: garis dulu menonjol 1 px keluar dari ujung isi (isi berinset `UI_GARIS_PX`, garis tidak); `TampilHud.rect_sumbu_bar` kini berinset sama (`Rect2i(1, tengah, lebar - 2, 1)`).
+- Radar tidak berubah (sumbu `OUTLINE` hitam tetap): di tangkapan rumput terlihat tipis dan jelas, di atas aspal gelap hampir hilang (2,3:1, dilaporkan di LOG E); tidak diubah sesuai permintaan.
+- Tangkapan sebelum dan sesudah: `g_bar_2340x1080.png`, `g_bar_1600x720.png`.
+
+### Tes dan probe yang berubah (per baris)
+- `tests/tes_revisi_ui_e.gd`: baris R-2 "baseline label reputasi = angka = chip" diganti pusat (R-5); `_test_pusat_murni` dan `_test_pusat_reputasi_scene` baru (oracle literal, 5 kasus x 4 lebar); `_test_sumbu_bar_abu` baru (token, kontras terhadap panel lima latar, isi, sumbu digambar tanpa syarat nilai); `rect_sumbu_bar` literal 111 -> `Rect2i(1, 4, 109, 1)`, 89 -> `Rect2i(1, 4, 87, 1)`, ukuran terlalu sempit kosong (alasan: inset ujung R-7).
+- `tests/probe_hasil_jendela.gd`: pemeriksaan baseline reputasi diganti pusat (layout, tolerans 0,51) dan `_ukur_piksel_reputasi` (piksel nyata, tolerans 0,8 px game).
+- `tests/probe_hud_rute_jendela.gd`: sumbu bar harus `TEXT_2` (semula `OUTLINE`); sumbu radar tetap `OUTLINE`.
+- `tests/tes_hud_rute_scene.gd`: tiga asersi R-6 dan pembantu kontras.
+- `tests/tes_revisi_ui_e.gd` `_test_tanpa_bingkai_dan_trek`: tidak diubah (masih hijau).
+
+### Mutan Dev (G; commit dulu; subset `TesRevisiUiE` + `TesHudRuteScene` + `TesTampilHasil` + `TesHasilStruk`)
+11 mutan, **11 tertangkap**: margin chip 0; label tidak diturunkan; `turun_pusat` memakai nilai terkecil; pusat tinta tanpa pembagi; tinggi tinta angka 12; `RADAR_PELANGGAN` kembali `#FFC94A`; sumbu bar kembali `OUTLINE`; sumbu bar tanpa inset; pusat chip memakai tepi atas; `_ratakan_reputasi` tidak dipanggil; sumbu bar tidak digambar. Perubahan konstanta tinta yang konsisten di layout dan accessor hanya terlihat dari piksel (probe) dan dari literal Config di tes murni (tertangkap).
+
+### Gerbang (setelah F dan G)
+- `godot --headless --import` exit 0; `--quit-after 2` 0 ERROR/WARNING.
+- `run_tests.gd` + pemeriksa: **29462 lolos, 0 gagal, 0 peringatan** (iterasi 1: 29088; E: 29214; F+G +248).
+- 17 `uji_*.py` exit 0.
+- Probe 0 keadaan tidak sesuai: `rute`, `hasil`, `hud_rute` di 2340x1080, 1600x720 (rute dan hasil juga 1920x1080 dan 2400x1080).
