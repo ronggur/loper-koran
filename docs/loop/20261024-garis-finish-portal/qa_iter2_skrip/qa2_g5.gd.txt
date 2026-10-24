@@ -1,0 +1,297 @@
+extends SceneTree
+## QA G-5: bot buatan QA (bukan bot Dev), berjalan di main dan di branch; menulis JSON sidik garis akhir dan layar hasil.
+## godot --headless --path <repo> --script <ini> -- <keluaran.json>
+
+const BERKAS_RUTE: String = "res://scenes/rute/rute.tscn"
+const DT: float = 1.0 / 60.0
+const SKALA: int = 3
+const STICK: Vector2 = Vector2(110, 270)
+const MAKS_LANGKAH: int = 40000
+
+const KASUS: Array = [
+	{"nama": "a_zigzag_h1_s11", "benih": 11, "hari": 1, "profil": "zigzag", "misi": false, "kondisi": 1.0, "lempar": 17},
+	{"nama": "b_ngebut_h2_s404_misi", "benih": 404, "hari": 2, "profil": "ngebut_tahan", "misi": true, "kondisi": 0.6, "lempar": 13},
+	{"nama": "c_zigzag_h3_s1999_dekat", "benih": 1999, "hari": 3, "profil": "zigzag", "misi": true, "kondisi": 0.3, "lempar": 11},
+	{"nama": "d_rem_h4_s7", "benih": 7, "hari": 4, "profil": "rem_garis", "misi": false, "kondisi": 1.0, "lempar": 19},
+	{"nama": "e_berhenti_h5_s2718_rusak", "benih": 2718, "hari": 5, "profil": "berhenti_garis", "misi": true, "kondisi": 0.05, "lempar": 23},
+	{"nama": "f_bantu_h6_s123", "benih": 123, "hari": 6, "profil": "zigzag", "misi": false, "kondisi": 0.9, "lempar": 15, "bantu": true},
+	{"nama": "g_tenggat_h7_s55", "benih": 55, "hari": 7, "profil": "ngebut_tahan", "misi": true, "kondisi": 1.0, "lempar": 9, "tenggat_sisa": 6.0},
+	{"nama": "h_jatuh_garis_h8_s909", "benih": 909, "hari": 8, "profil": "zigzag", "misi": true, "kondisi": 0.4, "lempar": 7, "jatuh": "garis"},
+	{"nama": "i_jatuh_keluar_h9_s8128", "benih": 8128, "hari": 9, "profil": "ngebut_tahan", "misi": false, "kondisi": 0.2, "lempar": 21, "jatuh": "keluar"},
+	{"nama": "j_diam_h10_s31337", "benih": 31337, "hari": 10, "profil": "diam", "misi": true, "kondisi": 0.05, "lempar": 0},
+	{"nama": "k_lempar_rapat_h6_s606", "benih": 606, "hari": 6, "profil": "rem_garis", "misi": false, "kondisi": 0.7, "lempar": 3},
+	{"nama": "l_bantu_tenggat_h4_s4", "benih": 4, "hari": 4, "profil": "diam", "misi": true, "kondisi": 1.0, "lempar": 5, "bantu": true, "tenggat_sisa": 4.0},
+	{"nama": "m_zigzag_h10_s90210_rusak", "benih": 90210, "hari": 10, "profil": "zigzag", "misi": true, "kondisi": 0.05, "lempar": 6},
+	{"nama": "n_berhenti_h3_s2", "benih": 2, "hari": 3, "profil": "berhenti_garis", "misi": false, "kondisi": 0.5, "lempar": 14},
+]
+
+
+func _sentuh(idx: int, pos: Vector2, tekan: bool) -> void:
+	var e: InputEventScreenTouch = InputEventScreenTouch.new()
+	e.index = idx
+	e.position = pos * float(SKALA)
+	e.pressed = tekan
+	Input.parse_input_event(e)
+	Input.flush_buffered_events()
+
+
+func _geser(idx: int, pos: Vector2) -> void:
+	var e: InputEventScreenDrag = InputEventScreenDrag.new()
+	e.index = idx
+	e.position = pos * float(SKALA)
+	Input.parse_input_event(e)
+	Input.flush_buffered_events()
+
+
+func _sidik(akar: RuteMain, jarak: float) -> Dictionary:
+	var s: SkorRute.Keadaan = akar.skor()
+	var ids: Array = s.terantar.keys()
+	ids.sort()
+	var h: Dictionary = {
+		"skor": s.skor, "koin": s.koin, "beruntun": s.beruntun, "antar": s.jumlah_antar, "tepat": s.jumlah_tepat,
+		"tip": s.jumlah_tip, "koin_tip": s.koin_tip, "terbuang": s.terbuang, "terantar": ",".join(PackedStringArray(ids)),
+	}
+	h["tenggat_waktu"] = "%.4f" % akar.tenggat().waktu_detik
+	h["tenggat_berhenti"] = akar.tenggat().berhenti
+	h["tenggat_lewat"] = TenggatRute.lewat(akar.tenggat())
+	h["kondisi"] = akar.kondisi_akhir()
+	var m: MissionManager.Keadaan = akar.keadaan_misi()
+	h["misi"] = MissionManager.nama_hasil(m) if m != null else "tanpa"
+	h["misi_koin"] = MissionManager.koin_misi(m) if m != null else 0
+	var terantar: Dictionary = s.terantar
+	var rute: RouteBuilder.Rute = akar.rute()
+	var penanda: Array[RadarRute.Penanda] = RadarRute.penanda(rute, jarak, terantar, akar.mode_bantu(), TenggatRute.lewat(akar.tenggat()))
+	var teks: PackedStringArray = PackedStringArray()
+	for p: RadarRute.Penanda in penanda:
+		teks.append("%s|%s|%s|%.4f" % [p.id_rumah, str(p.jenis), str(p.sisi), p.vertikal])
+	h["radar"] = "\n".join(teks)
+	var st: PackedStringArray = PackedStringArray()
+	for x: Variant in ProgresRute.status(rute, jarak, terantar, true):
+		st.append(str(x))
+	h["progres"] = ",".join(st)
+	h["terkirim"] = ProgresRute.jumlah_terkirim(rute, terantar)
+	h["sisa_koran"] = akar.koran.sisa
+	h["rute_md5"] = _rute_md5(rute)
+	return h
+
+
+func _rute_md5(r: RouteBuilder.Rute) -> String:
+	var t: PackedStringArray = PackedStringArray()
+	t.append("%d|%d|%.4f|%d|%d" % [r.benih, r.hari, r.panjang_ubin, r.koran_awal, r.pelepasan])
+	for s: SegmenRute in r.segmen:
+		t.append("S%s" % s.id)
+	for a: float in r.awal_segmen:
+		t.append("A%.3f" % a)
+	for x: RouteBuilder.RumahRute in r.rumah:
+		t.append("R%s|%d|%.3f|%d|%s|%s|%s|%s" % [x.id, x.pos, x.maju_ubin, x.sisi, x.jenis, str(x.pelanggan_boleh), str(x.pelanggan), str(x.pemberi_tip)])
+	for x: RouteBuilder.ObjekRute in r.objek:
+		t.append("O%s|%.3f|%s|%.3f" % [x.jenis, x.maju_ubin, x.jalur, x.tanda_ubin])
+	for x: RouteBuilder.TitikMisiRute in r.titik_misi:
+		t.append("M%s|%.3f|%d" % [x.nama, x.maju_ubin, x.sisi])
+	for x: RouteBuilder.DekorItem in r.dekor:
+		t.append("D%s|%.3f|%.3f|%d|%s|%s" % [x.id, x.maju_ubin, x.lateral_ubin, x.sisi, x.jenis, x.varian])
+	for x: RouteBuilder.SimpangItem in r.simpang:
+		t.append("P%s|%.3f|%d" % [x.id, x.maju_ubin, x.sisi])
+	for x: RouteBuilder.RumahRute in r.pelanggan:
+		t.append("C%s" % x.id)
+	return "\n".join(t).md5_text()
+
+
+func _jalankan(k: Dictionary) -> Dictionary:
+	root.size = Vector2i(2340, 1080)
+	var akar: RuteMain = (load(BERKAS_RUTE) as PackedScene).instantiate() as RuteMain
+	akar.atur_benih_awal(int(k["benih"]))
+	akar.atur_hari(int(k["hari"]))
+	var sp: Dictionary = {"sepeda": {}}
+	for id: String in Config.KONDISI_KOMPONEN:
+		(sp["sepeda"] as Dictionary)[id] = {"kondisi": float(k["kondisi"]), "level": 0}
+	var daftar: Array[DataToko] = []
+	akar.atur_sepeda(sp, int(k["hari"]), daftar)
+	if bool(k["misi"]):
+		akar.atur_misi(PemuatMisi.muat_folder().cari("p1_kucing"))
+	root.add_child(akar)
+	await process_frame
+	await process_frame
+	akar.set_process(false)
+	(akar.find_child("KontrolTouch", true, false) as KontrolTouch).keyboard_aktif = false
+	(akar.find_child("LoperAgen", true, false) as LoperSprite).set_process(false)
+	akar.atur_benih_awal(int(k["benih"]))
+	if bool(k.get("bantu", false)):
+		akar.atur_mode_bantu(true)
+	var sepeda: SepedaUji = akar.find_child("Sepeda", true, false) as SepedaUji
+	if k.has("tenggat_sisa"):
+		var tg: TenggatRute.Keadaan = akar.tenggat().salin()
+		tg.waktu_detik = float(tg.tenggat_detik) - float(k["tenggat_sisa"])
+		akar.atur_tenggat(tg)
+	var kamera: Camera2D = akar.find_child("Kamera", true, false) as Camera2D
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = int(k["benih"]) * 7919 + 13
+	var panjang: float = akar.rute().panjang_ubin
+	var hasil: Dictionary = {"nama": k["nama"], "panjang": "%.3f" % panjang, "pelanggan": akar.rute().pelanggan.size()}
+	var jumlah_hasil: Array[int] = [0]
+	akar.hasil_dibuka.connect(func(_a: HasilRute.Angka) -> void: jumlah_hasil[0] += 1)
+	var tabrak: Array[int] = [0, 0]
+	akar.tabrakan.connect(func(_j: String) -> void: tabrak[1 if akar.rute_sudah_selesai() else 0] += 1)
+	var lempar: Array[int] = [0, 0]
+	akar.koran_dilempar.connect(func(_l: ThrowSolver.Lintasan) -> void: lempar[1 if akar.rute_sudah_selesai() else 0] += 1)
+	var bel_setelah: Array[int] = [0]
+	var profil: String = String(k["profil"])
+	var jari: bool = false
+	var tarik: Vector2 = Vector2.ZERO
+	var langkah: int = 0
+	var l_garis: int = -1
+	var l_hampir: int = -1
+	var kam_garis: Vector2 = Vector2.ZERO
+	var kam_geser: float = 0.0
+	var laju_min_setelah: float = 1e9
+	var rem_setelah: int = 0
+	var lateral_garis: float = 0.0
+	var lateral_geser: float = 0.0
+	var fase_mundur: int = 0
+	var fase_lalu: int = 0
+	var cabang: bool = akar.has_method("fase_keluar")
+	var nyata_hasil_syarat: Array[String] = []
+	var tahan: int = 0
+	var jatuh_dipicu: bool = false
+	while langkah < MAKS_LANGKAH and not akar.hasil_tampil():
+		var selesai: bool = akar.rute_sudah_selesai()
+		var maju: float = sepeda.jarak_ubin
+		var sisa: float = panjang - maju
+		# stick
+		match profil:
+			"zigzag":
+				if langkah % 40 == 0:
+					tarik = Vector2(45.0 * sin(float(langkah) / 55.0), -55.0)
+			"ngebut_tahan":
+				tarik = Vector2(0.0, -60.0) if not selesai else Vector2(60.0, 60.0)
+			"rem_garis":
+				tarik = Vector2(0.0, -60.0) if sisa > 2.5 else Vector2(0.0, 60.0)
+			"berhenti_garis":
+				if sisa < 10.0 and tahan < 200:
+					tarik = Vector2(0.0, 60.0)
+					if sepeda.kecepatan_ud < 0.01:
+						tahan += 1
+					else:
+						tahan = maxi(tahan, 0)
+				elif sisa < 10.0:
+					tarik = Vector2(0.0, -12.0)
+				else:
+					tarik = Vector2(0.0, -60.0)
+			"diam":
+				tarik = Vector2.ZERO
+		if tarik != Vector2.ZERO and not jari:
+			_sentuh(0, STICK, true)
+			jari = true
+		if jari:
+			_geser(0, STICK + tarik)
+		# lempar: tembak terarah (pilihan_bantu) dan swipe sentuhan nyata acak
+		var selang: int = int(k["lempar"])
+		if selang > 0:
+			var dekat_garis: bool = sisa < 6.0 and sisa > -1.0
+			if (langkah % (selang * 10) == 0 or (dekat_garis and langkah % 5 == 0)) and bool(akar.call("_lempar_terbuka")) and SisaKoran.boleh_lempar(akar.koran):
+				var sisi: LoperAnim.Sisi = LoperAnim.Sisi.SEBERANG if rng.randf() < 0.6 else LoperAnim.Sisi.DEKAT
+				var pil: BantuLempar.Pilihan = akar.pilihan_bantu(sisi)
+				if pil != null:
+					akar.call("_lempar", pil.lintasan, rng.randf() < 0.3)
+			if langkah % (selang * 9) == 0:
+				var awal: Vector2 = Vector2(600 + rng.randf_range(-30, 30), 180 + rng.randf_range(-30, 30))
+				var akhir: Vector2 = awal + Vector2(rng.randf_range(-90, 20), rng.randf_range(-60, 60))
+				_sentuh(1, awal, true)
+				_geser(1, akhir)
+				_sentuh(1, akhir, false)
+		if selang > 0 and langkah % (selang * 5 + 3) == 0:
+			akar.ketuk_bel()
+			if selesai:
+				bel_setelah[0] += 1
+		akar.perbarui(DT)
+		langkah += 1
+		if cabang:
+			var f: int = int(akar.call("fase_keluar"))
+			if f < fase_lalu:
+				fase_mundur += 1
+			fase_lalu = f
+		if k.get("jatuh", "") == "garis" and akar.rute_sudah_selesai() and l_garis < 0:
+			akar.rintangan().tabrakan.jatuh_detik = Config.TABRAKAN_JATUH_DETIK
+			sepeda.tabrak()
+		if k.get("jatuh", "") == "keluar" and cabang and l_hampir < 0 and bool(akar.call("hampir_keluar")) and not jatuh_dipicu:
+			jatuh_dipicu = true
+			akar.rintangan().tabrakan.jatuh_detik = Config.TABRAKAN_JATUH_DETIK
+			sepeda.tabrak()
+		if akar.rute_sudah_selesai():
+			if l_garis < 0:
+				l_garis = langkah
+				hasil["garis"] = _sidik(akar, panjang)
+				kam_garis = kamera.position
+				lateral_garis = sepeda.lateral_ubin
+				hasil["garis_sepeda_v"] = "%.4f" % sepeda.kecepatan_ud
+				hasil["garis_jarak"] = "%.4f" % sepeda.jarak_ubin
+				hasil["garis_terbang"] = akar.koran_terbang().size()
+			else:
+				if cabang:
+					kam_geser = maxf(kam_geser, (kamera.position - kam_garis).length())
+					laju_min_setelah = minf(laju_min_setelah, sepeda.kecepatan_ud) if not Tabrakan.jatuh(akar.rintangan().tabrakan) else laju_min_setelah
+					rem_setelah += 1 if sepeda.rem_aktif() else 0
+					lateral_geser = maxf(lateral_geser, absf(sepeda.lateral_ubin - lateral_garis))
+			if cabang and l_hampir < 0 and bool(akar.call("hampir_keluar")):
+				l_hampir = langkah
+				hasil["hampir_banner_tampil"] = akar.panel_akhir().visible
+				hasil["hampir_hasil_belum"] = not akar.hasil_tampil()
+	hasil["langkah_garis"] = l_garis
+	hasil["hasil_terbuka"] = akar.hasil_tampil()
+	hasil["hasil"] = _sidik(akar, sepeda.jarak_ubin if not cabang else float(akar.call("jarak_beku")))
+	var a: HasilRute.Angka = akar.angka_hasil()
+	if a != null:
+		hasil["angka"] = {
+			"pelanggan": a.pelanggan, "terkirim": a.terkirim, "meleset": a.meleset, "koin": a.koin, "koin_tip": a.koin_tip, "jumlah_tip": a.jumlah_tip,
+			"skor": a.skor, "tepat": a.jumlah_tepat, "tenggat_lewat": a.tenggat_lewat, "detik_lewat": a.detik_lewat, "misi_id": a.misi_id,
+			"misi_hasil": a.misi_hasil, "koin_misi": a.koin_misi, "terbuang": a.lempar_terbuang, "potongan": a.potongan, "bersih": a.koin_bersih,
+		}
+		var catat: DataSave.CatatanHari = DataSave.CatatanHari.new()
+		catat.hari = int(k["hari"])
+		catat.angka = a
+		var save: Dictionary = DataSave.catat_hari(DataSave.templat(), catat)
+		hasil["save_sidik"] = str(JSON.stringify(save, "", true)).md5_text()
+	hasil["jumlah_hasil_sinyal"] = jumlah_hasil[0]
+	hasil["tabrakan_sebelum"] = tabrak[0]
+	hasil["tabrakan_sesudah"] = tabrak[1]
+	hasil["lempar_sebelum"] = lempar[0]
+	hasil["lempar_sesudah"] = lempar[1]
+	# metrik khusus branch (tidak dibandingkan dengan main)
+	var ekstra: Dictionary = {}
+	if cabang:
+		ekstra["langkah_garis_ke_hasil"] = langkah - l_garis
+		ekstra["langkah_hampir_ke_hasil"] = langkah - l_hampir if l_hampir >= 0 else -1
+		ekstra["kamera_geser_maks"] = kam_geser
+		ekstra["laju_min_setelah"] = laju_min_setelah
+		ekstra["rem_setelah"] = rem_setelah
+		ekstra["lateral_geser_maks"] = lateral_geser
+		ekstra["fase_mundur"] = fase_mundur
+		ekstra["fase_akhir"] = int(akar.call("fase_keluar"))
+		var ukuran: Vector2 = akar.get_viewport_rect().size
+		var p: Vector2 = akar.posisi_layar_sepeda()
+		ekstra["pijak_layar_x"] = p.x
+		ekstra["viewport_x"] = ukuran.x
+		ekstra["badan_kiri_di_luar"] = (p.x - 18.0) >= ukuran.x
+		ekstra["koran_terbang_saat_hasil"] = akar.koran_terbang().size()
+		ekstra["bel_setelah_garis"] = bel_setelah[0]
+	hasil["ekstra"] = ekstra
+	if jari:
+		_sentuh(0, STICK, false)
+	(akar.find_child("KontrolTouch", true, false) as KontrolTouch).keyboard_aktif = OS.has_feature("editor")
+	root.remove_child(akar)
+	akar.free()
+	return hasil
+
+
+func _initialize() -> void:
+	await process_frame
+	var arg: PackedStringArray = OS.get_cmdline_user_args()
+	var semua: Array = []
+	for k: Dictionary in KASUS:
+		var r: Dictionary = await _jalankan(k)
+		semua.append(r)
+		print("qa_g5 %s: garis langkah %d, hasil %s" % [k["nama"], int(r["langkah_garis"]), str(r["hasil_terbuka"])])
+	var f: FileAccess = FileAccess.open(arg[0], FileAccess.WRITE)
+	f.store_string(JSON.stringify({"kasus": semua}, "\t", true))
+	f.close()
+	quit(0)

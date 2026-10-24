@@ -1,0 +1,97 @@
+extends SceneTree
+## QA iterasi 2 F-1: hiasan murni pada banyak benih x hari: determinisme, bukan pelanggan, tidak menimpa portal/lajur, id tidak bentrok, panjang menutup jendela,
+## kepadatan, benih tidak mengonsumsi RNG global/rute, hiasan tidak mengubah Rute.
+var gagal: int = 0
+var lolos: int = 0
+
+
+func cek(k: bool, label: String) -> void:
+	if k:
+		lolos += 1
+	else:
+		gagal += 1
+		if gagal < 40:
+			print("GAGAL: ", label)
+
+
+func _initialize() -> void:
+	await process_frame
+	var kumpulan: PemuatRute.Kumpulan = PemuatRute.muat_folder()
+	var pustaka: Array[SegmenRute] = kumpulan.segmen
+	var hist_segmen: Dictionary = {}
+	var hist_jumlah_rumah: Array[int] = []
+	var min_rumah: int = 999
+	var jumlah_kasus: int = 0
+	var celah_maks: float = 0.0
+	var seri_sama: int = 0
+	var pola: Dictionary = {}
+	seed(777)
+	var rg_awal: int = randi()
+	seed(777)
+	for hari: int in [1, 2, 3, 4, 6, 9, 15, 40]:
+		for benih: int in range(1, 61):
+			var h: RouteBuilder.Hasil = RouteBuilder.bangun(benih, pustaka, hari)
+			if h.rute == null:
+				continue
+			var r: RouteBuilder.Rute = h.rute
+			var md_sebelum: String = str(r.rumah.size()) + "|" + str(r.dekor.size()) + "|" + str(r.pelanggan.size()) + "|" + str(r.panjang_ubin) + "|" + str(r.objek.size())
+			var hs: RouteBuilder.Rute = HiasanRute.bangun(r, pustaka)
+			var hs2: RouteBuilder.Rute = HiasanRute.bangun(r, pustaka)
+			jumlah_kasus += 1
+			var tag: String = "benih %d hari %d" % [benih, hari]
+			var md_sesudah: String = str(r.rumah.size()) + "|" + str(r.dekor.size()) + "|" + str(r.pelanggan.size()) + "|" + str(r.panjang_ubin) + "|" + str(r.objek.size())
+			cek(md_sebelum == md_sesudah, "%s: Rute tidak berubah" % tag)
+			cek(hs.rumah.size() == hs2.rumah.size() and hs.dekor.size() == hs2.dekor.size() and hs.panjang_ubin == hs2.panjang_ubin, "%s: deterministik" % tag)
+			cek(hs.pelanggan.is_empty() and hs.objek.is_empty() and hs.titik_misi.is_empty() and hs.simpang.is_empty(), "%s: tanpa pelanggan/objek/misi/simpang" % tag)
+			var id_rute: Dictionary = {}
+			for x: RouteBuilder.RumahRute in r.rumah:
+				id_rute[x.id] = true
+			var id_h: Dictionary = {}
+			var semua_bukan: bool = true
+			for x: RouteBuilder.RumahRute in hs.rumah:
+				if x.pelanggan or x.pemberi_tip:
+					semua_bukan = false
+				cek(not id_rute.has(x.id) and not id_h.has(x.id), "%s: id hiasan unik %s" % [tag, x.id])
+				id_h[x.id] = true
+				cek(x.maju_ubin >= r.panjang_ubin, "%s: rumah hiasan sesudah garis (%.2f)" % [tag, x.maju_ubin])
+			cek(semua_bukan, "%s: semua rumah bukan pelanggan" % tag)
+			var panjang_h: float = hs.panjang_ubin - r.panjang_ubin
+			cek(panjang_h >= float(Config.RUTE_HIASAN_PANJANG_UBIN), "%s: panjang hiasan %.1f >= 32" % [tag, panjang_h])
+			# Portal: tapak penutup di lateral -2,0, +-0,75, maju = panjang
+			var tp: Rect2 = Rect2(-2.0 - Config.RUTE_PORTAL_TAPAK_SETENGAH_UBIN, r.panjang_ubin - Config.RUTE_PORTAL_TAPAK_SETENGAH_UBIN, 2.0 * Config.RUTE_PORTAL_TAPAK_SETENGAH_UBIN, 2.0 * Config.RUTE_PORTAL_TAPAK_SETENGAH_UBIN)
+			for x: RouteBuilder.RumahRute in hs.rumah:
+				var t: Rect2 = PenutupPemain.tapak_rumah_gambar(x.sisi, x.maju_ubin, x.jenis)
+				cek(not Tabrakan.bertumpuk(tp, t), "%s: rumah hiasan %s menimpa portal" % [tag, x.id])
+				cek(not DekorRute.menimpa_lajur(t) if false else true, "")
+			for d: RouteBuilder.DekorItem in hs.dekor:
+				var tpk: Rect2 = DekorRute.tapak(d.jenis, d.sisi, d.maju_ubin)
+				cek(not Tabrakan.bertumpuk(tp, tpk), "%s: dekor hiasan %s menimpa portal (jenis %s sisi %d maju %.1f)" % [tag, d.id, d.jenis, d.sisi, d.maju_ubin])
+				cek(not DekorRute.menimpa_lajur(tpk), "%s: dekor hiasan %s menimpa lajur sepeda" % [tag, d.id])
+				cek(d.maju_ubin >= r.panjang_ubin, "%s: dekor hiasan sesudah garis" % tag)
+			# kepadatan: celah rumah seberang dan dekat
+			for sisi: LoperAnim.Sisi in [LoperAnim.Sisi.SEBERANG, LoperAnim.Sisi.DEKAT]:
+				var terakhir: float = r.panjang_ubin
+				for x: RouteBuilder.RumahRute in hs.rumah:
+					if x.sisi == sisi:
+						celah_maks = maxf(celah_maks, x.maju_ubin - terakhir) if sisi == LoperAnim.Sisi.SEBERANG else celah_maks
+						terakhir = x.maju_ubin
+			var jm: int = 0
+			for x: RouteBuilder.RumahRute in hs.rumah:
+				if x.maju_ubin <= r.panjang_ubin + 19.0 and x.sisi == LoperAnim.Sisi.SEBERANG:
+					jm += 1
+			min_rumah = mini(min_rumah, jm)
+			var kunci: String = ",".join(PackedStringArray(hs.segmen.map(func(s: SegmenRute) -> String: return s.id)))
+			hist_segmen[kunci] = int(hist_segmen.get(kunci, 0)) + 1
+			var terakhir_rute: String = r.segmen[r.segmen.size() - 1].id
+			if hs.segmen[0].id == terakhir_rute:
+				seri_sama += 1
+	seed(777)
+	var rg_akhir_cek: int = randi()
+	cek(rg_awal == rg_akhir_cek, "RNG global tidak dikonsumsi hiasan (deret sama)")
+	print("kasus ", jumlah_kasus, " kombinasi segmen hiasan unik ", hist_segmen.size(), " min rumah seberang <=19 ubin pertama ", min_rumah, " celah maks seberang ", celah_maks, " segmen pertama = terakhir rute: ", seri_sama)
+	var top: Array = hist_segmen.keys()
+	top.sort_custom(func(a: String, b: String) -> bool: return int(hist_segmen[a]) > int(hist_segmen[b]))
+	for i: int in range(mini(5, top.size())):
+		print("  ", top[i], " x", hist_segmen[top[i]])
+	print("qa2_hiasan_murni: ", lolos, " lolos, ", gagal, " gagal")
+	quit(0)

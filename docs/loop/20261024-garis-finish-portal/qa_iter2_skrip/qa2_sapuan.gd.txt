@@ -1,0 +1,97 @@
+extends SceneTree
+## QA iterasi 2 F-1/F-2 (jendela asli): untuk beberapa benih x hari, sepeda dari 8 ubin sebelum garis sampai hasil; tiap 8 langkah cek piksel bolong (77,77,77)
+## dengan sampel 1 dari 3x3, simpan tangkapan di garis dan di tengah keluar untuk benih terpilih, catat frame animasi sepeda (hidup selama keluar),
+## hiasan tidak membawa kotak surat oranye, bukan pelanggan, ukuran penerap stabil.
+## godot --path . --resolution WxH --position 0,0 --script <ini> -- <folder> <benih_dari> <jumlah> <hari> <kidal 0/1>
+const DT: float = 1.0 / 60.0
+
+
+func _bolong(img: Image) -> int:
+	var n: int = 0
+	var w: int = img.get_width()
+	var h: int = img.get_height()
+	var y: int = 0
+	while y < h:
+		var x: int = 0
+		while x < w:
+			var c: Color = img.get_pixel(x, y)
+			if int(round(c.r * 255.0)) == 77 and int(round(c.g * 255.0)) == 77 and int(round(c.b * 255.0)) == 77:
+				n += 1
+			x += 3
+		y += 3
+	return n
+
+
+func _initialize() -> void:
+	await process_frame
+	var arg: PackedStringArray = OS.get_cmdline_user_args()
+	var folder: String = arg[0]
+	var dari: int = int(arg[1])
+	var jumlah: int = int(arg[2])
+	var hari: int = int(arg[3])
+	var kidal: bool = arg[4] == "1"
+	var awalan: String = "%dx%d" % [root.size.x, root.size.y]
+	var total_bolong: int = 0
+	var diperiksa: int = 0
+	var gagal: int = 0
+	for n: int in range(jumlah):
+		var benih: int = dari + n
+		var akar: RuteMain = (load("res://scenes/rute/rute.tscn") as PackedScene).instantiate() as RuteMain
+		akar.atur_benih_awal(benih)
+		akar.atur_hari(hari)
+		root.add_child(akar)
+		for i: int in range(6):
+			await process_frame
+		akar.set_process(false)
+		akar.atur_kidal(kidal)
+		akar.atur_benih_awal(benih)
+		var sepeda: SepedaUji = akar.find_child("Sepeda", true, false) as SepedaUji
+		var sprite: LoperSprite = akar.find_child("LoperAgen", true, false) as LoperSprite
+		var panjang: float = akar.rute().panjang_ubin
+		sepeda.jarak_ubin = panjang - 8.0
+		var langkah: int = 0
+		var l_garis: int = -1
+		var bolong_kasus: int = 0
+		var frames: Dictionary = {}
+		var simpan_garis: bool = false
+		var simpan_tengah: bool = false
+		var penerap_min: int = 1 << 30
+		var penerap_maks: int = 0
+		if akar.rumah_hiasan().jumlah_kotak_surat() != 0:
+			gagal += 1
+			print("GAGAL benih %d: kotak surat oranye pada hiasan" % benih)
+		while langkah < 1500 and not akar.hasil_tampil():
+			akar.perbarui(DT)
+			langkah += 1
+			if akar.rute_sudah_selesai() and l_garis < 0:
+				l_garis = langkah
+			if langkah % 8 == 0 or (l_garis > 0 and langkah == l_garis + 2) or (l_garis > 0 and langkah == l_garis + 60):
+				await process_frame
+				await process_frame
+				var img: Image = root.get_texture().get_image()
+				var b: int = _bolong(img)
+				total_bolong += b
+				bolong_kasus += b
+				diperiksa += 1
+				if l_garis > 0:
+					frames["%s:%d" % [sprite.animation, sprite.frame]] = true
+				var pn: int = akar.penerap_penutup().jumlah()
+				penerap_min = mini(penerap_min, pn)
+				penerap_maks = maxi(penerap_maks, pn)
+				if l_garis > 0 and langkah == l_garis + 2 and n < 12:
+					img.save_png("%s/%s_h%d_s%d_garis.png" % [folder, awalan, hari, benih])
+				if l_garis > 0 and langkah == l_garis + 60 and n < 12:
+					img.save_png("%s/%s_h%d_s%d_keluar.png" % [folder, awalan, hari, benih])
+				if b > 0:
+					print("bolong ", b, " benih ", benih, " langkah ", langkah, " garis ", l_garis)
+		if frames.size() < 2:
+			gagal += 1
+			print("GAGAL benih %d: animasi sepeda tidak hidup selama keluar (%d frame unik)" % [benih, frames.size()])
+		if not akar.hiasan().pelanggan.is_empty() or not akar.hiasan().objek.is_empty():
+			gagal += 1
+		print("benih %d hari %d: bolong %d, frame animasi unik %d, penerap %d..%d, rumah hiasan %d dekor hiasan %d" % [benih, hari, bolong_kasus, frames.size(), penerap_min, penerap_maks, akar.hiasan().rumah.size(), akar.hiasan().dekor.size()])
+		root.remove_child(akar)
+		akar.free()
+		await process_frame
+	print("sapuan %s hari %d kidal %s: %d frame, bolong %d, gagal %d" % [awalan, hari, str(kidal), diperiksa, total_bolong, gagal])
+	await ProbeKeluar.keluar(self, 0)

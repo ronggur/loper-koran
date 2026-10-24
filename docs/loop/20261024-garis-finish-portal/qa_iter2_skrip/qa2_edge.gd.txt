@@ -1,0 +1,88 @@
+extends SceneTree
+## QA iterasi 2: Main lagi 40x dengan hiasan (kebocoran node/sinyal/penerap), hiasan kembali ke awal, jendela daur hiasan beku tidak tumbuh, jeda di antara garis dan hampir keluar.
+const DT: float = 1.0 / 60.0
+var gagal: int = 0
+var lolos: int = 0
+
+
+func cek(k: bool, label: String) -> void:
+	if k:
+		lolos += 1
+	else:
+		gagal += 1
+		print("GAGAL: ", label)
+
+
+func _sinyal(akar: RuteMain) -> Dictionary:
+	var d: Dictionary = {}
+	for nama: String in ["rute_selesai", "hasil_dibuka", "rute_disusun", "koran_dilempar", "koran_mendarat", "tabrakan", "skor_dinilai", "jeda_berubah"]:
+		d[nama] = akar.get_signal_connection_list(nama).size()
+	return d
+
+
+func lagi(hari: int) -> void:
+	root.size = Vector2i(2340, 1080)
+	var akar: RuteMain = (load("res://scenes/rute/rute.tscn") as PackedScene).instantiate() as RuteMain
+	akar.atur_hari(hari)
+	root.add_child(akar)
+	await process_frame
+	await process_frame
+	akar.set_process(false)
+	(akar.find_child("KontrolTouch", true, false) as KontrolTouch).keyboard_aktif = false
+	var sepeda: SepedaUji = akar.find_child("Sepeda", true, false) as SepedaUji
+	var pustaka: Array[SegmenRute] = PemuatRute.muat_folder().segmen
+	var awal_sinyal: Dictionary = _sinyal(akar)
+	var awal_node: int = int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
+	var awal_objek: int = int(Performance.get_monitor(Performance.OBJECT_COUNT))
+	var awal_anak: int = akar.get_child_count()
+	var objek: Node = akar.find_child("Objek", true, false)
+	var awal_objek_anak: int = objek.get_child_count()
+	var maks_node_rumah: int = 0
+	var maks_node_dekor: int = 0
+	cek(akar.rumah_hiasan().jumlah_rumah() == 0 and akar.dekor_hiasan().indeks_tampil().is_empty(), "hari %d: di awal rute hiasan belum tergambar" % hari)
+	for putaran: int in range(40):
+		# Hiasan = hitungan ulang dari rute sekarang
+		var ulang: RouteBuilder.Rute = HiasanRute.bangun(akar.rute(), pustaka)
+		cek(ulang.rumah.size() == akar.hiasan().rumah.size() and ulang.dekor.size() == akar.hiasan().dekor.size() and ulang.panjang_ubin == akar.hiasan().panjang_ubin, "hari %d putaran %d: hiasan sama dengan hitungan ulang dari rute" % [hari, putaran])
+		var jeda_dipakai: bool = putaran % 3 == 0
+		sepeda.jarak_ubin = akar.rute().panjang_ubin - 12.0
+		var langkah: int = 0
+		var di_jeda: bool = false
+		while langkah < 1500 and not akar.hasil_tampil():
+			akar.perbarui(DT)
+			langkah += 1
+			maks_node_rumah = maxi(maks_node_rumah, akar.rumah_hiasan().jumlah_node_rumah())
+			maks_node_dekor = maxi(maks_node_dekor, akar.dekor_hiasan().jumlah_node_dekor() if akar.dekor_hiasan().has_method("jumlah_node_dekor") else 0)
+			if jeda_dipakai and not di_jeda and akar.rute_sudah_selesai() and not akar.hampir_keluar():
+				di_jeda = true
+				akar.minta_jeda()
+				var j0: float = sepeda.jarak_ubin
+				for i: int in range(30):
+					akar.perbarui(DT)
+				cek(sepeda.jarak_ubin == j0, "hari %d putaran %d: jeda antara garis dan hampir keluar membekukan" % [hari, putaran])
+				akar.minta_lanjut()
+		cek(akar.hasil_tampil(), "hari %d putaran %d: hasil terbuka" % [hari, putaran])
+		cek(akar.rumah_hiasan().jumlah_rumah() > 0, "hari %d putaran %d: hiasan tergambar saat hasil" % [hari, putaran])
+		akar.layar_hasil().tombol_main_lagi().ditekan.emit()
+		akar.perbarui(DT)
+		cek(not akar.kamera_beku() and akar.fase_keluar() == AkhirRute.Fase.SEBELUM and not akar.hasil_tampil() and akar.rumah_hiasan().jumlah_rumah() == 0 and akar.dekor_hiasan().indeks_tampil().is_empty(), "hari %d putaran %d: pulih, hiasan kembali kosong di awal" % [hari, putaran])
+		sepeda.jarak_ubin = 0.0
+		print("putaran ", putaran, " node ", int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)), " objekanak ", objek.get_child_count())
+	for nama: String in awal_sinyal:
+		cek(akar.get_signal_connection_list(nama).size() == int(awal_sinyal[nama]), "hari %d: sinyal %s tidak bocor" % [hari, nama])
+	var akhir_node: int = int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
+	var akhir_objek: int = int(Performance.get_monitor(Performance.OBJECT_COUNT))
+	cek(absi(akhir_node - awal_node) <= 8, "hari %d: node stabil (%d -> %d)" % [hari, awal_node, akhir_node])
+	cek(akar.get_child_count() == awal_anak and objek.get_child_count() == awal_objek_anak, "hari %d: anak akar dan Objek stabil (%d->%d, %d->%d)" % [hari, awal_anak, akar.get_child_count(), awal_objek_anak, objek.get_child_count()])
+	print("hari ", hari, " node ", awal_node, "->", akhir_node, " objek ", awal_objek, "->", akhir_objek, " maks node rumah hiasan ", maks_node_rumah, " penerap ", akar.penerap_penutup().jumlah())
+	(akar.find_child("KontrolTouch", true, false) as KontrolTouch).keyboard_aktif = OS.has_feature("editor")
+	root.remove_child(akar)
+	akar.free()
+
+
+func _initialize() -> void:
+	await process_frame
+	await lagi(1)
+	await lagi(4)
+	print("qa2_edge: ", lolos, " lolos, ", gagal, " gagal")
+	quit(0)
