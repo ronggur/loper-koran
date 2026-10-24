@@ -1,7 +1,7 @@
 # Loop Log — 20261024-ui2-semua-layar
 Scope: Run UI-2 — redesain UI langkah 3-6 (hasil, koran, jeda, tutorial, banner, tombol jeda HUD) dalam satu PR  ·  Branch: feat/ui2-semua-layar (dari main d16b3bb, 0.7.0)  ·  Mulai: 2026-10-24  ·  Godot: 4.7.2.stable.official.ed1daf0bf
 
-## Status: IN_PROGRESS   (iterasi 1/2; bagian A, B, C, dan E selesai)
+## Status: IN_PROGRESS   (iterasi 1/2; bagian A, B, C, E, dan D selesai; QA belum)
 
 ## Lingkungan (orchestrator, awal run)
 - Basis: `main` = `origin/main` = `d16b3bb` (rilis 0.7.0; memuat PR #64 UI-1). Branch dibuat dari sana.
@@ -20,6 +20,7 @@ Pemilik menambah dua permintaan setelah SPEC ditulis: font bengkel dan hasil ter
 ## Ringkasan iterasi
 | Iter | Dev menyelesaikan | Gerbang | QA verdict | Temuan baru | Terverifikasi |
 |---|---|---|---|---|---|
+| 1 | A (font V-8, komponen, hasil), B (koran), C (jeda, tutorial, banner, HUD V-9), E (V-10 latar hasil, tanda bar 90 persen), D (dokumen) | import dan quit-after 0 ERROR/WARNING; `run_tests.gd` 28487 lolos, 0 gagal + pemeriksa lolos; 17 `uji_*.py` exit 0; `--export-pack` sesuai; probe 0 keadaan tidak sesuai di 4 ukuran; kontras terburuk hasil 7,29:1; mutan nyata A 34/34, B 32/32, C 41/41, E 25/25; sha256 save tidak berubah | (menunggu QA) | - | - |
 
 ## Temuan
 Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MANUAL | BLOCKED
@@ -372,6 +373,27 @@ Satu perubahan per mutan, runner kecil (`TesHasilDunia` + `TesTampilHasil` + `Te
 2. Tanda bar kecepatan dipasang 90 % (keputusan orchestrator, bagian C butir 2 selesai).
 
 ## Bagian D — dokumen
+
+Commit: `docs: dokumen run UI-2 (DESIGN_SPEC, ART_DIRECTION, redesain, AGENTS, SETUP_ANDROID 8.19, LOOP-DEV-QA 6l)`. Semua isi usulan atau dinilai di HP; tidak ada butir aset UI yang dicentang (DEV_PHASES) dan tidak ada yang ditandai "dikunci".
+- Diperbarui: `docs/design/DESIGN_SPEC.md` (1.2 skala font V-8, 1.3 komponen run UI-2, 3.5 tanda 90 persen (bagian E), baris Hasil dengan V-10, Koran, Jeda, baris baru Tutorial dan Banner, catatan redesain), `docs/ART_DIRECTION.md` (6.8 dan Changelog), `docs/design/redesain/README.md` (bagian 1 status, bagian 6 butir 3 sampai 6 terpasang usulan dengan penyimpangan, keputusan yang bisa ditolak, butir terbuka), `tools/ui_art/README.md` (jenis ukur kontras baru, `bandingkan_tangkapan_hud.py`, 62 berkas), `AGENTS.md` (tiga perintah baru dan peta repo run UI-2 saja, tanpa aturan baru), `docs/README.md`, `docs/DEV_PHASES.md` (catatan run, butir aset UI TIDAK dicentang), `docs/SETUP_ANDROID.md` (catatan font di 8.18 dan bagian 8.19 baru dengan lembar hasil), `docs/LOOP-DEV-QA.md` (6k baris UI-2 dan 6l), `docs/ROADMAP.md` (baris redesain UI; baris garis finish dengan portal tidak disentuh), `docs/CONTENT_GUIDE.md` (dua kunci UI baru). `DATA_SCHEMA.md` tidak berubah (tanpa perubahan format data).
+
+### Keputusan Dev yang bisa ditolak pemilik (penyimpangan dari kanvas, usulan)
+- Bagian A (hasil): label kapital kanvas tampil huruf biasa dengan spasi huruf (kunci `HASIL_*` tidak boleh berubah); angka Koin tanpa "+"; teks kondisi `TEXT` bukan `WARN` (6,91:1); bilah milestone tanpa garis sorot `#FFE08A` (bukan token); kasus terpadat: kolom samping naik sejajar judul, struk tanpa samping digeser ke kiri dari tombol; angka Koin 10 digit berelipsis.
+- Bagian B (koran): kotak iklan tanpa teks iklan kanvas (V-3 hanya dua kunci baru; diisi batang hiasan); panah Berangkat dan centang pilihan menempel di tepi tombol (`Button.icon`); notifikasi save selebar kolom berita; berita utama selain jalan dan lampu tanpa foto dan ikon; jarak baris headline dirapatkan; tekan Ambil/Lewati memakai bingkai terpilih; status misi memakai `LayarTeksMiniTebal`.
+- Bagian C (jeda, tutorial, banner, HUD): panel jeda di tengah tegak (bukan y 50) tanpa ruang cadangan 42; glif Lanjut di tepi kanan tombol; kenop tidak ikut turun saat ditekan; "JEDA" tanpa letter-spacing; tutorial dengan glif per langkah dan titik terisi sampai langkah sekarang; banner galat muat dengan tanda seru dan tombol utama; banner hasil misi HUD tanpa ikon kucing dan koin kanvas (piksel-identik V-9 dan lebar); reputasi berbagi panel kondisi baris 2 (bukan digabung ke koin) karena lebar baris 1 tidak muat di 640.
+- Bagian E (V-10, tanda bar): struk dan kartu digelapkan RGB 0,5 dan alpha 0,72 di atas lapisan 0,75 demi kontras 7:1 terukur (7,29:1); baris "Baru:" dipindah ke kartu target; tanda bar 90 persen bukan 80 persen.
+- Lain: lapisan jeda 72 persen (V-2); skala font +2 penuh di semua elemen (V-8; tidak ada yang turun ke +1).
+
+### DEFERRED (butuh keputusan pemilik atau run lain)
+1. Kata status FAIL di HUD (`LELAH`, `HABIS`, `PUTUS`) berkontras 3,7 sampai 4,8:1 di atas panel HUD: PRA-ADA (warna dan panel tidak diubah run ini; baseline sama). Keputusan orchestrator: dibiarkan.
+2. Banner misi 24 huruf (batas data `MISI_BANNER_PANJANG_MAKS`, sekitar 242 px) menyentuh panel baris 2 di 640 saat reputasi tampil (data nyata, banner terpanjang 173 px, aman).
+3. Aset lama `ui_lencana_{perunggu,perak,emas}.png` (14x14, 6A2) tidak dipakai skrip mana pun; dijaga `uji_ui_lencana.py` dan `tes_export`; pembersihan di run lain.
+4. Lisensi latar bengkel (butir pemilik lama): belum dicatat, belum boleh masuk rilis (ART_DIRECTION 9).
+5. Ikon banner hasil misi kanvas (kucing 24, koin 14) tidak dipasang (lihat bagian C).
+
+### Gerbang bagian D (2026-10-24, keluaran nyata)
+- `run_tests.gd`: **28487 lolos, 0 gagal**; `tools/cek_keluaran_tes.py`: "lolos (28487 lolos, 0 gagal, 0 peringatan)". 17 `uji_*.py`: exit 0 semua. Nama berkas yang ditulis di dokumen dicek ada (tidak ada tautan rusak). sha256 save asli: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` (tidak berubah).
+- Satu tes lama diubah karena dokumen baru: `tests/tes_export.gd` `_test_dokumen_5d` menghitung butir bernomor 8.16 sampai AKHIR berkas, jadi butir 12 dan 13 di SETUP_ANDROID 8.19 ikut terhitung (13 != 11); kini bagian 8.16 dipotong di judul `### 8.` berikutnya (celah tes lama, bukan perubahan perilaku).
 
 ## NEEDS-MANUAL
 Lihat SPEC (SETUP_ANDROID 8.19).

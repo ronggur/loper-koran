@@ -82,6 +82,8 @@ Bahasa Inggris atau bahasa lain belum direncanakan. Kalau nanti ada, semua teks 
 
 **Diputuskan pemilik 2026-10-17 (run 4A, nama masih placeholder berlabel usulan):** nama koran **"Warta Kring"** dan nama perumahan **"Perumahan Melati"**. Keduanya hanya ada di `translations/ui.csv` (satu kunci per nama: `KORAN_NAMA`, `KORAN_DISTRIK_PERUMAHAN`) dan tampil di layar koran sebagai "Hari N · Perumahan Melati".
 
+**Kunci UI baru run UI-2 (2026-10-24, usulan; `translations/ui.csv`):** `KORAN_IKLAN_BARIS` = "IKLAN BARIS" (label kapital kotak hiasan di halaman koran; teks iklan di kanvas, mis. "Dijual sepeda onthel...", sengaja belum ditulis) dan `MISI_PETUNJUK_LABEL` = "PELANGGAN:" (label di gelembung petunjuk dari pelanggan; kalimat petunjuknya tetap dari data misi). Kunci lama tidak berubah.
+
 **Efek berita utama belum diterapkan (S-5).** Di 4A berita utama hanya dicatat dan ditampilkan sebagai teks; efek dunianya (hujan, tenda hajatan, jalan menyempit) baru ada di Fase 7. Penguji tidak perlu menunggu hujan turun saat headline hujan tampil (headline hujan malah belum aktif di pool perumahan).
 
 **Contoh headline hari 1 sampai 3** (dari data nyata dengan `HeadlineManager`, tanpa flag; P1 diambil di hari 1 sehingga hari 2 dan 3 tanpa misi karena jeda 7 hari; dijaga `tests/tes_headline.gd`):

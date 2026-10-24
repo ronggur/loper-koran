@@ -709,6 +709,10 @@ func _test_dokumen_5d() -> void:
 	var awal: int = setup.find("### 8.16 ")
 	check(awal >= 0, "SETUP_ANDROID.md punya bagian 8.16 (uji pelanggan sisi dekat)")
 	var bagian: String = setup.substr(awal) if awal >= 0 else ""
+	# Bagian berakhir di judul "### 8." berikutnya (bukan sampai akhir berkas): bagian sesudahnya (8.19 punya 13 butir) tidak boleh ikut terhitung.
+	var akhir: int = bagian.find("\n### 8.", 10)
+	if akhir >= 0:
+		bagian = bagian.substr(0, akhir)
 	var nomor: int = 0
 	for baris: String in bagian.split("\n"):
 		if baris.begins_with("%d. [ ] **" % (nomor + 1)):

@@ -1408,7 +1408,7 @@ Disimpan 2026-10-23, sesudah Run 6A2 di-merge (PR #58, `main` = rilis 0.6.0). Pe
 | Run | Isi | Prasyarat |
 |---|---|---|
 | UI-1 | Komponen UI bersama (tombol empat peran, kartu, panel layar, chip, kotak kondisi besar) dan layar bengkel tata C. **Status (2026-10-23): dikerjakan Dev iterasi 1 (bagian A, B, C) di branch `feat/ui1-komponen-bengkel`, menunggu QA dan uji HP 8.18** (`docs/loop/20261023-ui1-komponen-bengkel/`) | 6A2 di-merge (PR #58) |
-| UI-2 dan seterusnya | Hasil (struk), koran, jeda dengan tutorial dan banner, HUD (hanya tombol jeda); ditulis sesudah UI-1 di-merge dan dinilai di HP | UI-1 di-merge |
+| UI-2 | Hasil (struk), koran, jeda dengan tutorial dan banner, HUD, skala font, dan latar hasil, dalam SATU PR (permintaan pemilik 2026-10-24). **Status (2026-10-24): dikerjakan Dev iterasi 1 (bagian A, B, C, E, D) di branch `feat/ui2-semua-layar`, menunggu QA dan uji HP 8.19** (`docs/loop/20261024-ui2-semua-layar/`; baris 6l) | UI-1 di-merge (PR #64, sudah) |
 
 Perintah di bawah ringkasan dari SPEC run (`docs/loop/20261023-ui1-komponen-bengkel/SPEC.md`, kontraknya), bukan salinan kata demi kata dari pesan pemilik.
 
@@ -1485,6 +1485,20 @@ RUN_ID: 20261023-ui1-komponen-bengkel
 ```
 
 **Catatan run UI-1 (dikerjakan 2026-10-23; SPEC dan LOG di `docs/loop/20261023-ui1-komponen-bengkel/`):** dipecah tiga bagian Dev berurutan (A komponen, B bengkel, C dokumen). Pelajaran: (1) set aset yang dipasang didaftar SATU tempat (`tools/ui_art/redesain/pasang.py`) dan dibaca skrip `--salin` serta uji, jadi "hanya yang dipakai" ditegakkan mesin, bukan disiplin; (2) pola penolakan aset lampu nyala di `uji_aset_pasang_5b.py` terlalu luas dan salah menandai `ui_btn_sakelar_nyala.png`, gerbang bagian B menangkapnya; (3) label berbungkus kata yang baru tampil menghitung tinggi dengan lebar 0 dan Control menyimpan ukuran itu di offsetnya (isi bergeser ke atas); `LayarBengkel._pulihkan_batas` menegakkan persegi penuh; (4) peringatan kontras harus diukur dari tangkapan nyata (`tools/ukur_kontras_tangkapan.py`), bukan dari token: WARN di atas `UI_PANEL` 6,91:1 dan chip diredupkan 3,65:1 baru ketahuan di tangkapan; (5) `git checkout` milik harness mutan bisa membuang suntingan yang belum di-commit, jadi commit dulu sebelum mutan. Mutan nyata bagian B: 50 dari 50 tertangkap sesudah sembilan tes ditambah.
+
+## 6l. Redesain UI: Run UI-2 (dikerjakan 2026-10-24)
+
+SPEC dan LOG di `docs/loop/20261024-ui2-semua-layar/`, branch `feat/ui2-semua-layar` dari `main` 0.7.0 (memuat PR #64 UI-1). Menggantikan "satu layar per run" (6k) atas permintaan pemilik 2026-10-24 ("langsung aja semua jadi 1 PR"): langkah 3 sampai 6 porting redesain (hasil, koran, jeda/tutorial/banner, HUD) dalam satu PR, ditambah tiga amandemen pemilik yang masuk sesudah SPEC ditulis: V-8 skala font +2 di semua layar penuh (bengkel ikut), V-9 tata ulang HUD (kecepatan dan stamina berdampingan, kolom kanan atas dua baris), dan V-10 layar hasil di atas lingkungan yang baru dilalui dengan struk transparan. Dev iterasi 1 dipecah lima bagian berurutan, commit sendiri-sendiri: A (font V-8, komponen, hasil), B (koran), C (jeda, tutorial, banner, HUD V-9), E (V-10 dan tanda bar 90 persen), D (dokumen). QA dan iterasi 2 belum.
+
+| Ringkasan | Nilai |
+|---|---|
+| Tes sesudah Dev | 28487 lolos, 0 gagal (baseline 23406); semua 17 `uji_*.py` exit 0; probe 0 keadaan tidak sesuai di 1920x1080, 2340x1080, 2400x1080, 1600x720 |
+| Mutan nyata Dev | A 34/34, B 32/32 (+1 setara), C 41/41 (+1 setara), E 25/25 tertangkap |
+| Aset | 32 berkas baru lewat `--salin` (total redesain terpasang 62), set tepat dijaga `uji_ui_redesain.py` |
+| Kunci teks baru | `KORAN_IKLAN_BARIS`, `MISI_PETUNJUK_LABEL` (V-3) |
+| Butuh keputusan pemilik (DEFERRED) | kata status FAIL HUD (LELAH, HABIS, PUTUS) 3,7 sampai 4,8:1 pra-ada; banner misi 24 huruf menyentuh panel baris 2 di 640 saat reputasi tampil; aset lencana lama 14x14 tak terpakai; lisensi latar bengkel; ikon banner misi kanvas tidak dipasang |
+
+Pelajaran run ini: (1) tampilan baru yang memakai transparansi harus diukur dari tangkapan nyata terhadap latar terburuk, bukan dari token: struk transparan menjatuhkan teks hijau `OK` dari 7,34 ke 6,91:1 dan baris tanpa panel dari 7 ke 3,5:1 (di atas dunia terang); tangkapan kedua tanpa teks (`_latar.png`) membuat pengukuran per piksel mungkin, dan penggelapan RGB panel lebih murah daripada menaikkan alpha lapisan; (2) angka yang tertulis di spesifikasi bisa menyesatkan (tanda bar 80 persen padahal ambang sprite di 90 persen bar): turunkan angka dari kode dengan tes, bukan menyalin; (3) pemeriksa tata letak murni (`TampilXxx`) dengan oracle literal kanvas menangkap pergeseran 1 px yang tidak terlihat mata; (4) tangkapan pertama probe jendela dan animasi di sekitar pemain tidak deterministik, jadi perbandingan piksel HUD memakai daftar pengecualian tertulis; (5) elemen yang disembunyikan lewat per-frame (tip) tetap tampak satu frame bila layar baru dipotret langsung: sembunyikan juga seketika; (6) `git checkout` mutan hanya aman bila kode sudah di-commit.
 
 ## 7. Batasan yang perlu diketahui
 
