@@ -184,7 +184,7 @@ func _test_layar_hasil_smoke(kasus: Array) -> void:
 	check(teks_semua.find("gagal") == -1 and teks_semua.find("kalah") == -1, "nada netral: tanpa kata 'gagal' atau 'kalah' (prinsip 2)")
 	var kotak_layar: Rect2 = Rect2(Vector2.ZERO, Vector2(lebar, 360))
 	var tombol: Rect2 = layar.rect_tombol()
-	check(tombol.size.x >= 42.0 and tombol.size.y >= 42.0 and kotak_layar.encloses(layar.rect_panel()) and layar.rect_panel().encloses(tombol), "lebar %d: panel di dalam layar, tombol Main lagi >= 42 px di dalam panel (%s)" % [lebar, tombol])
+	check(tombol.size.x >= 42.0 and tombol.size.y >= 42.0 and kotak_layar.encloses(layar.rect_panel()) and kotak_layar.encloses(tombol) and not layar.rect_panel().intersects(tombol), "lebar %d: struk di dalam layar, tombol Main lagi >= 42 px di dalam layar dan tidak menutupi struk (%s; run ui2: tombol kanan bawah di luar struk)" % [lebar, tombol])
 	var semua_di_panel: bool = true
 	for r: Rect2 in layar.rect_label():
 		semua_di_panel = semua_di_panel and layar.rect_panel().encloses(r) and r.size.x > 0.0
@@ -385,7 +385,7 @@ func _test_sakelar_layar_jeda() -> void:
 	await _tree.process_frame
 	check(hud.rect_tombol_bel() == Rect2(44, 276, 40, 40) and hud.rect_panel_kecepatan().end.x == float(LEBAR - Config.HUD_PANEL_KECEPATAN_GESER_PX), "sesudah lanjut: panel bawah dan bel dicerminkan (kidal)")
 	# QA-001 iterasi 1: mematikan Kidal lagi lewat sakelar yang sama (satu-satunya jalur kidal di scene rute, O-6), dengan sentuhan sungguhan.
-	# Harapan literal tangan kanan 780 (DESIGN_SPEC 3.5, 3.8): bel (696, 276) 40x40, panel kecepatan mulai x 210, radar seberang tetap
+	# Harapan literal tangan kanan 780 (DESIGN_SPEC 3.5, 3.8): bel (696, 276) 40x40, panel kecepatan mulai x 196 (V-9 H-1; dulu 210), radar seberang tetap
 	# (4, 10); stick di kiri (100, 260 masuk zona stick kanan), swipe di kanan.
 	akar.minta_jeda()
 	await _tree.process_frame
@@ -398,7 +398,7 @@ func _test_sakelar_layar_jeda() -> void:
 	akar.minta_lanjut()
 	akar.perbarui(0.0)
 	await _tree.process_frame
-	check(hud.rect_tombol_bel() == Rect2(696, 276, 40, 40) and hud.rect_panel_kecepatan().position.x == 210.0, "sesudah lanjut: bel kembali (696, 276) dan panel kecepatan kembali mulai x 210 (sisi kanan), dapat %s / %s" % [hud.rect_tombol_bel(), hud.rect_panel_kecepatan()])
+	check(hud.rect_tombol_bel() == Rect2(696, 276, 40, 40) and hud.rect_panel_kecepatan().position.x == float(Config.HUD_PANEL_KECEPATAN_GESER_PX), "sesudah lanjut: bel kembali (696, 276) dan panel kecepatan kembali mulai x 196 (HUD_PANEL_KECEPATAN_GESER_PX, sisi kanan), dapat %s / %s" % [hud.rect_tombol_bel(), hud.rect_panel_kecepatan()])
 	check(hud.rect_radar_seberang() == Rect2(4, 10, 12, 172) and hud.rect_radar_dekat() == Rect2(764, 10, 12, 172), "radar tidak berpindah saat kidal dimatikan")
 	_sentuh(0, TITIK_STICK, true)
 	check(router.stick_aktif() and not router.swipe_aktif(), "jari turun di (100, 260): stick (zona stick kembali di kiri)")

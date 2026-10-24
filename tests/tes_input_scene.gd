@@ -971,9 +971,9 @@ func _test_kidal_dan_hud() -> void:
 		_sentuh(0, rect.get_center(), true)
 		check(router.jumlah_jari_aktif() == 0, "%s: sentuhan di tombol kidal tidak menjadi stick atau swipe" % tag)
 		_sentuh(0, rect.get_center(), false)
-		# Panel kecepatan: bawaan di sisi stick (x 210), tidak menimpa zona stick.
+		# Panel kecepatan: bawaan di sisi stick (x 196, V-9 H-1; dulu 210), tidak menimpa zona stick.
 		var panel: Rect2 = hud.rect_panel_kecepatan()
-		check(absf(panel.position.x - 210.0) <= 1.0 and absf(panel.size.x - 170.0) <= 1.0, "%s: panel kecepatan bawaan di x 210 selebar 170 (DESIGN_SPEC 3.5), dapat %s" % [tag, panel])
+		check(absf(panel.position.x - 196.0) <= 1.0 and absf(panel.size.x - 220.0) <= 1.0, "%s: panel kecepatan bawaan di x 196 selebar 220 (kecepatan dan stamina berdampingan, V-9 H-1), dapat %s" % [tag, panel])
 		check(absf(panel.end.y - (360.0 - float(Config.HUD_MARGIN_TEPI_PX))) <= 1.0, "%s: panel kecepatan menempel 8 px dari bawah, dapat y akhir %s" % [tag, panel.end.y])
 		check(not panel.intersects(TouchZones.rect_stick(lebar, false)), "%s: panel kecepatan tidak menimpa zona stick" % tag)
 		# Toggle kidal: zona dan panel berpindah.
@@ -982,7 +982,7 @@ func _test_kidal_dan_hud() -> void:
 		await _tree.process_frame
 		check(router.kidal() and hud.get_node("%TombolKidal").button_pressed, "%s: toggle kidal menyalakan kidal di router" % tag)
 		var panel_kidal: Rect2 = hud.rect_panel_kecepatan()
-		check(absf(panel_kidal.end.x - (w - 210.0)) <= 1.0 and absf(panel_kidal.size.x - 170.0) <= 1.0, "%s kidal: panel kecepatan pindah ke sisi stick kanan (berakhir di lebar-210), dapat %s" % [tag, panel_kidal])
+		check(absf(panel_kidal.end.x - (w - 196.0)) <= 1.0 and absf(panel_kidal.size.x - 220.0) <= 1.0, "%s kidal: panel kecepatan pindah ke sisi stick kanan (berakhir di lebar-196), dapat %s" % [tag, panel_kidal])
 		check(absf(panel_kidal.end.y - panel.end.y) <= 1.0, "%s kidal: panel tetap di bawah" % tag)
 		check(not panel_kidal.intersects(TouchZones.rect_stick(lebar, true)), "%s kidal: panel kecepatan tidak menimpa zona stick kidal" % tag)
 		check(hud.rect_tombol_kidal() == rect, "%s kidal: tombol kidal tidak berpindah (tetap di strip atas)" % tag)
@@ -999,7 +999,7 @@ func _test_kidal_dan_hud() -> void:
 		await _tree.process_frame
 		await _tree.process_frame
 		check(not router.kidal() and router.jumlah_jari_aktif() == 0 and router.vektor_stick() == Vector2.ZERO, "%s: kembali ke tangan kanan membatalkan semua jari aktif" % tag)
-		check(absf(hud.rect_panel_kecepatan().position.x - 210.0) <= 1.0, "%s: panel kecepatan kembali ke x 210" % tag)
+		check(absf(hud.rect_panel_kecepatan().position.x - 196.0) <= 1.0, "%s: panel kecepatan kembali ke x 196" % tag)
 		_langkah(akar, 150)
 		check(sepeda.kecepatan_ud == 3.0, "%s: sesudah jari dibatalkan sepeda kembali santai" % tag)
 		# Isi HUD: bar dan angka mengikuti kecepatan, teks lewat kunci terjemahan.
@@ -1009,7 +1009,7 @@ func _test_kidal_dan_hud() -> void:
 		var judul: Label = _anak(hud, "LabelKecepatan") as Label
 		check(bar != null and is_equal_approx(bar.nilai, 0.75), "%s: bar kecepatan 4,5 u/d = 75%% dari ngebut" % tag)
 		check(angka != null and angka.text == hud.tr("HUD_KECEPATAN_ANGKA").format({"v": "4.5"}) and angka.text.contains("4.5"), "%s: angka kecepatan 4.5 lewat kunci HUD_KECEPATAN_ANGKA, dapat '%s'" % [tag, angka.text if angka != null else ""])
-		check(angka != null and judul != null and angka.get_theme_font_size(&"font_size") == 10 and judul.get_theme_font_size(&"font_size") == 8, "%s: ukuran font dari tema: angka 10 (HudAngka), label 8 (HudLabel, paket pemilik 2026-10-14, dulu 6), DESIGN_SPEC 1.2" % tag)
+		check(angka != null and judul != null and angka.get_theme_font_size(&"font_size") == 12 and judul.get_theme_font_size(&"font_size") == 10, "%s: ukuran font panel bawah dari tema: angka 12 (HudAngkaBawah), label 10 (HudLabelBawah) (V-9 H-1; dulu 10 dan 8), DESIGN_SPEC 1.2" % tag)
 		check(judul != null and judul.text == "HUD_KECEPATAN", "%s: label judul bar berisi kunci HUD_KECEPATAN (diterjemahkan otomatis oleh Label)" % tag)
 		_bersihkan(akar)
 

@@ -7,7 +7,7 @@ Palet: token DESIGN_SPEC 1.1 + palet induk ART_DIRECTION 2.4, tanpa anti-aliasin
 diberi tiga nada dengan cahaya dari kiri atas, lalu garis luar 1 px #0E0A1C.
 
 `--salin` (run ui1-komponen-bengkel) memasang ke assets/sprites/ui/ HANYA yang dipakai layar yang sudah dipasang
-(daftar di pasang.py: tombol, panel, kartu, chip, papan alat, ikon 24 dan glif 12 yang dipakai bengkel). Aset lain belum dipasang;
+(daftar di pasang.py: tombol, panel, kartu, chip, struk, koran (kotak, tombol tinta, kertas, foto), papan alat, ikon 24, lencana 32, dan glif 12 yang dipakai bengkel, layar hasil, dan halaman koran). Aset lain belum dipasang;
 porting ke Godot dikerjakan bertahap (docs/design/redesain/README.md).
 
 Menjalankan (dari root repo, butuh pillow):
@@ -633,13 +633,18 @@ def salin_ke_assets(dst=SALIN_KE):
     """Pasang aset yang dipakai ke `dst`: bingkai apa adanya, ikon 24 dan glif 12 dipotong per sel dari sheet (piksel sama dengan sheet)."""
     dst = Path(dst)
     dst.mkdir(parents=True, exist_ok=True)
-    for sumber, tujuan in {**pasang.TOMBOL, **pasang.PANEL, **pasang.PAPAN}.items():
+    for sumber, tujuan in {**pasang.TOMBOL, **pasang.PANEL, **pasang.KORAN, **pasang.PAPAN}.items():
         shutil.copyfile(OUT / f'{sumber}.png', dst / f'{tujuan}.png')
     ikon = Image.open(OUT / 'ikon24.png').convert('RGBA')
     urutan = META['ikon24']['urutan']
     for nama, tujuan in pasang.IKON24.items():
         i = urutan.index(nama)
         ikon.crop((i * 24, 0, i * 24 + 24, 24)).save(dst / f'{tujuan}.png')
+    lencana32 = Image.open(OUT / 'lencana32.png').convert('RGBA')
+    urutan32 = META['lencana32']['urutan']
+    for nama, tujuan in pasang.LENCANA32.items():
+        i = urutan32.index(nama)
+        lencana32.crop((i * 32, 0, i * 32 + 32, 32)).save(dst / f'{tujuan}.png')
     glif = Image.open(OUT / 'glif12.png').convert('RGBA')
     kolom, baris = META['glif12']['kolom'], META['glif12']['baris']
     for (nama, warna), tujuan in pasang.GLIF12.items():

@@ -357,20 +357,32 @@ const WAKTU_MS_PER_DETIK: float = 1000.0
 const HUD_STRIP_ATAS_TINGGI_PX: int = 48
 ## Jarak panel HUD dari tepi layar, piksel game.
 const HUD_MARGIN_TEPI_PX: int = 8
-## Jarak panel kecepatan dari tepi layar sisi stick, piksel game (DESIGN_SPEC 3.5: x 210).
-const HUD_PANEL_KECEPATAN_GESER_PX: int = 210
-## Lebar panel kecepatan, piksel game (DESIGN_SPEC 3.5).
-const HUD_PANEL_KECEPATAN_LEBAR_PX: int = 170
+## Jarak panel kecepatan dari tepi layar sisi stick, piksel game. Run ui2-semua-layar bagian C2 (V-9 H-1): 210 -> 196, 4 px di luar zona stick (x sampai 192), supaya panel kecepatan dan stamina berdampingan (lebih lebar) dan panel koran tetap di luar zona tap bel.
+const HUD_PANEL_KECEPATAN_GESER_PX: int = 196
+## Lebar minimum panel kecepatan dan stamina berdampingan, piksel game (V-9 H-1: 2 x `HUD_PANEL_BAWAH_PAD_X_PX` + kolom kecepatan + jarak + kolom stamina; dulu 170 untuk dua bar bertumpuk).
+const HUD_PANEL_KECEPATAN_LEBAR_PX: int = 220
 ## Isi panel HUD: jarak ke tepi atas dan bawah, piksel game (DESIGN_SPEC 1.3).
 const HUD_PANEL_PAD_Y_PX: int = 5
 ## Isi panel HUD: jarak ke tepi kiri dan kanan, piksel game (DESIGN_SPEC 1.3).
 const HUD_PANEL_PAD_X_PX: int = 7
-## Tinggi bar kecepatan dan stamina termasuk garis luar 1 px, piksel game (DESIGN_SPEC 1.3).
-const HUD_BAR_TINGGI_PX: int = 7
+## Tinggi bar kecepatan dan stamina termasuk garis luar 1 px, piksel game (DESIGN_SPEC 1.3; V-9 H-1: 7 -> 9 karena dua bar berdampingan hemat tinggi panel).
+const HUD_BAR_TINGGI_PX: int = 9
+## Letak tanda batas ngebut di bar kecepatan sebagai pecahan lebar isi bar (garis tegak `WARN`). Nilai 0,9 BUKAN pilihan desain bebas, melainkan hasil hitung dari kode: bar = kecepatan / `KECEPATAN_NGEBUT_UD` (6,0), dan sprite beralih ke ngebut di atas
+## `SPRITE_AMBANG_NGEBUT` (0,80 dari kekuatan stick); kecepatan di kekuatan itu = `BikeMotion.kecepatan_tujuan_ud(0,80)` = lerp(`KECEPATAN_SANTAI_UD` 3,0, `KECEPATAN_NGEBUT_UD` 6,0, 0,80) = 5,4 u/d, jadi 5,4 / 6,0 = 0,9. Tanda 0,8 (angka DESIGN_SPEC lama) menyesatkan: jatuh di 4,8 u/d,
+## sedangkan sprite baru ngebut di 5,4 u/d. `tests/tes_tampil_layar_c.gd` menurunkan angka ini dari `BikeMotion` dan `Config` supaya tidak bisa melenceng diam-diam.
+const HUD_BAR_TANDA_PECAHAN: float = 0.9
+## Panel bawah (kecepatan, stamina, koran; V-9 H-1): jarak isi ke samping dari tepi luar panel, lebar kolom kecepatan dan kolom stamina (label KECEPATAN 10 px 61 + jarak 6 + angka "3.0 u/d" 12 px 44; STAMINA 49 + 6 + LELAH 34), jarak antar kolom,
+## tinggi baris label (tinggi baris Lexend 12 px; dua kolom sejajar), dan jarak baris label ke bar atau deret ikon, piksel game.
+const HUD_PANEL_BAWAH_PAD_X_PX: int = 6
+const HUD_BAWAH_KOLOM_KECEPATAN_PX: int = 111
+const HUD_BAWAH_KOLOM_STAMINA_PX: int = 89
+const HUD_BAWAH_KOLOM_JARAK_PX: int = 8
+const HUD_BAWAH_BARIS_TINGGI_PX: int = 15
+const HUD_BAWAH_ISI_JARAK_PX: int = 2
 ## Bar stamina berganti warna dari `ACCENT` ke `FAIL` di bawah nilai ini (DESIGN_SPEC 3.5, usulan).
 const HUD_STAMINA_AMBANG_RENDAH: float = 30.0
-## Panel sisa koran: jarak dari tepi layar sisi stick, piksel game (DESIGN_SPEC 3.5: x 400). Celah ke panel kecepatan = sisa sesudah panel kecepatan.
-const HUD_PANEL_KORAN_GESER_PX: int = 400
+## Panel sisa koran: jarak dari tepi layar sisi stick, piksel game (V-9 H-1: 400 -> 424 = geser kecepatan 196 + lebar 220 + celah 8). Celah ke panel kecepatan = sisa sesudah panel kecepatan.
+const HUD_PANEL_KORAN_GESER_PX: int = 424
 ## Panel sisa koran: jumlah ikon koran paling banyak (DESIGN_SPEC 3.5).
 const HUD_KORAN_IKON_MAKS: int = 8
 ## Panel sisa koran: sisi ikon koran, piksel game (DESIGN_SPEC 3.5).
@@ -395,12 +407,8 @@ const HUD_JEDA_GAMBAR_PX: int = 24
 const HUD_JEDA_GAMBAR_X_PX: int = 26
 ## Tombol jeda: letak pojok kiri atas gambar dari tepi atas layar, piksel game.
 const HUD_JEDA_GAMBAR_Y_PX: int = 8
-## Tombol jeda: lebar satu batang ikon, piksel game.
-const HUD_JEDA_BATANG_LEBAR_PX: int = 3
-## Tombol jeda: tinggi batang ikon, piksel game.
-const HUD_JEDA_BATANG_TINGGI_PX: int = 10
-## Tombol jeda: celah di antara dua batang ikon, piksel game.
-const HUD_JEDA_BATANG_CELAH_PX: int = 4
+## Tombol jeda (V-9 H-3, tampilan tombol biasa 9-slice): sisi glif jeda 12x12 di tengah wajah tombol, piksel game.
+const HUD_JEDA_GLIF_PX: int = 12
 ## Layar jeda: lebar minimum tombol "Lanjut", piksel game (tingginya `HUD_TOMBOL_TINGGI_PX`).
 const JEDA_TOMBOL_LEBAR_PX: int = 96
 ## Objek berkala di sisi seberang: berapa ubin di belakang sepeda yang masih disiapkan.
@@ -756,18 +764,60 @@ const ZONA_AMAN_TOLERANSI_PX: float = 0.000001
 
 ## Layar hasil terbuka sesudah garis akhir bila kecepatan sepeda paling tinggi sekian u/d (sudah berhenti) dan tidak ada koran terbang.
 const HASIL_BERHENTI_TOLERANSI_UD: float = 0.000001
-## Panel layar hasil: lebar minimum, piksel game (muat di 640 dengan teks Indonesia yang lebih panjang).
-const HASIL_PANEL_LEBAR_PX: int = 300
-## Panel layar hasil: jarak antar baris dan antar bagian, piksel game.
-const HASIL_JARAK_BARIS_PX: int = 2
-## Layar hasil, kolom kanan (run 6A2 bagian C: reputasi, pelanggan, milestone): lebar minimum isi kolom, jarak ke kolom kiri, tinggi dan lebar minimum bilah milestone, dan sisi ikon (lencana, reputasi), piksel game.
-const HASIL_KANAN_LEBAR_PX: int = 180
-const HASIL_KOLOM_JARAK_PX: int = 8
+## Tinggi dan lebar minimum bilah milestone, tebal garis luarnya (piksel game di tiap sisi). Bilah di kartu target layar hasil.
 const HASIL_BILAH_TINGGI_PX: int = 7
 const HASIL_BILAH_LEBAR_MIN_PX: int = 60
-## Tebal garis luar bilah milestone (px game) di tiap sisi.
 const HASIL_BILAH_TEPI_PX: int = 1
-const HASIL_IKON_PX: int = 14
+
+## --- Layar hasil sebagai struk antaran (run ui2-semua-layar bagian A; kanvas Hasil.dc.html dan Hasil_*.dc.html, README redesain 3 butir 6 dan 4; usulan, dinilai di HP) ---
+## Margin layar minimum (dipakai max dengan inset aman), tinggi baris judul (struk dan kolom samping berada di margin atas + ini; kanvas y 44 = 12 + 32), dan jarak struk ke kolom samping, piksel game.
+const HASIL_MARGIN_PX: int = 12
+const HASIL_BARIS_ATAS_PX: int = 32
+const HASIL_STRUK_KOLOM_JARAK_PX: int = 10
+## Kolom samping dimulai sekian piksel di bawah margin atas (32 = sejajar dengan struk di kanvas; 0 = sejajar dengan judul bila kolom terpadat tidak muat di atas tombol aksi).
+const HASIL_KOLOM_ATAS_PX: int = 32
+## Lebar struk tanpa kolom samping (rute yang dijalankan sendiri; struk ke tengah), lebar kolom samping (reputasi, pelanggan, milestone) di lebar 640 dan di lebar >= `HASIL_LEBAR_LEBAR_MIN_PX`.
+const HASIL_STRUK_TANPA_SAMPING_PX: int = 360
+const HASIL_KOLOM_LEBAR_PX: int = 236
+const HASIL_KOLOM_LEBAR_LEBAR_PX: int = 300
+const HASIL_LEBAR_LEBAR_MIN_PX: int = 800
+## Struk: jarak isi ke tepi luar (sudah termasuk tepi 9-slice 4: kanvas padding 8 samping, 6 atas, 8 bawah; bawah 10 supaya kasus terpadat muat dengan inset aman bawah 20), jarak antar baris, jarak antar kelompok angka Terkirim dan Koin, tinggi baris garis sobek, tinggi minimum baris label-nilai, piksel game.
+const HASIL_STRUK_PAD_X_PX: int = 12
+const HASIL_STRUK_PAD_ATAS_PX: int = 10
+const HASIL_STRUK_PAD_BAWAH_PX: int = 10
+const HASIL_STRUK_JARAK_PX: int = 2
+const HASIL_ANGKA_JARAK_PX: int = 16
+const HASIL_SOBEK_TINGGI_PX: int = 14
+const HASIL_BARIS_TINGGI_PX: int = 15
+## Garis sobek: lebar dan tinggi takik tiket (`ui_struk_takik.png`), jarak garis putus-putus dari tepi struk, panjang goresan dan celahnya; garis titik-titik penuntun baris: jarak dari dasar baris dan jarak antar titik, piksel game.
+const HASIL_TAKIK_LEBAR_PX: int = 6
+const HASIL_TAKIK_TINGGI_PX: int = 10
+const HASIL_SOBEK_TEPI_PX: int = 6
+const HASIL_SOBEK_GORES_PX: int = 3
+const HASIL_TITIK_DASAR_PX: int = 5
+const HASIL_TITIK_JARAK_PX: int = 2
+## Ikon: koin di samping angka Koin, glif centang di samping Terkirim dan misi, bintang reputasi, lencana tingkat baru (24) dan lencana target (32), piksel game.
+const HASIL_IKON_BESAR_PX: int = 24
+const HASIL_GLIF_PX: int = 12
+const HASIL_LENCANA_TARGET_PX: int = 32
+## Kartu di kolom samping: jarak antar kartu, jarak antar baris di dalam kartu, tinggi kartu reputasi, jarak isi kartu ke garis (di luar tepi 4), jarak antar baris tingkat baru, piksel game.
+const HASIL_KARTU_JARAK_PX: int = 3
+const HASIL_KARTU_BARIS_JARAK_PX: int = 2
+const HASIL_KARTU_REPUTASI_PX: int = 40
+const HASIL_KARTU_PAD_PX: int = 2
+const HASIL_BARU_JARAK_PX: int = 2
+## Paling banyak sekian kali tata letak layar hasil ditata ulang per frame karena ukuran struk atau kolom samping berubah (bungkus kata menentukan tinggi sesudah Container selesai; mencegah berputar).
+const HASIL_SUSUN_ULANG_MAKS: int = 8
+## Jarak minimum kolom samping ke tombol aksi di bawahnya, piksel game.
+const HASIL_KOLOM_TOMBOL_JARAK_PX: int = 6
+## Layar hasil di atas lingkungan yang baru dilalui (run ui2-semua-layar bagian E, V-10, usulan, dinilai di HP): alpha lapisan gelap `UI_BG` di atas dunia rute, alpha tekstur struk dan kartu kolom samping, dan faktor gelap RGB tekstur itu
+## (keduanya lewat `StyleBoxTexture.modulate_color`; PNG tidak diedit). Faktor gelap perlu karena teks hijau `OK` (L 0,45) di atas struk hanya 7,34:1 dengan struk buram: sedikit saja latar terang yang tembus sudah menjatuhkannya di bawah 7:1.
+## Tanpa dunia (layar hasil sendiri tanpa rute): latar gelap polos buram dan panel buram tanpa penggelapan, seperti sebelum V-10. Nilai terpilih dan kontras terburuk terukur di LOG bagian E.
+const HASIL_LATAR_ALPHA: float = 0.75
+const HASIL_PANEL_ALPHA: float = 0.72
+const HASIL_PANEL_GELAP: float = 0.5
+const HASIL_ALPHA_TANPA_DUNIA: float = 1.0
+const HASIL_PANEL_GELAP_TANPA_DUNIA: float = 1.0
 
 ## --- Hari, seed, dan save (Fase 4 run 4A, DATA_SCHEMA 4, rule save-system; usulan, alur hari berurutan ini prototype yang tidak mengunci struktur sesi ROADMAP 5) ---
 
@@ -901,26 +951,69 @@ const MILESTONE_BARU_MAKS_TAMPIL: int = 3
 ## Volume bunyi milestone tercapai, dB (lembut: sekitar 4 dB di bawah bunyi misi selesai yang sudah -3, tidak menutupi bunyi lain).
 const AUDIO_MILESTONE_VOLUME_DB: float = -4.0
 
-## --- Layar halaman depan koran (DESIGN_SPEC 4, 1.2; rule ui-scenes; run 4A, usulan; dinilai lewat uji HP) ---
+## --- Layar halaman depan koran (DESIGN_SPEC 4, 1.2; rule ui-scenes; run 4A, usulan; dinilai lewat uji HP; tata ulang run ui2-semua-layar bagian B dari kanvas Koran*.dc.html) ---
 
 ## Tepi layar koran ke isi, piksel game (sebelum zona aman).
 const KORAN_MARGIN_PX: int = 12
-## Jarak antar blok di layar koran, piksel game.
-const KORAN_JARAK_PX: int = 8
-## Lebar kolom berita (nama, berita utama, berita ringan) dibanding kolom misi (misi, Berangkat): bobot regangan `size_flags_stretch_ratio`.
-const KORAN_KOLOM_BERITA_RASIO: float = 0.55
-## Bobot regangan kolom misi.
-const KORAN_KOLOM_MISI_RASIO: float = 0.45
-## Ukuran huruf teks tombol di layar koran, piksel game (lebih besar dari teks HUD supaya terbaca sekilas).
-const KORAN_TOMBOL_HURUF_PX: int = 10
-## Tombol Ambil dan Lewati: lebar, piksel game (tinggi `HUD_TOMBOL_TINGGI_PX`, >= 44 dp di A54).
-const KORAN_TOMBOL_PILIH_LEBAR_PX: int = 96
-## Tombol Berangkat: lebar, piksel game.
-const KORAN_TOMBOL_BERANGKAT_LEBAR_PX: int = 136
-## Tebal garis pemisah halaman koran, piksel game.
-const KORAN_GARIS_TEBAL_PX: int = 2
-## Tebal garis tombol terpilih dan panel misi, piksel game (tombol tidak terpilih 1 px: bentuk, bukan hanya warna).
-const KORAN_BINGKAI_TERPILIH_PX: int = 3
+## Jarak antar blok di kolom misi, piksel game (kanvas: gap 5).
+const KORAN_MISI_JARAK_PX: int = 5
+## Jarak antar blok di kolom berita, piksel game (kanvas: gap 6).
+const KORAN_BERITA_JARAK_PX: int = 6
+## Lebar kolom misi di lebar viewport < `KORAN_LEBAR_LEBAR_MIN_PX` dan di lebar >= itu (kanvas: 236 dan 280).
+const KORAN_MISI_LEBAR_PX: int = 236
+const KORAN_MISI_LEBAR_LEBAR_PX: int = 280
+const KORAN_LEBAR_LEBAR_MIN_PX: int = 800
+## Jarak kolom berita ke garis tegak dan garis tegak ke kolom misi (kanvas: 6 + garis 1 + 6), dan tebal garis tegak.
+const KORAN_KOLOM_JARAK_PX: int = 6
+const KORAN_GARIS_TEGAK_PX: int = 1
+## Garis ganda di bawah kepala (kanvas `.k-ganda`): garis atas 2, celah 1, garis bawah 1 (tinggi total 4), dan jarak kepala ke garis dan garis ke isi.
+const KORAN_GANDA_ATAS_PX: int = 2
+const KORAN_GANDA_CELAH_PX: int = 1
+const KORAN_GANDA_BAWAH_PX: int = 1
+const KORAN_GANDA_JARAK_PX: int = 6
+## Kepala: nama koran Lilita One 32 (tinggi baris 38) dinaikkan sekian px ke atas margin (seperti kanvas: kotak baris 33,6 px berpusat di glif) dan jarak ke garis ganda; sehingga garis ganda jatuh di y 46 (margin 12 + 34) seperti kanvas.
+const KORAN_KEPALA_NAIK_PX: int = 5
+const KORAN_KEPALA_BAWAH_PX: int = 1
+## "Hari N · Perumahan Melati" diturunkan sekian px dari tepi atas kepala supaya garis dasarnya sejajar nama koran (kanvas: top 26 di margin 12 + 13).
+const KORAN_HARI_TURUN_PX: int = 13
+## Jarak antar baris label bungkus kata (tambahan di atas tinggi huruf; bawaan Godot 3): headline Lilita One 24 dan 16 dirapatkan seperti kanvas (tinggi baris 1,05 em), teks Lexend 11 sedikit rapat.
+const KORAN_JARAK_BARIS_UTAMA_PX: int = -3
+const KORAN_JARAK_BARIS_JUDUL_PX: int = -2
+const KORAN_JARAK_BARIS_TEKS_PX: int = 1
+## Foto berita utama 100x62 dan jarak foto ke headline (kanvas: gap 8).
+const KORAN_FOTO_LEBAR_PX: int = 100
+const KORAN_FOTO_TINGGI_PX: int = 62
+const KORAN_FOTO_JARAK_PX: int = 8
+## Efek berita utama yang punya foto dan ikon 24 (urutan sejajar; efek lain tanpa foto dan tanpa ikon: "jalan dan lampu dulu", Spesifikasi.dc.html).
+const KORAN_EFEK_FOTO: Array[String] = ["jalan_diperbaiki", "mati_lampu"]
+const KORAN_NAMA_FOTO: Array[String] = ["foto_jalan", "foto_lampu"]
+const KORAN_NAMA_IKON: Array[String] = ["icon24_kerucut", "icon24_bohlam"]
+## Ikon 24 di judul bagian (berita utama, misi) dan jarak ikon ke label.
+const KORAN_IKON_PX: int = 24
+const KORAN_IKON_JARAK_PX: int = 6
+## Isi kotak misi 9-slice (tepi `UI_PANEL_SLICE_PX` sudah termasuk): samping, atas, bawah (kanvas: padding 4 6 6 di dalam bingkai 4).
+const KORAN_PANEL_PAD_X_PX: int = 10
+const KORAN_PANEL_PAD_ATAS_PX: int = 8
+const KORAN_PANEL_PAD_BAWAH_PX: int = 10
+## Jarak antar tombol Ambil dan Lewati.
+const KORAN_TOMBOL_JARAK_PX: int = 6
+## Kotak hiasan "Iklan baris" di bawah kolom berita: lebar paling besar, tinggi tetap, tinggi paling kecil supaya label dan satu baris hiasan muat (selain itu kotak tidak tampil), isi samping dan atas bawah, panjang goresan garis putus.
+const KORAN_IKLAN_LEBAR_MAKS_PX: int = 220
+const KORAN_IKLAN_TINGGI_PX: int = 54
+const KORAN_IKLAN_TINGGI_MIN_PX: int = 28
+const KORAN_IKLAN_PAD_X_PX: int = 6
+const KORAN_IKLAN_PAD_Y_PX: int = 4
+const KORAN_IKLAN_GORES_PX: int = 3
+## Garis hiasan pengganti teks (kanvas: batang 2 px KORAN_KERTAS_2): tinggi, jarak antar baris, jarak antar kolom, dan lebar tiap batang (pecahan dari lebar kolomnya, kiri ke kanan lalu ke bawah, dua kolom).
+const KORAN_HIASAN_TINGGI_PX: int = 2
+const KORAN_HIASAN_JARAK_BARIS_PX: int = 3
+const KORAN_HIASAN_JARAK_KOLOM_PX: int = 10
+const KORAN_HIASAN_POLA: Array[float] = [1.0, 1.0, 1.0, 0.8, 0.6, 1.0]
+## Kotak notifikasi save: tinggi paling kecil, isi samping dan atas bawah, jarak glif ke teks (kanvas: 42, padding 5 6, gap 4).
+const KORAN_NOTIF_TINGGI_MIN_PX: int = 42
+const KORAN_NOTIF_PAD_X_PX: int = 6
+const KORAN_NOTIF_PAD_Y_PX: int = 5
+const KORAN_NOTIF_JARAK_PX: int = 4
 ## Kontras minimum teks terhadap latar di layar koran (rumus WCAG, rasio).
 const KORAN_KONTRAS_TEKS_MIN: float = 7.0
 ## Kontras minimum garis tombol dan panel terhadap latar (komponen UI, WCAG 1.4.11).
@@ -1053,10 +1146,10 @@ const TUTORIAL_JUMLAH_LANGKAH_TANPA_MISI: int = 3
 ## lebar piksel game (tinggi `HUD_TOMBOL_TINGGI_PX` 42, >= 44 dp di A54). Di kanan area sentuh jeda (berakhir x 59) dan di kiri panel progres (mulai sekitar x 190 di 640).
 const TUTORIAL_LEWATI_X_PX: int = 66
 const TUTORIAL_LEWATI_LEBAR_PX: int = 64
-## Panel petunjuk tutorial: pojok kiri atas dari tepi layar sebelum zona aman, di bawah kartu misi; lebar minimum teks piksel game.
+## Panel petunjuk tutorial: pojok kiri atas dari tepi layar sebelum zona aman, di bawah kartu misi; lebar minimum panel piksel game (run ui2-semua-layar bagian C: 150 -> 176 seperti kanvas Tutorial.dc.html, teks 10 px).
 const TUTORIAL_PANEL_X_PX: int = 26
 const TUTORIAL_PANEL_Y_PX: int = 88
-const TUTORIAL_PANEL_LEBAR_PX: int = 150
+const TUTORIAL_PANEL_LEBAR_PX: int = 176
 
 ## --- Kondisi sepeda: ban, rem, rantai (GDD 12, BALANCING 8; run 6A1, usulan; dinilai lewat uji HP) ---
 ## Kondisi 0,0 (rusak total) sampai 1,0 (baru) per komponen. Tiga tingkat dari ambang: BAIK (>= `KONDISI_AMBANG_AUS`), AUS (tanda peringatan, efek masih nol),
@@ -1187,28 +1280,28 @@ const BENGKEL_BARIS_ATAS_PX: int = 34
 const BENGKEL_KOLOM_SERVIS_FRAKSI: float = 0.48
 const BENGKEL_KOLOM_JARAK_PX: int = 8
 ## Isi panel servis berjarak sekian piksel dari tepi (garis 4 + padding 4), jarak antar anak panel servis, tinggi baris judul bagian dan baris catatan ongkos, piksel game.
-const BENGKEL_PANEL_PAD_PX: int = 8
+const BENGKEL_PANEL_PAD_PX: int = 6
 const BENGKEL_PANEL_JARAK_PX: int = 4
-const BENGKEL_BAGIAN_TINGGI_PX: int = 12
+const BENGKEL_BAGIAN_TINGGI_PX: int = 14
 ## Judul bagian Upgrade berada di atas latar (bukan di dalam panel): diberi pelat `HUD_PANEL` dengan jarak samping sekian piksel supaya kontras teksnya tidak bergantung pada lampu di latar.
 const BENGKEL_BAGIAN_PELAT_PAD_PX: int = 3
-const BENGKEL_CATATAN_TINGGI_PX: int = 12
+const BENGKEL_CATATAN_TINGGI_PX: int = 14
 ## Jarak antar kartu upgrade dan geseran ke bawah judul bagian Upgrade, piksel game.
 const BENGKEL_UPGRADE_JARAK_PX: int = 6
 const BENGKEL_UPGRADE_ATAS_PX: int = 4
 ## Tinggi kartu servis, kartu upgrade tingkat tunggal, dan kartu upgrade dengan jejak tingkat I, II, III (komponen bertingkat), piksel game.
 const BENGKEL_KARTU_SERVIS_PX: int = 50
-const BENGKEL_KARTU_UPGRADE_PX: int = 62
+const BENGKEL_KARTU_UPGRADE_PX: int = 70
 const BENGKEL_KARTU_UPGRADE_JEJAK_PX: int = 72
 ## Isi kartu: jarak antar kolom, jarak tepi kiri (garis 4 + padding 4) dan kanan (garis 4), jarak antar baris teks servis dan upgrade, jarak kotak kondisi ke teks status, jarak antar chip, piksel game.
-const BENGKEL_KARTU_JARAK_PX: int = 6
-const BENGKEL_KARTU_PAD_AWAL_PX: int = 8
+const BENGKEL_KARTU_JARAK_PX: int = 3
+const BENGKEL_KARTU_PAD_AWAL_PX: int = 6
 const BENGKEL_KARTU_PAD_AKHIR_PX: int = 4
-const BENGKEL_KARTU_TEKS_JARAK_SERVIS_PX: int = 3
+const BENGKEL_KARTU_TEKS_JARAK_SERVIS_PX: int = 2
 const BENGKEL_KARTU_TEKS_JARAK_UPGRADE_PX: int = 2
 const BENGKEL_KARTU_STATUS_JARAK_PX: int = 5
 ## Jarak antar baris bila teks status turun ke bawah kotak kondisi (kolom teks sempit), piksel game.
-const BENGKEL_KARTU_STATUS_BARIS_PX: int = 2
+const BENGKEL_KARTU_STATUS_BARIS_PX: int = 1
 const BENGKEL_JEJAK_JARAK_PX: int = 2
 ## Tampilan: ikon komponen (`ui_icon24_*`), glif (`ui_glif_*`), dan ikon koin di chip, sisi persegi piksel game.
 const BENGKEL_IKON_PX: int = 24
@@ -1216,8 +1309,12 @@ const BENGKEL_GLIF_PX: int = 12
 const BENGKEL_KOIN_PX: int = 14
 ## Panel galat data upgrade: jarak isi ke tepi di luar garis kartu (kanvas padding 8), jarak glif ke teks.
 const BENGKEL_GALAT_PAD_PX: int = 8
-## Deskripsi kartu upgrade paling banyak sekian baris; sisanya dipotong dengan elipsis supaya kartu tetap 62 tinggi dan tiga upgrade muat tanpa scroll (QA-001; data nyata 1 sampai 2 baris).
-const BENGKEL_DESKRIPSI_BARIS_MAKS: int = 2
+## Deskripsi kartu upgrade tingkat tunggal paling banyak sekian baris; sisanya dipotong dengan elipsis supaya kartu tetap 70 tinggi dan tiga upgrade muat tanpa scroll (QA-001; V-8: font 11 membuat data nyata 2 sampai 3 baris di kolom 640).
+const BENGKEL_DESKRIPSI_BARIS_MAKS: int = 3
+## Deskripsi kartu upgrade BERTINGKAT (ada baris jejak I, II, III di bawahnya) paling banyak sekian baris.
+const BENGKEL_DESKRIPSI_BARIS_JEJAK_MAKS: int = 2
+## Jarak antar baris deskripsi kartu upgrade, piksel game (bawaan Label 3; 1 supaya tiga baris huruf 11 muat di kartu 70 dan tiga kartu muat di atas "Hari berikutnya" juga dengan inset aman bawah).
+const BENGKEL_DESKRIPSI_JARAK_BARIS_PX: int = 1
 ## Panggung sepeda: tinggi minimum bila ruang sempit, ukuran sepeda kecil (`ui_bengkel_sepeda_kecil.png`) dan papan alat (`ui_bengkel_papan_alat.png`), jarak sepeda dari bawah panggung, lebar latar.
 const BENGKEL_PANGGUNG_MIN_PX: int = 40
 const BENGKEL_SEPEDA_LEBAR_PX: int = 116
@@ -1418,15 +1515,15 @@ const UI_TOMBOL_FOKUS_JARAK_PX: int = 2
 const UI_GARIS_PX: int = 1
 ## Isi sakelar: jarak tambahan kiri dan kanan di luar tepi 9-slice (CSS `padding: 0 4px 2px`).
 const UI_TOMBOL_SAKELAR_PAD_X_PX: int = 4
-## Tinggi chip kecil, normal, dan besar, serta jarak isi ke samping di luar tepi 9-slice, piksel game.
-const UI_CHIP_TINGGI_KECIL_PX: int = 14
-const UI_CHIP_TINGGI_PX: int = 18
-const UI_CHIP_TINGGI_BESAR_PX: int = 24
+## Tinggi chip kecil, normal, dan besar (V-8: 16, 20, 26 untuk huruf 10, 12, 14), serta jarak isi ke samping di luar tepi 9-slice, piksel game.
+const UI_CHIP_TINGGI_KECIL_PX: int = 16
+const UI_CHIP_TINGGI_PX: int = 20
+const UI_CHIP_TINGGI_BESAR_PX: int = 26
 const UI_CHIP_PAD_X_KECIL_PX: int = 1
 const UI_CHIP_PAD_X_PX: int = 2
 const UI_CHIP_PAD_X_BESAR_PX: int = 4
-## Chip: jarak isi ke atas dan bawah di luar tepi 9-slice per ukuran (lebih kecil dari tepi: tinggi chip tetap 14, 18, 24 walau tinggi baris teks Lexend 10, 13, 15), dan jarak antar isi (glif, ikon, teks), piksel game.
-const UI_CHIP_PAD_Y_KECIL_PX: int = 2
+## Chip: jarak isi ke atas dan bawah di luar tepi 9-slice per ukuran (lebih kecil dari tepi: tinggi chip tetap 16, 20, 26 walau tinggi baris teks Lexend 13, 15, 18), dan jarak antar isi (glif, ikon, teks), piksel game.
+const UI_CHIP_PAD_Y_KECIL_PX: int = 1
 const UI_CHIP_PAD_Y_PX: int = 2
 const UI_CHIP_PAD_Y_BESAR_PX: int = 3
 const UI_CHIP_JARAK_PX: int = 3
@@ -1435,3 +1532,33 @@ const UI_CHIP_JARAK_BESAR_PX: int = 4
 const KONDISI_BESAR_KOTAK_PX: int = 8
 const KONDISI_BESAR_KOTAK_JARAK_PX: int = 2
 const KONDISI_BESAR_SERU_JARAK_PX: int = 2
+
+## --- Layar jeda, tutorial, dan banner (run ui2-semua-layar bagian C1; kanvas Jeda*.dc.html, Tutorial.dc.html, Banner.dc.html; usulan, dinilai di HP) ---
+## Lapisan di atas jalan saat jeda: warna `HUD_PANEL` dengan alpha ini (V-2: 72 %, bukan alpha 84 % token supaya jalan tetap terbaca; token tidak diubah).
+const JEDA_LAPISAN_ALPHA: float = 0.72
+## Panel jeda: lebar, isi berjarak ke samping, atas, dan bawah dari tepi luar (tepi 9-slice 4 + padding 4, 6, 4 kanvas), jarak antar isi, tinggi baris judul dan jarak glif ke judul, piksel game.
+const JEDA_PANEL_LEBAR_PX: int = 232
+const JEDA_PANEL_PAD_X_PX: int = 8
+const JEDA_PANEL_PAD_ATAS_PX: int = 10
+const JEDA_PANEL_PAD_BAWAH_PX: int = 8
+const JEDA_ISI_JARAK_PX: int = 6
+const JEDA_KEPALA_TINGGI_PX: int = 28
+const JEDA_KEPALA_JARAK_PX: int = 6
+## Garis pemisah di panel jeda: jarak ke tombol di atas dan di bawahnya di luar `JEDA_ISI_JARAK_PX`, piksel game.
+const JEDA_PISAH_MARGIN_PX: int = 2
+## Tombol Lanjut: jarak glif ke teks, piksel game. Sakelar: jarak isi ke samping di luar `UI_TOMBOL_SAKELAR_PAD_X_PX` (kanvas padding 8, bukan 4), piksel game.
+const JEDA_LANJUT_JARAK_PX: int = 4
+const JEDA_SAKELAR_PAD_TAMBAH_PX: int = 4
+## Kenop sakelar (digambar dari kode, `TampilJeda.KENOP_*`): ukuran, piksel game.
+const JEDA_KENOP_LEBAR_PX: int = 22
+const JEDA_KENOP_TINGGI_PX: int = 12
+## Titik langkah tutorial: sisi titik dan jarak antar titik, piksel game (kanvas: 4x4, jarak 2, cincin gelap 1 px di luar titik terisi). Jarak label langkah ke baris kalimat dan glif ke kalimat.
+const TUTORIAL_TITIK_PX: int = 4
+const TUTORIAL_TITIK_JARAK_PX: int = 2
+const TUTORIAL_BARIS_JARAK_PX: int = 4
+const TUTORIAL_LABEL_JARAK_PX: int = 6
+## Banner rute selesai dan galat muat: isi berjarak ke samping dari tepi luar panel, jarak glif ke judul, piksel game (kanvas padding 0 10 + tepi 4, tinggi 30).
+const RUTE_BANNER_PAD_X_PX: int = 12
+const RUTE_BANNER_JARAK_PX: int = 6
+## Gelembung petunjuk dari pelanggan: jarak label "PELANGGAN:" ke teks, piksel game. Lebar total baris tetap `MISI_PETUNJUK_LEBAR_PX`.
+const MISI_PETUNJUK_JARAK_PX: int = 4

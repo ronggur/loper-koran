@@ -141,6 +141,7 @@ func _siapkan_dunia() -> void:
 	_panel_akhir.main_lagi_diminta.connect(main_lagi)
 	_layar_hasil.main_lagi_diminta.connect(main_lagi)
 	_layar_hasil.bengkel_diminta.connect(bengkel_diminta.emit)
+	_layar_hasil.atur_dunia(true)
 	_susun(_benih)
 
 
@@ -196,9 +197,19 @@ func _buka_hasil() -> void:
 	_panel_akhir.tampilkan(false)
 	_hud.visible = false
 	_tutorial_node.visible = false
+	_atur_lapisan_dunia_tampil(false)
 	_kontrol.lepas_semua()
 	_kontrol.set_process_input(false)
 	hasil_dibuka.emit(_angka_hasil)
+
+
+## Layar hasil kini di atas dunia yang tembus pandang (V-10): selain HUD dan tutorial (disembunyikan di `_buka_hasil`), lapisan kontrol sentuh (stick, tanda "tidak ada sasaran") dan umpan melayang ("+15", TEPAT) tidak boleh
+## tembus di baliknya. `tampil` false saat layar hasil terbuka, true lagi sesudah "Main lagi". Hanya mengubah `visible`, tanpa pemrosesan per frame.
+func _atur_lapisan_dunia_tampil(tampil: bool) -> void:
+	_umpan_gambar.visible = tampil
+	(_kontrol.get_parent() as CanvasLayer).visible = tampil
+	if not tampil:
+		_tip_node.tampilkan("")
 
 
 ## State save sesudah hari ini (pratinjau murni `DataSave.catat_hari` dari state awal dan catatan hari ini, tanpa belanja bengkel dan tanpa menulis apa pun): dasar progres milestone di layar hasil.
@@ -314,6 +325,7 @@ func _susun(benih: int) -> void:
 	_layar_hasil.tampilkan(false)
 	_hud.visible = true
 	_tutorial_node.visible = true
+	_atur_lapisan_dunia_tampil(true)
 	if not _tip_sudah:
 		_tip_sudah = true
 		_tip_sisa = TipSisiDekat.detik_awal(_hari)

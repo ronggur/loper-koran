@@ -76,61 +76,78 @@ mouse_filter = 2
 [node name="PanelKecepatan" type="PanelContainer" parent="PanelBawah/BarisBawah"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 8
 mouse_filter = 2
 
-[node name="Isi" type="VBoxContainer" parent="PanelBawah/BarisBawah/PanelKecepatan"]
+[node name="Isi" type="HBoxContainer" parent="PanelBawah/BarisBawah/PanelKecepatan"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+
+[node name="KolomKecepatan" type="VBoxContainer" parent="PanelBawah/BarisBawah/PanelKecepatan/Isi"]
+unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Baris" type="HBoxContainer" parent="PanelBawah/BarisBawah/PanelKecepatan/Isi"]
+[node name="Baris" type="HBoxContainer" parent="PanelBawah/BarisBawah/PanelKecepatan/Isi/KolomKecepatan"]
+unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 
-[node name="LabelKecepatan" type="Label" parent="PanelBawah/BarisBawah/PanelKecepatan/Isi/Baris"]
+[node name="LabelKecepatan" type="Label" parent="PanelBawah/BarisBawah/PanelKecepatan/Isi/KolomKecepatan/Baris"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
-theme_type_variation = &"HudLabel"
+theme_type_variation = &"HudLabelBawah"
 text = "HUD_KECEPATAN"
+vertical_alignment = 1
 
-[node name="LabelAngka" type="Label" parent="PanelBawah/BarisBawah/PanelKecepatan/Isi/Baris"]
+[node name="LabelAngka" type="Label" parent="PanelBawah/BarisBawah/PanelKecepatan/Isi/KolomKecepatan/Baris"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
-theme_type_variation = &"HudAngka"
+theme_type_variation = &"HudAngkaBawah"
 horizontal_alignment = 2
+vertical_alignment = 1
 
-[node name="BarKecepatan" type="Control" parent="PanelBawah/BarisBawah/PanelKecepatan/Isi"]
+[node name="BarKecepatan" type="Control" parent="PanelBawah/BarisBawah/PanelKecepatan/Isi/KolomKecepatan"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 script = ExtResource("2_bar")
 
-[node name="BarisStamina" type="HBoxContainer" parent="PanelBawah/BarisBawah/PanelKecepatan/Isi"]
+[node name="KolomStamina" type="VBoxContainer" parent="PanelBawah/BarisBawah/PanelKecepatan/Isi"]
+unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 
-[node name="LabelStamina" type="Label" parent="PanelBawah/BarisBawah/PanelKecepatan/Isi/BarisStamina"]
+[node name="BarisStamina" type="HBoxContainer" parent="PanelBawah/BarisBawah/PanelKecepatan/Isi/KolomStamina"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="LabelStamina" type="Label" parent="PanelBawah/BarisBawah/PanelKecepatan/Isi/KolomStamina/BarisStamina"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
-theme_type_variation = &"HudLabel"
+theme_type_variation = &"HudLabelBawah"
 text = "HUD_STAMINA"
+vertical_alignment = 1
 
-[node name="LabelLelah" type="Label" parent="PanelBawah/BarisBawah/PanelKecepatan/Isi/BarisStamina"]
+[node name="LabelLelah" type="Label" parent="PanelBawah/BarisBawah/PanelKecepatan/Isi/KolomStamina/BarisStamina"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 mouse_filter = 2
-theme_type_variation = &"HudLabel"
+theme_type_variation = &"HudLabelBawah"
 text = "HUD_LELAH"
 horizontal_alignment = 2
+vertical_alignment = 1
 
-[node name="BarStamina" type="Control" parent="PanelBawah/BarisBawah/PanelKecepatan/Isi"]
+[node name="BarStamina" type="Control" parent="PanelBawah/BarisBawah/PanelKecepatan/Isi/KolomStamina"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -140,14 +157,16 @@ script = ExtResource("2_bar")
 [node name="PanelKoran" type="PanelContainer" parent="PanelBawah/BarisBawah"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 8
 mouse_filter = 2
 
 [node name="IsiKoran" type="VBoxContainer" parent="PanelBawah/BarisBawah/PanelKoran"]
+unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
+alignment = 1
 
 [node name="BarisKoran" type="HBoxContainer" parent="PanelBawah/BarisBawah/PanelKoran/IsiKoran"]
+unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 
@@ -156,23 +175,26 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
-theme_type_variation = &"HudLabel"
+theme_type_variation = &"HudLabelBawah"
 text = "HUD_KORAN"
+vertical_alignment = 1
 
 [node name="LabelHabis" type="Label" parent="PanelBawah/BarisBawah/PanelKoran/IsiKoran/BarisKoran"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 mouse_filter = 2
-theme_type_variation = &"HudLabel"
+theme_type_variation = &"HudLabelBawah"
 text = "HUD_KORAN_HABIS"
+vertical_alignment = 1
 
 [node name="AngkaKoran" type="Label" parent="PanelBawah/BarisBawah/PanelKoran/IsiKoran/BarisKoran"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
-theme_type_variation = &"HudAngka"
+theme_type_variation = &"HudAngkaBawah"
 horizontal_alignment = 2
+vertical_alignment = 1
 
 [node name="DeretKoran" type="Control" parent="PanelBawah/BarisBawah/PanelKoran/IsiKoran"]
 unique_name_in_owner = true

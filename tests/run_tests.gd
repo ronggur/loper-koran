@@ -228,6 +228,22 @@ func _initialize() -> void:
 	# Run fase6a2-reputasi-pelanggan bagian C: penanda reputasi HUD, kolom kanan layar hasil (empat ukuran), integrasi RuteMain, denting milestone, tiga alur hari.
 	var scene_reputasi: TesReputasiScene = TesReputasiScene.new(check, _judul, self)
 	await scene_reputasi.jalankan()
+	# Run ui2-semua-layar bagian A: layar hasil struk (pemilihan keadaan dan tata letak murni, scene di enam ukuran, inset, kontras, huruf V-8).
+	var tampil_hasil: TesTampilHasil = TesTampilHasil.new(check, _judul)
+	tampil_hasil.jalankan()
+	var hasil_struk: TesHasilStruk = TesHasilStruk.new(check, _judul, self)
+	await hasil_struk.jalankan()
+	# Run ui2-semua-layar bagian E (V-10): layar hasil di atas lingkungan yang baru dilalui (lapisan tembus pandang, panel transparan, HUD dan lapisan dunia tersembunyi dan pulih, tanpa dunia = gelap polos, kontras teoretis).
+	var hasil_dunia: TesHasilDunia = TesHasilDunia.new(check, _judul, self)
+	await hasil_dunia.jalankan()
+	# Run ui2-semua-layar bagian B: halaman koran (pemilihan keadaan dan tata letak murni; scene ada di TesHalamanKoran di atas).
+	var tampil_koran: TesTampilKoran = TesTampilKoran.new(check, _judul)
+	tampil_koran.jalankan()
+	# Run ui2-semua-layar bagian C: layar jeda, tutorial, banner, dan HUD rute tata ulang V-9 (pemilihan tampilan murni; scene di empat lebar x kanan/kidal x inset).
+	var tampil_layar_c: TesTampilLayarC = TesTampilLayarC.new(check, _judul)
+	tampil_layar_c.jalankan()
+	var layar_c_scene: TesLayarCScene = TesLayarCScene.new(check, _judul, self)
+	await layar_c_scene.jalankan()
 	var tata_letak: TesTataLetak = TesTataLetak.new(check, _judul, self)
 	await tata_letak.jalankan()
 	var bunyi: TesBunyi = TesBunyi.new(check, _judul, self)

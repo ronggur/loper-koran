@@ -839,6 +839,8 @@ Catatan (angka, bentuk, letak yang ingin diubah dan alasannya): ____
 
 ### 8.18 Uji bengkel tata C dan komponen UI baru (run `20261023-ui1-komponen-bengkel`, belum diuji, NEEDS-MANUAL)
 
+**Catatan run UI-2 (2026-10-24):** font layar bengkel kini lebih besar (+2 px game: nama dan teks utama 12, kecil 11, label 10, chip 12; tinggi chip 16/20/26 dan kartu upgrade 70) atas keluhan pemilik "font size di bengkel terlalu kecil". Nilai ukuran font di butir 1 di bawah dinilai dengan ukuran baru ini; bila masih kurang atau sekarang terlalu besar, catat di lembar 8.18 atau 8.19.
+
 Penguji: pemilik sendiri (rule `testing`), di vivo V2108 dan A54. Semua bentuk, ukuran, dan warna usulan (DESIGN_SPEC 1.3 dan 4 baris Bengkel; `design/redesain/README.md` 3 dan 4): catat yang ingin diubah beserta alasannya, jangan diubah di sesi uji. Run ini menggantikan tampilan layar bengkel (tombol empat peran, kartu menonjol dan redup, chip harga di sebelah tombol, sepeda dengan chip kondisi, latar ilustrasi); angka ekonomi, harga, aturan servis dan upgrade, save, dan alur Hasil -> Bengkel -> Hari berikutnya tidak berubah, dan layar hasil, koran, jeda, tutorial, banner, serta HUD rute tidak berubah tampilannya. Save lama dipakai apa adanya (tidak ada migrasi). Cara membuat keadaan uji: main sampai tamat satu hari, lalu "Ke bengkel"; untuk komponen rusak biarkan sepeda menabrak beberapa kali di rute; untuk "Koin kurang" belanja sampai saldo kecil. Edit `save.json` lewat `run-as` lebih disukai daripada `pm clear` (izin pemilik 2026-10-18); catat save yang dipakai.
 
 1. [ ] **Terbaca sekilas.** Buka bengkel dengan sepeda yang sebagian rusak. Diharapkan: dalam sekitar tiga detik tahu bagian mana yang bermasalah, berapa ongkosnya, dan tombol mana yang ditekan; tidak terasa kosong atau terlalu kecil dibanding layar bengkel sebelumnya (8.11). Hasil: terbaca ya / tidak; terlalu kecil / pas / terlalu besar.
@@ -866,5 +868,43 @@ Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build 
 8. Hari berikutnya mudah dijangkau ya / tidak   back = Hari berikutnya ya / tidak
 9. Zona aman (notch, lengkung) beres ya / tidak
 10. 60 fps tetap ya / tidak   piksel tajam ya / tidak
+Catatan (angka, bentuk, letak yang ingin diubah dan alasannya): ____
+```
+
+### 8.19 Uji layar hasil, koran, jeda, tutorial, banner, dan HUD baru (run `20261024-ui2-semua-layar`, belum diuji, NEEDS-MANUAL)
+
+Penguji: pemilik sendiri (rule `testing`), di vivo V2108 dan A54. Semua bentuk, ukuran, warna, dan angka usulan (DESIGN_SPEC 1.2, 1.3, 3.5, dan 4; `design/redesain/README.md` 6): catat yang ingin diubah beserta alasannya, jangan diubah di sesi uji. Run ini (satu PR, semua layar penuh) mengubah tampilan hasil (struk di atas lingkungan yang baru dilalui, struk transparan), koran (kertas, foto berita, kotak iklan hiasan), jeda (lapisan 72 persen, sakelar berkenop), tutorial, banner, tombol jeda HUD, panel bawah HUD (kecepatan dan stamina berdampingan), kolom kanan atas HUD (dua baris), tanda ambang ngebut di bar kecepatan, dan menaikkan font semua layar penuh (+2 px game, termasuk bengkel 8.18). Angka ekonomi, aturan permainan, save, dan alur Koran -> Rute -> Hasil -> Bengkel -> Hari berikutnya tidak berubah. Cara membuat keadaan uji: main satu hari penuh dari koran sampai "Ke bengkel"; hari 1 untuk tutorial; ambil misi kucing untuk banner dan kartu misi; biarkan sepeda menabrak untuk komponen rusak; buka jeda di tengah rute; lempar sampai koran habis untuk koran terbuang. Edit `save.json` lewat `run-as` lebih disukai daripada `pm clear` (izin pemilik 2026-10-18); catat save yang dipakai.
+
+1. [ ] **Tiap layar terbaca sekilas.** Hasil, koran, jeda, tutorial, dan banner: dalam sekitar tiga detik tahu apa yang tampil dan tombol mana yang ditekan; tidak terasa terlalu kosong atau terlalu kecil. Hasil: ya / tidak per layar.
+2. [ ] **Font baru cukup besar di bengkel dan hasil.** Teks bengkel dan hasil (nama, baris struk, kolom samping, label) terbaca tanpa menyipitkan mata di jarak main. Hasil: terlalu kecil / pas / terlalu besar.
+3. [ ] **Tombol enak ditekan.** Tombol Ke bengkel, Ambil, Lewati, Berangkat, Lanjut, sakelar Kidal dan Bantu, dan Lewati tutorial mudah dikenai jempol; wajah tombol turun saat ditekan. Hasil: ya / tidak.
+4. [ ] **Koran tidak silau dan terbaca di matahari.** Halaman koran (kertas krem, teks tinta, foto berita) terbaca di luar ruangan dan tidak terlalu menyilaukan di ruang gelap; tekstur kertas tidak mengganggu teks. Hasil: ya / tidak per kondisi cahaya.
+5. [ ] **Struk hasil terbaca di atas latar dunia gelap (V-10).** Jalan, rumah, dan sepeda yang baru dilalui terlihat redup di belakang struk; struk dan kartu samping yang transparan tetap terbaca di atas dinding rumah terang dan rumput; dunia tidak terlalu gelap (nyaris tak terlihat) dan tidak terlalu terang. Tidak ada elemen HUD atau angka melayang yang tembus di baliknya. Hasil: terbaca ya / tidak; terlalu gelap / pas / terlalu terang.
+6. [ ] **Lapisan jeda 72 persen (V-2).** Saat jeda, jalan di belakang tetap terbaca dan panel jeda serta sakelarnya terbaca jelas; keadaan Kidal dan Bantu terbaca nyala atau mati tanpa warna (bentuk kenop). Hasil: ya / tidak.
+7. [ ] **Tombol jeda mudah ditekan tanpa salah tekan.** Tombol jeda HUD berbentuk tombol dan mudah dijangkau; tidak tertekan tanpa sengaja saat melempar atau menyetir. Hasil: ya / tidak.
+8. [ ] **Kecepatan dan stamina berdampingan terbaca sekilas (V-9).** Dua bar sebelah-menyebelah dengan label di atas dan angka di samping; panel bawah lebih rendah sehingga jalan di depan sepeda lebih terlihat; stamina berubah warna di bawah 30. Hasil: ya / tidak.
+9. [ ] **Kolom kanan atas tidak penuh.** Koin dan skor di baris 1, kondisi sepeda dengan reputasi di baris 2; tidak bertumpuk dengan radar, bel, atau banner misi (banner dengan nama misi terpanjang bisa menyentuh panel baris 2 di layar sempit: DEFERRED). Hasil: ya / tidak.
+10. [ ] **Tanda ambang ngebut di bar kecepatan.** Garis oranye di bar kecepatan berada tepat di tempat sprite pemain beralih ke ngebut (kira-kira 5,4 u/d, 90 persen bar): tarik stick penuh ke atas dan lihat sprite berubah saat bar melewati garis. Hasil: cocok ya / tidak.
+11. [ ] **Tutorial hari 1 dan banner.** Panel petunjuk (titik langkah, glif) terbaca dan tidak menutupi jalan atau kontrol; banner Rute selesai terbaca; gelembung petunjuk "PELANGGAN:" terbaca. Hasil: ya / tidak.
+12. [ ] **Zona aman.** Di HP dengan notch atau lengkung (A54): tidak ada teks atau tombol tertutup tepi di hasil, koran, jeda, dan HUD. Hasil: ya / tidak.
+13. [ ] **60 fps tetap dan piksel tajam.** Hasil di atas dunia (lapisan tembus pandang), koran berkertas, dan jeda tidak menurunkan fps; gambar tidak buram atau berkedip. Hasil: ya / tidak.
+
+**Lembar hasil 8.19 (hasil, koran, jeda, tutorial, banner, HUD, run UI-2):**
+
+```
+Penguji: pemilik   Tanggal: ____   HP: vivo V2108 / A54 / lainnya: ____   Build (commit): ____
+1. Hasil terbaca sekilas ya / tidak   koran ya / tidak   jeda ya / tidak   tutorial ya / tidak   banner ya / tidak
+2. Font bengkel dan hasil terlalu kecil / pas / terlalu besar
+3. Tombol nyaman ya / tidak
+4. Koran silau ya / tidak   terbaca di matahari ya / tidak
+5. Struk di atas dunia terbaca ya / tidak   dunia terlalu gelap / pas / terlalu terang   ada yang tembus ya / tidak
+6. Lapisan jeda: jalan terbaca ya / tidak   panel terbaca ya / tidak   kenop terbaca ya / tidak
+7. Tombol jeda mudah ya / tidak   salah tekan ya / tidak
+8. Kecepatan dan stamina berdampingan terbaca ya / tidak   stamina rendah terlihat ya / tidak
+9. Kolom kanan atas penuh ya / tidak   bertabrakan ya / tidak
+10. Tanda ngebut cocok dengan sprite ya / tidak
+11. Tutorial dan banner terbaca ya / tidak
+12. Zona aman (notch, lengkung) beres ya / tidak
+13. 60 fps tetap ya / tidak   piksel tajam ya / tidak
 Catatan (angka, bentuk, letak yang ingin diubah dan alasannya): ____
 ```

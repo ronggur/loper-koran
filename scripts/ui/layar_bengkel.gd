@@ -246,6 +246,7 @@ func _segarkan_upgrade(kartu: KartuUpgrade, level_dimiliki: int, saldo: int, pem
 	kartu.nama.text = tr(kartu.data.nama)
 	kartu.nama.add_theme_color_override(&"font_color", Palette.TEXT_2 if info.dimiliki else Palette.TEXT)
 	kartu.deskripsi.text = tr(kartu.data.deskripsi)
+	kartu.deskripsi.max_lines_visible = Config.BENGKEL_DESKRIPSI_BARIS_JEJAK_MAKS if info.jejak_tampil else Config.BENGKEL_DESKRIPSI_BARIS_MAKS
 	kartu.panel.custom_minimum_size = Vector2(0, info.tinggi)
 	_gaya_kartu(kartu.panel, info.kartu, Config.BENGKEL_KARTU_PAD_AKHIR_PX + (Config.BENGKEL_KARTU_PAD_AKHIR_PX if info.dimiliki else 0))
 	kartu.chip_tingkat.atur_status(info.status_tingkat, KomponenUi.UkuranChip.KECIL, tr(TampilBengkel.kunci_tingkat(info.tingkat)).format({"n": info.tingkat}))
@@ -378,6 +379,7 @@ func _bangun_kartu_upgrade(id: String, tingkat: Array[DataToko]) -> KartuUpgrade
 	teks.add_child(kartu.nama)
 	kartu.deskripsi = _label(&"LayarTeksKecil", Palette.TEXT_2)
 	kartu.deskripsi.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	kartu.deskripsi.add_theme_constant_override(&"line_spacing", Config.BENGKEL_DESKRIPSI_JARAK_BARIS_PX)
 	kartu.deskripsi.max_lines_visible = Config.BENGKEL_DESKRIPSI_BARIS_MAKS
 	kartu.deskripsi.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	teks.add_child(kartu.deskripsi)

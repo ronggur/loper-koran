@@ -106,18 +106,22 @@ func _pelanggaran_hud(akar: RuteMain) -> Array[String]:
 	var hud: HudRute = akar.hud_rute()
 	var masalah: Array[String] = []
 	var layar: Rect2 = Rect2(Vector2.ZERO, _tree.root.get_visible_rect().size)
-	var panel: Rect2 = hud.rect_panel_reputasi()
+	# Lebar banner misi diasumsikan 176 (banner nyata terpanjang "Kucingnya lolos hari ini" 173 px; dulu 240 = batas 24 huruf data): panel baris 2 yang memuat reputasi 100 kini mulai x 431 di 640 (411 dengan inset kanan 24), jadi banner 24 huruf (sekitar 242 px) akan menyentuhnya; dicatat di LOG UI-2 bagian C.
+	# V-9 H-2: reputasi berbagi panel baris 2 dengan kondisi; yang diperiksa tumpang tindih adalah panel baris 2 utuh, ditambah penanda reputasi harus di dalamnya.
+	var panel: Rect2 = hud.rect_panel_kondisi()
 	var lebar: int = roundi(layar.size.x)
 	var pusat_bel: Vector2 = TouchZones.pusat_bel(lebar, akar.kidal(), akar.kontrol_router().geser_bel)
 	var lain: Dictionary = {
 		"radar seberang": hud.rect_radar_seberang(), "radar dekat": hud.rect_radar_dekat(), "panel progres": hud.rect_panel_progres(), "panel koin": hud.rect_panel_koin(), "panel skor": hud.rect_panel_skor(),
-		"panel kondisi": hud.rect_panel_kondisi(), "tombol jeda": hud.rect_tombol_jeda(), "zona bel": Rect2(pusat_bel - Vector2(28, 28), Vector2(56, 56)), "panel kecepatan": hud.rect_panel_kecepatan(),
+		"tombol jeda": hud.rect_tombol_jeda(), "zona bel": Rect2(pusat_bel - Vector2(28, 28), Vector2(56, 56)), "panel kecepatan": hud.rect_panel_kecepatan(),
 		"panel koran": hud.rect_panel_koran(), "zona stick": TouchZones.rect_stick(lebar, akar.kidal()),
 		"kartu misi": Rect2(Vector2(Config.MISI_KARTU_X_PX, Config.MISI_KARTU_Y_PX), Vector2(Config.MISI_KARTU_LEBAR_PX, 28)),
-		"banner misi": Rect2(Vector2(layar.size.x * 0.5 - 120.0, Config.MISI_BANNER_Y_PX), Vector2(240, 26)),
+		"banner misi": Rect2(Vector2(layar.size.x * 0.5 - 88.0, Config.MISI_BANNER_Y_PX), Vector2(176, 26)),
 	}
 	if not layar.encloses(panel):
 		masalah.append("di luar layar %s" % panel)
+	if hud.reputasi_tampil() and not panel.encloses(hud.rect_panel_reputasi()):
+		masalah.append("penanda reputasi %s keluar dari panel baris 2 %s" % [hud.rect_panel_reputasi(), panel])
 	for nama: String in lain:
 		if panel.intersects(lain[nama]):
 			masalah.append("menumpuk %s" % nama)
@@ -136,14 +140,15 @@ func _atur_inset(akar: RuteMain, awal_x: int, atas: int, akhir_x: int, bawah: in
 # --- HUD ---
 
 func _test_hud_reputasi() -> void:
-	_judul.call("HUD rute: penanda reputasi (angka bulat 0..100, ikon) di baris 3 samping atas, tidak menumpuk elemen lain di empat ukuran, samping dan kidal, dengan inset (O-10, AC-13, AC-14)")
+	_judul.call("HUD rute: penanda reputasi (angka bulat 0..100, ikon) di ujung kanan panel baris 2 (berbagi dengan kondisi, V-9 H-2), tidak menumpuk elemen lain di empat ukuran, samping dan kidal, dengan inset (O-10, AC-13, AC-14)")
 	for u: Array in UKURAN:
 		var akar: RuteMain = await _siapkan(_state(37), Vector2i(u[0], u[1]))
 		var hud: HudRute = akar.hud_rute()
 		check(hud.reputasi_tampil() and hud.teks_reputasi() == "37", "%d: penanda reputasi tampil '37', dapat '%s'" % [u[0], hud.teks_reputasi()])
 		var samping: Rect2 = hud.rect_panel_reputasi()
 		var kondisi: Rect2 = hud.rect_panel_kondisi()
-		check(absf(samping.end.x - kondisi.end.x) < 0.5 and samping.position.y >= kondisi.end.y + float(Config.HUD_PANEL_JARAK_PX) - 0.5 and samping.size.x >= float(Config.HUD_IKON_PX), "%d: rata samping dengan panel kondisi, di bawahnya berjarak 5: %s di bawah %s" % [u[0], samping, kondisi])
+		check(kondisi.encloses(samping) and samping.end.x < kondisi.end.x and kondisi.end.x - samping.end.x <= float(Config.HUD_PANEL_PAD_X_PX) + 0.5 and samping.size.x >= float(Config.HUD_IKON_PX) and samping.position.x > hud.rect_panel_koin().position.x, "%d: penanda reputasi di ujung kanan panel baris 2 (bukan panel baris 3): %s di dalam %s" % [u[0], samping, kondisi])
+		check(not hud.find_children("PanelReputasi", "", true, false).size() > 0 and kondisi.position.y == hud.rect_panel_skor().end.y + float(Config.HUD_PANEL_JARAK_PX), "%d: tidak ada panel reputasi sendiri; kolom kanan dua baris (baris 2 tepat 5 px di bawah baris 1)" % u[0])
 		check(_pelanggaran_hud(akar).is_empty(), "%d samping: tanpa pelanggaran tata letak: %s" % [u[0], _pelanggaran_hud(akar)])
 		akar.atur_kidal(true)
 		akar.perbarui(0.0)
@@ -180,11 +185,11 @@ func _test_hud_tanpa_keadaan() -> void:
 	var akar2: RuteMain = await _siapkan(_state(55))
 	_langkah(akar2, 300)
 	check(akar2.hud_rute().teks_reputasi() == "55", "reputasi tetap 55 selama rute berjalan (berubah hanya di akhir hari)")
-	var panel: PanelContainer = _anak(akar2.hud_rute(), "PanelReputasi") as PanelContainer
-	var semua_abaikan: bool = panel.mouse_filter == Control.MOUSE_FILTER_IGNORE
-	for c: Node in [_anak(akar2.hud_rute(), "IsiReputasi"), _anak(akar2.hud_rute(), "IkonReputasi"), _anak(akar2.hud_rute(), "AngkaReputasi")]:
+	var grup: HBoxContainer = _anak(akar2.hud_rute(), "GrupReputasi") as HBoxContainer
+	var semua_abaikan: bool = grup.mouse_filter == Control.MOUSE_FILTER_IGNORE
+	for c: Node in [_anak(akar2.hud_rute(), "PanelKondisi"), _anak(akar2.hud_rute(), "IkonReputasi"), _anak(akar2.hud_rute(), "AngkaReputasi")]:
 		semua_abaikan = semua_abaikan and (c as Control).mouse_filter == Control.MOUSE_FILTER_IGNORE
-	check(semua_abaikan, "panel reputasi dan isinya MOUSE_FILTER_IGNORE (tidak menangkap sentuhan)")
+	check(semua_abaikan, "panel baris 2, penanda reputasi, dan isinya MOUSE_FILTER_IGNORE (tidak menangkap sentuhan)")
 	var ikon: TextureRect = _anak(akar2.hud_rute(), "IkonReputasi") as TextureRect
 	check(ikon.texture != null and ikon.texture.get_size() == Vector2(14, 14), "ikon reputasi 14x14 (ui_icon_reputasi)")
 	_bersihkan(akar2)
@@ -260,17 +265,17 @@ func _test_layar_hasil_kanan() -> void:
 	check(l.teks_pelanggan() == ["Pelanggan baru: 3"], "hanya pelanggan baru 3 (setia, berhenti, kembali nol tidak tampil): %s" % [l.teks_pelanggan()])
 	check(l.teks_target() == "Pelanggan tetap · Perunggu 1/3" and is_equal_approx(l.pecahan_bilah(), 1.0 / 3.0), "milestone terdekat: pelanggan tetap 1/3 menuju perunggu (pecahan 1/3, bukan koin 1080/5000=0,22): '%s' %.3f" % [l.teks_target(), l.pecahan_bilah()])
 	check(l.teks_baru() == ["Baru: Koin terkumpul · Perunggu"], "tingkat baru: koin 700 -> 1080 melewati 1000: %s" % [l.teks_baru()])
-	check(l.tekstur_target() == l.LENCANA[0] and l.tekstur_baru() == [l.LENCANA[0]], "lencana: target menuju perunggu (indeks 0) dan baru perunggu")
+	check(l.tekstur_target() == l.LENCANA[0] and l.tekstur_baru() == [l.LENCANA_BARU[0]], "lencana: target menuju perunggu (lencana 32, indeks 0) dan baru perunggu (ikon 24, indeks 0; run ui2)")
 	check(l.teks_tampil().has("Reputasi 12 (+2)"), "teks_tampil memuat baris reputasi")
 	# Warna perubahan: naik OK, nol dan turun TEXT_2.
-	var nilai: Label = l.find_child("NilaiReputasi", true, false) as Label
-	check(nilai.get_theme_color(&"font_color") == Palette.OK, "reputasi naik: nilai berwarna OK")
+	var nilai: Label = l.chip_reputasi().label()
+	check(nilai.get_theme_color(&"font_color") == Palette.OK and l.chip_reputasi().glif_tampil() and l.chip_reputasi().teks() == "+2", "reputasi naik: chip perubahan '+2' berwarna OK dengan glif naik (run ui2: angka besar dan chip menggantikan satu label)")
 	l.isi(_angka(20, 300, 0), null, [] as Array[String], -1, _rep(30, 29, [0, 0, 1, 0]), null)
-	check(l.teks_reputasi() == "29 (-1)" and nilai.get_theme_color(&"font_color") == Palette.TEXT_2, "reputasi turun: '29 (-1)' netral TEXT_2 (bukan merah): '%s'" % l.teks_reputasi())
+	check(l.teks_reputasi() == "29 (-1)" and nilai.get_theme_color(&"font_color") == Palette.TEXT_2 and l.chip_reputasi().teks() == "-1" and l.chip_reputasi().glif_tampil(), "reputasi turun: '29 (-1)' chip '-1' netral TEXT_2 (bukan merah) dengan glif turun: '%s'" % l.teks_reputasi())
 	check(l.teks_pelanggan() == ["Berhenti berlangganan: 1"] and l.teks_target() == "" and l.teks_baru().is_empty(), "tanpa milestone: bagian target dan baru tersembunyi; berhenti 1 tampil: %s" % [l.teks_pelanggan()])
 	l.isi(_angka(20, 300, 0), null, [] as Array[String], -1, _rep(50, 50, [0, 0, 0, 0]), null)
 	check(l.teks_reputasi() == "50 (+0)" and l.teks_pelanggan().is_empty(), "perubahan nol: '50 (+0)' dan bagian pelanggan tersembunyi")
-	check(nilai.get_theme_color(&"font_color") == Palette.TEXT_2, "perubahan nol: nilai netral TEXT_2 (hanya kenaikan yang OK)")
+	check(nilai.get_theme_color(&"font_color") == Palette.TEXT_2 and l.chip_reputasi().teks() == "+0" and not l.chip_reputasi().glif_tampil(), "perubahan nol: chip '+0' netral TEXT_2 tanpa glif (hanya kenaikan yang OK)")
 	# Empat jenis.
 	l.isi(_angka(20, 300, 0), null, [] as Array[String], -1, _rep(30, 29, [2, 1, 1, 1]), null)
 	check(l.teks_pelanggan() == ["Pelanggan baru: 2", "Jadi pelanggan tetap: 1", "Berhenti berlangganan: 1", "Berlangganan lagi: 1"], "empat jenis tampil urut: %s" % [l.teks_pelanggan()])
@@ -281,7 +286,7 @@ func _test_layar_hasil_kanan() -> void:
 	var ringkas: MilestoneTracker.Ringkasan = MilestoneTracker.ringkas(_ms_state(0, 0, 0, 0, 0), _ms_state(3, 6000, 1, 4, 0))
 	check(ringkas.baru.size() == 4, "kontrol: empat milestone naik sekaligus")
 	l.isi(_angka(20, 300, 0), null, [] as Array[String], -1, _rep(30, 32, [0, 0, 0, 0]), ringkas)
-	check(l.teks_baru().size() == Config.MILESTONE_BARU_MAKS_TAMPIL and l.teks_baru()[0] == "Baru: Koin terkumpul · Perak" and l.tekstur_baru()[0] == l.LENCANA[1], "tampil paling banyak 3, tertinggi dulu (koin perak): %s" % [l.teks_baru()])
+	check(l.teks_baru().size() == Config.MILESTONE_BARU_MAKS_TAMPIL and l.teks_baru()[0] == "Baru: Koin terkumpul · Perak" and l.tekstur_baru()[0] == l.LENCANA_BARU[1], "tampil paling banyak 3, tertinggi dulu (koin perak): %s" % [l.teks_baru()])
 	# Semua emas.
 	l.isi(_angka(25, 500, 0), null, [] as Array[String], -1, _rep(90, 92, [0, 0, 0, 0]), MilestoneTracker.ringkas(_ms_state(25, 20000, 5, 10, 0), _ms_state(25, 20500, 5, 10, 0)))
 	check(l.teks_target() == "Semua target sudah emas" and l.pecahan_bilah() == -1.0 and l.teks_baru().is_empty(), "semua emas: teks tamat, tanpa bilah, tanpa baru: '%s'" % l.teks_target())
@@ -319,7 +324,7 @@ func _test_layar_hasil_ukuran(u: Array) -> void:
 	var layar: Rect2 = Rect2(Vector2.ZERO, _tree.root.get_visible_rect().size)
 	var panel: Rect2 = l.rect_panel()
 	var tombol: Rect2 = l.rect_tombol()
-	check(layar.encloses(panel) and panel.encloses(tombol), "%d: panel %s di dalam layar %s dan tombol di dalam panel" % [u[0], panel, layar])
+	check(layar.encloses(panel) and layar.encloses(tombol) and not panel.intersects(tombol), "%d: struk %s di dalam layar %s, tombol di dalam layar dan tidak menutupi struk (run ui2: tombol kanan bawah di luar struk)" % [u[0], panel, layar])
 	check(tombol.size.y >= 42.0 and tombol.size.x >= 96.0, "%d: tombol 'Ke bengkel' >= 42 px game dan terlihat penuh: %s" % [u[0], tombol.size])
 	var dalam: bool = true
 	var tumpang: bool = false
@@ -329,15 +334,26 @@ func _test_layar_hasil_ukuran(u: Array) -> void:
 	check(dalam and not tumpang, "%d: semua label utama di dalam panel dan tidak menumpuk tombol" % u[0])
 	var samping: Rect2 = l.rect_panel_kanan()
 	var isi_kanan: Array[Rect2] = l.rect_isi_kanan()
-	dalam = panel.encloses(samping) and not samping.intersects(tombol)
+	dalam = layar.encloses(samping) and not panel.intersects(samping) and not samping.intersects(tombol)
 	for r: Rect2 in isi_kanan:
 		dalam = dalam and samping.encloses(r)
 		tumpang = tumpang or r.intersects(tombol)
-	check(dalam and not tumpang and isi_kanan.size() >= 14, "%d: kolom samping dan %d isinya di dalam panel samping dan tidak menumpuk tombol" % [u[0], isi_kanan.size()])
-	check(panel.size.y <= layar.size.y - 2.0 * float(Config.HUD_MARGIN_TEPI_PX), "%d: tinggi panel %.0f muat dengan margin tepi di %.0f" % [u[0], panel.size.y, layar.size.y])
-	# Inset aman terbesar yang dipakai probe (utama 20, atas 16, samping 24, bawah 18): panel dan tombol tetap di dalam zona aman.
+	check(dalam and not tumpang and isi_kanan.size() >= 14, "%d: kolom samping dan %d isinya di dalam layar, tidak menumpuk struk atau tombol (run ui2: kolom samping terpisah dari struk)" % [u[0], isi_kanan.size()])
+	check(panel.size.y <= layar.size.y - 2.0 * float(Config.HUD_MARGIN_TEPI_PX), "%d: tinggi struk %.0f muat dengan margin tepi di %.0f" % [u[0], panel.size.y, layar.size.y])
+	# Inset aman terbesar yang dipakai probe lama (awal 20, atas 16, akhir 24, bawah 18): struk, kolom samping, dan tombol tetap di dalam zona aman.
+	var inset: ZonaAman.Inset = ZonaAman.Inset.new()
+	inset.awal_x = 20
+	inset.akhir_x = 24
+	inset.atas = 16
+	inset.bawah = 18
+	l.atur_inset(inset)
+	await _tree.process_frame
+	await _tree.process_frame
 	var aman: Rect2 = Rect2(Vector2(20, 16), layar.size - Vector2(44, 34))
-	check(aman.encloses(panel) and aman.encloses(tombol), "%d: panel dan tombol di dalam zona aman 20/16/24/18" % u[0])
+	check(aman.encloses(l.rect_panel()) and aman.encloses(l.rect_panel_kanan()) and aman.encloses(l.rect_tombol()) and not l.rect_panel_kanan().intersects(l.rect_tombol()), "%d: struk, kolom samping, dan tombol di dalam zona aman 20/16/24/18 dan tidak bertumpuk" % u[0])
+	l.atur_inset(null)
+	await _tree.process_frame
+	await _tree.process_frame
 	check(l.teks_reputasi() == "53 (-2)" and l.teks_pelanggan().size() == 4 and l.teks_baru().size() == 3, "%d: reputasi, empat pelanggan, tiga baru tampil" % u[0])
 	# Tanpa kolom samping (rute yang dijalankan sendiri): kasus yang sama tetap muat dan tidak melar (lebar sekitar 300, bukan hasil autowrap yang runtuh).
 	angka.misi_hasil = ""
@@ -345,7 +361,7 @@ func _test_layar_hasil_ukuran(u: Array) -> void:
 	await _tree.process_frame
 	await _tree.process_frame
 	var polos: Rect2 = l.rect_panel()
-	check(not l.kanan_tampil() and polos.size.x >= 296.0 and polos.size.x <= 310.0 and polos.size.y <= 300.0 and layar.encloses(polos) and l.rect_tombol().size.y >= 42.0, "%d: tanpa kolom samping dan tanpa rekap misi panel %s tetap sekitar 300 lebar dan di dalam layar" % [u[0], polos.size])
+	check(not l.kanan_tampil() and absf(polos.size.x - 360.0) < 0.5 and polos.size.y <= 300.0 and layar.encloses(polos) and l.rect_tombol().size.y >= 42.0 and not polos.intersects(l.rect_tombol()), "%d: tanpa kolom samping dan tanpa rekap misi struk %s selebar 360 dan di dalam layar, tidak menutupi tombol (run ui2: struk 360 menggantikan panel 300)" % [u[0], polos.size])
 	l.queue_free()
 
 

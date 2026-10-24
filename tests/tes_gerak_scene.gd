@@ -124,7 +124,7 @@ func _test_hud_stamina_dan_bar() -> void:
 		return
 	var r_kec: Rect2 = bar_kecepatan.get_global_rect()
 	var r_sta: Rect2 = bar_stamina.get_global_rect()
-	check(r_sta.position.y >= r_kec.end.y and is_equal_approx(r_sta.size.x, r_kec.size.x) and r_sta.size.y == float(Config.HUD_BAR_TINGGI_PX), "bar stamina di bawah bar kecepatan, selebar, tinggi 7 px (kecepatan %s, stamina %s)" % [r_kec, r_sta])
+	check(r_sta.position.x >= r_kec.end.x and is_equal_approx(r_sta.position.y, r_kec.position.y) and r_kec.size.y == float(Config.HUD_BAR_TINGGI_PX) and r_sta.size.y == float(Config.HUD_BAR_TINGGI_PX) and Config.HUD_BAR_TINGGI_PX == 9, "bar stamina BERDAMPINGAN di kanan bar kecepatan (V-9 H-1; dulu di bawahnya), sejajar tegak, tinggi 9 px (kecepatan %s, stamina %s)" % [r_kec, r_sta])
 	check(panel.get_global_rect().encloses(r_sta) and panel.get_global_rect().end.y <= 360.0 - float(Config.HUD_MARGIN_TEPI_PX) + 0.5, "bar stamina di dalam panel bawah, panel tetap 8 px dari tepi bawah (%s)" % panel.get_global_rect())
 	check(label_stamina.text == "HUD_STAMINA" and tr(label_stamina.text) == "STAMINA" and label_lelah.text == "HUD_LELAH" and tr(label_lelah.text) == "LELAH", "label stamina dan lelah memakai kunci terjemahan (STAMINA, LELAH)")
 	check(label_stamina.get_theme_color(&"font_color") == Palette.ACCENT, "label STAMINA berwarna ACCENT")

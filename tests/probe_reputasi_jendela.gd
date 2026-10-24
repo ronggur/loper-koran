@@ -154,7 +154,7 @@ func _hud_kidal_dan_inset() -> void:
 	await _foto("hud_inset_aman")
 	var layar: Rect2 = Rect2(Vector2.ZERO, root.get_visible_rect().size)
 	var panel: Rect2 = _hud.rect_panel_reputasi()
-	_harap("inset: penanda reputasi di dalam zona aman", panel.end.x <= layar.end.x - 24.0 and panel.position.y >= 16.0, str(panel))
+	_harap("inset: penanda reputasi di dalam zona aman", panel.end.x <= layar.end.x - 24.0 and panel.position.y >= 16.0 and _hud.rect_panel_kondisi().encloses(panel), str(panel))
 	_cek_hud("hud_inset_aman")
 	_akar.queue_free()
 	await _tunggu(2)
@@ -212,7 +212,7 @@ func _hasil_dari_rute() -> void:
 	await _tunggu(2)
 
 
-## Layar hasil kasus terpadat dengan inset aman tiruan: panel dan tombol tetap di dalam zona aman (layar hasil dipusatkan, jadi harus muat di layar dikurangi inset).
+## Layar hasil kasus terpadat dengan inset aman tiruan: struk, kolom, dan tombol tetap di dalam zona aman.
 func _hasil_inset() -> void:
 	var misi: DataMisi = PemuatMisi.muat_folder().cari("p1_kucing")
 	var layar: LayarHasil = (load(BERKAS_HASIL) as PackedScene).instantiate() as LayarHasil
@@ -221,6 +221,12 @@ func _hasil_inset() -> void:
 	var angka: HasilRute.Angka = _angka(2, 150, 25, true)
 	angka.misi_hasil = "selesai"
 	angka.koin_misi = 75
+	var inset: ZonaAman.Inset = ZonaAman.Inset.new()
+	inset.awal_x = 20
+	inset.atas = 16
+	inset.akhir_x = 24
+	inset.bawah = 18
+	layar.atur_inset(inset)
 	layar.atur_mode_hari(true)
 	layar.isi(angka, misi, ["ban", "rem", "rantai"] as Array[String], 10, _rep(55, 53, [4, 3, 2, 1]), MilestoneTracker.ringkas(_ms_state(2, 990, 0, 0, 0), _ms_state(10, 5100, 1, 4, 0)))
 	layar.tampilkan(true)
@@ -270,15 +276,16 @@ func _harap(nama: String, kondisi: bool, rincian: String) -> void:
 ## Penanda reputasi di dalam layar dan tidak menumpuk elemen HUD lain: radar, panel progres, koin, skor, kondisi, tombol jeda, zona bel, panel kecepatan, panel koran, zona stick, kartu misi, banner, petunjuk.
 func _cek_hud(keadaan: String) -> void:
 	var layar: Rect2 = Rect2(Vector2.ZERO, root.get_visible_rect().size)
-	var panel: Rect2 = _hud.rect_panel_reputasi()
+	# V-9 H-2: reputasi di ujung kanan panel baris 2 (berbagi dengan kondisi); yang dicek tumpang tindih panel baris 2 utuh, dan penanda harus di dalamnya.
+	var panel: Rect2 = _hud.rect_panel_kondisi()
 	var lebar: int = roundi(layar.size.x)
 	var pusat_bel: Vector2 = TouchZones.pusat_bel(lebar, _akar.kidal(), _akar.kontrol_router().geser_bel)
 	var lain: Dictionary = {
 		"radar_seberang": _hud.rect_radar_seberang(), "radar_dekat": _hud.rect_radar_dekat(), "panel_progres": _hud.rect_panel_progres(), "panel_koin": _hud.rect_panel_koin(),
-		"panel_skor": _hud.rect_panel_skor(), "panel_kondisi": _hud.rect_panel_kondisi(), "tombol_jeda": _hud.rect_tombol_jeda(), "zona_bel": Rect2(pusat_bel - Vector2(28, 28), Vector2(56, 56)),
+		"panel_skor": _hud.rect_panel_skor(), "tombol_jeda": _hud.rect_tombol_jeda(), "zona_bel": Rect2(pusat_bel - Vector2(28, 28), Vector2(56, 56)),
 		"panel_kecepatan": _hud.rect_panel_kecepatan(), "panel_koran": _hud.rect_panel_koran(), "zona_stick": TouchZones.rect_stick(lebar, _akar.kidal()),
 		"kartu_misi": Rect2(Vector2(Config.MISI_KARTU_X_PX, Config.MISI_KARTU_Y_PX), Vector2(Config.MISI_KARTU_LEBAR_PX, 28)),
-		"banner_misi": Rect2(Vector2(layar.size.x * 0.5 - 120.0, Config.MISI_BANNER_Y_PX), Vector2(240, 26)),
+		"banner_misi": Rect2(Vector2(layar.size.x * 0.5 - 88.0, Config.MISI_BANNER_Y_PX), Vector2(176, 26)),
 	}
 	var salah: int = 0
 	if not layar.encloses(panel):
@@ -292,23 +299,22 @@ func _cek_hud(keadaan: String) -> void:
 	_gagal += salah
 
 
-## Panel hasil dan isinya di dalam layar dikurangi `inset` (utama, atas, samping, bawah), tombol >= 42 px dan terlihat penuh, label dan isi kolom samping di dalam panel dan tidak menumpuk tombol atau satu sama lain.
+## Struk hasil, kolom samping, dan tombol di dalam layar dikurangi `inset` (awal, atas, akhir, bawah) dan tidak bertumpuk; tombol >= 42 px dan terlihat penuh; label di dalam struk, isi kolom samping di dalam kolom, tidak menumpuk tombol
+## (run ui2-semua-layar: struk, kolom, dan tombol terpisah; pemeriksaan penuh ada di `probe_hasil_jendela.gd`).
 func _cek_hasil(keadaan: String, hasil: LayarHasil, inset: Vector4) -> void:
 	var layar: Rect2 = Rect2(Vector2(inset.x, inset.y), root.get_visible_rect().size - Vector2(inset.x + inset.z, inset.y + inset.w))
 	var salah: int = 0
 	var panel: Rect2 = hasil.rect_panel()
 	var tombol: Rect2 = hasil.rect_tombol()
-	if not layar.encloses(panel) or not layar.encloses(tombol):
-		print("TIDAK SESUAI [%s]: panel hasil %s atau tombol %s di luar zona aman %s" % [keadaan, panel, tombol, layar])
+	if not layar.encloses(panel) or not layar.encloses(tombol) or (hasil.kanan_tampil() and not layar.encloses(hasil.rect_panel_kanan())):
+		print("TIDAK SESUAI [%s]: struk %s, tombol %s, atau kolom samping di luar zona aman %s" % [keadaan, panel, tombol, layar])
 		salah += 1
-	if tombol.size.y < float(Config.HUD_TOMBOL_TINGGI_PX) or not panel.encloses(tombol):
-		print("TIDAK SESUAI [%s]: tombol %s kurang dari 42 px atau keluar panel" % [keadaan, tombol])
+	if tombol.size.y < float(Config.HUD_TOMBOL_TINGGI_PX) or panel.intersects(tombol) or (hasil.kanan_tampil() and hasil.rect_panel_kanan().intersects(tombol)):
+		print("TIDAK SESUAI [%s]: tombol %s kurang dari 42 px atau menutupi struk atau kolom samping" % [keadaan, tombol])
 		salah += 1
-	var semua: Array[Rect2] = hasil.rect_label()
-	semua.append_array(hasil.rect_isi_kanan())
-	for r: Rect2 in semua:
+	for r: Rect2 in hasil.rect_label():
 		if not panel.encloses(r):
-			print("TIDAK SESUAI [%s]: isi %s keluar dari panel %s" % [keadaan, r, panel])
+			print("TIDAK SESUAI [%s]: isi %s keluar dari struk %s" % [keadaan, r, panel])
 			salah += 1
 		if r.intersects(tombol):
 			print("TIDAK SESUAI [%s]: isi %s menumpuk tombol %s" % [keadaan, r, tombol])
@@ -317,9 +323,9 @@ func _cek_hasil(keadaan: String, hasil: LayarHasil, inset: Vector4) -> void:
 		var samping: Rect2 = hasil.rect_panel_kanan()
 		for r: Rect2 in hasil.rect_isi_kanan():
 			if not samping.encloses(r):
-				print("TIDAK SESUAI [%s]: isi kolom samping %s keluar dari panel samping %s" % [keadaan, r, samping])
+				print("TIDAK SESUAI [%s]: isi kolom samping %s keluar dari kolom %s" % [keadaan, r, samping])
 				salah += 1
-	print("hasil [%s]: panel %s, tombol %s (%s), reputasi %s, pelanggan %s, target %s, baru %s, %d tidak sesuai" % [keadaan, panel, tombol, hasil.teks_tombol(), hasil.teks_reputasi(), hasil.teks_pelanggan(), hasil.teks_target(), hasil.teks_baru(), salah])
+	print("hasil [%s]: struk %s, tombol %s (%s), reputasi %s, pelanggan %s, target %s, baru %s, %d tidak sesuai" % [keadaan, panel, tombol, hasil.teks_tombol(), hasil.teks_reputasi(), hasil.teks_pelanggan(), hasil.teks_target(), hasil.teks_baru(), salah])
 	print("teks layar hasil: %s" % [" | ".join(hasil.teks_tampil())])
 	_gagal += salah
 

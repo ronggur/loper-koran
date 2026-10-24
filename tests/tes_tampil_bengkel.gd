@@ -93,14 +93,14 @@ func _test_aksi_dan_teks_alasan() -> void:
 # --- Upgrade ---
 
 func _test_upgrade_tunggal() -> void:
-	_judul.call("Bengkel (murni): kartu upgrade satu tingkat: dijual (biasa), saldo kurang (nonaktif), dimiliki (redup, tanpa aksi), tinggi 62, tanpa jejak (AC-7d)")
+	_judul.call("Bengkel (murni): kartu upgrade satu tingkat: dijual (biasa), saldo kurang (nonaktif), dimiliki (redup, tanpa aksi), tinggi 70, tanpa jejak (AC-7d; V-8: naik dari 62)")
 	var jual: TampilBengkel.InfoUpgrade = TampilBengkel.upgrade([1], [600], 0, 600)
-	check(not jual.dimiliki and jual.aksi == TampilBengkel.Aksi.AKTIF and jual.kartu == KomponenUi.JenisKartu.BIASA and jual.harga == 600 and jual.tingkat == 1 and jual.indeks == 0 and not jual.jejak_tampil and jual.tinggi == 62, "level 0, saldo 600: dijual, aktif, kartu biasa, harga 600, tinggi 62, tanpa jejak")
+	check(not jual.dimiliki and jual.aksi == TampilBengkel.Aksi.AKTIF and jual.kartu == KomponenUi.JenisKartu.BIASA and jual.harga == 600 and jual.tingkat == 1 and jual.indeks == 0 and not jual.jejak_tampil and jual.tinggi == 70, "level 0, saldo 600: dijual, aktif, kartu biasa, harga 600, tinggi 62, tanpa jejak")
 	check(jual.status_tingkat == KomponenUi.StatusChip.TINGKAT_LAIN and jual.jejak == [TampilBengkel.StatusJejak.AKTIF], "chip tingkat netral untuk tingkat tunggal yang belum dimiliki; jejak internal [AKTIF] (tidak ditampilkan)")
 	var kurang: TampilBengkel.InfoUpgrade = TampilBengkel.upgrade([1], [600], 0, 599)
 	check(kurang.aksi == TampilBengkel.Aksi.KURANG and kurang.kartu == KomponenUi.JenisKartu.BIASA, "saldo 599 untuk 600: nonaktif 'Koin kurang', kartu tetap biasa")
 	var milik: TampilBengkel.InfoUpgrade = TampilBengkel.upgrade([1], [600], 1, 0)
-	check(milik.dimiliki and milik.aksi == TampilBengkel.Aksi.TIDAK_ADA and milik.kartu == KomponenUi.JenisKartu.REDUP and milik.status_tingkat == KomponenUi.StatusChip.TINGKAT_AKTIF and milik.jejak == [TampilBengkel.StatusJejak.DIMILIKI] and milik.tinggi == 62, "level 1: dimiliki, tanpa aksi walau saldo 0, kartu redup, chip tingkat aksen")
+	check(milik.dimiliki and milik.aksi == TampilBengkel.Aksi.TIDAK_ADA and milik.kartu == KomponenUi.JenisKartu.REDUP and milik.status_tingkat == KomponenUi.StatusChip.TINGKAT_AKTIF and milik.jejak == [TampilBengkel.StatusJejak.DIMILIKI] and milik.tinggi == 70, "level 1: dimiliki, tanpa aksi walau saldo 0, kartu redup, chip tingkat aksen")
 	var lebih: TampilBengkel.InfoUpgrade = TampilBengkel.upgrade([1], [600], 7, 0)
 	check(lebih.dimiliki and lebih.indeks == 0 and lebih.aksi == TampilBengkel.Aksi.TIDAK_ADA, "level di save melebihi data (7): tetap dimiliki, indeks tingkat terakhir")
 	var kosong: TampilBengkel.InfoUpgrade = TampilBengkel.upgrade([], [], 0, 100)
@@ -108,7 +108,7 @@ func _test_upgrade_tunggal() -> void:
 
 
 func _test_upgrade_bertingkat() -> void:
-	_judul.call("Bengkel (murni): upgrade bertingkat I, II, III = satu kartu berganti isi dengan jejak (aktif, tersedia, dimiliki), tinggi 72 (AC-7, kanvas Bengkel_Tingkat)")
+	_judul.call("Bengkel (murni): upgrade bertingkat I, II, III = satu kartu berganti isi dengan jejak (aktif, tersedia, dimiliki), tinggi 72 (AC-7, kanvas Bengkel_Tingkat; ukuran sama dengan UI-1)")
 	var tingkat: Array[int] = [1, 2, 3]
 	var harga: Array[int] = [600, 900, 1500]
 	var s0: TampilBengkel.InfoUpgrade = TampilBengkel.upgrade(tingkat, harga, 0, 5000)

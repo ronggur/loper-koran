@@ -173,9 +173,10 @@ func _test_tombol_dan_layar() -> void:
 	var lanjut: Button = _anak(layar, "TombolLanjut") as Button
 	check(judul.text == "JEDA_JUDUL" and lanjut.text == "JEDA_LANJUT" and tr("JEDA_JUDUL") == "JEDA" and tr("JEDA_LANJUT") == "Lanjut", "teks layar jeda lewat kunci terjemahan (JEDA, Lanjut)")
 	var latar: ColorRect = _anak(layar, "Latar") as ColorRect
-	check(latar.color == Palette.HUD_PANEL and judul.get_theme_color(&"font_color") == Palette.TEXT, "lapisan gelap HUD_PANEL, judul TEXT (warna dari Palette)")
-	var gaya_lanjut: StyleBoxFlat = lanjut.get_theme_stylebox(&"normal") as StyleBoxFlat
-	check(gaya_lanjut != null and gaya_lanjut.border_color == Palette.TEXT and gaya_lanjut.bg_color == Palette.HUD_PANEL, "tombol Lanjut bergaris TEXT (terbaca di atas lapisan gelap)")
+	check(latar.color == TampilJeda.warna_lapisan() and Color(latar.color, Palette.HUD_PANEL.a) == Palette.HUD_PANEL and is_equal_approx(latar.color.a, 0.72) and is_equal_approx(Palette.HUD_PANEL.a, 0.84), "lapisan = HUD_PANEL alpha 72 % (V-2); token HUD_PANEL tetap alpha 84 %; judul TEXT (warna dari Palette)")
+	check(judul.get_theme_color(&"font_color") == Palette.TEXT, "judul JEDA berwarna TEXT")
+	var gaya_lanjut: StyleBoxTexture = lanjut.get_theme_stylebox(&"normal") as StyleBoxTexture
+	check(gaya_lanjut != null and gaya_lanjut.texture == GayaHud.tekstur("btn_utama") and lanjut.get_theme_color(&"font_color") == Palette.UI_BG, "tombol Lanjut peran utama (bingkai ACCENT, teks gelap): terbaca di atas lapisan")
 	akar.minta_jeda()
 	await _tunggu(2)
 	var r_lanjut: Rect2 = layar.rect_tombol_lanjut()
