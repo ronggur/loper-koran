@@ -164,7 +164,7 @@ func _perbarui_dunia(jarak_ubin: float) -> void:
 		_panel_akhir.tampilkan(true)
 		rute_selesai.emit()
 	_perbarui_hud_rute(jarak_ubin)
-	if _selesai and not _hasil_tampil and HasilRute.siap_tampil(_selesai, _sepeda.kecepatan_ud, koran_terbang()):
+	if _selesai and not _hasil_tampil and HasilRute.siap_tampil(_selesai, _sepeda.kecepatan_ud <= Config.HASIL_BERHENTI_TOLERANSI_UD, koran_terbang()):
 		_buka_hasil()
 
 
