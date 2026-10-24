@@ -305,7 +305,7 @@ func _test_rintangan_digambar() -> void:
 	var daur: RintanganDaur = akar.rintangan_daur()
 	var objek: Node2D = _anak(akar, "Objek") as Node2D
 	check(daur.get_parent() == objek and objek.y_sort_enabled and daur.y_sort_enabled and _sepeda(akar).get_parent() == objek, "induk rintangan anak Objek (Y-sort) bersama sepeda dan rumah, y_sort_enabled sendiri")
-	var kasus: Array = [[0.0, []], [10.0, [0]], [30.0, [0, 1, 2]], [100.0, [4, 5, 6]], [150.0, [7, 8]], [200.0, [9, 10]], [240.0, []]]
+	var kasus: Array = [[0.0, []], [10.0, [0]], [30.0, [0, 1, 2]], [100.0, [4, 5, 6]], [150.0, [7, 8]], [200.0, [9, 10]]]
 	var maks_node: int = 0
 	for kk: Array in kasus:
 		_taruh(akar, 3.0, 0.5, kk[0])

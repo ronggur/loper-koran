@@ -1,4 +1,4 @@
-[gd_scene load_steps=76 format=3]
+[gd_scene load_steps=78 format=3]
 
 [ext_resource type="Script" path="res://scripts/entities/rute_main.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/entities/tanah_daur.gd" id="2_tanah"]
@@ -71,6 +71,8 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/tiles/perumahan/tile_perumahan_simpang_seberang_rumput_seberang_belakang_1.png" id="70_simpang_seberang_14"]
 [ext_resource type="Texture2D" path="res://assets/sprites/tiles/perumahan/tile_perumahan_simpang_seberang_lengan_belakang_1.png" id="71_simpang_seberang_15"]
 [ext_resource type="PackedScene" path="res://scenes/ui/panel_tip_sisi_dekat.tscn" id="72_tip"]
+[ext_resource type="Script" path="res://scripts/entities/portal_garis.gd" id="73_portal"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/prop_portal_satpam.png" id="74_portal_png"]
 
 [node name="Rute" type="Node2D"]
 script = ExtResource("1_script")
@@ -134,6 +136,13 @@ script = ExtResource("29_dekor")
 
 [node name="Kucing" parent="Objek" instance=ExtResource("24_kucing")]
 unique_name_in_owner = true
+
+[node name="Portal" type="Sprite2D" parent="Objek"]
+unique_name_in_owner = true
+texture_filter = 1
+texture = ExtResource("74_portal_png")
+centered = false
+script = ExtResource("73_portal")
 
 [node name="PenerapPenutup" type="Node" parent="."]
 unique_name_in_owner = true

@@ -527,6 +527,16 @@ const RUTE_KELUAR_BADAN_BAWAH_PX: int = 8
 const RUTE_KELUAR_HAMPIR_UBIN: float = 6.0
 ## Portal satpam mulai terbuka saat sepeda paling jauh sekian ubin dari garis akhir (inklusif), lalu tetap terbuka (G-1). 6 ubin = 1,0 detik di ngebut dan 2,0 detik di santai sebelum sepeda lewat.
 const RUTE_PORTAL_BUKA_JARAK_UBIN: float = 6.0
+## --- Portal satpam di scene rute (run garis-finish-portal bagian C, G-1; usulan, disetel di HP) ---
+## Letak tiang portal melintang jalan, ubin dari garis tengah (negatif = sisi seberang). Palang `prop_portal_satpam` membentang 1,625 ubin ke sisi dekat dari tiang (sumbu +x dunia).
+const RUTE_PORTAL_LATERAL_UBIN: float = -2.0
+## Ukuran satu sel `prop_portal_satpam` (lebar, tinggi), jumlah frame (0 tertutup, 1 terbuka; berjajar kiri ke kanan), dan titik pijak (kaki tiang) di dalam sel, piksel; sama dengan JSON aset, dijaga tes.
+const RUTE_PORTAL_SEL_PX: Array[int] = [80, 92]
+const RUTE_PORTAL_FRAME: int = 2
+const RUTE_PORTAL_PIJAK_PX: Array[int] = [14, 60]
+## Setengah sisi tapak kotak penutup pemain di sekitar tiang (ubin) dan tinggi kotak (ubin: 57 piksel opak palang terangkat di atas pijak / 32). Frame tertutup lebih rendah, jadi kotak ini cukup untuk keduanya; dijaga tes piksel.
+const RUTE_PORTAL_TAPAK_SETENGAH_UBIN: float = 0.5
+const RUTE_PORTAL_TINGGI_UBIN: float = 1.78125
 ## Jarak banner "Rute selesai" dari tepi atas layar, piksel game: di bawah strip atas HUD dan di luar zona stick dan swipe.
 const RUTE_BANNER_MARGIN_ATAS_PX: int = 64
 ## Nama 12 sprite rumah perumahan (`assets/sprites/houses/perumahan/<nama>.png`), sejajar dengan `RUTE_RUMAH_PIJAK_PX`.
@@ -775,8 +785,6 @@ const ZONA_AMAN_TOLERANSI_PX: float = 0.000001
 
 ## --- Layar hasil (DESIGN_SPEC 4, rule ui-scenes; O-11, O-12 run fase3c-hud-hasil; usulan, sketsa) ---
 
-## Sementara (run garis-finish-portal bagian B): `HasilRute.siap_tampil` tidak lagi membaca kecepatan (G-4, syarat sekarang sepeda keluar viewport). Konstanta ini hanya masih dipakai adaptor sementara di `RuteMain` (perilaku lama: rem di garis akhir, hasil terbuka saat sepeda berhenti) sampai bagian C menyambungkan fase keluar; bagian C menghapusnya.
-const HASIL_BERHENTI_TOLERANSI_UD: float = 0.000001
 ## Tinggi dan lebar minimum bilah milestone, tebal garis luarnya (piksel game di tiap sisi). Bilah di kartu target layar hasil.
 const HASIL_BILAH_TINGGI_PX: int = 7
 const HASIL_BILAH_LEBAR_MIN_PX: int = 60

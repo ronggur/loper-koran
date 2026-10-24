@@ -119,13 +119,14 @@ static func jalankan(tree: SceneTree, kasus: Dictionary, jendela: Vector2i = Vec
 	akar.atur_sepeda(state_sepeda(float(kasus["kondisi"])), int(kasus["hari"]), daftar)
 	if bool(kasus["misi"]):
 		akar.atur_misi(PemuatMisi.muat_folder().cari("p1_kucing"))
-	akar.set_process(false)
 	tree.root.add_child(akar)
 	await tree.process_frame
 	await tree.process_frame
+	# `_ready` menyalakan `_process` skrip yang punya `_process`: matikan sesudah masuk pohon, lalu susun ulang dari awal (frame nyata tadi sudah menggerakkan sepeda dan jam sedikit, dengan dt tak tentu).
+	akar.set_process(false)
 	(akar.find_child("KontrolTouch", true, false) as KontrolTouch).keyboard_aktif = false
 	(akar.find_child("LoperAgen", true, false) as LoperSprite).set_process(false)
-	akar.perbarui(0.0)
+	akar.atur_benih_awal(int(kasus["benih"]))
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = int(kasus["benih"]) * 31 + int(kasus["hari"])
 	var profil: int = int(kasus["profil"])
