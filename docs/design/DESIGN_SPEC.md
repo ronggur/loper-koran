@@ -63,7 +63,7 @@ Radar (bagian 3.4):
 | Token | Hex | Arti |
 |---|---|---|
 | `RADAR_BG` | `#0E0A1C` alpha 60% | Isi strip |
-| `RADAR_PELANGGAN` | `#FFC94A` | Pelanggan biasa |
+| `RADAR_PELANGGAN` | `#FFF200` | Pelanggan biasa (kuning stabilo, revisi UI pemilik R-6; semula oranye muda) |
 | `RADAR_TIP` | `#56C46E` | Pelanggan pemberi tip |
 | `RADAR_MISI` | `#E98E3F` | Target misi |
 | `RADAR_BUKAN` | `#969AA0` | Rumah bukan pelanggan (hanya mode bantu, usulan) |

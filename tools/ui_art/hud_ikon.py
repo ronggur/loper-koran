@@ -205,7 +205,16 @@ p, pal = gen_rantai(); ICONS['rantai'] = (p, pal)
 ICONS['misi_kucing'] = (KUCING, JAHE)
 
 # ----------------------------------------------------------------- radar ----
-RAD = {'y': hexc('#FFC94A'), 'Y': hexc('#FFE08A'), 'g': hexc('#56C46E'), 't': hexc('#FFF3E3'),
+# Warna penanda pelanggan (revisi UI pemilik R-6, 2026-10-24: stabilo supaya lebih terlihat): (isi 'y', sorot atas 'Y'). `kuning` dipasang (bawaan); `hijau` dan `lama` hanya untuk tangkapan perbandingan
+# (`--varian=hijau|lama`); selisih terang isi dan sorot dijaga < 0,05 (`tes_hud_rute_scene`: pelanggan tanpa titik terang, supaya tidak tertukar dengan tip bertitik).
+VARIAN = {'kuning': ('#FFF200', '#FFF65A'), 'hijau': ('#39FF14', '#5DFF3F'), 'lama': ('#FFC94A', '#FFE08A')}
+varian = 'kuning'
+for arg in sys.argv[1:]:
+    if arg.startswith('--varian='):
+        varian = arg.split('=', 1)[1]
+if varian not in VARIAN:
+    raise SystemExit('varian tidak dikenal: %s (kuning, hijau, lama)' % varian)
+RAD = {'y': hexc(VARIAN[varian][0]), 'Y': hexc(VARIAN[varian][1]), 'g': hexc('#56C46E'), 't': hexc('#FFF3E3'),
        'x': hexc('#E98E3F'), 'X': hexc('#FFC94A'), 'b': hexc('#969AA0')}
 PENANDA = {
     'pelanggan': ["oooooooo", "oYYYYYYo", "oyyyyyyo", "oyyyyyyo", "oyyyyyyo", "oooooooo"],

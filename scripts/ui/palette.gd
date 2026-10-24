@@ -32,7 +32,7 @@ const WARN: Color = Color("#FF8A3D")
 ## Isi strip radar (alpha 60%).
 const RADAR_BG: Color = Color("#0E0A1C", 0.60)
 ## Penanda radar: pelanggan biasa.
-const RADAR_PELANGGAN: Color = Color("#FFC94A")
+const RADAR_PELANGGAN: Color = Color("#FFF200")
 ## Penanda radar: pelanggan pemberi tip.
 const RADAR_TIP: Color = Color("#56C46E")
 ## Penanda radar: target misi.

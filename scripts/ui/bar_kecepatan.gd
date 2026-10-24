@@ -1,6 +1,6 @@
 class_name BarKecepatan
 extends Control
-## Bar HUD (DESIGN_SPEC 1.3 dan 3.5), TANPA trek gelap (revisi UI pemilik R-4, 2026-10-24, usulan): bagian kosong hanya satu garis sumbu `OUTLINE` 1 px di tengah tinggi bar sepanjang bar (`TampilHud.rect_sumbu_bar`), isi `warna_isi`
+## Bar HUD (DESIGN_SPEC 1.3 dan 3.5), TANPA trek gelap (revisi UI pemilik R-4, 2026-10-24, usulan): bagian kosong hanya satu garis sumbu abu terang `TEXT_2` (R-7; semula `OUTLINE`) 1 px di tengah tinggi bar sepanjang bar (`TampilHud.rect_sumbu_bar`), isi `warna_isi`
 ## menutupi sumbu di bagian yang terisi (tinggi isi = tinggi bar - 2 `UI_GARIS_PX`, seperti isi lama di dalam garis luar), dan (opsional) tanda tegak `WARN` di `tanda` (batas ngebut, run ui2-semua-layar bagian C2).
 ## Bagian terisi dan kosong dibedakan oleh isi 7 px terang (`TEXT`, `ACCENT`, `FAIL`) lawan garis 1 px; panel bawah HUD di belakangnya (`HUD_PANEL`) tidak diubah.
 ##
@@ -33,13 +33,19 @@ func _ready() -> void:
 
 
 func _draw() -> void:
-	draw_rect(Rect2(TampilHud.rect_sumbu_bar(roundi(size.x), roundi(size.y))), Palette.OUTLINE)
+	draw_rect(Rect2(TampilHud.rect_sumbu_bar(roundi(size.x), roundi(size.y))), warna_sumbu())
 	var dalam: Rect2 = Rect2(Vector2.ONE, size - Vector2.ONE * 2)
 	var lebar_isi: float = floorf(dalam.size.x * nilai)
 	if lebar_isi > 0.0:
 		draw_rect(Rect2(dalam.position, Vector2(lebar_isi, dalam.size.y)), warna_isi)
 	if tanda > 0.0:
 		draw_rect(rect_tanda(), Palette.WARN)
+
+
+## Warna garis sumbu bar (revisi UI pemilik R-7, 2026-10-24: abu terang, bukan hitam; hitam `OUTLINE` hampir tak terlihat di atas panel gelap, 1,1 sampai 1,5:1). Token `Palette.TEXT_2`: 6,65 sampai 9,5:1 terhadap panel HUD di atas dunia
+## terang sampai gelap, sedangkan isi `TEXT` (putih) di bar hanya 1,73:1 terhadap garis tetapi isi setebal 7 px lawan garis 1 px.
+static func warna_sumbu() -> Color:
+	return Palette.TEXT_2
 
 
 ## Persegi tanda batas ngebut dalam koordinat lokal bar (`TampilHud.posisi_tanda`); selebar 1 px, setinggi bar. Dites dan digambar dari sini.

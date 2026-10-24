@@ -33,10 +33,13 @@ func jalankan() -> void:
 	_test_panah_murni()
 	await _test_panah_scene()
 	_test_baseline_murni()
+	_test_pusat_murni()
+	await _test_pusat_reputasi_scene()
 	await _test_hasil_rata()
 	_test_radar_murni()
 	_test_bar_murni()
 	_test_tanpa_bingkai_dan_trek()
+	await _test_sumbu_bar_abu()
 
 
 # --- R-1 ---
@@ -120,6 +123,18 @@ func _test_baseline_murni() -> void:
 	check(is_equal_approx(TampilHasil.baseline_chip(18, 3, 12.0, 11.0), 3.0 + 0.0 + 11.0), "isi 12 = baris 12: baseline = pad + ascent")
 
 
+func _test_pusat_murni() -> void:
+	_judul.call("R-5 pusat vertikal baris reputasi (murni, oracle literal)")
+	check(is_equal_approx(TampilHasil.pusat_tinta(23.0, 17.0), 14.5), "pusat tinta angka: ascent 23, tinggi tinta 17 -> 14,5 dari tepi atas")
+	check(is_equal_approx(TampilHasil.pusat_tinta(11.0, 7.0), 7.5), "pusat tinta label: ascent 11, tinggi 7 -> 7,5")
+	check(TampilHasil.turun_pusat([7.5, 14.5, 9.0] as Array[float]) == ([7, 0, 6] as Array[int]), "pusat 7,5 / 14,5 / 9,0: turun 7, 0, dan 6 (14,5 - 9,0 = 5,5 dibulatkan ke 6)")
+	check(TampilHasil.turun_pusat([5.0, 5.0, 5.0] as Array[float]) == ([0, 0, 0] as Array[int]), "pusat sama: tidak ada yang turun")
+	check(TampilHasil.turun_pusat([] as Array[float]).is_empty(), "masukan kosong: kosong")
+	check(TampilHasil.turun_pusat([1.0, NAN] as Array[float]).is_empty() and TampilHasil.turun_pusat([INF, 1.0] as Array[float]).is_empty(), "NaN atau tak hingga: kosong, tidak ada margin liar")
+	check(TampilHasil.turun_pusat([3.0, 3.4] as Array[float]) == ([0, 0] as Array[int]), "selisih 0,4 dibulatkan 0")
+	check(Config.HASIL_REPUTASI_TINTA_ANGKA_PX == 17 and Config.HASIL_REPUTASI_TINTA_LABEL_PX == 7, "tinggi tinta angka 17 dan label 7 px (terukur dari tangkapan, R-5)")
+
+
 func _angka_padat() -> HasilRute.Angka:
 	var a: HasilRute.Angka = HasilRute.Angka.new()
 	a.pelanggan = 25
@@ -186,8 +201,8 @@ func _test_hasil_rata() -> void:
 		check(semua_kanan, "%s: tepi kanan nilai sama di semua baris struk (%.1f)" % [ket, tepi])
 		var batas_isi: float = layar.rect_panel().end.x - float(Config.HASIL_STRUK_PAD_X_PX)
 		check(absf(tepi - batas_isi) < 0.5, "%s: tepi kanan nilai (%.1f) = tepi kanan isi struk (%.1f)" % [ket, tepi, batas_isi])
-		var rep: Vector3 = layar.baseline_reputasi()
-		check(absf(rep.x - rep.y) < 0.6 and absf(rep.z - rep.y) < 0.6, "%s: baseline label reputasi (%.2f) = angka (%.2f) = chip (%.2f)" % [ket, rep.x, rep.y, rep.z])
+		var rep: Vector3 = layar.pusat_reputasi()
+		check(absf(rep.x - rep.y) <= 0.51 and absf(rep.z - rep.y) <= 0.51, "%s: R-5 pusat tinta label reputasi (%.2f) = angka (%.2f) = pusat chip (%.2f), selisih paling besar 0,5 px" % [ket, rep.x, rep.y, rep.z])
 		var pel: Array[Dictionary] = layar.pasangan_pelanggan()
 		check(pel.size() == 4, "%s: empat baris pelanggan tampil" % ket)
 		var pel_rata: bool = true
@@ -200,6 +215,65 @@ func _test_hasil_rata() -> void:
 			akhir_sama = akhir_sama and absf(x - tepi_akhir[0]) < 0.51
 		check(akhir_sama, "%s: tepi kanan chip, nilai pelanggan, nama dan angka target sama (%d nilai, %.1f)" % [ket, tepi_akhir.size(), tepi_akhir[0] if not tepi_akhir.is_empty() else -1.0])
 		_buang(layar)
+
+
+func _rep_dengan(sesudah: int, ubah: int) -> ReputationManager.Hasil:
+	var h: ReputationManager.Hasil = _rep()
+	h.reputasi_sesudah = sesudah
+	h.reputasi_sebelum = sesudah - ubah
+	h.perubahan = ubah
+	return h
+
+
+func _test_pusat_reputasi_scene() -> void:
+	_judul.call("R-5 kotak chip reputasi satu garis tengah dengan label dan angka: +2, +0, -3, tiga digit (empat lebar viewport)")
+	var kasus: Array = [[12, 2], [0, 0], [97, -3], [100, 12], [8, -8]]
+	for jendela: Array in JENDELA:
+		for k: Array in kasus:
+			var layar: LayarHasil = await _pasang(BERKAS_HASIL, jendela) as LayarHasil
+			layar.isi(_angka_padat(), null, [], -1, _rep_dengan(int(k[0]), int(k[1])), _ringkas())
+			layar.tampilkan(true)
+			for i: int in range(4):
+				await _tree.process_frame
+			var rep: Vector3 = layar.pusat_reputasi()
+			check(absf(rep.x - rep.y) <= 0.51 and absf(rep.z - rep.y) <= 0.51, "@%dx%d reputasi %d (%+d): pusat label %.2f, angka %.2f, chip %.2f" % [jendela[0], jendela[1], k[0], k[1], rep.x, rep.y, rep.z])
+			var kartu: Rect2 = layar.rect_kartu()[0]
+			check(kartu.grow(0.5).encloses(layar.chip_reputasi().get_global_rect()) and kartu.grow(0.5).encloses(layar.rect_angka_reputasi()), "@%dx%d reputasi %d (%+d): chip dan angka di dalam kartu" % [jendela[0], jendela[1], k[0], k[1]])
+			_buang(layar)
+
+
+# --- R-7 ---
+
+## Kontras WCAG dua warna opak (oracle ditulis ulang).
+func _kontras(a: Color, b: Color) -> float:
+	var la: float = _luminans(a)
+	var lb: float = _luminans(b)
+	return (maxf(la, lb) + 0.05) / (minf(la, lb) + 0.05)
+
+
+func _luminans(c: Color) -> float:
+	var k: Array[float] = []
+	for v: float in [c.r, c.g, c.b]:
+		k.append(v / 12.92 if v <= 0.03928 else pow((v + 0.055) / 1.055, 2.4))
+	return 0.2126 * k[0] + 0.7152 * k[1] + 0.0722 * k[2]
+
+
+func _test_sumbu_bar_abu() -> void:
+	_judul.call("R-7 garis tengah bar kecepatan dan stamina abu terang (TEXT_2): token, kontras terhadap panel dan isi, tergambar di bar kosong, isi menutupi garis")
+	check(BarKecepatan.warna_sumbu() == Palette.TEXT_2 and BarKecepatan.warna_sumbu().to_html(false) == "cdb9a3", "warna sumbu bar = token Palette.TEXT_2 (#CDB9A3), bukan OUTLINE")
+	var dunia: Array = ["#6fae4f", "#4e4a56", "#ffffff", "#f2e7c9", "#4f9a74"]
+	var terburuk: float = INF
+	var lama_terbaik: float = 0.0
+	for hex: String in dunia:
+		var panel: Color = Color(Palette.HUD_PANEL.r, Palette.HUD_PANEL.g, Palette.HUD_PANEL.b).lerp(Color(hex), 1.0 - Palette.HUD_PANEL.a)
+		terburuk = minf(terburuk, _kontras(Palette.TEXT_2, panel))
+		lama_terbaik = maxf(lama_terbaik, _kontras(Palette.OUTLINE, panel))
+	check(terburuk >= 6.5 and lama_terbaik < 1.6, "kontras garis TEXT_2 vs panel HUD di atas lima latar dunia: terburuk %.2f:1 (>= 6,5); garis lama OUTLINE terbaiknya hanya %.2f:1" % [terburuk, lama_terbaik])
+	check(_kontras(Palette.TEXT_2, Palette.TEXT) < 2.0 and _kontras(Palette.TEXT_2, Palette.ACCENT) < 1.2, "garis vs isi putih %.2f:1 dan oranye %.2f:1: dibedakan tebal (isi 7 px lawan garis 1 px), bukan kontras" % [_kontras(Palette.TEXT_2, Palette.TEXT), _kontras(Palette.TEXT_2, Palette.ACCENT)])
+	# Piksel nyata di bar kosong dan terisi ditegakkan probe (`probe_hud_rute_jendela.gd`, `_cek_piksel_hud`): renderer headless tidak menggambar.
+	var bar_kosong: BarKecepatan = BarKecepatan.new()
+	check(bar_kosong.nilai == 0.0 and FileAccess.get_file_as_string("res://scripts/ui/bar_kecepatan.gd").contains("draw_rect(Rect2(TampilHud.rect_sumbu_bar(roundi(size.x), roundi(size.y))), warna_sumbu())"), "bar stamina kosong (nilai 0) tetap menggambar garis tengah: sumbu digambar tanpa syarat nilai, sebelum isi")
+	bar_kosong.free()
 
 
 # --- R-3 ---
@@ -234,9 +308,9 @@ func _test_radar_murni() -> void:
 
 func _test_bar_murni() -> void:
 	_judul.call("R-4 bar kecepatan dan stamina tanpa trek: garis sumbu (murni, oracle literal)")
-	check(TampilHud.rect_sumbu_bar(111, 9) == Rect2i(0, 4, 111, 1), "bar 111x9: sumbu di baris 4, selebar bar, setinggi 1")
-	check(TampilHud.rect_sumbu_bar(89, 9) == Rect2i(0, 4, 89, 1), "bar 89x9: sumbu baris 4")
-	check(TampilHud.rect_sumbu_bar(0, 9) == Rect2i() and TampilHud.rect_sumbu_bar(50, 0) == Rect2i(), "ukuran tidak positif: kosong")
+	check(TampilHud.rect_sumbu_bar(111, 9) == Rect2i(1, 4, 109, 1), "bar 111x9: sumbu di baris 4 dari x 1, selebar bar dikurangi dua inset (109), setinggi 1")
+	check(TampilHud.rect_sumbu_bar(89, 9) == Rect2i(1, 4, 87, 1), "bar 89x9: sumbu baris 4, x 1, lebar 87")
+	check(TampilHud.rect_sumbu_bar(0, 9) == Rect2i() and TampilHud.rect_sumbu_bar(50, 0) == Rect2i() and TampilHud.rect_sumbu_bar(2, 9) == Rect2i() and TampilHud.rect_sumbu_bar(3, 9) == Rect2i(1, 4, 1, 1), "ukuran tidak positif atau terlalu sempit untuk dua inset: kosong; lebar 3: satu piksel")
 	check(Config.HUD_BAR_TINGGI_PX == 9 and Config.HUD_BAR_TANDA_PECAHAN == 0.9, "tinggi bar 9 dan tanda ambang 0,9 tidak berubah")
 	var bar: BarKecepatan = BarKecepatan.new()
 	bar.size = Vector2(111, 9)

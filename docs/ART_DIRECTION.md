@@ -90,6 +90,7 @@ Diambil dari sprite pemain produksi dan mock jalan. Dikunci setelah aset gelomba
 | Trotoar, kerb | `#DCCBA6` · `#D5C4A1`, kerb `#A9A2AE` |
 | Dinding pastel | pink `#F0C8CD`/`#BB9C9F`, krem `#F6D6A0`, hijau muda `#C9E0A5`/`#9CAE80`, biru muda `#AADCF0`/`#90BBCC` |
 | Aksen hangat | `#FFE08A` · `#FFC94A` · `#E98E3F` |
+| Stabilo (penanda radar pelanggan, R-6 2026-10-24) | `#FFF65A` · `#FFF200` |
 
 ### 2.5 Palet per distrik dan waktu (usulan)
 

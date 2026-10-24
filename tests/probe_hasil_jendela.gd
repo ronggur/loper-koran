@@ -350,11 +350,60 @@ func _periksa_rata(nama: String, layar: LayarHasil) -> int:
 			print("TIDAK SESUAI [%s]: tepi kanan kolom samping %.2f != %.2f" % [nama, x, samping[0]])
 			salah += 1
 	if layar.kanan_tampil() and layar.chip_reputasi().is_visible_in_tree():
-		var rep: Vector3 = layar.baseline_reputasi()
-		if absf(rep.x - rep.y) > 0.6 or absf(rep.z - rep.y) > 0.6:
-			print("TIDAK SESUAI [%s]: baseline reputasi label %.2f, angka %.2f, chip %.2f" % [nama, rep.x, rep.y, rep.z])
+		var rep: Vector3 = layar.pusat_reputasi()
+		if absf(rep.x - rep.y) > 0.51 or absf(rep.z - rep.y) > 0.51:
+			print("TIDAK SESUAI [%s]: pusat reputasi label %.2f, angka %.2f, chip %.2f (R-5: satu garis tengah)" % [nama, rep.x, rep.y, rep.z])
 			salah += 1
+		salah += _ukur_piksel_reputasi(nama, layar)
 	return salah
+
+
+## Pusat vertikal TINTA label "Reputasi" (huruf R), angka reputasi, dan kotak chip perubahan diukur dari piksel tangkapan nyata (R-5): selisih paling besar 0,8 piksel game (0,5 dari tinggi tinta ganjil lawan tinggi chip genap, sisanya tepi anti-alias font).
+## Juga memeriksa tinggi tinta angka dan huruf kapital sama dengan konstanta Config. Hanya dipanggil sesudah beberapa frame layar stabil.
+func _ukur_piksel_reputasi(nama: String, layar: LayarHasil) -> int:
+	var gambar: Image = root.get_texture().get_image()
+	var skala: float = float(gambar.get_width()) / root.get_visible_rect().size.x
+	var angka: Rect2 = layar.rect_angka_reputasi()
+	var label: Rect2 = layar.rect_label_reputasi()
+	var chip: Rect2 = layar.chip_reputasi().get_global_rect()
+	var latar: Color = gambar.get_pixel(int((chip.position.x - 4.0) * skala), int(chip.get_center().y * skala))
+	var tinta_angka: Vector2 = _baris_tinta(gambar, skala, angka, latar, 60.0, 0.0, angka.size.x)
+	var tinta_label: Vector2 = _baris_tinta(gambar, skala, label, latar, 60.0, 0.0, 6.0)
+	var tepi_chip: Vector2 = _baris_tinta(gambar, skala, Rect2(chip.position, Vector2(2.0, chip.size.y)), latar, 60.0, 0.0, 2.0)
+	if tinta_angka.y < 0.0 or tinta_label.y < 0.0 or tepi_chip.y < 0.0:
+		print("TIDAK SESUAI [%s]: tinta reputasi tidak terukur (angka %s, label %s, chip %s)" % [nama, tinta_angka, tinta_label, tepi_chip])
+		return 1
+	var salah: int = 0
+	var c_angka: float = (tinta_angka.x + tinta_angka.y + 1.0) / 2.0 / skala
+	var c_label: float = (tinta_label.x + tinta_label.y + 1.0) / 2.0 / skala
+	var c_chip: float = (tepi_chip.x + tepi_chip.y + 1.0) / 2.0 / skala
+	print("pusat tinta reputasi [%s]: label %.2f, angka %.2f, chip %.2f (piksel game); tinggi tinta angka %.2f, label %.2f" % [nama, c_label, c_angka, c_chip, (tinta_angka.y - tinta_angka.x + 1.0) / skala, (tinta_label.y - tinta_label.x + 1.0) / skala])
+	if absf(c_label - c_angka) > 0.8 or absf(c_chip - c_angka) > 0.8:
+		print("TIDAK SESUAI [%s]: pusat tinta label %.2f, angka %.2f, chip %.2f tidak satu garis (> 0,8 px game: 0,5 dari tinggi ganjil lawan genap + 0,3 tepi anti-alias)" % [nama, c_label, c_angka, c_chip])
+		salah += 1
+	if absf((tinta_angka.y - tinta_angka.x + 1.0) / skala - float(Config.HASIL_REPUTASI_TINTA_ANGKA_PX)) > 1.0 or absf((tinta_label.y - tinta_label.x + 1.0) / skala - float(Config.HASIL_REPUTASI_TINTA_LABEL_PX)) > 1.0:
+		print("TIDAK SESUAI [%s]: tinggi tinta angka/label berbeda dari Config (%d, %d)" % [nama, Config.HASIL_REPUTASI_TINTA_ANGKA_PX, Config.HASIL_REPUTASI_TINTA_LABEL_PX])
+		salah += 1
+	return salah
+
+
+## Baris piksel layar (atas, bawah; -1 bila tidak ada) di dalam `area` (koordinat game, kolom `x0` sampai `x1` relatif tepi kirinya) yang warnanya berbeda dari `latar` lebih dari `ambang` (jarak RGB 0..765).
+func _baris_tinta(gambar: Image, skala: float, area: Rect2, latar: Color, ambang: float, x0: float, x1: float) -> Vector2:
+	var atas: int = -1
+	var bawah: int = -1
+	var y_awal: int = int(floor(area.position.y * skala))
+	var y_akhir: int = int(ceil(area.end.y * skala))
+	for y: int in range(y_awal, y_akhir):
+		for x: int in range(int(floor((area.position.x + x0) * skala)), int(ceil((area.position.x + x1) * skala))):
+			if x < 0 or y < 0 or x >= gambar.get_width() or y >= gambar.get_height():
+				continue
+			var p: Color = gambar.get_pixel(x, y)
+			if (absf(p.r - latar.r) + absf(p.g - latar.g) + absf(p.b - latar.b)) * 255.0 > ambang:
+				if atas < 0:
+					atas = y
+				bawah = y
+				break
+	return Vector2(float(atas), float(bawah))
 
 
 ## Label tampil yang teksnya terpotong (baris terlihat != baris, tinggi kurang, atau lebar kurang dari lebar teks pada label satu baris) dan label yang saling bertumpuk.

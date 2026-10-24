@@ -833,6 +833,9 @@ const HASIL_LENCANA_TARGET_PX: int = 32
 const HASIL_KARTU_JARAK_PX: int = 3
 const HASIL_KARTU_BARIS_JARAK_PX: int = 2
 const HASIL_KARTU_REPUTASI_PX: int = 40
+## Tinggi tinta (piksel game) angka reputasi (font `LayarJudul`, angka 0 sampai 9) dan huruf kapital label "Reputasi" (font `LayarLabel`), terukur dari tangkapan nyata (probe hasil); dipakai meratakan pusat vertikal label, angka, dan chip di kartu reputasi (R-5). Dijaga probe piksel.
+const HASIL_REPUTASI_TINTA_ANGKA_PX: int = 17
+const HASIL_REPUTASI_TINTA_LABEL_PX: int = 7
 const HASIL_KARTU_PAD_PX: int = 2
 const HASIL_BARU_JARAK_PX: int = 2
 ## Paling banyak sekian kali tata letak layar hasil ditata ulang per frame karena ukuran struk atau kolom samping berubah (bungkus kata menentukan tinggi sesudah Container selesai; mencegah berputar).

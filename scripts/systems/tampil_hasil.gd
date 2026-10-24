@@ -146,6 +146,25 @@ static func turun_baseline(ascent_a: float, ascent_b: float) -> Vector2i:
 	return Vector2i(selisih, 0) if ascent_a < ascent_b else Vector2i(0, selisih)
 
 
+## Pusat vertikal tinta teks (jarak dari tepi atas baris, piksel game) untuk teks yang rata atas dengan `ascent` dan tinggi tinta kapital atau angka `tinggi_tinta`: garis dasar (`ascent`) dikurangi setengah tinggi tinta (R-5).
+static func pusat_tinta(ascent: float, tinggi_tinta: float) -> float:
+	return ascent - tinggi_tinta / 2
+
+
+## Margin atas (piksel game, bulat, tidak pernah negatif) untuk tiap benda yang rata atas dalam satu baris supaya pusat vertikalnya sama (revisi UI pemilik R-5): `pusat` = pusat tiap benda dari tepi atasnya;
+## semuanya diturunkan sampai pusat yang paling rendah (dibulatkan; pusat dari tinta bisa setengah piksel, jadi selisih sisa paling besar 0,5 px). Hasil sejajar dengan `pusat`; kosong untuk masukan kosong atau tidak hingga.
+static func turun_pusat(pusat: Array[float]) -> Array[int]:
+	var hasil: Array[int] = []
+	var tertinggi: float = -INF
+	for p: float in pusat:
+		if not is_finite(p):
+			return hasil
+		tertinggi = maxf(tertinggi, p)
+	for p: float in pusat:
+		hasil.append(roundi(tertinggi - p))
+	return hasil
+
+
 ## Baseline (jarak dari tepi atas chip ke garis dasar teks chip) untuk chip setinggi `tinggi_chip` dengan isi berjarak `pad_y` atas dan bawah, teks berbaris setinggi `tinggi_baris` dan `ascent`, teks di tengah tinggi isi
 ## (`ChipUi`: label berrata tengah di dalam kotak isi). Dipakai menurunkan chip reputasi sampai garis dasar teksnya sama dengan garis dasar angka reputasi.
 static func baseline_chip(tinggi_chip: int, pad_y: int, tinggi_baris: float, ascent: float) -> float:

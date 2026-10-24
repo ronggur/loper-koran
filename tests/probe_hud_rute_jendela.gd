@@ -412,8 +412,8 @@ func _cek_piksel_hud(keadaan: String, gambar: Image) -> void:
 		var x: float = r2.position.x + r2.size.x - 3.0
 		var tengah: String = _piksel(gambar, x, r2.position.y + float(TampilHud.rect_sumbu_bar(roundi(r2.size.x), roundi(r2.size.y)).position.y) + 0.5)
 		var atas: String = _piksel(gambar, x, r2.position.y + 1.5)
-		if tengah != tetap or atas == Palette.UI_PANEL_RAISED.to_html(false):
-			print("TIDAK SESUAI [hud %s]: bar %s bagian kosong: sumbu %s (harus OUTLINE), baris atas %s (bukan UI_PANEL_RAISED)" % [keadaan, r2, tengah, atas])
+		if tengah != BarKecepatan.warna_sumbu().to_html(false) or atas == Palette.UI_PANEL_RAISED.to_html(false):
+			print("TIDAK SESUAI [hud %s]: bar %s bagian kosong: sumbu %s (harus TEXT_2 abu terang, R-7), baris atas %s (bukan UI_PANEL_RAISED)" % [keadaan, r2, tengah, atas])
 			salah += 1
 	_gagal += salah
 

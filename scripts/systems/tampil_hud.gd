@@ -67,10 +67,10 @@ static func baris2_tampil(ada_kondisi: bool, kunci: int) -> bool:
 	return ada_kondisi or reputasi_tampil(kunci)
 
 
-## Garis sumbu bar kecepatan dan stamina tanpa trek (revisi UI pemilik R-4): satu garis `UI_GARIS_PX` setinggi satu piksel di tengah tinggi bar (`floor(tinggi / 2)`, baris 4 dari 9), sepanjang seluruh lebar bar.
-## Koordinat lokal bar, piksel game; Rect2i kosong bila ukuran tidak positif.
+## Garis sumbu bar kecepatan dan stamina tanpa trek (revisi UI pemilik R-4): satu garis `UI_GARIS_PX` setinggi satu piksel di tengah tinggi bar (`floor(tinggi / 2)`, baris 4 dari 9), sepanjang lebar bar dikurangi `UI_GARIS_PX` di kedua ujung (R-7: garis abu terang tidak boleh menonjol keluar dari ujung isi, yang juga berinset `UI_GARIS_PX`).
+## Koordinat lokal bar, piksel game; Rect2i kosong bila ukuran tidak positif atau lebar tidak cukup untuk dua inset.
 static func rect_sumbu_bar(lebar_bar: int, tinggi_bar: int) -> Rect2i:
-	if lebar_bar <= 0 or tinggi_bar <= 0:
+	if lebar_bar <= Config.UI_GARIS_PX * 2 or tinggi_bar <= 0:
 		return Rect2i()
 	var tengah: int = tinggi_bar / 2
-	return Rect2i(0, tengah, lebar_bar, Config.UI_GARIS_PX)
+	return Rect2i(Config.UI_GARIS_PX, tengah, lebar_bar - Config.UI_GARIS_PX * 2, Config.UI_GARIS_PX)

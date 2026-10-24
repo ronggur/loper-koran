@@ -286,16 +286,19 @@ func _geser_atas(label: Label, piksel: int) -> void:
 	label.add_theme_stylebox_override(&"normal", kotak)
 
 
-## Baris reputasi (R-2): label "Reputasi" dan angka reputasi sama garis dasarnya; chip perubahan diturunkan sampai garis dasar teksnya juga sama (lewat `PembungkusChip`, dipanggil lagi tiap `atur` chip karena font chip
-## baru terpasang di situ).
+## Baris reputasi (R-5, menggantikan perataan garis dasar R-2 untuk baris ini): pusat vertikal tinta label "Reputasi", pusat tinta angka reputasi, dan pusat kotak chip perubahan ("+2") sama (satu garis tengah dengan
+## ikon bintang); yang pusatnya lebih tinggi diturunkan lewat margin atas (`TampilHasil.turun_pusat`; chip lewat `PembungkusChip`). Dipanggil lagi tiap `atur` chip.
 func _ratakan_reputasi() -> void:
-	_ratakan_baseline(_label_reputasi, _angka_reputasi)
-	var teks: Label = _chip_reputasi.label()
-	var tinggi: float = teks.get_theme_font(&"font").get_height(teks.get_theme_font_size(&"font_size"))
-	var ukuran: KomponenUi.UkuranChip = _chip_reputasi.ukuran()
-	var dalam_chip: float = TampilHasil.baseline_chip(KomponenUi.tinggi_chip(ukuran), KomponenUi.pad_y_chip(ukuran), tinggi, _ascent(teks))
-	var turun: int = maxi(roundi(_ascent(_angka_reputasi) - dalam_chip), 0)
-	_pembungkus_chip.add_theme_constant_override(&"margin_top", turun)
+	var tinggi_chip: float = float(KomponenUi.tinggi_chip(_chip_reputasi.ukuran()))
+	var pusat: Array[float] = [
+		TampilHasil.pusat_tinta(_ascent(_label_reputasi), float(Config.HASIL_REPUTASI_TINTA_LABEL_PX)),
+		TampilHasil.pusat_tinta(_ascent(_angka_reputasi), float(Config.HASIL_REPUTASI_TINTA_ANGKA_PX)),
+		tinggi_chip / 2,
+	]
+	var turun: Array[int] = TampilHasil.turun_pusat(pusat)
+	_geser_atas(_label_reputasi, turun[0])
+	_geser_atas(_angka_reputasi, turun[1])
+	_pembungkus_chip.add_theme_constant_override(&"margin_top", turun[2])
 
 
 ## Garis dasar (koordinat viewport game) teks pertama `label` yang rata atas: tepi atas + margin atas gaya `normal` + ascent font. Untuk tes dan probe.
@@ -304,13 +307,20 @@ func baseline_label(label: Label) -> float:
 	return label.get_global_rect().position.y + margin + _ascent(label)
 
 
-## Garis dasar label, nilai, dan teks chip baris reputasi (untuk tes): `Vector3(label, angka, chip)`; chip rata tengah isinya (`TampilHasil.baseline_chip`).
-func baseline_reputasi() -> Vector3:
-	var teks: Label = _chip_reputasi.label()
-	var ukuran: KomponenUi.UkuranChip = _chip_reputasi.ukuran()
-	var tinggi: float = teks.get_theme_font(&"font").get_height(teks.get_theme_font_size(&"font_size"))
-	var chip: float = _chip_reputasi.get_global_rect().position.y + TampilHasil.baseline_chip(KomponenUi.tinggi_chip(ukuran), KomponenUi.pad_y_chip(ukuran), tinggi, _ascent(teks))
-	return Vector3(baseline_label(_label_reputasi), baseline_label(_angka_reputasi), chip)
+## Persegi angka dan label reputasi (untuk probe pengukur piksel R-5).
+func rect_angka_reputasi() -> Rect2:
+	return _angka_reputasi.get_global_rect()
+
+
+func rect_label_reputasi() -> Rect2:
+	return _label_reputasi.get_global_rect()
+
+
+## Pusat vertikal (koordinat viewport game) tinta label, tinta angka, dan kotak chip baris reputasi (untuk tes dan probe): `Vector3(label, angka, chip)`. Ketiganya harus sama (selisih paling besar 0,5 px karena tinggi tinta ganjil lawan tinggi chip genap).
+func pusat_reputasi() -> Vector3:
+	var label: float = baseline_label(_label_reputasi) - float(Config.HASIL_REPUTASI_TINTA_LABEL_PX) / 2
+	var angka: float = baseline_label(_angka_reputasi) - float(Config.HASIL_REPUTASI_TINTA_ANGKA_PX) / 2
+	return Vector3(label, angka, _chip_reputasi.get_global_rect().get_center().y)
 
 
 ## Pasangan (label, nilai) tiap baris struk yang tampil, urut: Tip, Skor, Tepat, Meleset, Koran terbuang, Koin bersih (untuk tes perataan label-nilai).
