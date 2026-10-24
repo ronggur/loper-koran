@@ -522,9 +522,39 @@ func _test_invarian_g5() -> void:
 	k.stamina = 55.0
 	var h: BikeMotion.Hasil = AkhirRute.langkah_keluar(k, DT)
 	check(k.kecepatan_ud == 1.0 and k.stamina == 55.0 and h.keadaan != k, "langkah_keluar memberi keadaan baru, masukan tetap")
-	# Hanya satu hal yang berpengaruh pada skor/tenggat di scene: keadaan jam. Jarak sesudah garis tidak mengubah status garis akhir.
 	var status: AkhirRute.Status = AkhirRute.periksa(true, 9999.0, 236.0)
 	check(status.selesai and not status.baru_selesai, "jarak jauh sesudah garis: status tetap selesai, tanpa sinyal baru_selesai kedua")
+	# Dinamis dengan modul nyata: 10 detik gerak keluar (ngebut) sesudah garis tidak mengubah kondisi sepeda, jam tenggat, progres, dan radar.
+	var daftar_toko: Array[DataToko] = []
+	var awal_kondisi: KondisiRute.Keadaan = KondisiRute.awal({"ban": 0.5, "rem": 0.5, "rantai": 0.5}, {}, 1, daftar_toko)
+	var beku: KondisiRute.Keadaan = awal_kondisi
+	var jalan: KondisiRute.Keadaan = awal_kondisi
+	var sepeda: BikeMotion.Keadaan = BikeMotion.Keadaan.new()
+	sepeda.kecepatan_ud = 6.0
+	for i: int in range(600):
+		var gerak: BikeMotion.Hasil = AkhirRute.langkah_keluar(sepeda, DT, 0.0, beku.efek)
+		sepeda = gerak.keadaan
+		beku = KondisiRute.langkah(beku, gerak, DT, null, true).keadaan
+		jalan = KondisiRute.langkah(jalan, gerak, DT, null, false).keadaan
+	check(beku.kondisi == awal_kondisi.kondisi and beku.jumlah_peringatan == awal_kondisi.jumlah_peringatan, "kondisi sepeda sesudah garis (selesai): 600 langkah gerak keluar tidak mengubah kondisi")
+	check(jalan.kondisi != awal_kondisi.kondisi, "kontrol: gerak yang sama TANPA bendera selesai memang mengikis kondisi (uji ini bisa gagal)")
+	var tenggat: TenggatRute.Keadaan = TenggatRute.hentikan(TenggatRute.langkah(TenggatRute.awal(240.0), 70.0))
+	var tenggat_sesudah: TenggatRute.Keadaan = tenggat
+	for i: int in range(600):
+		tenggat_sesudah = TenggatRute.langkah(tenggat_sesudah, DT)
+	check(tenggat_sesudah.waktu_detik == tenggat.waktu_detik and tenggat_sesudah.waktu_detik == 70.0 and not TenggatRute.lewat(tenggat_sesudah), "jam tenggat berhenti di garis: 70,0 detik tetap sesudah 10 detik gerak keluar")
+	var pustaka: Array[SegmenRute] = PemuatRute.muat_folder("res://assets/data/routes/perumahan").segmen
+	var rute: RouteBuilder.Rute = RouteBuilder.bangun(7, pustaka).rute
+	check(rute != null and rute.panjang_ubin > 0.0, "rute nyata seed 7 tersusun")
+	if rute != null:
+		var terantar: Dictionary = {rute.pelanggan[0].id: true, rute.pelanggan[3].id: true}
+		var di_garis: Array[ProgresRute.Status] = ProgresRute.status(rute, rute.panjang_ubin, terantar, true)
+		var jauh: Array[ProgresRute.Status] = ProgresRute.status(rute, rute.panjang_ubin + 17.9, terantar, true)
+		check(di_garis == jauh and ProgresRute.jumlah_terkirim(rute, terantar) == 2, "progres 25 rumah sama di garis dan 17,9 ubin sesudahnya")
+		for bantu: bool in [false, true]:
+			var radar_garis: Array[RadarRute.Penanda] = RadarRute.penanda(rute, rute.panjang_ubin, terantar, bantu, false)
+			var radar_jauh: Array[RadarRute.Penanda] = RadarRute.penanda(rute, rute.panjang_ubin + 17.9, terantar, bantu, false)
+			check(radar_garis.size() == radar_jauh.size() and radar_jauh.is_empty(), "radar (bantu %s) kosong di garis dan 17,9 ubin sesudahnya: tidak ada rumah di depan garis akhir" % bantu)
 
 
 # --- Scene: rumus kamera dan titik pijak = kamera nyata ---
