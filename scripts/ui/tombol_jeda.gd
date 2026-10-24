@@ -35,7 +35,7 @@ func _draw() -> void:
 	var sisi: float = float(Config.HUD_JEDA_GAMBAR_PX)
 	var kotak: Rect2 = Rect2(geser_gambar, Vector2(sisi, sisi))
 	var ditekan: bool = is_pressed()
-	draw_style_box(_bingkai_tekan if ditekan else _bingkai_normal, kotak)
+	draw_style_box(bingkai(ditekan), kotak)
 	draw_texture(_glif, kotak.position + Vector2(TampilHud.posisi_glif_jeda(ditekan)))
 
 
@@ -43,6 +43,16 @@ func _draw() -> void:
 func rect_gambar() -> Rect2:
 	var sisi: float = float(Config.HUD_JEDA_GAMBAR_PX)
 	return Rect2(get_global_rect().position + geser_gambar, Vector2(sisi, sisi))
+
+
+## Bingkai 9-slice yang digambar untuk keadaan `ditekan` (dipakai `_draw`; untuk tes).
+func bingkai(ditekan: bool) -> StyleBoxTexture:
+	return _bingkai_tekan if ditekan else _bingkai_normal
+
+
+## Glif yang digambar (untuk tes).
+func glif() -> Texture2D:
+	return _glif
 
 
 ## Bingkai dan glif yang digambar untuk keadaan `ditekan` (untuk tes): `[nama tekstur bingkai, posisi glif relatif pojok gambar]`.

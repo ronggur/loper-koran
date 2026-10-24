@@ -390,6 +390,7 @@ func _test_hud_isi() -> void:
 	# Tombol jeda: bingkai tombol biasa, glif jeda terang, tekan = bingkai tekan dan glif turun 2 px.
 	var jeda: TombolJeda = hud.find_child("TombolJeda", true, false) as TombolJeda
 	check(jeda.tampilan(false) == ["btn_biasa", Vector2i(6, 5)] and jeda.tampilan(true) == ["btn_biasa_tekan", Vector2i(6, 7)], "tombol jeda: bingkai biasa dan glif (6, 5); ditekan bingkai tekan dan glif (6, 7)")
+	check(jeda.bingkai(false).texture == GayaHud.tekstur("btn_biasa") and jeda.bingkai(true).texture == GayaHud.tekstur("btn_biasa_tekan") and jeda.glif() == GayaHud.tekstur("glif_jeda_terang"), "tombol jeda menggambar bingkai biasa (ditekan: bingkai tekan) dan glif jeda terang")
 	check(jeda.rect_gambar() == Rect2(26, 8, 24, 24) and hud.rect_tombol_jeda() == Rect2(17, 4, 42, 42), "tombol jeda: gambar 24x24 di (26, 8), area sentuh 42x42 di (17, 4) tidak berubah")
 	check(jeda.text.is_empty() and jeda.icon == null, "tombol jeda tanpa teks dan tanpa Button.icon (digambar dari bingkai dan glif)")
 	_bersihkan_rute(akar)
