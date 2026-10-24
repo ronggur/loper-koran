@@ -9,6 +9,8 @@ extends RefCounted
 
 const BERKAS_RUTE: String = "res://scenes/rute/rute.tscn"
 const SKALA: int = 3
+## Skala jendela uji terhadap viewport game (3 untuk 1920x1080, 2340x1080, 2400x1080; 2 untuk 1600x720); tes di jendela lain mengubahnya sebelum memberi sentuhan.
+static var skala_jendela: int = SKALA
 const TITIK_STICK: Vector2 = Vector2(100, 260)
 const DT: float = 1.0 / 30.0
 const DT_REM: float = 0.1
@@ -51,7 +53,7 @@ static func state_sepeda(kondisi: float) -> Dictionary:
 static func sentuh(index: int, posisi_viewport: Vector2, tekan: bool) -> void:
 	var peristiwa: InputEventScreenTouch = InputEventScreenTouch.new()
 	peristiwa.index = index
-	peristiwa.position = posisi_viewport * float(SKALA)
+	peristiwa.position = posisi_viewport * float(skala_jendela)
 	peristiwa.pressed = tekan
 	Input.parse_input_event(peristiwa)
 	Input.flush_buffered_events()
@@ -61,7 +63,7 @@ static func sentuh(index: int, posisi_viewport: Vector2, tekan: bool) -> void:
 static func geser(index: int, posisi_viewport: Vector2) -> void:
 	var peristiwa: InputEventScreenDrag = InputEventScreenDrag.new()
 	peristiwa.index = index
-	peristiwa.position = posisi_viewport * float(SKALA)
+	peristiwa.position = posisi_viewport * float(skala_jendela)
 	Input.parse_input_event(peristiwa)
 	Input.flush_buffered_events()
 
@@ -112,6 +114,7 @@ static func sidik(akar: RuteMain, jarak_radar: float) -> Dictionary:
 ## Menjalankan satu kasus sampai layar hasil terbuka. Mengembalikan `{"garis": sidik di langkah garis akhir pertama, "hasil": sidik saat layar hasil terbuka + angka hasil, ...}`.
 static func jalankan(tree: SceneTree, kasus: Dictionary, jendela: Vector2i = Vector2i(2340, 1080)) -> Dictionary:
 	tree.root.size = jendela
+	skala_jendela = SKALA
 	var akar: RuteMain = (load(BERKAS_RUTE) as PackedScene).instantiate() as RuteMain
 	akar.atur_benih_awal(int(kasus["benih"]))
 	akar.atur_hari(int(kasus["hari"]))

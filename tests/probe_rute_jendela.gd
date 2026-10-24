@@ -3,8 +3,8 @@ extends SceneTree
 ## memajukan simulasi, sprite, dan partikel dengan langkah tetap `perbarui(1/60)` (bukan waktu dinding), lalu menyimpan tangkapan
 ## layar: awal rute, tengah rute dengan rumah dan kotak surat, objek uji yang menutupi pemain (semi-transparan; rumah rute di tepi
 ## jalan praktis tidak pernah menutupi, D-8 run 3A, jadi probe menaruh satu rumah uji lebih dekat ke jalan), mode bantu (koran bantu ke
-## kotak surat pelanggan dan centang), akhir rute (banner, sepeda berhenti, layar hasil sejak run 3C), "Main lagi" (seed berikutnya), dan
-## kidal. Titik ketukan digambar sebagai titik 2 px game warna `ACCENT` di lapisan probe (bukan bagian game). Mencetak data tiap
+## kotak surat pelanggan dan centang), garis finish dengan portal (run garis-finish-portal bagian C: portal tertutup jauh dan mendekat, terbuka, sepeda tepat di garis, keluar dalam tiga tahap,
+## banner saat hampir keluar, layar hasil di atas dunia portal), "Main lagi" (seed berikutnya, kamera mengikuti lagi, portal tertutup), dan kidal. Titik ketukan digambar sebagai titik 2 px game warna `ACCENT` di lapisan probe (bukan bagian game). Mencetak data tiap
 ## keadaan dan kotak teks HUD untuk `tools/cek_blok_piksel.py --kecualikan`. Tidak interaktif: keluar sendiri lewat `ProbeKeluar`.
 ##
 ## Pakai (jendela harus muat di layar monitor):
@@ -99,36 +99,65 @@ func _initialize() -> void:
 	await _maju(Config.LEMPAR_JEDA_DETIK)
 	await _lempar_bantu("bantu", false)
 
-	# --- Akhir rute: banner, tombol, sepeda berhenti ---
-	_sepeda.jarak_ubin = _akar.rute().panjang_ubin - 1.0
-	await _maju(0.6)
-	print("akhir: selesai %s, banner tampil %s, kecepatan %.2f" % [_akar.rute_sudah_selesai(), _akar.panel_akhir().tampil(), _sepeda.kecepatan_ud])
-	_cetak_kecualikan("akhir", [_hud.rect_tombol_jeda(), _hud.rect_panel_progres(), _hud.rect_panel_kecepatan(), _hud.rect_panel_koran(), _akar.panel_akhir().rect_banner()])
-	if not _akar.rute_sudah_selesai() or not _akar.panel_akhir().tampil():
-		_gagal += 1
-	await _foto("akhir_mengerem")
-	await _maju(3.0)
-	await _foto("akhir_berhenti")
-	print("akhir berhenti: layar hasil tampil %s" % _akar.hasil_tampil())
-	if _sepeda.kecepatan_ud != 0.0 or not _akar.hasil_tampil():
-		_gagal += 1
+	# --- Portal garis finish (run garis-finish-portal bagian C): tertutup jauh, masih tertutup, terbuka ---
+	var panjang: float = _akar.rute().panjang_ubin
+	_akar.atur_mode_bantu(false)
+	await _tunggu(3)
+	await _ke_sebelum_garis(panjang - 15.0)
+	await _periksa_portal("portal_jauh", 0)
+	await _ke_sebelum_garis(panjang - 7.0)
+	await _periksa_portal("portal_tertutup_mendekat", 0)
+	await _ke_sebelum_garis(panjang - 4.0)
+	await _periksa_portal("portal_terbuka", 1)
 
-	# --- Main lagi: seed berikutnya ---
-	var seed_awal: int = _akar.benih()
-	_akar.main_lagi()
-	print("main lagi: seed %d -> %d, jarak %.2f, koran %d, banner tampil %s" % [seed_awal, _akar.benih(), _sepeda.jarak_ubin, _akar.koran.sisa, _akar.panel_akhir().tampil()])
-	if _akar.benih() != seed_awal + 1 or _sepeda.jarak_ubin != 0.0 or _akar.koran.sisa != _akar.rute().koran_awal or _akar.panel_akhir().tampil():
+	# --- Garis akhir: sepeda tepat di garis, kamera beku, banner belum tampil ---
+	await _sampai(func() -> bool: return _akar.rute_sudah_selesai(), 6.0)
+	var kamera_garis: Vector2 = _akar.find_child("Kamera", true, false).position
+	print("garis: selesai %s, fase %s, banner tampil %s, kamera beku %s, jarak %.2f dari %.0f" % [_akar.rute_sudah_selesai(), AkhirRute.Fase.keys()[_akar.fase_keluar()], _akar.panel_akhir().tampil(), _akar.kamera_beku(), _sepeda.jarak_ubin, panjang])
+	if not _akar.rute_sudah_selesai() or _akar.panel_akhir().tampil() or not _akar.kamera_beku() or _akar.hasil_tampil():
+		_gagal += 1
+	await _foto("garis")
+
+	# --- Keluar: tiga tahap (sepeda melewati portal, hampir keluar dengan banner, setengah badan di luar layar) lalu layar hasil ---
+	await _maju(0.5)
+	await _foto("keluar_1")
+	await _sampai(func() -> bool: return _akar.hampir_keluar(), 6.0)
+	_cetak_kecualikan("banner", [_hud.rect_tombol_jeda(), _hud.rect_panel_progres(), _hud.rect_panel_kecepatan(), _hud.rect_panel_koran(), _akar.panel_akhir().rect_banner()])
+	print("hampir keluar: sisa %.2f ubin, banner tampil %s, hasil tampil %s, fase %s" % [_sisa_keluar(), _akar.panel_akhir().tampil(), _akar.hasil_tampil(), AkhirRute.Fase.keys()[_akar.fase_keluar()]])
+	if not _akar.panel_akhir().tampil() or _akar.hasil_tampil() or _sisa_keluar() <= 0.0:
+		_gagal += 1
+	await _foto("keluar_2_banner")
+	await _sampai(func() -> bool: return _sisa_keluar() < 1.5, 6.0)
+	await _foto("keluar_3")
+	await _sampai(func() -> bool: return _akar.hasil_tampil(), 6.0)
+	print("hasil: tampil %s, banner tampil %s, fase %s, sepeda di layar %s (sisa %.2f), kamera %s (garis %s)" % [_akar.hasil_tampil(), _akar.panel_akhir().tampil(), AkhirRute.Fase.keys()[_akar.fase_keluar()], _akar.posisi_layar_sepeda(), _sisa_keluar(), _akar.find_child("Kamera", true, false).position, kamera_garis])
+	if not _akar.hasil_tampil() or _akar.panel_akhir().tampil() or _sisa_keluar() > 0.0 or _akar.find_child("Kamera", true, false).position != kamera_garis:
 		_gagal += 1
 	await _maju(0.5)
+	await _foto("hasil")
+
+	# --- Main lagi: seed berikutnya, kamera mengikuti lagi, portal tertutup ---
+	var seed_awal: int = _akar.benih()
+	_akar.main_lagi()
+	await _maju(0.5)
+	print("main lagi: seed %d -> %d, jarak %.2f, koran %d, banner tampil %s, kamera beku %s, portal bingkai %d" % [seed_awal, _akar.benih(), _sepeda.jarak_ubin, _akar.koran.sisa, _akar.panel_akhir().tampil(), _akar.kamera_beku(), _akar.portal().bingkai()])
+	if _akar.benih() != seed_awal + 1 or _akar.koran.sisa != _akar.rute().koran_awal or _akar.panel_akhir().tampil() or _akar.kamera_beku() or _akar.portal().bingkai() != 0 or _akar.hasil_tampil():
+		_gagal += 1
 	await _foto("main_lagi")
 
-	# --- Kidal: zona tertukar, banner tetap, lalu layar hasil ---
+	# --- Kidal: zona tertukar, garis, banner, dan layar hasil ---
 	_akar.atur_kidal(true)
 	await _tunggu(3)
-	_sepeda.jarak_ubin = _akar.rute().panjang_ubin - 1.0
-	await _maju(2.0)
+	panjang = _akar.rute().panjang_ubin
+	await _ke_sebelum_garis(panjang - 5.0)
+	await _sampai(func() -> bool: return _akar.rute_sudah_selesai(), 6.0)
+	await _foto("kidal_garis")
+	await _sampai(func() -> bool: return _akar.hampir_keluar(), 6.0)
 	_cetak_kecualikan("kidal", [_hud.rect_tombol_jeda(), _hud.rect_panel_progres(), _hud.rect_panel_kecepatan(), _hud.rect_panel_koran(), _akar.panel_akhir().rect_banner()])
-	await _foto("kidal_akhir")
+	await _foto("kidal_banner")
+	await _sampai(func() -> bool: return _akar.hasil_tampil(), 6.0)
+	await _maju(0.5)
+	await _foto("kidal_hasil")
 	print("probe selesai, %d keadaan tidak sesuai" % _gagal)
 	await ProbeKeluar.keluar(self, 0 if _gagal == 0 else 1)
 
@@ -184,6 +213,42 @@ func _lempar_bantu(nama: String, kidal: bool) -> void:
 	if mendarat.hasil != ZonaSasaran.Hasil.KOTAK_SURAT or mendarat.penanda != ZonaSasaran.Penanda.CENTANG:
 		_gagal += 1
 	await _foto("%s_centang" % nama)
+
+
+## Menaruh sepeda di `jarak` ubin (santai, lateral 0), lalu memajukan setengah detik supaya dunia dan portal menyesuaikan.
+func _ke_sebelum_garis(jarak: float) -> void:
+	var k: BikeMotion.Keadaan = _sepeda.keadaan.salin()
+	k.kecepatan_ud = Config.KECEPATAN_SANTAI_UD
+	k.lateral_ubin = 0.0
+	_sepeda.keadaan = k
+	_sepeda.jarak_ubin = jarak
+	await _maju(0.3)
+
+
+## Memajukan langkah demi langkah sampai `kondisi` benar (paling lama `maks_detik`); keadaan tidak sesuai bila tidak tercapai.
+func _sampai(kondisi: Callable, maks_detik: float) -> void:
+	var langkah: int = 0
+	while not bool(kondisi.call()) and float(langkah) * DT < maks_detik:
+		await _maju(DT, false)
+		langkah += 1
+	if not bool(kondisi.call()):
+		print("PERINGATAN: kondisi tidak tercapai dalam %.1f detik" % maks_detik)
+		_gagal += 1
+	await _tunggu(2)
+
+
+## Sisa ubin sampai seluruh badan sepeda di luar viewport (`AkhirRute.sisa_ubin_keluar` dari posisi layar nyata).
+func _sisa_keluar() -> float:
+	return AkhirRute.sisa_ubin_keluar(_akar.posisi_layar_sepeda(), _akar.get_viewport_rect().size)
+
+
+## Portal bingkai `harapan` (0 tertutup, 1 terbuka) pada jarak sepeda sekarang, dan foto `keadaan`.
+func _periksa_portal(keadaan: String, harapan: int) -> void:
+	var portal: PortalGaris = _akar.portal()
+	print("%s: sisa ke garis %.2f ubin, bingkai %d (harapan %d), portal tampil %s, di layar %s" % [keadaan, _akar.rute().panjang_ubin - _sepeda.jarak_ubin, portal.bingkai(), harapan, portal.visible, portal.get_global_transform_with_canvas().origin])
+	if portal.bingkai() != harapan or not portal.visible:
+		_gagal += 1
+	await _foto(keadaan)
 
 
 func _koran_ini(koran: KoranLempar.Koran) -> KoranLempar.Koran:

@@ -534,8 +534,8 @@ const RUTE_PORTAL_LATERAL_UBIN: float = -2.0
 const RUTE_PORTAL_SEL_PX: Array[int] = [80, 92]
 const RUTE_PORTAL_FRAME: int = 2
 const RUTE_PORTAL_PIJAK_PX: Array[int] = [14, 60]
-## Setengah sisi tapak kotak penutup pemain di sekitar tiang (ubin) dan tinggi kotak (ubin: 57 piksel opak palang terangkat di atas pijak / 32). Frame tertutup lebih rendah, jadi kotak ini cukup untuk keduanya; dijaga tes piksel.
-const RUTE_PORTAL_TAPAK_SETENGAH_UBIN: float = 0.5
+## Setengah sisi tapak kotak penutup pemain di sekitar tiang (ubin) dan tinggi kotak (ubin: 57 piksel opak palang terangkat di atas pijak / 32). Frame tertutup lebih rendah, jadi kotak ini cukup untuk keduanya. Setengah tapak 0,75 = ukuran terkecil (kelipatan 0,125) yang membuat tidak ada piksel opak palang terangkat di atas piksel pemain tanpa kotak menutupinya (0,5: 20 posisi, 0,625: 2 posisi); dijaga tes piksel.
+const RUTE_PORTAL_TAPAK_SETENGAH_UBIN: float = 0.75
 const RUTE_PORTAL_TINGGI_UBIN: float = 1.78125
 ## Jarak banner "Rute selesai" dari tepi atas layar, piksel game: di bawah strip atas HUD dan di luar zona stick dan swipe.
 const RUTE_BANNER_MARGIN_ATAS_PX: int = 64
