@@ -4,7 +4,7 @@ extends SceneTree
 ## layar: awal rute, tengah rute dengan rumah dan kotak surat, objek uji yang menutupi pemain (semi-transparan; rumah rute di tepi
 ## jalan praktis tidak pernah menutupi, D-8 run 3A, jadi probe menaruh satu rumah uji lebih dekat ke jalan), mode bantu (koran bantu ke
 ## kotak surat pelanggan dan centang), garis finish dengan portal (run garis-finish-portal bagian C: portal tertutup jauh dan mendekat, terbuka, sepeda tepat di garis, keluar dalam tiga tahap,
-## banner saat hampir keluar, layar hasil di atas dunia portal), "Main lagi" (seed berikutnya, kamera mengikuti lagi, portal tertutup), dan kidal. Titik ketukan digambar sebagai titik 2 px game warna `ACCENT` di lapisan probe (bukan bagian game). Mencetak data tiap
+## banner saat hampir keluar, layar hasil di atas dunia portal; Bagian F: hiasan perumahan di depan portal, sepeda keluar dengan laju ngebut), "Main lagi" (seed berikutnya, kamera mengikuti lagi, portal tertutup), dan kidal. Titik ketukan digambar sebagai titik 2 px game warna `ACCENT` di lapisan probe (bukan bagian game). Mencetak data tiap
 ## keadaan dan kotak teks HUD untuk `tools/cek_blok_piksel.py --kecualikan`. Tidak interaktif: keluar sendiri lewat `ProbeKeluar`.
 ##
 ## Pakai (jendela harus muat di layar monitor):
@@ -116,6 +116,10 @@ func _initialize() -> void:
 	print("garis: selesai %s, fase %s, banner tampil %s, kamera beku %s, jarak %.2f dari %.0f" % [_akar.rute_sudah_selesai(), AkhirRute.Fase.keys()[_akar.fase_keluar()], _akar.panel_akhir().tampil(), _akar.kamera_beku(), _sepeda.jarak_ubin, panjang])
 	if not _akar.rute_sudah_selesai() or _akar.panel_akhir().tampil() or not _akar.kamera_beku() or _akar.hasil_tampil():
 		_gagal += 1
+	# Bagian F (F-1): hiasan perumahan tetap tergambar di depan portal sementara kamera beku.
+	print("hiasan di garis: %d rumah, %d dekor tergambar (rute hiasan %d rumah, %d dekor), kotak surat oranye hiasan %d" % [_akar.rumah_hiasan().jumlah_rumah(), _akar.dekor_hiasan().jumlah_tampil(), _akar.hiasan().rumah.size(), _akar.hiasan().dekor.size(), _akar.rumah_hiasan().jumlah_kotak_surat()])
+	if _akar.rumah_hiasan().jumlah_rumah() < 3 or _akar.dekor_hiasan().jumlah_tampil() < 1 or _akar.rumah_hiasan().jumlah_kotak_surat() != 0:
+		_gagal += 1
 	await _foto("garis")
 
 	# --- Keluar: tiga tahap (sepeda melewati portal, hampir keluar dengan banner, setengah badan di luar layar) lalu layar hasil ---
@@ -134,6 +138,8 @@ func _initialize() -> void:
 	if not _akar.hasil_tampil() or _akar.panel_akhir().tampil() or _sisa_keluar() > 0.0 or _akar.find_child("Kamera", true, false).position != kamera_garis:
 		_gagal += 1
 	await _maju(0.5)
+	if _akar.rumah_hiasan().jumlah_rumah() < 3:
+		_gagal += 1
 	await _foto("hasil")
 
 	# --- Main lagi: seed berikutnya, kamera mengikuti lagi, portal tertutup ---

@@ -527,12 +527,12 @@ func _test_keluar_cepat_walau_rusak_dan_lelah() -> void:
 			akar.perbarui(DT)
 			hasil_langkah += 1
 			laju_min = minf(laju_min, sepeda.kecepatan_ud)
-			stamina_maks_turun = maxf(stamina_maks_turun, stamina_garis - sepeda.stamina())
+			stamina_maks_turun = maxf(stamina_maks_turun, absf(stamina_garis - sepeda.stamina()))
 			lelah_menyala += 1 if (sepeda.lelah() and stamina_garis > 0.0) else 0
 		check(akar.hasil_tampil() and float(hasil_langkah) * DT <= 3.0, "rusak %s lelah stamina 0: hasil terbuka %.2f detik sesudah garis (<= 3,0)" % [rusak, float(hasil_langkah) * DT])
 		check(laju_min >= 6.0 - 0.0001, "rusak %s lelah: laju tidak pernah di bawah 6,0 sesudah garis (terendah %.3f)" % [rusak, laju_min])
 		check(akar.kondisi_akhir() == kondisi_garis, "rusak %s: kondisi sepeda tidak berubah sesudah garis (G-5)" % rusak)
-		check(stamina_maks_turun <= 12.0 * DT + 0.0001 and lelah_menyala == 0, "rusak %s: stamina tidak terkuras sesudah garis (turun paling banyak %.4f, lelah menyala %d)" % [rusak, stamina_maks_turun, lelah_menyala])
+		check(stamina_maks_turun <= 12.0 * DT + 0.0001 and lelah_menyala == 0, "rusak %s: stamina tetap di nilai garis %.1f sesudah garis (simpangan paling banyak %.4f, lelah menyala %d)" % [rusak, stamina_garis, stamina_maks_turun, lelah_menyala])
 		_bersihkan(akar)
 
 
