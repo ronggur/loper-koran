@@ -33,6 +33,7 @@ func jalankan() -> void:
 	await _test_tata_letak_semua_ukuran()
 	await _test_tampilan_baru()
 	await _test_hari_panjang()
+	await _test_gaya_tombol_koran()
 	await _test_tata_sapuan()
 	await _test_ambil_lewati()
 	await _test_tanpa_misi()
@@ -203,6 +204,32 @@ func _test_tata_letak_semua_ukuran() -> void:
 
 # --- Tampilan baru run ui2-semua-layar bagian B (AC-3) ---
 
+func _test_gaya_tombol_koran() -> void:
+	_judul.call("Layar koran: gaya tombol koran tiap keadaan: bingkai normal dan ditekan, geseran isi bibir 2 px, warna teks (AC-3, kanvas .k-tinta .k-tipis .k-pilih)")
+	var koran: HalamanKoran = await _siapkan()
+	koran.isi(HalamanUji.nyata(1), 1, "perumahan")
+	await _tree.process_frame
+	var berangkat: TombolSentuh = koran.tombol_berangkat()
+	var normal: StyleBoxTexture = berangkat.get_theme_stylebox(&"normal") as StyleBoxTexture
+	var tekan: StyleBoxTexture = berangkat.get_theme_stylebox(&"pressed") as StyleBoxTexture
+	check(normal.texture == GayaHud.tekstur("koran_btn_tinta") and tekan.texture == GayaHud.tekstur("koran_btn_tinta_tekan") and berangkat.get_theme_stylebox(&"hover_pressed") == tekan, "Berangkat: bingkai normal koran_btn_tinta, ditekan koran_btn_tinta_tekan")
+	check(normal.content_margin_top == 6.0 and normal.content_margin_bottom == 8.0 and tekan.content_margin_top == 8.0 and tekan.content_margin_bottom == 6.0, "Berangkat: normal teks naik (isi atas 6, bawah 8), ditekan teks turun 2 px (atas 8, bawah 6)")
+	check(normal.texture_margin_left == 4.0 and normal.texture_margin_top == 6.0 and normal.texture_margin_bottom == 6.0 and normal.texture_margin_right == 4.0, "Berangkat: slice 9-slice tombol 6/4/6/4 (Config.UI_TOMBOL_SLICE_*)")
+	check(berangkat.get_theme_color(&"font_color") == Palette.KORAN_KERTAS and berangkat.get_theme_color(&"font_pressed_color") == Palette.KORAN_KERTAS, "Berangkat: teks KORAN_KERTAS normal dan ditekan")
+	for tombol: TombolSentuh in [koran.tombol_ambil(), koran.tombol_lewati()]:
+		var tipis: StyleBoxTexture = tombol.get_theme_stylebox(&"normal") as StyleBoxTexture
+		var tekan_pilih: StyleBoxTexture = tombol.get_theme_stylebox(&"pressed") as StyleBoxTexture
+		check(tipis.texture == GayaHud.tekstur("koran_btn_tipis") and tekan_pilih.texture == GayaHud.tekstur("koran_btn_terpilih"), "%s: normal koran_btn_tipis, ditekan koran_btn_terpilih (menekan memilih)" % tombol.name)
+		check(tipis.content_margin_top == 6.0 and tipis.content_margin_bottom == 6.0 and tekan_pilih.content_margin_top == 6.0 and tekan_pilih.content_margin_bottom == 6.0, "%s: pilihan rata tanpa bibir (isi atas dan bawah 6 di kedua keadaan)" % tombol.name)
+		check(tombol.get_theme_color(&"font_color") == Palette.KORAN_TINTA_2 and tombol.get_theme_color(&"font_pressed_color") == Palette.KORAN_TINTA, "%s: teks TINTA_2 normal, TINTA saat ditekan" % tombol.name)
+	koran.tombol_ambil().ditekan.emit()
+	var terpilih: StyleBoxTexture = koran.tombol_ambil().get_theme_stylebox(&"normal") as StyleBoxTexture
+	check(terpilih.texture == GayaHud.tekstur("koran_btn_terpilih") and (koran.tombol_ambil().get_theme_stylebox(&"pressed") as StyleBoxTexture).texture == GayaHud.tekstur("koran_btn_terpilih") and koran.tombol_ambil().get_theme_color(&"font_color") == Palette.KORAN_TINTA, "Ambil terpilih: bingkai terpilih normal dan ditekan, teks TINTA")
+	check(Config.KORAN_FOTO_LEBAR_PX == int(GayaHud.tekstur("foto_jalan").get_size().x) and Config.KORAN_FOTO_TINGGI_PX == int(GayaHud.tekstur("foto_jalan").get_size().y) and Config.KORAN_FOTO_LEBAR_PX == int(GayaHud.tekstur("foto_lampu").get_size().x) and Config.KORAN_FOTO_TINGGI_PX == int(GayaHud.tekstur("foto_lampu").get_size().y), "ukuran foto di Config = ukuran kedua PNG foto")
+	check(Config.KORAN_IKON_PX == int(GayaHud.tekstur("icon24_kucing").get_size().x) and Config.UI_TOMBOL_LEBAR_UTAMA_PX == 140 and Config.UI_TOMBOL_TINGGI_PX == 42, "ukuran ikon 24 di Config = PNG; Berangkat 140x42")
+	_bersihkan(koran)
+
+
 func _test_hari_panjang() -> void:
 	_judul.call("Layar koran: teks hari yang sangat panjang berelipsis di kanan kepala dan tidak melebarkan layar (AC-7)")
 	for ukuran: Array in SKALA_JENDELA:
@@ -268,6 +295,7 @@ func _test_tampilan_baru() -> void:
 		check(koran.rect_hiasan_berita().size.y == 12.0 and koran.hiasan_baris() == 3 and koran.rect_hiasan_berita().end.y <= iklan.position.y, "%s: tiga baris hiasan (12 px) di atas kotak iklan" % etiket)
 		check(koran.find_child("LabelIklan", true, false).text == "KORAN_IKLAN_BARIS" and tr("KORAN_IKLAN_BARIS") == "IKLAN BARIS", "%s: label iklan lewat kunci KORAN_IKLAN_BARIS = 'IKLAN BARIS'" % etiket)
 		koran.tampilkan_notifikasi("KORAN_SAVE_GAGAL")
+		check(not koran.iklan_tampil() and koran.notifikasi_tampil(), "%s: seketika saat notifikasi tampil, iklan tersembunyi (tanpa menunggu tata letak)" % etiket)
 		await _tree.process_frame
 		await _tree.process_frame
 		check(not koran.iklan_tampil() and koran.notifikasi_tampil() and koran.rect_notifikasi().size.y >= float(Config.KORAN_NOTIF_TINGGI_MIN_PX) - 0.5, "%s: notifikasi menggantikan iklan, kotak setinggi minimal 42" % etiket)

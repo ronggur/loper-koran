@@ -121,6 +121,7 @@ func _test_foto_dan_ikon() -> void:
 	check(Config.EFEK_DUNIA_DIKENAL.has("jalan_diperbaiki") and Config.EFEK_DUNIA_DIKENAL.has("mati_lampu"), "kedua efek berfoto adalah efek dunia yang dikenal")
 	for nama: String in ["foto_jalan", "foto_lampu"]:
 		check(GayaHud.tekstur(nama) != null and GayaHud.tekstur(nama).get_size() == Vector2(100, 62), "%s terpasang 100x62" % nama)
+		check(GayaHud.tekstur(nama).get_size() == Vector2(float(Config.KORAN_FOTO_LEBAR_PX), float(Config.KORAN_FOTO_TINGGI_PX)), "%s: ukuran PNG = Config.KORAN_FOTO_LEBAR_PX x KORAN_FOTO_TINGGI_PX" % nama)
 	for nama: String in ["icon24_kerucut", "icon24_bohlam", "icon24_kucing"]:
 		check(GayaHud.tekstur(nama) != null and GayaHud.tekstur(nama).get_size() == Vector2(24, 24), "%s terpasang 24x24" % nama)
 
