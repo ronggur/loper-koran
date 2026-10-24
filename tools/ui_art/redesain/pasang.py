@@ -1,4 +1,4 @@
-"""Daftar aset redesain UI yang DIPASANG ke assets/sprites/ui/ (run ui1-komponen-bengkel, diperluas run ui2-semua-layar bagian A untuk layar hasil dan bagian B untuk halaman koran; usulan).
+"""Daftar aset redesain UI yang DIPASANG ke assets/sprites/ui/ (run ui1-komponen-bengkel, diperluas run ui2-semua-layar bagian A untuk layar hasil, bagian B untuk halaman koran, dan bagian C untuk layar jeda, tutorial, banner, dan tombol jeda HUD; usulan).
 
 Satu sumber untuk `komponen.py --salin`, `sepeda_fullbody.py --salin`, `latar_bengkel.py --salin`, dan
 `tools/tests_cek/uji_ui_redesain.py`. HANYA yang dipakai layar yang sudah dipasang (komponen bersama, bengkel tata C, layar hasil struk);
@@ -85,6 +85,12 @@ GLIF12: dict[tuple[str, str], str] = {
     ('centang', 'gelap'): 'ui_glif_centang_gelap',  # tombol Ambil/Lewati terpilih (koran)
     ('panah', 'terang'): 'ui_glif_panah_terang',    # tombol Berangkat (koran, di atas tinta)
     ('seru', 'tinta2'): 'ui_glif_seru_tinta2',      # kotak notifikasi save (koran)
+    ('jeda', 'terang'): 'ui_glif_jeda_terang',      # judul layar jeda dan tombol jeda HUD (run ui2-semua-layar bagian C)
+    ('lanjut', 'gelap'): 'ui_glif_lanjut_gelap',    # tombol Lanjut di layar jeda (di atas ACCENT)
+    ('naik', 'aksen'): 'ui_glif_naik_aksen',        # petunjuk tutorial langkah kayuh (kanvas Tutorial.dc.html)
+    ('turun', 'aksen'): 'ui_glif_turun_aksen',      # petunjuk tutorial langkah melambat
+    ('panah', 'aksen'): 'ui_glif_panah_aksen',      # petunjuk tutorial langkah lempar
+    ('seru', 'aksen'): 'ui_glif_seru_aksen',        # petunjuk tutorial langkah menepi
 }
 
 # --- disalin apa adanya dari keluaran resmi di docs/ (tidak dibuat ulang): (folder docs relatif root, nama sumber) -> nama tujuan ---

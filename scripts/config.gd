@@ -357,20 +357,30 @@ const WAKTU_MS_PER_DETIK: float = 1000.0
 const HUD_STRIP_ATAS_TINGGI_PX: int = 48
 ## Jarak panel HUD dari tepi layar, piksel game.
 const HUD_MARGIN_TEPI_PX: int = 8
-## Jarak panel kecepatan dari tepi layar sisi stick, piksel game (DESIGN_SPEC 3.5: x 210).
-const HUD_PANEL_KECEPATAN_GESER_PX: int = 210
-## Lebar panel kecepatan, piksel game (DESIGN_SPEC 3.5).
-const HUD_PANEL_KECEPATAN_LEBAR_PX: int = 170
+## Jarak panel kecepatan dari tepi layar sisi stick, piksel game. Run ui2-semua-layar bagian C2 (V-9 H-1): 210 -> 196, 4 px di luar zona stick (x sampai 192), supaya panel kecepatan dan stamina berdampingan (lebih lebar) dan panel koran tetap di luar zona tap bel.
+const HUD_PANEL_KECEPATAN_GESER_PX: int = 196
+## Lebar minimum panel kecepatan dan stamina berdampingan, piksel game (V-9 H-1: 2 x `HUD_PANEL_BAWAH_PAD_X_PX` + kolom kecepatan + jarak + kolom stamina; dulu 170 untuk dua bar bertumpuk).
+const HUD_PANEL_KECEPATAN_LEBAR_PX: int = 220
 ## Isi panel HUD: jarak ke tepi atas dan bawah, piksel game (DESIGN_SPEC 1.3).
 const HUD_PANEL_PAD_Y_PX: int = 5
 ## Isi panel HUD: jarak ke tepi kiri dan kanan, piksel game (DESIGN_SPEC 1.3).
 const HUD_PANEL_PAD_X_PX: int = 7
-## Tinggi bar kecepatan dan stamina termasuk garis luar 1 px, piksel game (DESIGN_SPEC 1.3).
-const HUD_BAR_TINGGI_PX: int = 7
+## Tinggi bar kecepatan dan stamina termasuk garis luar 1 px, piksel game (DESIGN_SPEC 1.3; V-9 H-1: 7 -> 9 karena dua bar berdampingan hemat tinggi panel).
+const HUD_BAR_TINGGI_PX: int = 9
+## Letak tanda batas ngebut di bar kecepatan sebagai pecahan lebar isi bar (DESIGN_SPEC 3.5: garis tegak `WARN` di 80%). Catatan: ambang sprite ngebut (`SPRITE_AMBANG_NGEBUT` 0,80 dari kekuatan stick, santai 3,0 = 0 dan ngebut 6,0 = 1) jatuh di 5,4 u/d, yaitu 90% bar (bar = kecepatan / `KECEPATAN_NGEBUT_UD`); tanda mengikuti angka 80% DESIGN_SPEC (usulan, perlu keputusan).
+const HUD_BAR_TANDA_PECAHAN: float = 0.8
+## Panel bawah (kecepatan, stamina, koran; V-9 H-1): jarak isi ke samping dari tepi luar panel, lebar kolom kecepatan dan kolom stamina (label KECEPATAN 10 px 61 + jarak 6 + angka "3.0 u/d" 12 px 44; STAMINA 49 + 6 + LELAH 34), jarak antar kolom,
+## tinggi baris label (tinggi baris Lexend 12 px; dua kolom sejajar), dan jarak baris label ke bar atau deret ikon, piksel game.
+const HUD_PANEL_BAWAH_PAD_X_PX: int = 6
+const HUD_BAWAH_KOLOM_KECEPATAN_PX: int = 111
+const HUD_BAWAH_KOLOM_STAMINA_PX: int = 89
+const HUD_BAWAH_KOLOM_JARAK_PX: int = 8
+const HUD_BAWAH_BARIS_TINGGI_PX: int = 15
+const HUD_BAWAH_ISI_JARAK_PX: int = 2
 ## Bar stamina berganti warna dari `ACCENT` ke `FAIL` di bawah nilai ini (DESIGN_SPEC 3.5, usulan).
 const HUD_STAMINA_AMBANG_RENDAH: float = 30.0
-## Panel sisa koran: jarak dari tepi layar sisi stick, piksel game (DESIGN_SPEC 3.5: x 400). Celah ke panel kecepatan = sisa sesudah panel kecepatan.
-const HUD_PANEL_KORAN_GESER_PX: int = 400
+## Panel sisa koran: jarak dari tepi layar sisi stick, piksel game (V-9 H-1: 400 -> 424 = geser kecepatan 196 + lebar 220 + celah 8). Celah ke panel kecepatan = sisa sesudah panel kecepatan.
+const HUD_PANEL_KORAN_GESER_PX: int = 424
 ## Panel sisa koran: jumlah ikon koran paling banyak (DESIGN_SPEC 3.5).
 const HUD_KORAN_IKON_MAKS: int = 8
 ## Panel sisa koran: sisi ikon koran, piksel game (DESIGN_SPEC 3.5).
@@ -395,12 +405,8 @@ const HUD_JEDA_GAMBAR_PX: int = 24
 const HUD_JEDA_GAMBAR_X_PX: int = 26
 ## Tombol jeda: letak pojok kiri atas gambar dari tepi atas layar, piksel game.
 const HUD_JEDA_GAMBAR_Y_PX: int = 8
-## Tombol jeda: lebar satu batang ikon, piksel game.
-const HUD_JEDA_BATANG_LEBAR_PX: int = 3
-## Tombol jeda: tinggi batang ikon, piksel game.
-const HUD_JEDA_BATANG_TINGGI_PX: int = 10
-## Tombol jeda: celah di antara dua batang ikon, piksel game.
-const HUD_JEDA_BATANG_CELAH_PX: int = 4
+## Tombol jeda (V-9 H-3, tampilan tombol biasa 9-slice): sisi glif jeda 12x12 di tengah wajah tombol, piksel game.
+const HUD_JEDA_GLIF_PX: int = 12
 ## Layar jeda: lebar minimum tombol "Lanjut", piksel game (tingginya `HUD_TOMBOL_TINGGI_PX`).
 const JEDA_TOMBOL_LEBAR_PX: int = 96
 ## Objek berkala di sisi seberang: berapa ubin di belakang sepeda yang masih disiapkan.
@@ -1130,10 +1136,10 @@ const TUTORIAL_JUMLAH_LANGKAH_TANPA_MISI: int = 3
 ## lebar piksel game (tinggi `HUD_TOMBOL_TINGGI_PX` 42, >= 44 dp di A54). Di kanan area sentuh jeda (berakhir x 59) dan di kiri panel progres (mulai sekitar x 190 di 640).
 const TUTORIAL_LEWATI_X_PX: int = 66
 const TUTORIAL_LEWATI_LEBAR_PX: int = 64
-## Panel petunjuk tutorial: pojok kiri atas dari tepi layar sebelum zona aman, di bawah kartu misi; lebar minimum teks piksel game.
+## Panel petunjuk tutorial: pojok kiri atas dari tepi layar sebelum zona aman, di bawah kartu misi; lebar minimum panel piksel game (run ui2-semua-layar bagian C: 150 -> 176 seperti kanvas Tutorial.dc.html, teks 10 px).
 const TUTORIAL_PANEL_X_PX: int = 26
 const TUTORIAL_PANEL_Y_PX: int = 88
-const TUTORIAL_PANEL_LEBAR_PX: int = 150
+const TUTORIAL_PANEL_LEBAR_PX: int = 176
 
 ## --- Kondisi sepeda: ban, rem, rantai (GDD 12, BALANCING 8; run 6A1, usulan; dinilai lewat uji HP) ---
 ## Kondisi 0,0 (rusak total) sampai 1,0 (baru) per komponen. Tiga tingkat dari ambang: BAIK (>= `KONDISI_AMBANG_AUS`), AUS (tanda peringatan, efek masih nol),
@@ -1516,3 +1522,33 @@ const UI_CHIP_JARAK_BESAR_PX: int = 4
 const KONDISI_BESAR_KOTAK_PX: int = 8
 const KONDISI_BESAR_KOTAK_JARAK_PX: int = 2
 const KONDISI_BESAR_SERU_JARAK_PX: int = 2
+
+## --- Layar jeda, tutorial, dan banner (run ui2-semua-layar bagian C1; kanvas Jeda*.dc.html, Tutorial.dc.html, Banner.dc.html; usulan, dinilai di HP) ---
+## Lapisan di atas jalan saat jeda: warna `HUD_PANEL` dengan alpha ini (V-2: 72 %, bukan alpha 84 % token supaya jalan tetap terbaca; token tidak diubah).
+const JEDA_LAPISAN_ALPHA: float = 0.72
+## Panel jeda: lebar, isi berjarak ke samping, atas, dan bawah dari tepi luar (tepi 9-slice 4 + padding 4, 6, 4 kanvas), jarak antar isi, tinggi baris judul dan jarak glif ke judul, piksel game.
+const JEDA_PANEL_LEBAR_PX: int = 232
+const JEDA_PANEL_PAD_X_PX: int = 8
+const JEDA_PANEL_PAD_ATAS_PX: int = 10
+const JEDA_PANEL_PAD_BAWAH_PX: int = 8
+const JEDA_ISI_JARAK_PX: int = 6
+const JEDA_KEPALA_TINGGI_PX: int = 28
+const JEDA_KEPALA_JARAK_PX: int = 6
+## Garis pemisah di panel jeda: jarak ke tombol di atas dan di bawahnya di luar `JEDA_ISI_JARAK_PX`, piksel game.
+const JEDA_PISAH_MARGIN_PX: int = 2
+## Tombol Lanjut: jarak glif ke teks, piksel game. Sakelar: jarak isi ke samping di luar `UI_TOMBOL_SAKELAR_PAD_X_PX` (kanvas padding 8, bukan 4), piksel game.
+const JEDA_LANJUT_JARAK_PX: int = 4
+const JEDA_SAKELAR_PAD_TAMBAH_PX: int = 4
+## Kenop sakelar (digambar dari kode, `TampilJeda.KENOP_*`): ukuran, piksel game.
+const JEDA_KENOP_LEBAR_PX: int = 22
+const JEDA_KENOP_TINGGI_PX: int = 12
+## Titik langkah tutorial: sisi titik dan jarak antar titik, piksel game (kanvas: 4x4, jarak 2, cincin gelap 1 px di luar titik terisi). Jarak label langkah ke baris kalimat dan glif ke kalimat.
+const TUTORIAL_TITIK_PX: int = 4
+const TUTORIAL_TITIK_JARAK_PX: int = 2
+const TUTORIAL_BARIS_JARAK_PX: int = 4
+const TUTORIAL_LABEL_JARAK_PX: int = 6
+## Banner rute selesai dan galat muat: isi berjarak ke samping dari tepi luar panel, jarak glif ke judul, piksel game (kanvas padding 0 10 + tepi 4, tinggi 30).
+const RUTE_BANNER_PAD_X_PX: int = 12
+const RUTE_BANNER_JARAK_PX: int = 6
+## Gelembung petunjuk dari pelanggan: jarak label "PELANGGAN:" ke teks, piksel game. Lebar total baris tetap `MISI_PETUNJUK_LEBAR_PX`.
+const MISI_PETUNJUK_JARAK_PX: int = 4

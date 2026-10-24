@@ -12,7 +12,7 @@
 6. Sepeda dari gambar full body (`sepeda_fullbody.py`): deterministik, docs = keluaran skrip, semua warna dari palet
    gambar full body, tidak ada warna kulit/kemeja/celana di bekas tempat tokoh, versi kecil = setengah ukuran versi besar,
    dan titik penanda kondisi jatuh di piksel sepeda yang opak.
-7. Pemasangan ke `assets/sprites/ui/` (run ui1-komponen-bengkel, diperluas run ui2-semua-layar bagian A dengan struk, takik, ikon koin/bintang/lencana 24, lencana 32, glif naik/turun, dan bagian B dengan kotak misi koran, empat tombol tinta koran, kertas, dua foto berita, ikon kucing/kerucut/bohlam, glif centang gelap/panah terang/seru tinta2; `pasang.py`): set berkas redesain TEPAT sama dengan daftar yang dipakai
+7. Pemasangan ke `assets/sprites/ui/` (run ui1-komponen-bengkel, diperluas run ui2-semua-layar bagian A dengan struk, takik, ikon koin/bintang/lencana 24, lencana 32, glif naik/turun, dan bagian B dengan kotak misi koran, empat tombol tinta koran, kertas, dua foto berita, ikon kucing/kerucut/bohlam, glif centang gelap/panah terang/seru tinta2, dan bagian C dengan glif jeda terang, lanjut gelap, dan naik/turun/panah/seru aksen; `pasang.py`): set berkas redesain TEPAT sama dengan daftar yang dipakai
    (tidak ada aset redesain lain), isi = keluaran `--salin` (komponen: piksel sama dengan keluaran `komponen.py`; sepeda dan latar: sama
    dengan berkas resmi di docs/), ikon 24 dan glif 12 = sel sheet, impor Lossless/tanpa mipmap/bukan VRAM, ukuran dan slice = `meta.json`
    (dan `Config.UI_*` = slice meta.json), warna dari palet induk atau token UI, tidak ada aset docs yang tidak dipasang ikut tersalin.
@@ -276,6 +276,18 @@ cek(tuple(meta['koran_kotak']['slice']) == next(iter(slice_panel)) and meta['kor
 cek(meta['foto_jalan']['size'] == [100, 62] and meta['foto_lampu']['size'] == [100, 62] and meta['kertas_tile']['size'] == [4, 4], 'foto berita 100x62 dan kertas 4x4 = meta.json')
 cek(sorted(pasang.KORAN) == sorted(['koran_kotak', 'koran_btn_tinta', 'koran_btn_tinta_tekan', 'koran_btn_tipis', 'koran_btn_terpilih', 'kertas_tile', 'foto_jalan', 'foto_lampu']), 'aset koran yang dipasang = delapan yang dipakai halaman koran (foto per efek: jalan dan lampu)')
 cek({'kucing', 'kerucut', 'bohlam'} <= set(pasang.IKON24) and {('centang', 'gelap'), ('panah', 'terang'), ('seru', 'tinta2')} <= set(pasang.GLIF12), 'ikon kucing/kerucut/bohlam dan glif centang gelap/panah terang/seru tinta2 terdaftar')
+
+# jeda, tutorial, banner, dan tombol jeda HUD (run ui2-semua-layar bagian C): glif yang dipakai terdaftar tepat, kenop sakelar 22x12 digambar dari pola di kode (bukan PNG) dan ukurannya = Config
+glif_c = {('jeda', 'terang'), ('lanjut', 'gelap'), ('naik', 'aksen'), ('turun', 'aksen'), ('panah', 'aksen'), ('seru', 'aksen')}
+cek(glif_c <= set(pasang.GLIF12), 'glif jeda terang, lanjut gelap, naik/turun/panah/seru aksen terdaftar (layar jeda, tutorial, tombol jeda HUD)')
+kode_jeda = open(os.path.join(ROOT, 'scripts', 'systems', 'tampil_jeda.gd'), encoding='utf-8').read()
+config_teks = open(os.path.join(ROOT, 'scripts', 'config.gd'), encoding='utf-8').read()
+import re as _re
+pola_kenop = {m.group(1): _re.findall(r'"([^"]+)"', m.group(2)) for m in _re.finditer(r'const (KENOP_\w+): Array\[String\] = \[(.*?)\n\]', kode_jeda, _re.S)}
+lebar_cfg = int(_re.search(r'const JEDA_KENOP_LEBAR_PX: int = (\d+)', config_teks).group(1))
+tinggi_cfg = int(_re.search(r'const JEDA_KENOP_TINGGI_PX: int = (\d+)', config_teks).group(1))
+cek(sorted(pola_kenop) == ['KENOP_MATI', 'KENOP_NYALA'] and all(len(v) == tinggi_cfg and all(len(r) == lebar_cfg for r in v) for v in pola_kenop.values()) and pola_kenop['KENOP_MATI'] != pola_kenop['KENOP_NYALA'], f'kenop sakelar: dua pola {lebar_cfg}x{tinggi_cfg} = Config.JEDA_KENOP_*, mati dan nyala berbeda')
+cek(not any(n.startswith('ui_kenop') or n.startswith('ui_sakelar') for n in os.listdir(ASET_UI)), 'kenop sakelar digambar dari kode: tidak ada PNG kenop atau sakelar di assets/sprites/ui')
 
 salah = []
 for n in pasang.nama_semua():

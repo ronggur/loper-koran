@@ -106,18 +106,22 @@ func _pelanggaran_hud(akar: RuteMain) -> Array[String]:
 	var hud: HudRute = akar.hud_rute()
 	var masalah: Array[String] = []
 	var layar: Rect2 = Rect2(Vector2.ZERO, _tree.root.get_visible_rect().size)
-	var panel: Rect2 = hud.rect_panel_reputasi()
+	# Lebar banner misi diasumsikan 176 (banner nyata terpanjang "Kucingnya lolos hari ini" 173 px; dulu 240 = batas 24 huruf data): panel baris 2 yang memuat reputasi 100 kini mulai x 431 di 640 (411 dengan inset kanan 24), jadi banner 24 huruf (sekitar 242 px) akan menyentuhnya; dicatat di LOG UI-2 bagian C.
+	# V-9 H-2: reputasi berbagi panel baris 2 dengan kondisi; yang diperiksa tumpang tindih adalah panel baris 2 utuh, ditambah penanda reputasi harus di dalamnya.
+	var panel: Rect2 = hud.rect_panel_kondisi()
 	var lebar: int = roundi(layar.size.x)
 	var pusat_bel: Vector2 = TouchZones.pusat_bel(lebar, akar.kidal(), akar.kontrol_router().geser_bel)
 	var lain: Dictionary = {
 		"radar seberang": hud.rect_radar_seberang(), "radar dekat": hud.rect_radar_dekat(), "panel progres": hud.rect_panel_progres(), "panel koin": hud.rect_panel_koin(), "panel skor": hud.rect_panel_skor(),
-		"panel kondisi": hud.rect_panel_kondisi(), "tombol jeda": hud.rect_tombol_jeda(), "zona bel": Rect2(pusat_bel - Vector2(28, 28), Vector2(56, 56)), "panel kecepatan": hud.rect_panel_kecepatan(),
+		"tombol jeda": hud.rect_tombol_jeda(), "zona bel": Rect2(pusat_bel - Vector2(28, 28), Vector2(56, 56)), "panel kecepatan": hud.rect_panel_kecepatan(),
 		"panel koran": hud.rect_panel_koran(), "zona stick": TouchZones.rect_stick(lebar, akar.kidal()),
 		"kartu misi": Rect2(Vector2(Config.MISI_KARTU_X_PX, Config.MISI_KARTU_Y_PX), Vector2(Config.MISI_KARTU_LEBAR_PX, 28)),
-		"banner misi": Rect2(Vector2(layar.size.x * 0.5 - 120.0, Config.MISI_BANNER_Y_PX), Vector2(240, 26)),
+		"banner misi": Rect2(Vector2(layar.size.x * 0.5 - 88.0, Config.MISI_BANNER_Y_PX), Vector2(176, 26)),
 	}
 	if not layar.encloses(panel):
 		masalah.append("di luar layar %s" % panel)
+	if hud.reputasi_tampil() and not panel.encloses(hud.rect_panel_reputasi()):
+		masalah.append("penanda reputasi %s keluar dari panel baris 2 %s" % [hud.rect_panel_reputasi(), panel])
 	for nama: String in lain:
 		if panel.intersects(lain[nama]):
 			masalah.append("menumpuk %s" % nama)
@@ -136,14 +140,15 @@ func _atur_inset(akar: RuteMain, awal_x: int, atas: int, akhir_x: int, bawah: in
 # --- HUD ---
 
 func _test_hud_reputasi() -> void:
-	_judul.call("HUD rute: penanda reputasi (angka bulat 0..100, ikon) di baris 3 samping atas, tidak menumpuk elemen lain di empat ukuran, samping dan kidal, dengan inset (O-10, AC-13, AC-14)")
+	_judul.call("HUD rute: penanda reputasi (angka bulat 0..100, ikon) di ujung kanan panel baris 2 (berbagi dengan kondisi, V-9 H-2), tidak menumpuk elemen lain di empat ukuran, samping dan kidal, dengan inset (O-10, AC-13, AC-14)")
 	for u: Array in UKURAN:
 		var akar: RuteMain = await _siapkan(_state(37), Vector2i(u[0], u[1]))
 		var hud: HudRute = akar.hud_rute()
 		check(hud.reputasi_tampil() and hud.teks_reputasi() == "37", "%d: penanda reputasi tampil '37', dapat '%s'" % [u[0], hud.teks_reputasi()])
 		var samping: Rect2 = hud.rect_panel_reputasi()
 		var kondisi: Rect2 = hud.rect_panel_kondisi()
-		check(absf(samping.end.x - kondisi.end.x) < 0.5 and samping.position.y >= kondisi.end.y + float(Config.HUD_PANEL_JARAK_PX) - 0.5 and samping.size.x >= float(Config.HUD_IKON_PX), "%d: rata samping dengan panel kondisi, di bawahnya berjarak 5: %s di bawah %s" % [u[0], samping, kondisi])
+		check(kondisi.encloses(samping) and samping.end.x < kondisi.end.x and kondisi.end.x - samping.end.x <= float(Config.HUD_PANEL_PAD_X_PX) + 0.5 and samping.size.x >= float(Config.HUD_IKON_PX) and samping.position.x > hud.rect_panel_koin().position.x, "%d: penanda reputasi di ujung kanan panel baris 2 (bukan panel baris 3): %s di dalam %s" % [u[0], samping, kondisi])
+		check(not hud.find_children("PanelReputasi", "", true, false).size() > 0 and kondisi.position.y == hud.rect_panel_skor().end.y + float(Config.HUD_PANEL_JARAK_PX), "%d: tidak ada panel reputasi sendiri; kolom kanan dua baris (baris 2 tepat 5 px di bawah baris 1)" % u[0])
 		check(_pelanggaran_hud(akar).is_empty(), "%d samping: tanpa pelanggaran tata letak: %s" % [u[0], _pelanggaran_hud(akar)])
 		akar.atur_kidal(true)
 		akar.perbarui(0.0)
@@ -180,11 +185,11 @@ func _test_hud_tanpa_keadaan() -> void:
 	var akar2: RuteMain = await _siapkan(_state(55))
 	_langkah(akar2, 300)
 	check(akar2.hud_rute().teks_reputasi() == "55", "reputasi tetap 55 selama rute berjalan (berubah hanya di akhir hari)")
-	var panel: PanelContainer = _anak(akar2.hud_rute(), "PanelReputasi") as PanelContainer
-	var semua_abaikan: bool = panel.mouse_filter == Control.MOUSE_FILTER_IGNORE
-	for c: Node in [_anak(akar2.hud_rute(), "IsiReputasi"), _anak(akar2.hud_rute(), "IkonReputasi"), _anak(akar2.hud_rute(), "AngkaReputasi")]:
+	var grup: HBoxContainer = _anak(akar2.hud_rute(), "GrupReputasi") as HBoxContainer
+	var semua_abaikan: bool = grup.mouse_filter == Control.MOUSE_FILTER_IGNORE
+	for c: Node in [_anak(akar2.hud_rute(), "PanelKondisi"), _anak(akar2.hud_rute(), "IkonReputasi"), _anak(akar2.hud_rute(), "AngkaReputasi")]:
 		semua_abaikan = semua_abaikan and (c as Control).mouse_filter == Control.MOUSE_FILTER_IGNORE
-	check(semua_abaikan, "panel reputasi dan isinya MOUSE_FILTER_IGNORE (tidak menangkap sentuhan)")
+	check(semua_abaikan, "panel baris 2, penanda reputasi, dan isinya MOUSE_FILTER_IGNORE (tidak menangkap sentuhan)")
 	var ikon: TextureRect = _anak(akar2.hud_rute(), "IkonReputasi") as TextureRect
 	check(ikon.texture != null and ikon.texture.get_size() == Vector2(14, 14), "ikon reputasi 14x14 (ui_icon_reputasi)")
 	_bersihkan(akar2)

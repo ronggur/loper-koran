@@ -1,7 +1,8 @@
 class_name TutorialController
 extends CanvasLayer
 ## Node tutorial terpandu hari 1 (M-9, AC-18 run fase4b-misi-kucing, usulan; TECH_PLAN Fase 4): menampilkan petunjuk dari `TutorialLangkah` (logika murni) dan
-## tombol Lewati. Tipis: keputusan langkah ada di `TutorialLangkah`, node ini hanya menampilkan dan memancarkan `lewati_diminta`.
+## tombol Lewati. Tipis: keputusan langkah ada di `TutorialLangkah`, node ini hanya menampilkan dan memancarkan `lewati_diminta`. Tampilan run ui2-semua-layar bagian C1 (kanvas Tutorial.dc.html,
+## usulan): panel HUD 9-slice lebar `TUTORIAL_PANEL_LEBAR_PX`, label langkah `ACCENT` dengan titik langkah (`TampilTutorial`), glif aksen dan kalimat 10 px; Lewati peran tenang.
 ##
 ## TIDAK memblokir input: panel dan semua labelnya `MOUSE_FILTER_IGNORE`; satu-satunya yang menerima sentuhan adalah tombol Lewati (`TombolSentuh`, >= 42 px game,
 ## membaca sentuhan sendiri di `_input` tanpa menandai event tertangani), jadi stick, swipe, dan bel tetap sampai ke `TouchRouter` (dijaga tes). Tombol
@@ -17,15 +18,22 @@ var _inset: ZonaAman.Inset = ZonaAman.Inset.new()
 @onready var _tombol: TombolSentuh = %TombolLewatiTutorial
 @onready var _strip_teks: MarginContainer = %StripTeksTutorial
 @onready var _panel: PanelContainer = %PanelTutorial
+@onready var _isi: VBoxContainer = %IsiTutorial
+@onready var _baris_kalimat: HBoxContainer = %BarisKalimat
 @onready var _label_langkah: Label = %LabelLangkahTutorial
+@onready var _titik: TitikLangkah = %TitikLangkah
+@onready var _ikon: TextureRect = %IkonKalimat
 @onready var _teks: Label = %TeksTutorial
 
 
 func _ready() -> void:
 	_tombol.custom_minimum_size = Vector2(Config.TUTORIAL_LEWATI_LEBAR_PX, Config.HUD_TOMBOL_TINGGI_PX)
-	GayaHud.terapkan_tombol(_tombol)
+	GayaHud.tombol_tenang(_tombol)
 	_panel.custom_minimum_size = Vector2(Config.TUTORIAL_PANEL_LEBAR_PX, 0)
 	_panel.add_theme_stylebox_override(&"panel", GayaHud.panel_hud())
+	_isi.add_theme_constant_override(&"separation", Config.TUTORIAL_BARIS_JARAK_PX)
+	_baris_kalimat.add_theme_constant_override(&"separation", Config.TUTORIAL_BARIS_JARAK_PX)
+	(%BarisLangkah as HBoxContainer).add_theme_constant_override(&"separation", Config.TUTORIAL_LABEL_JARAK_PX)
 	_label_langkah.add_theme_color_override(&"font_color", Palette.ACCENT)
 	_teks.add_theme_color_override(&"font_color", Palette.TEXT)
 	_tombol.ditekan.connect(lewati_diminta.emit)
@@ -42,6 +50,8 @@ func tampilkan_langkah(k: TutorialLangkah.Keadaan) -> void:
 		return
 	var nomor: Vector2i = TutorialLangkah.nomor(k)
 	_label_langkah.text = tr("TUTORIAL_LANGKAH").format({"n": nomor.x, "total": nomor.y})
+	_titik.atur(nomor.x, nomor.y)
+	_ikon.texture = GayaHud.tekstur(TampilTutorial.nama_glif(k.langkah))
 	_teks.text = tr(TutorialLangkah.kunci_teks(k))
 
 

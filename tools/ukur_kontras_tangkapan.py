@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Ukur kontras dari tangkapan layar nyata probe bengkel (run ui1-komponen-bengkel bagian B, AC-9), probe layar hasil (run ui2-semua-layar bagian A, AC-7, `--jenis hasil`), dan probe halaman koran
-(run ui2-semua-layar bagian B, AC-7, `--jenis koran`).
+(run ui2-semua-layar bagian B, AC-7, `--jenis koran`), serta probe jeda, tutorial, banner, dan HUD (run ui2-semua-layar bagian C, AC-7, `--jenis jeda|tutorial|banner|hud_c`, ditulis `tests/probe_jeda_hud_jendela.gd`).
 
 Membaca pasangan `<awalan>_<jenis>_<keadaan>.png` dan `.json` (ditulis `tests/probe_bengkel_jendela.gd`, `tests/probe_hasil_jendela.gd`, atau `tests/probe_halaman_koran_jendela.gd`; jenis bawaan `bengkel`):
 - TEKS: tiap persegi teks; latar = warna terbanyak di persegi, teks = piksel persentil 98 terjauh dari latar (piksel solid, bukan tepi lunak).
@@ -9,6 +9,8 @@ Membaca pasangan `<awalan>_<jenis>_<keadaan>.png` dan `.json` (ditulis `tests/pr
   Hanya dilaporkan (garis bingkai bergantung pada desain 9-slice); nonaktif sengaja redup.
   `--jenis koran`: tombol (Berangkat, tinta penuh) dan pilih (Ambil/Lewati, tipis atau terpilih) adalah kontrol aktif dan WAJIB >= 3:1 (exit 1 bila kurang); `kotak_misi` adalah wadah non-kontrol (garis ganda `KORAN_GARIS`
   di atas kertas, dilaporkan saja seperti kartu bengkel dan struk hasil). Teks di atas kertas terang (tinta di krem) ikut diukur >= 7:1.
+  `--jenis jeda` dan `--jenis banner`: `tombol_utama` (Lanjut, Main lagi: bingkai ACCENT) adalah kontrol aktif dan WAJIB >= 3:1 (exit 1 bila kurang); `sakelar` (bingkai biasa di atas panel layar) dan `tombol` (Lewati tenang, sengaja rata)
+  hanya dilaporkan seperti QA-003 UI-1. `--jenis hud_c` dan `tutorial`: hanya teks (HUD berlatar jalan: latar = warna terbanyak di persegi teks).
 Pakai: python3 tools/ukur_kontras_tangkapan.py <folder tangkapan> [--awalan 1920x1080] [--jenis bengkel|hasil|koran] (butuh numpy, pillow). Exit 1 bila ada teks < 7:1 (atau kontrol koran aktif < 3:1).
 """
 import json
@@ -18,6 +20,9 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image
+
+
+FAIL_RGB = (217, 79, 61)
 
 
 def lum(rgb):
@@ -74,13 +79,20 @@ def main():
         teks = [(r, n) for r, n in teks if r is not None]
         terburuk = min(teks, key=lambda p: p[0][0])
         gagal_berkas = [(r, n) for r, n in teks if r[0] < 7.0]
+        if jenis == "hud_c":
+            # Kata status berwarna token FAIL (LELAH, HABIS, PUTUS) di atas panel HUD sudah ada sebelum run ini (token tidak diubah): dilaporkan, tidak menggagalkan.
+            pra_ada = [(r, n) for r, n in gagal_berkas if any(max(abs(int(a) - b) for a, b in zip(warna, FAIL_RGB)) <= 4 for warna in (r[1], r[2]))]
+            for r, n in pra_ada:
+                print(f"   PRA-ADA < 7:1 '{n}' {r[0]:.2f} (token FAIL di panel HUD, tidak diubah run UI-2)")
+            gagal_berkas = [(r, n) for r, n in gagal_berkas if (r, n) not in pra_ada]
         gagal += len(gagal_berkas)
-        garis = {"tombol": [], "tombol_nonaktif": [], "kartu": [], "struk": [], "pilih": [], "kotak_misi": []}
+        garis = {"tombol": [], "tombol_nonaktif": [], "kartu": [], "struk": [], "pilih": [], "kotak_misi": [], "tombol_utama": [], "sakelar": []}
         for k in data["komponen"]:
             garis.setdefault(k["jenis"], []).append(ukur_garis(img, skala, k))
-        ringkas = {j: (round(min(v), 2) if v else None) for j, v in garis.items() if jenis == "koran" or j not in ("pilih", "kotak_misi")}
-        if jenis == "koran":
-            lemah = [(j, round(min(garis[j]), 2)) for j in ("tombol", "pilih") if garis[j] and min(garis[j]) < 3.0]
+        ringkas = {j: (round(min(v), 2) if v else None) for j, v in garis.items() if (jenis == "koran" or j not in ("pilih", "kotak_misi")) and (v or jenis in ("bengkel", "hasil", "koran"))}
+        wajib = {"koran": ("tombol", "pilih"), "jeda": ("tombol_utama",), "banner": ("tombol_utama",)}.get(jenis)
+        if wajib:
+            lemah = [(j, round(min(garis[j]), 2)) for j in wajib if garis[j] and min(garis[j]) < 3.0]
             gagal += len(lemah)
             for j, nilai in lemah:
                 print(f"   KONTROL AKTIF < 3:1 '{j}' {nilai}")

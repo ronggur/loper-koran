@@ -236,6 +236,11 @@ func _initialize() -> void:
 	# Run ui2-semua-layar bagian B: halaman koran (pemilihan keadaan dan tata letak murni; scene ada di TesHalamanKoran di atas).
 	var tampil_koran: TesTampilKoran = TesTampilKoran.new(check, _judul)
 	tampil_koran.jalankan()
+	# Run ui2-semua-layar bagian C: layar jeda, tutorial, banner, dan HUD rute tata ulang V-9 (pemilihan tampilan murni; scene di empat lebar x kanan/kidal x inset).
+	var tampil_layar_c: TesTampilLayarC = TesTampilLayarC.new(check, _judul)
+	tampil_layar_c.jalankan()
+	var layar_c_scene: TesLayarCScene = TesLayarCScene.new(check, _judul, self)
+	await layar_c_scene.jalankan()
 	var tata_letak: TesTataLetak = TesTataLetak.new(check, _judul, self)
 	await tata_letak.jalankan()
 	var bunyi: TesBunyi = TesBunyi.new(check, _judul, self)

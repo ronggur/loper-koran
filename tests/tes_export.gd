@@ -447,6 +447,8 @@ const UI1_PNG_DIPASANG: Array[String] = [
 	# Run ui2-semua-layar bagian B (halaman koran): kotak misi, empat tombol tinta, kertas, dua foto berita, ikon kucing/kerucut/bohlam, glif centang gelap/panah terang/seru tinta2.
 	"ui_koran_kotak", "ui_koran_btn_tinta", "ui_koran_btn_tinta_tekan", "ui_koran_btn_tipis", "ui_koran_btn_terpilih", "ui_kertas_tile", "ui_foto_jalan", "ui_foto_lampu",
 	"ui_icon24_kucing", "ui_icon24_kerucut", "ui_icon24_bohlam", "ui_glif_centang_gelap", "ui_glif_panah_terang", "ui_glif_seru_tinta2",
+	# Run ui2-semua-layar bagian C (jeda, tutorial, banner, tombol jeda HUD): glif jeda terang, lanjut gelap, naik/turun/panah/seru aksen.
+	"ui_glif_jeda_terang", "ui_glif_lanjut_gelap", "ui_glif_naik_aksen", "ui_glif_turun_aksen", "ui_glif_panah_aksen", "ui_glif_seru_aksen",
 ]
 ## Skrip dan scene bengkel tata C yang ikut paket.
 const UI1_SKRIP_IKUT: Array[String] = [
@@ -456,6 +458,9 @@ const UI1_SKRIP_IKUT: Array[String] = [
 	"scripts/systems/tampil_hasil.gd", "scripts/ui/garis_sobek.gd", "scripts/ui/garis_titik.gd", "scripts/ui/layar_hasil.gd", "scenes/ui/layar_hasil.tscn",
 	# Run ui2-semua-layar bagian B: halaman koran.
 	"scripts/systems/tampil_koran.gd", "scripts/ui/garis_ganda.gd", "scripts/ui/garis_hiasan.gd", "scripts/ui/kotak_iklan.gd", "scripts/ui/halaman_koran.gd", "scenes/koran/halaman_koran.tscn",
+	# Run ui2-semua-layar bagian C: layar jeda, tutorial, banner.
+	"scripts/systems/tampil_jeda.gd", "scripts/systems/tampil_tutorial.gd", "scripts/ui/kenop_sakelar.gd", "scripts/ui/titik_langkah.gd", "scripts/ui/layar_jeda.gd", "scenes/ui/layar_jeda.tscn",
+	"scripts/ui/tutorial_controller.gd", "scenes/ui/tutorial.tscn", "scripts/ui/panel_akhir_rute.gd", "scenes/ui/panel_akhir_rute.tscn",
 ]
 ## Awalan nama aset redesain yang TIDAK dipasang (sheet lencana 32 utuh, sepeda besar, latar 640, sheet ikon dan glif, panel HUD, lembar pratinjau); tidak boleh ada di `assets/`. Struk dan lencana 32 per tingkat dipasang sejak run ui2-semua-layar bagian A; kotak misi, tombol tinta, kertas, dan foto koran sejak bagian B (foto hanya jalan dan lampu).
 const UI1_AWALAN_TAK_DIPASANG: Array[String] = ["ui_lencana32.", "ui_bengkel_sepeda_besar", "ui_bengkel_latar_640", "ui_bengkel_latar.", "ui_lembar_", "ui_ikon24", "ui_glif12", "ui_panel_hud.", "ui_sepeda_besar", "ui_foto_lain", "ui_koran_foto"]

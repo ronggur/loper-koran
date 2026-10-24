@@ -154,7 +154,7 @@ func _hud_kidal_dan_inset() -> void:
 	await _foto("hud_inset_aman")
 	var layar: Rect2 = Rect2(Vector2.ZERO, root.get_visible_rect().size)
 	var panel: Rect2 = _hud.rect_panel_reputasi()
-	_harap("inset: penanda reputasi di dalam zona aman", panel.end.x <= layar.end.x - 24.0 and panel.position.y >= 16.0, str(panel))
+	_harap("inset: penanda reputasi di dalam zona aman", panel.end.x <= layar.end.x - 24.0 and panel.position.y >= 16.0 and _hud.rect_panel_kondisi().encloses(panel), str(panel))
 	_cek_hud("hud_inset_aman")
 	_akar.queue_free()
 	await _tunggu(2)
@@ -276,15 +276,16 @@ func _harap(nama: String, kondisi: bool, rincian: String) -> void:
 ## Penanda reputasi di dalam layar dan tidak menumpuk elemen HUD lain: radar, panel progres, koin, skor, kondisi, tombol jeda, zona bel, panel kecepatan, panel koran, zona stick, kartu misi, banner, petunjuk.
 func _cek_hud(keadaan: String) -> void:
 	var layar: Rect2 = Rect2(Vector2.ZERO, root.get_visible_rect().size)
-	var panel: Rect2 = _hud.rect_panel_reputasi()
+	# V-9 H-2: reputasi di ujung kanan panel baris 2 (berbagi dengan kondisi); yang dicek tumpang tindih panel baris 2 utuh, dan penanda harus di dalamnya.
+	var panel: Rect2 = _hud.rect_panel_kondisi()
 	var lebar: int = roundi(layar.size.x)
 	var pusat_bel: Vector2 = TouchZones.pusat_bel(lebar, _akar.kidal(), _akar.kontrol_router().geser_bel)
 	var lain: Dictionary = {
 		"radar_seberang": _hud.rect_radar_seberang(), "radar_dekat": _hud.rect_radar_dekat(), "panel_progres": _hud.rect_panel_progres(), "panel_koin": _hud.rect_panel_koin(),
-		"panel_skor": _hud.rect_panel_skor(), "panel_kondisi": _hud.rect_panel_kondisi(), "tombol_jeda": _hud.rect_tombol_jeda(), "zona_bel": Rect2(pusat_bel - Vector2(28, 28), Vector2(56, 56)),
+		"panel_skor": _hud.rect_panel_skor(), "tombol_jeda": _hud.rect_tombol_jeda(), "zona_bel": Rect2(pusat_bel - Vector2(28, 28), Vector2(56, 56)),
 		"panel_kecepatan": _hud.rect_panel_kecepatan(), "panel_koran": _hud.rect_panel_koran(), "zona_stick": TouchZones.rect_stick(lebar, _akar.kidal()),
 		"kartu_misi": Rect2(Vector2(Config.MISI_KARTU_X_PX, Config.MISI_KARTU_Y_PX), Vector2(Config.MISI_KARTU_LEBAR_PX, 28)),
-		"banner_misi": Rect2(Vector2(layar.size.x * 0.5 - 120.0, Config.MISI_BANNER_Y_PX), Vector2(240, 26)),
+		"banner_misi": Rect2(Vector2(layar.size.x * 0.5 - 88.0, Config.MISI_BANNER_Y_PX), Vector2(176, 26)),
 	}
 	var salah: int = 0
 	if not layar.encloses(panel):

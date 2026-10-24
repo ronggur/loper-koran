@@ -64,6 +64,13 @@ const _TEKSTUR: Dictionary = {
 	"glif_centang_gelap": preload("res://assets/sprites/ui/ui_glif_centang_gelap.png"),
 	"glif_panah_terang": preload("res://assets/sprites/ui/ui_glif_panah_terang.png"),
 	"glif_seru_tinta2": preload("res://assets/sprites/ui/ui_glif_seru_tinta2.png"),
+	# Run ui2-semua-layar bagian C (jeda, tutorial, banner, tombol jeda HUD): glif jeda terang, lanjut gelap, naik/turun/panah/seru aksen (petunjuk tutorial).
+	"glif_jeda_terang": preload("res://assets/sprites/ui/ui_glif_jeda_terang.png"),
+	"glif_lanjut_gelap": preload("res://assets/sprites/ui/ui_glif_lanjut_gelap.png"),
+	"glif_naik_aksen": preload("res://assets/sprites/ui/ui_glif_naik_aksen.png"),
+	"glif_turun_aksen": preload("res://assets/sprites/ui/ui_glif_turun_aksen.png"),
+	"glif_panah_aksen": preload("res://assets/sprites/ui/ui_glif_panah_aksen.png"),
+	"glif_seru_aksen": preload("res://assets/sprites/ui/ui_glif_seru_aksen.png"),
 }
 ## Variasi tema (`assets/ui/theme.tres`) teks tombol: SemiBold 10 untuk utama, biasa, sakelar; Regular 10 untuk tenang dan nonaktif.
 const VARIASI_TOMBOL_TEBAL: StringName = &"TombolPeran"
@@ -101,15 +108,15 @@ static func terapkan_tombol(tombol: Button) -> void:
 
 
 ## Panel HUD 9-slice (DESIGN_SPEC 1.3): latar `HUD_PANEL`, garis luar `OUTLINE`, garis dalam `UI_PANEL_RAISED`, sudut tumpul bertingkat, dari
-## tekstur 12x12 dengan tepi `HUD_PANEL_9SLICE_PX`; isi berjarak `pad_x` ke samping dan `HUD_PANEL_PAD_Y_PX` ke atas dan bawah.
-static func panel_hud(pad_x: int = Config.HUD_PANEL_PAD_X_PX) -> StyleBoxTexture:
+## tekstur 12x12 dengan tepi `HUD_PANEL_9SLICE_PX`; isi berjarak `pad_x` ke samping dan `pad_y` (bawaan `HUD_PANEL_PAD_Y_PX`) ke atas dan bawah.
+static func panel_hud(pad_x: int = Config.HUD_PANEL_PAD_X_PX, pad_y: int = Config.HUD_PANEL_PAD_Y_PX) -> StyleBoxTexture:
 	var hasil: StyleBoxTexture = StyleBoxTexture.new()
 	hasil.texture = TEKSTUR_PANEL_HUD
 	hasil.set_texture_margin_all(float(Config.HUD_PANEL_9SLICE_PX))
 	hasil.content_margin_left = float(pad_x)
 	hasil.content_margin_right = float(pad_x)
-	hasil.content_margin_top = float(Config.HUD_PANEL_PAD_Y_PX)
-	hasil.content_margin_bottom = float(Config.HUD_PANEL_PAD_Y_PX)
+	hasil.content_margin_top = float(pad_y)
+	hasil.content_margin_bottom = float(pad_y)
 	return hasil
 
 
@@ -129,8 +136,9 @@ static func tombol_biasa(tombol: Button) -> void:
 
 
 ## Tombol sakelar (`KomponenUi.Peran.SAKELAR`): bingkai biasa saat mati, bingkai ACCENT saat `nyala`; isi diberi jarak samping tambahan untuk kenop atau teks nyala/mati buatan pemanggil.
-static func tombol_sakelar(tombol: Button, nyala: bool) -> void:
-	_terapkan_peran(tombol, KomponenUi.Peran.SAKELAR, nyala)
+## `pad_tambah` menambah jarak isi ke samping di luar `UI_TOMBOL_SAKELAR_PAD_X_PX` (layar jeda: `JEDA_SAKELAR_PAD_TAMBAH_PX`, kanvas padding 8).
+static func tombol_sakelar(tombol: Button, nyala: bool, pad_tambah: int = 0) -> void:
+	_terapkan_peran(tombol, KomponenUi.Peran.SAKELAR, nyala, pad_tambah)
 
 
 ## Tombol tenang (`KomponenUi.Peran.TENANG`): rata tanpa bibir, teks Regular TEXT_2 (Lewati, bahaya ringan); ditekan tidak bergeser.
@@ -172,6 +180,21 @@ static func kartu_redup() -> StyleBoxTexture:
 ## Panel layar penuh 9-slice.
 static func panel_layar() -> StyleBoxTexture:
 	return _panel_9slice("panel_layar")
+
+
+## Panel layar jeda (run ui2-semua-layar bagian C; kanvas Jeda.dc.html `.pnl.layar` padding 6 4 4): bingkai panel layar 9-slice, isi berjarak `JEDA_PANEL_PAD_*` dari tepi luar.
+static func panel_jeda() -> StyleBoxTexture:
+	var hasil: StyleBoxTexture = panel_layar()
+	hasil.content_margin_left = float(Config.JEDA_PANEL_PAD_X_PX)
+	hasil.content_margin_right = float(Config.JEDA_PANEL_PAD_X_PX)
+	hasil.content_margin_top = float(Config.JEDA_PANEL_PAD_ATAS_PX)
+	hasil.content_margin_bottom = float(Config.JEDA_PANEL_PAD_BAWAH_PX)
+	return hasil
+
+
+## Bingkai 9-slice satu keadaan tombol untuk node yang menggambar sendiri (tombol jeda HUD digambar di 24x24 walau area sentuhnya 42x42, jadi tidak bisa memakai `tombol_*`).
+static func bingkai_tombol(peran: KomponenUi.Peran, keadaan: KomponenUi.KeadaanTombol, nyala: bool = false) -> StyleBoxTexture:
+	return _kotak_tombol(peran, keadaan, nyala)
 
 
 ## Struk hasil 9-slice (run ui2-semua-layar bagian A; kanvas `.pnl.struk`, usulan): tepi atas dan bawah bergerigi, tepi `UI_PANEL_SLICE_PX`, tepi mendatar diulang (`TILE_FIT`, seperti `border-image: round` kanvas supaya gigi rata di tepi kanan).
@@ -276,16 +299,16 @@ static func _panel_9slice(nama: String) -> StyleBoxTexture:
 
 
 # Satu peran aktif: gaya normal/hover (sama, layar sentuh), pressed/hover_pressed, disabled, focus, warna teks, font, dan `disabled = false`.
-static func _terapkan_peran(tombol: Button, peran: KomponenUi.Peran, nyala: bool) -> void:
+static func _terapkan_peran(tombol: Button, peran: KomponenUi.Peran, nyala: bool, pad_tambah: int = 0) -> void:
 	tombol.disabled = false
 	tombol.theme_type_variation = VARIASI_TOMBOL_TEBAL if KomponenUi.teks_tebal(peran, KomponenUi.KeadaanTombol.NORMAL) else VARIASI_TOMBOL_TIPIS
-	var normal: StyleBoxTexture = _kotak_tombol(peran, KomponenUi.KeadaanTombol.NORMAL, nyala)
-	var tekan: StyleBoxTexture = _kotak_tombol(peran, KomponenUi.KeadaanTombol.DITEKAN, nyala)
+	var normal: StyleBoxTexture = _kotak_tombol(peran, KomponenUi.KeadaanTombol.NORMAL, nyala, pad_tambah)
+	var tekan: StyleBoxTexture = _kotak_tombol(peran, KomponenUi.KeadaanTombol.DITEKAN, nyala, pad_tambah)
 	tombol.add_theme_stylebox_override(&"normal", normal)
 	tombol.add_theme_stylebox_override(&"hover", normal)
 	tombol.add_theme_stylebox_override(&"pressed", tekan)
 	tombol.add_theme_stylebox_override(&"hover_pressed", tekan)
-	tombol.add_theme_stylebox_override(&"disabled", _kotak_tombol(peran, KomponenUi.KeadaanTombol.NONAKTIF, nyala))
+	tombol.add_theme_stylebox_override(&"disabled", _kotak_tombol(peran, KomponenUi.KeadaanTombol.NONAKTIF, nyala, pad_tambah))
 	tombol.add_theme_stylebox_override(&"focus", _kotak_fokus())
 	_warna_teks(tombol, KomponenUi.warna_teks_tombol(peran, KomponenUi.KeadaanTombol.NORMAL), KomponenUi.warna_teks_tombol(peran, KomponenUi.KeadaanTombol.DITEKAN))
 	tombol.add_theme_color_override(&"font_disabled_color", KomponenUi.warna_teks_tombol(peran, KomponenUi.KeadaanTombol.NONAKTIF))
@@ -301,7 +324,7 @@ static func _warna_teks(tombol: Button, normal: Color, tekan: Color) -> void:
 
 
 # Bingkai 9-slice satu keadaan tombol. Tepi dari `Config.UI_TOMBOL_SLICE_*`; margin isi = tepi + geseran bibir (`KomponenUi.margin_isi_tombol`), sakelar + jarak samping.
-static func _kotak_tombol(peran: KomponenUi.Peran, keadaan: KomponenUi.KeadaanTombol, nyala: bool) -> StyleBoxTexture:
+static func _kotak_tombol(peran: KomponenUi.Peran, keadaan: KomponenUi.KeadaanTombol, nyala: bool, pad_tambah: int = 0) -> StyleBoxTexture:
 	var hasil: StyleBoxTexture = StyleBoxTexture.new()
 	if keadaan == KomponenUi.KeadaanTombol.NONAKTIF:
 		hasil.texture = _tekstur_nonaktif_arsir()
@@ -314,7 +337,7 @@ static func _kotak_tombol(peran: KomponenUi.Peran, keadaan: KomponenUi.KeadaanTo
 	hasil.texture_margin_top = float(Config.UI_TOMBOL_SLICE_ATAS_PX)
 	hasil.texture_margin_bottom = float(Config.UI_TOMBOL_SLICE_BAWAH_PX)
 	var tambah: Vector2i = KomponenUi.margin_isi_tombol(peran, keadaan)
-	var pad_x: float = float(Config.UI_TOMBOL_SAKELAR_PAD_X_PX) if peran == KomponenUi.Peran.SAKELAR else 0.0
+	var pad_x: float = float(Config.UI_TOMBOL_SAKELAR_PAD_X_PX + pad_tambah) if peran == KomponenUi.Peran.SAKELAR else 0.0
 	hasil.content_margin_left = float(Config.UI_TOMBOL_SLICE_SAMPING_PX) + pad_x
 	hasil.content_margin_right = hasil.content_margin_left
 	hasil.content_margin_top = float(Config.UI_TOMBOL_SLICE_ATAS_PX + tambah.x)

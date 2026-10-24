@@ -4,11 +4,12 @@ extends CanvasLayer
 ## panel bawah kecepatan/stamina dan sisa koran, dan tombol bel. Pewarisnya menambah isi strip atas.
 ##
 ## `CanvasLayer` terpisah dari dunia. Tata letak memakai anchor dan Container (bukan posisi piksel absolut):
-## - Panel bawah (DESIGN_SPEC 3.5): panel kecepatan menempel di bawah `HUD_PANEL_KECEPATAN_GESER_PX` dari tepi layar sisi stick dan panel
-##   sisa koran di sampingnya dalam satu baris (`BarisBawah`, celah = x 400 dikurangi ujung panel kecepatan); keduanya pindah sisi saat kidal
-##   (dicerminkan). Dua bar: kecepatan (isi `TEXT`) dan stamina (isi `ACCENT`, `FAIL` di bawah `HUD_STAMINA_AMBANG_RENDAH`); label
-##   `HUD_LELAH` saat lelah dan `HUD_KORAN_HABIS` saat koran habis (penanda teks, bukan hanya warna). Panel tidak menerima sentuhan.
-## - Tombol jeda (`TombolJeda`, DESIGN_SPEC 3.1): area sentuh `HUD_JEDA_SENTUH_PX` persegi dengan gambar 24x24 di x `HUD_JEDA_GAMBAR_X_PX`,
+## - Panel bawah (DESIGN_SPEC 3.5; tata ulang run ui2-semua-layar bagian C2, V-9 H-1, usulan): panel kecepatan menempel di bawah `HUD_PANEL_KECEPATAN_GESER_PX` dari tepi layar sisi stick dan panel
+##   sisa koran di sampingnya dalam satu baris (`BarisBawah`, celah = `HUD_PANEL_KORAN_GESER_PX` dikurangi ujung panel kecepatan); keduanya pindah sisi saat kidal
+##   (dicerminkan) dan sama tinggi. Kecepatan dan stamina BERDAMPINGAN dalam satu panel, masing-masing satu kolom: label KAPITAL (`HudLabelBawah` 10) di atas bar (tinggi `HUD_BAR_TINGGI_PX`), angka kecepatan
+##   (`HudAngkaBawah` 12) di kanan label. Kecepatan: isi `TEXT`, tanda `WARN` di `HUD_BAR_TANDA_PECAHAN`. Stamina: isi `ACCENT`, `FAIL` di bawah `HUD_STAMINA_AMBANG_RENDAH` (`TampilHud.warna_stamina`);
+##   label `HUD_LELAH` saat lelah dan `HUD_KORAN_HABIS` saat koran habis (penanda teks, bukan hanya warna). Panel 9-slice `panel_hud`, tidak menerima sentuhan.
+## - Tombol jeda (`TombolJeda`, DESIGN_SPEC 3.1; tampilan tombol biasa 9-slice, V-9 H-3): area sentuh `HUD_JEDA_SENTUH_PX` persegi dengan gambar 24x24 di x `HUD_JEDA_GAMBAR_X_PX`,
 ##   y `HUD_JEDA_GAMBAR_Y_PX`; tidak dicerminkan saat kidal. Menekannya memancarkan `jeda_diminta`.
 ## - Tombol bel (`TombolBel`) 40x40 di bawah sisi swipe (`StripBel` lebar penuh di tepi bawah), pusat `BEL_TOMBOL_PUSAT_SAMPING_PX` dari
 ##   tepi samping dan `BEL_TOMBOL_PUSAT_BAWAH_PX` dari tepi bawah (margin strip dari kode, bukan dari scene); kidal dicerminkan mendatar. Hanya gambar: sentuhannya dibaca `TouchRouter`, frame dari `tampilkan_bel`.
@@ -35,6 +36,12 @@ var _inset: ZonaAman.Inset = ZonaAman.Inset.new()
 @onready var _baris_bawah: HBoxContainer = %BarisBawah
 @onready var _panel_kecepatan: PanelContainer = %PanelKecepatan
 @onready var _panel_koran: PanelContainer = %PanelKoran
+@onready var _isi_kecepatan: HBoxContainer = %Isi
+@onready var _kolom_kecepatan: VBoxContainer = %KolomKecepatan
+@onready var _kolom_stamina: VBoxContainer = %KolomStamina
+@onready var _baris_kecepatan: HBoxContainer = %Baris
+@onready var _baris_stamina: HBoxContainer = %BarisStamina
+@onready var _isi_koran: VBoxContainer = %IsiKoran
 @onready var _label_koran: Label = %LabelKoran
 @onready var _label_habis: Label = %LabelHabis
 @onready var _angka_koran: Label = %AngkaKoran
@@ -56,6 +63,7 @@ func _ready() -> void:
 	var celah: int = Config.HUD_PANEL_KORAN_GESER_PX - Config.HUD_PANEL_KECEPATAN_GESER_PX - Config.HUD_PANEL_KECEPATAN_LEBAR_PX
 	_baris_bawah.add_theme_constant_override(&"separation", celah)
 	_terapkan_gaya_dasar()
+	_terapkan_ukuran_bawah()
 	_tombol_jeda.ditekan.connect(jeda_diminta.emit)
 	tampilkan_kecepatan(Config.KECEPATAN_SANTAI_UD)
 	tampilkan_stamina(Config.STAMINA_MAKS, false)
@@ -190,7 +198,7 @@ func tampilkan_kecepatan(kecepatan_ud: float) -> void:
 ## `lelah` menampilkan label `HUD_LELAH` (penanda teks, bukan hanya warna).
 func tampilkan_stamina(stamina: float, lelah: bool) -> void:
 	_bar_stamina.nilai = stamina / Config.STAMINA_MAKS
-	_bar_stamina.warna_isi = Palette.FAIL if stamina < Config.HUD_STAMINA_AMBANG_RENDAH else Palette.ACCENT
+	_bar_stamina.warna_isi = TampilHud.warna_stamina(stamina)
 	_label_lelah.visible = lelah
 
 
@@ -224,6 +232,39 @@ func rect_panel_kecepatan() -> Rect2:
 	return _panel_kecepatan.get_global_rect()
 
 
+## Persegi bar kecepatan dan bar stamina dalam koordinat viewport game (V-9 H-1: berdampingan, sejajar tegak).
+func rect_bar_kecepatan() -> Rect2:
+	return _bar.get_global_rect()
+
+
+func rect_bar_stamina() -> Rect2:
+	return _bar_stamina.get_global_rect()
+
+
+## Persegi kolom kecepatan dan kolom stamina dalam koordinat viewport game.
+func rect_kolom_kecepatan() -> Rect2:
+	return _kolom_kecepatan.get_global_rect()
+
+
+func rect_kolom_stamina() -> Rect2:
+	return _kolom_stamina.get_global_rect()
+
+
+## Label panel bawah (kecepatan, angka kecepatan, stamina, lelah, koran, habis, angka koran) untuk tes dan probe.
+func label_bawah() -> Array[Label]:
+	return [_label_judul, _label_angka, _label_stamina, _label_lelah, _label_koran, _label_habis, _angka_koran]
+
+
+## Bar kecepatan (untuk tes dan probe: tanda batas ngebut).
+func bar_kecepatan() -> BarKecepatan:
+	return _bar
+
+
+## Bar stamina (untuk tes dan probe).
+func bar_stamina() -> BarKecepatan:
+	return _bar_stamina
+
+
 ## Persegi panel sisa koran dalam koordinat viewport game.
 func rect_panel_koran() -> Rect2:
 	return _panel_koran.get_global_rect()
@@ -237,13 +278,12 @@ func _terapkan_tata_letak_dasar() -> void:
 	_strip_jeda.add_theme_constant_override(&"margin_left", tepi_jeda + geser_awal_x())
 	_strip_jeda.add_theme_constant_override(&"margin_top", Config.HUD_TOMBOL_MARGIN_ATAS_PX + geser_atas())
 	_tombol_jeda.geser_gambar = Vector2(Config.HUD_JEDA_GAMBAR_X_PX - tepi_jeda, Config.HUD_JEDA_GAMBAR_Y_PX - Config.HUD_TOMBOL_MARGIN_ATAS_PX)
-	var geser: int = Config.HUD_PANEL_KECEPATAN_GESER_PX
-	var tepi: int = Config.HUD_MARGIN_TEPI_PX
-	_panel_bawah.add_theme_constant_override(&"margin_left", tepi if _kidal else geser)
-	_panel_bawah.add_theme_constant_override(&"margin_right", geser if _kidal else tepi)
-	_panel_bawah.add_theme_constant_override(&"margin_bottom", tepi + geser_bawah())
+	var margin: Vector2i = TampilHud.margin_bawah(_kidal)
+	_panel_bawah.add_theme_constant_override(&"margin_left", margin.x)
+	_panel_bawah.add_theme_constant_override(&"margin_right", margin.y)
+	_panel_bawah.add_theme_constant_override(&"margin_bottom", Config.HUD_MARGIN_TEPI_PX + geser_bawah())
 	_baris_bawah.size_flags_horizontal = Control.SIZE_SHRINK_END if _kidal else Control.SIZE_SHRINK_BEGIN
-	_baris_bawah.move_child(_panel_koran, 0 if _kidal else -1)
+	_baris_bawah.move_child(_panel_koran, 0 if TampilHud.koran_di_awal(_kidal) else -1)
 	# Tombol bel: bawah sisi swipe (StripBel lebar penuh di tepi bawah), pusat BEL_TOMBOL_PUSAT_SAMPING_PX dari tepi samping dan
 	# BEL_TOMBOL_PUSAT_BAWAH_PX dari tepi bawah (sama dengan TouchZones.pusat_bel). Kidal hanya menukar sisi samping.
 	var setengah_bel: int = floori(float(Config.BEL_TOMBOL_UKURAN_PX) / 2)
@@ -257,8 +297,8 @@ func _terapkan_tata_letak_dasar() -> void:
 
 ## Warna dan bentuk panel bawah dari `Palette` (DESIGN_SPEC 1.3).
 func _terapkan_gaya_dasar() -> void:
-	_panel_kecepatan.add_theme_stylebox_override(&"panel", GayaHud.kotak(Palette.HUD_PANEL, Palette.OUTLINE))
-	_panel_koran.add_theme_stylebox_override(&"panel", GayaHud.kotak(Palette.HUD_PANEL, Palette.OUTLINE))
+	_panel_kecepatan.add_theme_stylebox_override(&"panel", GayaHud.panel_hud(Config.HUD_PANEL_BAWAH_PAD_X_PX))
+	_panel_koran.add_theme_stylebox_override(&"panel", GayaHud.panel_hud(Config.HUD_PANEL_BAWAH_PAD_X_PX))
 	_label_koran.add_theme_color_override(&"font_color", Palette.ACCENT)
 	_label_habis.add_theme_color_override(&"font_color", Palette.FAIL)
 	_angka_koran.add_theme_color_override(&"font_color", Palette.TEXT)
@@ -266,3 +306,15 @@ func _terapkan_gaya_dasar() -> void:
 	_label_angka.add_theme_color_override(&"font_color", Palette.TEXT)
 	_label_stamina.add_theme_color_override(&"font_color", Palette.ACCENT)
 	_label_lelah.add_theme_color_override(&"font_color", Palette.FAIL)
+
+
+## Ukuran dan jarak isi panel bawah (V-9 H-1): lebar kolom kecepatan dan stamina, tinggi baris label yang sama di kedua kolom (bar sejajar), jarak antar isi, dan tanda batas ngebut di bar kecepatan.
+func _terapkan_ukuran_bawah() -> void:
+	_isi_kecepatan.add_theme_constant_override(&"separation", Config.HUD_BAWAH_KOLOM_JARAK_PX)
+	_kolom_kecepatan.custom_minimum_size = Vector2(Config.HUD_BAWAH_KOLOM_KECEPATAN_PX, 0)
+	_kolom_stamina.custom_minimum_size = Vector2(Config.HUD_BAWAH_KOLOM_STAMINA_PX, 0)
+	for kolom: VBoxContainer in [_kolom_kecepatan, _kolom_stamina, _isi_koran]:
+		kolom.add_theme_constant_override(&"separation", Config.HUD_BAWAH_ISI_JARAK_PX)
+	for baris: HBoxContainer in [_baris_kecepatan, _baris_stamina, %BarisKoran as HBoxContainer]:
+		baris.custom_minimum_size = Vector2(0, Config.HUD_BAWAH_BARIS_TINGGI_PX)
+	_bar.tanda = Config.HUD_BAR_TANDA_PECAHAN
