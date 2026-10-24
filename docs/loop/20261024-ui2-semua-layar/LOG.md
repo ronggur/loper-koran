@@ -1,7 +1,7 @@
 # Loop Log — 20261024-ui2-semua-layar
 Scope: Run UI-2 — redesain UI langkah 3-6 (hasil, koran, jeda, tutorial, banner, tombol jeda HUD) dalam satu PR  ·  Branch: feat/ui2-semua-layar (dari main d16b3bb, 0.7.0)  ·  Mulai: 2026-10-24  ·  Godot: 4.7.2.stable.official.ed1daf0bf
 
-## Status: IN_PROGRESS   (iterasi 1/2; bagian A selesai)
+## Status: IN_PROGRESS   (iterasi 1/2; bagian A dan B selesai)
 
 ## Lingkungan (orchestrator, awal run)
 - Basis: `main` = `origin/main` = `d16b3bb` (rilis 0.7.0; memuat PR #64 UI-1). Branch dibuat dari sana.
@@ -129,6 +129,74 @@ Satu perubahan per mutan, runner kecil (`TesTampilHasil` + `TesHasilStruk` + `Te
 - sha256 save asli sesudah semua tes dan probe: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` (tidak berubah).
 
 ## Bagian B — Koran
+
+### B1 — Halaman koran (selesai; commit `8e722be`, tes penutup mutan di commit berikutnya)
+- Kode baru: `scripts/systems/tampil_koran.gd` (`TampilKoran`, murni: `tata` = margin max(12, inset), lebar kolom misi 236 dan 280 (di lebar >= 800), lebar kolom berita = isi - misi - 13, x garis tegak, persegi Berangkat 140x42 kanan bawah; `PeranTombol` TINTA/TIPIS/TERPILIH dengan `nama_tekstur_tombol`, `warna_teks_tombol`, `margin_isi_tombol`, `glif_pilih`; `foto_untuk_efek` dan `ikon_untuk_efek`; `ruang` (pembagian sisa kolom berita antara batang hiasan di atas dan kotak iklan di dasar), `iklan`, `batang_hiasan`, `baris_hiasan_muat`, `tinggi_hiasan`, `garis_ganda`), `scripts/ui/garis_ganda.gd`, `scripts/ui/garis_hiasan.gd`, `scripts/ui/kotak_iklan.gd` (garis putus dari `GarisSobek.segmen`). `GayaHud` mendapat fungsi BARU `tombol_koran(tombol, peran)`, `panel_koran()`, `kotak_notifikasi_koran()` dan 14 entri tekstur baru; fungsi lama tidak diubah. `theme.tres`: satu type variation BARU `LayarTeksMiniTebal` (Lexend SemiBold 10, untuk teks status misi; kanvas memberi status `font-weight: 600`); variation lain tidak diubah. `halaman_koran.tscn` dan `halaman_koran.gd` ditulis ulang (anchor + Container). Sinyal (`ambil_diminta`, `lewati_diminta`, `berangkat_diminta`), `isi(...)`, `atur_pilihan`, `pilihan`, `ada_misi`, `tampilkan_notifikasi`, `atur_inset`, `teks_tampil` (urutan sama), `teks_tombol`, `teks_status`, `tombol_*`, `rect_*`, `ukur_label` TETAP; baru: `peran_tombol`, `nama_foto`, `nama_ikon_utama`, `foto_tampil`, `iklan_tampil`, `notifikasi_tampil`, `hiasan_baris`, `tata` dan beberapa `rect_*`. `gaya_tombol` kini mengembalikan `StyleBoxTexture` (dulu `StyleBoxFlat`; tidak bisa dihindari karena bingkai tombol kini 9-slice). Perilaku, alur (Koran -> Rute), `HeadlineManager`/`PemuatHeadline`/misi, back per keadaan TIDAK berubah.
+- Sesuai kanvas `Koran.dc.html`: kertas = `ColorRect` KORAN_KERTAS + `ui_kertas_tile` diulang (`TextureRect` TILE, Nearest); nama koran Lilita One 32 (variation `LayarAngkaBesar`, dinaikkan 5 px di atas margin seperti kanvas supaya garis ganda jatuh di y 46); "Hari N · Perumahan Melati" kanan (diturunkan 13 px supaya garis dasar sejajar nama); garis ganda 2+1+1 KORAN_TINTA; kolom berita | 6 + garis tegak 1 + 6 | misi 236/280; judul bagian dengan ikon 24 (kerucut atau bohlam menurut efek) dan label KAPITAL; foto 100x62 (hanya efek `jalan_diperbaiki` dan `mati_lampu`, "jalan dan lampu dulu" Spesifikasi.dc.html; efek lain tanpa foto dan tanpa ikon, headline mengisi lebar kolom); headline Lilita 24, ringan Lilita 16 dan batang hiasan 2 px (tiga baris, dua kolom, pola 100/100/100/80/60/100 persen); kotak misi `ui_koran_kotak` 9-slice garis ganda dengan ikon kucing 24; tombol Ambil/Lewati bingkai tipis (tidak terpilih) atau terpilih berongga bingkai tinta 3 px dengan glif centang, Berangkat tinta penuh 140x42 kanan bawah dengan panah; kotak "Iklan baris" 220x54 di kiri bawah kolom berita (garis putus KORAN_GARIS); kotak notifikasi save (isi KORAN_KERTAS_2, garis 1 px, glif "!" TINTA_2, tinggi >= 42) menggantikan iklan; inset aman; lebar 800.
+- V-8 di koran: nama koran 32 (`LayarAngkaBesar`), headline 24 dan 16 (tidak berubah, Lilita), hari dan teks "tanpa misi" 12 (`LayarTeksUtama`), ringkasan dan notifikasi 11 (`LayarTeksKecil`), status misi 10 tebal (`LayarTeksMiniTebal`), label KAPITAL 10 (`LayarLabel`), tombol 12 (`TombolPeran`). **Tidak ada elemen yang turun ke +1.** Headline 40 huruf lebar dan ringkasan 60 muat di 640 sesudah dua penyesuaian tata letak, bukan penurunan huruf: jarak antar baris headline dirapatkan seperti kanvas (tinggi baris 1,05 em; bawaan Godot menambah 3 px: `KORAN_JARAK_BARIS_UTAMA_PX` -3, `_JUDUL_PX` -2, `_TEKS_PX` 1) dan kepala dipadatkan (nama dinaikkan 5 px). Kasus terburuk terukur di 640 (1920x1080): `terpanjang_save` = headline utama 40 huruf M/W dengan foto jalan (empat baris Lilita 24), headline misi 40 huruf (tiga baris), ringkasan 60 huruf (tiga baris), berita ringan 40 huruf (dua baris) dan notifikasi `KORAN_SAVE_TIDAK_TERBACA` 150 huruf (tiga baris): kolom berakhir tepat di batas bawah isi (y 348), tidak ada teks terpotong. Batang hiasan dan kotak iklan hanya hiasan: tinggi minimum 0 dan mengalah lebih dulu (iklan lalu baris hiasan), jadi kolom tidak pernah meluap karena hiasan.
+- Teks: SATU kunci baru `KORAN_IKLAN_BARIS` = "IKLAN BARIS" (label kapital, pola kunci `KORAN_LABEL_*`) di `translations/ui.csv` (`ui.id.translation` terbarui lewat `--import`); kunci lama tidak diubah. **Penyimpangan dari kanvas karena V-3 (hanya dua kunci baru run ini): kotak iklan TIDAK memuat teks iklan "Dijual sepeda onthel, ban baru, bel nyaring. Hubungi Pak Darto, Blok C."; gantinya batang hiasan 2 px (sama dengan hiasan di bawah berita ringan).** Butuh keputusan bila teks iklan itu diinginkan: itu kunci baru kedua (jadi tiga kunci baru run ini, V-3 menyebut dua).
+- Aset (V-4): `komponen.py --salin` + daftar tunggal `pasang.py` (`KORAN`, `IKON24`, `GLIF12` diperluas) memasang 14 berkas baru ke `assets/sprites/ui/` (total redesain terpasang 56 berkas: 53 komponen, sepeda, JSON sepeda, dan latar; bagian A berakhir di 42): `ui_koran_{kotak,btn_tinta,btn_tinta_tekan,btn_tipis,btn_terpilih}`, `ui_kertas_tile`, `ui_foto_{jalan,lampu}`, `ui_icon24_{kucing,kerucut,bohlam}`, `ui_glif_{centang_gelap,panah_terang,seru_tinta2}`; `.import` Lossless, tanpa mipmap, bukan VRAM. Berkas yang sudah terpasang byte-identik (skrip deterministik). Tanpa font atau palet baru; PNG tidak diedit tangan. Yang tetap tidak dipasang: `sepeda_besar`, sheet `lencana32` utuh, `panel_hud`, latar 640, sheet ikon dan glif utuh.
+- Probe `tests/probe_halaman_koran_jendela.gd` (ditulis ulang): 17 keadaan (hari 1, Ambil, Lewati, hari 2, terpanjang foto jalan, terpanjang Ambil, terpanjang tanpa foto, foto lampu, tanpa misi, lanjutan, save rusak, save tidak terbaca, save gagal, terpanjang + save terpanjang, inset aman terpanjang, inset aman hari 1) x 1920x1080 (640), 2340x1080 (780), 2400x1080 (800), 1600x720 (800): **0 keadaan tidak sesuai di keempat ukuran** (teks terpotong, elemen atau teks di luar zona aman, tumpang tindih label/tombol/foto/ikon/iklan/notifikasi/kolom, tombol < 42x84, kolom meluap ke bawah, lebar kolom misi/berita, x garis tegak, dan Berangkat sama dengan `TampilKoran.tata`, foto 100x62). Tangkapan `<ukuran>_koran_<keadaan>.png` + `.json` di `shots/iter1/`. Saya MELIHAT tangkapan hari 1 dan tanpa misi (1920x1080), terpanjang_save dan inset_aman (1920x1080), ambil (2400x1080), foto_lampu (2340x1080) dan membandingkan dengan `Koran*.dc.html`: urutan blok, garis ganda di y 46, foto di kiri headline, kotak misi garis ganda, tombol tipis/terpilih/tinta, kotak iklan kiri bawah, dan notifikasi cocok; selisih tertulis di bawah. Dibanding baseline (`shots/baseline/*_koran_*`, kertas rata tanpa foto dan tanpa kotak iklan, tombol berbingkai polos, huruf 7 sampai 10): kini bertekstur kertas, berfoto, bertombol tinta, huruf V-8.
+- Kontras (`tools/ukur_kontras_tangkapan.py`, diperluas `--jenis koran`, 16 keadaan x 4 ukuran, semua dari tangkapan nyata): teks terburuk **7,58:1** (1600x720 "Lewati" TINTA_2 di KERTAS_2; 7,67:1 di tiga ukuran lain, label "MISI SAMPINGAN"), tidak ada teks < 7:1 (teks tinta di atas kertas terang ikut diukur); kontrol aktif: Berangkat 15,28:1, Ambil/Lewati (garis tipis KORAN_GARIS) **3,89:1** (>= 3:1, alat kini gagal bila < 3 untuk `tombol` dan `pilih`); kotak misi 4,48:1 (wadah non-kontrol, dilaporkan saja seperti kartu bengkel/struk hasil, QA-003 UI-1).
+
+Penyimpangan dari kanvas (usulan, bisa ditolak): (1) kotak iklan tanpa teks iklan (V-3, di atas); (2) panah Berangkat dan centang pilihan menempel di tepi kanan/kiri tombol, bukan dekat teks (`Button.icon` Godot; sama dengan "Hari berikutnya" bengkel); (3) kotak notifikasi selebar kolom berita (367 di 640), bukan selebar isi dikurangi Berangkat (464): teks 150 huruf jadi tiga baris dan tidak membuat tinggi kotak melebihi 58; (4) label "BERITA UTAMA" dan teman tampil kapital dari kunci lama (kanvas kapital lewat CSS); (5) berita utama efek selain jalan dan lampu tanpa ikon di judul (kanvas selalu mengisi ikon; tidak ada ikon untuk efek lain); (6) jarak antar baris headline dirapatkan (-3) supaya sama dengan tinggi baris kanvas; (7) tekan Ambil/Lewati memakai bingkai terpilih karena kanvas tidak punya bingkai tekan untuk pilihan; (8) status misi memakai variation baru `LayarTeksMiniTebal` (tebal 10), karena `LayarTeksMini` Regular tidak sama dengan kanvas.
+
+Tes lama yang diubah (semua karena tampilan, bukan perilaku):
+| Tes | Perubahan | Alasan |
+|---|---|---|
+| `tests/tes_halaman_koran.gd` `VARIASI_SAH` | daftar variation: `JudulBesar/JudulLayar/HudLabel/HudTeks/TeksKecil` -> `LayarAngkaBesar/JudulBesar/JudulLayar/LayarLabel/LayarTeksUtama/LayarTeksKecil/LayarTeksMiniTebal` | V-8 dan tata ulang |
+| `tests/tes_halaman_koran.gd` `_test_tata_letak_semua_ukuran` | label di dalam zona aman: kotak `NamaKoran` boleh naik `KORAN_KEPALA_NAIK_PX` di atas margin (tinta tetap di dalam); sisanya sama | kepala seperti kanvas |
+| `tests/tes_halaman_koran.gd` `_test_ambil_lewati` | cek bentuk: `StyleBoxFlat` (warna isi, lebar bingkai) -> tekstur bingkai (`koran_btn_tipis`/`koran_btn_terpilih`/`koran_btn_tinta`), peran, glif centang dan panah | tombol kini 9-slice |
+| `tests/tes_halaman_koran.gd` `_test_notifikasi_dan_zona_aman` | notifikasi "menambah satu label" -> jumlah label sama (label iklan hilang, label notifikasi muncul) + iklan tersembunyi | kanvas: iklan = tanpa save |
+| `tests/tes_halaman_koran.gd` `_test_font_dan_warna` | ditulis ulang: ukuran huruf V-8 per label (13 label), latar kontras (kotak notifikasi KERTAS_2), kontras teks tombol terhadap isi per peran, bingkai `StyleBoxTexture` | tombol 9-slice, V-8 |
+| `tests/halaman_uji.gd` `terpanjang()` | efek `hajatan` -> `jalan_diperbaiki` (foto 100x62 ikut tampil: kasus tersempit); baru `dengan_efek()` | kasus terpanjang harus memuat foto |
+| `tests/tes_export.gd` | `UI1_PNG_DIPASANG` + 14 aset koran, `UI1_SKRIP_IKUT` + skrip dan scene koran, `UI1_AWALAN_TAK_DIPASANG` tidak lagi memuat `ui_koran_`, `ui_foto_`, `ui_kertas_tile` (kini dipasang); contoh "tak ada di assets" diganti `ui_foto_hujan.png`, `ui_koran_foto_jalan.png`, `ui_sepeda_besar.png`, `ui_panel_hud.png` | aset koran dipasang |
+Tes baru: `tests/tes_tampil_koran.gd` (murni, oracle kanvas literal; terdaftar di `run_tests.gd`) dan di `tests/tes_halaman_koran.gd`: `_test_tampilan_baru` (empat ukuran: kertas, foto, ikon, kolom, garis tegak, Berangkat, garis ganda, iklan, notifikasi), `_test_hari_panjang` (nomor hari 16 digit berelipsis), `_test_gaya_tombol_koran`, `_test_tata_sapuan` (224 kombinasi: empat ukuran x inset x tujuh halaman x empat notifikasi: tidak meluap, tidak bertumpuk, semua di zona aman, tidak terpotong). `tools/tests_cek/uji_ui_redesain.py` diperluas (isi assets = keluaran skrip, set tepat 56 berkas redesain, slice tombol tinta = tombol biasa dan kotak misi = panel, foto 100x62, kertas 4x4, ikon dan glif terdaftar); `tools/ukur_kontras_tangkapan.py` `--jenis koran`.
+
+### Mutan nyata bagian B (32 dari 32 tertangkap; 1 setara)
+Satu perubahan per mutan, runner kecil (`TesTampilKoran` + `TesKomponenUi` + `TesHalamanKoran` + `TesAlurHari`, sekitar 3000 pemeriksaan, 6 detik), `git checkout` sesudah tiap mutan, kode di-COMMIT lebih dulu (`8e722be`). Putaran pertama: 28 tertangkap, 4 lolos (B21, B26, B27, B31). B21, B26, B27 ditutup tes (commit penutup) dan diulang: tertangkap. B31 setara (`_hiasan_berita.visible = true` saat nol baris: node berukuran 0 dan tidak menggambar apa pun, tidak ada perbedaan terlihat atau terukur), dicatat.
+| Mutan | Perubahan | Tertangkap oleh |
+|---|---|---|
+| B01 | lebar 800 tepat memakai 236 (`>=` jadi `>`) | "lebar 800: kolom misi 280" |
+| B02 | garis tegak 1 px dihapus dari pemisah kolom | tata 640: isi, misi, berita |
+| B03 | jarak 6 sebelum garis tegak dihapus | tata 640: garis x 385 |
+| B04 | Berangkat memakai margin atas | tata inset (dan sapuan 113 pemeriksaan) |
+| B05 | `peran_pilih` dibalik | "terpilih = TERPILIH" |
+| B06 | TIPIS ditekan tetap bingkai tipis | "TIPIS ditekan = bingkai terpilih" |
+| B07 | teks TINTA berwarna tinta | warna TINTA |
+| B08 | geseran isi TINTA normal/ditekan tertukar | "TINTA normal: teks naik" |
+| B09 | centang selalu ada | glif_pilih |
+| B10 | foto selalu indeks 0 | "mati lampu: foto lampu" |
+| B11 | ikon efek tertukar | "jalan diperbaiki: foto jalan, ikon kerucut" |
+| B12 | iklan minimum `<=` | "ruang 28 tepat" |
+| B13 | tinggi iklan `maxi` | "iklan 220x54 di dasar" |
+| B14 | hiasan 0 baris | "tiga baris hiasan" |
+| B15 | kolom hiasan tanpa jarak kolom | "dua batang penuh (178)" |
+| B16 | baris hiasan muat tanpa jarak baris | "ruang 7: dua baris hiasan" |
+| B17 | garis ganda tanpa celah | "garis ganda: 2 px, celah 1, 1 px" |
+| B18 | margin kiri mengabaikan inset | "margin mengikuti inset" |
+| B19 | iklan tanpa jarak dari hiasan | "ruang 60" |
+| B20 | iklan tampil walau ada notifikasi | notifikasi menggantikan iklan (164 pemeriksaan) |
+| B21 | `tampilkan_notifikasi` tidak menata iklan | seketika iklan tersembunyi (setelah ditambah) |
+| B22 | foto selalu tampil | "efek hajatan: tanpa foto" |
+| B23 | gaya pilihan terbalik | "awal: kedua tombol hanya garis tipis" |
+| B24 | lebar kolom misi selalu 236 | "lebar 800: kolom misi 280" |
+| B25 | efek foto tidak dibaca | "efek jalan_diperbaiki: foto jalan" |
+| B26 | bingkai tekan sama dengan normal | gaya tombol koran (setelah ditambah) |
+| B27 | `KORAN_FOTO_TINGGI_PX` 60 | ukuran PNG = Config (setelah ditambah) |
+| B28 | `KORAN_KEPALA_NAIK_PX` 0 | "garis ganda ... di y 46" |
+| B29 | jarak baris headline +3 | sapuan: Berangkat tepat di kanan bawah (kolom meluap) |
+| B30 | goresan garis putus sisi bawah salah letak | "sisi bawah di y 11" |
+| B31 | hiasan selalu tampil | SETARA (node 0 piksel) |
+| B32 | tinggi minimum notifikasi dihapus | "notifikasi ... setinggi minimal 42" |
+
+### Gerbang bagian B (2026-10-24, keluaran nyata)
+- `godot --headless --import`: 0 baris ERROR/WARNING. `godot --headless --path . --quit-after 2`: 0 baris ERROR/WARNING.
+- `run_tests.gd`: **25855 lolos, 0 gagal**; `tools/cek_keluaran_tes.py`: "lolos (25855 lolos, 0 gagal, 0 peringatan)" (akhir bagian A 24009; +1846 pemeriksaan).
+- 17 berkas `tools/tests_cek/uji_*.py`: exit 0 semua (termasuk `uji_ui_redesain.py` diperluas).
+- `godot --headless --path . --export-pack Android build/kring-uji.pck`: exit 0, 0 ERROR/WARNING; ada: 14 aset baru, `tampil_koran.gd`, `garis_ganda.gd`, `garis_hiasan.gd`, `kotak_iklan.gd`, `halaman_koran.tscn`; tidak ada: `sepeda_besar`, `ui_lencana32.png`, `ui_panel_hud.png`, `ui_koran_foto*`, tes dan probe koran, `tests/`.
+- Probe jendela `probe_halaman_koran_jendela.gd` (1920x1080, 2340x1080, 2400x1080, 1600x720): 0 keadaan tidak sesuai. (Probe hasil/bengkel/reputasi/HUD/kondisi/misi tidak dijalankan ulang di bagian B: tidak ada kode yang mereka sentuh berubah; `GayaHud` hanya bertambah fungsi.)
+- sha256 save asli sesudah semua tes dan probe: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` (tidak berubah).
 
 ## Bagian C — Jeda, tutorial, banner, HUD
 
