@@ -1,7 +1,7 @@
 # Loop Log — 20261024-ui2-semua-layar
 Scope: Run UI-2 — redesain UI langkah 3-6 (hasil, koran, jeda, tutorial, banner, tombol jeda HUD) dalam satu PR  ·  Branch: feat/ui2-semua-layar (dari main d16b3bb, 0.7.0)  ·  Mulai: 2026-10-24  ·  Godot: 4.7.2.stable.official.ed1daf0bf
 
-## Status: IN_PROGRESS   (iterasi 1/2; bagian A, B, dan C selesai)
+## Status: IN_PROGRESS   (iterasi 1/2; bagian A, B, C, dan E selesai)
 
 ## Lingkungan (orchestrator, awal run)
 - Basis: `main` = `origin/main` = `d16b3bb` (rilis 0.7.0; memuat PR #64 UI-1). Branch dibuat dari sana.
@@ -305,6 +305,71 @@ Satu perubahan per mutan, runner kecil (`TesTampilLayarC` + `TesLayarCScene` + `
 3. Banner misi 24 huruf (batas data) akan menyentuh panel baris 2 di 640 bila reputasi tampil; opsi di C2.
 4. Kata status berwarna `FAIL` di HUD (`LELAH`, `HABIS`, `PUTUS`) 3,7 sampai 4,8:1 (PRA-ADA): ganti ke `WARN` atau terima.
 5. Panel jeda di tengah tegak (bukan y 50 kanvas) dan tanpa ruang cadangan 42.
+
+## Bagian E — layar hasil di atas lingkungan yang baru dilalui (V-10) dan tanda bar kecepatan
+
+Commit kode: `fix: tanda bar kecepatan di ambang ngebut sebenarnya` (E2) dan `feat: layar hasil di atas lingkungan yang baru dilalui dengan struk transparan (V-10)` (E1). Tes baru `tests/tes_hasil_dunia.gd` (terdaftar di `run_tests.gd`).
+
+### E1 — V-10 (selesai)
+- Kode: `TampilHasil.warna_latar/alpha_panel/gelap_panel/modulasi_panel` (murni); `LayarHasil.atur_dunia(bool)`, `ada_dunia()`, `warna_latar()`, `alpha_panel()`; `RuteMain` memanggil `atur_dunia(true)` di `_siapkan_dunia` (jalur alur hari lewat `HariMain` memakai `RuteMain` yang sama, jadi otomatis) dan `_atur_lapisan_dunia_tampil(false/true)` di `_buka_hasil` dan di jalur Main lagi. `Config`: `HASIL_LATAR_ALPHA`, `HASIL_PANEL_ALPHA`, `HASIL_PANEL_GELAP`, `HASIL_ALPHA_TANPA_DUNIA`, `HASIL_PANEL_GELAP_TANPA_DUNIA`.
+- Tembus pandang: `LatarHasil` (ColorRect, tetap `MOUSE_FILTER_STOP`) berwarna token `UI_BG` dengan alpha di atas dunia rute (CanvasLayer 15 di atas dunia); struk dan tiga kartu samping memakai `StyleBoxTexture.modulate_color` (abu-abu x alpha; PNG tidak diedit). Tanpa dunia (bawaan: layar hasil sendiri, tes, probe, dev) latar `UI_BG` buram penuh dan panel putih buram = tampilan lama persis, tanpa galat.
+- Lapisan dunia yang disembunyikan selama hasil tampil (pulih di Main lagi): HUD (progres, radar, panel bawah, kolom kanan atas, bel, jeda, kartu misi, banner, penanda kucing; sudah dilakukan `_buka_hasil` sebelum run ini), tutorial dan banner akhir (juga sudah), BARU: umpan melayang ("+15", TEPAT; `visible` node), lapisan kontrol sentuh (CanvasLayer `LapisanKontrol`: stick dan tanda "tidak ada sasaran" yang bisa masih tampil sebentar di layer 10), dan tip sisi dekat (disembunyikan seketika, bukan menunggu frame berikutnya; di tangkapan probe pertama ia terlihat samar menembus struk, sudah diperbaiki). Hanya `visible`, tanpa pemrosesan per frame (dites: `is_processing()` false). Tangkapan layar ke disk dan tekstur viewport tidak dipakai (dunia memang masih ada di belakang).
+- **Nilai terpilih: lapisan gelap alpha 0,75; struk dan kartu alpha 0,72 dan faktor gelap RGB 0,5.** Alpha lapisan 0,75 <= 0,85 (batas SPEC), dunia (sepeda, rumah, jalan) tetap terlihat redup (lihat tangkapan). Perjalanan penyetelan (terukur, 1920x1080, sapuan 12 posisi): (a) 0,70 / 0,90 tanpa penggelapan: judul 6,97:1 dan teks hijau `OK` di struk 6,91:1 (gagal); (b) 0,75 / 0,82 / gelap 0,55: terburuk 7,78:1; (c) 0,75 / 0,72 / gelap 0,5 dipilih supaya struk benar-benar terlihat tembus (siluet rumah dan jalan di balik struk) dengan terburuk 7,29:1. Penggelapan RGB perlu karena teks hijau `OK` (L 0,45) di atas struk buram hanya 7,34:1: dengan struk transparan tanpa digelapkan, sedikit saja latar terang yang tembus menjatuhkannya di bawah 7:1.
+- **Kontras terburuk TERUKUR dari tangkapan nyata: 7,29:1** ('Baru: Pelanggan tetap · Perak', hijau `OK` di kartu target, di atas rumah terang), seluruhnya >= 7:1 di 4 ukuran x (16 keadaan probe + 12 sapuan latar: hari 3 dan 9 x posisi rute 8/25/42/58/75/92 persen, keadaan terpadat, rumput, jalan, trotoar, dinding rumah) = 4 x 28 tangkapan; pengukuran lama (warna terbanyak) terburuk 7,34:1 (Tip hijau). Kontras TEORETIS terburuk (dunia putih penuh, hitung dari piksel tekstur nyata dan pencampuran sRGB, dijaga `TesHasilDunia`): judul 7,45:1; di struk dan kartu `TEXT` 14,56, `TEXT_2` 8,40, `OK` 7,22, `ACCENT` 8,85. Alat `tools/ukur_kontras_tangkapan.py --jenis hasil` diperluas: bila ada `<keadaan>_latar.png` (tangkapan sama dengan SEMUA teks transparan, ditulis probe) kontras warna teks diukur terhadap SETIAP piksel latar di bawah teks (persentil 0,5 terendah dan minimum; persegi tombol dipangkas dari bingkainya), exit 1 bila < 7:1. Sapuan ditulis ke `build/hasil_sapu/iter1/` (tidak di-commit; 192 berkas); tangkapan keadaan resmi (16 keadaan x 4 ukuran, PNG + JSON + `_latar.png`) di `shots/iter1/*_hasil_*`.
+- **Penyimpangan tata letak (usulan): baris "Baru: ... tingkat" kini di DALAM kartu target** (dulu langsung di atas latar). Alasan terukur: tanpa panel di belakangnya teks hijau di atas dunia terang hanya 3,2 sampai 4,6:1 (alpha lapisan >= 0,93 baru cukup; melanggar batas 0,85); kartu sendiri menambah 15 px tinggi dan memecahkan kasus terpadat dengan inset di 640 (kolom 302 > batas 292), jadi baris dipindah ke kartu target (`BagianBaru` anak `IsiTarget`).
+- Probe `tests/probe_hasil_jendela.gd` ditulis ulang: SEMUA keadaan (a sampai o, 15 keadaan) di atas `RuteMain` nyata yang dibekukan (`_buka_hasil` dipanggil) dengan data buatan keadaan itu; `o_dari_rute` tetap rute nyata sampai garis akhir; baru `p_tanpa_dunia` (latar polos) dan sapuan 12 kombinasi; tiap tangkapan disertai `_latar.png`; tiap keadaan memeriksa dunia ada, alpha dari `Config`, HUD/tutorial/kontrol/umpan/banner tersembunyi. **0 keadaan tidak sesuai di 1920x1080, 2340x1080, 2400x1080, 1600x720.** Saya MELIHAT tangkapan a_biasa (1920x1080), h_terpadat (2400x1080), m_inset_terpadat (1920x1080), o_dari_rute (1600x720), p_tanpa_dunia (1920x1080): jalan, rumah, dan sepeda terlihat redup di balik lapisan, siluet rumah samar di balik struk, semua teks terbaca, kartu dan tombol tetap jelas; tanpa dunia sama dengan tampilan lama.
+- Dibanding tangkapan bagian A: struk dan kartu kini gelap kehitaman transparan (bukan cokelat buram), latar bukan cokelat polos melainkan dunia redup.
+
+Tes lama yang diubah di E1: **tidak ada tes hasil lama yang harus diubah** (HUD sudah disembunyikan sebelumnya; tes yang membaca hasil lewat `RuteMain` tidak bergantung pada warna). `tests/probe_hasil_jendela.gd` ditulis ulang (di atas). Tes baru `tests/tes_hasil_dunia.gd` (murni: nilai `Config` literal, warna, kontras teoretis dunia putih; scene: tanpa dunia, di atas dunia, pulih sesudah Main lagi, hasil kedua, pengali struk dan tiga kartu, tombol tetap menerima sentuhan, tanpa pemrosesan per frame).
+
+### E2 — tanda bar kecepatan (selesai)
+- Dihitung dari kode: kecepatan di ambang stick sprite ngebut = `BikeMotion.kecepatan_tujuan_ud(SPRITE_AMBANG_NGEBUT 0,80)` = lerp(3,0, 6,0, 0,80) = 5,4 u/d; bar = kecepatan / `KECEPATAN_NGEBUT_UD` (6,0) = 0,9. `HUD_BAR_TANDA_PECAHAN` 0,8 -> **0,9** (komentar `Config` menjelaskan asal angka; tanda lama jatuh di 4,8 u/d dan menyesatkan). Posisi tanda di bar 111: x 88 -> 99.
+- `DESIGN_SPEC` 3.5 (baris Kecepatan dan stamina dan paragraf tata ulang H-1) diperbarui. Tes: `tes_tampil_layar_c` kini MENURUNKAN angka dari `BikeMotion` dan `Config` (5,4 u/d, 0,9 = 5,4 / 6,0, sprite ngebut tepat di atas ambang yang sama, bar sudah melewati tanda tepat di atas ambang), jadi mengubah ambang sprite, skala bar, atau pemetaan stick tanpa menggeser tanda gagal.
+- Tes lama yang diubah (alasan: nilai tanda): `tests/tes_tampil_layar_c.gd` `_test_stamina_dan_tanda` (0,8 -> 0,9; posisi 87/69/80 -> 98/78/90), `tests/tes_layar_c_scene.gd` (tanda 0,9; x 88 -> 99), `tests/probe_jeda_hud_jendela.gd` (teks), komentar `bar_kecepatan.gd`.
+- Tangkapan HUD terkait: `shots/iter1/*_hud_c_*` dibuat ulang di 4 ukuran (probe_jeda_hud_jendela: 0 keadaan tidak sesuai, tanda di x 99). `tools/bandingkan_tangkapan_hud.py baseline iter1`: 60 tangkapan, pengecualian panel bawah mencakup tanda; sisa perbedaan hanya derau tidak deterministik yang berpindah antar jalan probe (`hud_awal`/`misi_awal`: tangkapan pertama probe; `misi_hud_8_rumah` 468 piksel dan `misi_penanda_dekat` 27 piksel muncul di salah satu ukuran per jalan dan hilang di jalan berikutnya), sama seperti catatan bagian C.
+
+### Mutan nyata bagian E (25 dari 25 tertangkap)
+Satu perubahan per mutan, runner kecil (`TesHasilDunia` + `TesTampilHasil` + `TesTampilLayarC` + `TesLayarCScene` + `TesHasilStruk`, sekitar 2560 pemeriksaan, 5 detik), `git checkout` sesudah tiap mutan, kode di-COMMIT lebih dulu. Putaran pertama: semua tertangkap (tes ditambah sebelum putaran: tip hari 3 terlihat sebelum hasil dan pengali struk dan tiga kartu).
+| Mutan | Perubahan | Tertangkap oleh |
+|---|---|---|
+| E01 | `HASIL_LATAR_ALPHA` 0,9 | Config: lapisan 0,75, panel 0,72, gelap 0,5 |
+| E02 | `HASIL_LATAR_ALPHA` 0,4 | idem |
+| E03 | `HASIL_PANEL_ALPHA` 0,95 | idem |
+| E04 | `HASIL_PANEL_GELAP` 0,9 | idem |
+| E05 | `HASIL_ALPHA_TANPA_DUNIA` 0,5 | Config: tanpa dunia buram |
+| E06 | `warna_latar` bendera dunia terbalik | lapisan UI_BG dengan alpha Config |
+| E07 | `alpha_panel` selalu alpha dunia | alpha panel: 1,0 tanpa dunia |
+| E08 | `gelap_panel` selalu gelap dunia | faktor gelap: 1,0 tanpa dunia |
+| E09 | `RuteMain` tidak memanggil `atur_dunia(true)` | ada_dunia() true di RuteMain |
+| E10 | umpan melayang tidak disembunyikan | umpan tersembunyi |
+| E11 | lapisan kontrol tidak disembunyikan | lapisan kontrol tersembunyi |
+| E12 | `_buka_hasil` tidak memanggil penyembunyian dunia | lapisan kontrol tersembunyi |
+| E13 | Main lagi tidak memulihkan lapisan dunia | Main lagi: lapisan kontrol pulih |
+| E14 | tip tidak disembunyikan seketika | tip sisi dekat tersembunyi (setelah tes hari 3 ditambah) |
+| E15 | `atur_dunia` tidak menerapkan | atur_dunia(true): lapisan dan panel tembus pandang |
+| E16 | `_ready` tidak menerapkan keadaan dunia | latar gelap polos buram |
+| E17 | kartu samping tidak terdaftar di pengali | KartuReputasi: modulate_color (setelah ditambah) |
+| E18 | latar `MOUSE_FILTER_IGNORE` | latar tetap menangkap sentuhan |
+| E19 | HUD tidak disembunyikan | HUD tersembunyi |
+| E20 | `modulasi_panel` tanpa faktor gelap | modulasi panel di atas dunia |
+| E21 | `HUD_BAR_TANDA_PECAHAN` 0,8 | ambang 30, tanda 0,9, bar 9 tinggi |
+| E22 | `SPRITE_AMBANG_NGEBUT` 0,85 | kecepatan di ambang ngebut = 5,4 (diturunkan dari kode) |
+| E23 | `KECEPATAN_NGEBUT_UD` 7,0 | idem |
+| E24 | `_terapkan_dunia` panel selalu mode dunia | panel buram (alpha 1,0) |
+| E25 | `_terapkan_dunia` latar selalu mode dunia | latar gelap polos buram |
+
+### Gerbang bagian E (2026-10-24, keluaran nyata)
+- `godot --headless --import`: 0 baris ERROR/WARNING. `godot --headless --path . --quit-after 2`: 0 baris ERROR/WARNING.
+- `run_tests.gd`: **28487 lolos, 0 gagal**; `tools/cek_keluaran_tes.py`: "lolos (28487 lolos, 0 gagal, 0 peringatan)" (akhir bagian C 28415; +72 pemeriksaan).
+- 17 berkas `tools/tests_cek/uji_*.py`: exit 0 semua.
+- `godot --headless --path . --export-pack Android build/kring-uji.pck`: exit 0, 0 ERROR/WARNING; `tampil_hasil.gd`, `layar_hasil.tscn`, `rute_main.gd` ada; `tes_hasil_dunia` dan `probe_hasil` tidak ada.
+- Probe jendela (1920x1080, 2340x1080, 2400x1080, 1600x720): `probe_hasil_jendela` dan `probe_jeda_hud_jendela`: 0 keadaan tidak sesuai. `probe_hud_rute`, `probe_misi`, `probe_reputasi`, `probe_kondisi` (1920x1080, 2340x1080): 0 keadaan tidak sesuai.
+- `tools/ukur_kontras_tangkapan.py --jenis hasil` (4 ukuran, keadaan resmi dan sapuan): exit 0, terburuk 7,29:1.
+- sha256 save asli sesudah semua tes dan probe: `37d6d6cb98a428a8d2cf68673a0090848e60de15b79fdfba9830d7552f9a549e` (tidak berubah).
+
+### Butuh keputusan (bagian E)
+1. Penggelapan RGB struk dan kartu (0,5) dan baris "Baru:" dipindah ke kartu target (penyimpangan dari kanvas) demi kontras 7:1; dinilai di HP (apakah struk terasa cukup transparan, apakah dunia di balik terlalu gelap).
+2. Tanda bar kecepatan dipasang 90 % (keputusan orchestrator, bagian C butir 2 selesai).
 
 ## Bagian D — dokumen
 
