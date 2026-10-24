@@ -1,0 +1,48 @@
+extends SceneTree
+## QA: sapuan lubang (piksel warna kosong 77,77,77) tiap 6 langkah dari 8 ubin sebelum garis sampai hasil; tutorial hari 1 saat keluar.
+const DT: float = 1.0 / 60.0
+
+
+func _initialize() -> void:
+	var arg: PackedStringArray = OS.get_cmdline_user_args()
+	var folder: String = arg[0]
+	var tutorial: bool = arg.size() > 1 and arg[1] == "tutorial"
+	var akar: RuteMain = (load("res://scenes/rute/rute.tscn") as PackedScene).instantiate() as RuteMain
+	if tutorial:
+		akar.atur_hari(1)
+		akar.atur_tutorial(true)
+	root.add_child(akar)
+	for i: int in range(6):
+		await process_frame
+	akar.set_process(false)
+	var sepeda: SepedaUji = akar.find_child("Sepeda", true, false) as SepedaUji
+	sepeda.jarak_ubin = akar.rute().panjang_ubin - 8.0
+	var langkah: int = 0
+	var total_bolong: int = 0
+	var diperiksa: int = 0
+	var fotos: int = 0
+	while langkah < 1200 and not akar.hasil_tampil():
+		akar.perbarui(DT)
+		(akar.find_child("LoperAgen", true, false) as LoperSprite).maju(DT)
+		langkah += 1
+		if langkah % 6 == 0:
+			await process_frame
+			await process_frame
+			var img: Image = root.get_texture().get_image()
+			var n: int = 0
+			for y: int in range(0, img.get_height()):
+				for x: int in range(0, img.get_width()):
+					var c: Color = img.get_pixel(x, y)
+					if int(round(c.r * 255.0)) == 77 and int(round(c.g * 255.0)) == 77 and int(round(c.b * 255.0)) == 77:
+						n += 1
+			total_bolong += n
+			diperiksa += 1
+			if tutorial and akar.hampir_keluar() and fotos < 1:
+				fotos += 1
+				img.save_png("%s/tutorial_hampir_keluar.png" % folder)
+			if n > 0:
+				print("bolong ", n, " di langkah ", langkah)
+	print("sweep %dx%d: %d frame diperiksa, total piksel bolong %d, hasil %s langkah %d" % [root.size.x, root.size.y, diperiksa, total_bolong, str(akar.hasil_tampil()), langkah])
+	if tutorial:
+		print("tutorial dimulai ", akar.tutorial_dimulai())
+	await ProbeKeluar.keluar(self, 0)

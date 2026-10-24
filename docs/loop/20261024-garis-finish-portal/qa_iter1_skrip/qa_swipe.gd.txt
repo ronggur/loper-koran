@@ -1,0 +1,105 @@
+extends SceneTree
+## QA: jari swipe/stick/bel ditekan SEBELUM garis dan dilepas SESUDAH garis: tidak ada lemparan, bel, belokan; hasil tepat sekali; Main lagi lalu jari sisa tidak merusak.
+const DT: float = 1.0 / 60.0
+var gagal: int = 0
+
+
+func cek(k: bool, l: String) -> void:
+	if not k:
+		gagal += 1
+		print("GAGAL: ", l)
+
+
+func t(i: int, p: Vector2, tekan: bool) -> void:
+	var e: InputEventScreenTouch = InputEventScreenTouch.new()
+	e.index = i
+	e.position = p * 3.0
+	e.pressed = tekan
+	Input.parse_input_event(e)
+	Input.flush_buffered_events()
+
+
+func g(i: int, p: Vector2) -> void:
+	var e: InputEventScreenDrag = InputEventScreenDrag.new()
+	e.index = i
+	e.position = p * 3.0
+	Input.parse_input_event(e)
+	Input.flush_buffered_events()
+
+
+func _initialize() -> void:
+	await process_frame
+	root.size = Vector2i(2340, 1080)
+	var akar: RuteMain = (load("res://scenes/rute/rute.tscn") as PackedScene).instantiate() as RuteMain
+	root.add_child(akar)
+	await process_frame
+	await process_frame
+	akar.set_process(false)
+	(akar.find_child("KontrolTouch", true, false) as KontrolTouch).keyboard_aktif = false
+	akar.atur_benih_awal(akar.benih())
+	var sepeda: SepedaUji = akar.find_child("Sepeda", true, false) as SepedaUji
+	var lempar: Array[int] = [0]
+	var bel: Array[int] = [0]
+	var hasil: Array[int] = [0]
+	akar.koran_dilempar.connect(func(_l: ThrowSolver.Lintasan) -> void: lempar[0] += 1)
+	akar.bel_berbunyi.connect(func(_b: Bel.Bunyi, _r: Array[int]) -> void: bel[0] += 1)
+	akar.hasil_dibuka.connect(func(_a: HasilRute.Angka) -> void: hasil[0] += 1)
+	var k: BikeMotion.Keadaan = sepeda.keadaan.salin()
+	k.kecepatan_ud = 6.0
+	sepeda.keadaan = k
+	sepeda.jarak_ubin = akar.rute().panjang_ubin - 0.3
+	# stick ditahan ke belakang-kiri, swipe ditahan (jari ke-2 di zona swipe, sudah melewati ambang), bel ditahan (jari ke-3)
+	t(0, Vector2(110, 270), true)
+	g(0, Vector2(60, 330))
+	t(1, Vector2(600, 200), true)
+	g(1, Vector2(680, 150))
+	var posisi_bel: Vector2 = TouchZones.pusat_bel(780, false)
+	t(2, posisi_bel, true)
+	for i: int in range(30):
+		akar.perbarui(DT)
+		if akar.rute_sudah_selesai():
+			break
+	cek(akar.rute_sudah_selesai(), "garis tercapai")
+	var lat: float = sepeda.lateral_ubin
+	var l0: int = lempar[0]
+	var b0: int = bel[0]
+	for i: int in range(20):
+		akar.perbarui(DT)
+	# lepas SESUDAH garis
+	g(0, Vector2(60, 330))
+	t(0, Vector2(60, 330), false)
+	g(1, Vector2(700, 140))
+	t(1, Vector2(700, 140), false)
+	t(2, posisi_bel, false)
+	for i: int in range(900):
+		akar.perbarui(DT)
+		if akar.hasil_tampil():
+			break
+	cek(lempar[0] == l0, "swipe yang dilepas sesudah garis tidak melempar (%d -> %d)" % [l0, lempar[0]])
+	cek(bel[0] == b0, "bel yang dilepas sesudah garis tidak berbunyi")
+	cek(absf(sepeda.lateral_ubin - lat) < 1e-6 and not sepeda.rem_aktif(), "stick ditahan: tidak belok dan tidak rem")
+	cek(akar.hasil_tampil() and hasil[0] == 1, "hasil tepat sekali")
+	# Main lagi dengan jari masih 'turun' (drag tanpa tekan)
+	t(0, Vector2(110, 270), true)
+	g(0, Vector2(60, 330))
+	akar.layar_hasil().tombol_main_lagi().ditekan.emit()
+	g(0, Vector2(50, 340))
+	for i: int in range(30):
+		akar.perbarui(DT)
+	cek(not akar.rute_sudah_selesai() and akar.kamera_beku() == false, "Main lagi: rute normal")
+	t(0, Vector2(110, 270), false)
+	# jari baru menggerakkan stick normal
+	t(0, Vector2(110, 270), true)
+	print("diag2: sesudah tekan stick_aktif=", akar.kontrol_router().stick_aktif(), " kidal=", akar.kidal())
+	g(0, Vector2(110, 210))
+	print("diag3: sesudah geser stick_aktif=", akar.kontrol_router().stick_aktif(), " vektor=", akar.call("_vektor_stick"))
+	var j0: float = sepeda.jarak_ubin
+	for i: int in range(60):
+		akar.perbarui(DT)
+	print("diag: stick_aktif=", akar.kontrol_router().stick_aktif(), " processing_input=", (akar.find_child("KontrolTouch", true, false) as KontrolTouch).is_processing_input(), " v=", sepeda.kecepatan_ud, " maju=", sepeda.jarak_ubin - j0)
+	cek(sepeda.jarak_ubin - j0 > 3.0 and sepeda.kecepatan_ud > 5.0, "stick baru bekerja sesudah Main lagi (laju %.2f)" % sepeda.kecepatan_ud)
+	t(0, Vector2(110, 210), false)
+	print("qa_swipe: gagal=", gagal)
+	root.remove_child(akar)
+	akar.free()
+	quit(0)
