@@ -22,7 +22,7 @@ Scope: Run garis finish dengan portal satpam (sepeda melaju keluar viewport)  ·
 ## Temuan
 Status: OPEN → FIXED (Dev) → VERIFIED (QA) | DISPUTED | DEFERRED | NEEDS-MANUAL | BLOCKED
 
-| ID | Iter | Sev | Lokasi | Temuan & reproduksi/bukti | Status | Fix (file/commit) | Tes tegresi |
+| ID | Iter | Sev | Lokasi | Temuan & reproduksi/bukti | Status | Fix (file/commit) | Tes regresi |
 |---|---|---|---|---|---|---|---|
 
 ## Tes lama yang diubah (G-1..G-6), per baris
