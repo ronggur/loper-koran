@@ -12,7 +12,7 @@ extends RefCounted
 ## - Fase (`Fase`): SEBELUM garis, MELAJU_KELUAR (garis tercapai, sepeda belum seluruhnya di luar viewport), SUDAH_KELUAR. Hanya maju (`periksa_keluar`).
 ## - Gerak: `stick_keluar` (lurus penuh, tanpa belok) dan laju minimum `RUTE_KELUAR_LAJU_MIN_UD` (`laju_dijaga`, `keadaan_dijaga`).
 ## - Keluar viewport dari geometri nyata, bukan waktu: titik pijak sepeda di layar (`posisi_layar_pijak`, `posisi_layar`), kotak badan
-##   `RUTE_KELUAR_BADAN_*_PX`, dan arah maju dari `Iso` (naik ke kanan atas). `sisa_ubin_keluar` = ubin yang masih harus ditempuh sampai seluruh badan di luar
+##   `RUTE_KELUAR_BADAN_KIRI_PX` dan `RUTE_KELUAR_BADAN_BAWAH_PX`, dan arah maju dari `Iso` (naik ke kanan atas). `sisa_ubin_keluar` = ubin yang masih harus ditempuh sampai seluruh badan di luar
 ##   tepi kanan atau tepi atas viewport (mana lebih dulu); "hampir keluar" (sinyal banner) bila sisa <= `RUTE_KELUAR_HAMPIR_UBIN`.
 ## - Kamera berhenti mengikuti di garis akhir: `posisi_kamera` adalah fungsi murni dari posisi sepeda saat garis tercapai.
 ## - Portal (`portal_terbuka`): terbuka mulai `RUTE_PORTAL_BUKA_JARAK_UBIN` sebelum garis akhir dan seterusnya.
@@ -113,7 +113,7 @@ static func posisi_layar(posisi_sepeda: Vector2, kamera: Vector2, ukuran: Vector
 	return posisi_sepeda - kamera + ukuran / 2
 
 
-## Ubin sepanjang jalan yang masih harus ditempuh dari pijak di layar `posisi_layar_pijak` sampai SELURUH badan (`RUTE_KELUAR_BADAN_*_PX`) berada di luar
+## Ubin sepanjang jalan yang masih harus ditempuh dari pijak di layar `posisi_layar_pijak` sampai SELURUH badan (`RUTE_KELUAR_BADAN_KIRI_PX` dan `RUTE_KELUAR_BADAN_BAWAH_PX`) berada di luar
 ## viewport berukuran `ukuran`: yang lebih dulu antara tepi kanan (sisi kiri badan melewati tepi) dan tepi atas (sisi bawah badan melewati tepi), karena maju
 ## = naik ke kanan atas (`Iso.ARAH_MAJU`). 0 bila sudah di luar (menyentuh tepi tanpa piksel terlihat dihitung di luar). Masukan tidak hingga atau ukuran
 ## tidak positif = tak hingga (tidak pernah dianggap keluar).

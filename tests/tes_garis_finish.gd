@@ -186,7 +186,7 @@ func _jarak_satu_detik(v0: float, e: EfekKondisi) -> float:
 # --- Kotak badan = sprite nyata ---
 
 func _test_badan_sama_dengan_sprite() -> void:
-	_judul.call("Kotak badan RUTE_KELUAR_BADAN_*_PX = gabungan piksel buram sprite pemain nyata (kayuh, melambat, meluncur, rem, berhenti; arah lurus)")
+	_judul.call("Kotak badan RUTE_KELUAR_BADAN_KIRI_PX dan RUTE_KELUAR_BADAN_BAWAH_PX = gabungan piksel buram sprite pemain nyata (kayuh, melambat, meluncur, rem, berhenti; arah lurus)")
 	var x_min: int = 1000000
 	var x_maks: int = -1000000
 	var y_min: int = 1000000
@@ -217,8 +217,8 @@ func _test_badan_sama_dengan_sprite() -> void:
 							y_min = mini(y_min, ry)
 							y_maks = maxi(y_maks, ry)
 	check(diukur == 7, "tujuh animasi arah lurus terukur (dapat %d)" % diukur)
-	check(-x_min == Config.RUTE_KELUAR_BADAN_KIRI_PX and x_maks == Config.RUTE_KELUAR_BADAN_KANAN_PX and -y_min == Config.RUTE_KELUAR_BADAN_ATAS_PX and y_maks == Config.RUTE_KELUAR_BADAN_BAWAH_PX, "badan terukur [%d, %d, %d, %d] = config [%d, %d, %d, %d]" % [-x_min, x_maks, -y_min, y_maks, Config.RUTE_KELUAR_BADAN_KIRI_PX, Config.RUTE_KELUAR_BADAN_KANAN_PX, Config.RUTE_KELUAR_BADAN_ATAS_PX, Config.RUTE_KELUAR_BADAN_BAWAH_PX])
-	check(-x_min == 18 and x_maks == 16 and -y_min == 43 and y_maks == 8, "literal terukur 18, 16, 43, 8")
+	check(-x_min == Config.RUTE_KELUAR_BADAN_KIRI_PX and y_maks == Config.RUTE_KELUAR_BADAN_BAWAH_PX, "badan terukur kiri %d bawah %d = config kiri %d bawah %d" % [-x_min, y_maks, Config.RUTE_KELUAR_BADAN_KIRI_PX, Config.RUTE_KELUAR_BADAN_BAWAH_PX])
+	check(-x_min == 18 and x_maks == 16 and -y_min == 43 and y_maks == 8, "literal terukur kiri 18, kanan 16, atas 43, bawah 8")
 
 
 # --- Geometri keluar viewport ---
