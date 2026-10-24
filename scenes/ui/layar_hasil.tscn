@@ -329,7 +329,7 @@ theme_type_variation = &"LayarTeksKecil"
 text = "HASIL_TARGET_TAMAT"
 autowrap_mode = 3
 
-[node name="BagianBaru" type="VBoxContainer" parent="LatarHasil/Batas/Badan/KolomKanan"]
+[node name="BagianBaru" type="VBoxContainer" parent="LatarHasil/Batas/Badan/KolomKanan/KartuTarget/IsiTarget"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2

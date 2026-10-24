@@ -7,6 +7,11 @@ extends SceneTree
 ## Menulis juga `<awalan>_hasil_<keadaan>.json` (persegi dan warna token tiap teks, persegi kartu dan tombol) yang dibaca `tools/ukur_kontras_tangkapan.py --jenis hasil`. Tidak interaktif: keluar lewat `ProbeKeluar`.
 ## Tidak menulis save apa pun.
 ##
+## Run ui2-semua-layar bagian E (V-10): semua keadaan dipotret DI ATAS DUNIA RUTE nyata (`RuteMain` dibekukan di satu posisi, `_buka_hasil` dipanggil supaya HUD dan lapisan dunia tersembunyi seperti di permainan, lalu isi layar
+## diganti data buatan keadaan itu). Keadaan `p_tanpa_dunia` memotret layar hasil sendiri tanpa dunia (latar gelap polos, panel buram). Tiap tangkapan disertai `<awalan>_hasil_<keadaan>_latar.png`: sama persis tetapi semua teks
+## dibuat transparan, sehingga `tools/ukur_kontras_tangkapan.py --jenis hasil` mengukur kontras teks terhadap piksel latar TERBURUK di bawahnya (bukan hanya warna terbanyak). Argumen kedua (opsional) = folder untuk SAPUAN latar
+## terburuk: keadaan terpadat di 12 kombinasi hari dan posisi rute (rumput, jalan, rumah, trotoar) berawalan `sapu_`; bawaan = folder pertama.
+##
 ## Pakai (jendela harus muat di layar monitor):
 ##   godot --path . --resolution 2340x1080 --position 0,0 --script res://tests/probe_hasil_jendela.gd -- docs/loop/<RUN_ID>/shots/iter<N>
 ##   (juga 1920x1080 = lebar 640, 2400x1080 = lebar 800, 1600x720 = lebar 800)
@@ -15,8 +20,14 @@ extends SceneTree
 const BERKAS_RUTE: String = "res://scenes/rute/rute.tscn"
 const BERKAS_HASIL: String = "res://scenes/ui/layar_hasil.tscn"
 const DT: float = 1.0 / 60.0
+## Hari dan posisi rute (pecahan panjang rute) untuk sapuan latar terburuk, dan posisi dunia keadaan biasa.
+const SAPU_HARI: Array[int] = [3, 9]
+const SAPU_POSISI: Array[float] = [0.08, 0.25, 0.42, 0.58, 0.75, 0.92]
+const POSISI_BIASA: float = 0.5
+const HARI_BIASA: int = 3
 
 var _folder: String = ""
+var _folder_sapu: String = ""
 var _awalan: String = ""
 var _gagal: int = 0
 var _toko: PemuatToko.Kumpulan = PemuatToko.muat()
@@ -26,6 +37,7 @@ var _kepribadian: Array[KepribadianPelanggan.Entri] = PemuatPelanggan.muat().ent
 func _initialize() -> void:
 	var argumen: PackedStringArray = OS.get_cmdline_user_args()
 	_folder = argumen[0] if argumen.size() > 0 else ""
+	_folder_sapu = argumen[1] if argumen.size() > 1 else _folder
 	var misi: DataMisi = PemuatMisi.muat_folder().cari("p1_kucing")
 	var kosong: Array[String] = []
 	var tiga: Array[String] = ["ban", "rem", "rantai"]
@@ -52,6 +64,8 @@ func _initialize() -> void:
 	inset.bawah = 20
 	await _kasus("m_inset_terpadat", padat, misi, tiga, 10, _rep(55, 53, [4, 3, 2, 1]), _ms(2, 990, 0, 0, 0), _ms(10, 5100, 1, 4, 0), true, inset)
 	await _kasus("n_inset_biasa", _angka(22, 355, 0, 25, 1, 14780, 9), null, kosong, 120, _rep(10, 12, [1, 0, 0, 0]), _ms(7, 700, 0, 0, 0), _ms(7, 1080, 0, 0, 0), true, inset)
+	await _kasus_tanpa_dunia("p_tanpa_dunia", padat, misi, tiga, 10, _rep(55, 53, [4, 3, 2, 1]), _ms(2, 990, 0, 0, 0), _ms(10, 5100, 1, 4, 0))
+	await _sapu(padat, misi, tiga)
 	print("probe selesai, %d keadaan tidak sesuai" % _gagal)
 	await ProbeKeluar.keluar(self, 0 if _gagal == 0 else 1)
 
@@ -112,24 +126,87 @@ func _ms(setia: int, koin_total: int, misi: int, servis: int, level: int) -> Dic
 
 # --- Skenario ---
 
-func _kasus(nama: String, angka: HasilRute.Angka, misi: DataMisi, perlu: Array[String], saldo_lama: int, rep: ReputationManager.Hasil, sebelum: Variant, sesudah: Variant, mode_hari: bool = true, inset: ZonaAman.Inset = null) -> void:
-	var layar: LayarHasil = (load(BERKAS_HASIL) as PackedScene).instantiate() as LayarHasil
-	root.add_child(layar)
-	await _tunggu(2)
+func _kasus(nama: String, angka: HasilRute.Angka, misi: DataMisi, perlu: Array[String], saldo_lama: int, rep: ReputationManager.Hasil, sebelum: Variant, sesudah: Variant, mode_hari: bool = true, inset: ZonaAman.Inset = null, posisi: float = POSISI_BIASA, hari: int = HARI_BIASA, folder: String = "", awalan_nama: String = "") -> void:
+	var akar: RuteMain = await _dunia_beku(hari, posisi)
+	var layar: LayarHasil = akar.layar_hasil()
 	layar.atur_inset(inset)
 	layar.atur_mode_hari(mode_hari)
 	var ringkas: MilestoneTracker.Ringkasan = null
 	if sebelum != null:
 		ringkas = MilestoneTracker.ringkas(sebelum, sesudah)
 	layar.isi(angka, misi if angka.misi_hasil != "" else null, perlu, saldo_lama, rep, ringkas)
+	await _tunggu(5)
+	_awalan = "%dx%d" % [root.size.x, root.size.y]
+	_periksa_dunia(nama, akar)
+	await _simpan(nama, folder)
+	_cek(nama, layar, inset)
+	_tulis_ukuran(nama, layar, folder)
+	await _simpan_latar(nama, layar, folder)
+	akar.queue_free()
+	await _tunggu(2)
+
+
+## Layar hasil sendiri tanpa dunia (`RuteMain` tidak ada): latar gelap polos buram dan panel buram, tanpa galat.
+func _kasus_tanpa_dunia(nama: String, angka: HasilRute.Angka, misi: DataMisi, perlu: Array[String], saldo_lama: int, rep: ReputationManager.Hasil, sebelum: Variant, sesudah: Variant) -> void:
+	var layar: LayarHasil = (load(BERKAS_HASIL) as PackedScene).instantiate() as LayarHasil
+	root.add_child(layar)
+	await _tunggu(2)
+	layar.atur_mode_hari(true)
+	layar.isi(angka, misi if angka.misi_hasil != "" else null, perlu, saldo_lama, rep, MilestoneTracker.ringkas(sebelum, sesudah))
 	layar.tampilkan(true)
 	await _tunggu(5)
 	_awalan = "%dx%d" % [root.size.x, root.size.y]
-	await _simpan(nama)
-	_cek(nama, layar, inset)
-	_tulis_ukuran(nama, layar)
+	_harap("%s: tanpa dunia, latar gelap polos buram dan panel buram" % nama, not layar.ada_dunia() and layar.warna_latar() == TampilHasil.warna_latar(false) and layar.warna_latar().a == 1.0 and layar.alpha_panel() == 1.0, "")
+	await _simpan(nama, "")
+	_cek(nama, layar, null)
+	_tulis_ukuran(nama, layar, "")
+	await _simpan_latar(nama, layar, "")
 	layar.queue_free()
 	await _tunggu(2)
+
+
+## Sapuan latar terburuk: keadaan terpadat di atas dunia pada 12 kombinasi hari dan posisi rute (tangkapan ke folder sapuan bila diberikan).
+func _sapu(padat: HasilRute.Angka, misi: DataMisi, tiga: Array[String]) -> void:
+	for hari: int in SAPU_HARI:
+		for pos: float in SAPU_POSISI:
+			var nama: String = "sapu_h%d_p%02d" % [hari, roundi(pos * 100.0)]
+			await _kasus(nama, padat, misi, tiga, 10, _rep(55, 53, [4, 3, 2, 1]), _ms(2, 990, 0, 0, 0), _ms(10, 5100, 1, 4, 0), true, null, pos, hari, _folder_sapu)
+
+
+## `RuteMain` nyata di hari `hari` dibekukan di `posisi` x panjang rute, lalu `_buka_hasil` dipanggil (HUD, tutorial, umpan melayang, dan lapisan kontrol tersembunyi seperti di permainan). Dunia tetap tergambar di belakang layar hasil.
+func _dunia_beku(hari: int, posisi: float) -> RuteMain:
+	var s: Dictionary = DataSave.templat()
+	s["reputasi"] = {"perumahan": 20}
+	s["koin"] = 150
+	var akar: RuteMain = (load(BERKAS_RUTE) as PackedScene).instantiate() as RuteMain
+	akar.atur_hari(hari)
+	akar.atur_sepeda(s, hari, _toko.upgrade)
+	akar.atur_pelanggan(s, _kepribadian)
+	root.add_child(akar)
+	await _tunggu(3)
+	akar.set_process(false)
+	(akar.find_child("KontrolTouch", true, false) as KontrolTouch).keyboard_aktif = false
+	(akar.find_child("LoperAgen", true, false) as LoperSprite).set_process(false)
+	var sepeda: SepedaUji = akar.find_child("Sepeda", true, false) as SepedaUji
+	sepeda.jarak_ubin = akar.rute().panjang_ubin * posisi
+	var k: BikeMotion.Keadaan = sepeda.keadaan.salin()
+	k.lateral_ubin = 0.5
+	k.kecepatan_ud = 0.0
+	sepeda.keadaan = k
+	akar.perbarui(0.0)
+	await _tunggu(2)
+	akar.call(&"_buka_hasil")
+	await _tunggu(2)
+	return akar
+
+
+## Dunia ada di belakang layar hasil dan lapisan yang tidak boleh tembus tersembunyi (HUD, tutorial, umpan melayang, lapisan kontrol, banner), lapisan gelap tembus pandang dan panel transparan sebagian dari `Config`.
+func _periksa_dunia(nama: String, akar: RuteMain) -> void:
+	var layar: LayarHasil = akar.layar_hasil()
+	var kontrol: CanvasLayer = akar.find_child("KontrolTouch", true, false).get_parent() as CanvasLayer
+	var umpan: CanvasItem = akar.find_child("UmpanMelayang", true, false) as CanvasItem
+	_harap("%s: dunia di belakang, lapisan gelap tembus pandang, panel transparan" % nama, layar.ada_dunia() and absf(layar.warna_latar().a - Config.HASIL_LATAR_ALPHA) < 0.0001 and absf(layar.alpha_panel() - Config.HASIL_PANEL_ALPHA) < 0.0001, "")
+	_harap("%s: HUD, tutorial, kontrol, umpan, banner akhir tersembunyi" % nama, not akar.hud_rute().visible and not akar.find_child("Tutorial", true, false).visible and not kontrol.visible and not umpan.visible and not (akar.find_child("PanelAkhir", true, false) as PanelAkhirRute).tampil(), "")
 
 
 ## Hasil dari rute nyata (`RuteMain`): reputasi, pelanggan, dan milestone dihitung dari state save tiruan (tanpa menulis save).
@@ -167,9 +244,11 @@ func _kasus_dari_rute() -> void:
 	await _tunggu(5)
 	var layar: LayarHasil = akar.layar_hasil()
 	_harap("rute nyata: hasil reputasi dan milestone terisi dan kolom samping tampil", akar.hasil_reputasi() != null and akar.hasil_milestone() != null and layar.kanan_tampil(), "")
-	await _simpan("o_dari_rute")
+	_periksa_dunia("o_dari_rute", akar)
+	await _simpan("o_dari_rute", "")
 	_cek("o_dari_rute", layar, null)
-	_tulis_ukuran("o_dari_rute", layar)
+	_tulis_ukuran("o_dari_rute", layar, "")
+	await _simpan_latar("o_dari_rute", layar, "")
 	akar.queue_free()
 	await _tunggu(2)
 
@@ -270,8 +349,9 @@ func _periksa_label(nama: String, layar: LayarHasil) -> int:
 
 
 ## Persegi dan warna token tiap teks, kartu, struk, dan tombol ke `<awalan>_hasil_<keadaan>.json` untuk `tools/ukur_kontras_tangkapan.py --jenis hasil` (hanya bila folder keluaran diberikan).
-func _tulis_ukuran(nama: String, layar: LayarHasil) -> void:
-	if _folder.is_empty():
+func _tulis_ukuran(nama: String, layar: LayarHasil, folder: String = "") -> void:
+	var tujuan: String = folder if folder != "" else _folder
+	if tujuan.is_empty():
 		return
 	var teks: Array = []
 	for simpul: Node in layar.find_children("*", "Label", true, false):
@@ -284,7 +364,7 @@ func _tulis_ukuran(nama: String, layar: LayarHasil) -> void:
 		if tombol.is_visible_in_tree() and tombol.text != "":
 			var r2: Rect2 = tombol.get_global_rect()
 			var kunci: StringName = &"font_disabled_color" if tombol.disabled else &"font_color"
-			teks.append({"teks": tr(tombol.text), "rect": [r2.position.x, r2.position.y, r2.size.x, r2.size.y], "warna": "#" + tombol.get_theme_color(kunci).to_html(false)})
+			teks.append({"tombol": true, "teks": tr(tombol.text), "rect": [r2.position.x, r2.position.y, r2.size.x, r2.size.y], "warna": "#" + tombol.get_theme_color(kunci).to_html(false)})
 	var komponen: Array = []
 	var rt: Rect2 = layar.rect_tombol()
 	komponen.append({"jenis": "tombol", "rect": [rt.position.x, rt.position.y, rt.size.x, rt.size.y]})
@@ -292,7 +372,7 @@ func _tulis_ukuran(nama: String, layar: LayarHasil) -> void:
 		komponen.append({"jenis": "kartu", "rect": [r3.position.x, r3.position.y, r3.size.x, r3.size.y]})
 	var rs: Rect2 = layar.rect_panel()
 	komponen.append({"jenis": "struk", "rect": [rs.position.x, rs.position.y, rs.size.x, rs.size.y]})
-	var berkas: FileAccess = FileAccess.open("%s/%s_hasil_%s.json" % [_folder, _awalan, nama], FileAccess.WRITE)
+	var berkas: FileAccess = FileAccess.open("%s/%s_hasil_%s.json" % [tujuan, _awalan, nama], FileAccess.WRITE)
 	if berkas != null:
 		berkas.store_string(JSON.stringify({"viewport": [root.get_visible_rect().size.x, root.get_visible_rect().size.y], "teks": teks, "komponen": komponen}))
 
@@ -302,10 +382,27 @@ func _tunggu(jumlah: int) -> void:
 		await process_frame
 
 
-func _simpan(keadaan: String) -> void:
-	if _folder.is_empty():
+func _simpan(keadaan: String, folder: String = "") -> void:
+	var tujuan: String = folder if folder != "" else _folder
+	if tujuan.is_empty():
 		return
 	var gambar: Image = root.get_texture().get_image()
-	var berkas: String = "%s/%s_hasil_%s.png" % [_folder, _awalan, keadaan]
+	var berkas: String = "%s/%s_hasil_%s.png" % [tujuan, _awalan, keadaan]
 	var galat: int = gambar.save_png(berkas)
 	print("tangkapan layar %dx%d (%s) ke %s (kode %d)" % [gambar.get_width(), gambar.get_height(), keadaan, berkas, galat])
+
+
+## Tangkapan kedua dengan semua teks transparan (`<awalan>_hasil_<keadaan>_latar.png`): latar nyata di bawah tiap teks untuk kontras terburuk. Dipanggil sesudah `_tulis_ukuran` (warna teks sudah terbaca); layar dibuang sesudahnya.
+func _simpan_latar(keadaan: String, layar: LayarHasil, folder: String) -> void:
+	var tujuan: String = folder if folder != "" else _folder
+	if tujuan.is_empty():
+		return
+	var bening: Color = Color(0, 0, 0, 0)
+	for simpul: Node in layar.find_children("*", "Label", true, false):
+		(simpul as Label).add_theme_color_override(&"font_color", bening)
+	for simpul: Node in layar.find_children("*", "Button", true, false):
+		for kunci: StringName in [&"font_color", &"font_hover_color", &"font_pressed_color", &"font_focus_color", &"font_disabled_color", &"font_hover_pressed_color"]:
+			(simpul as Button).add_theme_color_override(kunci, bening)
+	await _tunggu(3)
+	var gambar: Image = root.get_texture().get_image()
+	gambar.save_png("%s/%s_hasil_%s_latar.png" % [tujuan, _awalan, keadaan])

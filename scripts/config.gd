@@ -810,6 +810,14 @@ const HASIL_BARU_JARAK_PX: int = 2
 const HASIL_SUSUN_ULANG_MAKS: int = 8
 ## Jarak minimum kolom samping ke tombol aksi di bawahnya, piksel game.
 const HASIL_KOLOM_TOMBOL_JARAK_PX: int = 6
+## Layar hasil di atas lingkungan yang baru dilalui (run ui2-semua-layar bagian E, V-10, usulan, dinilai di HP): alpha lapisan gelap `UI_BG` di atas dunia rute, alpha tekstur struk dan kartu kolom samping, dan faktor gelap RGB tekstur itu
+## (keduanya lewat `StyleBoxTexture.modulate_color`; PNG tidak diedit). Faktor gelap perlu karena teks hijau `OK` (L 0,45) di atas struk hanya 7,34:1 dengan struk buram: sedikit saja latar terang yang tembus sudah menjatuhkannya di bawah 7:1.
+## Tanpa dunia (layar hasil sendiri tanpa rute): latar gelap polos buram dan panel buram tanpa penggelapan, seperti sebelum V-10. Nilai terpilih dan kontras terburuk terukur di LOG bagian E.
+const HASIL_LATAR_ALPHA: float = 0.75
+const HASIL_PANEL_ALPHA: float = 0.72
+const HASIL_PANEL_GELAP: float = 0.5
+const HASIL_ALPHA_TANPA_DUNIA: float = 1.0
+const HASIL_PANEL_GELAP_TANPA_DUNIA: float = 1.0
 
 ## --- Hari, seed, dan save (Fase 4 run 4A, DATA_SCHEMA 4, rule save-system; usulan, alur hari berurutan ini prototype yang tidak mengunci struktur sesi ROADMAP 5) ---
 

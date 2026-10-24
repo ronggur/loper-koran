@@ -11,6 +11,9 @@ Membaca pasangan `<awalan>_<jenis>_<keadaan>.png` dan `.json` (ditulis `tests/pr
   di atas kertas, dilaporkan saja seperti kartu bengkel dan struk hasil). Teks di atas kertas terang (tinta di krem) ikut diukur >= 7:1.
   `--jenis jeda` dan `--jenis banner`: `tombol_utama` (Lanjut, Main lagi: bingkai ACCENT) adalah kontrol aktif dan WAJIB >= 3:1 (exit 1 bila kurang); `sakelar` (bingkai biasa di atas panel layar) dan `tombol` (Lewati tenang, sengaja rata)
   hanya dilaporkan seperti QA-003 UI-1. `--jenis hud_c` dan `tutorial`: hanya teks (HUD berlatar jalan: latar = warna terbanyak di persegi teks).
+  `--jenis hasil` (run ui2-semua-layar bagian E, V-10: layar hasil di atas dunia rute yang digelapkan, struk dan kartu transparan sebagian): bila ada `<awalan>_hasil_<keadaan>_latar.png` (tangkapan yang sama dengan semua teks dibuat
+  transparan, ditulis `tests/probe_hasil_jendela.gd`), kontras juga diukur terhadap piksel latar TERBURUK di bawah tiap teks: warna teks = piksel solid terukur dari tangkapan (kandidat terdekat dengan token JSON), latar = tiap piksel persegi teks di tangkapan latar, kontras per piksel,
+  terburuk = persentil 0,5 terendah (membuang derau satu-dua piksel tepi) dan minimum mutlak; batas >= 7:1 pada persentil terburuk (exit 1 bila kurang). Ini yang mengukur "teks terbaca di atas latar terburuk", bukan hanya warna terbanyak.
 Pakai: python3 tools/ukur_kontras_tangkapan.py <folder tangkapan> [--awalan 1920x1080] [--jenis bengkel|hasil|koran] (butuh numpy, pillow). Exit 1 bila ada teks < 7:1 (atau kontrol koran aktif < 3:1).
 """
 import json
@@ -47,6 +50,33 @@ def ukur_teks(img, skala, item):
     ambang = np.percentile(jarak, 98)
     fg = area[jarak >= ambang].mean(axis=0)
     return kontras(fg, latar), latar, tuple(int(v) for v in fg)
+
+
+def hex_ke_rgb(teks):
+    teks = teks.lstrip("#")
+    return tuple(int(teks[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def ukur_latar_terburuk(latar, skala, item, fg):
+    """Kontras warna teks `fg` terhadap tiap piksel latar di persegi teks. Kembali (persentil 0,5 terendah, minimum, rata-rata luminans latar) atau None."""
+    x, y, w, h = [v * skala for v in item["rect"]]
+    if item.get("tombol"):
+        # Persegi tombol memuat bingkai gelapnya sendiri; teks hanya di wajah tombol: pangkas bingkai (tepi 4 + garis dan bayangan) di semua sisi.
+        pangkas = 6.0 * skala
+        x, y, w, h = x + pangkas, y + pangkas, w - 2 * pangkas, h - 2 * pangkas
+    area = latar[int(round(y)):int(round(y + h)), int(round(x)):int(round(x + w)), :3].reshape(-1, 3)
+    if len(area) == 0:
+        return None
+    lf = float(lum(fg))
+    ll = lum(area)
+    k = (np.maximum(ll, lf) + 0.05) / (np.minimum(ll, lf) + 0.05)
+    return float(np.percentile(k, 0.5)), float(k.min()), float(ll.mean())
+
+
+def warna_teks_nyata(ukur, item):
+    """Warna teks solid dari tangkapan nyata: dari dua kandidat pengukuran teks (warna terbanyak dan piksel terjauh; huruf besar bisa mendominasi persegi sehingga warna terbanyak malah warna teks) dipilih yang terdekat dengan token JSON."""
+    token = hex_ke_rgb(item["warna"])
+    return min((ukur[1], ukur[2]), key=lambda c: sum(abs(int(a) - b) for a, b in zip(c, token)))
 
 
 def ukur_garis(img, skala, item):
@@ -86,6 +116,21 @@ def main():
                 print(f"   PRA-ADA < 7:1 '{n}' {r[0]:.2f} (token FAIL di panel HUD, tidak diubah run UI-2)")
             gagal_berkas = [(r, n) for r, n in gagal_berkas if (r, n) not in pra_ada]
         gagal += len(gagal_berkas)
+        latar_png = js.with_name(js.stem + "_latar.png")
+        if jenis == "hasil" and latar_png.exists():
+            latar = np.array(Image.open(latar_png).convert("RGB"))
+            terburuk_latar = []
+            for (ukur, _nama), t in zip(teks, [t for t in data["teks"] if ukur_teks(img, skala, t) is not None]):
+                r = ukur_latar_terburuk(latar, skala, t, warna_teks_nyata(ukur, t))
+                if r is not None:
+                    terburuk_latar.append((r, t["teks"]))
+            if terburuk_latar:
+                tb = min(terburuk_latar, key=lambda p: p[0][0])
+                lemah = [(r, n) for r, n in terburuk_latar if r[0] < 7.0]
+                gagal += len(lemah)
+                print(f"   LATAR TERBURUK {js.stem}: p0,5 {tb[0][0]:.2f}:1 min {tb[0][1]:.2f}:1 '{tb[1]}' (luminans latar rata-rata {tb[0][2]:.3f}), < 7: {len(lemah)}")
+                for r, n in lemah:
+                    print(f"   TEKS < 7:1 DI ATAS LATAR TERBURUK '{n}' p0,5 {r[0]:.2f} min {r[1]:.2f}")
         garis = {"tombol": [], "tombol_nonaktif": [], "kartu": [], "struk": [], "pilih": [], "kotak_misi": [], "tombol_utama": [], "sakelar": []}
         for k in data["komponen"]:
             garis.setdefault(k["jenis"], []).append(ukur_garis(img, skala, k))

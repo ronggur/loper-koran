@@ -233,6 +233,9 @@ func _initialize() -> void:
 	tampil_hasil.jalankan()
 	var hasil_struk: TesHasilStruk = TesHasilStruk.new(check, _judul, self)
 	await hasil_struk.jalankan()
+	# Run ui2-semua-layar bagian E (V-10): layar hasil di atas lingkungan yang baru dilalui (lapisan tembus pandang, panel transparan, HUD dan lapisan dunia tersembunyi dan pulih, tanpa dunia = gelap polos, kontras teoretis).
+	var hasil_dunia: TesHasilDunia = TesHasilDunia.new(check, _judul, self)
+	await hasil_dunia.jalankan()
 	# Run ui2-semua-layar bagian B: halaman koran (pemilihan keadaan dan tata letak murni; scene ada di TesHalamanKoran di atas).
 	var tampil_koran: TesTampilKoran = TesTampilKoran.new(check, _judul)
 	tampil_koran.jalankan()

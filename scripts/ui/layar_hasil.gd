@@ -11,6 +11,10 @@ extends CanvasLayer
 ## banyak `MILESTONE_BARU_MAKS_TAMPIL`). Tombol aksi utama 140x42 di kanan bawah ("Ke bengkel" di alur hari, "Main lagi" di rute sendiri; `BENGKEL_BUKA` dan `RUTE_MAIN_LAGI`, peran utama). Tata letak dari
 ## `TampilHasil.tata` (murni): anchor + Container, margin = max(12, inset aman), lentur 640 sampai 800. Teks panjang berbungkus kata (Indonesia sering lebih panjang), tidak pernah terpotong.
 ##
+## Run ui2-semua-layar bagian E (V-10, permintaan pemilik 2026-10-24, usulan): di atas dunia rute (`atur_dunia(true)`, diatur `RuteMain`) latar adalah lapisan gelap `UI_BG` tembus pandang (`HASIL_LATAR_ALPHA`) sehingga jalan, rumah, dan sepeda yang baru dilalui
+## terlihat redup, dan struk dan kartu kolom samping transparan sebagian (`HASIL_PANEL_ALPHA`, digelapkan `HASIL_PANEL_GELAP`, lewat `StyleBoxTexture.modulate_color`) dengan kontras teks >= 7:1 terukur di atas latar terburuk. Baris tingkat baru tercapai kini di dalam kartu
+## target (tanpa kartu, teks hijau di atas dunia hanya 3,5:1). Tanpa dunia (bawaan: layar hasil sendiri, tes, probe) latar gelap polos buram dan panel buram seperti sebelumnya.
+##
 ## Latar menangkap sentuhan GUI (`MOUSE_FILTER_STOP`); HUD dan kontrol sentuh di bawahnya dimatikan adegan (`RuteMain`) selama layar ini tampil, karena keduanya membaca sentuhan lewat `_input`.
 ## Run fase6a1-bengkel-kondisi bagian B (AC-24): bila ada komponen sepeda PERLU_BENGKEL, satu baris per komponen (sampai tiga, `KONDISI_HASIL_PERLU`, `WARN`); tombol "Ke bengkel" memancarkan `bengkel_diminta`.
 ## Run fase6a2-reputasi-pelanggan (AC-11 sampai AC-14): baris "Koran terbuang n koran (-potongan)" dan "Koin bersih" (boleh minus) hanya bila ada koran terbuang; baris "Saldo mulai lagi dari 0" hanya bila saldo save
@@ -50,6 +54,10 @@ class BarisStruk extends RefCounted:
 
 ## True bila tombol layar ini "Ke bengkel" (di dalam alur hari), false bila "Main lagi" (rute dijalankan sendiri: probe, tes lama, dev).
 var _mode_hari: bool = false
+## True bila layar ini di atas dunia rute (diatur `RuteMain`): lapisan gelap tembus pandang dan struk dan kartu transparan sebagian (V-10). Bawaan false: latar gelap polos dan panel buram (layar hasil sendiri).
+var _ada_dunia: bool = false
+## Kotak 9-slice struk dan kartu kolom samping yang alphanya mengikuti `_ada_dunia`.
+var _kotak_panel: Array[StyleBoxTexture] = []
 var _inset: ZonaAman.Inset = ZonaAman.Inset.new()
 var _tata: TampilHasil.Tata = null
 ## Teks reputasi "12 (+2)" yang tersimpan untuk tes (layar menampilkan angka dan chip terpisah).
@@ -123,7 +131,6 @@ var _susun_hitung: int = 0
 
 
 func _ready() -> void:
-	_latar.color = Palette.UI_BG
 	_latar.mouse_filter = Control.MOUSE_FILTER_STOP
 	_judul.add_theme_color_override(&"font_color", Palette.TEXT)
 	_judul.custom_minimum_size = Vector2(0, Config.HASIL_BARIS_ATAS_PX)
@@ -131,7 +138,9 @@ func _ready() -> void:
 	_kolom_kiri.add_theme_constant_override(&"separation", 0)
 	for blok: Node in [_label_terkirim.get_parent(), _label_koin.get_parent()]:
 		(blok as VBoxContainer).add_theme_constant_override(&"separation", 0)
-	_panel.add_theme_stylebox_override(&"panel", GayaHud.struk())
+	var kotak_struk: StyleBoxTexture = GayaHud.struk()
+	_kotak_panel.append(kotak_struk)
+	_panel.add_theme_stylebox_override(&"panel", kotak_struk)
 	_isi.add_theme_constant_override(&"separation", Config.HASIL_STRUK_JARAK_PX)
 	_baris_angka.add_theme_constant_override(&"separation", Config.HASIL_ANGKA_JARAK_PX)
 	_sobek_atas.atur_pad(Config.HASIL_STRUK_PAD_X_PX, Config.HASIL_STRUK_PAD_X_PX)
@@ -171,6 +180,7 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_baca_zona_aman)
 	_panel.resized.connect(_ukuran_berubah)
 	_kolom_kanan.resized.connect(_ukuran_berubah)
+	_terapkan_dunia()
 	_baca_zona_aman()
 	tampilkan(false)
 
@@ -183,6 +193,7 @@ func _terapkan_gaya_kanan() -> void:
 		var kotak: StyleBoxTexture = GayaHud.kartu_biasa()
 		kotak.set_content_margin_all(float(Config.UI_PANEL_SLICE_PX + Config.HASIL_KARTU_PAD_PX))
 		kartu.add_theme_stylebox_override(&"panel", kotak)
+		_kotak_panel.append(kotak)
 	_kartu_reputasi.custom_minimum_size = Vector2(0, Config.HASIL_KARTU_REPUTASI_PX)
 	for bagian: Control in [_kartu_pelanggan.get_child(0), _kartu_target.get_child(0)]:
 		(bagian as VBoxContainer).add_theme_constant_override(&"separation", Config.HASIL_KARTU_BARIS_JARAK_PX)
@@ -276,6 +287,34 @@ func _label(varian: StringName, warna: Color) -> Label:
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.add_theme_color_override(&"font_color", warna)
 	return label
+
+
+## Menyatakan ada tidaknya dunia rute di belakang layar ini (V-10; `RuteMain` mengaturnya true). Dengan dunia: lapisan gelap `UI_BG` tembus pandang (alpha `HASIL_LATAR_ALPHA`) dan struk dan kartu transparan sebagian
+## (`HASIL_PANEL_ALPHA`). Tanpa dunia (bawaan): latar gelap polos buram dan panel buram, seperti sebelum V-10. Tidak ada pemrosesan per frame: hanya warna lapisan dan pengali kotak yang diubah.
+func atur_dunia(ada: bool) -> void:
+	_ada_dunia = ada
+	_terapkan_dunia()
+
+
+## True bila layar ini di atas dunia rute.
+func ada_dunia() -> bool:
+	return _ada_dunia
+
+
+## Warna lapisan latar yang sedang dipakai (untuk tes dan probe).
+func warna_latar() -> Color:
+	return _latar.color
+
+
+## Alpha struk dan kartu kolom samping yang sedang dipakai (untuk tes dan probe).
+func alpha_panel() -> float:
+	return _kotak_panel[0].modulate_color.a if not _kotak_panel.is_empty() else 1.0
+
+
+func _terapkan_dunia() -> void:
+	_latar.color = TampilHasil.warna_latar(_ada_dunia)
+	for kotak: StyleBoxTexture in _kotak_panel:
+		kotak.modulate_color = TampilHasil.modulasi_panel(_ada_dunia)
 
 
 ## Mengganti tombol layar ini: true = "Ke bengkel" (alur hari), false = "Main lagi" (bawaan).

@@ -116,3 +116,24 @@ static func kunci_nama_milestone(id: String) -> String:
 
 static func kunci_tingkat(tingkat_ke: int) -> String:
 	return "HASIL_MILESTONE_TINGKAT_" + MilestoneTracker.nama_tingkat(tingkat_ke).to_upper()
+
+
+## Warna lapisan latar layar hasil (V-10): `UI_BG` dengan alpha `HASIL_LATAR_ALPHA` di atas dunia rute yang baru dilalui, atau alpha `HASIL_ALPHA_TANPA_DUNIA` (gelap polos) bila dunia tidak ada. Token `UI_BG` sendiri tidak berubah.
+static func warna_latar(ada_dunia: bool) -> Color:
+	return Color(Palette.UI_BG, Config.HASIL_LATAR_ALPHA if ada_dunia else Config.HASIL_ALPHA_TANPA_DUNIA)
+
+
+## Alpha tekstur struk dan kartu kolom samping (V-10): `HASIL_PANEL_ALPHA` di atas dunia, `HASIL_ALPHA_TANPA_DUNIA` bila dunia tidak ada.
+static func alpha_panel(ada_dunia: bool) -> float:
+	return Config.HASIL_PANEL_ALPHA if ada_dunia else Config.HASIL_ALPHA_TANPA_DUNIA
+
+
+## Faktor gelap RGB struk dan kartu (V-10): `HASIL_PANEL_GELAP` di atas dunia (menjaga kontras teks hijau walau panel transparan), `HASIL_PANEL_GELAP_TANPA_DUNIA` (1,0 = tanpa penggelapan) bila dunia tidak ada.
+static func gelap_panel(ada_dunia: bool) -> float:
+	return Config.HASIL_PANEL_GELAP if ada_dunia else Config.HASIL_PANEL_GELAP_TANPA_DUNIA
+
+
+## Warna pengali (`modulate_color` StyleBoxTexture) struk dan kartu: abu-abu `gelap_panel` dengan alpha `alpha_panel`. Tanpa dunia = putih buram = tekstur apa adanya.
+static func modulasi_panel(ada_dunia: bool) -> Color:
+	var g: float = gelap_panel(ada_dunia)
+	return Color(g, g, g, alpha_panel(ada_dunia))
